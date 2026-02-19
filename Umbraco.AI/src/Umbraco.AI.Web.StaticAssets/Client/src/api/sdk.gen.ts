@@ -642,7 +642,7 @@ export class TestsService {
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{runId}',
+            url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{testRunId}',
             ...options
         });
     }

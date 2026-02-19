@@ -4,7 +4,7 @@ import type { UaiTestFeatureEntityRepositoryApi } from "../test-feature-entity-r
 /**
  * Manifest for registering a test feature entity repository.
  *
- * Each test feature type (e.g., "prompt-completion", "agent-tool-test")
+ * Each test feature (e.g., "prompt", "agent")
  * registers one repository that provides entities for that feature.
  *
  * @example
@@ -14,7 +14,7 @@ import type { UaiTestFeatureEntityRepositoryApi } from "../test-feature-entity-r
  *     alias: "Uai.Repository.TestFeatureEntity.Prompt",
  *     name: "Prompt Test Feature Entity Repository",
  *     meta: {
- *         testFeatureType: "prompt-completion",
+ *         feature: "prompt",
  *     },
  *     api: () => import("./prompt-test-entity.repository.js"),
  * };
@@ -23,7 +23,7 @@ import type { UaiTestFeatureEntityRepositoryApi } from "../test-feature-entity-r
 export interface ManifestUaiTestFeatureEntityRepository
 	extends ManifestRepository<UaiTestFeatureEntityRepositoryApi> {
 	meta: {
-		/** The test feature type ID this repository provides entities for */
-		testFeatureType: string;
+		/** The test feature ID this repository provides entities for */
+		feature: string;
 	};
 }

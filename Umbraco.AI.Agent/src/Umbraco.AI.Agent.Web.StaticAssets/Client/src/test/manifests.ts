@@ -5,7 +5,7 @@ const testEntityRepositoryManifest: ManifestUaiTestFeatureEntityRepository = {
 	alias: "Uai.Repository.TestFeatureEntity.Agent",
 	name: "Agent Test Feature Entity Repository",
 	meta: {
-		testFeatureType: "agent-tool-test", // Must match backend feature ID
+		feature: "agent", // Must match backend feature ID
 	},
 	api: () => import("./agent-test-entity.repository.js"),
 };

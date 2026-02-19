@@ -27,10 +27,10 @@ export class PromptTestFeatureEntityRepository
 			}
 
 			return response.data.items.map((prompt) => ({
-				id: prompt.alias, // Use alias as primary identifier
+				id: prompt.id,
 				name: prompt.name,
-				description: prompt.description || undefined,
-				icon: "icon-script-alt", // Prompt icon
+				description: prompt.alias,
+				icon: "icon-command", // Prompt icon
 			}));
 		} catch (error) {
 			console.error("Failed to load prompts for test picker:", error);

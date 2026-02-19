@@ -101,11 +101,11 @@ export class UaiTestFeatureEntityPickerElement extends UmbFormControlMixin<
 		}
 
 		try {
-			// Find repository manifest for this test feature type
+			// Find repository manifest for this test feature
 			const manifests = umbExtensionsRegistry.getByTypeAndFilter<
 				"repository",
 				ManifestUaiTestFeatureEntityRepository
-			>("repository", (m) => m.alias?.startsWith("Uai.Repository.TestFeatureEntity.") && m.meta?.testFeatureType === this.testFeatureId);
+			>("repository", (m) => m.alias?.startsWith("Uai.Repository.TestFeatureEntity.") && m.meta?.feature === this.testFeatureId);
 
 			if (manifests.length === 0) {
 				console.warn(`No entity repository found for test feature type: ${this.testFeatureId}`);

@@ -5,7 +5,7 @@ const testEntityRepositoryManifest: ManifestUaiTestFeatureEntityRepository = {
 	alias: "Uai.Repository.TestFeatureEntity.Prompt",
 	name: "Prompt Test Feature Entity Repository",
 	meta: {
-		testFeatureType: "prompt-completion", // Must match backend feature ID
+		feature: "prompt", // Must match backend feature ID
 	},
 	api: () => import("./prompt-test-entity.repository.js"),
 };

@@ -81,8 +81,8 @@ export type ChatResponseModel = {
 };
 
 export type CompareRunsRequestModel = {
-    baselineRunId: string;
-    comparisonRunId: string;
+    baselineTestRunId: string;
+    comparisonTestRunId: string;
 };
 
 export type ConnectionItemResponseModel = {
@@ -1872,10 +1872,10 @@ export type SetBaselineTestRunData = {
     body?: never;
     path: {
         testId: string;
-        runId: string;
+        testRunId: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{runId}';
+    url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{testRunId}';
 };
 
 export type SetBaselineTestRunErrors = {

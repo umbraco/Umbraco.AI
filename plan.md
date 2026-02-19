@@ -1,439 +1,471 @@
-# Frontend Context Contributor Manifest — Implementation Plan
-
-## Problem
-
-Context assembly in the copilot is **hardcoded** in `copilot.context.ts:sendUserMessage()`:
-
-```typescript
-// Hardcoded surface context
-context.push({ description: "surface", value: JSON.stringify({ surface: "copilot" }) });
-// Hardcoded section context
-const currentSection = getSectionPathnameFromUrl();
-if (currentSection) { context.push({ ... }); }
-// Hardcoded entity context
-const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
-if (entityContext) { context.push({ ... }); }
-```
-
-This prevents extensibility — third parties can't add context, the Prompt package can't reuse the same contributors, and adding new context types requires modifying copilot code.
+# Plan: Test Feature Entity Picker System
 
 ## Goal
+Enable the test workspace editor to pick a target entity (prompt, agent, etc.) using a picker UI based on the test feature type. Entities live in different packages, so we need a plugin system using manifests.
 
-Introduce a **manifest-driven request context contributor system** that mirrors the backend `IAIRuntimeContextContributor` pipeline. Contributors register via the extension registry, a collector gathers and invokes them, and any consumer (copilot, prompt, future chat) calls the collector to build the `UaiRequestContextItem[]` array.
-
-### Naming Rationale
-
-The **backend** has `IAIRuntimeContextContributor` — it contributes to the `AIRuntimeContext` by processing `AIRequestContextItem`s that arrive in the HTTP request.
-
-The **frontend** produces those request items. So the frontend side is `UaiRequestContextContributor` — it contributes `UaiRequestContextItem`s that get sent in the request. This aligns with the existing `request-context/` module that already owns `UaiRequestContextItem`.
-
-## Design Decisions
-
-1. **Core request context contributors are unconditional** — section and entity contributors always run regardless of consumer. No condition needed.
-2. **Product-specific contributors use product-specific conditions** — surface identity is an agent concern (uses `UaiAgentSurfaceCondition` from Agent.UI/Copilot). Prompt-specific context would use prompt conditions.
-3. **The manifest type and collector live in Core** (`@umbraco-ai/core`) since request context items are a Core concept (`UaiRequestContextItem`).
-4. **Contributors use `ManifestApi` pattern** matching `uaiAgentFrontendTool` — lazy-loaded API class with a `contribute(context)` method, mirroring the backend `void Contribute(AIRuntimeContext context)` pattern.
+## Problem
+Currently, the test target is a simple text input where users manually enter an ID or alias. This is error-prone and doesn't provide:
+- Visual selection from available entities
+- Entity names and descriptions
+- Package-specific entity discovery (prompts from Prompt package, agents from Agent package)
 
 ## Architecture
 
 ```
-@umbraco-ai/core (Umbraco.AI)
-├── ManifestUaiRequestContextContributor (type definition)
-├── UaiRequestContextContributorApi (interface)
-├── UaiRequestContextCollector (collects + invokes contributors)
-├── SectionRequestContextContributor (unconditional)
-└── EntityRequestContextContributor (unconditional)
-
-@umbraco-ai/agent-copilot (Umbraco.AI.Agent.Copilot)
-├── SurfaceRequestContextContributor (copilot-scoped)
-└── Updated copilot.context.ts (uses UaiRequestContextCollector)
+┌─────────────────────────────────────────────────────────┐
+│                    Umbraco.AI (Core)                    │
+│  - Define Repository API Interface                      │
+│  - Define Extension Type (manifest)                     │
+│  - Create Picker Element                                │
+│  - Export types for consumers                           │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ implements
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│          Umbraco.AI.Prompt / Umbraco.AI.Agent           │
+│  - Implement Repository (extends UmbControllerBase)     │
+│  - Register Manifest (type: 'repository')               │
+│  - Map entities to picker data                          │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ consumed by
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                Umbraco.AI Test Workspace                │
+│  - Query repositories by feature type                   │
+│  - Display entities in picker                           │
+│  - Set target.targetId                                  │
+└─────────────────────────────────────────────────────────┘
 ```
+
+## Key Decisions
+
+1. **Remove `isAlias` field** - Simplify target model to just `targetId: string`
+2. **Follow existing `uai-tool-picker` pattern** - Reuse established picker approach
+3. **Single-select picker** - Only one target per test
+4. **Use `UAI_ITEM_PICKER_MODAL`** - Reuse existing modal infrastructure
+5. **Repository pattern** - Similar to `UaiFrontendToolRepositoryApi` pattern used in agent permissions
+
+## Data Flow
+
+1. User selects test feature type (e.g., "prompt-completion")
+2. Picker queries extension registry for repository with matching `testFeatureType`
+3. Repository fetches entities from its package's API
+4. Modal displays entities with name, description, icon
+5. User selects entity
+6. Picker updates `target.targetId` with selected entity's ID/alias
 
 ## Implementation Steps
 
-### Step 1: Define the manifest type and API interface in Core
+### Phase 0: Research - Check for Existing CMS Infrastructure
 
-**New file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/request-context/extension-type.ts`
+**BEFORE IMPLEMENTING CUSTOM SOLUTION:**
 
+Research if Umbraco CMS already provides reusable picker infrastructure that we could leverage:
+
+1. **Content Picker Pattern**
+   - Check `@umbraco-cms/backoffice` for generic entity picker components
+   - Look for: `umb-input-entity-picker`, `umb-entity-picker`, or similar
+   - Investigate picker modal system and reusability
+
+2. **Extension Registry Patterns**
+   - Check if CMS has entity provider extension types
+   - Look for generic repository patterns for entity lists
+   - Check manifest types for entity sources
+
+3. **Modal Picker System**
+   - Verify if `UMB_MODAL_MANAGER_CONTEXT` supports generic entity picking
+   - Check for standard item picker modals with customizable data sources
+
+4. **Form Control Patterns**
+   - Check `UmbFormControlMixin` usage for entity selection
+   - Look for standard picker element patterns in CMS codebase
+
+**Search Strategy:**
+```bash
+# In additional working directory: D:\Work\Umbraco\Umbraco.CMS\Umbraco.CMS
+# Search for picker patterns
+grep -r "picker.*element" --include="*.ts" | head -20
+grep -r "entity.*picker" --include="*.ts" | head -20
+grep -r "ManifestPicker" --include="*.ts" | head -20
+```
+
+**Decision Point:**
+- If suitable CMS infrastructure exists → Adapt to use it instead of custom implementation
+- If no suitable infrastructure → Proceed with custom implementation (Phases 1-7 below)
+
+---
+
+### Phase 1: Core Package - Define Contracts
+
+**Files to create:**
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/test/test-feature-entity-repository.ts`
+  - `UaiTestFeatureEntityData` interface (id, name, description, icon)
+  - `UaiTestFeatureEntityRepositoryApi` interface (getEntities, getEntity)
+
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/test/extensions/uai-test-feature-entity-repository.extension.ts`
+  - `ManifestUaiTestFeatureEntityRepository` interface
+  - Extends `ManifestRepository<UaiTestFeatureEntityRepositoryApi>`
+  - Meta property: `testFeatureType: string`
+
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/exports.ts`
+  - Export types for consumer packages
+
+**Key Interface:**
 ```typescript
-import type { ManifestApi } from "@umbraco-cms/backoffice/extension-api";
-import type { UmbApi } from "@umbraco-cms/backoffice/extension-api";
-import type { UaiRequestContextItem } from "./types.js";
-
-/**
- * Extension type alias for request context contributors.
- */
-export const UAI_REQUEST_CONTEXT_CONTRIBUTOR_EXTENSION_TYPE = "uaiRequestContextContributor";
-
-/**
- * Mutable context bag passed to each contributor.
- * Mirrors the backend AIRuntimeContext pattern — contributors
- * call `add()` to push context items rather than returning them.
- */
-export class UaiRequestContext {
-    readonly #items: UaiRequestContextItem[] = [];
-
-    /**
-     * Add a context item to the request context.
-     */
-    add(item: UaiRequestContextItem): void {
-        this.#items.push(item);
-    }
-
-    /**
-     * Get all contributed context items.
-     */
-    getItems(): UaiRequestContextItem[] {
-        return [...this.#items];
-    }
+export interface UaiTestFeatureEntityData {
+    id: string;           // Entity ID or alias
+    name: string;         // Display name
+    description?: string; // Optional description
+    icon: string;         // Umbraco icon name
 }
 
-/**
- * API interface for request context contributors.
- * Implement this to contribute context items to AI requests.
- *
- * Frontend counterpart of the backend IAIRuntimeContextContributor.
- * While the backend contributors *process* request context items into
- * runtime context, frontend contributors *produce* the request context
- * items that get sent in the request.
- *
- * Mirrors the backend signature: `void Contribute(AIRuntimeContext context)`
- */
-export interface UaiRequestContextContributorApi extends UmbApi {
-    /**
-     * Contribute context items to the request context.
-     * Called once per message send / prompt execution.
-     * Add items via `context.add(item)`. No-op to contribute nothing.
-     *
-     * @param context The mutable request context to contribute to.
-     */
-    contribute(context: UaiRequestContext): Promise<void>;
+export interface UaiTestFeatureEntityRepositoryApi extends UmbApi {
+    getEntities(): Promise<UaiTestFeatureEntityData[]>;
+    getEntity(idOrAlias: string): Promise<UaiTestFeatureEntityData | undefined>;
 }
 
-/**
- * Manifest for request context contributor extensions.
- *
- * Request context contributors are invoked before each AI request to gather
- * ambient context (current section, entity, surface, etc.) into
- * UaiRequestContextItem[] for the backend.
- *
- * Core contributors are unconditional (always run).
- * Product-specific contributors can use Umbraco's conditions framework
- * to gate when they contribute.
- *
- * @example
- * ```typescript
- * // Unconditional contributor (always contributes)
- * const manifest: ManifestUaiRequestContextContributor = {
- *     type: "uaiRequestContextContributor",
- *     alias: "UmbracoAI.RequestContextContributor.Section",
- *     name: "Section Request Context Contributor",
- *     api: () => import("./section.contributor.js"),
- *     weight: 100,
- * };
- *
- * // Conditional contributor (only in copilot surface)
- * const manifest: ManifestUaiRequestContextContributor = {
- *     type: "uaiRequestContextContributor",
- *     alias: "UmbracoAI.RequestContextContributor.Surface",
- *     name: "Surface Request Context Contributor",
- *     api: () => import("./surface.contributor.js"),
- *     weight: 200,
- *     conditions: [{ alias: "Umb.Condition.SomeCondition", ... }],
- * };
- * ```
- */
-export interface ManifestUaiRequestContextContributor extends ManifestApi<UaiRequestContextContributorApi> {
-    type: typeof UAI_REQUEST_CONTEXT_CONTRIBUTOR_EXTENSION_TYPE;
-}
-
-declare global {
-    interface UmbExtensionManifestMap {
-        uaiRequestContextContributor: ManifestUaiRequestContextContributor;
-    }
+export interface ManifestUaiTestFeatureEntityRepository
+    extends ManifestRepository<UaiTestFeatureEntityRepositoryApi> {
+    meta: {
+        testFeatureType: string; // Links repository to test feature type
+    };
 }
 ```
 
-### Step 2: Create the request context collector in Core
+### Phase 2: Core Package - Create Picker Element
 
-**New file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/request-context/request-context-collector.ts`
+**File to create:**
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/test/components/test-feature-entity-picker.element.ts`
 
-The collector queries `uaiRequestContextContributor` manifests from the extension registry and invokes them all when `collect()` is called. Uses the CMS-provided `createExtensionApiByAlias` to load API instances (same pattern as `agent-permissions-workspace-view.element.ts`), with caching to avoid reloading on each `collect()` call.
+**Pattern:**
+- Extends `UmbFormControlMixin<string | undefined>`
+- Properties: `testFeatureId`, `value`, `readonly`
+- Discovers repository via `umbExtensionsRegistry.getByTypeAndFilter()`
+- Opens `UAI_ITEM_PICKER_MODAL` for selection
+- Renders selected item with `uui-ref-node`
+- Renders "Select Target" button when empty
+- Fires `UmbChangeEvent` on selection change
 
-```typescript
-import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import {
-    createExtensionApiByAlias,
-    umbExtensionsRegistry,
-} from "@umbraco-cms/backoffice/extension-registry";
-import {
-    UAI_REQUEST_CONTEXT_CONTRIBUTOR_EXTENSION_TYPE,
-    UaiRequestContext,
-    type ManifestUaiRequestContextContributor,
-    type UaiRequestContextContributorApi,
-} from "./extension-type.js";
-import type { UaiRequestContextItem } from "./types.js";
+**Key Behavior:**
+- When `testFeatureId` changes → reload repository
+- When `value` is set → load selected entity from repository
+- Modal shows all available entities from `repository.getEntities()`
+- Single-select mode (unlike multi-select tool picker)
+- Shows empty state when no testFeatureId or no repository found
 
-/**
- * Collects request context from all registered contributors.
- *
- * Queries uaiRequestContextContributor extensions and uses the CMS
- * `createExtensionApiByAlias` to load + instantiate each API.
- * API instances are cached for the lifetime of the collector.
- */
-export class UaiRequestContextCollector extends UmbControllerBase {
-    readonly #apiCache = new Map<string, UaiRequestContextContributorApi>();
+**Visual Structure:**
+```
+┌─────────────────────────────────────────┐
+│ [When no entity selected]              │
+│  ┌──────────────────────────────────┐  │
+│  │ + Select Target                  │  │
+│  └──────────────────────────────────┘  │
+└─────────────────────────────────────────┘
 
-    constructor(host: UmbControllerHost) {
-        super(host);
-    }
-
-    /**
-     * Collect request context items from all resolved contributors.
-     * Creates a mutable UaiRequestContext, passes it through each
-     * contributor (mirroring the backend Contribute pattern), and
-     * returns the accumulated items.
-     *
-     * @returns Aggregated request context items from all contributors.
-     */
-    async collect(): Promise<UaiRequestContextItem[]> {
-        const manifests = umbExtensionsRegistry.getByType(
-            UAI_REQUEST_CONTEXT_CONTRIBUTOR_EXTENSION_TYPE,
-        ) as ManifestUaiRequestContextContributor[];
-
-        const context = new UaiRequestContext();
-
-        for (const manifest of manifests) {
-            try {
-                const api = await this.#getOrLoadApi(manifest);
-                if (api) {
-                    await api.contribute(context);
-                }
-            } catch (e) {
-                console.error(
-                    `[UaiRequestContextCollector] Contributor ${manifest.alias} failed:`, e,
-                );
-            }
-        }
-
-        return context.getItems();
-    }
-
-    async #getOrLoadApi(
-        manifest: ManifestUaiRequestContextContributor,
-    ): Promise<UaiRequestContextContributorApi | undefined> {
-        const cached = this.#apiCache.get(manifest.alias);
-        if (cached) return cached;
-
-        const api = await createExtensionApiByAlias<UaiRequestContextContributorApi>(
-            this,
-            manifest.alias,
-        );
-
-        this.#apiCache.set(manifest.alias, api);
-        return api;
-    }
-}
+┌─────────────────────────────────────────┐
+│ [When entity selected]                 │
+│  ┌──────────────────────────────────┐  │
+│  │ [icon] My Prompt                 │  │
+│  │        Description text          │🗑│
+│  └──────────────────────────────────┘  │
+└─────────────────────────────────────────┘
 ```
 
-### Step 3: Implement the Section request context contributor in Core
+### Phase 3: Prompt Package - Implement Repository
 
-**New file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/request-context/contributors/section.contributor.ts`
+**Files to create:**
+- `Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client/src/test/prompt-test-entity.repository.ts`
+  - Extends `UmbControllerBase`
+  - Implements `UaiTestFeatureEntityRepositoryApi`
+  - `getEntities()` → Fetches prompts via `PromptsService.getPrompts()`
+  - `getEntity(idOrAlias)` → Fetches single prompt via `PromptsService.getPromptByIdOrAlias()`
+  - Maps to `UaiTestFeatureEntityData` format
+  - Uses `icon: "icon-script-alt"`
 
-Extracts the current section from the URL and creates a request context item. Unconditional — always runs.
+- `Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client/src/manifests/test-entity.manifests.ts`
+  - Register manifest with `type: "repository"`
+  - `alias: "Uai.Repository.TestFeatureEntity.Prompt"`
+  - `meta.testFeatureType: "prompt-completion"` (must match backend feature ID)
+  - `api: () => import("../test/prompt-test-entity.repository.js")`
 
+- `Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client/src/manifests.ts`
+  - Import and export test entity manifests
+
+**Example Repository:**
 ```typescript
-import type { UaiRequestContextContributorApi, UaiRequestContext } from "../extension-type.js";
-
-/**
- * Contributes the current backoffice section to the request context.
- * Frontend counterpart of backend SectionContextContributor.
- *
- * Unconditional — always contributes when a section is detected.
- */
-export default class UaiSectionRequestContextContributor implements UaiRequestContextContributorApi {
-    async contribute(context: UaiRequestContext): Promise<void> {
-        const section = this.#getSectionFromUrl();
-        if (!section) return;
-
-        context.add({
-            description: `Current section: ${section}`,
-            value: JSON.stringify({ section }),
-        });
-    }
-
-    #getSectionFromUrl(): string | null {
-        const match = window.location.pathname.match(/\/section\/([^/]+)/);
-        return match?.[1] ?? null;
-    }
-
-    destroy(): void { /* no-op */ }
-}
-```
-
-### Step 4: Implement the Entity request context contributor in Core
-
-**New file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/request-context/contributors/entity.contributor.ts`
-
-Consumes `UaiEntityAdapterContext` (from the workspace registry + entity adapter system) and serializes the selected entity. Unconditional — always runs; contributes nothing if no entity is selected.
-
-```typescript
-import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { UaiEntityAdapterContext } from "../../entity-adapter/entity-adapter.context.js";
-import { createEntityContextItem } from "../helpers.js";
-import type { UaiRequestContextContributorApi, UaiRequestContext } from "../extension-type.js";
-
-/**
- * Contributes the currently selected entity to the request context.
- * Frontend counterpart of backend SerializedEntityContributor.
- *
- * Unconditional — always contributes when an entity is selected.
- * No-op if no entity is open or no adapter matches.
- */
-export default class UaiEntityRequestContextContributor
+export class PromptTestFeatureEntityRepository
     extends UmbControllerBase
-    implements UaiRequestContextContributorApi
-{
-    #entityAdapterContext: UaiEntityAdapterContext;
+    implements UaiTestFeatureEntityRepositoryApi {
 
-    constructor(host: UmbControllerHost) {
-        super(host);
-        this.#entityAdapterContext = new UaiEntityAdapterContext(host);
+    async getEntities(): Promise<UaiTestFeatureEntityData[]> {
+        const response = await PromptsService.getPrompts();
+        return response.data?.items.map(prompt => ({
+            id: prompt.alias,
+            name: prompt.name,
+            description: prompt.description || undefined,
+            icon: "icon-script-alt",
+        })) ?? [];
     }
 
-    async contribute(context: UaiRequestContext): Promise<void> {
-        const serialized = await this.#entityAdapterContext.serializeSelectedEntity();
-        if (!serialized) return;
-
-        context.add(createEntityContextItem(serialized));
-    }
-}
-```
-
-**Note:** The entity contributor creates its own `UaiEntityAdapterContext` instance. Since contributors are instantiated once and cached by the collector, the overhead is a single extra adapter context that observes the same workspace registry. This is acceptable — the adapter context is lightweight and reactive.
-
-### Step 5: Register contributor manifests in Core
-
-**New file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/request-context/manifests.ts`
-
-```typescript
-import type { ManifestUaiRequestContextContributor } from "./extension-type.js";
-
-export const requestContextManifests: ManifestUaiRequestContextContributor[] = [
-    {
-        type: "uaiRequestContextContributor",
-        alias: "UmbracoAI.RequestContextContributor.Section",
-        name: "Section Request Context Contributor",
-        api: () => import("./contributors/section.contributor.js"),
-        weight: 100,
-    },
-    {
-        type: "uaiRequestContextContributor",
-        alias: "UmbracoAI.RequestContextContributor.Entity",
-        name: "Entity Request Context Contributor",
-        api: () => import("./contributors/entity.contributor.js"),
-        weight: 200,
-    },
-];
-```
-
-**Updated file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/manifests.ts`
-
-Add `...requestContextManifests` to the aggregated manifests array.
-
-### Step 6: Implement Surface request context contributor in Copilot
-
-**New file:** `Umbraco.AI.Agent.Copilot/src/.../Client/src/copilot/contributors/surface.contributor.ts`
-
-```typescript
-import type { UaiRequestContextContributorApi, UaiRequestContext } from "@umbraco-ai/core";
-
-/**
- * Contributes the copilot surface identifier to the request context.
- * Frontend counterpart of backend SurfaceContextContributor.
- *
- * Copilot-scoped — registered only in the copilot bundle.
- */
-export default class UaiCopilotSurfaceRequestContextContributor
-    implements UaiRequestContextContributorApi
-{
-    async contribute(context: UaiRequestContext): Promise<void> {
-        context.add({
-            description: "surface",
-            value: JSON.stringify({ surface: "copilot" }),
+    async getEntity(idOrAlias: string): Promise<UaiTestFeatureEntityData | undefined> {
+        const response = await PromptsService.getPromptByIdOrAlias({
+            promptIdOrAlias: idOrAlias
         });
+        // ... map to UaiTestFeatureEntityData
     }
-
-    destroy(): void { /* no-op */ }
 }
 ```
 
-Register in copilot manifests. For now, no condition needed since it's only registered in the copilot bundle. Later, when conditions are needed, they can be added.
+### Phase 4: Agent Package - Implement Repository
 
-### Step 7: Update copilot to use UaiRequestContextCollector
+**Files to create:**
+- `Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client/src/test/agent-test-entity.repository.ts`
+  - Same pattern as Prompt repository
+  - Fetches agents via `AgentsService.getAgents()` and `AgentsService.getAgentByIdOrAlias()`
+  - Uses `icon: "icon-robot"`
 
-**Updated file:** `Umbraco.AI.Agent.Copilot/src/.../Client/src/copilot/copilot.context.ts`
+- `Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client/src/manifests/test-entity.manifests.ts`
+  - `alias: "Uai.Repository.TestFeatureEntity.Agent"`
+  - `meta.testFeatureType: "agent-tool-test"` (must match backend feature ID)
 
-Replace the hardcoded context assembly in `sendUserMessage()`:
+### Phase 5: Backend Model Changes
 
+**Files to modify:**
+- `Umbraco.AI/src/Umbraco.AI.Web/Api/Management/Test/Models/TestTargetModel.cs`
+  - Simplify to: `public string TargetId { get; set; } = string.Empty;`
+  - Remove `IsAlias` property
+
+**Regenerate OpenAPI client:**
+```bash
+cd Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client
+npm run generate-client
+```
+
+**Commit strategy:**
+- Backend model change + OpenAPI regeneration = one commit
+- Allows frontend to reference updated types
+
+### Phase 6: Update Test Workspace Editor
+
+**Files to modify:**
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/test/workspace/test/views/test-workspace-editor.element.ts`
+
+**Changes:**
+1. Replace target input section (lines 332-348):
+```html
+<uui-form-layout-item>
+    <uui-label for="target" slot="label" required>Target</uui-label>
+    <uai-test-feature-entity-picker
+        id="target"
+        .testFeatureId=${this._model.testFeatureId}
+        .value=${this._model.target.targetId}
+        @change=${this.#onTargetChange}
+    ></uai-test-feature-entity-picker>
+    <small slot="description">Select the entity to test (prompt, agent, etc.)</small>
+</uui-form-layout-item>
+```
+
+2. Replace handler methods:
 ```typescript
-// Before:
-async sendUserMessage(content: string): Promise<void> {
-    const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
-    const context: Array<{ description: string; value: string }> = [];
-    // ... hardcoded context items ...
-    this.#runController.sendUserMessage(content, context);
-}
-
-// After:
-async sendUserMessage(content: string): Promise<void> {
-    const context = await this.#requestContextCollector.collect();
-    this.#runController.sendUserMessage(content, context);
+#onTargetChange(event: UmbChangeEvent) {
+    event.stopPropagation();
+    const picker = event.target as UaiTestFeatureEntityPickerElement;
+    this.#workspaceContext?.handleCommand(
+        new UaiPartialUpdateCommand<UaiTestDetailModel>(
+            { target: { targetId: picker.value ?? "" } },
+            "target",
+        ),
+    );
 }
 ```
 
-The copilot constructor creates a `UaiRequestContextCollector` instance. The hardcoded section/entity/surface logic is removed — the registered contributors handle it.
+3. Remove obsolete handlers:
+   - Delete `#onTargetIdChange`
+   - Delete `#onTargetIsAliasChange`
 
-### Step 8: Update exports
+4. Update imports:
+   - Add import for `UaiTestFeatureEntityPickerElement`
 
-**Updated file:** `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/request-context/exports.ts`
+### Phase 7: Update TypeScript Types
 
-Add exports for the new types:
+**Files to modify:**
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/test/types.ts`
+  - Update `UaiTestDetailModel.target` type to match simplified `TestTargetModel`
+  - Change from `{ targetId: string; isAlias: boolean }` to just `{ targetId: string }`
 
-```typescript
-export { type UaiRequestContextItem, createEntityContextItem, createSelectionContextItem } from "./index.js";
-export {
-    UaiRequestContext,
-    type UaiRequestContextContributorApi,
-    type ManifestUaiRequestContextContributor,
-} from "./extension-type.js";
-export { UaiRequestContextCollector } from "./request-context-collector.js";
-```
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/test/type-mapper.ts`
+  - Update mapper functions to handle simplified target model
+  - Remove any `isAlias` mapping logic
 
-### Step 9: Update `@umbraco-ai/core` type declarations
+## Testing Plan
 
-The types file that add-on packages consume (`types/umbraco-ai-core-types.d.ts` or equivalent) needs to export `UaiRequestContextContributorApi`, `ManifestUaiRequestContextContributor`, and `UaiRequestContextCollector` so the Copilot and other consumers can import them.
+### Unit Testing (Manual)
 
-## File Summary
+1. **Core Package - Picker Element:**
+   - ✅ Renders empty state when no `testFeatureId`
+   - ✅ Shows "no repository" message when feature type has no provider
+   - ✅ Loads and displays selected entity from repository
+   - ✅ Opens modal and shows available entities
+   - ✅ Selection updates model and fires change event
+   - ✅ Remove button clears selection
 
-| File | Action | Package |
-|------|--------|---------|
-| `request-context/extension-type.ts` | **New** — manifest type + API interface | Core |
-| `request-context/request-context-collector.ts` | **New** — collector class | Core |
-| `request-context/contributors/section.contributor.ts` | **New** — section contributor | Core |
-| `request-context/contributors/entity.contributor.ts` | **New** — entity contributor | Core |
-| `request-context/manifests.ts` | **New** — manifest registrations | Core |
-| `request-context/exports.ts` | **Edit** — add new exports | Core |
-| `request-context/index.ts` | **Edit** — add new re-exports | Core |
-| `manifests.ts` (root) | **Edit** — add `requestContextManifests` | Core |
-| `copilot/contributors/surface.contributor.ts` | **New** — surface contributor | Copilot |
-| `copilot/manifests.ts` | **Edit** — add surface contributor manifest | Copilot |
-| `copilot/copilot.context.ts` | **Edit** — use `UaiRequestContextCollector` | Copilot |
+2. **Prompt Package - Repository:**
+   - ✅ Fetches all prompts via API
+   - ✅ Resolves single prompt by alias/ID
+   - ✅ Manifest is registered in extension registry
+   - ✅ Picker shows prompts when feature type is "prompt-completion"
 
-## Not In Scope
+3. **Agent Package - Repository:**
+   - ✅ Fetches all agents via API
+   - ✅ Resolves single agent by alias/ID
+   - ✅ Manifest is registered in extension registry
+   - ✅ Picker shows agents when feature type is "agent-tool-test"
 
-- **Conditions on contributors** — The infrastructure supports conditions via the extension registry, but no custom condition types are defined in this pass. Core contributors are unconditional. The copilot surface contributor is scoped by being in the copilot bundle.
-- **Prompt package integration** — The Prompt package can consume `UaiRequestContextCollector` when it needs context for prompt execution. That's a separate task.
-- **Ordering guarantees** — Contributors use `weight` for ordering, matching Umbraco's extension registry pattern. No explicit pipeline ordering like the backend's `OrderedCollectionBuilder`.
+### Integration Testing
+
+1. **Create Test with Prompt:**
+   - Create new test
+   - Select "Prompt Completion" feature type
+   - Target picker shows list of prompts
+   - Select a prompt
+   - Save test
+   - Verify `targetId` is saved correctly
+
+2. **Create Test with Agent:**
+   - Create new test
+   - Select "Agent Tool Test" feature type
+   - Target picker shows list of agents
+   - Select an agent
+   - Save test
+   - Verify `targetId` is saved correctly
+
+3. **Edit Existing Test:**
+   - Open existing test
+   - Verify selected entity is displayed
+   - Change entity selection
+   - Save changes
+   - Verify updated `targetId`
+
+4. **Feature Type Change:**
+   - Create test with prompt selected
+   - Change feature type to agent
+   - Verify target picker updates to show agents
+   - Verify previous selection is cleared
+
+5. **Package Not Installed:**
+   - Select feature type for package not installed
+   - Verify picker shows appropriate message
+   - No errors in console
+
+## Benefits
+
+✅ **Package independence** - Test framework doesn't know about entity types
+✅ **Extensibility** - New packages can add providers via manifests
+✅ **Type safety** - TypeScript interfaces throughout
+✅ **Follows established patterns** - Mirrors `uai-tool-picker` approach
+✅ **Reuses existing infrastructure** - `UAI_ITEM_PICKER_MODAL`, `UmbFormControlMixin`
+✅ **Simplified model** - No `isAlias` field, just `targetId`
+✅ **Graceful degradation** - Shows appropriate UI when no repository available
+✅ **Lazy loading** - Repositories only loaded when needed
+✅ **Visual selection** - Better UX than manual text input
+
+## Open Questions
+
+### 1. **Can we reuse existing Umbraco CMS picker infrastructure?**
+
+**✅ RESEARCH COMPLETE:**
+
+**CMS Picker Infrastructure Found:**
+- `@umbraco-cms/backoffice/picker` - Core picker infrastructure
+- `@umbraco-cms/backoffice/picker-data-source` - Data source interfaces
+- `UmbPickerDataSource` interface (extends `UmbItemRepository`)
+- `UmbItemRepository` interface with `requestItems(uniques: string[])` method
+- Entity data picker property editor (`entity-data-picker`)
+
+**CMS Pattern:**
+- Designed primarily for property editors (content, media, member pickers)
+- Uses `UmbItemRepository.requestItems(uniques[])` - fetch items by known IDs
+- Requires data source, item store, and complex repository setup
+- Works with entity types that have unique IDs
+
+**Our Pattern (uai-tool-picker):**
+- Simple repository with `getEntities()` - list all available items
+- Lightweight - no store, no complex setup
+- Uses existing `UAI_ITEM_PICKER_MODAL` we already have
+- Already proven pattern in our codebase
+
+**DECISION: Use custom implementation (Phases 1-7)**
+
+**Rationale:**
+1. **Different use case**: We need "list all entities of type X" not "fetch these specific IDs"
+2. **Simpler requirements**: No need for stores, caching, or complex repository patterns
+3. **Consistency**: Matches our existing `uai-tool-picker` pattern exactly
+4. **Less coupling**: Don't depend on CMS property editor infrastructure
+5. **Proven approach**: `uai-tool-picker` already works well with this pattern
+6. **Lightweight**: Repository just wraps API calls, no additional infrastructure
+
+**What we learned from CMS:**
+- Confirmed repository + manifest pattern is the right approach
+- CMS uses similar extension registry pattern for data sources
+- Our simpler approach is appropriate for our use case
+
+### 2. **Backend test feature type IDs**
+
+Need to verify exact feature type IDs from backend:
+- Prompt tests: `"prompt-completion"` or different?
+- Agent tests: `"agent-tool-test"` or different?
+- Must match exactly for repository lookup
+
+### 3. **Icon customization**
+
+Current approach hardcodes icons per package:
+- Prompt: `"icon-script-alt"`
+- Agent: `"icon-robot"`
+
+**Options:**
+- Keep hardcoded (simple, consistent)
+- Allow repositories to specify icons per entity (flexible, more complex)
+- Use entity type icons from backend (requires backend changes)
+
+**Recommendation:** Keep hardcoded for v1, add per-entity icons if needed later
+
+### 4. **Error handling**
+
+When repository fetch fails:
+- Show error message to user?
+- Fall back to text input?
+- Log to console and show empty state?
+
+**Recommendation:** Log error, show empty state with message "Unable to load entities"
+
+## Migration Strategy
+
+**Existing Tests:**
+- Tests with `target.isAlias` field need migration
+- Can be done automatically via data migration
+- Or handle gracefully in frontend (ignore `isAlias` if present)
+
+**Backwards Compatibility:**
+- Frontend should handle old model structure temporarily
+- Backend should accept both old and new structures during transition
+- Remove old structure after full migration
+
+## Next Steps
+
+1. **✅ PHASE 0: Research existing CMS infrastructure**
+   - Search Umbraco CMS codebase for picker patterns
+   - Check backoffice package for generic entity pickers
+   - Evaluate if CMS solutions fit our needs
+
+2. **Decision Point:**
+   - If CMS infrastructure suitable → Adapt plan to use CMS patterns
+   - If custom implementation needed → Proceed with Phases 1-7
+
+3. **Verify backend feature type IDs**
+   - Check exact string values used in backend
+   - Update manifest registrations to match
+
+4. **Implementation order:**
+   - Core contracts → Core picker → Backend changes → Prompt repo → Agent repo → Workspace editor

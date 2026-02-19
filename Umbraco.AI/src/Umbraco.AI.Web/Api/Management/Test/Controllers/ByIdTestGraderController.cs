@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Tests;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 using Umbraco.AI.Web.Api.Management.Test.Models;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
@@ -14,6 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[UmbracoAIVersionedManagementApiRoute("test-graders")]
 public class ByIdTestGraderController : TestControllerBase
 {
     private readonly AITestGraderCollection _testGraders;
@@ -34,7 +36,7 @@ public class ByIdTestGraderController : TestControllerBase
     /// <param name="id">The unique identifier of the test grader.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The test grader details with configuration schema.</returns>
-    [HttpGet("test-graders/{id}")]
+    [HttpGet("{id}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestGraderResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

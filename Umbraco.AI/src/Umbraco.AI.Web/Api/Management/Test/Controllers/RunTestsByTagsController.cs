@@ -36,7 +36,7 @@ public class RunTestsByTagsController : TestControllerBase
     /// <param name="requestModel">The tags execution request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Batch execution results with metrics for each matching test.</returns>
-    [HttpPost("execute-by-tags")]
+    [HttpPost("run-by-tags")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestBatchResultsResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

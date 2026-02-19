@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, CompareVersionsData, CompareVersionsErrors, CompareVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, ConnectionAliasExistsData, ConnectionAliasExistsErrors, ConnectionAliasExistsResponses, ContextAliasExistsData, ContextAliasExistsErrors, ContextAliasExistsResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, CreateTestData, CreateTestErrors, CreateTestResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, DeleteTestData, DeleteTestErrors, DeleteTestResponses, DeleteTestRunData, DeleteTestRunErrors, DeleteTestRunResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAllTestFeaturesData, GetAllTestFeaturesErrors, GetAllTestFeaturesResponses, GetAllTestGradersData, GetAllTestGradersErrors, GetAllTestGradersResponses, GetAllTestRunsData, GetAllTestRunsErrors, GetAllTestRunsResponses, GetAllTestsData, GetAllTestsErrors, GetAllTestsResponses, GetAllToolScopesData, GetAllToolScopesErrors, GetAllToolScopesResponses, GetAllToolsData, GetAllToolsErrors, GetAllToolsResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetLatestTestRunData, GetLatestTestRunErrors, GetLatestTestRunResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSupportedEntityTypesData, GetSupportedEntityTypesErrors, GetSupportedEntityTypesResponses, GetTestByIdOrAliasData, GetTestByIdOrAliasErrors, GetTestByIdOrAliasResponses, GetTestFeatureByIdData, GetTestFeatureByIdErrors, GetTestFeatureByIdResponses, GetTestRunByIdData, GetTestRunByIdErrors, GetTestRunByIdResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, GetVersionData, GetVersionErrors, GetVersionHistoryData, GetVersionHistoryErrors, GetVersionHistoryResponses, GetVersionResponses, ProfileAliasExistsData, ProfileAliasExistsErrors, ProfileAliasExistsResponses, RollbackToVersionData, RollbackToVersionErrors, RollbackToVersionResponses, RunTestBatchData, RunTestBatchErrors, RunTestBatchResponses, RunTestData, RunTestErrors, RunTestResponses, RunTestsByTagsData, RunTestsByTagsErrors, RunTestsByTagsResponses, SetBaselineTestRunData, SetBaselineTestRunErrors, SetBaselineTestRunResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses, UpdateSettingsData, UpdateSettingsErrors, UpdateSettingsResponses, UpdateTestData, UpdateTestErrors, UpdateTestResponses } from './types.gen';
+import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, CompareVersionsData, CompareVersionsErrors, CompareVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, ConnectionAliasExistsData, ConnectionAliasExistsErrors, ConnectionAliasExistsResponses, ContextAliasExistsData, ContextAliasExistsErrors, ContextAliasExistsResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, CreateTestData, CreateTestErrors, CreateTestResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, DeleteTestData, DeleteTestErrors, DeleteTestResponses, DeleteTestRunData, DeleteTestRunErrors, DeleteTestRunResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAllTestFeaturesData, GetAllTestFeaturesErrors, GetAllTestFeaturesResponses, GetAllTestGradersData, GetAllTestGradersErrors, GetAllTestGradersResponses, GetAllTestRunsData, GetAllTestRunsErrors, GetAllTestRunsResponses, GetAllTestsData, GetAllTestsErrors, GetAllTestsResponses, GetAllToolScopesData, GetAllToolScopesErrors, GetAllToolScopesResponses, GetAllToolsData, GetAllToolsErrors, GetAllToolsResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetLatestTestRunData, GetLatestTestRunErrors, GetLatestTestRunResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSupportedEntityTypesData, GetSupportedEntityTypesErrors, GetSupportedEntityTypesResponses, GetTestByIdOrAliasData, GetTestByIdOrAliasErrors, GetTestByIdOrAliasResponses, GetTestFeatureByIdData, GetTestFeatureByIdErrors, GetTestFeatureByIdResponses, GetTestGraderByIdData, GetTestGraderByIdErrors, GetTestGraderByIdResponses, GetTestRunByIdData, GetTestRunByIdErrors, GetTestRunByIdResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, GetVersionData, GetVersionErrors, GetVersionHistoryData, GetVersionHistoryErrors, GetVersionHistoryResponses, GetVersionResponses, ProfileAliasExistsData, ProfileAliasExistsErrors, ProfileAliasExistsResponses, RollbackToVersionData, RollbackToVersionErrors, RollbackToVersionResponses, RunTestBatchData, RunTestBatchErrors, RunTestBatchResponses, RunTestData, RunTestErrors, RunTestResponses, RunTestsByTagsData, RunTestsByTagsErrors, RunTestsByTagsResponses, SetBaselineTestRunData, SetBaselineTestRunErrors, SetBaselineTestRunResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses, UpdateSettingsData, UpdateSettingsErrors, UpdateSettingsResponses, UpdateTestData, UpdateTestErrors, UpdateTestResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -595,6 +595,58 @@ export class SettingsService {
 }
 
 export class TestsService {
+    public static getAllTestFeatures<ThrowOnError extends boolean = false>(options?: Options<GetAllTestFeaturesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllTestFeaturesResponses, GetAllTestFeaturesErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/test-features',
+            ...options
+        });
+    }
+    
+    public static getTestFeatureById<ThrowOnError extends boolean = false>(options: Options<GetTestFeatureByIdData, ThrowOnError>) {
+        return (options.client ?? client).get<GetTestFeatureByIdResponses, GetTestFeatureByIdErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/test-features/{id}',
+            ...options
+        });
+    }
+    
+    public static getAllTestGraders<ThrowOnError extends boolean = false>(options?: Options<GetAllTestGradersData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllTestGradersResponses, GetAllTestGradersErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/test-graders',
+            ...options
+        });
+    }
+    
+    public static getTestGraderById<ThrowOnError extends boolean = false>(options: Options<GetTestGraderByIdData, ThrowOnError>) {
+        return (options.client ?? client).get<GetTestGraderByIdResponses, GetTestGraderByIdErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/test-graders/{id}',
+            ...options
+        });
+    }
+    
     public static getAllTestRuns<ThrowOnError extends boolean = false>(options?: Options<GetAllTestRunsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllTestRunsResponses, GetAllTestRunsErrors, ThrowOnError>({
             security: [
@@ -775,7 +827,7 @@ export class TestsService {
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/tests/execute-batch',
+            url: '/umbraco/ai/management/api/v1/tests/run-batch',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -792,51 +844,12 @@ export class TestsService {
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/tests/execute-by-tags',
+            url: '/umbraco/ai/management/api/v1/tests/run-by-tags',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
                 ...options?.headers
             }
-        });
-    }
-    
-    public static getAllTestFeatures<ThrowOnError extends boolean = false>(options?: Options<GetAllTestFeaturesData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetAllTestFeaturesResponses, GetAllTestFeaturesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/tests/test-features',
-            ...options
-        });
-    }
-    
-    public static getTestFeatureById<ThrowOnError extends boolean = false>(options: Options<GetTestFeatureByIdData, ThrowOnError>) {
-        return (options.client ?? client).get<GetTestFeatureByIdResponses, GetTestFeatureByIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/tests/test-features/{id}',
-            ...options
-        });
-    }
-    
-    public static getAllTestGraders<ThrowOnError extends boolean = false>(options?: Options<GetAllTestGradersData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetAllTestGradersResponses, GetAllTestGradersErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/tests/test-graders',
-            ...options
         });
     }
 }

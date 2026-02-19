@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Tests;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 using Umbraco.AI.Web.Api.Management.Test.Models;
 using Umbraco.AI.Web.Authorization;
 
@@ -13,6 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[UmbracoAIVersionedManagementApiRoute("test-features")]
 public class AllTestFeaturesController : TestControllerBase
 {
     private readonly AITestFeatureCollection _testFeatures;
@@ -30,7 +32,7 @@ public class AllTestFeaturesController : TestControllerBase
     /// Test features are discovered via the [AITestFeature] attribute and registered in DI.
     /// </summary>
     /// <returns>List of available test features.</returns>
-    [HttpGet("test-features")]
+    [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<TestFeatureInfoModel>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<TestFeatureInfoModel>> GetAllTestFeatures()

@@ -7,6 +7,7 @@ import type {
 import type { UaiTestGraderConfig } from "../../types.js";
 import { createEmptyGraderConfig } from "../../types.js";
 import type { EditableModelSchemaModel } from "../../../api/types.gen.js";
+import { TestsService } from "../../../api/sdk.gen.js";
 
 @customElement("uai-grader-config-editor-modal")
 export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
@@ -47,18 +48,11 @@ export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
         }
 
         try {
-            const response = await fetch(
-                `/umbraco/ai/management/api/v1/test-graders/${this.data.graderTypeId}`
-            );
+            const { data } = await TestsService.getTestGraderById({
+                path: { id: this.data.graderTypeId },
+            });
 
-            if (!response.ok) {
-                console.error("Failed to fetch grader schema");
-                this._loading = false;
-                return;
-            }
-
-            const graderInfo = await response.json();
-            this._schema = graderInfo.configSchema || null;
+            this._schema = data?.configSchema || null;
         } catch (error) {
             console.error("Error fetching grader schema:", error);
         } finally {

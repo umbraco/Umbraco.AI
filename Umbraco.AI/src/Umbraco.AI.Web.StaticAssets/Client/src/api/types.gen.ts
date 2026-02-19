@@ -419,6 +419,14 @@ export type TestGraderModel = {
     weight: number;
 };
 
+export type TestGraderResponseModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    type: string;
+    configSchema?: EditableModelSchemaModel | null;
+};
+
 export type TestGraderResultResponseModel = {
     graderId: string;
     passed: boolean;
@@ -1780,6 +1788,114 @@ export type UpdateSettingsResponses = {
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
 
+export type GetAllTestFeaturesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-features';
+};
+
+export type GetAllTestFeaturesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestFeaturesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestFeatureInfoModel>;
+};
+
+export type GetAllTestFeaturesResponse = GetAllTestFeaturesResponses[keyof GetAllTestFeaturesResponses];
+
+export type GetTestFeatureByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-features/{id}';
+};
+
+export type GetTestFeatureByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestFeatureByIdError = GetTestFeatureByIdErrors[keyof GetTestFeatureByIdErrors];
+
+export type GetTestFeatureByIdResponses = {
+    /**
+     * OK
+     */
+    200: TestFeatureResponseModel;
+};
+
+export type GetTestFeatureByIdResponse = GetTestFeatureByIdResponses[keyof GetTestFeatureByIdResponses];
+
+export type GetAllTestGradersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-graders';
+};
+
+export type GetAllTestGradersErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestGradersResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestGraderInfoModel>;
+};
+
+export type GetAllTestGradersResponse = GetAllTestGradersResponses[keyof GetAllTestGradersResponses];
+
+export type GetTestGraderByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-graders/{id}';
+};
+
+export type GetTestGraderByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestGraderByIdError = GetTestGraderByIdErrors[keyof GetTestGraderByIdErrors];
+
+export type GetTestGraderByIdResponses = {
+    /**
+     * OK
+     */
+    200: TestGraderResponseModel;
+};
+
+export type GetTestGraderByIdResponse = GetTestGraderByIdResponses[keyof GetTestGraderByIdResponses];
+
 export type GetAllTestRunsData = {
     body?: never;
     path?: never;
@@ -2153,7 +2269,7 @@ export type RunTestBatchData = {
     body?: RunTestBatchRequestModel;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/execute-batch';
+    url: '/umbraco/ai/management/api/v1/tests/run-batch';
 };
 
 export type RunTestBatchErrors = {
@@ -2182,7 +2298,7 @@ export type RunTestsByTagsData = {
     body?: RunTestsByTagsRequestModel;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/execute-by-tags';
+    url: '/umbraco/ai/management/api/v1/tests/run-by-tags';
 };
 
 export type RunTestsByTagsErrors = {
@@ -2206,83 +2322,6 @@ export type RunTestsByTagsResponses = {
 };
 
 export type RunTestsByTagsResponse = RunTestsByTagsResponses[keyof RunTestsByTagsResponses];
-
-export type GetAllTestFeaturesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/test-features';
-};
-
-export type GetAllTestFeaturesErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetAllTestFeaturesResponses = {
-    /**
-     * OK
-     */
-    200: Array<TestFeatureInfoModel>;
-};
-
-export type GetAllTestFeaturesResponse = GetAllTestFeaturesResponses[keyof GetAllTestFeaturesResponses];
-
-export type GetTestFeatureByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/test-features/{id}';
-};
-
-export type GetTestFeatureByIdErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type GetTestFeatureByIdError = GetTestFeatureByIdErrors[keyof GetTestFeatureByIdErrors];
-
-export type GetTestFeatureByIdResponses = {
-    /**
-     * OK
-     */
-    200: TestFeatureResponseModel;
-};
-
-export type GetTestFeatureByIdResponse = GetTestFeatureByIdResponses[keyof GetTestFeatureByIdResponses];
-
-export type GetAllTestGradersData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/test-graders';
-};
-
-export type GetAllTestGradersErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetAllTestGradersResponses = {
-    /**
-     * OK
-     */
-    200: Array<TestGraderInfoModel>;
-};
-
-export type GetAllTestGradersResponse = GetAllTestGradersResponses[keyof GetAllTestGradersResponses];
 
 export type GetAllToolsData = {
     body?: never;

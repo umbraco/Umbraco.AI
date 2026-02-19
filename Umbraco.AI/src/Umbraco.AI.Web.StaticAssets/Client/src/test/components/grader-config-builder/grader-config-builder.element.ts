@@ -5,8 +5,10 @@ import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { UAI_GRADER_CONFIG_EDITOR_MODAL } from "../../modals/grader-config-editor/index.js";
-import type { UaiTestGraderConfig, UaiTestGraderTypeInfo } from "../../types.js";
+import type { UaiTestGraderConfig } from "../../types.js";
 import { getGraderSummary } from "../../types.js";
+import { TestsService } from "../../../api/sdk.gen.js";
+import type { TestGraderInfoModel } from "../../../api/types.gen.js";
 
 @customElement("uai-grader-config-builder")
 export class UaiGraderConfigBuilderElement extends UmbLitElement {
@@ -14,19 +16,17 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
     graders: UaiTestGraderConfig[] = [];
 
     @state()
-    private _graderTypes: UaiTestGraderTypeInfo[] = [];
+    private _graders: TestGraderInfoModel[] = [];
 
     override async connectedCallback() {
         super.connectedCallback();
-        await this.#fetchGraderTypes();
+        await this.#fetchGraders();
     }
 
-    async #fetchGraderTypes() {
+    async #fetchGraders() {
         try {
-            const response = await fetch("/umbraco/ai/management/api/v1/test-graders");
-            if (response.ok) {
-                this._graderTypes = await response.json();
-            }
+            const { data } = await TestsService.getAllTestGraders();
+            this._graders = data ?? [];
         } catch (error) {
             console.error("Failed to fetch grader types:", error);
         }
@@ -39,7 +39,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
         // Step 1: Pick grader type using existing item picker modal
         const typeModal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
-                fetchItems: () => this.#getGraderTypeItems(),
+                fetchItems: () => this.#getGraderItems(),
                 selectionMode: "single",
                 title: "Select Grader",
             },
@@ -73,7 +73,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
         if (!modalManager) return;
 
         // Get grader type name
-        const typeName = this._graderTypes.find((t) => t.id === grader.graderTypeId)?.name;
+        const typeName = this._graders.find((t) => t.id === grader.graderTypeId)?.name;
 
         // Open config editor directly (skip type picker)
         const modal = modalManager.open(this, UAI_GRADER_CONFIG_EDITOR_MODAL, {
@@ -100,17 +100,17 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
         this.dispatchEvent(new UmbChangeEvent());
     }
 
-    async #getGraderTypeItems(): Promise<UaiPickableItemModel[]> {
-        return this._graderTypes.map((type) => ({
+    async #getGraderItems(): Promise<UaiPickableItemModel[]> {
+        return this._graders.map((type) => ({
             value: type.id,
             label: type.name,
-            description: type.description,
+            description: type.description || undefined,
             meta: { type: type.type },
         }));
     }
 
     #getGraderDetail(grader: UaiTestGraderConfig): string {
-        const typeName = this._graderTypes.find((t) => t.id === grader.graderTypeId)?.name;
+        const typeName = this._graders.find((t) => t.id === grader.graderTypeId)?.name;
         return getGraderSummary(grader, typeName);
     }
 

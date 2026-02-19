@@ -8,6 +8,7 @@ export * from "./request-context/exports.js";
 export * from "./tool/exports.js";
 export * from "./workspace-registry/exports.js";
 export * from "./section/exports.js";
+export * from "./test/exports.js";
 export * from "./constants.js";
 
 // Export client ready promise for nested packages to wait on

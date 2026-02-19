@@ -152,4 +152,12 @@ export default {
     uaiUserGroupPermissions: {
         headline: "User Group Permissions",
     },
+    uaiTest: {
+        selectTargetEntity: "Select Target Entity",
+        selectTarget: "Select Target",
+        selectTestTypeFirst: "Select a test type first to choose a target entity.",
+        noEntitiesAvailable: "No entities available for this test type",
+        noEntitiesAvailableForType: "No entities available for this test type.",
+        ensurePackageInstalled: "Make sure the required package is installed.",
+    },
 } as UmbLocalizationDictionary;

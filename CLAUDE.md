@@ -13,6 +13,9 @@ This is a monorepo containing Umbraco.AI and its add-on packages:
 | **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`            |
 | **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`         |
 | **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/`    |
+| **Umbraco.AI.Deploy**           | Deploy support for AI entities             | `Umbraco.AI.Deploy/`           |
+| **Umbraco.AI.Deploy.Prompt**    | Deploy support for prompts                 | `Umbraco.AI.Deploy.Prompt/`    |
+| **Umbraco.AI.Deploy.Agent**     | Deploy support for agents                  | `Umbraco.AI.Deploy.Agent/`     |
 | **Umbraco.AI.OpenAI**           | OpenAI provider plugin                     | `Umbraco.AI.OpenAI/`           |
 | **Umbraco.AI.Anthropic**        | Anthropic provider plugin                  | `Umbraco.AI.Anthropic/`        |
 | **Umbraco.AI.Amazon**           | Amazon Bedrock provider plugin             | `Umbraco.AI.Amazon/`           |
@@ -144,6 +147,9 @@ dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
 dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
 dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
 dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
+dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.sln
+dotnet build Umbraco.AI.Deploy.Prompt/Umbraco.AI.Deploy.Prompt.sln
+dotnet build Umbraco.AI.Deploy.Agent/Umbraco.AI.Deploy.Agent.sln
 
 # Run tests for a product
 dotnet test Umbraco.AI/Umbraco.AI.sln
@@ -198,9 +204,12 @@ Umbraco.AI (Core)
     ├── Umbraco.AI.Google (Provider - depends on Core)
     ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
-    └── Umbraco.AI.Agent (Add-on - depends on Core)
-            ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
-            └── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
+    │   └── Umbraco.AI.Deploy.Prompt (Deploy - depends on Prompt + Deploy)
+    ├── Umbraco.AI.Agent (Add-on - depends on Core)
+    │   ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
+    │   ├── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
+    │   └── Umbraco.AI.Deploy.Agent (Deploy - depends on Agent + Deploy)
+    └── Umbraco.AI.Deploy (Deploy - depends on Core)
 ```
 
 ### Standard Project Structure

@@ -34,6 +34,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
 
     async #onAdd() {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
 
         // Step 1: Pick grader type using existing item picker modal
         const typeModal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
@@ -69,6 +70,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
 
     async #onEdit(grader: UaiTestGraderConfig) {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
 
         // Get grader type name
         const typeName = this._graderTypes.find((t) => t.id === grader.graderTypeId)?.name;

@@ -58,7 +58,7 @@ internal class EfCoreAITestRepository : IAITestRepository
     public async Task<(IEnumerable<AITest> Items, int Total)> GetPagedAsync(
         string? filter = null,
         string? testTypeId = null,
-        bool? isEnabled = null,
+        bool? isActive = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
@@ -75,10 +75,10 @@ internal class EfCoreAITestRepository : IAITestRepository
                 query = query.Where(t => t.TestTypeId == testTypeId);
             }
 
-            // Apply enabled filter
-            if (isEnabled.HasValue)
+            // Apply active filter
+            if (isActive.HasValue)
             {
-                query = query.Where(t => t.IsEnabled == isEnabled.Value);
+                query = query.Where(t => t.IsActive == isActive.Value);
             }
 
             // Apply name filter (case-insensitive contains)

@@ -61,9 +61,9 @@ internal class AITestEntity
     public string? Tags { get; set; }
 
     /// <summary>
-    /// Whether this test is enabled.
+    /// Whether this test is active.
     /// </summary>
-    public bool IsEnabled { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     /// Optional baseline run ID for regression detection.

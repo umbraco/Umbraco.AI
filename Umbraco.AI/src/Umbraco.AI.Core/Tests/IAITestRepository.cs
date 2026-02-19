@@ -26,7 +26,7 @@ internal interface IAITestRepository
     /// </summary>
     /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
     /// <param name="testTypeId">Optional test type to filter by.</param>
-    /// <param name="isEnabled">Optional enabled status filter.</param>
+    /// <param name="isActive">Optional active status filter.</param>
     /// <param name="skip">Number of items to skip.</param>
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -34,7 +34,7 @@ internal interface IAITestRepository
     Task<(IEnumerable<AITest> Items, int Total)> GetPagedAsync(
         string? filter = null,
         string? testTypeId = null,
-        bool? isEnabled = null,
+        bool? isActive = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);

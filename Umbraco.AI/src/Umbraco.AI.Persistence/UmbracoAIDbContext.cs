@@ -629,7 +629,7 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 
-            entity.Property(e => e.IsEnabled)
+            entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValue(true);
 
@@ -652,7 +652,7 @@ public class UmbracoAIDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.TestTypeId);
-            entity.HasIndex(e => e.IsEnabled);
+            entity.HasIndex(e => e.IsActive);
         });
 
         modelBuilder.Entity<AITestRunEntity>(entity =>

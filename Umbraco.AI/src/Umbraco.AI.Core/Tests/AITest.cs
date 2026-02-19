@@ -63,10 +63,10 @@ public sealed class AITest : IAIVersionableEntity
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 
     /// <summary>
-    /// Whether this test is enabled for execution.
-    /// Disabled tests are skipped during batch runs.
+    /// Whether this test is active for execution.
+    /// Inactive tests are skipped during batch runs.
     /// </summary>
-    public bool IsEnabled { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     /// Optional baseline run ID for regression detection.

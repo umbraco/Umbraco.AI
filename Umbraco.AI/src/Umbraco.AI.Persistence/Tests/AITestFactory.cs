@@ -41,7 +41,7 @@ internal static class AITestFactory
             Graders = graders,
             RunCount = entity.RunCount,
             Tags = tags,
-            IsEnabled = entity.IsEnabled,
+            IsActive = entity.IsActive,
             BaselineRunId = entity.BaselineRunId,
             Version = entity.Version,
             DateCreated = entity.DateCreated,
@@ -69,7 +69,7 @@ internal static class AITestFactory
             GradersJson = test.Graders.Count > 0 ? JsonSerializer.Serialize(test.Graders) : null,
             RunCount = test.RunCount,
             Tags = test.Tags.Count > 0 ? string.Join(',', test.Tags) : null,
-            IsEnabled = test.IsEnabled,
+            IsActive = test.IsActive,
             BaselineRunId = test.BaselineRunId,
             Version = test.Version,
             DateCreated = test.DateCreated,
@@ -94,7 +94,7 @@ internal static class AITestFactory
         entity.GradersJson = test.Graders.Count > 0 ? JsonSerializer.Serialize(test.Graders) : null;
         entity.RunCount = test.RunCount;
         entity.Tags = test.Tags.Count > 0 ? string.Join(',', test.Tags) : null;
-        entity.IsEnabled = test.IsEnabled;
+        entity.IsActive = test.IsActive;
         entity.BaselineRunId = test.BaselineRunId;
         entity.Version = test.Version;
         entity.DateModified = test.DateModified;

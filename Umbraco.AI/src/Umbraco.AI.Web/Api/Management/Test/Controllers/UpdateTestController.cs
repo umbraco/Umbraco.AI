@@ -111,7 +111,7 @@ public class UpdateTestController : TestControllerBase
             }).ToList(),
             RunCount = requestModel.RunCount,
             Tags = requestModel.Tags.ToList(),
-            IsEnabled = existing.IsEnabled,
+            IsActive = existing.IsActive,
             BaselineRunId = existing.BaselineRunId,
             DateCreated = existing.DateCreated,
             DateModified = DateTime.UtcNow,

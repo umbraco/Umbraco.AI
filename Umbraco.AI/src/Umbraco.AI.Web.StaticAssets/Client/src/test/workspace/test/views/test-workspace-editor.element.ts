@@ -6,7 +6,8 @@ import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
 import { UAI_TEST_WORKSPACE_ALIAS } from "../../../constants.js";
-import type { TestResponseModel, TestGraderModel, TestFeatureInfoModel, TestGraderInfoModel } from "../../../../api/types.gen.js";
+import type { TestGraderModel, TestFeatureInfoModel, TestGraderInfoModel } from "../../../../api/types.gen.js";
+import type { UaiTestDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
 import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../../test-root/paths.js";
 import { AITestRepository } from "../../../repository/test.repository.js";
@@ -18,7 +19,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 	#repository!: AITestRepository;
 
 	@state()
-	private _model?: TestResponseModel;
+	private _model?: UaiTestDetailModel;
 
 	@state()
 	private _isNew?: boolean;
@@ -94,11 +95,11 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		if (this._aliasLocked && this._isNew) {
 			const alias = this.#generateAlias(name);
 			this.#workspaceContext?.handleCommand(
-				new UaiPartialUpdateCommand<TestResponseModel>({ name, alias }, "name-alias"),
+				new UaiPartialUpdateCommand<UaiTestDetailModel>({ name, alias }, "name-alias"),
 			);
 		} else {
 			this.#workspaceContext?.handleCommand(
-				new UaiPartialUpdateCommand<TestResponseModel>({ name }, "name"),
+				new UaiPartialUpdateCommand<UaiTestDetailModel>({ name }, "name"),
 			);
 		}
 	}
@@ -109,7 +110,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		const alias = target.value.toString();
 
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ alias }, "alias"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ alias }, "alias"),
 		);
 	}
 
@@ -127,14 +128,14 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 	#onDescriptionChange(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ description: target.value || null }, "description"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ description: target.value || null }, "description"),
 		);
 	}
 
 	#onTestFeatureChange(event: Event) {
 		const target = event.target as HTMLSelectElement;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ testFeatureId: target.value }, "testFeatureId"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testFeatureId: target.value }, "testFeatureId"),
 		);
 	}
 
@@ -142,7 +143,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		const target = event.target as HTMLInputElement;
 		if (!this._model) return;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>(
+			new UaiPartialUpdateCommand<UaiTestDetailModel>(
 				{
 					target: {
 						targetId: target.value,
@@ -158,7 +159,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		const target = event.target as HTMLInputElement;
 		if (!this._model) return;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>(
+			new UaiPartialUpdateCommand<UaiTestDetailModel>(
 				{
 					target: {
 						targetId: this._model.target.targetId,
@@ -173,7 +174,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 	#onTestCaseJsonChange(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ testCaseJson: target.value }, "testCaseJson"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testCaseJson: target.value }, "testCaseJson"),
 		);
 	}
 
@@ -181,7 +182,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		const target = event.target as HTMLInputElement;
 		const runCount = parseInt(target.value) || 1;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ runCount }, "runCount"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ runCount }, "runCount"),
 		);
 	}
 
@@ -194,7 +195,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 			return;
 		}
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ tags: [...this._model.tags, this._tagInput] }, "tags"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ tags: [...this._model.tags, this._tagInput] }, "tags"),
 		);
 		this._tagInput = "";
 	}
@@ -202,7 +203,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 	#onRemoveTag(tag: string) {
 		if (!this._model) return;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>(
+			new UaiPartialUpdateCommand<UaiTestDetailModel>(
 				{ tags: this._model.tags.filter((t) => t !== tag) },
 				"tags",
 			),
@@ -222,14 +223,14 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 			weight: 1.0,
 		};
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ graders: [...this._model.graders, newGrader] }, "graders"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ graders: [...this._model.graders, newGrader] }, "graders"),
 		);
 	}
 
 	#onRemoveGrader(index: number) {
 		if (!this._model) return;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>(
+			new UaiPartialUpdateCommand<UaiTestDetailModel>(
 				{ graders: this._model.graders.filter((_, i) => i !== index) },
 				"graders",
 			),
@@ -241,7 +242,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		const updated = [...this._model.graders];
 		(updated[index] as any)[field] = value;
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<TestResponseModel>({ graders: updated }, "graders"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ graders: updated }, "graders"),
 		);
 	}
 

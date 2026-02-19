@@ -1,637 +1,654 @@
-import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
-import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
-import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
+import { css, html, customElement, state, when, nothing, repeat } from "@umbraco-cms/backoffice/external/lit";
+import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
+import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
+import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
+import { UAI_TEST_WORKSPACE_ALIAS } from "../../../constants.js";
+import type { TestResponseModel, TestGraderModel, TestFeatureInfoModel, TestGraderInfoModel } from "../../../../api/types.gen.js";
+import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
+import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../../test-root/paths.js";
 import { AITestRepository } from "../../../repository/test.repository.js";
-import type {
-    CreateTestRequestModel,
-    UpdateTestRequestModel,
-    TestGraderModel,
-    TestFeatureInfoModel,
-    TestGraderInfoModel,
-} from "../../../../api/types.gen.js";
 
-/**
- * Test editor workspace for creating and editing AI tests.
- */
 @customElement("umbraco-ai-test-workspace-editor")
-export class UmbracoAITestWorkspaceEditorElement extends UmbElementMixin(LitElement) {
-    @property({ type: String })
-    testId?: string;
-
-    @state()
-    private _isLoading = true;
-
-    @state()
-    private _isSaving = false;
-
-    @state()
-    private _testFeatures: TestFeatureInfoModel[] = [];
-
-    @state()
-    private _testGraders: TestGraderInfoModel[] = [];
-
-    // Form fields
-    @state()
-    private _alias = "";
-
-    @state()
-    private _name = "";
-
-    @state()
-    private _description = "";
-
-    @state()
-    private _testFeatureId = "";
-
-    @state()
-    private _targetId = "";
-
-    @state()
-    private _targetIsAlias = false;
-
-    @state()
-    private _testCaseJson = "{}";
-
-    @state()
-    private _graders: TestGraderModel[] = [];
-
-    @state()
-    private _runCount = 3;
-
-    @state()
-    private _tags: string[] = [];
-
-    @state()
-    private _tagInput = "";
-
-    private _repository!: AITestRepository;
-
-    constructor() {
-        super();
-        this._repository = new AITestRepository(this);
-    }
-
-    async connectedCallback() {
-        super.connectedCallback();
-        await this._loadMetadata();
-        if (this.testId && this.testId !== "create") {
-            await this._loadTest();
-        } else {
-            this._isLoading = false;
-        }
-    }
-
-    private async _loadMetadata() {
-        try {
-            this._testFeatures = await this._repository.getAllTestFeatures();
-            this._testGraders = await this._repository.getAllTestGraders();
-        } catch (error) {
-            console.error("Failed to load metadata:", error);
-        }
-    }
-
-    private async _loadTest() {
-        this._isLoading = true;
-        try {
-            const test = await this._repository.getTestByIdOrAlias(this.testId!);
-            if (test) {
-                this._alias = test.alias;
-                this._name = test.name;
-                this._description = test.description || "";
-                this._testFeatureId = test.testFeatureId;
-                this._targetId = test.target.targetId;
-                this._targetIsAlias = test.target.isAlias;
-                this._testCaseJson = test.testCaseJson;
-                this._graders = [...test.graders];
-                this._runCount = test.runCount;
-                this._tags = [...test.tags];
-            }
-        } catch (error) {
-            console.error("Failed to load test:", error);
-        } finally {
-            this._isLoading = false;
-        }
-    }
-
-    private async _handleSave() {
-        if (!this._alias || !this._name || !this._testFeatureId || !this._targetId) {
-            alert("Please fill in all required fields");
-            return;
-        }
-
-        // Validate JSON
-        try {
-            JSON.parse(this._testCaseJson);
-        } catch {
-            alert("Invalid test case JSON");
-            return;
-        }
-
-        this._isSaving = true;
-        try {
-            const model = {
-                alias: this._alias,
-                name: this._name,
-                description: this._description || undefined,
-                testFeatureId: this._testFeatureId,
-                target: {
-                    targetId: this._targetId,
-                    isAlias: this._targetIsAlias,
-                },
-                testCaseJson: this._testCaseJson,
-                graders: this._graders,
-                runCount: this._runCount,
-                tags: this._tags,
-            };
-
-            if (this.testId && this.testId !== "create") {
-                await this._repository.updateTest(this.testId, model as UpdateTestRequestModel);
-            } else {
-                const id = await this._repository.createTest(model as CreateTestRequestModel);
-                window.location.hash = `#/section/ai/workspace/test/edit/${id}`;
-            }
-
-            alert("Test saved successfully");
-        } catch (error) {
-            console.error("Failed to save test:", error);
-            alert("Failed to save test. See console for details.");
-        } finally {
-            this._isSaving = false;
-        }
-    }
-
-    private _handleAddGrader() {
-        const newGrader: TestGraderModel = {
-            id: crypto.randomUUID(),
-            graderTypeId: this._testGraders[0]?.id || "",
-            name: "New Grader",
-            description: null,
-            configJson: "{}",
-            negate: false,
-            severity: "Error",
-            weight: 1.0,
-        };
-        this._graders = [...this._graders, newGrader];
-    }
-
-    private _handleRemoveGrader(index: number) {
-        this._graders = this._graders.filter((_, i) => i !== index);
-    }
-
-    private _handleGraderChange(index: number, field: keyof TestGraderModel, value: any) {
-        const updated = [...this._graders];
-        (updated[index] as any)[field] = value;
-        this._graders = updated;
-    }
-
-    private _handleAddTag() {
-        if (this._tagInput && !this._tags.includes(this._tagInput)) {
-            this._tags = [...this._tags, this._tagInput];
-            this._tagInput = "";
-        }
-    }
-
-    private _handleRemoveTag(tag: string) {
-        this._tags = this._tags.filter(t => t !== tag);
-    }
-
-    render() {
-        if (this._isLoading) {
-            return html`<div class="loading">Loading...</div>`;
-        }
-
-        return html`
-            <div class="container">
-                <h1>${this.testId === "create" ? "Create" : "Edit"} Test</h1>
-
-                <div class="form">
-                    <div class="form-group">
-                        <label>Alias *</label>
-                        <input
-                            type="text"
-                            .value=${this._alias}
-                            @input=${(e: Event) => (this._alias = (e.target as HTMLInputElement).value)}
-                            ?disabled=${this.testId !== "create"}
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Name *</label>
-                        <input
-                            type="text"
-                            .value=${this._name}
-                            @input=${(e: Event) => (this._name = (e.target as HTMLInputElement).value)}
-                        />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea
-                            .value=${this._description}
-                            @input=${(e: Event) => (this._description = (e.target as HTMLTextAreaElement).value)}
-                            rows="3"
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Test Type *</label>
-                        <select
-                            .value=${this._testFeatureId}
-                            @change=${(e: Event) => (this._testFeatureId = (e.target as HTMLSelectElement).value)}
-                        >
-                            <option value="">Select test type...</option>
-                            ${this._testFeatures.map(
-                                feature => html`<option value=${feature.id}>${feature.name}</option>`
-                            )}
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Target ID/Alias *</label>
-                        <div class="target-input">
-                            <input
-                                type="text"
-                                .value=${this._targetId}
-                                @input=${(e: Event) => (this._targetId = (e.target as HTMLInputElement).value)}
-                                placeholder="Enter prompt or agent ID/alias"
-                            />
-                            <label class="checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    .checked=${this._targetIsAlias}
-                                    @change=${(e: Event) => (this._targetIsAlias = (e.target as HTMLInputElement).checked)}
-                                />
-                                Is Alias
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Test Case (JSON) *</label>
-                        <textarea
-                            .value=${this._testCaseJson}
-                            @input=${(e: Event) => (this._testCaseJson = (e.target as HTMLTextAreaElement).value)}
-                            rows="10"
-                            placeholder='{"key": "value"}'
-                        ></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Run Count</label>
-                        <input
-                            type="number"
-                            .value=${this._runCount.toString()}
-                            @input=${(e: Event) => (this._runCount = parseInt((e.target as HTMLInputElement).value) || 1)}
-                            min="1"
-                            max="100"
-                        />
-                        <small>Number of times to run this test (for pass@k calculation)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Tags</label>
-                        <div class="tags-input">
-                            <input
-                                type="text"
-                                .value=${this._tagInput}
-                                @input=${(e: Event) => (this._tagInput = (e.target as HTMLInputElement).value)}
-                                @keypress=${(e: KeyboardEvent) => e.key === "Enter" && this._handleAddTag()}
-                                placeholder="Add tag and press Enter"
-                            />
-                            <button @click=${this._handleAddTag} type="button">Add</button>
-                        </div>
-                        <div class="tags-list">
-                            ${this._tags.map(
-                                tag => html`
-                                    <span class="tag">
-                                        ${tag}
-                                        <button @click=${() => this._handleRemoveTag(tag)}>×</button>
-                                    </span>
-                                `
-                            )}
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="section-header">
-                            <label>Graders</label>
-                            <button @click=${this._handleAddGrader} type="button">+ Add Grader</button>
-                        </div>
-                        ${this._graders.map((grader, index) => this._renderGrader(grader, index))}
-                    </div>
-
-                    <div class="form-actions">
-                        <button @click=${this._handleSave} ?disabled=${this._isSaving} class="save-button">
-                            ${this._isSaving ? "Saving..." : "Save"}
-                        </button>
-                        <button @click=${() => window.history.back()} type="button" class="cancel-button">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    private _renderGrader(grader: TestGraderModel, index: number) {
-        return html`
-            <div class="grader">
-                <div class="grader-header">
-                    <strong>Grader ${index + 1}</strong>
-                    <button @click=${() => this._handleRemoveGrader(index)} type="button" class="remove-button">
-                        Remove
-                    </button>
-                </div>
-                <div class="grader-fields">
-                    <div class="form-group">
-                        <label>Grader Type</label>
-                        <select
-                            .value=${grader.graderTypeId}
-                            @change=${(e: Event) =>
-                                this._handleGraderChange(index, "graderTypeId", (e.target as HTMLSelectElement).value)}
-                        >
-                            ${this._testGraders.map(
-                                g => html`<option value=${g.id}>${g.name}</option>`
-                            )}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input
-                            type="text"
-                            .value=${grader.name}
-                            @input=${(e: Event) =>
-                                this._handleGraderChange(index, "name", (e.target as HTMLInputElement).value)}
-                        />
-                    </div>
-                    <div class="form-group">
-                        <label>Config (JSON)</label>
-                        <textarea
-                            .value=${grader.configJson || "{}"}
-                            @input=${(e: Event) =>
-                                this._handleGraderChange(index, "configJson", (e.target as HTMLTextAreaElement).value)}
-                            rows="3"
-                        ></textarea>
-                    </div>
-                    <div class="grader-options">
-                        <div class="form-group">
-                            <label>Severity</label>
-                            <select
-                                .value=${grader.severity}
-                                @change=${(e: Event) =>
-                                    this._handleGraderChange(index, "severity", (e.target as HTMLSelectElement).value)}
-                            >
-                                <option value="Info">Info</option>
-                                <option value="Warning">Warning</option>
-                                <option value="Error">Error</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Weight</label>
-                            <input
-                                type="number"
-                                .value=${grader.weight.toString()}
-                                @input=${(e: Event) =>
-                                    this._handleGraderChange(
-                                        index,
-                                        "weight",
-                                        parseFloat((e.target as HTMLInputElement).value) || 1.0
-                                    )}
-                                min="0"
-                                max="1"
-                                step="0.1"
-                            />
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    .checked=${grader.negate}
-                                    @change=${(e: Event) =>
-                                        this._handleGraderChange(index, "negate", (e.target as HTMLInputElement).checked)}
-                                />
-                                Negate Result
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    static styles = css`
-        :host {
-            display: block;
-            padding: 20px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            margin-bottom: 30px;
-        }
-
-        .form {
-            background: var(--uui-color-surface);
-            padding: 30px;
-            border-radius: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--uui-color-border);
-            border-radius: 4px;
-            font-family: inherit;
-        }
-
-        textarea {
-            font-family: monospace;
-            resize: vertical;
-        }
-
-        small {
-            display: block;
-            margin-top: 5px;
-            color: var(--uui-color-text-alt);
-            font-size: 12px;
-        }
-
-        .target-input {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .target-input input {
-            flex: 1;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: normal;
-            white-space: nowrap;
-        }
-
-        .checkbox-label input {
-            width: auto;
-        }
-
-        .tags-input {
-            display: flex;
-            gap: 10px;
-        }
-
-        .tags-input input {
-            flex: 1;
-        }
-
-        .tags-input button {
-            padding: 8px 16px;
-        }
-
-        .tags-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            background: var(--uui-color-surface-alt);
-            border-radius: 3px;
-            font-size: 14px;
-        }
-
-        .tag button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            line-height: 1;
-            padding: 0;
-            color: var(--uui-color-text-alt);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .section-header button {
-            padding: 6px 12px;
-            font-size: 14px;
-        }
-
-        .grader {
-            background: var(--uui-color-surface-alt);
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        .grader-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .remove-button {
-            background: var(--uui-color-danger);
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .grader-fields .form-group {
-            margin-bottom: 15px;
-        }
-
-        .grader-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .checkbox-group label {
-            font-weight: normal;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--uui-color-border);
-        }
-
-        .save-button {
-            padding: 10px 24px;
-            background: var(--uui-color-positive);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .save-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .cancel-button {
-            padding: 10px 24px;
-            background: var(--uui-color-surface-alt);
-            border: 1px solid var(--uui-color-border);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        button {
-            cursor: pointer;
-        }
-    `;
-}
-
-declare global {
-    interface HTMLElementTagNameMap {
-        "umbraco-ai-test-workspace-editor": UmbracoAITestWorkspaceEditorElement;
-    }
+export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
+	#workspaceContext?: typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE;
+	#notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
+	#repository!: AITestRepository;
+
+	@state()
+	private _model?: TestResponseModel;
+
+	@state()
+	private _isNew?: boolean;
+
+	@state()
+	private _aliasLocked = true;
+
+	@state()
+	private _testFeatures: TestFeatureInfoModel[] = [];
+
+	@state()
+	private _testGraders: TestGraderInfoModel[] = [];
+
+	@state()
+	private _tagInput = "";
+
+	constructor() {
+		super();
+
+		this.#repository = new AITestRepository(this);
+
+		this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
+			if (!context) return;
+			this.#workspaceContext = context;
+			this.observe(context.model, (model) => {
+				this._model = model;
+			});
+			this.observe(context.isNew, (isNew) => {
+				this._isNew = isNew;
+				if (isNew) {
+					requestAnimationFrame(() => {
+						(this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
+					});
+				}
+			});
+		});
+
+		this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+			this.#notificationContext = context;
+		});
+	}
+
+	override async connectedCallback() {
+		super.connectedCallback();
+		await this.#loadMetadata();
+	}
+
+	protected override firstUpdated(_changedProperties: any) {
+		super.firstUpdated(_changedProperties);
+		// Register form control elements to enable HTML5 validation
+		const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+		if (nameInput) this.addFormControlElement(nameInput as any);
+	}
+
+	async #loadMetadata() {
+		try {
+			this._testFeatures = await this.#repository.getAllTestFeatures();
+			this._testGraders = await this.#repository.getAllTestGraders();
+		} catch (error) {
+			console.error("Failed to load metadata:", error);
+			this.#notificationContext?.peek("danger", {
+				data: { message: "Failed to load test metadata" },
+			});
+		}
+	}
+
+	#onNameChange(event: UUIInputEvent) {
+		event.stopPropagation();
+		const target = event.composedPath()[0] as UUIInputElement;
+		const name = target.value.toString();
+
+		// If alias is locked and creating new, generate alias from name
+		if (this._aliasLocked && this._isNew) {
+			const alias = this.#generateAlias(name);
+			this.#workspaceContext?.handleCommand(
+				new UaiPartialUpdateCommand<TestResponseModel>({ name, alias }, "name-alias"),
+			);
+		} else {
+			this.#workspaceContext?.handleCommand(
+				new UaiPartialUpdateCommand<TestResponseModel>({ name }, "name"),
+			);
+		}
+	}
+
+	#onAliasChange(event: UUIInputEvent) {
+		event.stopPropagation();
+		const target = event.composedPath()[0] as UUIInputElement;
+		const alias = target.value.toString();
+
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ alias }, "alias"),
+		);
+	}
+
+	#onToggleAliasLock() {
+		this._aliasLocked = !this._aliasLocked;
+	}
+
+	#generateAlias(name: string): string {
+		return name
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-|-$/g, "");
+	}
+
+	#onDescriptionChange(event: Event) {
+		const target = event.target as HTMLTextAreaElement;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ description: target.value || null }, "description"),
+		);
+	}
+
+	#onTestFeatureChange(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ testFeatureId: target.value }, "testFeatureId"),
+		);
+	}
+
+	#onTargetIdChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		if (!this._model) return;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>(
+				{
+					target: {
+						targetId: target.value,
+						isAlias: this._model.target.isAlias,
+					},
+				},
+				"target",
+			),
+		);
+	}
+
+	#onTargetIsAliasChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		if (!this._model) return;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>(
+				{
+					target: {
+						targetId: this._model.target.targetId,
+						isAlias: target.checked,
+					},
+				},
+				"target",
+			),
+		);
+	}
+
+	#onTestCaseJsonChange(event: Event) {
+		const target = event.target as HTMLTextAreaElement;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ testCaseJson: target.value }, "testCaseJson"),
+		);
+	}
+
+	#onRunCountChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const runCount = parseInt(target.value) || 1;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ runCount }, "runCount"),
+		);
+	}
+
+	#onAddTag() {
+		if (!this._model || !this._tagInput) return;
+		if (this._model.tags.includes(this._tagInput)) {
+			this.#notificationContext?.peek("warning", {
+				data: { message: "Tag already exists" },
+			});
+			return;
+		}
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ tags: [...this._model.tags, this._tagInput] }, "tags"),
+		);
+		this._tagInput = "";
+	}
+
+	#onRemoveTag(tag: string) {
+		if (!this._model) return;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>(
+				{ tags: this._model.tags.filter((t) => t !== tag) },
+				"tags",
+			),
+		);
+	}
+
+	#onAddGrader() {
+		if (!this._model) return;
+		const newGrader: TestGraderModel = {
+			id: crypto.randomUUID(),
+			graderTypeId: this._testGraders[0]?.id || "",
+			name: "New Grader",
+			description: null,
+			configJson: "{}",
+			negate: false,
+			severity: "Error",
+			weight: 1.0,
+		};
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ graders: [...this._model.graders, newGrader] }, "graders"),
+		);
+	}
+
+	#onRemoveGrader(index: number) {
+		if (!this._model) return;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>(
+				{ graders: this._model.graders.filter((_, i) => i !== index) },
+				"graders",
+			),
+		);
+	}
+
+	#onGraderChange(index: number, field: keyof TestGraderModel, value: any) {
+		if (!this._model) return;
+		const updated = [...this._model.graders];
+		(updated[index] as any)[field] = value;
+		this.#workspaceContext?.handleCommand(
+			new UaiPartialUpdateCommand<TestResponseModel>({ graders: updated }, "graders"),
+		);
+	}
+
+	render() {
+		if (!this._model) return html`<uui-loader></uui-loader>`;
+
+		return html`
+			<umb-workspace-editor alias="${UAI_TEST_WORKSPACE_ALIAS}">
+				<div id="header" slot="header">
+					<uui-button href=${UAI_TEST_ROOT_WORKSPACE_PATH} label="Back to tests" compact>
+						<uui-icon name="icon-arrow-left"></uui-icon>
+					</uui-button>
+					<uui-input
+						id="name"
+						.value=${this._model.name}
+						@input="${this.#onNameChange}"
+						label="Name"
+						placeholder="Enter test name"
+						required
+						maxlength="255"
+						.requiredMessage=${this.localize.term("uaiValidation_required")}
+						.maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 255)}
+						${umbBindToValidation(this, "$.name", this._model.name)}
+					>
+						<uui-input-lock
+							slot="append"
+							id="alias"
+							name="alias"
+							label="Alias"
+							placeholder="Enter alias"
+							.value=${this._model.alias}
+							?auto-width=${!!this._model.name}
+							?locked=${this._aliasLocked}
+							?readonly=${this._aliasLocked || !this._isNew}
+							@input=${this.#onAliasChange}
+							@lock-change=${this.#onToggleAliasLock}
+							required
+							maxlength="100"
+							pattern="^[a-z0-9\\-]+$"
+							.requiredMessage=${this.localize.term("uaiValidation_required")}
+							.maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
+							.patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+							${umbBindToValidation(this, "$.alias", this._model.alias)}
+						>
+						</uui-input-lock>
+					</uui-input>
+				</div>
+
+				${when(
+					!this._isNew && this._model,
+					() => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
+				)}
+
+				<div slot="footer-info" id="footer">
+					<a href=${UAI_TEST_ROOT_WORKSPACE_PATH}>Tests</a>
+					/ ${this._model.name || "Untitled"}
+				</div>
+			</umb-workspace-editor>
+
+			<uui-box headline="Test Details">
+				<div class="form-section">
+					<uui-form-layout-item>
+						<uui-label for="description" slot="label">Description</uui-label>
+						<uui-textarea
+							id="description"
+							.value=${this._model.description || ""}
+							@input=${this.#onDescriptionChange}
+							placeholder="Enter test description (optional)"
+						></uui-textarea>
+					</uui-form-layout-item>
+
+					<uui-form-layout-item>
+						<uui-label for="testFeatureId" slot="label" required>Test Type</uui-label>
+						<uui-select
+							id="testFeatureId"
+							.value=${this._model.testFeatureId}
+							@change=${this.#onTestFeatureChange}
+							placeholder="Select test type"
+						>
+							${this._testFeatures.map(
+								(feature) =>
+									html`<uui-select-option .value=${feature.id}>${feature.name}</uui-select-option>`,
+							)}
+						</uui-select>
+					</uui-form-layout-item>
+
+					<uui-form-layout-item>
+						<uui-label for="targetId" slot="label" required>Target</uui-label>
+						<div class="target-input">
+							<uui-input
+								id="targetId"
+								.value=${this._model.target.targetId}
+								@input=${this.#onTargetIdChange}
+								placeholder="Enter prompt or agent ID/alias"
+							></uui-input>
+							<uui-toggle
+								label="Is Alias"
+								.checked=${this._model.target.isAlias}
+								@change=${this.#onTargetIsAliasChange}
+							>
+								Is Alias
+							</uui-toggle>
+						</div>
+					</uui-form-layout-item>
+
+					<uui-form-layout-item>
+						<uui-label for="testCaseJson" slot="label" required>Test Case (JSON)</uui-label>
+						<uui-textarea
+							id="testCaseJson"
+							.value=${this._model.testCaseJson}
+							@input=${this.#onTestCaseJsonChange}
+							placeholder='{"key": "value"}'
+							rows="10"
+						></uui-textarea>
+						<small slot="description">Test case data in JSON format</small>
+					</uui-form-layout-item>
+
+					<uui-form-layout-item>
+						<uui-label for="runCount" slot="label">Run Count</uui-label>
+						<uui-input
+							id="runCount"
+							type="number"
+							.value=${this._model.runCount.toString()}
+							@input=${this.#onRunCountChange}
+							min="1"
+							max="100"
+						></uui-input>
+						<small slot="description">Number of times to run this test (for pass@k calculation)</small>
+					</uui-form-layout-item>
+				</div>
+			</uui-box>
+
+			<uui-box headline="Tags">
+				<div class="form-section">
+					<div class="tags-input">
+						<uui-input
+							.value=${this._tagInput}
+							@input=${(e: UUIInputEvent) => (this._tagInput = (e.target as UUIInputElement).value.toString())}
+							@keypress=${(e: KeyboardEvent) => e.key === "Enter" && this.#onAddTag()}
+							placeholder="Add tag and press Enter"
+						></uui-input>
+						<uui-button @click=${this.#onAddTag} label="Add tag" look="primary">Add</uui-button>
+					</div>
+					<div class="tags-list">
+						${repeat(
+							this._model.tags,
+							(tag) => tag,
+							(tag) => html`
+								<uui-tag>
+									${tag}
+									<uui-button
+										slot="actions"
+										@click=${() => this.#onRemoveTag(tag)}
+										label="Remove tag"
+										compact
+									>
+										<uui-icon name="icon-remove"></uui-icon>
+									</uui-button>
+								</uui-tag>
+							`,
+						)}
+					</div>
+				</div>
+			</uui-box>
+
+			<uui-box>
+				<div slot="headline" class="box-headline">
+					<span>Graders</span>
+					<uui-button @click=${this.#onAddGrader} label="Add grader" look="primary" compact>
+						<uui-icon name="icon-add"></uui-icon>
+						Add Grader
+					</uui-button>
+				</div>
+				<div class="form-section">
+					${repeat(
+						this._model.graders,
+						(grader) => grader.id,
+						(grader, index) => this.#renderGrader(grader, index),
+					)}
+					${when(
+						this._model.graders.length === 0,
+						() => html`<div class="empty-state">No graders configured. Click "Add Grader" to get started.</div>`,
+					)}
+				</div>
+			</uui-box>
+		`;
+	}
+
+	#renderGrader(grader: TestGraderModel, index: number) {
+		return html`
+			<uui-box class="grader-box">
+				<div slot="headline" class="grader-headline">
+					<strong>Grader ${index + 1}</strong>
+					<uui-button
+						@click=${() => this.#onRemoveGrader(index)}
+						label="Remove grader"
+						color="danger"
+						look="secondary"
+						compact
+					>
+						<uui-icon name="icon-delete"></uui-icon>
+						Remove
+					</uui-button>
+				</div>
+
+				<div class="grader-content">
+					<uui-form-layout-item>
+						<uui-label for="graderType-${index}" slot="label">Grader Type</uui-label>
+						<uui-select
+							id="graderType-${index}"
+							.value=${grader.graderTypeId}
+							@change=${(e: Event) =>
+								this.#onGraderChange(index, "graderTypeId", (e.target as HTMLSelectElement).value)}
+						>
+							${this._testGraders.map(
+								(g) => html`<uui-select-option .value=${g.id}>${g.name}</uui-select-option>`,
+							)}
+						</uui-select>
+					</uui-form-layout-item>
+
+					<uui-form-layout-item>
+						<uui-label for="graderName-${index}" slot="label">Name</uui-label>
+						<uui-input
+							id="graderName-${index}"
+							.value=${grader.name}
+							@input=${(e: UUIInputEvent) =>
+								this.#onGraderChange(index, "name", (e.target as UUIInputElement).value)}
+						></uui-input>
+					</uui-form-layout-item>
+
+					<uui-form-layout-item>
+						<uui-label for="graderConfig-${index}" slot="label">Config (JSON)</uui-label>
+						<uui-textarea
+							id="graderConfig-${index}"
+							.value=${grader.configJson || "{}"}
+							@input=${(e: Event) =>
+								this.#onGraderChange(index, "configJson", (e.target as HTMLTextAreaElement).value)}
+							rows="3"
+						></uui-textarea>
+					</uui-form-layout-item>
+
+					<div class="grader-options">
+						<uui-form-layout-item>
+							<uui-label for="graderSeverity-${index}" slot="label">Severity</uui-label>
+							<uui-select
+								id="graderSeverity-${index}"
+								.value=${grader.severity}
+								@change=${(e: Event) =>
+									this.#onGraderChange(index, "severity", (e.target as HTMLSelectElement).value)}
+							>
+								<uui-select-option value="Info">Info</uui-select-option>
+								<uui-select-option value="Warning">Warning</uui-select-option>
+								<uui-select-option value="Error">Error</uui-select-option>
+							</uui-select>
+						</uui-form-layout-item>
+
+						<uui-form-layout-item>
+							<uui-label for="graderWeight-${index}" slot="label">Weight</uui-label>
+							<uui-input
+								id="graderWeight-${index}"
+								type="number"
+								.value=${grader.weight.toString()}
+								@input=${(e: UUIInputEvent) =>
+									this.#onGraderChange(index, "weight", parseFloat((e.target as UUIInputElement).value.toString()) || 1.0)}
+								min="0"
+								max="1"
+								step="0.1"
+							></uui-input>
+						</uui-form-layout-item>
+
+						<uui-form-layout-item>
+							<uui-label for="graderNegate-${index}" slot="label">Negate</uui-label>
+							<uui-toggle
+								id="graderNegate-${index}"
+								label="Negate Result"
+								.checked=${grader.negate}
+								@change=${(e: Event) =>
+									this.#onGraderChange(index, "negate", (e.target as HTMLInputElement).checked)}
+							>
+								Negate Result
+							</uui-toggle>
+						</uui-form-layout-item>
+					</div>
+				</div>
+			</uui-box>
+		`;
+	}
+
+	static styles = [
+		UmbTextStyles,
+		css`
+			:host {
+				display: block;
+				width: 100%;
+				height: 100%;
+			}
+
+			#header {
+				display: flex;
+				flex: 1 1 auto;
+				gap: var(--uui-size-space-3);
+			}
+
+			#name {
+				width: 100%;
+				flex: 1 1 auto;
+				align-items: center;
+			}
+
+			#footer {
+				padding: 0 var(--uui-size-layout-1);
+			}
+
+			uui-loader {
+				display: block;
+				margin: auto;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+
+			uui-box {
+				margin-bottom: var(--uui-size-space-5);
+			}
+
+			.form-section {
+				display: flex;
+				flex-direction: column;
+				gap: var(--uui-size-space-4);
+			}
+
+			.box-headline {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				width: 100%;
+			}
+
+			.target-input {
+				display: flex;
+				gap: var(--uui-size-space-3);
+				align-items: center;
+			}
+
+			.target-input uui-input {
+				flex: 1;
+			}
+
+			.tags-input {
+				display: flex;
+				gap: var(--uui-size-space-3);
+			}
+
+			.tags-input uui-input {
+				flex: 1;
+			}
+
+			.tags-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: var(--uui-size-space-2);
+			}
+
+			.grader-box {
+				margin-bottom: var(--uui-size-space-4);
+			}
+
+			.grader-headline {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				width: 100%;
+			}
+
+			.grader-content {
+				display: flex;
+				flex-direction: column;
+				gap: var(--uui-size-space-3);
+			}
+
+			.grader-options {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr;
+				gap: var(--uui-size-space-3);
+			}
+
+			.empty-state {
+				padding: var(--uui-size-space-5);
+				text-align: center;
+				color: var(--uui-color-text-alt);
+			}
+
+			small {
+				display: block;
+				color: var(--uui-color-text-alt);
+				font-size: 0.875rem;
+			}
+		`,
+	];
 }
 
 export default UmbracoAITestWorkspaceEditorElement;
+
+declare global {
+	interface HTMLElementTagNameMap {
+		"umbraco-ai-test-workspace-editor": UmbracoAITestWorkspaceEditorElement;
+	}
+}

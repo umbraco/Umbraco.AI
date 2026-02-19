@@ -42,7 +42,7 @@ public class ByIdTestFeatureController : TestControllerBase
         string id,
         CancellationToken cancellationToken = default)
     {
-        var testFeature = _testFeatures.FirstOrDefault(f => f.Id == id);
+        IAITestFeature? testFeature = _testFeatures.FirstOrDefault(f => f.Id == id);
         if (testFeature is null)
         {
             return Task.FromResult(TestNotFound());

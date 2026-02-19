@@ -17,7 +17,7 @@ export const UaiTestTypeMapper = {
             name: response.name,
             description: response.description,
             testFeatureId: response.testFeatureId,
-            target: response.target,
+            testTargetId: (response as any).testTargetId || "",
             testCaseJson: response.testCaseJson,
             graders: response.graders,
             runCount: response.runCount,
@@ -56,12 +56,12 @@ export const UaiTestTypeMapper = {
             name: model.name,
             description: model.description,
             testFeatureId: model.testFeatureId,
-            target: model.target,
+            testTargetId: model.testTargetId,
             testCaseJson: model.testCaseJson,
             graders: model.graders,
             runCount: model.runCount,
             tags: model.tags,
-        };
+        } as any; // Cast needed until API types are regenerated
     },
 
     toUpdateRequest(model: UaiTestDetailModel): UpdateTestRequestModel {
@@ -69,11 +69,11 @@ export const UaiTestTypeMapper = {
             alias: model.alias,
             name: model.name,
             description: model.description,
-            target: model.target,
+            testTargetId: model.testTargetId,
             testCaseJson: model.testCaseJson,
             graders: model.graders,
             runCount: model.runCount,
             tags: model.tags,
-        };
+        } as any; // Cast needed until API types are regenerated
     },
 };

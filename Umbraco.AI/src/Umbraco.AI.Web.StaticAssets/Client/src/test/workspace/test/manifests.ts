@@ -14,6 +14,24 @@ export const manifests: Array<UmbExtensionManifest> = [
 		},
 	},
 	{
+		type: "workspaceView",
+		alias: "UmbracoAI.Workspace.Test.View.Details",
+		name: "Test Details Workspace View",
+		js: () => import("./views/test-details-workspace-view.element.js"),
+		weight: 100,
+		meta: {
+			label: "Details",
+			pathname: "details",
+			icon: "icon-document",
+		},
+		conditions: [
+			{
+				alias: UMB_WORKSPACE_CONDITION_ALIAS,
+				match: UAI_TEST_WORKSPACE_ALIAS,
+			},
+		],
+	},
+	{
 		type: "workspaceAction",
 		kind: "default",
 		alias: "UmbracoAI.WorkspaceAction.Test.Save",

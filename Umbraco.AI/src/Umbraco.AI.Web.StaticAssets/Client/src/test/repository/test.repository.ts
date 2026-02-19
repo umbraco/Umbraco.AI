@@ -182,8 +182,8 @@ export class AITestRepository extends UmbControllerBase {
     ): Promise<TestRunComparisonResponseModel> {
         const { data } = await TestsService.compareTestRuns({
             body: {
-                baselineRunId,
-                comparisonRunId,
+                baselineTestRunId: baselineRunId,
+                comparisonTestRunId: comparisonRunId,
             },
         });
         return data!;
@@ -194,7 +194,7 @@ export class AITestRepository extends UmbControllerBase {
      */
     async setBaseline(testId: string, runId: string): Promise<void> {
         await TestsService.setBaselineTestRun({
-            path: { testId, runId },
+            path: { testId, testRunId: runId },
         });
     }
 

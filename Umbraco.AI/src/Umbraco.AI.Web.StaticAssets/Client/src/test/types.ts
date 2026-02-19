@@ -1,5 +1,5 @@
 import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
-import type { TestTargetModel, TestGraderModel } from "../api/types.gen.js";
+import type { TestGraderModel } from "../api/types.gen.js";
 
 /**
  * Detail model for test workspace editing.
@@ -11,7 +11,7 @@ export interface UaiTestDetailModel extends UmbEntityModel {
     name: string;
     description?: string | null;
     testFeatureId: string;
-    target: TestTargetModel;
+    testTargetId: string; // ID or alias of the target entity (prompt, agent, etc.)
     testCaseJson: string;
     graders: TestGraderModel[];
     runCount: number;

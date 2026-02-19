@@ -12,7 +12,7 @@ import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
 import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../test-root/paths.js";
 import { UaiTestDetailRepository } from "../../repository/detail/test-detail.repository.js";
-import { UmbracoAITestWorkspaceEditorElement } from "./views/test-workspace-editor.element.js";
+import { UmbracoAITestWorkspaceEditorElement } from "./test-workspace-editor.element.js";
 import type { UaiCommand } from "../../../core/command/command.base.js";
 import { UaiCommandStore } from "../../../core/command/command.store.js";
 import { UaiEntityDeletedRedirectController } from "../../../core/workspace/entity-deleted-redirect.controller.js";

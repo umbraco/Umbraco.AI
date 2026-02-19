@@ -153,6 +153,12 @@ export default {
         headline: "User Group Permissions",
     },
     uaiTest: {
+        testConfiguration: "Test Configuration",
+        testFeatureType: "Test Feature Type",
+        selectTestFeature: "Select test feature",
+        testFeatureDescription: "The type of test to run (e.g., prompt completion, agent tool test)",
+        targetEntity: "Target Entity",
+        targetEntityDescription: "The entity to test (e.g., a specific prompt or agent)",
         selectTargetEntity: "Select Target Entity",
         selectTarget: "Select Target",
         selectTestTypeFirst: "Select a test type first to choose a target entity.",

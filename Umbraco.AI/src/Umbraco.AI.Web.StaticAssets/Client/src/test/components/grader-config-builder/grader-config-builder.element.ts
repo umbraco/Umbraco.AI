@@ -36,7 +36,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
         if (!modalManager) return;
 
-        // Step 1: Pick grader type using existing item picker modal
+        // Open grader type picker
         const typeModal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
                 fetchItems: () => this.#getGraderItems(),
@@ -45,11 +45,11 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
             },
         });
 
-        try {
-            const typeResult = await typeModal.onSubmit();
+        // Handle type selection without closing the picker
+        typeModal.onSubmit().then(async (typeResult) => {
             const selectedType = typeResult.selection[0];
 
-            // Step 2: Configure grader (opens over item picker modal)
+            // Open config editor over the picker (picker stays open)
             const configModal = modalManager.open(this, UAI_GRADER_CONFIG_EDITOR_MODAL, {
                 data: {
                     graderTypeId: selectedType.value,
@@ -58,14 +58,20 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
                 },
             });
 
-            const configResult = await configModal.onSubmit();
+            try {
+                const configResult = await configModal.onSubmit();
 
-            // Add to list and notify
-            this.graders = [...this.graders, configResult.grader];
-            this.dispatchEvent(new UmbChangeEvent());
-        } catch {
-            // User cancelled
-        }
+                // Config submitted - close picker and add grader
+                typeModal.destroy();
+                this.graders = [...this.graders, configResult.grader];
+                this.dispatchEvent(new UmbChangeEvent());
+            } catch {
+                // Config cancelled - picker remains open so user can select different type
+                // Don't destroy picker, just let them choose again
+            }
+        }).catch(() => {
+            // Picker cancelled - do nothing
+        });
     }
 
     async #onEdit(grader: UaiTestGraderConfig) {

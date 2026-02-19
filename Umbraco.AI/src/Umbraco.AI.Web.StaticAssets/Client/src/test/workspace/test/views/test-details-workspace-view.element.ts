@@ -1,12 +1,11 @@
-import { css, html, customElement, state, when, repeat } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
-import type { TestGraderModel, TestGraderInfoModel, TestFeatureResponseModel } from "../../../../api/types.gen.js";
-import type { UaiTestDetailModel } from "../../../types.js";
+import type { TestGraderModel, TestFeatureResponseModel } from "../../../../api/types.gen.js";
+import type { UaiTestDetailModel, UaiTestGraderConfig } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
 import { AITestRepository } from "../../../repository/test.repository.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
@@ -19,9 +18,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 
 	@state()
 	private _model?: UaiTestDetailModel;
-
-	@state()
-	private _testGraders: TestGraderInfoModel[] = [];
 
 	@state()
 	private _testFeature?: TestFeatureResponseModel | null;
@@ -50,22 +46,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
 			this.#notificationContext = context;
 		});
-	}
-
-	override async connectedCallback() {
-		super.connectedCallback();
-		await this.#loadMetadata();
-	}
-
-	async #loadMetadata() {
-		try {
-			this._testGraders = await this.#repository.getAllTestGraders();
-		} catch (error) {
-			console.error("Failed to load metadata:", error);
-			this.#notificationContext?.peek("danger", {
-				data: { message: "Failed to load test metadata" },
-			});
-		}
 	}
 
 	async #loadTestFeatureDetails(testFeatureId: string) {
@@ -119,40 +99,55 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		);
 	}
 
-	#onAddGrader() {
-		if (!this._model) return;
-		const newGrader: TestGraderModel = {
-			id: crypto.randomUUID(),
-			graderTypeId: this._testGraders[0]?.id || "",
-			name: "New Grader",
-			description: null,
-			configJson: "{}",
-			negate: false,
-			severity: "Error",
-			weight: 1.0,
-		};
+	#onGradersChange(event: Event) {
+		const target = event.target as any;
+		const graderConfigs = target.graders as UaiTestGraderConfig[];
+
+		// Convert UaiTestGraderConfig[] to TestGraderModel[]
+		const graderModels: TestGraderModel[] = graderConfigs.map(config => ({
+			id: config.id,
+			graderTypeId: config.graderTypeId,
+			name: config.name,
+			description: config.description || null,
+			configJson: config.config ? JSON.stringify(config.config) : "{}",
+			negate: config.negate,
+			severity: config.severity,
+			weight: config.weight,
+		}));
+
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>({ graders: [...this._model.graders, newGrader] }, "graders"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ graders: graderModels }, "graders"),
 		);
 	}
 
-	#onRemoveGrader(index: number) {
-		if (!this._model) return;
-		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>(
-				{ graders: this._model.graders.filter((_, i) => i !== index) },
-				"graders",
-			),
-		);
-	}
+	#getGraderConfigs(): UaiTestGraderConfig[] {
+		if (!this._model) return [];
 
-	#onGraderChange(index: number, field: keyof TestGraderModel, value: any) {
-		if (!this._model) return;
-		const updated = [...this._model.graders];
-		(updated[index] as any)[field] = value;
-		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>({ graders: updated }, "graders"),
-		);
+		// Convert TestGraderModel[] to UaiTestGraderConfig[]
+		return this._model.graders.map(grader => {
+			let config: Record<string, unknown> | undefined = undefined;
+
+			// Parse configJson if it exists and is valid
+			if (grader.configJson) {
+				try {
+					const parsed = JSON.parse(grader.configJson);
+					config = Object.keys(parsed).length > 0 ? parsed : undefined;
+				} catch {
+					// Invalid JSON, leave as undefined
+				}
+			}
+
+			return {
+				id: grader.id,
+				graderTypeId: grader.graderTypeId,
+				name: grader.name,
+				description: grader.description || undefined,
+				config,
+				negate: grader.negate,
+				severity: grader.severity as "Info" | "Warning" | "Error",
+				weight: grader.weight,
+			};
+		});
 	}
 
 	render() {
@@ -210,116 +205,16 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 				</umb-property-layout>
 			</uui-box>
 
-			<uui-box>
-				<div slot="headline" class="box-headline">
-					<span>Graders</span>
-					<uui-button @click=${this.#onAddGrader} label="Add grader" look="primary" compact>
-						<uui-icon name="icon-add"></uui-icon>
-						Add Grader
-					</uui-button>
-				</div>
-
-				${repeat(
-					this._model.graders,
-					(grader) => grader.id,
-					(grader, index) => this.#renderGrader(grader, index),
-				)}
-				${when(
-					this._model.graders.length === 0,
-					() => html`<div class="empty-state">No graders configured. Click "Add Grader" to get started.</div>`,
-				)}
-			</uui-box>
-		`;
-	}
-
-	#renderGrader(grader: TestGraderModel, index: number) {
-		return html`
-			<uui-box class="grader-box">
-				<div slot="headline" class="grader-headline">
-					<strong>Grader ${index + 1}</strong>
-					<uui-button
-						@click=${() => this.#onRemoveGrader(index)}
-						label="Remove grader"
-						color="danger"
-						look="secondary"
-						compact
-					>
-						<uui-icon name="icon-delete"></uui-icon>
-						Remove
-					</uui-button>
-				</div>
-
-				<umb-property-layout label="Grader Type">
-					<uui-select
+			<uui-box headline="Graders">
+				<umb-property-layout
+					label="Graders"
+					description="Configure graders to validate test outputs">
+					<uai-grader-config-builder
 						slot="editor"
-						.value=${grader.graderTypeId}
-						@change=${(e: Event) =>
-							this.#onGraderChange(index, "graderTypeId", (e.target as HTMLSelectElement).value)}
-					>
-						${this._testGraders.map(
-							(g) => html`<uui-select-option .value=${g.id}>${g.name}</uui-select-option>`,
-						)}
-					</uui-select>
+						.graders=${this.#getGraderConfigs()}
+						@change=${this.#onGradersChange}
+					></uai-grader-config-builder>
 				</umb-property-layout>
-
-				<umb-property-layout label="Name">
-					<uui-input
-						slot="editor"
-						.value=${grader.name}
-						@input=${(e: UUIInputEvent) =>
-							this.#onGraderChange(index, "name", (e.target as UUIInputElement).value)}
-					></uui-input>
-				</umb-property-layout>
-
-				<umb-property-layout label="Config (JSON)">
-					<uui-textarea
-						slot="editor"
-						.value=${grader.configJson || "{}"}
-						@input=${(e: Event) =>
-							this.#onGraderChange(index, "configJson", (e.target as HTMLTextAreaElement).value)}
-						rows="3"
-					></uui-textarea>
-				</umb-property-layout>
-
-				<div class="grader-options">
-					<umb-property-layout label="Severity">
-						<uui-select
-							slot="editor"
-							.value=${grader.severity}
-							@change=${(e: Event) =>
-								this.#onGraderChange(index, "severity", (e.target as HTMLSelectElement).value)}
-						>
-							<uui-select-option value="Info">Info</uui-select-option>
-							<uui-select-option value="Warning">Warning</uui-select-option>
-							<uui-select-option value="Error">Error</uui-select-option>
-						</uui-select>
-					</umb-property-layout>
-
-					<umb-property-layout label="Weight">
-						<uui-input
-							slot="editor"
-							type="number"
-							.value=${grader.weight.toString()}
-							@input=${(e: UUIInputEvent) =>
-								this.#onGraderChange(index, "weight", parseFloat((e.target as UUIInputElement).value.toString()) || 1.0)}
-							min="0"
-							max="1"
-							step="0.1"
-						></uui-input>
-					</umb-property-layout>
-
-					<umb-property-layout label="Negate">
-						<uui-toggle
-							slot="editor"
-							label="Negate Result"
-							.checked=${grader.negate}
-							@change=${(e: Event) =>
-								this.#onGraderChange(index, "negate", (e.target as HTMLInputElement).checked)}
-						>
-							Negate Result
-						</uui-toggle>
-					</umb-property-layout>
-				</div>
 			</uui-box>
 		`;
 	}
@@ -353,13 +248,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 				transform: translate(-50%, -50%);
 			}
 
-			.box-headline {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				width: 100%;
-			}
-
 			.target-input {
 				display: flex;
 				gap: var(--uui-size-space-3);
@@ -368,30 +256,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 
 			.target-input uui-input {
 				flex: 1;
-			}
-
-			.grader-box {
-				--uui-box-default-padding: 0 var(--uui-size-space-5);
-				margin-bottom: var(--uui-size-space-4);
-			}
-
-			.grader-headline {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				width: 100%;
-			}
-
-			.grader-options {
-				display: grid;
-				grid-template-columns: 1fr 1fr 1fr;
-				gap: var(--uui-size-space-3);
-			}
-
-			.empty-state {
-				padding: var(--uui-size-space-3) 0;
-				text-align: center;
-				color: var(--uui-color-text-alt);
 			}
 
 			uui-select,

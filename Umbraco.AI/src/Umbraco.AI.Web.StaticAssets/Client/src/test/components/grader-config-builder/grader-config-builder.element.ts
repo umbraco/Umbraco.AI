@@ -41,7 +41,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
             data: {
                 fetchItems: () => this.#getGraderTypeItems(),
                 selectionMode: "single",
-                title: "Select Grader Type",
+                title: "Select Grader",
             },
         });
 

@@ -696,7 +696,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TestTypeId")
+                    b.Property<string>("TestFeatureId")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -713,7 +713,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
 
                     b.HasIndex("IsActive");
 
-                    b.HasIndex("TestTypeId");
+                    b.HasIndex("TestFeatureId");
 
                     b.ToTable("umbracoAITest", (string)null);
                 });

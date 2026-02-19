@@ -1,6 +1,6 @@
-import type { TestItemResponseModel } from "../api/types.gen.js";
+import type { TestItemResponseModel, TestFeatureInfoModel } from "../api/types.gen.js";
 import { UAI_TEST_ENTITY_TYPE } from "./constants.js";
-import type { UaiTestItemModel } from "./types.js";
+import type { UaiTestItemModel, UaiTestFeatureItemModel } from "./types.js";
 
 export const UaiTestTypeMapper = {
     toItemModel(response: TestItemResponseModel): UaiTestItemModel {
@@ -9,10 +9,19 @@ export const UaiTestTypeMapper = {
             entityType: UAI_TEST_ENTITY_TYPE,
             alias: response.alias,
             name: response.name,
-            testTypeId: response.testTypeId,
+            testFeatureId: response.testTypeId,
             tags: response.tags,
             runCount: response.runCount,
             dateModified: response.dateModified,
+        };
+    },
+
+    toTestFeatureItemModel(response: TestFeatureInfoModel): UaiTestFeatureItemModel {
+        return {
+            id: response.id,
+            name: response.name,
+            description: response.description,
+            category: response.category,
         };
     },
 };

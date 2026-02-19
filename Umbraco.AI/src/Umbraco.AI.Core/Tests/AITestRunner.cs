@@ -33,8 +33,8 @@ internal sealed class AITestRunner : IAITestRunner
         ArgumentNullException.ThrowIfNull(test);
 
         // Get the test feature
-        var testFeature = _testFeatures.FirstOrDefault(f => f.Id == test.TestTypeId)
-            ?? throw new InvalidOperationException($"Test feature '{test.TestTypeId}' not found");
+        var testFeature = _testFeatures.FirstOrDefault(f => f.Id == test.TestFeatureId)
+            ?? throw new InvalidOperationException($"Test feature '{test.TestFeatureId}' not found");
 
         // Generate batch ID if not provided
         var effectiveBatchId = batchId ?? Guid.NewGuid();

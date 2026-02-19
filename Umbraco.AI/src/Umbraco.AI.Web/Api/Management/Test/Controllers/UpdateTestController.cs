@@ -77,21 +77,14 @@ public class UpdateTestController : TestControllerBase
             }
         }
 
-        // Validate test type exists
-        var testFeature = _testFeatures.FirstOrDefault(f => f.Id == requestModel.TestTypeId);
-        if (testFeature is null)
-        {
-            return TestOperationStatusResult(TestOperationStatus.InvalidTestType);
-        }
-
-        // Update existing entity with request values
+        // Update existing entity with request values (TestFeatureId cannot be changed - it's init-only)
         var test = new AITest
         {
             Id = existing.Id,
             Alias = requestModel.Alias,
             Name = requestModel.Name,
             Description = requestModel.Description,
-            TestTypeId = requestModel.TestTypeId,
+            TestFeatureId = existing.TestFeatureId,
             Target = new AITestTarget
             {
                 TargetId = requestModel.Target.TargetId,

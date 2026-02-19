@@ -57,7 +57,7 @@ public class CreateTestController : TestControllerBase
         }
 
         // Validate test type exists
-        var testFeature = _testFeatures.FirstOrDefault(f => f.Id == requestModel.TestTypeId);
+        var testFeature = _testFeatures.FirstOrDefault(f => f.Id == requestModel.TestFeatureId);
         if (testFeature is null)
         {
             return TestOperationStatusResult(TestOperationStatus.InvalidTestType);

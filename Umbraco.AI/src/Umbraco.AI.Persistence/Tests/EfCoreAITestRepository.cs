@@ -57,7 +57,7 @@ internal class EfCoreAITestRepository : IAITestRepository
     /// <inheritdoc />
     public async Task<(IEnumerable<AITest> Items, int Total)> GetPagedAsync(
         string? filter = null,
-        string? testTypeId = null,
+        string? testFeatureId = null,
         bool? isActive = null,
         int skip = 0,
         int take = 100,
@@ -70,9 +70,9 @@ internal class EfCoreAITestRepository : IAITestRepository
             IQueryable<AITestEntity> query = db.Tests;
 
             // Apply test type filter
-            if (!string.IsNullOrEmpty(testTypeId))
+            if (!string.IsNullOrEmpty(testFeatureId))
             {
-                query = query.Where(t => t.TestTypeId == testTypeId);
+                query = query.Where(t => t.TestFeatureId == testFeatureId);
             }
 
             // Apply active filter

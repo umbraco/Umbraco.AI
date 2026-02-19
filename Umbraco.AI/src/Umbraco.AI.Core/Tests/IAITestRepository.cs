@@ -25,7 +25,7 @@ internal interface IAITestRepository
     /// Gets tests with pagination and optional filtering.
     /// </summary>
     /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
-    /// <param name="testTypeId">Optional test type to filter by.</param>
+    /// <param name="testFeatureId">Optional test type to filter by.</param>
     /// <param name="isActive">Optional active status filter.</param>
     /// <param name="skip">Number of items to skip.</param>
     /// <param name="take">Number of items to take.</param>
@@ -33,7 +33,7 @@ internal interface IAITestRepository
     /// <returns>A tuple containing the filtered/paginated tests and the total count.</returns>
     Task<(IEnumerable<AITest> Items, int Total)> GetPagedAsync(
         string? filter = null,
-        string? testTypeId = null,
+        string? testFeatureId = null,
         bool? isActive = null,
         int skip = 0,
         int take = 100,

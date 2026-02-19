@@ -35,11 +35,11 @@ public class RunTestBatchController : TestControllerBase
     /// <param name="requestModel">The batch execution request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Batch execution results with metrics for each test.</returns>
-    [HttpPost("~/umbraco/ai/management/api/v{version:apiVersion}/tests/execute-batch")]
+    [HttpPost("tests/execute-batch")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestBatchResultsResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<TestBatchResultsResponseModel>> RunBatch(
+    public async Task<ActionResult<TestBatchResultsResponseModel>> RunTestBatch(
         [FromBody] RunTestBatchRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {

@@ -31,7 +31,7 @@ internal static class AITestFactory
             Alias = entity.Alias,
             Name = entity.Name,
             Description = entity.Description,
-            TestTypeId = entity.TestTypeId,
+            TestFeatureId = entity.TestFeatureId,
             Target = new AITestTarget
             {
                 TargetId = entity.TargetId,
@@ -62,7 +62,7 @@ internal static class AITestFactory
             Alias = test.Alias,
             Name = test.Name,
             Description = test.Description,
-            TestTypeId = test.TestTypeId,
+            TestFeatureId = test.TestFeatureId,
             TargetId = test.Target.TargetId,
             TargetIsAlias = test.Target.IsAlias,
             TestCaseJson = test.TestCaseJson,
@@ -87,7 +87,7 @@ internal static class AITestFactory
         entity.Alias = test.Alias;
         entity.Name = test.Name;
         entity.Description = test.Description;
-        entity.TestTypeId = test.TestTypeId;
+        entity.TestFeatureId = test.TestFeatureId;
         entity.TargetId = test.Target.TargetId;
         entity.TargetIsAlias = test.Target.IsAlias;
         entity.TestCaseJson = test.TestCaseJson;

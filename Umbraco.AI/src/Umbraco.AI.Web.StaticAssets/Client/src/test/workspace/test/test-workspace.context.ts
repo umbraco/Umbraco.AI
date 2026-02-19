@@ -46,10 +46,11 @@ export class UaiTestWorkspaceContext
 
         this.routes.setRoutes([
             {
-                path: "create",
+                path: "create/:testFeatureId",
                 component: UmbracoAITestWorkspaceEditorElement,
-                setup: () => {
-                    this.#createScaffold();
+                setup: (_component, info) => {
+                    const testFeatureId = info.match.params.testFeatureId;
+                    this.#createScaffold(testFeatureId);
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
@@ -84,14 +85,14 @@ export class UaiTestWorkspaceContext
         }
     }
 
-    #createScaffold() {
+    #createScaffold(testFeatureId: string) {
         this.resetState();
         const scaffold: TestResponseModel = {
             id: crypto.randomUUID(),
             alias: "",
             name: "",
             description: null,
-            testTypeId: "",
+            testFeatureId: testFeatureId,
             target: {
                 targetId: "",
                 isAlias: false,
@@ -133,7 +134,7 @@ export class UaiTestWorkspaceContext
                 alias: model.alias,
                 name: model.name,
                 description: model.description || undefined,
-                testTypeId: model.testTypeId,
+                testFeatureId: model.testFeatureId,
                 target: model.target,
                 testCaseJson: model.testCaseJson,
                 graders: model.graders,
@@ -149,7 +150,7 @@ export class UaiTestWorkspaceContext
                 alias: model.alias,
                 name: model.name,
                 description: model.description || undefined,
-                testTypeId: model.testTypeId,
+                testFeatureId: model.testFeatureId,
                 target: model.target,
                 testCaseJson: model.testCaseJson,
                 graders: model.graders,

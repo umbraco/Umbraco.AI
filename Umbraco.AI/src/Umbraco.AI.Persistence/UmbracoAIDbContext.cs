@@ -606,7 +606,7 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(2000);
 
-            entity.Property(e => e.TestTypeId)
+            entity.Property(e => e.TestFeatureId)
                 .HasMaxLength(100)
                 .IsRequired();
 
@@ -651,7 +651,7 @@ public class UmbracoAIDbContext : DbContext
             entity.HasIndex(e => e.Alias)
                 .IsUnique();
 
-            entity.HasIndex(e => e.TestTypeId);
+            entity.HasIndex(e => e.TestFeatureId);
             entity.HasIndex(e => e.IsActive);
         });
 

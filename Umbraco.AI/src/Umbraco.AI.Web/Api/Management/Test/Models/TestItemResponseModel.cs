@@ -31,10 +31,10 @@ public class TestItemResponseModel
     public string? Description { get; set; }
 
     /// <summary>
-    /// The test type ID (test feature implementation).
+    /// The test feature ID (test feature implementation).
     /// </summary>
     [Required]
-    public string TestTypeId { get; set; } = string.Empty;
+    public string TestFeatureId { get; set; } = string.Empty;
 
     /// <summary>
     /// Tags for organizing tests.

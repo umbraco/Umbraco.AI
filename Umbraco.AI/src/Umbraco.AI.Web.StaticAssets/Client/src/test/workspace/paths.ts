@@ -8,8 +8,8 @@ export const UAI_TEST_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generateAbsolu
 	entityType: UAI_TEST_ENTITY_TYPE,
 });
 
-export const UAI_CREATE_TEST_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ testType: string }>(
-	"create/:testType",
+export const UAI_CREATE_TEST_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ testFeatureId: string }>(
+	"create/:testFeatureId",
 	UAI_TEST_WORKSPACE_PATH,
 );
 

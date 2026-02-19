@@ -18,8 +18,8 @@ public sealed class AITestFeatureCollection : BuilderCollectionBase<IAITestFeatu
     /// <summary>
     /// Gets a test feature by its unique identifier.
     /// </summary>
-    /// <param name="testTypeId">The test feature identifier.</param>
+    /// <param name="testFeatureId">The test feature identifier.</param>
     /// <returns>The test feature, or <c>null</c> if not found.</returns>
-    public IAITestFeature? GetById(string testTypeId)
-        => this.FirstOrDefault(f => f.Id.Equals(testTypeId, StringComparison.OrdinalIgnoreCase));
+    public IAITestFeature? GetById(string testFeatureId)
+        => this.FirstOrDefault(f => f.Id.Equals(testFeatureId, StringComparison.OrdinalIgnoreCase));
 }

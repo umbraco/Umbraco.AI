@@ -32,7 +32,7 @@ public sealed class AITest : IAIVersionableEntity
     /// The ID of the test feature (harness) to use for execution.
     /// References an IAITestFeature implementation (e.g., "prompt", "agent").
     /// </summary>
-    public required string TestTypeId { get; set; }
+    public required string TestFeatureId { get; init; }
 
     /// <summary>
     /// What to test - the target prompt, agent, or custom feature.
@@ -40,7 +40,7 @@ public sealed class AITest : IAIVersionableEntity
     public required AITestTarget Target { get; set; }
 
     /// <summary>
-    /// Test input configuration as JSON - structure depends on TestTypeId.
+    /// Test input configuration as JSON - structure depends on TestFeatureId.
     /// Deserialized to the type specified by IAITestFeature.TestCaseType.
     /// </summary>
     public required string TestCaseJson { get; set; }

@@ -3,6 +3,7 @@ import { testWorkspaceManifests } from "./workspace/manifests.js";
 import { testEntityActionManifests } from "./entity-actions/manifests.js";
 import { testRepositoryManifests } from "./repository/manifests.js";
 import { testCollectionManifests } from "./collection/manifests.js";
+import { testModalManifests } from "./modals/manifests.js";
 
 export const testManifests: Array<UmbExtensionManifest> = [
 	...testMenuManifests,
@@ -10,4 +11,5 @@ export const testManifests: Array<UmbExtensionManifest> = [
 	...testCollectionManifests,
 	...testWorkspaceManifests,
 	...testEntityActionManifests,
+	...testModalManifests,
 ];

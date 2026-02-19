@@ -30,10 +30,10 @@ public class AllTestGradersController : TestControllerBase
     /// Graders are discovered via the [AITestGrader] attribute and registered in DI.
     /// </summary>
     /// <returns>List of available test graders.</returns>
-    [HttpGet("~/umbraco/ai/management/api/v{version:apiVersion}/test-graders")]
+    [HttpGet("test-graders")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<TestGraderInfoModel>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<TestGraderInfoModel>> GetAll()
+    public ActionResult<IEnumerable<TestGraderInfoModel>> GetAllTestGraders()
     {
         var graders = _testGraders.Select(grader => new TestGraderInfoModel
         {

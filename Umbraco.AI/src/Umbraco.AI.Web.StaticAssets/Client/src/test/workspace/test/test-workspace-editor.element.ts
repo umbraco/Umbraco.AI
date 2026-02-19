@@ -41,7 +41,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbElementMixin(LitElem
     private _description = "";
 
     @state()
-    private _testTypeId = "";
+    private _testFeatureId = "";
 
     @state()
     private _targetId = "";
@@ -98,7 +98,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbElementMixin(LitElem
                 this._alias = test.alias;
                 this._name = test.name;
                 this._description = test.description || "";
-                this._testTypeId = test.testTypeId;
+                this._testFeatureId = test.testFeatureId;
                 this._targetId = test.target.targetId;
                 this._targetIsAlias = test.target.isAlias;
                 this._testCaseJson = test.testCaseJson;
@@ -114,7 +114,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbElementMixin(LitElem
     }
 
     private async _handleSave() {
-        if (!this._alias || !this._name || !this._testTypeId || !this._targetId) {
+        if (!this._alias || !this._name || !this._testFeatureId || !this._targetId) {
             alert("Please fill in all required fields");
             return;
         }
@@ -133,7 +133,7 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbElementMixin(LitElem
                 alias: this._alias,
                 name: this._name,
                 description: this._description || undefined,
-                testTypeId: this._testTypeId,
+                testFeatureId: this._testFeatureId,
                 target: {
                     targetId: this._targetId,
                     isAlias: this._targetIsAlias,
@@ -236,8 +236,8 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbElementMixin(LitElem
                     <div class="form-group">
                         <label>Test Type *</label>
                         <select
-                            .value=${this._testTypeId}
-                            @change=${(e: Event) => (this._testTypeId = (e.target as HTMLSelectElement).value)}
+                            .value=${this._testFeatureId}
+                            @change=${(e: Event) => (this._testFeatureId = (e.target as HTMLSelectElement).value)}
                         >
                             <option value="">Select test type...</option>
                             ${this._testFeatures.map(

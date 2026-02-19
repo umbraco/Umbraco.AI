@@ -88,7 +88,7 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
                 },
                 {
                     columnAlias: "testType",
-                    value: item.testTypeId,
+                    value: item.testFeatureId,
                 },
                 {
                     columnAlias: "tags",

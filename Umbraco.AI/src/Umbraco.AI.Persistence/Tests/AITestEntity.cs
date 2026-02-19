@@ -28,7 +28,7 @@ internal class AITestEntity
     /// <summary>
     /// The ID of the test feature (harness) to use.
     /// </summary>
-    public string TestTypeId { get; set; } = string.Empty;
+    public string TestFeatureId { get; set; } = string.Empty;
 
     /// <summary>
     /// Target identifier (Guid or alias).

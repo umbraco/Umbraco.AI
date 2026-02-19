@@ -28,7 +28,7 @@ public class CreateTestRequestModel
     /// The test type ID (test feature implementation).
     /// </summary>
     [Required]
-    public string TestTypeId { get; set; } = string.Empty;
+    public string TestFeatureId { get; set; } = string.Empty;
 
     /// <summary>
     /// The target being tested (prompt ID/alias or agent ID/alias).

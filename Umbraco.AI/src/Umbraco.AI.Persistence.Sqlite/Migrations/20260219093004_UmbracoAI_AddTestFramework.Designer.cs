@@ -692,7 +692,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TestTypeId")
+                    b.Property<string>("TestFeatureId")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -709,7 +709,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
 
                     b.HasIndex("IsActive");
 
-                    b.HasIndex("TestTypeId");
+                    b.HasIndex("TestFeatureId");
 
                     b.ToTable("umbracoAITest", (string)null);
                 });

@@ -8,8 +8,18 @@ export interface UaiTestItemModel extends UmbEntityModel {
     entityType: string;
     alias: string;
     name: string;
-    testTypeId: string;
+    testFeatureId: string;
     tags: string[];
     runCount: number;
     dateModified: string | null;
+}
+
+/**
+ * Test feature item model for feature selection.
+ */
+export interface UaiTestFeatureItemModel {
+    id: string;
+    name: string;
+    description?: string | null;
+    category?: string | null;
 }

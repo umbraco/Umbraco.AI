@@ -36,11 +36,11 @@ public class RunTestsByTagsController : TestControllerBase
     /// <param name="requestModel">The tags execution request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Batch execution results with metrics for each matching test.</returns>
-    [HttpPost("~/umbraco/ai/management/api/v{version:apiVersion}/tests/execute-by-tags")]
+    [HttpPost("tests/execute-by-tags")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestBatchResultsResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<TestBatchResultsResponseModel>> RunByTags(
+    public async Task<ActionResult<TestBatchResultsResponseModel>> RunTestsByTags(
         [FromBody] RunTestsByTagsRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {

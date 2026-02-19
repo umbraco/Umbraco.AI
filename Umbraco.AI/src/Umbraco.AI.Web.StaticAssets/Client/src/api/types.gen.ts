@@ -178,7 +178,7 @@ export type CreateTestRequestModel = {
     alias: string;
     name: string;
     description?: string | null;
-    testTypeId: string;
+    testFeatureId: string;
     target: TestTargetModel;
     testCaseJson: string;
     graders: Array<TestGraderModel>;
@@ -456,7 +456,7 @@ export type TestResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    testTypeId: string;
+    testFeatureId: string;
     target: TestTargetModel;
     testCaseJson: string;
     graders: Array<TestGraderModel>;
@@ -546,7 +546,7 @@ export type UpdateTestRequestModel = {
     alias: string;
     name: string;
     description?: string | null;
-    testTypeId: string;
+    testFeatureId: string;
     target: TestTargetModel;
     testCaseJson: string;
     graders: Array<TestGraderModel>;

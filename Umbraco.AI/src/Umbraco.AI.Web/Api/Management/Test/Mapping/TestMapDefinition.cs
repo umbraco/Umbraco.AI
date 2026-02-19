@@ -19,7 +19,7 @@ public class TestMapDefinition : IMapDefinition
             Alias = source.Alias,
             Name = source.Name,
             Description = source.Description,
-            TestTypeId = source.TestTypeId,
+            TestFeatureId = source.TestFeatureId,
             Target = new TestTargetModel
             {
                 TargetId = source.Target.TargetId,
@@ -51,7 +51,7 @@ public class TestMapDefinition : IMapDefinition
             Alias = source.Alias,
             Name = source.Name,
             Description = source.Description,
-            TestTypeId = source.TestTypeId,
+            TestFeatureId = source.TestFeatureId,
             Tags = source.Tags,
             RunCount = source.RunCount,
             DateCreated = source.DateCreated,
@@ -65,35 +65,7 @@ public class TestMapDefinition : IMapDefinition
             Alias = source.Alias,
             Name = source.Name,
             Description = source.Description,
-            TestTypeId = source.TestTypeId,
-            Target = new AITestTarget
-            {
-                TargetId = source.Target.TargetId,
-                IsAlias = source.Target.IsAlias
-            },
-            TestCaseJson = source.TestCaseJson,
-            Graders = source.Graders.Select(g => new AITestGrader
-            {
-                Id = g.Id,
-                GraderTypeId = g.GraderTypeId,
-                Name = g.Name,
-                Description = g.Description,
-                ConfigJson = g.ConfigJson,
-                Negate = g.Negate,
-                Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
-                Weight = g.Weight
-            }).ToList(),
-            RunCount = source.RunCount,
-            Tags = source.Tags.ToList()
-        });
-
-        // UpdateTestRequestModel -> AITest
-        mapper.Define<UpdateTestRequestModel, AITest>((source, context) => new AITest
-        {
-            Alias = source.Alias,
-            Name = source.Name,
-            Description = source.Description,
-            TestTypeId = source.TestTypeId,
+            TestFeatureId = source.TestFeatureId,
             Target = new AITestTarget
             {
                 TargetId = source.Target.TargetId,

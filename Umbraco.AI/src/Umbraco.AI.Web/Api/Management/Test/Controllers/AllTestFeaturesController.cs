@@ -30,10 +30,10 @@ public class AllTestFeaturesController : TestControllerBase
     /// Test features are discovered via the [AITestFeature] attribute and registered in DI.
     /// </summary>
     /// <returns>List of available test features.</returns>
-    [HttpGet("~/umbraco/ai/management/api/v{version:apiVersion}/test-features")]
+    [HttpGet("test-features")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<TestFeatureInfoModel>), StatusCodes.Status200OK)]
-    public ActionResult<IEnumerable<TestFeatureInfoModel>> GetAll()
+    public ActionResult<IEnumerable<TestFeatureInfoModel>> GetAllTestFeatures()
     {
         var features = _testFeatures.Select(feature => new TestFeatureInfoModel
         {

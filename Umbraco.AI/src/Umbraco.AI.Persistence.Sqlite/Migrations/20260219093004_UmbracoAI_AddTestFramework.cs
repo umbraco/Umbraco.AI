@@ -19,7 +19,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     Alias = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    TestTypeId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    TestFeatureId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     TargetId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     TargetIsAlias = table.Column<bool>(type: "INTEGER", nullable: false),
                     TestCaseJson = table.Column<string>(type: "TEXT", nullable: false),
@@ -96,9 +96,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 column: "IsActive");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAITest_TestTypeId",
+                name: "IX_umbracoAITest_TestFeatureId",
                 table: "umbracoAITest",
-                column: "TestTypeId");
+                column: "TestFeatureId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_umbracoAITestRun_BatchId",

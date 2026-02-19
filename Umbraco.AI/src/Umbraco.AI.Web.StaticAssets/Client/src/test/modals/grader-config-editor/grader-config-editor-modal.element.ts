@@ -163,11 +163,25 @@ export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
                                 <uui-select
                                     id="severity"
                                     .value=${this._grader.severity}
+                                    .options=${[
+                                        {
+                                            value: "Info",
+                                            name: "Info",
+                                            selected: this._grader.severity === "Info",
+                                        },
+                                        {
+                                            value: "Warning",
+                                            name: "Warning",
+                                            selected: this._grader.severity === "Warning",
+                                        },
+                                        {
+                                            value: "Error",
+                                            name: "Error",
+                                            selected: this._grader.severity === "Error",
+                                        },
+                                    ]}
                                     @change=${this.#onSeverityChange}
                                 >
-                                    <uui-select-option value="Info">Info</uui-select-option>
-                                    <uui-select-option value="Warning">Warning</uui-select-option>
-                                    <uui-select-option value="Error">Error</uui-select-option>
                                 </uui-select>
                             </div>
                         </umb-property-layout>
@@ -190,9 +204,12 @@ export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
                             description="Invert the pass/fail result of this grader"
                         >
                             <div slot="editor">
-                                <uui-checkbox .checked=${this._grader.negate} @change=${this.#onNegateChange}>
-                                    Negate (invert pass/fail)
-                                </uui-checkbox>
+                                <uui-toggle
+                                    .checked=${this._grader.negate}
+                                    @change=${this.#onNegateChange}
+                                    label="Negate (invert pass/fail)"
+                                >
+                                </uui-toggle>
                             </div>
                         </umb-property-layout>
                     </uui-box>

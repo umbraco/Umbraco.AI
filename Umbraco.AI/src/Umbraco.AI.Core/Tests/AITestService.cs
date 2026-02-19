@@ -207,6 +207,73 @@ internal sealed class AITestService : IAITestService
     }
 
     /// <inheritdoc />
+    public async Task<AITest> RollbackTestAsync(
+        Guid testId,
+        int targetVersion,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the current test to ensure it exists
+        var currentTest = await _repository.GetByIdAsync(testId, cancellationToken);
+        if (currentTest is null)
+        {
+            throw new InvalidOperationException($"Test with ID '{testId}' not found.");
+        }
+
+        // Get the snapshot at the target version
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AITest>(testId, targetVersion, cancellationToken);
+        if (snapshot is null)
+        {
+            throw new InvalidOperationException($"Version {targetVersion} not found for test '{testId}'.");
+        }
+
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Publish rolling back notification (before rollback)
+        var messages = new EventMessages();
+        var rollingBackNotification = new AITestRollingBackNotification(testId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rollingBackNotification, cancellationToken);
+
+        // Check if cancelled
+        if (rollingBackNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Test rollback cancelled: {errorMessages}");
+        }
+
+        // Save the current state to version history before rolling back
+        await _versionService.SaveVersionAsync(currentTest, userId, null, cancellationToken);
+
+        // Create a new version by saving the snapshot data
+        // We need to preserve the ID and update the dates appropriately
+        var rolledBackTest = new AITest
+        {
+            Id = testId,
+            Alias = snapshot.Alias,
+            Name = snapshot.Name,
+            Description = snapshot.Description,
+            TestFeatureId = snapshot.TestFeatureId,
+            TestTargetId = snapshot.TestTargetId,
+            TestCase = snapshot.TestCase,
+            Graders = snapshot.Graders,
+            RunCount = snapshot.RunCount,
+            Tags = snapshot.Tags,
+            IsActive = snapshot.IsActive,
+            BaselineRunId = snapshot.BaselineRunId,
+            DateCreated = snapshot.DateCreated,
+            DateModified = DateTime.UtcNow
+        };
+
+        // Save without versioning (we already versioned the current state above)
+        var savedTest = await _repository.SaveAsync(rolledBackTest, userId, cancellationToken);
+
+        // Publish rolled back notification (after rollback)
+        var rolledBackNotification = new AITestRolledBackNotification(testId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rolledBackNotification, cancellationToken);
+
+        return savedTest;
+    }
+
+    /// <inheritdoc />
     public async Task<AITestMetrics> RunTestAsync(
         Guid testId,
         Guid? profileIdOverride = null,

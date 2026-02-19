@@ -43,8 +43,7 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
     /// </summary>
     public ContainsGrader(IAIEditableModelSchemaBuilder schemaBuilder)
         : base(schemaBuilder)
-    {
-    }
+    { }
 
     /// <inheritdoc />
     public override Task<AITestGraderResult> GradeAsync(

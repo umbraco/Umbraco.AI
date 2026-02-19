@@ -50,29 +50,12 @@ public abstract class AITestGraderBase<TConfig> : IAITestGrader
         Name = attribute.Name;
         Type = attribute.Type;
 
-        _configSchema = new Lazy<AIEditableModelSchema?>(() => BuildSchemaForType(ConfigType, Id));
+        _configSchema = new Lazy<AIEditableModelSchema?>(() => ConfigType != null ? SchemaBuilder.BuildForType(ConfigType, Id) : null);
     }
 
     /// <inheritdoc />
     public AIEditableModelSchema? GetConfigSchema()
         => _configSchema.Value;
-
-    /// <summary>
-    /// Builds a schema for a runtime type using reflection to call the generic method.
-    /// </summary>
-    private AIEditableModelSchema? BuildSchemaForType(Type? type, string modelId)
-    {
-        if (type == null)
-        {
-            return null;
-        }
-
-        var method = typeof(IAIEditableModelSchemaBuilder)
-            .GetMethod(nameof(IAIEditableModelSchemaBuilder.BuildForType))!
-            .MakeGenericMethod(type);
-
-        return (AIEditableModelSchema?)method.Invoke(SchemaBuilder, new object[] { modelId });
-    }
 
     /// <inheritdoc />
     public abstract Task<AITestGraderResult> GradeAsync(

@@ -77,6 +77,19 @@ public interface IAITestService
     Task<bool> TestAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Rolls back a test to a previous version.
+    /// </summary>
+    /// <param name="testId">The test ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated test at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the test or target version is not found.</exception>
+    Task<AITest> RollbackTestAsync(
+        Guid testId,
+        int targetVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Executes a test and returns the metrics.
     /// Creates N test runs (based on test.RunCount) and calculates pass@k metrics.
     /// </summary>

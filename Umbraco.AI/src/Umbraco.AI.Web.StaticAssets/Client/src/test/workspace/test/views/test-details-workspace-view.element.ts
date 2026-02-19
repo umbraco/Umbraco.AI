@@ -177,7 +177,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 					<uui-input
 						slot="editor"
 						type="number"
-						.value=${this._model.runCount.toString()}
+						.value=${this._model.runCount}
 						@input=${this.#onRunCountChange}
 						min="1"
 						max="100"

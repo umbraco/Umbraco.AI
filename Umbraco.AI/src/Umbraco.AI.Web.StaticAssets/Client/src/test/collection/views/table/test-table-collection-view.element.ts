@@ -37,7 +37,7 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
     private _columns: UmbTableColumn[] = [
         { name: "Name", alias: "name" },
         { name: "Alias", alias: "alias" },
-        { name: "Test Type", alias: "testType" },
+        { name: "Feature", alias: "testFeature" },
         { name: "Tags", alias: "tags" },
         { name: "Run Count", alias: "runCount" },
         { name: "Modified", alias: "dateModified" },
@@ -84,10 +84,10 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
                 },
                 {
                     columnAlias: "alias",
-                    value: item.alias,
+                    value: html`<uui-tag color="primary" look="secondary">${item.alias}</uui-tag>`,
                 },
                 {
-                    columnAlias: "testType",
+                    columnAlias: "testFeature",
                     value: item.testFeatureId,
                 },
                 {

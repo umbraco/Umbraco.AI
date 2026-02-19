@@ -9,10 +9,8 @@ namespace Umbraco.AI.Core.EditableModels;
 
 internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuilder
 {
-    public AIEditableModelSchema BuildForType<TModel>(string modelId)
-        where TModel : class
+    public AIEditableModelSchema BuildForType(Type modelType, string modelId)
     {
-        var modelType = typeof(TModel);
         var properties = modelType
             .GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
@@ -22,6 +20,10 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
         var fields = properties.Select(property => BuildFieldForProperty(property, modelId, modelInstance)).ToList();
         return new AIEditableModelSchema(modelType, fields);
     }
+
+    public AIEditableModelSchema BuildForType<TModel>(string modelId)
+        where TModel : class
+        => BuildForType(typeof(TModel), modelId);
 
     private AIEditableModelField BuildFieldForProperty(PropertyInfo property, string modelId, object? modelInstance)
     {
@@ -86,7 +88,8 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
         var validationAttributes = property.GetCustomAttributes<ValidationAttribute>().ToList();
 
         // If the property is non-nullable and doesn't already have a Required attribute, add one
-        if (!property.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
+        if (!property.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any()
+            && property.PropertyType != typeof(bool))
         {
             validationAttributes.Add(new RequiredAttribute());
         }

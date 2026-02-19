@@ -1,4 +1,4 @@
-import { html, customElement, property, state, repeat } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, property, state, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
@@ -10,7 +10,6 @@ import type { UaiTestGraderConfig } from "../../types.js";
 import { getGraderSummary } from "../../types.js";
 import { TestsService } from "../../../api/sdk.gen.js";
 import type { TestGraderInfoModel } from "../../../api/types.gen.js";
-import { css } from "@umbraco-cms/backoffice/dist-cms/external/lit";
 
 @customElement("uai-grader-config-builder")
 export class UaiGraderConfigBuilderElement extends UmbLitElement {
@@ -134,7 +133,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
                             name=${grader.name || "Unnamed grader"}
                             detail=${this.#getGraderDetail(grader)}
                         >
-                            <uui-icon slot="icon" name="icon-checkbox"></uui-icon>
+                            <umb-icon slot="icon" name="icon-checkbox color-blue"></umb-icon>
                             <uui-action-bar slot="actions">
                                 <uui-button @click=${() => this.#onEdit(grader)} label="Edit">
                                     <uui-icon name="icon-edit"></uui-icon>
@@ -156,7 +155,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
 
     static override styles = [
         css`
-            add-btn {
+            .add-btn {
                 width: 100%;
             }
         `,

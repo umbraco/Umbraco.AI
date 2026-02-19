@@ -8,6 +8,8 @@ export type { UaiTestEntityType, UaiTestRootEntityType } from "./entity.js";
 // Repository aliases
 export const UAI_TEST_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test";
 export const UAI_TEST_COLLECTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test.Collection";
+export const UAI_TEST_DETAIL_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test.Detail";
+export const UAI_TEST_DETAIL_STORE_ALIAS = "UmbracoAI.Store.Test.Detail";
 
 // Collection aliases
 export const UAI_TEST_COLLECTION_ALIAS = "UmbracoAI.Collection.Test";

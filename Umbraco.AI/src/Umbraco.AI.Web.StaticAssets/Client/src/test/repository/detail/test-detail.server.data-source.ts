@@ -31,7 +31,7 @@ export class UaiTestDetailServerDataSource implements UmbDetailDataSource<UaiTes
             testTargetId: preset?.testTargetId ?? "",
             testCase: null,
             graders: [],
-            runCount: 0,
+            runCount: 1,
             tags: [],
             dateCreated: null,
             dateModified: null,
@@ -62,6 +62,7 @@ export class UaiTestDetailServerDataSource implements UmbDetailDataSource<UaiTes
      * Creates a new test.
      */
     async create(model: UaiTestDetailModel, _parentUnique: string | null) {
+        debugger;
         const requestBody = UaiTestTypeMapper.toCreateRequest(model);
 
         const { response, error } = await tryExecute(

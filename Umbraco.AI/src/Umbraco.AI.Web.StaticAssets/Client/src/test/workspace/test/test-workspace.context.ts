@@ -176,6 +176,7 @@ export class UaiTestWorkspaceContext
      * Saves the test (create or update).
      */
     async submit() {
+        debugger;
         const model = this.getData();
         if (!model) {
             throw new Error("No model to submit");

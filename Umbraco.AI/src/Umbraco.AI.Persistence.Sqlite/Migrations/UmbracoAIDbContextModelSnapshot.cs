@@ -677,13 +677,8 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TargetId")
-                        .IsRequired()
-                        .HasMaxLength(100)
+                    b.Property<Guid>("TestTargetId")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("TargetIsAlias")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("TestCaseJson")
                         .IsRequired()

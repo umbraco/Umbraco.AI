@@ -154,7 +154,8 @@ public static partial class UmbracoBuilderExtensions
         builder.AIVersionableEntityAdapters()
             .Add<AIConnectionVersionableEntityAdapter>()
             .Add<AIProfileVersionableEntityAdapter>()
-            .Add<AIContextVersionableEntityAdapter>();
+            .Add<AIContextVersionableEntityAdapter>()
+            .Add<AITestVersionableEntityAdapter>();
 
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();

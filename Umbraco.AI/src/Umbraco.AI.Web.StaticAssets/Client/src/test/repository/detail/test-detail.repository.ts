@@ -18,6 +18,7 @@ export class UaiTestDetailRepository extends UmbDetailRepositoryBase<UaiTestDeta
     }
 
     override async create(model: UaiTestDetailModel) {
+        debugger;
         const result = await super.create(model, null);
         if (!result.error && result.data) {
             dispatchActionEvent(this, UaiEntityActionEvent.created(result.data.unique, UAI_TEST_ENTITY_TYPE));
@@ -33,6 +34,7 @@ export class UaiTestDetailRepository extends UmbDetailRepositoryBase<UaiTestDeta
     }
 
     override async save(model: UaiTestDetailModel) {
+        debugger;
         const result = await super.save(model);
         if (!result.error) {
             dispatchActionEvent(this, UaiEntityActionEvent.updated(model.unique, UAI_TEST_ENTITY_TYPE));

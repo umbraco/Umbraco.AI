@@ -684,13 +684,8 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("TargetId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("TargetIsAlias")
-                        .HasColumnType("bit");
+                    b.Property<Guid>("TestTargetId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TestCaseJson")
                         .IsRequired()

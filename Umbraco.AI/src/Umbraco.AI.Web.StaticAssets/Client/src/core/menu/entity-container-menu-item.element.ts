@@ -1,5 +1,5 @@
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { customElement, html, property, state } from '@umbraco-cms/backoffice/external/lit';
+import { customElement, html, property, state, when } from '@umbraco-cms/backoffice/external/lit';
 import { UMB_SECTION_CONTEXT } from '@umbraco-cms/backoffice/section';
 import { debounce } from '@umbraco-cms/backoffice/utils';
 import type { UaiEntityContainerMenuItemManifest } from './types.js';
@@ -107,6 +107,17 @@ export class UaiEntityContainerMenuItemElement extends UmbLitElement {
 				?active=${this._isActive}
 				label=${this.localize.string(this.manifest.meta.label ?? this.manifest.name)}>
 				<uui-icon slot="icon" name=${this.manifest.meta.icon ?? ''}></uui-icon>
+				${when(
+					this.manifest?.meta?.entityType,
+					() => html`
+						<umb-entity-actions-bundle
+							slot="actions"
+							.entityType=${this.manifest.meta.entityType}
+							.unique=${null}
+							.label=${this.localize.string(this.manifest.meta.label ?? this.manifest.name)}>
+						</umb-entity-actions-bundle>
+					`,
+				)}
 			</uui-menu-item>
 		`;
 	}

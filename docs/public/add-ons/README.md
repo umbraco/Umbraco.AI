@@ -14,6 +14,7 @@ Umbraco.AI can be extended with add-on packages that provide specialized functio
 | [Prompt Management](prompt/README.md)    | `Umbraco.AI.Prompt`        | Create, manage, and execute reusable prompt templates  |
 | [Agent Runtime](agent/README.md)         | `Umbraco.AI.Agent`         | Configure and run AI agents with streaming responses   |
 | [Agent Copilot](agent-copilot/README.md) | `Umbraco.AI.Agent.Copilot` | Chat sidebar UI for agent interaction (requires Agent) |
+| [Deploy Support](deploy/README.md)       | `Umbraco.AI.Deploy`        | Deploy AI configuration across environments            |
 
 ## Architecture
 
@@ -65,6 +66,11 @@ Install-Package Umbraco.AI.OpenAI
 # Install add-ons (optional)
 Install-Package Umbraco.AI.Prompt
 Install-Package Umbraco.AI.Agent
+
+# Install Deploy support (requires Umbraco Deploy)
+Install-Package Umbraco.AI.Deploy
+Install-Package Umbraco.AI.Deploy.Prompt
+Install-Package Umbraco.AI.Deploy.Agent
 ```
 
 {% endcode %}
@@ -81,7 +87,7 @@ All add-ons share these features from the core package:
 
 ## Add-on Databases
 
-Each add-on has its own database tables with a package-specific prefix:
+Add-ons that store data have their own database tables with a package-specific prefix:
 
 | Add-on | Migration Prefix   |
 | ------ | ------------------ |
@@ -89,7 +95,7 @@ Each add-on has its own database tables with a package-specific prefix:
 | Agent  | `UmbracoAIAgent_`  |
 
 {% hint style="info" %}
-Agent Copilot is a frontend-only package with no database tables.
+Agent Copilot and Deploy packages are integration-only packages with no database tables.
 {% endhint %}
 
 Migrations run automatically on application startup.

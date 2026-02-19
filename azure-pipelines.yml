@@ -34,6 +34,10 @@ parameters:
           - name: Umbraco.AI.Agent
             changeVar: AgentChanged
             hasNpm: true
+          # Deploy support (no frontend)
+          - name: Umbraco.AI.Deploy
+            changeVar: DeployChanged
+            hasNpm: false
     - name: level2Products
       type: object
       default:
@@ -41,6 +45,13 @@ parameters:
           - name: Umbraco.AI.Agent.UI
             changeVar: AgentUiChanged
             hasNpm: true
+          # Deploy extensions (depend on Deploy + their respective add-ons)
+          - name: Umbraco.AI.Deploy.Prompt
+            changeVar: DeployPromptChanged
+            hasNpm: false
+          - name: Umbraco.AI.Deploy.Agent
+            changeVar: DeployAgentChanged
+            hasNpm: false
     - name: level3Products
       type: object
       default:

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Title>Umbraco AI Deploy Agent</Title>
+    <Description>Umbraco Deploy support for Umbraco.AI.Agent</Description>
+  </PropertyGroup>
+
+  <!-- Use project references for local dev, NuGet packages for CI -->
+  <PropertyGroup>
+    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+  </PropertyGroup>
+
+  <!-- Core Umbraco.AI packages -->
+  <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ProjectReference Include="..\..\..\Umbraco.AI.Deploy\src\Umbraco.AI.Deploy\Umbraco.AI.Deploy.csproj" />
+    <ProjectReference Include="..\..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Startup\Umbraco.AI.Agent.Startup.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+    <PackageReference Include="Umbraco.AI.Deploy" />
+    <PackageReference Include="Umbraco.AI.Agent.Startup" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Deploy.Infrastructure" />
+  </ItemGroup>
+</Project>

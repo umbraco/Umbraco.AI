@@ -44,7 +44,9 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
 			if (!context) return;
 			this.#workspaceContext = context;
+            console.log("Workspace context consumed in editor:", context);
 			this.observe(context.model, (model) => {
+                console.log("Received model update in editor:", model);
 				this._model = model;
 			});
 			this.observe(context.isNew, (isNew) => {

@@ -18,6 +18,9 @@ public class TestMapDefinition : IMapDefinition
         // IAITestFeature -> TestFeatureResponseModel
         mapper.Define<IAITestFeature, TestFeatureResponseModel>((_, _) => new TestFeatureResponseModel(), MapTestFeature);
 
+        // IAITestGrader -> TestGraderResponseModel
+        mapper.Define<IAITestGrader, TestGraderResponseModel>((_, _) => new TestGraderResponseModel(), MapTestGrader);
+
         // AITest -> TestResponseModel
         mapper.Define<AITest, TestResponseModel>((source, context) => new TestResponseModel
         {
@@ -216,6 +219,18 @@ public class TestMapDefinition : IMapDefinition
         target.Category = source.Category;
         target.TestCaseSchema = source.TestCaseType is not null
             ? context.Map<EditableModelSchemaModel>(source.GetTestCaseSchema())
+            : null;
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapTestGrader(IAITestGrader source, TestGraderResponseModel target, MapperContext context)
+    {
+        target.Id = source.Id;
+        target.Name = source.Name;
+        target.Description = source.Description;
+        target.Type = source.Type.ToString();
+        target.ConfigSchema = source.ConfigType is not null
+            ? context.Map<EditableModelSchemaModel>(source.GetConfigSchema())
             : null;
     }
 }

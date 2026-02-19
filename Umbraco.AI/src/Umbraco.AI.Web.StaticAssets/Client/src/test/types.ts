@@ -44,3 +44,63 @@ export interface UaiTestFeatureItemModel {
     description?: string | null;
     category?: string | null;
 }
+
+/**
+ * Frontend representation of a test grader configuration.
+ * Maps to AITestGrader C# model.
+ */
+export interface UaiTestGraderConfig {
+    id: string;                          // Guid - unique ID
+    graderTypeId: string;                // ID of grader implementation
+    name: string;                        // Display name
+    description?: string;                // Optional description
+    config?: Record<string, unknown>;    // Configuration object for grader type
+    negate: boolean;                     // Invert pass/fail
+    severity: "Info" | "Warning" | "Error";  // Severity level
+    weight: number;                      // Scoring weight (default 1.0)
+}
+
+/**
+ * Information about an available grader type.
+ */
+export interface UaiTestGraderTypeInfo {
+    id: string;
+    name: string;
+    description?: string;
+    type: "CodeBased" | "ModelBased";
+}
+
+/**
+ * Creates an empty grader configuration with default values.
+ */
+export function createEmptyGraderConfig(): UaiTestGraderConfig {
+    return {
+        id: crypto.randomUUID(),
+        graderTypeId: "",
+        name: "",
+        description: undefined,
+        config: undefined,
+        negate: false,
+        severity: "Error",
+        weight: 1.0,
+    };
+}
+
+/**
+ * Generates a human-readable summary for a grader.
+ */
+export function getGraderSummary(grader: UaiTestGraderConfig, typeName?: string): string {
+    const parts: string[] = [];
+
+    parts.push(grader.name || "Unnamed grader");
+    if (typeName) {
+        parts.push(`(${typeName})`);
+    }
+    parts.push(`${grader.severity}`);
+
+    if (grader.negate) {
+        parts.push("(Negated)");
+    }
+
+    return parts.join(" ");
+}

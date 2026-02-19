@@ -169,7 +169,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 					></uui-textarea>
 				</umb-property-layout>
 
-				<umb-property-layout label="Target Entity" description="The entity to test" mandatory>
+				<umb-property-layout label="Target" description="The entity to test" mandatory>
 					<uai-test-feature-entity-picker
 						slot="editor"
 						.testFeatureId=${this._model.testFeatureId}

@@ -14,24 +14,6 @@ export const manifests: Array<UmbExtensionManifest> = [
 		},
 	},
 	{
-		type: "workspaceView",
-		alias: "UmbracoAI.WorkspaceView.Test.Edit",
-		name: "Test Edit Workspace View",
-		js: () => import("./views/test-workspace-editor.element.js"),
-		weight: 1000,
-		meta: {
-			label: "Edit",
-			pathname: "edit",
-			icon: "icon-edit",
-		},
-		conditions: [
-			{
-				alias: UMB_WORKSPACE_CONDITION_ALIAS,
-				match: UAI_TEST_WORKSPACE_ALIAS,
-			},
-		],
-	},
-	{
 		type: "workspaceAction",
 		kind: "default",
 		alias: "UmbracoAI.WorkspaceAction.Test.Save",

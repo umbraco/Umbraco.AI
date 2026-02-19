@@ -10,5 +10,5 @@ public class UmbracoAIDeploySettingsAccessor(IOptionsMonitor<UmbracoAIDeploySett
     /// <summary>
     /// Gets the current Umbraco.AI Deploy settings.
     /// </summary>
-    public UmbracoAIDeploySettings Settings => optionsMonitor.CurrentValue;
+    public virtual UmbracoAIDeploySettings Settings => optionsMonitor.CurrentValue;
 }

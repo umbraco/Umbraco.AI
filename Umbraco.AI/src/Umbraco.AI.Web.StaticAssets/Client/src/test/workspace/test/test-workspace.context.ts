@@ -61,6 +61,7 @@ export class UaiTestWorkspaceContext
                 setup: async (_component, info) => {
                     const testFeatureId = info.match.params.testFeatureId;
                     await this.scaffold(testFeatureId);
+                    console.log("Scaffolded new test with testFeatureId:", testFeatureId);
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,

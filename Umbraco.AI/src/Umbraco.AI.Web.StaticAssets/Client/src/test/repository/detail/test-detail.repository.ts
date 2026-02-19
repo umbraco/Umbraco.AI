@@ -13,18 +13,18 @@ import { UaiEntityActionEvent, dispatchActionEvent } from "../../../core/index.j
  * Dispatches entity action events after successful CRUD operations.
  */
 export class UaiTestDetailRepository extends UmbDetailRepositoryBase<UaiTestDetailModel> {
-    #dataSource: UaiTestDetailServerDataSource;
+    #source: UaiTestDetailServerDataSource;
 
     constructor(host: UmbControllerHost) {
         super(host, UaiTestDetailServerDataSource, UAI_TEST_DETAIL_STORE_CONTEXT);
-        this.#dataSource = new UaiTestDetailServerDataSource(host);
+        this.#source = new UaiTestDetailServerDataSource(host);
     }
 
     /**
      * Creates a scaffold for a new test.
      */
     async createScaffold(preset?: Partial<UaiTestDetailModel>) {
-        return this.#dataSource.createScaffold(preset);
+        return await this.#source.createScaffold(preset);
     }
 
     override async create(model: UaiTestDetailModel) {

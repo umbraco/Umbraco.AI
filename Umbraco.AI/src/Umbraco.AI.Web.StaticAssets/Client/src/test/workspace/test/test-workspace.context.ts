@@ -136,7 +136,9 @@ export class UaiTestWorkspaceContext
      */
     async scaffold(testFeatureId?: string) {
         this.resetState();
-        const { data } = await this.#repository.createScaffold({ testFeatureId });
+        const { data } = await this.#repository.createScaffold(
+            testFeatureId ? { testFeatureId } : undefined
+        );
         if (data) {
             this.#unique.setValue(UAI_EMPTY_GUID);
             this.#model.setValue(data);

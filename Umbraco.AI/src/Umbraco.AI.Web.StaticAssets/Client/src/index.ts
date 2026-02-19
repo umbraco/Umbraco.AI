@@ -11,4 +11,4 @@ export * from "./request-context/index.js";
 export * from "./audit-log/index.js";
 export * from "./analytics/index.js";
 export * from "./workspace-registry/index.js";
-export * from "./tests/index.js";
+export * from "./test/index.js";

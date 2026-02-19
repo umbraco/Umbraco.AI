@@ -1,7 +1,10 @@
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
-import { UAI_TEST_ROOT_WORKSPACE_ALIAS } from "../../constants.js";
-import { UAI_TEST_ROOT_ENTITY_TYPE } from "../../entity.js";
-import { UAI_TEST_ICON } from "../../constants.js";
+import {
+    UAI_TEST_ROOT_WORKSPACE_ALIAS,
+    UAI_TEST_ROOT_ENTITY_TYPE,
+    UAI_TEST_ICON,
+    UAI_TEST_COLLECTION_ALIAS,
+} from "../../constants.js";
 
 export const manifests: Array<UmbExtensionManifest> = [
     {
@@ -16,14 +19,14 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAI.WorkspaceView.TestsRoot.Dashboard",
-        name: "Tests Dashboard Workspace View",
-        element: () => import("./tests-workspace-root.element.js"),
-        weight: 1000,
+        kind: "collection",
+        alias: "UmbracoAI.WorkspaceView.TestRoot.Collection",
+        name: "Test Root Collection Workspace View",
         meta: {
-            label: "Dashboard",
-            pathname: "dashboard",
+            label: "Collection",
+            pathname: "collection",
             icon: UAI_TEST_ICON,
+            collectionAlias: UAI_TEST_COLLECTION_ALIAS,
         },
         conditions: [
             {

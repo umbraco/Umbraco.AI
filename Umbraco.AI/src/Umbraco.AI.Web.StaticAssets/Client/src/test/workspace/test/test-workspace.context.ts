@@ -9,7 +9,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
-import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../tests-root/paths.js";
+import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../test-root/paths.js";
 import { AITestRepository } from "../../repository/test.repository.js";
 import { UmbracoAITestWorkspaceEditorElement } from "./test-workspace-editor.element.js";
 import type {

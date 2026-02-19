@@ -21,6 +21,7 @@ using Umbraco.AI.Web.Api.Management.Embedding.Mapping;
 using Umbraco.AI.Web.Api.Management.Profile.Mapping;
 using Umbraco.AI.Web.Api.Management.Provider.Mapping;
 using Umbraco.AI.Web.Api.Management.Settings.Mapping;
+using Umbraco.AI.Web.Api.Management.Test.Mapping;
 using Umbraco.AI.Web.Api.Management.Tool.Mapping;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Api.Common.OpenApi;
@@ -70,6 +71,7 @@ public static class UmbracoBuilderExtensions
             .Add<ProviderMapDefinition>()
             .Add<EmbeddingMapDefinition>()
             .Add<ChatMapDefinition>()
+            .Add<TestMapDefinition>()
             .Add<AuditLogMapDefinition>()
             .Add<UsageMapDefinition>()
             .Add<SettingsMapDefinition>()

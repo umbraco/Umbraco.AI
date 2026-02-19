@@ -10,6 +10,8 @@ export interface UaiItemPickerModalData {
     title?: string;
     buttonLabel?: string;
     noResultsMessage?: string;
+    /** If false, modal won't auto-close in single selection mode. Default: true */
+    autoSubmit?: boolean;
 }
 
 export interface UaiItemPickerModalValue {

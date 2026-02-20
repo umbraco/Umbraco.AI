@@ -10,16 +10,6 @@ namespace Umbraco.AI.Prompt.Core.Tests;
 public class PromptTestFeatureConfig
 {
     /// <summary>
-    /// The entity ID to test with (content/media item).
-    /// </summary>
-    [AIField(
-        Label = "Entity ID",
-        Description = "The content or media item to test with",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
-        SortOrder = 1)]
-    public Guid? EntityId { get; set; }
-
-    /// <summary>
     /// The type of entity (document, media, member).
     /// </summary>
     [AIField(
@@ -27,8 +17,18 @@ public class PromptTestFeatureConfig
         Description = "Type of entity being tested",
         EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
         EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"document\",\"media\",\"member\"]}]",
-        SortOrder = 2)]
+        SortOrder = 1)]
     public string EntityType { get; set; } = "document";
+
+    /// <summary>
+    /// The entity ID to test with (content/media item).
+    /// </summary>
+    [AIField(
+        Label = "Entity ID",
+        Description = "The content or media item to test with",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        SortOrder = 2)]
+    public Guid? EntityId { get; set; }
 
     /// <summary>
     /// The property alias being edited.

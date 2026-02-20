@@ -266,20 +266,20 @@ public class AIEditableModelSerializerTests
     public void Deserialize_WithNullJson_ReturnsDefault()
     {
         // Act
-        var result = (JsonElement)_serializer.Deserialize(null);
+        var result = _serializer.Deserialize(null);
 
         // Assert
-        result.ValueKind.ShouldBe(JsonValueKind.Undefined);
+        result.ShouldBeNull();
     }
 
     [Fact]
     public void Deserialize_WithEmptyJson_ReturnsDefault()
     {
         // Act
-        var result = (JsonElement)_serializer.Deserialize(string.Empty);
+        var result = _serializer.Deserialize(string.Empty);
 
         // Assert
-        result.ValueKind.ShouldBe(JsonValueKind.Undefined);
+        result.ShouldBeNull();
     }
 
     [Fact]

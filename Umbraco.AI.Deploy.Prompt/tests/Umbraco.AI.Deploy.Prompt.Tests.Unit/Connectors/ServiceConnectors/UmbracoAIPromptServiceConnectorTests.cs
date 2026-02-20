@@ -97,7 +97,7 @@ public class UmbracoAIPromptServiceConnectorTests
         artifact.Scope.ShouldNotBeNull();
         var scope = JsonSerializer.Deserialize<Dictionary<string, object>>(artifact.Scope.Value);
         scope.ShouldNotBeNull();
-        scope.ShouldContainKey("DocumentTypes");
+        scope.ShouldContainKey("AllowRules");
     }
 
     [Fact]

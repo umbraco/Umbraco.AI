@@ -163,7 +163,7 @@ public class UmbracoAIAgentServiceConnectorTests
         artifact.ShouldNotBeNull();
         artifact.ProfileUdi.ShouldBeNull();
         artifact.Scope.ShouldBeNull();
-        artifact.UserGroupPermissions.ShouldNotBeNull(); // Empty dict serialized
+        artifact.UserGroupPermissions.ShouldBeNull(); // Empty dict not serialized
         artifact.Instructions.ShouldBeNull();
         artifact.IsActive.ShouldBeFalse();
 
@@ -173,11 +173,22 @@ public class UmbracoAIAgentServiceConnectorTests
     }
 
     [Fact]
-    public async Task GetArtifactAsync_WithUserGroupPermissions_AddsDependencies()
+    public async Task GetArtifactAsync_WithUserGroupPermissions_ResolvesToAliasKeys()
     {
         // Arrange
         var userGroupId1 = Guid.NewGuid();
         var userGroupId2 = Guid.NewGuid();
+
+        var userGroup1 = new Mock<IUserGroup>();
+        userGroup1.Setup(x => x.Key).Returns(userGroupId1);
+        userGroup1.Setup(x => x.Alias).Returns("editors");
+
+        var userGroup2 = new Mock<IUserGroup>();
+        userGroup2.Setup(x => x.Key).Returns(userGroupId2);
+        userGroup2.Setup(x => x.Alias).Returns("writers");
+
+        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId1)).ReturnsAsync(userGroup1.Object);
+        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId2)).ReturnsAsync(userGroup2.Object);
 
         var agent = new AIAgent
         {
@@ -199,16 +210,18 @@ public class UmbracoAIAgentServiceConnectorTests
         // Assert
         artifact.ShouldNotBeNull();
 
-        // Verify user group dependencies are added
-        artifact.Dependencies.Count(d => d.Udi.EntityType == "user-group").ShouldBe(2);
-        artifact.Dependencies.ShouldContain(d =>
-            d.Udi.EntityType == "user-group" &&
-            ((GuidUdi)d.Udi).Guid == userGroupId1 &&
-            d.Mode == Cms.Core.Deploy.ArtifactDependencyMode.Exist);
-        artifact.Dependencies.ShouldContain(d =>
-            d.Udi.EntityType == "user-group" &&
-            ((GuidUdi)d.Udi).Guid == userGroupId2 &&
-            d.Mode == Cms.Core.Deploy.ArtifactDependencyMode.Exist);
+        // User group permissions are stored by alias, not as dependencies
+        artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "user-group");
+
+        // Verify permissions are keyed by alias
+        artifact.UserGroupPermissions.ShouldNotBeNull();
+        var permissions = JsonSerializer.Deserialize<Dictionary<string, AIAgentUserGroupPermissions>>(artifact.UserGroupPermissions.Value);
+        permissions.ShouldNotBeNull();
+        permissions.Count.ShouldBe(2);
+        permissions.ShouldContainKey("editors");
+        permissions.ShouldContainKey("writers");
+        permissions["editors"].AllowedToolIds.ShouldBe(new[] { "read" });
+        permissions["writers"].AllowedToolIds.ShouldBe(new[] { "write" });
     }
 
     [Fact]

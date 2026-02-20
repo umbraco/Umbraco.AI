@@ -4,8 +4,8 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
-import type { TestGraderModel, TestFeatureResponseModel } from "../../../../api/types.gen.js";
-import type { UaiTestDetailModel, UaiTestGraderConfig } from "../../../types.js";
+import type { TestFeatureResponseModel } from "../../../../api/types.gen.js";
+import type { UaiTestDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
 import { AITestRepository } from "../../../repository/test.repository.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
@@ -91,45 +91,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		);
 	}
 
-	#onGradersChange(event: Event) {
-		const target = event.target as any;
-		const graderConfigs = target.graders as UaiTestGraderConfig[];
-
-		// Convert UaiTestGraderConfig[] to TestGraderModel[]
-		const graderModels: TestGraderModel[] = graderConfigs.map(config => ({
-			id: config.id,
-			graderTypeId: config.graderTypeId,
-			name: config.name,
-			description: config.description || null,
-			config: config.config ?? undefined,
-			negate: config.negate,
-			severity: config.severity,
-			weight: config.weight,
-		}));
-
-		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>({ graders: graderModels }, "graders"),
-		);
-	}
-
-	#getGraderConfigs(): UaiTestGraderConfig[] {
-		if (!this._model) return [];
-
-		// Convert TestGraderModel[] to UaiTestGraderConfig[]
-		return this._model.graders.map(grader => {
-			return {
-				id: grader.id,
-				graderTypeId: grader.graderTypeId,
-				name: grader.name,
-				description: grader.description || undefined,
-				config: grader.config as Record<string, unknown> || undefined,
-				negate: grader.negate,
-				severity: grader.severity as "Info" | "Warning" | "Error",
-				weight: grader.weight,
-			};
-		});
-	}
-
 	render() {
 		if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -173,18 +134,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
                 @change=${this.#onTestFeatureConfigChange}
                 default-group="#uaiFieldGroups_configLabel"
             ></uai-model-editor>
-
-			<uui-box headline="Graders">
-				<umb-property-layout
-					label="Graders"
-					description="Configure graders to validate test outputs">
-					<uai-grader-config-builder
-						slot="editor"
-						.graders=${this.#getGraderConfigs()}
-						@change=${this.#onGradersChange}
-					></uai-grader-config-builder>
-				</umb-property-layout>
-			</uui-box>
 		`;
 	}
 

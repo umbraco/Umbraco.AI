@@ -154,8 +154,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
         return html`
             <div class="container">
-                <h2>Test Run Details</h2>
-
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Run ID</label>
@@ -224,7 +222,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
     static styles = css`
         :host {
             display: block;
-            padding: 20px;
         }
 
         .loading,
@@ -232,11 +229,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             text-align: center;
             padding: 40px;
             color: var(--uui-color-text-alt);
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
         }
 
         h2 {

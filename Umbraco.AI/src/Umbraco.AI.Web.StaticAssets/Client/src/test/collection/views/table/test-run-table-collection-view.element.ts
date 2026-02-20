@@ -37,12 +37,12 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
     private _columns: UmbTableColumn[] = [
         { name: "Run ID", alias: "runId" },
-        { name: "Status", alias: "status" },
+        { name: "Batch ID", alias: "batchId" },
         { name: "Test ID", alias: "testId" },
         { name: "Run #", alias: "runNumber" },
+        { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
         { name: "Executed At", alias: "executedAt" },
-        { name: "Batch ID", alias: "batchId" },
     ];
 
     constructor() {
@@ -125,12 +125,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     >`,
                 },
                 {
-                    columnAlias: "status",
-                    value: html`<uui-tag
-                        color=${this.#getStatusColor(item.status)}
-                        look="primary"
-                        >${item.status}</uui-tag
-                    >`,
+                    columnAlias: "batchId",
+                    value: item.batchId
+                        ? html`<span title=${item.batchId}>${this.#truncateGuid(item.batchId)}</span>`
+                        : "-",
                 },
                 {
                     columnAlias: "testId",
@@ -141,18 +139,20 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     value: `#${item.runNumber}`,
                 },
                 {
+                    columnAlias: "status",
+                    value: html`<uui-tag
+                        color=${this.#getStatusColor(item.status)}
+                        look="primary"
+                        >${item.status}</uui-tag
+                    >`,
+                },
+                {
                     columnAlias: "duration",
                     value: this.#formatDuration(item.durationMs),
                 },
                 {
                     columnAlias: "executedAt",
                     value: item.executedAt ? formatDateTime(item.executedAt) : "-",
-                },
-                {
-                    columnAlias: "batchId",
-                    value: item.batchId
-                        ? html`<span title=${item.batchId}>${this.#truncateGuid(item.batchId)}</span>`
-                        : "-",
                 },
             ],
         }));

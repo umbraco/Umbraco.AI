@@ -12,6 +12,6 @@ export const UAI_TEST_RUN_DETAIL_MODAL = new UmbModalToken<
 >("UmbracoAI.Modal.TestRun.Detail", {
     modal: {
         type: "sidebar",
-        size: "large",
+        size: "medium",
     },
 });

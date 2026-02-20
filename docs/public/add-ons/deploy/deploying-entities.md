@@ -49,7 +49,7 @@ data/Revision/umbraco-ai-profile__chat-assistant_abcd1234.uda
 **Dependencies:**
 - Automatically deploys the referenced Connection first
 
-### Prompts (Requires Umbraco.AI.Deploy.Prompt)
+### Prompts (Requires Umbraco.AI.Prompt.Deploy)
 
 When you save a Prompt, Deploy creates a file like:
 
@@ -67,7 +67,7 @@ data/Revision/umbraco-ai-prompt__article-summarizer_abcd1234.uda
 **Dependencies:**
 - If linked to a Profile, deploys the Profile first
 
-### Agents (Requires Umbraco.AI.Deploy.Agent)
+### Agents (Requires Umbraco.AI.Agent.Deploy)
 
 When you save an Agent, Deploy creates a file like:
 

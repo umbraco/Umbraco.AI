@@ -2,7 +2,7 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiTestDetailModel } from "../../../types.js";
-import { UAI_EMPTY_GUID, formatDateTime } from "../../../../core/index.js";
+import { UAI_EMPTY_GUID, formatDateTime, UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
 
 /**
@@ -26,6 +26,14 @@ export class UaiTestInfoWorkspaceViewElement extends UmbLitElement {
                 });
             }
         });
+    }
+
+    #onTagsChange(event: CustomEvent) {
+        const target = event.target as any;
+        const tags = target.items as string[];
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiTestDetailModel>({ tags }, "tags"),
+        );
     }
 
     render() {
@@ -77,6 +85,14 @@ export class UaiTestInfoWorkspaceViewElement extends UmbLitElement {
                           </umb-property-layout>
                       `
                     : ""}
+                <umb-property-layout label="Tags" orientation="vertical">
+                    <uai-tags-input
+                        slot="editor"
+                        .items=${this._model.tags}
+                        @change=${this.#onTagsChange}
+                        placeholder="Add tag"
+                    ></uai-tags-input>
+                </umb-property-layout>
             </uui-box>
         `;
     }

@@ -91,14 +91,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		);
 	}
 
-	#onTagsChange(event: CustomEvent) {
-		const target = event.target as any;
-		const tags = target.items as string[];
-		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>({ tags }, "tags"),
-		);
-	}
-
 	#onGradersChange(event: Event) {
 		const target = event.target as any;
 		const graderConfigs = target.graders as UaiTestGraderConfig[];
@@ -181,17 +173,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
                 @change=${this.#onTestFeatureConfigChange}
                 default-group="#uaiFieldGroups_configLabel"
             ></uai-model-editor>
-
-			<uui-box headline="Tags">
-				<umb-property-layout label="Tags" description="Tags to categorize this test">
-					<uai-tags-input
-						slot="editor"
-						.items=${this._model.tags}
-						@change=${this.#onTagsChange}
-						placeholder="Add tag"
-					></uai-tags-input>
-				</umb-property-layout>
-			</uui-box>
 
 			<uui-box headline="Graders">
 				<umb-property-layout

@@ -1,15 +1,15 @@
 import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
-import { AITestRepository } from "../repository/test.repository.js";
-import type { TestRunResponseModel } from "../../api/types.gen.js";
+import { AITestRepository } from "../../repository/test.repository.js";
+import type { TestRunResponseModel } from "../../../api/types.gen.js";
 
 /**
  * Individual test run detail viewer.
  * Shows single run details including outcome, grader results, and transcript reference.
  */
-@customElement("umbraco-ai-test-run-detail")
-export class UmbracoAITestRunDetailElement extends UmbElementMixin(LitElement) {
+@customElement("uai-test-run-detail")
+export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
     @property({ type: String })
     runId?: string;
 
@@ -99,7 +99,7 @@ export class UmbracoAITestRunDetailElement extends UmbElementMixin(LitElement) {
                 ${this._run.graderResults.map(result => html`
                     <div class="grader-result ${result.passed ? 'passed' : 'failed'}">
                         <div class="grader-header">
-                            <span class="grader-status">${result.passed ? '✓' : '✗'}</span>
+                            <span class="grader-status">${result.passed ? '\u2713' : '\u2717'}</span>
                             <span class="grader-score">Score: ${(result.score * 100).toFixed(1)}%</span>
                         </div>
                         ${result.actualValue
@@ -402,6 +402,6 @@ export class UmbracoAITestRunDetailElement extends UmbElementMixin(LitElement) {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "umbraco-ai-test-run-detail": UmbracoAITestRunDetailElement;
+        "uai-test-run-detail": UaiTestRunDetailElement;
     }
 }

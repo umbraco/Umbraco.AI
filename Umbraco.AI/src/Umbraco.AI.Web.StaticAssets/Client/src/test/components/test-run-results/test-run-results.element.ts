@@ -1,14 +1,14 @@
 import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
-import type { TestMetricsResponseModel } from "../../api/types.gen.js";
+import type { TestMetricsResponseModel } from "../../../api/types.gen.js";
 
 /**
  * Test run results viewer displaying aggregate metrics.
  * Shows pass@k, pass^k, and links to individual run details.
  */
-@customElement("umbraco-ai-test-run-results")
-export class UmbracoAITestRunResultsElement extends UmbElementMixin(LitElement) {
+@customElement("uai-test-run-results")
+export class UaiTestRunResultsElement extends UmbElementMixin(LitElement) {
     @property({ type: Object })
     metrics?: TestMetricsResponseModel;
 
@@ -41,7 +41,7 @@ export class UmbracoAITestRunResultsElement extends UmbElementMixin(LitElement) 
                         ${(this.metrics.passAtK * 100).toFixed(1)}%
                     </div>
                     <div class="metric-description">
-                        Probability of ≥1 success
+                        Probability of \u22651 success
                     </div>
                 </div>
 
@@ -82,7 +82,7 @@ export class UmbracoAITestRunResultsElement extends UmbElementMixin(LitElement) 
                                     href="#/section/ai/workspace/test-run/${runId}"
                                     class="run-link"
                                 >
-                                    View Details →
+                                    View Details \u2192
                                 </a>
                             </div>
                         `
@@ -229,6 +229,6 @@ export class UmbracoAITestRunResultsElement extends UmbElementMixin(LitElement) 
 
 declare global {
     interface HTMLElementTagNameMap {
-        "umbraco-ai-test-run-results": UmbracoAITestRunResultsElement;
+        "uai-test-run-results": UaiTestRunResultsElement;
     }
 }

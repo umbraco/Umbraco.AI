@@ -235,8 +235,8 @@ public static partial class UmbracoBuilderExtensions
             .Add<RegexGrader>()
             .Add<JSONSchemaGrader>()
             .Add<ToolCallGrader>()
-            .Add<LLMJudgeGrader>()
-            .Add<SemanticSimilarityGrader>();
+            .Add<LLMJudgeGrader>();
+            //.Add<SemanticSimilarityGrader>();
 
         // Register test infrastructure services
         // Note: IAITestRepository and IAITestRunRepository are registered by persistence layer

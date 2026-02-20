@@ -16,7 +16,7 @@ public class LLMJudgeGraderConfig
     [AIField(
         Label = "Judge Profile ID",
         Description = "AI profile to use for judgment (leave empty for default)",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Uai.PropertyEditorUi.ProfilePicker",
         SortOrder = 1)]
     public Guid? ProfileId { get; set; }
 

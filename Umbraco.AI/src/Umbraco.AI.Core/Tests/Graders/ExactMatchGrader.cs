@@ -25,7 +25,7 @@ public class ExactMatchGraderConfig
         Label = "Ignore Case",
         Description = "Case-insensitive comparison",
         SortOrder = 2)]
-    public bool IgnoreCase { get; set; }
+    public bool IgnoreCase { get; set; } = true;
 }
 
 /// <summary>

@@ -61,16 +61,6 @@ public class PromptTestFeatureConfig
     public string? Segment { get; set; }
 
     /// <summary>
-    /// Whether to use real entity data instead of mock data.
-    /// </summary>
-    [AIField(
-        Label = "Use Real Entity",
-        Description = "Use actual entity data instead of mock data",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
-        SortOrder = 6)]
-    public bool UseRealEntity { get; set; }
-
-    /// <summary>
     /// Additional context items to provide to the prompt.
     /// </summary>
     [AIField(

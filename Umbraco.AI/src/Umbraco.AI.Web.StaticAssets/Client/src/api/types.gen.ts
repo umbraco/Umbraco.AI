@@ -510,6 +510,15 @@ export type TestRunResponseModel = {
     batchId?: string | null;
 };
 
+export type TestTranscriptResponseModel = {
+    id: string;
+    messagesJson?: string | null;
+    toolCallsJson?: string | null;
+    reasoningJson?: string | null;
+    timingJson?: string | null;
+    finalOutputJson?: string | null;
+};
+
 export type ToolItemResponseModel = {
     id: string;
     name: string;
@@ -1986,6 +1995,37 @@ export type GetTestRunByIdResponses = {
 };
 
 export type GetTestRunByIdResponse = GetTestRunByIdResponses[keyof GetTestRunByIdResponses];
+
+export type GetTestRunTranscriptData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/{id}/transcript';
+};
+
+export type GetTestRunTranscriptErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestRunTranscriptError = GetTestRunTranscriptErrors[keyof GetTestRunTranscriptErrors];
+
+export type GetTestRunTranscriptResponses = {
+    /**
+     * OK
+     */
+    200: TestTranscriptResponseModel;
+};
+
+export type GetTestRunTranscriptResponse = GetTestRunTranscriptResponses[keyof GetTestRunTranscriptResponses];
 
 export type SetBaselineTestRunData = {
     body?: never;

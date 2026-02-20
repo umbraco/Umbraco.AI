@@ -8,6 +8,7 @@ import type {
     RunTestRequestModel,
     TestMetricsResponseModel,
     TestRunResponseModel,
+    TestTranscriptResponseModel,
     TestBatchResultsResponseModel,
     RunTestBatchRequestModel,
     TestFeatureInfoModel,
@@ -152,6 +153,20 @@ export class AITestRepository extends UmbControllerBase {
     async getRunById(id: string): Promise<TestRunResponseModel | null> {
         try {
             const { data } = await TestsService.getTestRunById({
+                path: { id },
+            });
+            return data ?? null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Get the transcript for a test run.
+     */
+    async getTestRunTranscript(id: string): Promise<TestTranscriptResponseModel | null> {
+        try {
+            const { data } = await TestsService.getTestRunTranscript({
                 path: { id },
             });
             return data ?? null;

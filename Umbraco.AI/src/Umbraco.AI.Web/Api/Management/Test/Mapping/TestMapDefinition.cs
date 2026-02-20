@@ -134,6 +134,17 @@ public class TestMapDefinition : IMapDefinition
             BatchId = source.BatchId
         });
 
+        // AITestTranscript -> TestTranscriptResponseModel
+        mapper.Define<AITestTranscript, TestTranscriptResponseModel>((source, context) => new TestTranscriptResponseModel
+        {
+            Id = source.Id,
+            MessagesJson = source.MessagesJson,
+            ToolCallsJson = source.ToolCallsJson,
+            ReasoningJson = source.ReasoningJson,
+            TimingJson = source.TimingJson,
+            FinalOutputJson = source.FinalOutputJson,
+        });
+
         // AITestMetrics -> TestMetricsResponseModel
         mapper.Define<AITestMetrics, TestMetricsResponseModel>((source, context) => new TestMetricsResponseModel
         {

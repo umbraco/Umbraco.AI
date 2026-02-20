@@ -9,15 +9,18 @@ namespace Umbraco.AI.Core.Tests;
 internal sealed class AITestRunner : IAITestRunner
 {
     private readonly IAITestRunRepository _runRepository;
+    private readonly IAITestTranscriptRepository _transcriptRepository;
     private readonly AITestFeatureCollection _testFeatures;
     private readonly AITestGraderCollection _testGraders;
 
     public AITestRunner(
         IAITestRunRepository runRepository,
+        IAITestTranscriptRepository transcriptRepository,
         AITestFeatureCollection testFeatures,
         AITestGraderCollection testGraders)
     {
         _runRepository = runRepository;
+        _transcriptRepository = transcriptRepository;
         _testFeatures = testFeatures;
         _testGraders = testGraders;
     }
@@ -100,8 +103,9 @@ internal sealed class AITestRunner : IAITestRunner
                 testRun.ContextIds,
                 cancellationToken);
 
-            // Set run ID and save transcript
+            // Link transcript to run and persist it
             transcript.RunId = testRun.Id;
+            await _transcriptRepository.SaveAsync(transcript, cancellationToken);
             testRun.TranscriptId = transcript.Id;
 
             // Build outcome from transcript

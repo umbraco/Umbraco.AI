@@ -197,22 +197,19 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                         : null}
                 </div>
 
-                <div class="section">
-                    <h3>Outcome</h3>
+                <uui-box headline="Outcome">
                     ${this._renderOutcome()}
-                </div>
+                </uui-box>
 
-                <div class="section">
-                    <h3>Grader Results</h3>
+                <uui-box headline="Grader Results">
                     ${this._renderGraderResults()}
-                </div>
+                </uui-box>
 
                 ${this._run.metadataJson
                     ? html`
-                        <div class="section">
-                            <h3>Metadata</h3>
+                        <uui-box headline="Metadata">
                             <pre class="code-block">${this._formatJson(this._run.metadataJson)}</pre>
-                        </div>
+                        </uui-box>
                     `
                     : null}
             </div>
@@ -245,7 +242,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
-            margin-bottom: 30px;
         }
 
         .info-item {
@@ -293,12 +289,8 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             color: white;
         }
 
-        .section {
-            background: var(--uui-color-surface);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--uui-color-border);
-            margin-bottom: 20px;
+        uui-box {
+            margin-top: 20px;
         }
 
         .section-empty {

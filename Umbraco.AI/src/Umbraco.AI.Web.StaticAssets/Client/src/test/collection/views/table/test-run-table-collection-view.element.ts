@@ -113,11 +113,12 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "runId",
                     value: html`<a
-                        href=""
+                        href="#"
                         class="run-link"
                         title=${item.unique}
                         @click=${(e: Event) => {
                             e.preventDefault();
+                            e.stopPropagation();
                             this.#openRunDetail(item.unique);
                         }}
                         >${this.#truncateGuid(item.unique)}</a

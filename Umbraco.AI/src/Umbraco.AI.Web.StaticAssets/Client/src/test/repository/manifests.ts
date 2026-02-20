@@ -2,7 +2,8 @@ import type { ManifestRepository, ManifestStore } from "@umbraco-cms/backoffice/
 import {
     UAI_TEST_COLLECTION_REPOSITORY_ALIAS,
     UAI_TEST_DETAIL_REPOSITORY_ALIAS,
-    UAI_TEST_DETAIL_STORE_ALIAS
+    UAI_TEST_DETAIL_STORE_ALIAS,
+    UAI_TEST_RUN_COLLECTION_REPOSITORY_ALIAS,
 } from "../constants.js";
 
 export const testRepositoryManifests: Array<ManifestRepository | ManifestStore> = [
@@ -23,5 +24,11 @@ export const testRepositoryManifests: Array<ManifestRepository | ManifestStore> 
         alias: UAI_TEST_COLLECTION_REPOSITORY_ALIAS,
         name: "Test Collection Repository",
         api: () => import("./collection/test-collection.repository.js"),
+    },
+    {
+        type: "repository",
+        alias: UAI_TEST_RUN_COLLECTION_REPOSITORY_ALIAS,
+        name: "Test Run Collection Repository",
+        api: () => import("./test-run-collection/test-run-collection.repository.js"),
     },
 ];

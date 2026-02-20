@@ -5,6 +5,25 @@ export const testBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityBulkAction",
         kind: "default",
+        alias: "UmbracoAI.EntityBulkAction.Test.Run",
+        name: "Run Tests Bulk Action",
+        weight: 200,
+        api: () => import("./test-bulk-run.action.js"),
+        forEntityTypes: [UAI_TEST_ENTITY_TYPE],
+        meta: {
+            icon: "icon-play",
+            label: "Run",
+        },
+        conditions: [
+            {
+                alias: UMB_COLLECTION_ALIAS_CONDITION,
+                match: UAI_TEST_COLLECTION_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "entityBulkAction",
+        kind: "default",
         alias: "UmbracoAI.EntityBulkAction.Test.Delete",
         name: "Delete Tests Bulk Action",
         weight: 100,

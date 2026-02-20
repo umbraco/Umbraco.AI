@@ -1,5 +1,5 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
-import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
+import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE, UAI_TEST_RUN_COLLECTION_ALIAS, UAI_TEST_RUN_ICON } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 
 export const manifests: Array<UmbExtensionManifest> = [
@@ -41,6 +41,26 @@ export const manifests: Array<UmbExtensionManifest> = [
             label: "Scoring",
             pathname: "scoring",
             icon: "icon-speed-gauge",
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_TEST_WORKSPACE_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "workspaceView",
+        kind: "collection",
+        alias: "UmbracoAI.Workspace.Test.View.Runs",
+        name: "Test Runs Workspace View",
+        element: () => import("./views/test-runs-workspace-view.element.js"),
+        weight: 150,
+        meta: {
+            label: "Runs",
+            pathname: "runs",
+            icon: UAI_TEST_RUN_ICON,
+            collectionAlias: UAI_TEST_RUN_COLLECTION_ALIAS,
         },
         conditions: [
             {

@@ -41,6 +41,7 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
         { name: "Tags", alias: "tags" },
         { name: "Run Count", alias: "runCount" },
         { name: "Modified", alias: "dateModified" },
+        { name: "", alias: "entityActions", align: "right" },
     ];
 
     constructor() {
@@ -103,6 +104,12 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "dateModified",
                     value: item.dateModified ? formatDateTime(item.dateModified) : "-",
+                },
+                {
+                    columnAlias: "entityActions",
+                    value: html`<umb-entity-actions-table-column-view
+                        .value=${{ entityType: item.entityType, unique: item.unique }}
+                    ></umb-entity-actions-table-column-view>`,
                 },
             ],
         }));

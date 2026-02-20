@@ -2,11 +2,12 @@ import type {
     TestItemResponseModel,
     TestFeatureInfoModel,
     TestResponseModel,
+    TestRunResponseModel,
     CreateTestRequestModel,
     UpdateTestRequestModel,
 } from "../api/types.gen.js";
-import { UAI_TEST_ENTITY_TYPE } from "./constants.js";
-import type { UaiTestItemModel, UaiTestFeatureItemModel, UaiTestDetailModel } from "./types.js";
+import { UAI_TEST_ENTITY_TYPE, UAI_TEST_RUN_ENTITY_TYPE } from "./constants.js";
+import type { UaiTestItemModel, UaiTestFeatureItemModel, UaiTestDetailModel, UaiTestRunItemModel } from "./types.js";
 
 export const UaiTestTypeMapper = {
     toDetailModel(response: TestResponseModel): UaiTestDetailModel {
@@ -38,6 +39,20 @@ export const UaiTestTypeMapper = {
             tags: response.tags,
             runCount: response.runCount,
             dateModified: response.dateModified,
+        };
+    },
+
+    toRunItemModel(response: TestRunResponseModel): UaiTestRunItemModel {
+        return {
+            unique: response.id,
+            entityType: UAI_TEST_RUN_ENTITY_TYPE,
+            testId: response.testId,
+            runNumber: response.runNumber,
+            status: response.status,
+            durationMs: response.durationMs,
+            executedAt: response.executedAt,
+            batchId: response.batchId,
+            profileId: response.profileId,
         };
     },
 

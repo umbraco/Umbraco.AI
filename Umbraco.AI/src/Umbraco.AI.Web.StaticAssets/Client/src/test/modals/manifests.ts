@@ -13,4 +13,10 @@ export const testModalManifests: Array<ManifestModal> = [
         name: "Grader Config Editor Modal",
         element: () => import("./grader-config-editor/grader-config-editor-modal.element.js"),
     },
+    {
+        type: "modal",
+        alias: "UmbracoAI.Modal.TestRun.Detail",
+        name: "Test Run Detail Modal",
+        element: () => import("./test-run-detail/test-run-detail-modal.element.js"),
+    },
 ];

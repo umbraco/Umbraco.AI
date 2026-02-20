@@ -1,4 +1,5 @@
 import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
+import type { UmbCollectionFilterModel } from "@umbraco-cms/backoffice/collection";
 import type { TestGraderModel } from "../api/types.gen.js";
 
 /**
@@ -68,6 +69,29 @@ export interface UaiTestGraderTypeInfo {
     name: string;
     description?: string;
     type: "CodeBased" | "ModelBased";
+}
+
+/**
+ * Collection item model for test run list view.
+ */
+export interface UaiTestRunItemModel extends UmbEntityModel {
+    unique: string;
+    entityType: string;
+    testId: string;
+    runNumber: number;
+    status: string;
+    durationMs: number;
+    executedAt: string;
+    batchId?: string | null;
+    profileId?: string | null;
+}
+
+/**
+ * Filter model for scoped runs collection.
+ * Extends the standard collection filter with optional test scoping.
+ */
+export interface UaiTestRunCollectionFilterModel extends UmbCollectionFilterModel {
+    test?: { unique: string } | null;
 }
 
 /**

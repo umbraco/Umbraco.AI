@@ -166,5 +166,12 @@ export default {
         noEntitiesAvailable: "No entities available for this feature type",
         noEntitiesAvailableForType: "No entities available for this feature type.",
         ensurePackageInstalled: "Make sure the required package is installed.",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} test(s)?`,
+        bulkRunConfirm: (count: number) =>
+            `Run ${count} selected test(s)? This will execute against configured AI providers.`,
+        runCompleted: "Test run completed successfully.",
+        runFailed: "Test run failed.",
+        bulkRunDeleteConfirm: (count: number) =>
+            `Are you sure you want to delete ${count} test run(s)? This action cannot be undone.`,
     },
 } as UmbLocalizationDictionary;

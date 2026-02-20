@@ -26,7 +26,8 @@ public class PromptTestFeatureConfig
     [AIField(
         Label = "Entity ID",
         Description = "The content or media item to test with",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Uai.PropertyEditorUi.EntityPicker",
+        EditorConfig = "[{\"alias\":\"entityTypeField\",\"value\":\"entityType\"}]",
         SortOrder = 2)]
     public Guid? EntityId { get; set; }
 
@@ -36,7 +37,8 @@ public class PromptTestFeatureConfig
     [AIField(
         Label = "Property Alias",
         Description = "The property being edited by the prompt",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Uai.PropertyEditorUi.EntityPropertyPicker",
+        EditorConfig = "[{\"alias\":\"entityTypeField\",\"value\":\"entityType\"},{\"alias\":\"entityIdField\",\"value\":\"entityId\"}]",
         SortOrder = 3)]
     public string PropertyAlias { get; set; } = string.Empty;
 

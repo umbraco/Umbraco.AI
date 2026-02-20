@@ -3,19 +3,17 @@ import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "./test-workspace.context-token.js";
-import { UAI_TEST_WORKSPACE_ALIAS } from "../../constants.js";
+import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
 import type { UaiTestDetailModel } from "../../types.js";
 import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
 import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../test-root/paths.js";
-import { AITestRepository } from "../../repository/test.repository.js";
+import { UaiTestRunEntityAction } from "../../entity-actions/test-run.action.js";
 
 @customElement("umbraco-ai-test-workspace-editor")
 export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
 	#workspaceContext?: typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE;
-	#notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
 	@state()
 	private _model?: UaiTestDetailModel;
@@ -28,9 +26,6 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 
 	@state()
 	private _runButtonState?: UUIButtonState;
-
-	@state()
-	private _runButtonColor?: "default" | "positive" | "warning" | "danger" = "default";
 
 	constructor() {
 		super();
@@ -49,10 +44,6 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 					});
 				}
 			});
-		});
-
-		this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
-			this.#notificationContext = context;
 		});
 	}
 
@@ -107,41 +98,21 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 		if (!unique) return;
 
 		this._runButtonState = "waiting";
-		this._runButtonColor = "default";
 
 		try {
-			const repository = new AITestRepository(this);
-			const metrics = await repository.runTest(unique);
-
-			const passed = metrics.passAtK > 0;
+			const action = new UaiTestRunEntityAction(this, {
+				unique,
+				entityType: UAI_TEST_ENTITY_TYPE,
+				meta: undefined as never,
+			});
+			await action.execute();
 			this._runButtonState = "success";
-			this._runButtonColor = passed ? "positive" : "warning";
-
-			this.#notificationContext?.peek(passed ? "positive" : "warning", {
-				data: {
-					headline: passed ? "Test Passed" : "Test Failed",
-					message: `Pass@K: ${(metrics.passAtK * 100).toFixed(0)}% | ${metrics.totalRuns} run(s)`,
-				},
-			});
-		} catch (error) {
+		} catch {
 			this._runButtonState = "failed";
-			this._runButtonColor = "danger";
-
-			this.#notificationContext?.peek("danger", {
-				data: {
-					headline: "Test Run Failed",
-					message: error instanceof Error ? error.message : "An unexpected error occurred.",
-				},
-			});
 		}
 
-		this.#resetRunButtonState();
-	}
-
-	#resetRunButtonState() {
 		setTimeout(() => {
 			this._runButtonState = undefined;
-			this._runButtonColor = "default";
 		}, 2000);
 	}
 
@@ -201,7 +172,6 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 							slot="actions"
 							label="Run"
 							look="default"
-							.color=${this._runButtonColor}
 							.state=${this._runButtonState}
 							@click=${this.#onRunTest}
 						>

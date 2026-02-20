@@ -69,8 +69,8 @@ Install-Package Umbraco.AI.Agent
 
 # Install Deploy support (requires Umbraco Deploy)
 Install-Package Umbraco.AI.Deploy
-Install-Package Umbraco.AI.Deploy.Prompt
-Install-Package Umbraco.AI.Deploy.Agent
+Install-Package Umbraco.AI.Prompt.Deploy
+Install-Package Umbraco.AI.Agent.Deploy
 ```
 
 {% endcode %}

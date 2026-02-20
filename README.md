@@ -14,21 +14,38 @@
 
 This is a monorepo containing multiple Umbraco.AI packages:
 
-| Product                                                         | Description                                | Version | Location                       |
-| --------------------------------------------------------------- | ------------------------------------------ | ------- | ------------------------------ |
-| [**Umbraco.AI**](Umbraco.AI/)                                   | Core AI integration layer                  | 1.x     | `Umbraco.AI/`                  |
-| [**Umbraco.AI.Agent**](Umbraco.AI.Agent/)                       | AI agent management and runtime            | 1.x     | `Umbraco.AI.Agent/`            |
-| [**Umbraco.AI.Agent.UI**](Umbraco.AI.Agent.UI/)                 | Reusable chat UI infrastructure (library)  | 1.x     | `Umbraco.AI.Agent.UI/`         |
-| [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/)       | Copilot chat UI for agents (frontend-only) | 1.x     | `Umbraco.AI.Agent.Copilot/`    |
-| [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/)                     | Prompt template management                 | 1.x     | `Umbraco.AI.Prompt/`           |
-| [**Umbraco.AI.Deploy**](Umbraco.AI.Deploy/)                     | Deploy support for AI entities             | 1.x     | `Umbraco.AI.Deploy/`           |
-| [**Umbraco.AI.Deploy.Prompt**](Umbraco.AI.Deploy.Prompt/)       | Deploy support for prompts                 | 1.x     | `Umbraco.AI.Deploy.Prompt/`    |
-| [**Umbraco.AI.Deploy.Agent**](Umbraco.AI.Deploy.Agent/)         | Deploy support for agents                  | 1.x     | `Umbraco.AI.Deploy.Agent/`     |
-| [**Umbraco.AI.OpenAI**](Umbraco.AI.OpenAI/)                     | OpenAI provider                            | 1.x     | `Umbraco.AI.OpenAI/`           |
-| [**Umbraco.AI.Anthropic**](Umbraco.AI.Anthropic/)               | Anthropic provider                         | 1.x     | `Umbraco.AI.Anthropic/`        |
-| [**Umbraco.AI.Amazon**](Umbraco.AI.Amazon/)                     | Amazon Bedrock provider                    | 1.x     | `Umbraco.AI.Amazon/`           |
-| [**Umbraco.AI.Google**](Umbraco.AI.Google/)                     | Google Gemini provider                     | 1.x     | `Umbraco.AI.Google/`           |
-| [**Umbraco.AI.MicrosoftFoundry**](Umbraco.AI.MicrosoftFoundry/) | Microsoft AI Foundry provider              | 1.x     | `Umbraco.AI.MicrosoftFoundry/` |
+### Core
+
+| Product                                                   | Description               | Version | Location          |
+| --------------------------------------------------------- | ------------------------- | ------- | ----------------- |
+| [**Umbraco.AI**](Umbraco.AI/)                             | Core AI integration layer | 1.x     | `Umbraco.AI/`     |
+
+### Addons
+
+| Product                                                         | Description                                | Version | Location                    |
+| --------------------------------------------------------------- | ------------------------------------------ | ------- | --------------------------- |
+| [**Umbraco.AI.Agent**](Umbraco.AI.Agent/)                       | AI agent management and runtime            | 1.x     | `Umbraco.AI.Agent/`         |
+| [**Umbraco.AI.Agent.UI**](Umbraco.AI.Agent.UI/)                 | Reusable chat UI infrastructure (library)  | 1.x     | `Umbraco.AI.Agent.UI/`      |
+| [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/)       | Copilot chat UI for agents (frontend-only) | 1.x     | `Umbraco.AI.Agent.Copilot/`  |
+| [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/)                     | Prompt template management                 | 1.x     | `Umbraco.AI.Prompt/`         |
+
+### Deploy
+
+| Product                                                         | Description                    | Version | Location                    |
+| --------------------------------------------------------------- | ------------------------------ | ------- | --------------------------- |
+| [**Umbraco.AI.Deploy**](Umbraco.AI.Deploy/)                     | Deploy support for AI entities | 1.x     | `Umbraco.AI.Deploy/`        |
+| [**Umbraco.AI.Prompt.Deploy**](Umbraco.AI.Prompt.Deploy/)       | Deploy support for prompts     | 1.x     | `Umbraco.AI.Prompt.Deploy/` |
+| [**Umbraco.AI.Agent.Deploy**](Umbraco.AI.Agent.Deploy/)         | Deploy support for agents      | 1.x     | `Umbraco.AI.Agent.Deploy/`  |
+
+### Providers
+
+| Product                                                         | Description                   | Version | Location                       |
+| --------------------------------------------------------------- | ----------------------------- | ------- | ------------------------------ |
+| [**Umbraco.AI.OpenAI**](Umbraco.AI.OpenAI/)                     | OpenAI provider               | 1.x     | `Umbraco.AI.OpenAI/`           |
+| [**Umbraco.AI.Anthropic**](Umbraco.AI.Anthropic/)               | Anthropic provider            | 1.x     | `Umbraco.AI.Anthropic/`        |
+| [**Umbraco.AI.Amazon**](Umbraco.AI.Amazon/)                     | Amazon Bedrock provider       | 1.x     | `Umbraco.AI.Amazon/`           |
+| [**Umbraco.AI.Google**](Umbraco.AI.Google/)                     | Google Gemini provider        | 1.x     | `Umbraco.AI.Google/`           |
+| [**Umbraco.AI.MicrosoftFoundry**](Umbraco.AI.MicrosoftFoundry/) | Microsoft AI Foundry provider | 1.x     | `Umbraco.AI.MicrosoftFoundry/` |
 
 ## Quick Start
 
@@ -78,8 +95,8 @@ dotnet build Umbraco.AI/Umbraco.AI.sln
 dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
 dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
 dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.sln
-dotnet build Umbraco.AI.Deploy.Prompt/Umbraco.AI.Deploy.Prompt.sln
-dotnet build Umbraco.AI.Deploy.Agent/Umbraco.AI.Deploy.Agent.sln
+dotnet build Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.sln
+dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.sln
 dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.sln
 dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
 dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
@@ -124,11 +141,11 @@ Umbraco.AI (Core)
     ├── Umbraco.AI.Google (Provider - depends on Core)
     ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
-    │   └── Umbraco.AI.Deploy.Prompt (Deploy - depends on Prompt + Deploy)
+    │   └── Umbraco.AI.Prompt.Deploy (Deploy - depends on Prompt + Deploy)
     ├── Umbraco.AI.Agent (Add-on - depends on Core)
     │   ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
     │   ├── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
-    │   └── Umbraco.AI.Deploy.Agent (Deploy - depends on Agent + Deploy)
+    │   └── Umbraco.AI.Agent.Deploy (Deploy - depends on Agent + Deploy)
     └── Umbraco.AI.Deploy (Deploy - depends on Core)
 ```
 
@@ -143,8 +160,8 @@ Umbraco.AI (Core)
     - [Umbraco.AI.Agent.Copilot/CLAUDE.md](Umbraco.AI.Agent.Copilot/CLAUDE.md) - Agent Copilot add-on
     - [Umbraco.AI.Prompt/CLAUDE.md](Umbraco.AI.Prompt/CLAUDE.md) - Prompt add-on
     - [Umbraco.AI.Deploy/CLAUDE.md](Umbraco.AI.Deploy/CLAUDE.md) - Deploy support
-    - [Umbraco.AI.Deploy.Prompt/CLAUDE.md](Umbraco.AI.Deploy.Prompt/CLAUDE.md) - Deploy Prompt support
-    - [Umbraco.AI.Deploy.Agent/CLAUDE.md](Umbraco.AI.Deploy.Agent/CLAUDE.md) - Deploy Agent support
+    - [Umbraco.AI.Prompt.Deploy/CLAUDE.md](Umbraco.AI.Prompt.Deploy/CLAUDE.md) - Deploy Prompt support
+    - [Umbraco.AI.Agent.Deploy/CLAUDE.md](Umbraco.AI.Agent.Deploy/CLAUDE.md) - Deploy Agent support
 
 ## Target Framework
 

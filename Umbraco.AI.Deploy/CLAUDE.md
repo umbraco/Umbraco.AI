@@ -170,8 +170,8 @@ dependencies.Add(new UmbracoAIArtifactDependency(
 
 ## Related Packages
 
-- **Umbraco.AI.Deploy.Prompt** - Deploy support for prompts
-- **Umbraco.AI.Deploy.Agent** - Deploy support for agents
+- **Umbraco.AI.Prompt.Deploy** - Deploy support for prompts
+- **Umbraco.AI.Agent.Deploy** - Deploy support for agents
 
 ## Key Patterns
 

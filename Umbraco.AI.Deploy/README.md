@@ -102,8 +102,8 @@ When deploying to another environment, Deploy:
 
 ## Related Packages
 
-- **[Umbraco.AI.Deploy.Prompt](../Umbraco.AI.Deploy.Prompt)** - Deploy support for AI prompts
-- **[Umbraco.AI.Deploy.Agent](../Umbraco.AI.Deploy.Agent)** - Deploy support for AI agents
+- **[Umbraco.AI.Prompt.Deploy](../Umbraco.AI.Prompt.Deploy)** - Deploy support for AI prompts
+- **[Umbraco.AI.Agent.Deploy](../Umbraco.AI.Agent.Deploy)** - Deploy support for AI agents
 
 ## Documentation
 

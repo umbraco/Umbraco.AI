@@ -65,8 +65,14 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
 
         try
         {
-            // TODO: Handle profileIdOverride and contextIdsOverride once prompt service supports it
-            result = await _promptService.ExecutePromptAsync(promptId, request, cancellationToken);
+            var options = new AIPromptExecutionOptions
+            {
+                ValidateScope = false,
+                ProfileIdOverride = profileIdOverride,
+                ContextIdsOverride = contextIdsOverride?.ToList()
+            };
+
+            result = await _promptService.ExecutePromptAsync(promptId, request, options, cancellationToken);
         }
         catch (Exception ex)
         {

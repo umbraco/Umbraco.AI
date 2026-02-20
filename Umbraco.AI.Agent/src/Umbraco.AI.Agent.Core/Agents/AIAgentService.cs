@@ -331,12 +331,23 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
+    public IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        Guid agentId,
+        AGUIRunRequest request,
+        IEnumerable<AIFrontendTool>? frontendTools,
+        CancellationToken cancellationToken = default)
+        => StreamAgentAsync(agentId, request, frontendTools, new AIAgentExecutionOptions(), cancellationToken);
+
+    /// <inheritdoc />
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
+        AIAgentExecutionOptions options,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         // 1. Resolve agent
         var agent = await GetAgentAsync(agentId, cancellationToken);
 
@@ -357,6 +368,12 @@ internal sealed class AIAgentService : IAIAgentService
             yield return errorEmitter.EmitError($"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE");
             yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent '{agent.Name}' is not active"));
             yield break;
+        }
+
+        // Apply profile override if specified
+        if (options.ProfileIdOverride.HasValue)
+        {
+            agent.ProfileId = options.ProfileIdOverride.Value;
         }
 
         // Publish executing notification (before execution)
@@ -432,6 +449,12 @@ internal sealed class AIAgentService : IAIAgentService
                 Constants.ContextKeys.ThreadId
             }}
         };
+
+        // Set context IDs override in additional properties for AgentContextResolver to pick up
+        if (options.ContextIdsOverride is not null)
+        {
+            additionalProperties[Constants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
+        }
 
         // 4. Create MAF agent
         //    System message injection is handled automatically by ScopedAIAgent

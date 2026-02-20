@@ -171,26 +171,38 @@ internal sealed class AIPromptService : IAIPromptService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AIPromptExecutionResult> ExecutePromptAsync(
+    public Task<AIPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
         AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default)
+        => ExecutePromptAsync(promptId, request, new AIPromptExecutionOptions(), cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AIPromptExecutionResult> ExecutePromptAsync(
+        Guid promptId,
+        AIPromptExecutionRequest request,
+        AIPromptExecutionOptions options,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(options);
 
         // 1. Get the prompt
         var prompt = await GetPromptAsync(promptId, cancellationToken)
             ?? throw new InvalidOperationException($"Prompt {promptId} not found");
 
         // 2. Validate scope - ensure prompt is allowed to run for this context
-        // Use a scope to resolve the scoped IAIPromptScopeValidator
-        using var scope = _serviceScopeFactory.CreateScope();
-        var scopeValidator = scope.ServiceProvider.GetRequiredService<IAIPromptScopeValidator>();
-        var scopeValidation = await scopeValidator.ValidateAsync(prompt, request, cancellationToken);
-        if (!scopeValidation.IsAllowed)
+        if (options.ValidateScope)
         {
-            throw new InvalidOperationException(
-                $"Prompt execution denied: {scopeValidation.DenialReason}");
+            // Use a scope to resolve the scoped IAIPromptScopeValidator
+            using var scope = _serviceScopeFactory.CreateScope();
+            var scopeValidator = scope.ServiceProvider.GetRequiredService<IAIPromptScopeValidator>();
+            var scopeValidation = await scopeValidator.ValidateAsync(prompt, request, cancellationToken);
+            if (!scopeValidation.IsAllowed)
+            {
+                throw new InvalidOperationException(
+                    $"Prompt execution denied: {scopeValidation.DenialReason}");
+            }
         }
 
         // Publish executing notification (before execution)
@@ -225,6 +237,12 @@ internal sealed class AIPromptService : IAIPromptService
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureId, prompt.Id);
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureAlias, prompt.Alias);
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureVersion, prompt.Version);
+
+        // Set context IDs override in runtime context for PromptContextResolver to pick up
+        if (options.ContextIdsOverride is not null)
+        {
+            runtimeContext.SetValue(Constants.MetadataKeys.ContextIdsOverride, options.ContextIdsOverride);
+        }
 
         // 4. Build template context from basic request info + processor results
         var templateContext = BuildExecutionContext(request);
@@ -292,9 +310,10 @@ internal sealed class AIPromptService : IAIPromptService
             ToolMode = ChatToolMode.Auto
         };
 
-        // 10. Execute via chat service
-        var response = prompt.ProfileId.HasValue
-            ? await _chatService.GetChatResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
+        // 10. Execute via chat service — use profile override if provided
+        var profileId = options.ProfileIdOverride ?? prompt.ProfileId;
+        var response = profileId.HasValue
+            ? await _chatService.GetChatResponseAsync(profileId.Value, messages, chatOptions, cancellationToken)
             : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
 
         var responseText = response.Text ?? string.Empty;

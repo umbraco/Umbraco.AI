@@ -83,8 +83,13 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
 
         try
         {
-            // TODO: Handle profileIdOverride and contextIdsOverride once agent service supports it
-            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, frontendTools, cancellationToken))
+            var options = new AIAgentExecutionOptions
+            {
+                ProfileIdOverride = profileIdOverride,
+                ContextIdsOverride = contextIdsOverride?.ToList()
+            };
+
+            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, frontendTools, options, cancellationToken))
             {
                 // Track lifecycle events
                 if (evt is RunStartedEvent runStarted)

@@ -44,6 +44,19 @@ internal sealed class AgentContextResolver : IAIContextResolver
         }
 
         var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
+
+        // Check for context IDs override (set by execution options for test scenarios)
+        var contextIdsOverride = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.ContextKeys.ContextIdsOverride);
+        if (contextIdsOverride is not null)
+        {
+            if (contextIdsOverride.Count == 0)
+            {
+                return AIContextResolverResult.Empty;
+            }
+
+            return await ResolveContextIdsAsync(contextIdsOverride, agent?.Name, cancellationToken);
+        }
+
         if (agent is null || agent.ContextIds.Count == 0)
         {
             return AIContextResolverResult.Empty;

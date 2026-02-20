@@ -83,4 +83,18 @@ public interface IAIPromptService
         Guid promptId,
         AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a prompt with execution options controlling validation and overrides.
+    /// </summary>
+    /// <param name="promptId">The prompt ID to execute.</param>
+    /// <param name="request">The execution request containing context.</param>
+    /// <param name="options">Options controlling scope validation, profile, and context overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The execution result containing the AI response.</returns>
+    Task<AIPromptExecutionResult> ExecutePromptAsync(
+        Guid promptId,
+        AIPromptExecutionRequest request,
+        AIPromptExecutionOptions options,
+        CancellationToken cancellationToken = default);
 }

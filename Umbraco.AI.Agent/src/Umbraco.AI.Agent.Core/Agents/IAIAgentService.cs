@@ -154,4 +154,20 @@ public interface IAIAgentService
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams an agent execution with AG-UI events and execution options controlling overrides.
+    /// </summary>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
+    /// <param name="frontendTools">Frontend tools with metadata for permission filtering.</param>
+    /// <param name="options">Options controlling profile and context overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Async enumerable of AG-UI events.</returns>
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        Guid agentId,
+        AGUIRunRequest request,
+        IEnumerable<AIFrontendTool>? frontendTools,
+        AIAgentExecutionOptions options,
+        CancellationToken cancellationToken = default);
 }

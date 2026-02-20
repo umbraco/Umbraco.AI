@@ -1,4 +1,4 @@
-import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { html, customElement, state, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type {
     UmbTableColumn,
@@ -36,6 +36,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
+        { name: "Run ID", alias: "runId" },
         { name: "Status", alias: "status" },
         { name: "Test ID", alias: "testId" },
         { name: "Run #", alias: "runNumber" },
@@ -95,11 +96,33 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         return guid.length > 8 ? guid.substring(0, 8) + "..." : guid;
     }
 
+    async #openRunDetail(runId: string) {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
+            data: { runId },
+        });
+    }
+
     #createTableItems(items: UaiTestRunItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
             icon: UAI_TEST_RUN_ICON,
             data: [
+                {
+                    columnAlias: "runId",
+                    value: html`<a
+                        href=""
+                        class="run-link"
+                        title=${item.unique}
+                        @click=${(e: Event) => {
+                            e.preventDefault();
+                            this.#openRunDetail(item.unique);
+                        }}
+                        >${this.#truncateGuid(item.unique)}</a
+                    >`,
+                },
                 {
                     columnAlias: "status",
                     value: html`<uui-tag
@@ -146,15 +169,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         this.#collectionContext?.selection.setSelection(table.selection);
     }
 
-    async #handleRowClick(item: UmbTableItem) {
-        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
-        if (!modalManager) return;
-
-        modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
-            data: { runId: item.id },
-        });
-    }
-
     render() {
         return html`<umb-table
             .config=${this._tableConfig}
@@ -163,18 +177,22 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             .selection=${this._selection}
             @selected=${this.#handleSelect}
             @deselected=${this.#handleDeselect}
-            @click=${(e: Event) => {
-                const target = e.target as HTMLElement;
-                const row = target.closest("umb-table-row");
-                if (row && !target.closest("uui-checkbox")) {
-                    const item = this._items.find((i) => i.id === row.getAttribute("id"));
-                    if (item) this.#handleRowClick(item);
-                }
-            }}
         ></umb-table>`;
     }
 
-    static styles = [UmbTextStyles];
+    static styles = [
+        UmbTextStyles,
+        css`
+            .run-link {
+                color: var(--uui-color-interactive);
+                text-decoration: none;
+                font-weight: 600;
+            }
+            .run-link:hover {
+                text-decoration: underline;
+            }
+        `,
+    ];
 }
 
 export default UaiTestRunTableCollectionViewElement;

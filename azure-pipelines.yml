@@ -46,11 +46,11 @@ parameters:
             changeVar: AgentUiChanged
             hasNpm: true
           # Deploy extensions (depend on Deploy + their respective add-ons)
-          - name: Umbraco.AI.Deploy.Prompt
-            changeVar: DeployPromptChanged
+          - name: Umbraco.AI.Prompt.Deploy
+            changeVar: PromptDeployChanged
             hasNpm: false
-          - name: Umbraco.AI.Deploy.Agent
-            changeVar: DeployAgentChanged
+          - name: Umbraco.AI.Agent.Deploy
+            changeVar: AgentDeployChanged
             hasNpm: false
     - name: level3Products
       type: object

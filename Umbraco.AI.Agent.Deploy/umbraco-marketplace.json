@@ -8,7 +8,7 @@
     },
     "Category": "Artificial Intelligence",
     "LicenseTypes": ["Free"],
-    "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Deploy",
+    "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Agent.Deploy",
     "IssueTrackerUrl": "https://github.com/umbraco/Umbraco.AI/issues",
     "PackageType": "Package",
     "PackagesByAuthor": [
@@ -20,21 +20,17 @@
     ],
     "RelatedPackages": [
         {
-            "PackageId": "Umbraco.AI",
-            "Description": "Core AI integration layer for Umbraco CMS"
+            "PackageId": "Umbraco.AI.Agent",
+            "Description": "AI agent management for Umbraco.AI"
         },
         {
-            "PackageId": "Umbraco.Deploy.OnPrem",
-            "Description": "Umbraco Deploy for on-premise deployments"
+            "PackageId": "Umbraco.AI.Deploy",
+            "Description": "Core Deploy support for Umbraco.AI"
         },
         {
             "PackageId": "Umbraco.AI.Prompt.Deploy",
             "Description": "Deploy support for AI prompts"
-        },
-        {
-            "PackageId": "Umbraco.AI.Agent.Deploy",
-            "Description": "Deploy support for AI agents"
         }
     ],
-    "Tags": ["umbraco", "ai", "deploy", "devops"]
+    "Tags": ["umbraco", "ai", "deploy", "agent", "chatbot"]
 }

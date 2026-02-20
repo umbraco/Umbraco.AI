@@ -1,0 +1,30 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Deploy", "src\Umbraco.AI.Agent.Deploy\Umbraco.AI.Agent.Deploy.csproj", "{G1H2I3J4-K5L6-4788-9012-901234567890}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{H1I2J3K4-L5M6-4788-9012-012345678901}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Deploy.Tests.Unit", "tests\Umbraco.AI.Agent.Deploy.Tests.Unit\Umbraco.AI.Agent.Deploy.Tests.Unit.csproj", "{I1J2K3L4-M5N6-4788-9012-123456789012}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{G1H2I3J4-K5L6-4788-9012-901234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{G1H2I3J4-K5L6-4788-9012-901234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{G1H2I3J4-K5L6-4788-9012-901234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{G1H2I3J4-K5L6-4788-9012-901234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{I1J2K3L4-M5N6-4788-9012-123456789012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{I1J2K3L4-M5N6-4788-9012-123456789012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{I1J2K3L4-M5N6-4788-9012-123456789012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{I1J2K3L4-M5N6-4788-9012-123456789012}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{I1J2K3L4-M5N6-4788-9012-123456789012} = {H1I2J3K4-L5M6-4788-9012-012345678901}
+	EndGlobalSection
+EndGlobal

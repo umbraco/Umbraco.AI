@@ -21,10 +21,10 @@ Install the Deploy packages you need:
 dotnet add package Umbraco.AI.Deploy
 
 # Optional: Prompt deployment
-dotnet add package Umbraco.AI.Deploy.Prompt
+dotnet add package Umbraco.AI.Prompt.Deploy
 
 # Optional: Agent deployment
-dotnet add package Umbraco.AI.Deploy.Agent
+dotnet add package Umbraco.AI.Agent.Deploy
 ```
 
 ## Step 2: Build and Run

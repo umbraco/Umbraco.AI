@@ -101,9 +101,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{2E29DB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Deploy", "Umbraco.AI.Deploy\src\Umbraco.AI.Deploy\Umbraco.AI.Deploy.csproj", "{9A932605-77F4-4E1A-8AA9-718072CE7C95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Deploy.Agent", "Umbraco.AI.Deploy.Agent\src\Umbraco.AI.Deploy.Agent\Umbraco.AI.Deploy.Agent.csproj", "{E760E0B6-3053-4148-BD2C-B80A834E99EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Deploy", "Umbraco.AI.Agent.Deploy\src\Umbraco.AI.Agent.Deploy\Umbraco.AI.Agent.Deploy.csproj", "{E760E0B6-3053-4148-BD2C-B80A834E99EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Deploy.Prompt", "Umbraco.AI.Deploy.Prompt\src\Umbraco.AI.Deploy.Prompt\Umbraco.AI.Deploy.Prompt.csproj", "{913478A5-B729-4B88-93A0-1B117E1DD581}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Deploy", "Umbraco.AI.Prompt.Deploy\src\Umbraco.AI.Prompt.Deploy\Umbraco.AI.Prompt.Deploy.csproj", "{913478A5-B729-4B88-93A0-1B117E1DD581}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

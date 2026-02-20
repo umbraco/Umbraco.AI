@@ -8,8 +8,8 @@ With Deploy support installed, these AI entities are automatically deployed:
 
 - **Connections** - API keys and provider settings
 - **Profiles** - Model configurations and chat settings
-- **Prompts** - Template content and scoping rules (requires Umbraco.AI.Deploy.Prompt)
-- **Agents** - Instructions, tools, and permissions (requires Umbraco.AI.Deploy.Agent)
+- **Prompts** - Template content and scoping rules (requires Umbraco.AI.Prompt.Deploy)
+- **Agents** - Instructions, tools, and permissions (requires Umbraco.AI.Agent.Deploy)
 
 ## How It Works
 
@@ -26,8 +26,8 @@ This means your AI configuration follows the same deployment workflow as your co
 | Package | Purpose |
 |---------|---------|
 | **Umbraco.AI.Deploy** | Core Deploy support for Connections and Profiles |
-| **Umbraco.AI.Deploy.Prompt** | Deploy support for Prompt templates |
-| **Umbraco.AI.Deploy.Agent** | Deploy support for AI Agents |
+| **Umbraco.AI.Prompt.Deploy** | Deploy support for Prompt templates |
+| **Umbraco.AI.Agent.Deploy** | Deploy support for AI Agents |
 
 ## Installation
 
@@ -38,8 +38,8 @@ Install the packages you need via NuGet:
 dotnet add package Umbraco.AI.Deploy
 
 # Optional add-ons
-dotnet add package Umbraco.AI.Deploy.Prompt
-dotnet add package Umbraco.AI.Deploy.Agent
+dotnet add package Umbraco.AI.Prompt.Deploy
+dotnet add package Umbraco.AI.Agent.Deploy
 ```
 
 See [Installation](installation.md) for detailed setup instructions.

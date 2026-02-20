@@ -37,7 +37,7 @@
             <_Parameter1>Umbraco.AI.Agent.Startup</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-          <_Parameter1>Umbraco.AI.Deploy.Agent</_Parameter1>
+          <_Parameter1>Umbraco.AI.Agent.Deploy</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Agent.Tests.Unit</_Parameter1>

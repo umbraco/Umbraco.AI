@@ -6,21 +6,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo containing Umbraco.AI and its add-on packages:
 
-| Product                         | Description                                | Location                       |
-| ------------------------------- | ------------------------------------------ | ------------------------------ |
-| **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS  | `Umbraco.AI/`                  |
-| **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`           |
-| **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`            |
-| **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`         |
-| **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/`    |
-| **Umbraco.AI.Deploy**           | Deploy support for AI entities             | `Umbraco.AI.Deploy/`           |
-| **Umbraco.AI.Prompt.Deploy**    | Deploy support for prompts                 | `Umbraco.AI.Prompt.Deploy/`    |
-| **Umbraco.AI.Agent.Deploy**     | Deploy support for agents                  | `Umbraco.AI.Agent.Deploy/`     |
-| **Umbraco.AI.OpenAI**           | OpenAI provider plugin                     | `Umbraco.AI.OpenAI/`           |
-| **Umbraco.AI.Anthropic**        | Anthropic provider plugin                  | `Umbraco.AI.Anthropic/`        |
-| **Umbraco.AI.Amazon**           | Amazon Bedrock provider plugin             | `Umbraco.AI.Amazon/`           |
-| **Umbraco.AI.Google**           | Google Gemini provider plugin              | `Umbraco.AI.Google/`           |
-| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin       | `Umbraco.AI.MicrosoftFoundry/` |
+**Core:**
+
+| Product                         | Description                               | Location          |
+| ------------------------------- | ----------------------------------------- | ----------------- |
+| **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS | `Umbraco.AI/`     |
+
+**Addons:**
+
+| Product                         | Description                                | Location                    |
+| ------------------------------- | ------------------------------------------ | --------------------------- |
+| **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`         |
+| **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`      |
+| **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
+| **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`        |
+
+**Deploy:**
+
+| Product                         | Description                    | Location                    |
+| ------------------------------- | ------------------------------ | --------------------------- |
+| **Umbraco.AI.Deploy**           | Deploy support for AI entities | `Umbraco.AI.Deploy/`        |
+| **Umbraco.AI.Prompt.Deploy**    | Deploy support for prompts     | `Umbraco.AI.Prompt.Deploy/` |
+| **Umbraco.AI.Agent.Deploy**     | Deploy support for agents      | `Umbraco.AI.Agent.Deploy/`  |
+
+**Providers:**
+
+| Product                         | Description                   | Location                       |
+| ------------------------------- | ----------------------------- | ------------------------------ |
+| **Umbraco.AI.OpenAI**           | OpenAI provider plugin        | `Umbraco.AI.OpenAI/`          |
+| **Umbraco.AI.Anthropic**        | Anthropic provider plugin     | `Umbraco.AI.Anthropic/`       |
+| **Umbraco.AI.Amazon**           | Amazon Bedrock provider plugin| `Umbraco.AI.Amazon/`           |
+| **Umbraco.AI.Google**           | Google Gemini provider plugin | `Umbraco.AI.Google/`           |
+| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.AI.MicrosoftFoundry/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 

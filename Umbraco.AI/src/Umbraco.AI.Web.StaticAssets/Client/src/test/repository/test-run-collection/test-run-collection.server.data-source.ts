@@ -22,6 +22,7 @@ export class UaiTestRunCollectionServerDataSource implements UmbCollectionDataSo
             TestsService.getAllTestRuns({
                 query: {
                     testId: filter.test?.unique,
+                    status: filter.filter || undefined,
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },

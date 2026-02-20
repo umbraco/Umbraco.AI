@@ -62,9 +62,9 @@ public sealed class TestOperationResult
     public static TestOperationResult InvalidRunCount() => Failed("InvalidRunCount");
 
     /// <summary>
-    /// Creates an invalid test case result.
+    /// Creates an invalid test feature config result.
     /// </summary>
-    public static TestOperationResult InvalidTestCase() => Failed("InvalidTestCase");
+    public static TestOperationResult InvalidTestFeatureConfig() => Failed("InvalidTestFeatureConfig");
 
     /// <summary>
     /// Creates a cancelled result.

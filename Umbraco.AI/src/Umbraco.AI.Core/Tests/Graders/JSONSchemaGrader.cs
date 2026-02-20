@@ -56,9 +56,9 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new JSONSchemaGraderConfig()
-            : JsonSerializer.Deserialize<JSONSchemaGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<JSONSchemaGraderConfig>(configElement)
                 ?? new JSONSchemaGraderConfig();
 
         // Extract actual value from final output

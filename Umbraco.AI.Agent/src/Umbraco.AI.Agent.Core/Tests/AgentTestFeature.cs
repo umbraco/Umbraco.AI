@@ -17,15 +17,12 @@ namespace Umbraco.AI.Agent.Core.Tests;
 /// Executes agents with messages, tools, and context, and captures the AG-UI event stream.
 /// </summary>
 [AITestFeature("agent", "Agent Test", Category = "Built-in")]
-public class AgentTestFeature : AITestFeatureBase
+public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
 {
     private readonly IAIAgentService _agentService;
 
     /// <inheritdoc />
     public override string Description => "Tests agent execution with messages, tools, and context";
-
-    /// <inheritdoc />
-    public override Type? TestCaseType => typeof(AgentTestCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
@@ -46,11 +43,11 @@ public class AgentTestFeature : AITestFeatureBase
         IEnumerable<Guid>? contextIdsOverride,
         CancellationToken cancellationToken)
     {
-        // Get strongly-typed test case
-        var testCase = test.GetTestCase<AgentTestCase>();
-        if (testCase == null)
+        // Get strongly-typed config
+        var config = test.GetTestFeatureConfig<AgentTestFeatureConfig>();
+        if (config == null)
         {
-            throw new InvalidOperationException("Failed to deserialize test case");
+            throw new InvalidOperationException("Failed to deserialize test feature config");
         }
 
         // Use target agent ID directly (entity picker ensures valid ID)
@@ -59,12 +56,12 @@ public class AgentTestFeature : AITestFeatureBase
         // Build AG-UI run request
         var request = new AGUIRunRequest
         {
-            ThreadId = testCase.ThreadId ?? test.Id.ToString(),
+            ThreadId = config.ThreadId ?? test.Id.ToString(),
             RunId = $"{test.Id}-run-{runNumber}",
-            Messages = testCase.Messages,
-            Tools = testCase.Tools,
-            State = testCase.State,
-            Context = testCase.Context
+            Messages = config.Messages,
+            Tools = config.Tools,
+            State = config.State,
+            Context = config.Context
         };
 
         // Execute agent and capture timing
@@ -80,7 +77,7 @@ public class AgentTestFeature : AITestFeatureBase
         string? currentMessageId = null;
 
         // Convert AGUITools to AIFrontendTools (with default metadata for testing)
-        IEnumerable<AIFrontendTool>? frontendTools = testCase.Tools?
+        IEnumerable<AIFrontendTool>? frontendTools = config.Tools?
             .Select(t => new AIFrontendTool(t, Scope: null, IsDestructive: false))
             .ToList();
 

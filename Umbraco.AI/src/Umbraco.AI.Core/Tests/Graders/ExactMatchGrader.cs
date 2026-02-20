@@ -54,9 +54,9 @@ public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new ExactMatchGraderConfig()
-            : JsonSerializer.Deserialize<ExactMatchGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<ExactMatchGraderConfig>(configElement)
                 ?? new ExactMatchGraderConfig();
 
         // Extract actual value from final output

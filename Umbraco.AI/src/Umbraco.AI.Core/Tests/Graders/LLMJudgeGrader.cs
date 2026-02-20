@@ -74,9 +74,9 @@ public class LLMJudgeGrader : AITestGraderBase<LLMJudgeGraderConfig>
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new LLMJudgeGraderConfig()
-            : JsonSerializer.Deserialize<LLMJudgeGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<LLMJudgeGraderConfig>(configElement)
                 ?? new LLMJudgeGraderConfig();
 
         // Extract actual value from final output

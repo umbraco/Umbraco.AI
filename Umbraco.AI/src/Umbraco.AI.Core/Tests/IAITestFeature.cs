@@ -57,14 +57,14 @@ public interface IAITestFeature : IDiscoverable
     /// Used to generate UI schemas for test case input.
     /// Returns null if no test case configuration is needed.
     /// </summary>
-    Type? TestCaseType { get; }
+    Type? ConfigType { get; }
 
     /// <summary>
     /// Gets the test case schema that describes the configuration needed.
     /// Used by the UI to render the test case configuration form.
     /// Returns null if no test case configuration is needed.
     /// </summary>
-    AIEditableModelSchema? GetTestCaseSchema();
+    AIEditableModelSchema? GetConfigSchema();
 
     /// <summary>
     /// Executes a single test run and returns the transcript.

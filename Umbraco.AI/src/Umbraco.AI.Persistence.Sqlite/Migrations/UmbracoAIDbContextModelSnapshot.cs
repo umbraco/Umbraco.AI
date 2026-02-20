@@ -680,7 +680,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<Guid>("TestTargetId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TestCaseJson")
+                    b.Property<string>("TestFeatureConfigJson")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

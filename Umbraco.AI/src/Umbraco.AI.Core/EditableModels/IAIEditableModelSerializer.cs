@@ -20,5 +20,13 @@ public interface IAIEditableModelSerializer
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A <see cref="object"/> with decrypted values.</returns>
-    object Deserialize(string? json);
+    JsonElement? Deserialize(string? json);
+
+    /// <summary>
+    /// Deserializes a JSON string into a specific type, decrypting any encrypted field values.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    T? Deserialize<T>(string? json);
 }

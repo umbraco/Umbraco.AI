@@ -12,15 +12,12 @@ namespace Umbraco.AI.Prompt.Core.Tests;
 /// Executes prompts with mock or real content context and captures the response.
 /// </summary>
 [AITestFeature("prompt", "Prompt Test", Category = "Built-in")]
-public class PromptTestFeature : AITestFeatureBase
+public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
 {
     private readonly IAIPromptService _promptService;
 
     /// <inheritdoc />
     public override string Description => "Tests prompt execution with mock or real content context";
-
-    /// <inheritdoc />
-    public override Type? TestCaseType => typeof(PromptTestCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
@@ -41,11 +38,11 @@ public class PromptTestFeature : AITestFeatureBase
         IEnumerable<Guid>? contextIdsOverride,
         CancellationToken cancellationToken)
     {
-        // Deserialize test case from test.TestCaseJson
-        var testCase = test.GetTestCase<PromptTestCase>();
-        if (testCase == null)
+        // Deserialize test feature config
+        var config = test.GetTestFeatureConfig<PromptTestFeatureConfig>();
+        if (config == null)
         {
-            throw new InvalidOperationException("Failed to deserialize test case");
+            throw new InvalidOperationException("Failed to deserialize test feature config");
         }
 
         // Use target prompt ID directly (entity picker ensures valid ID)
@@ -54,12 +51,12 @@ public class PromptTestFeature : AITestFeatureBase
         // Build execution request
         var request = new AIPromptExecutionRequest
         {
-            EntityId = testCase.EntityId ?? Guid.Empty,
-            EntityType = testCase.EntityType,
-            PropertyAlias = testCase.PropertyAlias,
-            Culture = testCase.Culture,
-            Segment = testCase.Segment,
-            Context = testCase.ContextItems
+            EntityId = config.EntityId ?? Guid.Empty,
+            EntityType = config.EntityType,
+            PropertyAlias = config.PropertyAlias,
+            Culture = config.Culture,
+            Segment = config.Segment,
+            Context = config.ContextItems
         };
 
         // Execute prompt and capture timing
@@ -102,7 +99,7 @@ public class PromptTestFeature : AITestFeatureBase
         // Build messages array (simplified for prompt execution)
         var messages = new[]
         {
-            new { role = "system", content = $"Executing prompt for {testCase.EntityType}.{testCase.PropertyAlias}" },
+            new { role = "system", content = $"Executing prompt for {config.EntityType}.{config.PropertyAlias}" },
             new { role = "assistant", content = result.Content }
         };
 

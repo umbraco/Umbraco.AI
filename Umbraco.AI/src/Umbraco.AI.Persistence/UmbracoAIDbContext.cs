@@ -613,7 +613,7 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.TestTargetId)
                 .IsRequired();
 
-            entity.Property(e => e.TestCaseJson)
+            entity.Property(e => e.TestFeatureConfigJson)
                 .IsRequired();
 
             entity.Property(e => e.GradersJson);

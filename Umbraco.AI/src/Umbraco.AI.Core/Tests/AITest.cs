@@ -42,10 +42,10 @@ public sealed class AITest : IAIVersionableEntity
     public required Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test case data as JsonElement.
+    /// Test feature configuration data as JsonElement.
     /// Stored as JSON in database, deserialized on demand by test features.
     /// </summary>
-    public JsonElement? TestCase { get; set; }
+    public JsonElement? TestFeatureConfig { get; set; }
 
     /// <summary>
     /// Success criteria - graders that evaluate the test output.
@@ -103,19 +103,19 @@ public sealed class AITest : IAIVersionableEntity
     public Guid? ModifiedByUserId { get; set; }
 
     /// <summary>
-    /// Gets the test case as a strongly-typed object.
+    /// Gets the test feature configuration as a strongly-typed object.
     /// Deserializes the JsonElement to the specified type.
     /// </summary>
-    /// <typeparam name="T">The target test case type.</typeparam>
-    /// <returns>The test case as the specified type, or null if TestCase is null.</returns>
-    public T? GetTestCase<T>() where T : class
+    /// <typeparam name="T">The target configuration type.</typeparam>
+    /// <returns>The configuration as the specified type, or null if TestFeatureConfig is null.</returns>
+    public T? GetTestFeatureConfig<T>() where T : class
     {
-        if (TestCase == null)
+        if (TestFeatureConfig == null)
         {
             return null;
         }
 
         // Deserialize directly from JsonElement
-        return JsonSerializer.Deserialize<T>(TestCase.Value);
+        return JsonSerializer.Deserialize<T>(TestFeatureConfig.Value);
     }
 }

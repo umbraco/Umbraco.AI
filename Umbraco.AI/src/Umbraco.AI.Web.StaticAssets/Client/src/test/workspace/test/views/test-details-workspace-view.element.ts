@@ -77,9 +77,9 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		);
 	}
 
-	#onTestCaseChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+	#onTestFeatureConfigChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testCase: e.detail.model }, "testCase"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testFeatureConfig: e.detail.model }, "testFeatureConfig"),
 		);
 	}
 
@@ -109,7 +109,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 			graderTypeId: config.graderTypeId,
 			name: config.name,
 			description: config.description || null,
-			configJson: config.config ? JSON.stringify(config.config) : "{}",
+			config: config.config ?? undefined,
 			negate: config.negate,
 			severity: config.severity,
 			weight: config.weight,
@@ -125,24 +125,12 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 
 		// Convert TestGraderModel[] to UaiTestGraderConfig[]
 		return this._model.graders.map(grader => {
-			let config: Record<string, unknown> | undefined = undefined;
-
-			// Parse configJson if it exists and is valid
-			if (grader.configJson) {
-				try {
-					const parsed = JSON.parse(grader.configJson);
-					config = Object.keys(parsed).length > 0 ? parsed : undefined;
-				} catch {
-					// Invalid JSON, leave as undefined
-				}
-			}
-
 			return {
 				id: grader.id,
 				graderTypeId: grader.graderTypeId,
 				name: grader.name,
 				description: grader.description || undefined,
-				config,
+				config: grader.config as Record<string, unknown> || undefined,
 				negate: grader.negate,
 				severity: grader.severity as "Info" | "Warning" | "Error",
 				weight: grader.weight,
@@ -187,10 +175,10 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 
             <uai-model-editor
                 slot="editor"
-                .schema=${this._testFeature?.testCaseSchema}
-                .model=${this._model.testCase}
-                empty-message="This test feature has no configurable test case parameters."
-                @change=${this.#onTestCaseChange}
+                .schema=${this._testFeature?.testFeatureConfigSchema}
+                .model=${this._model.testFeatureConfig}
+                empty-message="This test feature has no configurable parameters."
+                @change=${this.#onTestFeatureConfigChange}
                 default-group="#uaiFieldGroups_configLabel"
             ></uai-model-editor>
 

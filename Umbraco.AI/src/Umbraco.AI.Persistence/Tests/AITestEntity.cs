@@ -36,9 +36,9 @@ internal class AITestEntity
     public Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test case configuration as JSON.
+    /// Test feature configuration as JSON.
     /// </summary>
-    public string TestCaseJson { get; set; } = string.Empty;
+    public string TestFeatureConfigJson { get; set; } = string.Empty;
 
     /// <summary>
     /// Graders serialized as JSON array.

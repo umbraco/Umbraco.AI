@@ -31,14 +31,14 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
             entity.Description,
             entity.TestFeatureId,
             entity.TestTargetId,
-            TestCase = entity.TestCase?.ToString(),
+            TestFeatureConfig = entity.TestFeatureConfig?.ToString(),
             Graders = entity.Graders.Select(g => new
             {
                 g.Id,
                 g.GraderTypeId,
                 g.Name,
                 g.Description,
-                g.ConfigJson,
+                Config = g.Config?.ToString(),
                 g.Negate,
                 Severity = (int)g.Severity,
                 g.Weight
@@ -81,14 +81,14 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
                 }
             }
 
-            JsonElement? testCase = null;
-            if (root.TryGetProperty("testCase", out var testCaseElement) &&
-                testCaseElement.ValueKind == JsonValueKind.String)
+            JsonElement? testFeatureConfig = null;
+            if (root.TryGetProperty("testFeatureConfig", out var testFeatureConfigElement) &&
+                testFeatureConfigElement.ValueKind == JsonValueKind.String)
             {
-                var testCaseJson = testCaseElement.GetString();
-                if (!string.IsNullOrEmpty(testCaseJson))
+                var testFeatureConfigJson = testFeatureConfigElement.GetString();
+                if (!string.IsNullOrEmpty(testFeatureConfigJson))
                 {
-                    testCase = JsonDocument.Parse(testCaseJson).RootElement;
+                    testFeatureConfig = JsonDocument.Parse(testFeatureConfigJson).RootElement;
                 }
             }
 
@@ -98,6 +98,16 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
             {
                 foreach (var graderElement in gradersElement.EnumerateArray())
                 {
+                    JsonElement? graderConfig = null;
+                    if (graderElement.TryGetProperty("config", out var configProp) && configProp.ValueKind == JsonValueKind.String)
+                    {
+                        var configStr = configProp.GetString();
+                        if (!string.IsNullOrEmpty(configStr))
+                        {
+                            graderConfig = JsonDocument.Parse(configStr).RootElement;
+                        }
+                    }
+
                     var grader = new AITestGraderConfig
                     {
                         Id = graderElement.GetProperty("id").GetGuid(),
@@ -106,9 +116,7 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
                         Description = graderElement.TryGetProperty("description", out var descProp) && descProp.ValueKind == JsonValueKind.String
                             ? descProp.GetString()
                             : null,
-                        ConfigJson = graderElement.TryGetProperty("configJson", out var configProp) && configProp.ValueKind == JsonValueKind.String
-                            ? configProp.GetString()
-                            : null,
+                        Config = graderConfig,
                         Negate = graderElement.TryGetProperty("negate", out var negateProp) && negateProp.GetBoolean(),
                         Severity = graderElement.TryGetProperty("severity", out var severityProp)
                             ? (AITestGraderSeverity)severityProp.GetInt32()
@@ -132,7 +140,7 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
                     : null,
                 TestFeatureId = root.GetProperty("testFeatureId").GetString()!,
                 TestTargetId = root.GetProperty("testTargetId").GetGuid(),
-                TestCase = testCase,
+                TestFeatureConfig = testFeatureConfig,
                 Graders = graders,
                 RunCount = root.GetProperty("runCount").GetInt32(),
                 Tags = tags,
@@ -185,15 +193,15 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
             changes.Add(new AIValueChange("TestTargetId", from.TestTargetId.ToString(), to.TestTargetId.ToString()));
         }
 
-        // Compare test case JSON
-        var fromTestCase = from.TestCase?.ToString() ?? string.Empty;
-        var toTestCase = to.TestCase?.ToString() ?? string.Empty;
-        if (fromTestCase != toTestCase)
+        // Compare test feature config JSON
+        var fromTestFeatureConfig = from.TestFeatureConfig?.ToString() ?? string.Empty;
+        var toTestFeatureConfig = to.TestFeatureConfig?.ToString() ?? string.Empty;
+        if (fromTestFeatureConfig != toTestFeatureConfig)
         {
             changes.Add(new AIValueChange(
-                "TestCase",
-                AIJsonComparer.TruncateValue(fromTestCase),
-                AIJsonComparer.TruncateValue(toTestCase)));
+                "TestFeatureConfig",
+                AIJsonComparer.TruncateValue(fromTestFeatureConfig),
+                AIJsonComparer.TruncateValue(toTestFeatureConfig)));
         }
 
         // Compare graders

@@ -45,11 +45,11 @@ internal sealed class AIEditableModelSerializer : IAIEditableModelSerializer
     }
 
     /// <inheritdoc />
-    public object Deserialize(string? json)
+    public JsonElement? Deserialize(string? json)
     {
         if (string.IsNullOrEmpty(json))
         {
-            return default(JsonElement);
+            return null;
         }
 
         // Parse JSON and decrypt encrypted fields
@@ -62,6 +62,15 @@ internal sealed class AIEditableModelSerializer : IAIEditableModelSerializer
         }
 
         return JsonSerializer.Deserialize<JsonElement>(json, Constants.DefaultJsonSerializerOptions);
+    }
+
+    /// <inheritdoc />
+    public T? Deserialize<T>(string? json)
+    {
+        var decryptedElement = Deserialize(json);
+        return decryptedElement == null
+            ? default
+            : decryptedElement.Value.Deserialize<T>(Constants.DefaultJsonSerializerOptions);
     }
 
     private void EncryptSensitiveFields(JsonObject jsonObject, AIEditableModelSchema schema)

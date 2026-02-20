@@ -7,9 +7,9 @@ namespace Umbraco.AI.Core.Tests;
 /// Base class for AI test features (harnesses).
 /// Handles attribute reading and provides common infrastructure.
 /// </summary>
-public abstract class AITestFeatureBase : IAITestFeature
+public abstract class AITestFeatureBase<TConfig> : IAITestFeature
 {
-    private readonly Lazy<AIEditableModelSchema?> _testCaseSchema;
+    private readonly Lazy<AIEditableModelSchema?> _configSchema;
 
     /// <inheritdoc />
     public string Id { get; }
@@ -24,7 +24,7 @@ public abstract class AITestFeatureBase : IAITestFeature
     public string Category { get; }
 
     /// <inheritdoc />
-    public abstract Type? TestCaseType { get; }
+    public virtual Type? ConfigType => typeof(TConfig);
 
     /// <summary>
     /// The schema builder for generating UI schemas.
@@ -32,7 +32,7 @@ public abstract class AITestFeatureBase : IAITestFeature
     protected IAIEditableModelSchemaBuilder SchemaBuilder { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AITestFeatureBase"/> class.
+    /// Initializes a new instance of the <see cref="AITestFeatureBase{TConfig}"/> class.
     /// </summary>
     /// <param name="schemaBuilder">The schema builder.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
@@ -50,12 +50,12 @@ public abstract class AITestFeatureBase : IAITestFeature
         Name = attribute.Name;
         Category = attribute.Category;
 
-        _testCaseSchema = new Lazy<AIEditableModelSchema?>(() => TestCaseType != null ? SchemaBuilder.BuildForType(TestCaseType, Id) : null);
+        _configSchema = new Lazy<AIEditableModelSchema?>(() => ConfigType != null ? SchemaBuilder.BuildForType(ConfigType, Id) : null);
     }
 
     /// <inheritdoc />
-    public AIEditableModelSchema? GetTestCaseSchema()
-        => _testCaseSchema.Value;
+    public AIEditableModelSchema? GetConfigSchema()
+        => _configSchema.Value;
 
     /// <inheritdoc />
     public abstract Task<AITestTranscript> ExecuteAsync(

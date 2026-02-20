@@ -4,10 +4,10 @@ using Umbraco.AI.Core.RuntimeContext;
 namespace Umbraco.AI.Prompt.Core.Tests;
 
 /// <summary>
-/// Test case configuration for prompt testing.
+/// Configuration for prompt test feature.
 /// Defines what content/media to test with and whether to use real or mock data.
 /// </summary>
-public class PromptTestCase
+public class PromptTestFeatureConfig
 {
     /// <summary>
     /// The entity ID to test with (content/media item).

@@ -30,14 +30,14 @@ public class TestMapDefinition : IMapDefinition
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
-            TestCase = source.TestCase,
+            TestFeatureConfig = source.TestFeatureConfig,
             Graders = source.Graders.Select(g => new TestGraderModel
             {
                 Id = g.Id,
                 GraderTypeId = g.GraderTypeId,
                 Name = g.Name,
                 Description = g.Description,
-                ConfigJson = g.ConfigJson,
+                Config = g.Config,
                 Negate = g.Negate,
                 Severity = g.Severity.ToString(),
                 Weight = g.Weight
@@ -72,14 +72,14 @@ public class TestMapDefinition : IMapDefinition
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
-            TestCase = source.TestCase,
+            TestFeatureConfig = source.TestFeatureConfig,
             Graders = source.Graders.Select(g => new AITestGraderConfig
             {
                 Id = g.Id,
                 GraderTypeId = g.GraderTypeId,
                 Name = g.Name,
                 Description = g.Description,
-                ConfigJson = g.ConfigJson,
+                Config = g.Config,
                 Negate = g.Negate,
                 Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
                 Weight = g.Weight
@@ -194,14 +194,14 @@ public class TestMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.TestTargetId = source.TestTargetId;
-        target.TestCase = source.TestCase;
+        target.TestFeatureConfig = source.TestFeatureConfig;
         target.Graders = source.Graders.Select(g => new AITestGraderConfig
         {
             Id = g.Id,
             GraderTypeId = g.GraderTypeId,
             Name = g.Name,
             Description = g.Description,
-            ConfigJson = g.ConfigJson,
+            Config = g.Config,
             Negate = g.Negate,
             Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
             Weight = g.Weight
@@ -217,8 +217,8 @@ public class TestMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.Category = source.Category;
-        target.TestCaseSchema = source.TestCaseType is not null
-            ? context.Map<EditableModelSchemaModel>(source.GetTestCaseSchema())
+        target.TestFeatureConfigSchema = source.ConfigType is not null
+            ? context.Map<EditableModelSchemaModel>(source.GetConfigSchema())
             : null;
     }
 

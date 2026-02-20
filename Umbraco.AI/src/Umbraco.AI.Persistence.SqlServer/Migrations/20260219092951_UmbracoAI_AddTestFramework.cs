@@ -21,7 +21,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     TestFeatureId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     TestTargetId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TestCaseJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TestFeatureConfigJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     GradersJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RunCount = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     Tags = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),

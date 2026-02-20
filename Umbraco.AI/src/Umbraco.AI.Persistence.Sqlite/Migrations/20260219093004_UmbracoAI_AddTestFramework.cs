@@ -21,7 +21,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
                     TestFeatureId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     TestTargetId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TestCaseJson = table.Column<string>(type: "TEXT", nullable: false),
+                    TestFeatureConfigJson = table.Column<string>(type: "TEXT", nullable: false),
                     GradersJson = table.Column<string>(type: "TEXT", nullable: true),
                     RunCount = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 1),
                     Tags = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),

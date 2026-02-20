@@ -695,7 +695,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<bool>("TargetIsAlias")
                         .HasColumnType("bit");
 
-                    b.Property<string>("TestCaseJson")
+                    b.Property<string>("TestFeatureConfigJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

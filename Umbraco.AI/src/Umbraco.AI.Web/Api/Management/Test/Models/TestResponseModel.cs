@@ -44,10 +44,10 @@ public class TestResponseModel
     public Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test case configuration as JsonElement.
-    /// Structure depends on the test feature's TestCaseType.
+    /// Test feature configuration as JsonElement.
+    /// Structure depends on the test feature's ConfigType.
     /// </summary>
-    public JsonElement? TestCase { get; set; }
+    public JsonElement? TestFeatureConfig { get; set; }
 
     /// <summary>
     /// List of graders to evaluate test outcomes.
@@ -108,9 +108,9 @@ public class TestGraderModel
     public string? Description { get; set; }
 
     /// <summary>
-    /// Grader-specific configuration as JSON.
+    /// Grader-specific configuration as JsonElement.
     /// </summary>
-    public string? ConfigJson { get; set; }
+    public JsonElement? Config { get; set; }
 
     /// <summary>
     /// Whether to negate the grader result.

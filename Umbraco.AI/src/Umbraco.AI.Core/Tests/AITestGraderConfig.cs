@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Umbraco.AI.Core.Tests;
 
 /// <summary>
@@ -28,10 +30,10 @@ public sealed class AITestGraderConfig
     public string? Description { get; set; }
 
     /// <summary>
-    /// Grader-specific configuration as JSON.
+    /// Grader-specific configuration as JsonElement.
     /// Structure depends on the grader type's ConfigType.
     /// </summary>
-    public string? ConfigJson { get; set; }
+    public JsonElement? Config { get; set; }
 
     /// <summary>
     /// Whether to negate the grader result (pass becomes fail, fail becomes pass).

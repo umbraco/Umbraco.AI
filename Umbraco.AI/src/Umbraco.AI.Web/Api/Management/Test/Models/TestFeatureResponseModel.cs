@@ -31,7 +31,7 @@ public class TestFeatureResponseModel
     public string? Category { get; set; }
 
     /// <summary>
-    /// The schema for the test case configuration.
+    /// The schema for the test feature configuration.
     /// </summary>
-    public EditableModelSchemaModel? TestCaseSchema { get; set; }
+    public EditableModelSchemaModel? TestFeatureConfigSchema { get; set; }
 }

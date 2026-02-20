@@ -36,9 +36,9 @@ public enum TestOperationStatus
     InvalidRunCount,
 
     /// <summary>
-    /// The test case JSON is empty or invalid.
+    /// The test feature config JSON is empty or invalid.
     /// </summary>
-    InvalidTestCase,
+    InvalidTestFeatureConfig,
 
     /// <summary>
     /// The operation was cancelled by a notification handler.

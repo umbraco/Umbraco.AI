@@ -60,6 +60,9 @@ public static class UmbracoBuilderExtensions
         // Unified versioning repository
         builder.Services.AddSingleton<IAIEntityVersionRepository, EfCoreAIEntityVersionRepository>();
 
+        // Test factory for entity/domain mapping with encryption support
+        builder.Services.AddSingleton<IAITestFactory, AITestFactory>();
+
         // Test framework repositories
         builder.Services.AddSingleton<IAITestRepository, EfCoreAITestRepository>();
         builder.Services.AddSingleton<IAITestRunRepository, EfCoreAITestRunRepository>();

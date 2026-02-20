@@ -10,10 +10,14 @@ namespace Umbraco.AI.Persistence.Tests;
 internal class EfCoreAITestRepository : IAITestRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
+    private readonly IAITestFactory _testFactory;
 
-    public EfCoreAITestRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EfCoreAITestRepository(
+        IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
+        IAITestFactory testFactory)
     {
         _scopeProvider = scopeProvider;
+        _testFactory = testFactory;
     }
 
     /// <inheritdoc />
@@ -25,7 +29,7 @@ internal class EfCoreAITestRepository : IAITestRepository
             await db.Tests.FirstOrDefaultAsync(t => t.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AITestFactory.BuildDomain(entity);
+        return entity is null ? null : _testFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -39,7 +43,7 @@ internal class EfCoreAITestRepository : IAITestRepository
                 cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AITestFactory.BuildDomain(entity);
+        return entity is null ? null : _testFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -51,7 +55,7 @@ internal class EfCoreAITestRepository : IAITestRepository
             await db.Tests.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AITestFactory.BuildDomain);
+        return entities.Select(_testFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -101,7 +105,7 @@ internal class EfCoreAITestRepository : IAITestRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AITestFactory.BuildDomain), result.total);
+        return (result.items.Select(_testFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
@@ -121,7 +125,7 @@ internal class EfCoreAITestRepository : IAITestRepository
                 test.CreatedByUserId = userId;
                 test.ModifiedByUserId = userId;
 
-                AITestEntity newEntity = AITestFactory.BuildEntity(test);
+                AITestEntity newEntity = _testFactory.BuildEntity(test);
                 db.Tests.Add(newEntity);
             }
             else
@@ -131,7 +135,7 @@ internal class EfCoreAITestRepository : IAITestRepository
                 test.DateModified = DateTime.UtcNow;
                 test.ModifiedByUserId = userId;
 
-                AITestFactory.UpdateEntity(existing, test);
+                _testFactory.UpdateEntity(existing, test);
             }
 
             await db.SaveChangesAsync(cancellationToken);

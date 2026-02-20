@@ -5,10 +5,10 @@ using Umbraco.AI.Core.EditableModels;
 namespace Umbraco.AI.Agent.Core.Tests;
 
 /// <summary>
-/// Test case configuration for agent testing.
+/// Configuration for agent test feature.
 /// Defines what messages, tools, state, and context to test with.
 /// </summary>
-public class AgentTestCase
+public class AgentTestFeatureConfig
 {
     /// <summary>
     /// Messages to send to the agent.

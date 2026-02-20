@@ -65,9 +65,9 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new ToolCallGraderConfig()
-            : JsonSerializer.Deserialize<ToolCallGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<ToolCallGraderConfig>(configElement)
                 ?? new ToolCallGraderConfig();
 
         // Parse expected tools

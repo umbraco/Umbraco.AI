@@ -38,9 +38,9 @@ public abstract class TestControllerBase : UmbracoAICoreManagementControllerBase
                 .WithTitle("Invalid run count")
                 .WithDetail("Run count must be at least 1.")
                 .Build()),
-            TestOperationStatus.InvalidTestCase => BadRequest(problemDetailsBuilder
-                .WithTitle("Invalid test case")
-                .WithDetail("Test case JSON cannot be empty.")
+            TestOperationStatus.InvalidTestFeatureConfig => BadRequest(problemDetailsBuilder
+                .WithTitle("Invalid test feature config")
+                .WithDetail("Test feature config JSON cannot be empty.")
                 .Build()),
             TestOperationStatus.Cancelled => BadRequest(problemDetailsBuilder
                 .WithTitle("Operation cancelled")

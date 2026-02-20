@@ -687,7 +687,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<Guid>("TestTargetId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("TestCaseJson")
+                    b.Property<string>("TestFeatureConfigJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

@@ -64,9 +64,9 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new RegexGraderConfig()
-            : JsonSerializer.Deserialize<RegexGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<RegexGraderConfig>(configElement)
                 ?? new RegexGraderConfig();
 
         // Extract actual value from final output

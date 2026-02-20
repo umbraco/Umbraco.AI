@@ -99,10 +99,10 @@ internal sealed class AITestService : IAITestService
         ArgumentException.ThrowIfNullOrWhiteSpace(test.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(test.TestFeatureId);
 
-        // Validate test case is not null
-        if (test.TestCase == null)
+        // Validate test feature config is not null
+        if (test.TestFeatureConfig == null)
         {
-            throw new InvalidOperationException("Test case cannot be null");
+            throw new InvalidOperationException("Test feature config cannot be null");
         }
 
         // Validate target ID
@@ -253,7 +253,7 @@ internal sealed class AITestService : IAITestService
             Description = snapshot.Description,
             TestFeatureId = snapshot.TestFeatureId,
             TestTargetId = snapshot.TestTargetId,
-            TestCase = snapshot.TestCase,
+            TestFeatureConfig = snapshot.TestFeatureConfig,
             Graders = snapshot.Graders,
             RunCount = snapshot.RunCount,
             Tags = snapshot.Tags,

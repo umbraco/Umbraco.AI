@@ -180,7 +180,7 @@ export type CreateTestRequestModel = {
     description?: string | null;
     testFeatureId: string;
     testTargetId: string;
-    testCase?: unknown;
+    testFeatureConfig?: unknown;
     graders: Array<TestGraderModel>;
     runCount: number;
     tags: Array<string>;
@@ -389,7 +389,7 @@ export type TestFeatureResponseModel = {
     name: string;
     description?: string | null;
     category?: string | null;
-    testCaseSchema?: EditableModelSchemaModel | null;
+    testFeatureConfigSchema?: EditableModelSchemaModel | null;
 };
 
 export type TestGraderComparisonResponseModel = {
@@ -413,7 +413,7 @@ export type TestGraderModel = {
     graderTypeId: string;
     name: string;
     description?: string | null;
-    configJson?: string | null;
+    config?: unknown;
     negate: boolean;
     severity: string;
     weight: number;
@@ -474,7 +474,7 @@ export type TestResponseModel = {
     description?: string | null;
     testFeatureId: string;
     testTargetId: string;
-    testCase?: unknown;
+    testFeatureConfig?: unknown;
     graders: Array<TestGraderModel>;
     runCount: number;
     tags: Array<string>;
@@ -558,7 +558,7 @@ export type UpdateTestRequestModel = {
     name: string;
     description?: string | null;
     testTargetId: string;
-    testCase?: unknown;
+    testFeatureConfig?: unknown;
     graders: Array<TestGraderModel>;
     runCount: number;
     tags: Array<string>;

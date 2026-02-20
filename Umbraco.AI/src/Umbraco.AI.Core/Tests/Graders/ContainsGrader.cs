@@ -53,9 +53,9 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new ContainsGraderConfig()
-            : JsonSerializer.Deserialize<ContainsGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<ContainsGraderConfig>(configElement)
                 ?? new ContainsGraderConfig();
 
         // Extract actual value from final output

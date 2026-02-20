@@ -688,7 +688,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<bool>("TargetIsAlias")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("TestCaseJson")
+                    b.Property<string>("TestFeatureConfigJson")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

@@ -1,7 +1,6 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
 import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
-import { UAI_CONTEXT_WORKSPACE_ALIAS } from "../../../context";
 
 export const manifests: Array<UmbExtensionManifest> = [
 	{

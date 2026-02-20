@@ -74,9 +74,9 @@ public class SemanticSimilarityGrader : AITestGraderBase<SemanticSimilarityGrade
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
-        var config = string.IsNullOrWhiteSpace(graderConfig.ConfigJson)
+        var config = graderConfig.Config is not { } configElement
             ? new SemanticSimilarityGraderConfig()
-            : JsonSerializer.Deserialize<SemanticSimilarityGraderConfig>(graderConfig.ConfigJson)
+            : JsonSerializer.Deserialize<SemanticSimilarityGraderConfig>(configElement)
                 ?? new SemanticSimilarityGraderConfig();
 
         if (string.IsNullOrWhiteSpace(config.ExpectedContent))

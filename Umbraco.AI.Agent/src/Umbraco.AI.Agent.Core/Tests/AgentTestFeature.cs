@@ -7,19 +7,19 @@ using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.EditableModels;
-using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tests;
 
 namespace Umbraco.AI.Agent.Core.Tests;
 
 /// <summary>
 /// Test feature for testing AI agents.
-/// Executes agents with messages, tools, and context, and captures the AG-UI event stream.
+/// Executes agents with messages, tools, and mock entity context, and captures the AG-UI event stream.
 /// </summary>
 [AITestFeature("agent", "Agent Test", Category = "Built-in")]
 public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
 {
     private readonly IAIAgentService _agentService;
+    private readonly AITestContextResolver _contextResolver;
 
     /// <inheritdoc />
     public override string Description => "Tests agent execution with messages, tools, and context";
@@ -29,10 +29,12 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
     /// </summary>
     public AgentTestFeature(
         IAIAgentService agentService,
+        AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
         : base(schemaBuilder)
     {
         _agentService = agentService;
+        _contextResolver = contextResolver;
     }
 
     /// <inheritdoc />
@@ -53,6 +55,24 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         // Use target agent ID directly (entity picker ensures valid ID)
         Guid agentId = test.TestTargetId;
 
+        // Extract entity context from config
+        var entityContext = config.EntityContext?.Deserialize<EntityContextConfig>();
+
+        // Mock entity → AG-UI context items
+        var resolvedContextItems = _contextResolver.ResolveContextItems(entityContext?.MockEntity);
+        var aguiContextItems = resolvedContextItems
+            .Select(item => new AGUIContextItem
+            {
+                Description = item.Description,
+                Value = item.Value
+            })
+            .ToList();
+
+        // Merge resolved mock entity context with any existing config context
+        var mergedContext = aguiContextItems.Count > 0
+            ? aguiContextItems
+            : null;
+
         // Build AG-UI run request
         var request = new AGUIRunRequest
         {
@@ -61,7 +81,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
             Messages = config.Messages,
             Tools = config.Tools,
             State = config.State,
-            Context = config.Context
+            Context = mergedContext
         };
 
         // Execute agent and capture timing
@@ -81,12 +101,15 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
             .Select(t => new AIFrontendTool(t, Scope: null, IsDestructive: false))
             .ToList();
 
+        // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
+        var effectiveContextIds = contextIdsOverride ?? config.ContextIds;
+
         try
         {
             var options = new AIAgentExecutionOptions
             {
                 ProfileIdOverride = profileIdOverride,
-                ContextIdsOverride = contextIdsOverride?.ToList()
+                ContextIdsOverride = effectiveContextIds?.ToList()
             };
 
             await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, frontendTools, options, cancellationToken))

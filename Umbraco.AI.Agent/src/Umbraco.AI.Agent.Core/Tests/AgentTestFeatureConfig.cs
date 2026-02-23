@@ -6,10 +6,20 @@ namespace Umbraco.AI.Agent.Core.Tests;
 
 /// <summary>
 /// Configuration for agent test feature.
-/// Defines what messages, tools, state, and context to test with.
+/// Defines entity context, messages, tools, state, and context for agent testing.
 /// </summary>
 public class AgentTestFeatureConfig
 {
+    /// <summary>
+    /// Mock entity context configuration (entity type, sub-type, and mock entity data).
+    /// </summary>
+    [AIField(
+        Label = "Entity Context",
+        Description = "Mock entity data to test with",
+        EditorUiAlias = "Uai.PropertyEditorUi.TestEntityContext",
+        SortOrder = 0)]
+    public JsonElement? EntityContext { get; set; }
+
     /// <summary>
     /// Messages to send to the agent.
     /// </summary>
@@ -44,15 +54,14 @@ public class AgentTestFeatureConfig
     public JsonElement? State { get; set; }
 
     /// <summary>
-    /// Additional context items.
+    /// AIContext entity IDs to include (overrides agent's configured contexts).
     /// </summary>
     [AIField(
-        Label = "Context Items",
-        Description = "Optional context items (JSON array)",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
-        EditorConfig = "[{\"alias\":\"rows\",\"value\":3}]",
-        SortOrder = 4)]
-    public List<AGUIContextItem>? Context { get; set; }
+        Label = "Context IDs",
+        Description = "AIContext entity IDs to include (overrides agent's configured contexts)",
+        EditorUiAlias = "Uai.PropertyEditorUi.ContextPicker",
+        SortOrder = 5)]
+    public List<Guid>? ContextIds { get; set; }
 
     /// <summary>
     /// Thread ID for the test run.
@@ -61,6 +70,6 @@ public class AgentTestFeatureConfig
         Label = "Thread ID",
         Description = "Optional thread ID (defaults to test ID)",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
-        SortOrder = 5)]
+        SortOrder = 6)]
     public string? ThreadId { get; set; }
 }

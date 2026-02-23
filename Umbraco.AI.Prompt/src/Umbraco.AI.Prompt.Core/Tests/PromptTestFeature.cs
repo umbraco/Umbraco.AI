@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Umbraco.AI.Core.EditableModels;
-using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Prompt.Core.Prompts;
 
@@ -9,25 +8,28 @@ namespace Umbraco.AI.Prompt.Core.Tests;
 
 /// <summary>
 /// Test feature for testing AI prompts.
-/// Executes prompts with mock or real content context and captures the response.
+/// Executes prompts with mock entity context and captures the response.
 /// </summary>
 [AITestFeature("prompt", "Prompt Test", Category = "Built-in")]
 public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
 {
     private readonly IAIPromptService _promptService;
+    private readonly AITestContextResolver _contextResolver;
 
     /// <inheritdoc />
-    public override string Description => "Tests prompt execution with mock or real content context";
+    public override string Description => "Tests prompt execution with mock entity context";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
     /// </summary>
     public PromptTestFeature(
         IAIPromptService promptService,
+        AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
         : base(schemaBuilder)
     {
         _promptService = promptService;
+        _contextResolver = contextResolver;
     }
 
     /// <inheritdoc />
@@ -48,16 +50,25 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         // Use target prompt ID directly (entity picker ensures valid ID)
         Guid promptId = test.TestTargetId;
 
+        // Extract entity context from config
+        var entityContext = config.EntityContext?.Deserialize<EntityContextConfig>();
+
+        // Mock entity → request.Context (raw AIRequestContextItem)
+        var contextItems = _contextResolver.ResolveContextItems(entityContext?.MockEntity);
+
         // Build execution request
         var request = new AIPromptExecutionRequest
         {
-            EntityId = config.EntityId ?? Guid.Empty,
-            EntityType = config.EntityType,
+            EntityId = Guid.Empty, // No real entity
+            EntityType = entityContext?.EntityType ?? "document",
             PropertyAlias = config.PropertyAlias,
             Culture = config.Culture,
             Segment = config.Segment,
-            Context = config.ContextItems
+            Context = contextItems.Count > 0 ? contextItems : null
         };
+
+        // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
+        var effectiveContextIds = contextIdsOverride ?? config.ContextIds;
 
         // Execute prompt and capture timing
         var stopwatch = Stopwatch.StartNew();
@@ -69,7 +80,7 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
             {
                 ValidateScope = false,
                 ProfileIdOverride = profileIdOverride,
-                ContextIdsOverride = contextIdsOverride?.ToList()
+                ContextIdsOverride = effectiveContextIds?.ToList()
             };
 
             result = await _promptService.ExecutePromptAsync(promptId, request, options, cancellationToken);
@@ -105,7 +116,7 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         // Build messages array (simplified for prompt execution)
         var messages = new[]
         {
-            new { role = "system", content = $"Executing prompt for {config.EntityType}.{config.PropertyAlias}" },
+            new { role = "system", content = $"Executing prompt for {entityContext?.EntityType ?? "document"}.{config.PropertyAlias}" },
             new { role = "assistant", content = result.Content }
         };
 

@@ -8,7 +8,7 @@ namespace Umbraco.AI.Core.Tests;
 /// Converts mock entity JSON directly into AIRequestContextItems
 /// that are indistinguishable from real entity context downstream.
 /// </summary>
-internal sealed class AITestContextResolver
+public sealed class AITestContextResolver
 {
     /// <summary>
     /// Resolves context items from a mock entity JSON element.

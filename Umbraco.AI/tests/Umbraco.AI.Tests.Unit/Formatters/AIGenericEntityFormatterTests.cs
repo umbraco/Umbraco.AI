@@ -1,21 +1,22 @@
 using System.Text.Json;
 using Umbraco.AI.Core.EntityAdapter;
+using Umbraco.AI.Core.EntityAdapter.Adapters;
 
 namespace Umbraco.AI.Tests.Unit.Formatters;
 
-public class AIGenericEntityFormatterTests
+public class GenericEntityAdapterTests
 {
-    private readonly AIGenericEntityFormatter _formatter = new();
+    private readonly GenericEntityAdapter _adapter = new();
 
     [Fact]
     public void EntityType_ReturnsNull()
     {
-        // Assert - generic formatter is the default (null entity type)
-        _formatter.EntityType.ShouldBeNull();
+        // Assert - generic adapter is the default (null entity type)
+        _adapter.EntityType.ShouldBeNull();
     }
 
     [Fact]
-    public void Format_WithSimpleJsonData_FormatsAsJson()
+    public void FormatForLlm_WithSimpleJsonData_FormatsAsJson()
     {
         // Arrange
         var data = JsonDocument.Parse("""
@@ -35,7 +36,7 @@ public class AIGenericEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = _adapter.FormatForLlm(entity);
 
         // Assert
         result.ShouldContain("## Current Entity Context");
@@ -50,7 +51,7 @@ public class AIGenericEntityFormatterTests
     }
 
     [Fact]
-    public void Format_WithNestedJsonData_FormatsWithIndentation()
+    public void FormatForLlm_WithNestedJsonData_FormatsWithIndentation()
     {
         // Arrange
         var data = JsonDocument.Parse("""
@@ -72,7 +73,7 @@ public class AIGenericEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = _adapter.FormatForLlm(entity);
 
         // Assert
         result.ShouldContain("```json");
@@ -83,7 +84,7 @@ public class AIGenericEntityFormatterTests
     }
 
     [Fact]
-    public void Format_WithEmptyObject_FormatsCorrectly()
+    public void FormatForLlm_WithEmptyObject_FormatsCorrectly()
     {
         // Arrange
         var data = JsonDocument.Parse("{}").RootElement;
@@ -97,7 +98,7 @@ public class AIGenericEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = _adapter.FormatForLlm(entity);
 
         // Assert
         result.ShouldContain("## Current Entity Context");
@@ -106,9 +107,9 @@ public class AIGenericEntityFormatterTests
     }
 
     [Fact]
-    public void Format_ThrowsArgumentNullException_WhenEntityIsNull()
+    public void FormatForLlm_ThrowsArgumentNullException_WhenEntityIsNull()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _formatter.Format(null!));
+        Should.Throw<ArgumentNullException>(() => _adapter.FormatForLlm(null!));
     }
 }

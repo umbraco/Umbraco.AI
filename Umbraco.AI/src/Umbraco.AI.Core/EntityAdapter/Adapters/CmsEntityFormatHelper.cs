@@ -1,39 +1,32 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Umbraco.AI.Core.EntityAdapter;
+namespace Umbraco.AI.Core.EntityAdapter.Adapters;
 
 /// <summary>
-/// Formatter for Umbraco CMS document/media entities.
-/// Provides property-based formatting when the data structure matches the expected CMS format.
-/// Falls back to generic JSON formatting if the structure doesn't match.
+/// Shared formatting logic for CMS entities (documents, media, members)
+/// that use the standard { contentType, properties[] } data structure.
 /// </summary>
-internal sealed class AIDocumentEntityFormatter : IAIEntityFormatter
+internal static class CmsEntityFormatHelper
 {
-    private readonly AIGenericEntityFormatter _genericFormatter = new();
-
-    /// <inheritdoc />
-    public string? EntityType => "document";
-
-    /// <inheritdoc />
-    public string Format(AISerializedEntity entity)
+    /// <summary>
+    /// Formats a CMS entity with property-based structure.
+    /// Falls back to generic JSON formatting if the structure doesn't match.
+    /// </summary>
+    public static string FormatCmsEntity(AISerializedEntity entity)
     {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        // Try to extract CMS-specific structure from data
         if (!TryExtractCmsStructure(entity.Data, out var contentType, out var properties))
         {
-            // Structure doesn't match - fall back to generic formatter
-            return _genericFormatter.Format(entity);
+            return GenericEntityAdapter.FormatGeneric(entity);
         }
 
         var sb = new StringBuilder();
 
-        sb.AppendLine($"## Current Entity Context");
+        sb.AppendLine("## Current Entity Context");
         sb.AppendLine($"Key: `{entity.Unique}`");
         sb.AppendLine($"Name: `{entity.Name}`");
         sb.AppendLine($"Type: `{entity.EntityType}`");
-        sb.AppendLine($"**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
+        sb.AppendLine("**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
 
         if (!string.IsNullOrEmpty(contentType))
         {
@@ -64,27 +57,23 @@ internal sealed class AIDocumentEntityFormatter : IAIEntityFormatter
         contentType = null;
         properties = [];
 
-        // Check if data is an object
         if (data.ValueKind != JsonValueKind.Object)
         {
             return false;
         }
 
-        // Try to get contentType (optional)
         if (data.TryGetProperty("contentType", out var contentTypeElement)
             && contentTypeElement.ValueKind == JsonValueKind.String)
         {
             contentType = contentTypeElement.GetString();
         }
 
-        // Try to get properties array (required for CMS structure)
         if (!data.TryGetProperty("properties", out var propertiesElement)
             || propertiesElement.ValueKind != JsonValueKind.Array)
         {
             return false;
         }
 
-        // Parse properties array
         foreach (var propElement in propertiesElement.EnumerateArray())
         {
             if (propElement.ValueKind != JsonValueKind.Object)
@@ -92,7 +81,6 @@ internal sealed class AIDocumentEntityFormatter : IAIEntityFormatter
                 continue;
             }
 
-            // Require alias and label
             if (!propElement.TryGetProperty("alias", out var aliasElement)
                 || aliasElement.ValueKind != JsonValueKind.String
                 || !propElement.TryGetProperty("label", out var labelElement)
@@ -109,7 +97,6 @@ internal sealed class AIDocumentEntityFormatter : IAIEntityFormatter
                 continue;
             }
 
-            // Value is optional
             object? value = null;
             if (propElement.TryGetProperty("value", out var valueElement))
             {
@@ -119,7 +106,6 @@ internal sealed class AIDocumentEntityFormatter : IAIEntityFormatter
             properties.Add(new PropertyInfo(alias, label, value));
         }
 
-        // Consider it a CMS structure if we found at least some properties
         return properties.Count > 0;
     }
 
@@ -132,7 +118,7 @@ internal sealed class AIDocumentEntityFormatter : IAIEntityFormatter
             JsonValueKind.True => true,
             JsonValueKind.False => false,
             JsonValueKind.Null => null,
-            _ => element.GetRawText(), // For objects/arrays, return JSON string
+            _ => element.GetRawText(),
         };
     }
 

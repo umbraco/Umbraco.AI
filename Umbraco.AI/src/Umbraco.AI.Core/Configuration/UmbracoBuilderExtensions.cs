@@ -13,6 +13,7 @@ using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.EntityAdapter;
+using Umbraco.AI.Core.EntityAdapter.Adapters;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.Chat.Middleware;
@@ -187,10 +188,12 @@ public static partial class UmbracoBuilderExtensions
         // Entity adapter infrastructure
         services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
 
-        // Entity formatter infrastructure - auto-discover formatters
-        builder.AIEntityFormatters()
-            .Add<AIGenericEntityFormatter>()   // Default formatter (EntityType = null)
-            .Add<AIDocumentEntityFormatter>(); // CMS document/media formatter
+        // Entity adapter infrastructure - type-specific formatting + metadata + sub-types
+        builder.AIEntityAdapters()
+            .Add<GenericEntityAdapter>()    // Default adapter (EntityType = null)
+            .Add<DocumentEntityAdapter>()   // CMS document adapter
+            .Add<MediaEntityAdapter>()      // CMS media adapter
+            .Add<MemberEntityAdapter>();    // CMS member adapter
 
         // Runtime context infrastructure
         // Single instance implements both accessor (for reading) and scope provider (for creating)

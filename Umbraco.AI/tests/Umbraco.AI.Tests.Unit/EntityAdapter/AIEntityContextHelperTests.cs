@@ -5,21 +5,21 @@ namespace Umbraco.AI.Tests.Unit.EntityAdapter;
 
 public class AIEntityContextHelperTests
 {
-    private readonly AIEntityFormatterCollection _formatterCollection;
+    private readonly AIEntityAdapterCollection _adapterCollection;
     private readonly AIEntityContextHelper _helper;
 
     public AIEntityContextHelperTests()
     {
-        // Create real formatter collection with a mock formatter
-        var defaultFormatterMock = new Mock<IAIEntityFormatter>();
-        defaultFormatterMock.Setup(f => f.EntityType).Returns((string?)null);
-        defaultFormatterMock.Setup(f => f.Format(It.IsAny<AISerializedEntity>()))
+        // Create real adapter collection with a mock adapter
+        var defaultAdapterMock = new Mock<IAIEntityAdapter>();
+        defaultAdapterMock.Setup(a => a.EntityType).Returns((string?)null);
+        defaultAdapterMock.Setup(a => a.FormatForLlm(It.IsAny<AISerializedEntity>()))
             .Returns("Mocked formatted output");
 
-        var formatters = new List<IAIEntityFormatter> { defaultFormatterMock.Object };
-        _formatterCollection = new AIEntityFormatterCollection(() => formatters);
+        var adapters = new List<IAIEntityAdapter> { defaultAdapterMock.Object };
+        _adapterCollection = new AIEntityAdapterCollection(() => adapters);
 
-        _helper = new AIEntityContextHelper(_formatterCollection);
+        _helper = new AIEntityContextHelper(_adapterCollection);
     }
 
     [Fact]
@@ -293,7 +293,7 @@ public class AIEntityContextHelperTests
     }
 
     [Fact]
-    public void FormatForLlm_GetsFormatterForEntityType()
+    public void FormatForLlm_GetsAdapterForEntityType()
     {
         // Arrange
         var data = JsonDocument.Parse("{}").RootElement;

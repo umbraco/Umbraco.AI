@@ -38,8 +38,9 @@ public class UpdateTestRequestModel
     public JsonElement? TestFeatureConfig { get; set; }
 
     /// <summary>
-    /// List of graders to evaluate test outcomes.
+    /// List of graders to evaluate test outcomes. At least one grader is required.
     /// </summary>
+    [MinLength(1)]
     public IReadOnlyList<TestGraderModel> Graders { get; set; } = [];
 
     /// <summary>

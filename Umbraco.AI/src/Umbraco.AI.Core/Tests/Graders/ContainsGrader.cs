@@ -58,8 +58,8 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
             : JsonSerializer.Deserialize<ContainsGraderConfig>(configElement)
                 ?? new ContainsGraderConfig();
 
-        // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
+        // Output value is already extracted by the test feature
+        var actualValue = outcome.OutputValue ?? string.Empty;
 
         // Perform substring check
         var comparisonType = config.IgnoreCase
@@ -81,26 +81,4 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
         });
     }
 
-    private static string ExtractContentFromOutput(string? outputJson)
-    {
-        if (string.IsNullOrWhiteSpace(outputJson))
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(outputJson);
-            if (doc.RootElement.TryGetProperty("content", out var content))
-            {
-                return content.GetString() ?? string.Empty;
-            }
-        }
-        catch
-        {
-            // If parsing fails, return raw JSON
-        }
-
-        return outputJson;
-    }
 }

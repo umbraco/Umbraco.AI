@@ -42,6 +42,7 @@ internal sealed class DocumentEntityAdapter : AIEntityAdapterBase
     public override Task<IEnumerable<AIEntitySubType>> GetEntitySubTypesAsync(CancellationToken cancellationToken = default)
     {
         var contentTypes = _contentTypeService.GetAll()
+            .Where(x => x is { IsElement: false, AllowedTemplates: not null } && x.AllowedTemplates.Any()) // Only include content types that can be created (not elements) and have templates (i.e., are not purely structural)
             .Select(ct => new AIEntitySubType
             {
                 Alias = ct.Alias,

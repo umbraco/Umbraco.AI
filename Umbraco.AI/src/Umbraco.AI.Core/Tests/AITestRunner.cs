@@ -109,10 +109,11 @@ internal sealed class AITestRunner : IAITestRunner
             testRun.TranscriptId = transcript.Id;
 
             // Build outcome from transcript
+            // The test feature extracts the gradable output from the entity-specific response format
             var outcome = new AITestOutcome
             {
                 OutputType = AITestOutputType.Text, // TODO: Detect from transcript
-                OutputValue = transcript.FinalOutputJson,
+                OutputValue = testFeature.ExtractOutputValue(transcript),
                 FinishReason = "completed", // TODO: Get from transcript
                 TokenUsageJson = null // TODO: Extract from transcript timing/metadata if available
             };

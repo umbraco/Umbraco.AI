@@ -61,8 +61,8 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
             : JsonSerializer.Deserialize<JSONSchemaGraderConfig>(configElement)
                 ?? new JSONSchemaGraderConfig();
 
-        // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
+        // Output value is already extracted by the test feature
+        var actualValue = outcome.OutputValue ?? string.Empty;
 
         // Parse expected keys
         var expectedKeys = config.ExpectedKeys
@@ -123,29 +123,6 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
                 ? JsonSerializer.Serialize(new { missingKeys })
                 : null
         });
-    }
-
-    private static string ExtractContentFromOutput(string? outputJson)
-    {
-        if (string.IsNullOrWhiteSpace(outputJson))
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(outputJson);
-            if (doc.RootElement.TryGetProperty("content", out var content))
-            {
-                return content.GetString() ?? string.Empty;
-            }
-        }
-        catch
-        {
-            // If parsing fails, return raw JSON
-        }
-
-        return outputJson;
     }
 
     private static bool HasProperty(JsonElement element, string propertyPath)

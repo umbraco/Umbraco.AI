@@ -249,7 +249,7 @@ public class RunAgentController : AgentControllerBase
         try
         {
             var metadataList = JsonSerializer.Deserialize<List<ToolMetadataDto>>(
-                metadataElement.GetRawText()) ?? [];
+                metadataElement.GetRawText(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions) ?? [];
 
             return metadataList.ToDictionary(
                 m => m.ToolName,

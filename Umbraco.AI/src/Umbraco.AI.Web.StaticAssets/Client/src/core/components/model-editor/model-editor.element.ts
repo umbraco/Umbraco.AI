@@ -176,7 +176,15 @@ export class UaiModelEditorElement extends UmbLitElement {
             groups.delete(generalKey);
         }
 
-        return Array.from(groups.entries());
+        // Sort fields within each group by sortOrder
+        for (const fields of groups.values()) {
+            fields.sort((a, b) => a.sortOrder - b.sortOrder);
+        }
+
+        // Sort groups by the minimum sortOrder of their fields
+        return Array.from(groups.entries()).sort(
+            ([, a], [, b]) => a[0].sortOrder - b[0].sortOrder,
+        );
     }
 
     #renderField(field: UaiEditableModelFieldModel) {

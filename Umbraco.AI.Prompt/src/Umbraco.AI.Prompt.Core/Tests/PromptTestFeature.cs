@@ -14,7 +14,6 @@ namespace Umbraco.AI.Prompt.Core.Tests;
 public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
 {
     private readonly IAIPromptService _promptService;
-    private readonly AITestContextResolver _contextResolver;
 
     /// <inheritdoc />
     public override string Description => "Tests prompt execution with mock entity context";
@@ -26,10 +25,9 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         IAIPromptService promptService,
         AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+        : base(contextResolver, schemaBuilder)
     {
         _promptService = promptService;
-        _contextResolver = contextResolver;
     }
 
     /// <inheritdoc />
@@ -51,10 +49,10 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         Guid promptId = test.TestTargetId;
 
         // Extract entity context from config
-        var entityContext = config.EntityContext?.Deserialize<EntityContextConfig>();
+        var entityContext = ResolveEntityContext(config);
 
         // Mock entity → request.Context (raw AIRequestContextItem)
-        var contextItems = _contextResolver.ResolveContextItems(entityContext?.MockEntity);
+        var contextItems = ResolveEntityContextItems(config);
 
         // Build execution request
         var request = new AIPromptExecutionRequest
@@ -62,13 +60,11 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
             EntityId = Guid.Empty, // No real entity
             EntityType = entityContext?.EntityType ?? "document",
             PropertyAlias = config.PropertyAlias,
-            Culture = config.Culture,
-            Segment = config.Segment,
             Context = contextItems.Count > 0 ? contextItems : null
         };
 
         // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
-        var effectiveContextIds = contextIdsOverride ?? config.ContextIds;
+        var effectiveContextIds = ResolveEffectiveContextIds(config, contextIdsOverride);
 
         // Execute prompt and capture timing
         var stopwatch = Stopwatch.StartNew();
@@ -113,12 +109,18 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
 
         stopwatch.Stop();
 
-        // Build messages array (simplified for prompt execution)
-        var messages = new[]
+        // Build messages array from actual chat messages sent to the AI model
+        var messages = new List<object>();
+        if (result.Messages != null)
         {
-            new { role = "system", content = $"Executing prompt for {entityContext?.EntityType ?? "document"}.{config.PropertyAlias}" },
-            new { role = "assistant", content = result.Content }
-        };
+            foreach (var msg in result.Messages)
+            {
+                messages.Add(new { role = msg.Role.Value, content = msg.Text ?? string.Empty });
+            }
+        }
+
+        // Append the assistant response
+        messages.Add(new { role = "assistant", content = result.Content });
 
         // Build structured transcript
         return new AITestTranscript

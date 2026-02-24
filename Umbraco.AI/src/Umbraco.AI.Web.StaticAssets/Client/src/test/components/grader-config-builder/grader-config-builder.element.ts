@@ -1,6 +1,7 @@
 import { css, html, customElement, property, state, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
@@ -12,12 +13,37 @@ import { TestsService } from "../../../api/sdk.gen.js";
 import type { TestGraderInfoModel } from "../../../api/types.gen.js";
 
 @customElement("uai-grader-config-builder")
-export class UaiGraderConfigBuilderElement extends UmbLitElement {
+export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
+    UaiTestGraderConfig[] | undefined,
+    typeof UmbLitElement,
+    undefined
+>(UmbLitElement, undefined) {
     @property({ type: Array })
-    graders: UaiTestGraderConfig[] = [];
+    set graders(value: UaiTestGraderConfig[]) {
+        this.value = value.length > 0 ? value : undefined;
+    }
+    get graders(): UaiTestGraderConfig[] {
+        return this.value ?? [];
+    }
 
     @state()
     private _graders: TestGraderInfoModel[] = [];
+
+    constructor() {
+        super();
+
+        this.addValidator(
+            "valueMissing",
+            () => this.requiredMessage,
+            () => this.hasAttribute("required") && (!this.value || this.value.length === 0),
+        );
+    }
+
+    /**
+     * The validation message to show when required and empty.
+     */
+    @property({ attribute: "required-message", type: String })
+    requiredMessage = "At least one grader is required";
 
     override async connectedCallback() {
         super.connectedCallback();
@@ -66,7 +92,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
 
                 // Config submitted - close picker and add grader
                 typeModal.reject();
-                this.graders = [...this.graders, configResult.grader];
+                this.value = [...this.graders, configResult.grader];
                 this.dispatchEvent(new UmbChangeEvent());
             } catch {
                 // Config cancelled - picker remains open so user can select different type
@@ -95,7 +121,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
             const result = await modal.onSubmit();
 
             // Update in list and notify
-            this.graders = this.graders.map((g) => (g.id === grader.id ? result.grader : g));
+            this.value = this.graders.map((g) => (g.id === grader.id ? result.grader : g));
             this.dispatchEvent(new UmbChangeEvent());
         } catch {
             // User cancelled
@@ -103,7 +129,8 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
     }
 
     #onRemove(graderId: string) {
-        this.graders = this.graders.filter((g) => g.id !== graderId);
+        const updated = this.graders.filter((g) => g.id !== graderId);
+        this.value = updated.length > 0 ? updated : undefined;
         this.dispatchEvent(new UmbChangeEvent());
     }
 

@@ -6,6 +6,7 @@ import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
 import type { TestGraderModel } from "../../../../api/types.gen.js";
 import type { UaiTestDetailModel, UaiTestGraderConfig } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
+import type { UaiGraderConfigBuilderElement } from "../../../components/grader-config-builder/grader-config-builder.element.js";
 
 @customElement("umbraco-ai-test-scoring-workspace-view")
 export class UmbracoAITestScoringWorkspaceViewElement extends UmbFormControlMixin(UmbLitElement) {
@@ -24,6 +25,12 @@ export class UmbracoAITestScoringWorkspaceViewElement extends UmbFormControlMixi
                 });
             }
         });
+	}
+
+	protected override firstUpdated(_changedProperties: any) {
+		super.firstUpdated(_changedProperties);
+		const graderBuilder = this.shadowRoot?.querySelector<UaiGraderConfigBuilderElement>("uai-grader-config-builder");
+		if (graderBuilder) this.addFormControlElement(graderBuilder as any);
 	}
 
 	#onGradersChange(event: Event) {
@@ -72,10 +79,13 @@ export class UmbracoAITestScoringWorkspaceViewElement extends UmbFormControlMixi
 			<uui-box headline="Graders">
 				<umb-property-layout
 					label="Graders"
-					description="Configure graders to validate test outputs">
+					description="Configure graders to validate test outputs"
+					mandatory>
 					<uai-grader-config-builder
 						slot="editor"
 						.graders=${this.#getGraderConfigs()}
+						required
+						.requiredMessage=${this.localize.term("uaiValidation_gradersRequired")}
 						@change=${this.#onGradersChange}
 					></uai-grader-config-builder>
 				</umb-property-layout>

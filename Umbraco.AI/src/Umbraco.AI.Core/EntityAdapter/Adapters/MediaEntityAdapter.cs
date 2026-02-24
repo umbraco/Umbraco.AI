@@ -42,6 +42,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
     public override Task<IEnumerable<AIEntitySubType>> GetEntitySubTypesAsync(CancellationToken cancellationToken = default)
     {
         var mediaTypes = _mediaTypeService.GetAll()
+            .Where(x => !x.IsElement)
             .Select(mt => new AIEntitySubType
             {
                 Alias = mt.Alias,

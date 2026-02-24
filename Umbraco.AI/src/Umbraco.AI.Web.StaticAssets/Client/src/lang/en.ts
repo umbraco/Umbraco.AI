@@ -135,6 +135,7 @@ export default {
         featuresLabel: "Features",
         dataLabel: "Data",
         configLabel: "Configuration",
+        contextLabel: "Context",
     },
     uaiValidation: {
         required: "This field is required",
@@ -149,6 +150,7 @@ export default {
         modelRequired: "Please select a model",
         temperatureRange: "Temperature must be between 0 and 2",
         maxTokensMin: "Max tokens must be at least 1",
+        gradersRequired: "At least one grader is required",
     },
     uaiUserGroupPermissions: {
         headline: "User Group Permissions",

@@ -325,6 +325,7 @@ internal sealed class AIPromptService : IAIPromptService
             {
                 Content = responseText,
                 Usage = response.Usage,
+                Messages = messages,
                 ResultOptions = [] // Empty array for informational
             },
 
@@ -332,6 +333,7 @@ internal sealed class AIPromptService : IAIPromptService
             {
                 Content = responseText,
                 Usage = response.Usage,
+                Messages = messages,
                 ResultOptions = [
                     new AIPromptExecutionResult.AIPromptResultOption
                     {
@@ -420,6 +422,7 @@ internal sealed class AIPromptService : IAIPromptService
             {
                 Content = responseText,
                 Usage = usage,
+                Messages = messages.ToList(),
                 ResultOptions = parseResult.Options!
             };
         }
@@ -481,6 +484,7 @@ internal sealed class AIPromptService : IAIPromptService
         {
             Content = $"❌ Failed to parse multiple options after {MaxRetries} attempts.\n\n**Error:** {parseResult.Error}\n\n**Raw response:**\n\n{responseText}",
             Usage = usage,
+            Messages = messages.ToList(),
             ResultOptions = [] // Empty array on error
         };
     }

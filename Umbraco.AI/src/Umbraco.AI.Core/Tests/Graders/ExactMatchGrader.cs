@@ -56,11 +56,11 @@ public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
         // Deserialize configuration
         var config = graderConfig.Config is not { } configElement
             ? new ExactMatchGraderConfig()
-            : JsonSerializer.Deserialize<ExactMatchGraderConfig>(configElement)
-                ?? new ExactMatchGraderConfig();
+            : configElement.Deserialize<ExactMatchGraderConfig>(Constants.DefaultJsonSerializerOptions)
+              ?? new ExactMatchGraderConfig();
 
-        // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
+        // Output value is already extracted by the test feature
+        var actualValue = outcome.OutputValue ?? string.Empty;
 
         // Apply transformations
         var actual = actualValue.Trim();
@@ -82,26 +82,4 @@ public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
         });
     }
 
-    private static string ExtractContentFromOutput(string? outputJson)
-    {
-        if (string.IsNullOrWhiteSpace(outputJson))
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(outputJson);
-            if (doc.RootElement.TryGetProperty("content", out var content))
-            {
-                return content.GetString() ?? string.Empty;
-            }
-        }
-        catch
-        {
-            // If parsing fails, return raw JSON
-        }
-
-        return outputJson;
-    }
 }

@@ -42,6 +42,7 @@ internal sealed class MemberEntityAdapter : AIEntityAdapterBase
     public override Task<IEnumerable<AIEntitySubType>> GetEntitySubTypesAsync(CancellationToken cancellationToken = default)
     {
         var memberTypes = _memberTypeService.GetAll()
+            .Where(x => !x.IsElement)
             .Select(mt => new AIEntitySubType
             {
                 Alias = mt.Alias,

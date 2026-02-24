@@ -115,7 +115,7 @@ public sealed class AITest : IAIVersionableEntity
             return null;
         }
 
-        // Deserialize directly from JsonElement
-        return JsonSerializer.Deserialize<T>(TestFeatureConfig.Value);
+        // Deserialize with camelCase options to match frontend-stored JSON
+        return JsonSerializer.Deserialize<T>(TestFeatureConfig.Value, Constants.DefaultJsonSerializerOptions);
     }
 }

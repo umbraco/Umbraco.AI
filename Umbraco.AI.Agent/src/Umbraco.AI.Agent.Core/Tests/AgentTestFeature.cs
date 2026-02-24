@@ -19,7 +19,6 @@ namespace Umbraco.AI.Agent.Core.Tests;
 public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
 {
     private readonly IAIAgentService _agentService;
-    private readonly AITestContextResolver _contextResolver;
 
     /// <inheritdoc />
     public override string Description => "Tests agent execution with messages, tools, and context";
@@ -31,10 +30,9 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         IAIAgentService agentService,
         AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+        : base(contextResolver, schemaBuilder)
     {
         _agentService = agentService;
-        _contextResolver = contextResolver;
     }
 
     /// <inheritdoc />
@@ -56,10 +54,10 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         Guid agentId = test.TestTargetId;
 
         // Extract entity context from config
-        var entityContext = config.EntityContext?.Deserialize<EntityContextConfig>();
+        var entityContext = ResolveEntityContext(config);
 
         // Mock entity → AG-UI context items
-        var resolvedContextItems = _contextResolver.ResolveContextItems(entityContext?.MockEntity);
+        var resolvedContextItems = ResolveEntityContextItems(config);
         var aguiContextItems = resolvedContextItems
             .Select(item => new AGUIContextItem
             {
@@ -79,8 +77,6 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
             ThreadId = config.ThreadId ?? test.Id.ToString(),
             RunId = $"{test.Id}-run-{runNumber}",
             Messages = config.Messages,
-            Tools = config.Tools,
-            State = config.State,
             Context = mergedContext
         };
 
@@ -96,13 +92,8 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         var currentMessageContent = new List<string>();
         string? currentMessageId = null;
 
-        // Convert AGUITools to AIFrontendTools (with default metadata for testing)
-        IEnumerable<AIFrontendTool>? frontendTools = config.Tools?
-            .Select(t => new AIFrontendTool(t, Scope: null, IsDestructive: false))
-            .ToList();
-
         // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
-        var effectiveContextIds = contextIdsOverride ?? config.ContextIds;
+        var effectiveContextIds = ResolveEffectiveContextIds(config, contextIdsOverride);
 
         try
         {
@@ -112,7 +103,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                 ContextIdsOverride = effectiveContextIds?.ToList()
             };
 
-            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, frontendTools, options, cancellationToken))
+            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, null, options, cancellationToken))
             {
                 // Track lifecycle events
                 if (evt is RunStartedEvent runStarted)

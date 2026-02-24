@@ -117,6 +117,12 @@ internal sealed class AITestService : IAITestService
             throw new InvalidOperationException("Run count must be at least 1");
         }
 
+        // Validate graders
+        if (test.Graders is not { Count: > 0 })
+        {
+            throw new InvalidOperationException("At least one grader is required");
+        }
+
         // Generate new ID if needed
         if (test.Id == Guid.Empty)
         {

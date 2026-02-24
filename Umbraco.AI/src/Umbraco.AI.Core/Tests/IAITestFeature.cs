@@ -67,6 +67,15 @@ public interface IAITestFeature : IDiscoverable
     AIEditableModelSchema? GetConfigSchema();
 
     /// <summary>
+    /// Extracts the gradable output value from a test transcript.
+    /// Each test feature knows how to extract the meaningful output from its entity-specific response format.
+    /// For example, a prompt test feature extracts the content field from the prompt response JSON.
+    /// </summary>
+    /// <param name="transcript">The execution transcript.</param>
+    /// <returns>The extracted output value that graders will evaluate.</returns>
+    string ExtractOutputValue(AITestTranscript transcript);
+
+    /// <summary>
     /// Executes a single test run and returns the transcript.
     /// The harness enables the model to act - processing inputs, orchestrating tool calls, returning results.
     /// </summary>

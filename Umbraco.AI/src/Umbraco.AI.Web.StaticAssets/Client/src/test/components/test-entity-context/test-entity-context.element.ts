@@ -59,17 +59,17 @@ export class UaiTestEntityContextElement extends UmbLitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        this.#loadEntityTypes();
-        this.#parseValue();
+        this.#initialize();
     }
 
-    async #loadEntityTypes() {
+    async #initialize() {
         try {
             const { data } = await TestsService.getAllEntityTypes();
             this._entityTypes = data ?? [];
         } catch {
             this._entityTypes = [];
         }
+        this.#parseValue();
     }
 
     #parseValue() {

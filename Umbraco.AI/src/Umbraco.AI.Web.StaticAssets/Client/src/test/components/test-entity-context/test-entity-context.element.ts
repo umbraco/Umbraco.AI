@@ -43,7 +43,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
     private _subTypes: TestEntitySubTypeResponseModel[] = [];
 
     @state()
-    private _selectedEntityType = "document";
+    private _selectedEntityType = "";
 
     @state()
     private _selectedSubType?: string;
@@ -101,7 +101,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
         try {
             const parsed: EntityContextValue = JSON.parse(this.value);
             this.#lastParsedValue = this.value;
-            this._selectedEntityType = parsed.entityType ?? "document";
+            this._selectedEntityType = parsed.entityType ?? "";
             this._selectedSubType = parsed.entitySubType ?? undefined;
             this._mockEntityJson = parsed.mockEntity ? JSON.stringify(parsed.mockEntity, null, 2) : undefined;
 
@@ -204,11 +204,14 @@ export class UaiTestEntityContextElement extends UmbLitElement {
                 <uui-select
                     slot="editor"
                     .value=${this._selectedEntityType}
-                    .options=${this._entityTypes.map((et) => ({
-                        name: et.name,
-                        value: et.entityType,
-                        selected: et.entityType === this._selectedEntityType,
-                    }))}
+                    .options=${[
+                        { name: "-- Select --", value: "", selected: !this._selectedEntityType },
+                        ...this._entityTypes.map((et) => ({
+                            name: et.name,
+                            value: et.entityType,
+                            selected: et.entityType === this._selectedEntityType,
+                        })),
+                    ]}
                     ?disabled=${this.readonly}
                     @change=${this.#onEntityTypeChange}>
                 </uui-select>

@@ -377,6 +377,20 @@ export type TestBatchResultsResponseModel = {
     };
 };
 
+export type TestEntitySubTypeResponseModel = {
+    alias: string;
+    name: string;
+    icon?: string | null;
+    description?: string | null;
+};
+
+export type TestEntityTypeResponseModel = {
+    entityType: string;
+    name: string;
+    icon?: string | null;
+    hasSubTypes: boolean;
+};
+
 export type TestFeatureInfoModel = {
     id: string;
     name: string;
@@ -2304,6 +2318,58 @@ export type RunTestResponses = {
 };
 
 export type RunTestResponse = RunTestResponses[keyof RunTestResponses];
+
+export type GetAllEntityTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/entity-types';
+};
+
+export type GetAllEntityTypesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllEntityTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestEntityTypeResponseModel>;
+};
+
+export type GetAllEntityTypesResponse = GetAllEntityTypesResponses[keyof GetAllEntityTypesResponses];
+
+export type GetEntitySubTypesData = {
+    body?: never;
+    path: {
+        entityType: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/entity-types/{entityType}/sub-types';
+};
+
+export type GetEntitySubTypesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetEntitySubTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestEntitySubTypeResponseModel>;
+};
+
+export type GetEntitySubTypesResponse = GetEntitySubTypesResponses[keyof GetEntitySubTypesResponses];
 
 export type RunTestBatchData = {
     body?: RunTestBatchRequestModel;

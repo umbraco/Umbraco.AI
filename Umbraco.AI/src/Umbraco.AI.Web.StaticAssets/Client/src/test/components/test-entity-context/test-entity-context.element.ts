@@ -1,24 +1,11 @@
 import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import { client } from "../../../api/client.gen.js";
+import { TestsService } from "../../../api/sdk.gen.js";
+import type { TestEntityTypeResponseModel, TestEntitySubTypeResponseModel } from "../../../api/types.gen.js";
 import "./json-mock-entity-editor.element.js";
 
 const elementName = "uai-test-entity-context";
-
-interface TestEntityTypeModel {
-    entityType: string;
-    name: string;
-    icon?: string | null;
-    hasSubTypes: boolean;
-}
-
-interface TestEntitySubTypeModel {
-    alias: string;
-    name: string;
-    icon?: string | null;
-    description?: string | null;
-}
 
 interface EntityContextValue {
     entityType: string;
@@ -50,10 +37,10 @@ export class UaiTestEntityContextElement extends UmbLitElement {
     readonly = false;
 
     @state()
-    private _entityTypes: TestEntityTypeModel[] = [];
+    private _entityTypes: TestEntityTypeResponseModel[] = [];
 
     @state()
-    private _subTypes: TestEntitySubTypeModel[] = [];
+    private _subTypes: TestEntitySubTypeResponseModel[] = [];
 
     @state()
     private _selectedEntityType = "document";
@@ -78,9 +65,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
 
     async #loadEntityTypes() {
         try {
-            const { data } = await client.get<TestEntityTypeModel[]>({
-                url: "/umbraco/ai/management/api/v1/tests/entity-types",
-            });
+            const { data } = await TestsService.getAllEntityTypes();
             this._entityTypes = data ?? [];
         } catch {
             this._entityTypes = [];
@@ -112,9 +97,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
     async #loadSubTypes(entityType: string) {
         this._loading = true;
         try {
-            const { data } = await client.get<TestEntitySubTypeModel[]>({
-                url: `/umbraco/ai/management/api/v1/tests/entity-types/${encodeURIComponent(entityType)}/sub-types`,
-            });
+            const { data } = await TestsService.getEntitySubTypes({ path: { entityType } });
             this._subTypes = data ?? [];
         } catch {
             this._subTypes = [];

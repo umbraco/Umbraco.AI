@@ -115,6 +115,16 @@ if [[ -f "$INCLUDE_FILE" ]]; then
     fi
   done < "$INCLUDE_FILE"
 
+  # Build prune list dynamically from .gitignore (respects all gitignore rules)
+  # This avoids hardcoding directories like bin/, obj/, refs/, node_modules/ etc.
+  # Only prune DIRECTORIES (trailing /), not individual gitignored files -
+  # those are the files we actually want to find and copy.
+  prune_args=(-path "$GIT_ROOT/.git")
+  while IFS= read -r ignored_dir; do
+    ignored_dir="${ignored_dir%/}"  # Remove trailing slash
+    [[ -n "$ignored_dir" ]] && prune_args+=(-o -path "$GIT_ROOT/$ignored_dir")
+  done < <(git -C "$GIT_ROOT" ls-files --others --ignored --exclude-standard --directory 2>/dev/null | grep '/$')
+
   copied=0
 
   for pattern in "${include_patterns[@]}"; do
@@ -134,7 +144,8 @@ if [[ -f "$INCLUDE_FILE" ]]; then
     fi
 
     # --- File patterns (*.user, appsettings.Development.json, .env*) ---
-    # Find matching files recursively, pruning build artifacts and non-source dirs
+    # Search recursively, pruning all gitignored directories so we only
+    # find files in tracked source trees (not build artifacts or references)
     while IFS= read -r -d '' file; do
       rel_path="${file#$GIT_ROOT/}"
 
@@ -156,18 +167,7 @@ if [[ -f "$INCLUDE_FILE" ]]; then
       echo "  + $rel_path" >&2
       copied=$((copied + 1))
     done < <(find "$GIT_ROOT" \
-      \( -path "$GIT_ROOT/.git" \
-      -o -path "$GIT_ROOT/.worktrees" \
-      -o -path "$GIT_ROOT/.claude/worktrees" \
-      -o -path "$GIT_ROOT/refs" \
-      -o -path "$GIT_ROOT/node_modules" \
-      -o -name "bin" -type d \
-      -o -name "obj" -type d \
-      -o -name "dist" -type d \
-      -o -name "wwwroot" -type d \
-      -o -name ".vs" -type d \
-      -o -name ".idea" -type d \
-      \) -prune -o \
+      \( "${prune_args[@]}" \) -prune -o \
       -type f -name "$pattern" -print0 2>/dev/null)
   done
 

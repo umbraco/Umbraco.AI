@@ -396,26 +396,30 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
 
         return html`
             <div id="header">
-                <uui-input
-                    id="name-input"
-                    .value=${this._entityName}
-                    @input=${this.#onNameChange}
-                    placeholder="Enter a name..."
-                    label="Name"
-                ></uui-input>
+                <div id="name-container">
+                    <uui-input
+                        id="name-input"
+                        .value=${this._entityName}
+                        @input=${this.#onNameChange}
+                        placeholder="Enter a name..."
+                        label="Name"
+                    ></uui-input>
+                </div>
                 ${this._tabs.length > 0
                     ? html`
-                        <uui-tab-group>
-                            ${this._tabs.map(
-                                (tab) => html`
-                                    <uui-tab
-                                        label=${tab.name}
-                                        ?active=${this._activeTabKey === tab.key}
-                                        @click=${() => this.#onTabClick(tab.key)}
-                                    >${tab.name}</uui-tab>
-                                `,
-                            )}
-                        </uui-tab-group>`
+                        <div id="tabs-container">
+                            <uui-tab-group>
+                                ${this._tabs.map(
+                                    (tab) => html`
+                                        <uui-tab
+                                            label=${tab.name}
+                                            ?active=${this._activeTabKey === tab.key}
+                                            @click=${() => this.#onTabClick(tab.key)}
+                                        >${tab.name}</uui-tab>
+                                    `,
+                                )}
+                            </uui-tab-group>
+                        </div>`
                     : nothing}
             </div>
 
@@ -489,8 +493,12 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
             top: 0;
             z-index: 1;
             background-color: var(--uui-color-surface);
-            padding: var(--uui-size-layout-1) var(--uui-size-layout-1) 0;
             flex-shrink: 0;
+        }
+
+        #name-container {
+            padding: var(--uui-size-layout-1);
+            border-bottom: 1px solid var(--uui-color-border);
         }
 
         #name-input {

@@ -276,14 +276,14 @@ export class UaiTestEntityContextElement extends UmbLitElement {
     #renderSubTypePicker() {
         if (this._loading) {
             return html`
-                <umb-property-layout label="Sub-Type" description="Loading sub-types...">
+                <umb-property-layout label="Entity Sub-Type" description="Loading sub-types...">
                     <uui-loader slot="editor"></uui-loader>
                 </umb-property-layout>
             `;
         }
 
         return html`
-            <umb-property-layout label="Sub-Type" description="Select a content type">
+            <umb-property-layout label="Entity Sub-Type" description="Select a content type">
                 <uui-select
                     slot="editor"
                     .value=${this._selectedSubType ?? ""}
@@ -314,7 +314,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
 
         if (!hasMockEntity) {
             return html`
-                <umb-property-layout label="Mock Entity" description="Create a mock entity using the structured editor">
+                <umb-property-layout label="Mock" description="Create a mock entity using the structured editor">
                     <div slot="editor">
                         <uui-button
                             look="placeholder"
@@ -333,7 +333,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
         const summary = this.#getMockEntitySummary();
 
         return html`
-            <umb-property-layout label="Mock Entity" description="Structured mock entity data">
+            <umb-property-layout label="Mock" description="Structured mock entity data">
                 <div slot="editor">
                     <uui-ref-node
                         name=${summary.name || "Unnamed Entity"}

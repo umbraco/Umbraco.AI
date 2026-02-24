@@ -125,7 +125,7 @@ export class UaiMockEntityEditorModalElement extends UmbModalBaseElement<
         }
 
         return html`
-            <umb-body-layout headline="Mock ${subTypeName} Entity" main-no-padding>
+            <umb-body-layout main-no-padding>
                 <div id="editor-host"></div>
                 <div slot="actions">
                     <uui-button label="Cancel" @click=${this.#onCancel}>Cancel</uui-button>

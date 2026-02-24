@@ -18,18 +18,14 @@ const elementName = "uai-cms-mock-entity-editor";
  * that share the same name, type, and parent path.
  */
 interface MergedContainer {
-    /** Composite key: "type::parentKey::name" */
     key: string;
-    /** All original container IDs that map to this merged container. */
     ids: Set<string>;
     name: string;
     type: "Tab" | "Group";
     sortOrder: number;
-    /** The merged key of the parent container, or null for root. */
     parentKey: string | null;
 }
 
-/** A tab with its child groups and any root-level properties. */
 interface TabViewModel {
     key: string;
     name: string;
@@ -38,7 +34,6 @@ interface TabViewModel {
     rootProperties: UmbPropertyTypeModel[];
 }
 
-/** A group (rendered as a box) with its properties. */
 interface GroupViewModel {
     key: string;
     name: string;
@@ -52,6 +47,9 @@ interface GroupViewModel {
  * Fetches content type structure and renders properties in tabs and groups
  * using `umb-property-type-based-property` within `umb-property-dataset`,
  * matching the document blueprint editor layout.
+ *
+ * Renders its own sticky header (name input + tabs) so the host modal
+ * only needs to provide the outer chrome and footer actions.
  *
  * @fires change - Fires UmbChangeEvent when value changes.
  */
@@ -81,11 +79,9 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
     @state()
     private _tabs: TabViewModel[] = [];
 
-    /** Properties that have no container at all. */
     @state()
     private _rootProperties: UmbPropertyTypeModel[] = [];
 
-    /** All resolved property types from the content type + compositions. */
     @state()
     private _allProperties: UmbPropertyTypeModel[] = [];
 
@@ -95,7 +91,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
     @state()
     private _activeTabKey?: string;
 
-    // Lazy repository instances
     #documentTypeRepo?: UmbDocumentTypeDetailRepository;
     #mediaTypeRepo?: UmbMediaTypeDetailRepository;
     #memberTypeRepo?: UmbMemberTypeDetailRepository;
@@ -143,7 +138,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                 return;
             }
 
-            // Collect all properties and containers (direct + compositions)
             const allProperties: UmbPropertyTypeModel[] = [...(contentType.properties ?? [])];
             const allContainers: UmbPropertyTypeContainerModel[] = [...(contentType.containers ?? [])];
 
@@ -165,13 +159,11 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                 }
             }
 
-            // Sort properties by sortOrder then name
             allProperties.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
 
             this._allProperties = allProperties;
             this.#buildViewModel(allProperties, allContainers);
 
-            // Initialize property values for any properties not yet in the values array
             const existingAliases = new Set(this._propertyValues.map((v) => v.alias));
             const newValues = allProperties
                 .filter((p) => !existingAliases.has(p.alias))
@@ -186,20 +178,12 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
         this._loading = false;
     }
 
-    /**
-     * Merges containers from the main type and compositions by name + type + parent path.
-     * This is necessary because compositions create separate container instances with different
-     * IDs but the same logical name (e.g. multiple "Content" tabs from different compositions).
-     */
     #mergeContainers(containers: UmbPropertyTypeContainerModel[]): MergedContainer[] {
-        // Build a lookup: original id → container
         const byId = new Map<string, UmbPropertyTypeContainerModel>();
         for (const c of containers) {
             byId.set(c.id, c);
         }
 
-        // Resolve the parent chain to build a stable key path.
-        // Two containers match if they have the same name, type, and parent path.
         const resolvedKeyCache = new Map<string, string>();
 
         const resolveKey = (container: UmbPropertyTypeContainerModel): string => {
@@ -219,7 +203,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
             return key;
         };
 
-        // Merge containers by their resolved key
         const mergedMap = new Map<string, MergedContainer>();
 
         for (const container of containers) {
@@ -228,7 +211,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
 
             if (existing) {
                 existing.ids.add(container.id);
-                // Keep the lowest sort order
                 if (container.sortOrder < existing.sortOrder) {
                     existing.sortOrder = container.sortOrder;
                 }
@@ -258,19 +240,13 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
     #buildViewModel(properties: UmbPropertyTypeModel[], containers: UmbPropertyTypeContainerModel[]) {
         const merged = this.#mergeContainers(containers);
 
-        // Build a set of all original IDs per merged key
-        const mergedByKey = new Map<string, MergedContainer>();
-        // Map original container ID → merged key
         const idToMergedKey = new Map<string, string>();
-
         for (const mc of merged) {
-            mergedByKey.set(mc.key, mc);
             for (const id of mc.ids) {
                 idToMergedKey.set(id, mc.key);
             }
         }
 
-        // Map properties to their merged container key
         const propsByMergedKey = new Map<string, UmbPropertyTypeModel[]>();
         const rootProps: UmbPropertyTypeModel[] = [];
 
@@ -284,17 +260,14 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                     list.push(prop);
                     propsByMergedKey.set(mergedKey, list);
                 } else {
-                    // Container not found — treat as root property
                     rootProps.push(prop);
                 }
             }
         }
 
-        // Separate merged containers into tabs and groups
         const tabs = merged.filter((mc) => mc.type === "Tab" && !mc.parentKey);
         const groups = merged.filter((mc) => mc.type === "Group");
 
-        // Build group view models
         const buildGroup = (mc: MergedContainer): GroupViewModel => ({
             key: mc.key,
             name: mc.name,
@@ -302,7 +275,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
             properties: propsByMergedKey.get(mc.key) ?? [],
         });
 
-        // Build tab view models
         const tabViewModels: TabViewModel[] = tabs
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map((tab) => {
@@ -320,13 +292,11 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                 };
             });
 
-        // Groups without a parent tab (standalone groups)
         const standaloneGroups = groups
             .filter((g) => !g.parentKey)
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map(buildGroup);
 
-        // If there are standalone groups, create a synthetic tab
         if (standaloneGroups.length > 0) {
             tabViewModels.unshift({
                 key: "__standalone__",
@@ -342,7 +312,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
 
         this._tabs = tabViewModels;
 
-        // Set active tab to first
         if (tabViewModels.length > 0 && !this._activeTabKey) {
             this._activeTabKey = tabViewModels[0].key;
         }
@@ -426,7 +395,7 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
         }
 
         return html`
-            <div class="cms-editor">
+            <div id="header">
                 <uui-input
                     id="name-input"
                     .value=${this._entityName}
@@ -434,9 +403,23 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                     placeholder="Enter a name..."
                     label="Name"
                 ></uui-input>
+                ${this._tabs.length > 0
+                    ? html`
+                        <uui-tab-group>
+                            ${this._tabs.map(
+                                (tab) => html`
+                                    <uui-tab
+                                        label=${tab.name}
+                                        ?active=${this._activeTabKey === tab.key}
+                                        @click=${() => this.#onTabClick(tab.key)}
+                                    >${tab.name}</uui-tab>
+                                `,
+                            )}
+                        </uui-tab-group>`
+                    : nothing}
+            </div>
 
-                ${this._tabs.length > 0 ? this.#renderTabs() : nothing}
-
+            <div id="body">
                 <umb-property-dataset .value=${this._propertyValues} @change=${this.#onPropertyDatasetChange}>
                     ${this._tabs.length > 0
                         ? this._tabs.map(
@@ -449,22 +432,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                         : this.#renderUngroupedProperties()}
                 </umb-property-dataset>
             </div>
-        `;
-    }
-
-    #renderTabs() {
-        return html`
-            <uui-tab-group>
-                ${this._tabs.map(
-                    (tab) => html`
-                        <uui-tab
-                            label=${tab.name}
-                            ?active=${this._activeTabKey === tab.key}
-                            @click=${() => this.#onTabClick(tab.key)}
-                        >${tab.name}</uui-tab>
-                    `,
-                )}
-            </uui-tab-group>
         `;
     }
 
@@ -511,27 +478,45 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
 
     static override styles = css`
         :host {
-            display: block;
-        }
-        .cms-editor {
             display: flex;
             flex-direction: column;
+            height: 100%;
+            overflow: hidden;
         }
+
+        #header {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: var(--uui-color-surface);
+            padding: var(--uui-size-layout-1) var(--uui-size-layout-1) 0;
+            flex-shrink: 0;
+        }
+
         #name-input {
             width: 100%;
             margin-bottom: var(--uui-size-space-4);
         }
+
         uui-tab-group {
             --uui-tab-divider: var(--uui-color-border);
             border-bottom: 1px solid var(--uui-color-border);
-            margin-bottom: var(--uui-size-space-4);
         }
+
+        #body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--uui-size-layout-1);
+            background-color: var(--uui-color-background);
+        }
+
         uui-box {
             --uui-box-default-padding: 0 var(--uui-size-space-5);
         }
         uui-box + uui-box {
             margin-top: var(--uui-size-layout-1);
         }
+
         .tab-content[hidden] {
             display: none;
         }

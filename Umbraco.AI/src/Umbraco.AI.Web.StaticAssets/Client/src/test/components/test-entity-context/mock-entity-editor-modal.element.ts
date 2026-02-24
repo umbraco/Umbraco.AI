@@ -16,6 +16,10 @@ const elementName = "uai-mock-entity-editor-modal";
  * Generic modal that hosts a registered mock entity editor element.
  * Looks up the uaiTestMockEntityEditor extension for the given entity type
  * and dynamically creates and manages the editor element.
+ *
+ * The modal handles the outer chrome (header bar + footer actions).
+ * The editor element is responsible for its own internal layout
+ * including any sticky headers, tabs, and scrollable content.
  */
 @customElement(elementName)
 export class UaiMockEntityEditorModalElement extends UmbModalBaseElement<
@@ -121,7 +125,7 @@ export class UaiMockEntityEditorModalElement extends UmbModalBaseElement<
         }
 
         return html`
-            <umb-body-layout headline="Mock ${subTypeName} Entity">
+            <umb-body-layout headline="Mock ${subTypeName} Entity" main-no-padding>
                 <div id="editor-host"></div>
                 <div slot="actions">
                     <uui-button label="Cancel" @click=${this.#onCancel}>Cancel</uui-button>
@@ -141,7 +145,9 @@ export class UaiMockEntityEditorModalElement extends UmbModalBaseElement<
 
     static override styles = css`
         #editor-host {
-            padding: var(--uui-size-space-4) 0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
     `;
 }

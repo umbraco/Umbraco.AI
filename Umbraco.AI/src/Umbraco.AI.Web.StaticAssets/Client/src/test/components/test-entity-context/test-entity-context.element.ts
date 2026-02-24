@@ -188,12 +188,18 @@ export class UaiTestEntityContextElement extends UmbLitElement {
         this.dispatchEvent(new UmbChangeEvent());
     }
 
+    get #showMockEntityEditor(): boolean {
+        if (!this._selectedEntityType) return false;
+        if (this._hasSubTypes && !this._selectedSubType) return false;
+        return true;
+    }
+
     override render() {
         return html`
             <div class="entity-context-editor">
                 ${this.#renderEntityTypePicker()}
                 ${this._hasSubTypes ? this.#renderSubTypePicker() : nothing}
-                ${this.#renderMockEntityEditor()}
+                ${this.#showMockEntityEditor ? this.#renderMockEntityEditor() : nothing}
             </div>
         `;
     }

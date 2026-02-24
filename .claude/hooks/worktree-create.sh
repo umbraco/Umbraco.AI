@@ -94,84 +94,35 @@ else
 fi
 
 # --- Copy .worktreeinclude files ---
+# .worktreeinclude uses gitignore syntax (globs, negation, directory patterns).
+# We pass it directly to git's pattern matching engine via --exclude-from,
+# so all gitignore rules work natively: *, **, !, trailing /, etc.
 INCLUDE_FILE="$GIT_ROOT/.worktreeinclude"
 
 if [[ -f "$INCLUDE_FILE" ]]; then
-  echo "Copying files from .worktreeinclude..." >&2
+  file_list=$(git -C "$GIT_ROOT" ls-files --others --ignored --exclude-from="$INCLUDE_FILE" 2>/dev/null)
 
-  include_patterns=()
-  exclude_patterns=()
+  if [[ -z "$file_list" ]]; then
+    echo "No files matched .worktreeinclude patterns" >&2
+  else
+    count=$(echo "$file_list" | wc -l | tr -d ' ')
+    echo "Copying $count file(s) from .worktreeinclude..." >&2
 
-  # Parse patterns (gitignore-style: # comments, ! exclusions)
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    [[ -z "$line" ]] && continue
+    # Bulk copy via tar (fast even for thousands of files, handles paths with spaces)
+    git -C "$GIT_ROOT" ls-files -z --others --ignored --exclude-from="$INCLUDE_FILE" 2>/dev/null | \
+      tar -C "$GIT_ROOT" --null -T - -cf - 2>/dev/null | \
+      tar -C "$WORKTREE_PATH" -xf - 2>/dev/null
 
-    if [[ "$line" == !* ]]; then
-      exclude_patterns+=("${line:1}")
-    else
-      include_patterns+=("$line")
-    fi
-  done < "$INCLUDE_FILE"
-
-  # Build prune list dynamically from .gitignore (respects all gitignore rules)
-  # This avoids hardcoding directories like bin/, obj/, refs/, node_modules/ etc.
-  # Only prune DIRECTORIES (trailing /), not individual gitignored files -
-  # those are the files we actually want to find and copy.
-  prune_args=(-path "$GIT_ROOT/.git")
-  while IFS= read -r ignored_dir; do
-    ignored_dir="${ignored_dir%/}"  # Remove trailing slash
-    [[ -n "$ignored_dir" ]] && prune_args+=(-o -path "$GIT_ROOT/$ignored_dir")
-  done < <(git -C "$GIT_ROOT" ls-files --others --ignored --exclude-standard --directory 2>/dev/null | grep '/$')
-
-  copied=0
-
-  for pattern in "${include_patterns[@]}"; do
-    # --- Directory patterns (demo/*, config/**) ---
-    if [[ "$pattern" == *"/*" || "$pattern" == *"/**" ]]; then
-      dir_path="${pattern%/\*\*}"
-      dir_path="${dir_path%/\*}"
-      source="$GIT_ROOT/$dir_path"
-
-      if [[ -d "$source" ]]; then
-        mkdir -p "$(dirname "$WORKTREE_PATH/$dir_path")"
-        cp -r "$source" "$WORKTREE_PATH/$dir_path"
-        echo "  + $dir_path/ (directory)" >&2
-        copied=$((copied + 1))
-      fi
-      continue
-    fi
-
-    # --- File patterns (*.user, appsettings.Development.json, .env*) ---
-    # Search recursively, pruning all gitignored directories so we only
-    # find files in tracked source trees (not build artifacts or references)
-    while IFS= read -r -d '' file; do
-      rel_path="${file#$GIT_ROOT/}"
-
-      # Apply exclude patterns
-      excluded=false
-      filename=$(basename "$rel_path")
-      for excl in "${exclude_patterns[@]}"; do
-        if [[ "$filename" == $excl || "$rel_path" == $excl ]]; then
-          excluded=true
-          break
+    # Summary: group by top-level directory, show root files individually
+    echo "$file_list" | awk -F/ '{print ($2 ? $1"/" : $0)}' | sort | uniq -c | \
+      while read -r cnt path; do
+        if [[ "$cnt" -eq 1 && "$path" != */ ]]; then
+          echo "  + $path" >&2
+        else
+          echo "  + $path ($cnt files)" >&2
         fi
       done
-      [[ "$excluded" == true ]] && continue
-
-      # Copy to worktree
-      dest="$WORKTREE_PATH/$rel_path"
-      mkdir -p "$(dirname "$dest")"
-      cp "$file" "$dest"
-      echo "  + $rel_path" >&2
-      copied=$((copied + 1))
-    done < <(find "$GIT_ROOT" \
-      \( "${prune_args[@]}" \) -prune -o \
-      -type f -name "$pattern" -print0 2>/dev/null)
-  done
-
-  echo "Copied $copied item(s)" >&2
+  fi
 else
   echo "No .worktreeinclude file found - skipping file copy" >&2
 fi

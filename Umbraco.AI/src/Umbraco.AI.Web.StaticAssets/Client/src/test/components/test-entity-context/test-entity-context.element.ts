@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { TestsService } from "../../../api/sdk.gen.js";
@@ -57,37 +57,62 @@ export class UaiTestEntityContextElement extends UmbLitElement {
     @state()
     private _hasSubTypes = false;
 
+    #entityTypesLoaded = false;
+    #lastParsedValue?: string;
+
     connectedCallback() {
         super.connectedCallback();
-        this.#initialize();
+        this.#loadEntityTypes();
     }
 
-    async #initialize() {
+    override willUpdate(changedProperties: PropertyValues) {
+        super.willUpdate(changedProperties);
+
+        // Re-sync from value whenever it changes externally and entity types are ready
+        if (changedProperties.has("value") && this.#entityTypesLoaded && this.value !== this.#lastParsedValue) {
+            this.#syncFromValue();
+        }
+    }
+
+    async #loadEntityTypes() {
         try {
             const { data } = await TestsService.getAllEntityTypes();
             this._entityTypes = data ?? [];
         } catch {
             this._entityTypes = [];
         }
-        this.#parseValue();
+        this.#entityTypesLoaded = true;
+        this.#syncFromValue();
     }
 
-    #parseValue() {
-        if (!this.value) return;
+    #syncFromValue() {
+        if (!this.value) {
+            // No stored value — check if the default entity type has sub-types
+            const entityTypeInfo = this._entityTypes.find(
+                (et) => et.entityType === this._selectedEntityType
+            );
+            this._hasSubTypes = entityTypeInfo?.hasSubTypes ?? false;
+            if (this._hasSubTypes) {
+                this.#loadSubTypes(this._selectedEntityType);
+            }
+            return;
+        }
 
         try {
             const parsed: EntityContextValue = JSON.parse(this.value);
+            this.#lastParsedValue = this.value;
             this._selectedEntityType = parsed.entityType ?? "document";
             this._selectedSubType = parsed.entitySubType ?? undefined;
             this._mockEntityJson = parsed.mockEntity ? JSON.stringify(parsed.mockEntity, null, 2) : undefined;
 
-            // Load sub-types for the selected entity type
             const entityTypeInfo = this._entityTypes.find(
                 (et) => et.entityType === this._selectedEntityType
             );
-            if (entityTypeInfo?.hasSubTypes) {
-                this._hasSubTypes = true;
+            this._hasSubTypes = entityTypeInfo?.hasSubTypes ?? false;
+            if (this._hasSubTypes) {
                 this.#loadSubTypes(this._selectedEntityType);
+            } else {
+                this._subTypes = [];
             }
         } catch {
             // Invalid JSON - reset

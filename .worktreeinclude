@@ -14,3 +14,8 @@ appsettings.Local.json
 # Demo site
 demo/
 *.local.sln
+
+# Exclude non-source directories that contain pattern matches
+!refs/**
+!node_modules/**
+!.worktrees/**

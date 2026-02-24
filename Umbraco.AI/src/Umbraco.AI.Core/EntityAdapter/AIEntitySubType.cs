@@ -24,4 +24,10 @@ public sealed class AIEntitySubType
     /// Gets a description of the sub-type.
     /// </summary>
     public string? Description { get; init; }
+
+    /// <summary>
+    /// Gets the unique identifier of the sub-type, if available.
+    /// For CMS content types this is the GUID key; other adapters may use any unique string.
+    /// </summary>
+    public string? Unique { get; init; }
 }

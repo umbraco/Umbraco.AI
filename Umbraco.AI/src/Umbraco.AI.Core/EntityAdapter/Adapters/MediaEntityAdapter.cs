@@ -47,7 +47,8 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
                 Alias = mt.Alias,
                 Name = mt.Name ?? mt.Alias,
                 Icon = mt.Icon,
-                Description = mt.Description
+                Description = mt.Description,
+                Unique = mt.Key.ToString()
             })
             .OrderBy(mt => mt.Name);
 

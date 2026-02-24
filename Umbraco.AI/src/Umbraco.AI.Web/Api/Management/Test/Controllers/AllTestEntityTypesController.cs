@@ -83,7 +83,8 @@ public class AllTestEntityTypesController : TestControllerBase
             Alias = st.Alias,
             Name = st.Name,
             Icon = st.Icon,
-            Description = st.Description
+            Description = st.Description,
+            Unique = st.Unique
         });
 
         return Ok(response);

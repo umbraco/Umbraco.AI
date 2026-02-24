@@ -24,4 +24,9 @@ public sealed class TestEntitySubTypeResponseModel
     /// A description of the sub-type.
     /// </summary>
     public string? Description { get; init; }
+
+    /// <summary>
+    /// The unique identifier of the sub-type, if available.
+    /// </summary>
+    public string? Unique { get; init; }
 }

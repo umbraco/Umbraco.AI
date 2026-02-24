@@ -382,6 +382,7 @@ export type TestEntitySubTypeResponseModel = {
     name: string;
     icon?: string | null;
     description?: string | null;
+    unique?: string | null;
 };
 
 export type TestEntityTypeResponseModel = {

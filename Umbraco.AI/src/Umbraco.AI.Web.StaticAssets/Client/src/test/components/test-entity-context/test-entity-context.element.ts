@@ -1,9 +1,17 @@
 import { css, customElement, html, nothing, property, state, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { TestsService } from "../../../api/sdk.gen.js";
 import type { TestEntityTypeResponseModel, TestEntitySubTypeResponseModel } from "../../../api/types.gen.js";
+import {
+    UAI_TEST_MOCK_ENTITY_EDITOR_EXTENSION_TYPE,
+    type ManifestTestMockEntityEditor,
+} from "./mock-entity-editor-extension-type.js";
+import { UAI_MOCK_ENTITY_EDITOR_MODAL } from "./mock-entity-editor-modal.token.js";
 import "./json-mock-entity-editor.element.js";
+
 
 const elementName = "uai-test-entity-context";
 
@@ -17,16 +25,11 @@ interface EntityContextValue {
  * Composite editor for test entity context.
  * Combines entity type picker, sub-type picker, and mock entity editor.
  *
- * @fires change - Fires when the entity context value changes (UmbChangeEvent).
+ * When a registered `uaiTestMockEntityEditor` extension exists for the selected
+ * entity type, it renders a summary card with Create/Edit/Clear actions using a modal.
+ * Otherwise falls back to the inline JSON editor.
  *
- * @example
- * ```html
- * <uai-test-entity-context
- *   .value=${"{}"}
- *   ?readonly=${false}
- *   @change=${(e) => console.log(e.target.value)}
- * ></uai-test-entity-context>
- * ```
+ * @fires change - Fires when the entity context value changes (UmbChangeEvent).
  */
 @customElement(elementName)
 export class UaiTestEntityContextElement extends UmbLitElement {
@@ -72,6 +75,26 @@ export class UaiTestEntityContextElement extends UmbLitElement {
         if (changedProperties.has("value") && this.#entityTypesLoaded && this.value !== this.#lastParsedValue) {
             this.#syncFromValue();
         }
+    }
+
+    get #hasRegisteredEditor(): boolean {
+        if (!this._selectedEntityType) return false;
+        const extensions = umbExtensionsRegistry.getByType(
+            UAI_TEST_MOCK_ENTITY_EDITOR_EXTENSION_TYPE,
+        ) as ManifestTestMockEntityEditor[];
+        return extensions.some((ext) =>
+            ext.forEntityTypes.includes(this._selectedEntityType),
+        );
+    }
+
+    get #selectedSubTypeUnique(): string | undefined {
+        if (!this._selectedSubType) return undefined;
+        return this._subTypes.find((st) => st.alias === this._selectedSubType)?.unique ?? undefined;
+    }
+
+    get #selectedSubTypeName(): string | undefined {
+        if (!this._selectedSubType) return undefined;
+        return this._subTypes.find((st) => st.alias === this._selectedSubType)?.name ?? undefined;
     }
 
     async #loadEntityTypes() {
@@ -168,6 +191,31 @@ export class UaiTestEntityContextElement extends UmbLitElement {
         this.#emitValue();
     }
 
+    async #onCreateOrEditMockEntity() {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        const modal = modalManager.open(this, UAI_MOCK_ENTITY_EDITOR_MODAL, {
+            data: {
+                entityType: this._selectedEntityType,
+                subTypeAlias: this._selectedSubType,
+                subTypeUnique: this.#selectedSubTypeUnique,
+                subTypeName: this.#selectedSubTypeName,
+                existingValue: this._mockEntityJson,
+            },
+        });
+
+        try {
+            const result = await modal.onSubmit();
+            if (result?.mockEntityJson) {
+                this._mockEntityJson = result.mockEntityJson;
+                this.#emitValue();
+            }
+        } catch {
+            // Modal cancelled
+        }
+    }
+
     #emitValue() {
         let mockEntity: Record<string, unknown> | null = null;
         if (this._mockEntityJson) {
@@ -206,7 +254,7 @@ export class UaiTestEntityContextElement extends UmbLitElement {
 
     #renderEntityTypePicker() {
         return html`
-            <umb-property-layout label="Entity Type" description="Type of entity to mock">
+            <umb-property-layout label="Entity Type" description="Type of entity to mock" style="padding-top: 0;">
                 <uui-select
                     slot="editor"
                     .value=${this._selectedEntityType}
@@ -255,6 +303,77 @@ export class UaiTestEntityContextElement extends UmbLitElement {
     }
 
     #renderMockEntityEditor() {
+        if (this.#hasRegisteredEditor) {
+            return this.#renderRegisteredEditorUI();
+        }
+        return this.#renderJsonEditorFallback();
+    }
+
+    #renderRegisteredEditorUI() {
+        const hasMockEntity = !!this._mockEntityJson;
+
+        if (!hasMockEntity) {
+            return html`
+                <umb-property-layout label="Mock Entity" description="Create a mock entity using the structured editor">
+                    <div slot="editor">
+                        <uui-button
+                            look="placeholder"
+                            label="Create Mock Entity"
+                            ?disabled=${this.readonly}
+                            @click=${this.#onCreateOrEditMockEntity}
+                        >
+                            Create Mock Entity
+                        </uui-button>
+                    </div>
+                </umb-property-layout>
+            `;
+        }
+
+        // Parse the mock entity for a summary
+        const summary = this.#getMockEntitySummary();
+
+        return html`
+            <umb-property-layout label="Mock Entity" description="Structured mock entity data">
+                <div slot="editor">
+                    <uui-ref-node
+                        name=${summary.name || "Unnamed Entity"}
+                        detail=${summary.detail}
+                    >
+                        ${!this.readonly
+                            ? html`
+                                <uui-action-bar slot="actions">
+                                    <uui-button
+                                        label="Edit"
+                                        @click=${this.#onCreateOrEditMockEntity}
+                                    ></uui-button>
+                                    <uui-button
+                                        label="Clear"
+                                        color="danger"
+                                        @click=${this.#onClearMockEntity}
+                                    ></uui-button>
+                                </uui-action-bar>`
+                            : nothing}
+                    </uui-ref-node>
+                </div>
+            </umb-property-layout>
+        `;
+    }
+
+    #getMockEntitySummary(): { name: string; detail: string } {
+        if (!this._mockEntityJson) return { name: "", detail: "" };
+
+        try {
+            const entity = JSON.parse(this._mockEntityJson);
+            const name = entity.name ?? "";
+            const propCount = entity.data?.properties?.length ?? 0;
+            const detail = `${this._selectedSubType ?? entity.entityType} - ${propCount} propert${propCount === 1 ? "y" : "ies"}`;
+            return { name, detail };
+        } catch {
+            return { name: "Invalid JSON", detail: "" };
+        }
+    }
+
+    #renderJsonEditorFallback() {
         const hasMockEntity = !!this._mockEntityJson;
 
         if (hasMockEntity) {

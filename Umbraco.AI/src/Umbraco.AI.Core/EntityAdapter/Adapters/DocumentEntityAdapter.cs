@@ -47,7 +47,8 @@ internal sealed class DocumentEntityAdapter : AIEntityAdapterBase
                 Alias = ct.Alias,
                 Name = ct.Name ?? ct.Alias,
                 Icon = ct.Icon,
-                Description = ct.Description
+                Description = ct.Description,
+                Unique = ct.Key.ToString()
             })
             .OrderBy(ct => ct.Name);
 

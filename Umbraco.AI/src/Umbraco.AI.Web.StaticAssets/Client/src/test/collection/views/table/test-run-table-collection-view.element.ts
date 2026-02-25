@@ -170,7 +170,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                             style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
                             title=${item.testId}
                         >
-                            ${this.#truncateGuid(item.testId)}
+                            ${item.testId}
                         </div>
                     </div>`,
                 },

@@ -10,7 +10,7 @@ namespace Umbraco.AI.Google;
 /// </summary>
 public class GoogleChatCapability(GoogleProvider provider) : AIChatCapabilityBase<GoogleProviderSettings>(provider)
 {
-    private const string DefaultChatModel = "gemini-2.0-flash";
+    private const string DefaultChatModel = "gemini-3-flash-preview";
 
     private new GoogleProvider Provider => (GoogleProvider)base.Provider;
 
@@ -19,6 +19,7 @@ public class GoogleChatCapability(GoogleProvider provider) : AIChatCapabilityBas
     /// </summary>
     private static readonly string[] KnownChatModels =
     [
+        "gemini-3-flash-preview"
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
         "gemini-1.5-pro",

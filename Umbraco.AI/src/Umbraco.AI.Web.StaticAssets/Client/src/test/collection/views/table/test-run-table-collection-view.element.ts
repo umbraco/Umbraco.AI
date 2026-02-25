@@ -54,6 +54,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
         { name: "Executed At", alias: "executedAt" },
+        { name: "", alias: "entityActions", align: "right" },
     ];
 
     constructor() {
@@ -193,6 +194,12 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "executedAt",
                     value: item.executedAt ? formatDateTime(item.executedAt) : "-",
+                },
+                {
+                    columnAlias: "entityActions",
+                    value: html`<umb-entity-actions-table-column-view
+                        .value=${{ entityType: item.entityType, unique: item.unique }}
+                    ></umb-entity-actions-table-column-view>`,
                 },
             ],
         }));

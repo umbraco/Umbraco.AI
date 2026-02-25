@@ -6,10 +6,10 @@ import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { AITestRepository } from "../repository/test.repository.js";
 
 /**
- * Entity action for deleting a test.
+ * Entity action for deleting a test run.
  * Shows confirmation modal before deleting.
  */
-export class UaiTestDeleteEntityAction extends UmbEntityActionBase<never> {
+export class UaiTestRunDeleteEntityAction extends UmbEntityActionBase<never> {
 	constructor(host: UmbControllerHost, args: UmbEntityActionArgs<never>) {
 		super(host, args);
 	}
@@ -19,18 +19,18 @@ export class UaiTestDeleteEntityAction extends UmbEntityActionBase<never> {
 		if (!unique) return;
 
 		await umbConfirmModal(this, {
-			headline: "Delete Test",
-			content: "Are you sure you want to delete this test? This action cannot be undone.",
+			headline: "Delete Test Run",
+			content: "Are you sure you want to delete this test run? This action cannot be undone.",
 			color: "danger",
 			confirmLabel: "Delete",
 		});
 
 		const repository = new AITestRepository(this);
-		await repository.deleteTest(unique);
+		await repository.deleteRun(unique);
 
 		const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);
 		collectionContext?.loadCollection();
 	}
 }
 
-export { UaiTestDeleteEntityAction as api };
+export { UaiTestRunDeleteEntityAction as api };

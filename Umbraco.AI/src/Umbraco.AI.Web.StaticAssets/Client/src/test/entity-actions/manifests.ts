@@ -1,4 +1,4 @@
-import { UAI_TEST_ENTITY_TYPE, UAI_TEST_ROOT_ENTITY_TYPE } from "../constants.js";
+import { UAI_TEST_ENTITY_TYPE, UAI_TEST_ROOT_ENTITY_TYPE, UAI_TEST_RUN_ENTITY_TYPE } from "../constants.js";
 
 export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
@@ -36,6 +36,19 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 		weight: 100,
 		api: () => import("./test-delete.action.js"),
 		forEntityTypes: [UAI_TEST_ENTITY_TYPE],
+		meta: {
+			icon: "icon-trash",
+			label: "#actions_delete",
+		},
+	},
+	{
+		type: "entityAction",
+		kind: "default",
+		alias: "UmbracoAI.EntityAction.TestRun.Delete",
+		name: "Delete Test Run Entity Action",
+		weight: 100,
+		api: () => import("./test-run-delete.action.js"),
+		forEntityTypes: [UAI_TEST_RUN_ENTITY_TYPE],
 		meta: {
 			icon: "icon-trash",
 			label: "#actions_delete",

@@ -66,7 +66,7 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
         // Deserialize configuration
         var config = graderConfig.Config is not { } configElement
             ? new RegexGraderConfig()
-            : JsonSerializer.Deserialize<RegexGraderConfig>(configElement)
+            : configElement.Deserialize<RegexGraderConfig>(Constants.DefaultJsonSerializerOptions)
                 ?? new RegexGraderConfig();
 
         // Output value is already extracted by the test feature
@@ -111,10 +111,10 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
         }
 
         // Build metadata with match details
-        string? metadataJson = null;
+        JsonElement? metadata = null;
         if (match?.Success == true)
         {
-            var metadata = new
+            metadata = JsonSerializer.SerializeToElement(new
             {
                 matchValue = match.Value,
                 matchIndex = match.Index,
@@ -123,8 +123,7 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
                     .Skip(1) // Skip the full match group
                     .Select(g => new { name = g.Name, value = g.Value })
                     .ToArray()
-            };
-            metadataJson = JsonSerializer.Serialize(metadata);
+            }, Constants.DefaultJsonSerializerOptions);
         }
 
         return Task.FromResult(new AITestGraderResult
@@ -135,7 +134,7 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
             ActualValue = actualValue,
             ExpectedValue = config.Pattern,
             FailureMessage = failureMessage,
-            MetadataJson = metadataJson
+            Metadata = metadata
         });
     }
 

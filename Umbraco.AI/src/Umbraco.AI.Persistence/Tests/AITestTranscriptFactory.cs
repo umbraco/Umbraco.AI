@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Umbraco.AI.Core;
 using Umbraco.AI.Core.Tests;
 
 namespace Umbraco.AI.Persistence.Tests;
@@ -16,11 +18,11 @@ internal static class AITestTranscriptFactory
         {
             Id = entity.Id,
             RunId = entity.RunId,
-            MessagesJson = entity.MessagesJson,
-            ToolCallsJson = entity.ToolCallsJson,
-            ReasoningJson = entity.ReasoningJson,
-            TimingJson = entity.TimingJson,
-            FinalOutputJson = entity.FinalOutputJson
+            Messages = ParseJson(entity.MessagesJson),
+            ToolCalls = ParseJson(entity.ToolCallsJson),
+            Reasoning = ParseJson(entity.ReasoningJson),
+            Timing = ParseJson(entity.TimingJson),
+            FinalOutput = ParseJson(entity.FinalOutputJson) ?? default
         };
     }
 
@@ -33,11 +35,11 @@ internal static class AITestTranscriptFactory
         {
             Id = transcript.Id,
             RunId = transcript.RunId,
-            MessagesJson = transcript.MessagesJson,
-            ToolCallsJson = transcript.ToolCallsJson,
-            ReasoningJson = transcript.ReasoningJson,
-            TimingJson = transcript.TimingJson,
-            FinalOutputJson = transcript.FinalOutputJson
+            MessagesJson = ToJsonString(transcript.Messages),
+            ToolCallsJson = ToJsonString(transcript.ToolCalls),
+            ReasoningJson = ToJsonString(transcript.Reasoning),
+            TimingJson = ToJsonString(transcript.Timing),
+            FinalOutputJson = transcript.FinalOutput.GetRawText()
         };
     }
 
@@ -47,10 +49,23 @@ internal static class AITestTranscriptFactory
     public static void UpdateEntity(AITestTranscriptEntity entity, AITestTranscript transcript)
     {
         entity.RunId = transcript.RunId;
-        entity.MessagesJson = transcript.MessagesJson;
-        entity.ToolCallsJson = transcript.ToolCallsJson;
-        entity.ReasoningJson = transcript.ReasoningJson;
-        entity.TimingJson = transcript.TimingJson;
-        entity.FinalOutputJson = transcript.FinalOutputJson;
+        entity.MessagesJson = ToJsonString(transcript.Messages);
+        entity.ToolCallsJson = ToJsonString(transcript.ToolCalls);
+        entity.ReasoningJson = ToJsonString(transcript.Reasoning);
+        entity.TimingJson = ToJsonString(transcript.Timing);
+        entity.FinalOutputJson = transcript.FinalOutput.GetRawText();
     }
+
+    private static JsonElement? ParseJson(string? json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<JsonElement>(json, Constants.DefaultJsonSerializerOptions);
+    }
+
+    private static string? ToJsonString(JsonElement? element)
+        => element?.GetRawText();
 }

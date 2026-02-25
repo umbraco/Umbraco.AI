@@ -58,7 +58,7 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
         // Deserialize configuration
         var config = graderConfig.Config is not { } configElement
             ? new JSONSchemaGraderConfig()
-            : JsonSerializer.Deserialize<JSONSchemaGraderConfig>(configElement)
+            : configElement.Deserialize<JSONSchemaGraderConfig>(Constants.DefaultJsonSerializerOptions)
                 ?? new JSONSchemaGraderConfig();
 
         // Output value is already extracted by the test feature
@@ -119,8 +119,8 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
             ActualValue = actualValue,
             ExpectedValue = config.ExpectedKeys,
             FailureMessage = failureMessage,
-            MetadataJson = missingKeys != null && missingKeys.Count > 0
-                ? JsonSerializer.Serialize(new { missingKeys })
+            Metadata = missingKeys != null && missingKeys.Count > 0
+                ? JsonSerializer.SerializeToElement(new { missingKeys }, Constants.DefaultJsonSerializerOptions)
                 : null
         });
     }

@@ -156,7 +156,7 @@
 //                 FailureMessage = passed
 //                     ? null
 //                     : $"Similarity {similarity:F3} below threshold {config.SimilarityThreshold:F3}",
-//                 MetadataJson = JsonSerializer.Serialize(new
+//                 Metadata = JsonSerializer.SerializeToElement(new
 //                 {
 //                     cosineSimilarity = similarity,
 //                     threshold = config.SimilarityThreshold,

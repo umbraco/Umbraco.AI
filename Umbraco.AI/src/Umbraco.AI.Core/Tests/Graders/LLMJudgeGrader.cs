@@ -76,7 +76,7 @@ public class LLMJudgeGrader : AITestGraderBase<LLMJudgeGraderConfig>
         // Deserialize configuration
         var config = graderConfig.Config is not { } configElement
             ? new LLMJudgeGraderConfig()
-            : JsonSerializer.Deserialize<LLMJudgeGraderConfig>(configElement)
+            : configElement.Deserialize<LLMJudgeGraderConfig>(Constants.DefaultJsonSerializerOptions)
                 ?? new LLMJudgeGraderConfig();
 
         // Output value is already extracted by the test feature
@@ -157,12 +157,12 @@ Be objective and consistent in your evaluation.
                     ActualValue = actualValue,
                     ExpectedValue = config.EvaluationCriteria,
                     FailureMessage = passed ? null : $"Score {score:F2} below threshold {config.PassThreshold:F2}",
-                    MetadataJson = JsonSerializer.Serialize(new
+                    Metadata = JsonSerializer.SerializeToElement(new
                     {
                         reasoning,
                         threshold = config.PassThreshold,
                         fullJudgment = judgmentText
-                    })
+                    }, Constants.DefaultJsonSerializerOptions)
                 };
             }
 
@@ -175,7 +175,7 @@ Be objective and consistent in your evaluation.
                 ActualValue = actualValue,
                 ExpectedValue = config.EvaluationCriteria,
                 FailureMessage = "Failed to parse judgment response from LLM",
-                MetadataJson = JsonSerializer.Serialize(new { rawResponse = judgmentText })
+                Metadata = JsonSerializer.SerializeToElement(new { rawResponse = judgmentText }, Constants.DefaultJsonSerializerOptions)
             };
         }
         catch (Exception ex)

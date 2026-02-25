@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Umbraco.AI.Core.Tests;
 
 /// <summary>
@@ -17,32 +19,32 @@ public sealed class AITestTranscript
     public required Guid RunId { get; set; }
 
     /// <summary>
-    /// Chat messages exchanged during execution (JSON array).
+    /// Chat messages exchanged during execution.
     /// Structure: [{ role: "system|user|assistant", content: "..." }, ...]
     /// </summary>
-    public string? MessagesJson { get; set; }
+    public JsonElement? Messages { get; set; }
 
     /// <summary>
-    /// Tool calls made during execution (JSON array).
+    /// Tool calls made during execution.
     /// Structure: [{ toolName: "...", arguments: {...}, result: {...} }, ...]
     /// </summary>
-    public string? ToolCallsJson { get; set; }
+    public JsonElement? ToolCalls { get; set; }
 
     /// <summary>
-    /// Reasoning/thinking captured during execution (JSON array).
+    /// Reasoning/thinking captured during execution.
     /// Structure depends on the test feature (e.g., agent thinking events).
     /// </summary>
-    public string? ReasoningJson { get; set; }
+    public JsonElement? Reasoning { get; set; }
 
     /// <summary>
-    /// Timing information for execution steps (JSON object).
+    /// Timing information for execution steps.
     /// Structure: { totalMs: 1234, steps: [{ name: "...", durationMs: 123 }, ...] }
     /// </summary>
-    public string? TimingJson { get; set; }
+    public JsonElement? Timing { get; set; }
 
     /// <summary>
-    /// The final output from the execution (JSON object).
+    /// The final output from the execution.
     /// Structure depends on the test feature.
     /// </summary>
-    public required string FinalOutputJson { get; set; }
+    public required JsonElement FinalOutput { get; set; }
 }

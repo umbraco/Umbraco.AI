@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Core;
 using Umbraco.AI.Core.Tests;
 
 namespace Umbraco.AI.Persistence.Tests;
@@ -25,8 +26,20 @@ internal static class AITestRunFactory
         IReadOnlyList<AITestGraderResult> graderResults = Array.Empty<AITestGraderResult>();
         if (!string.IsNullOrEmpty(entity.GraderResultsJson))
         {
-            graderResults = (IReadOnlyList<AITestGraderResult>?)JsonSerializer.Deserialize<List<AITestGraderResult>>(entity.GraderResultsJson)
+            graderResults = (IReadOnlyList<AITestGraderResult>?)JsonSerializer.Deserialize<List<AITestGraderResult>>(entity.GraderResultsJson, Constants.DefaultJsonSerializerOptions)
                 ?? Array.Empty<AITestGraderResult>();
+        }
+
+        AITestTokenUsage? tokenUsage = null;
+        if (!string.IsNullOrEmpty(entity.OutcomeTokenUsageJson))
+        {
+            tokenUsage = JsonSerializer.Deserialize<AITestTokenUsage>(entity.OutcomeTokenUsageJson, Constants.DefaultJsonSerializerOptions);
+        }
+
+        AITestRunError? error = null;
+        if (!string.IsNullOrEmpty(entity.MetadataJson))
+        {
+            error = JsonSerializer.Deserialize<AITestRunError>(entity.MetadataJson, Constants.DefaultJsonSerializerOptions);
         }
 
         return new AITestRun
@@ -47,10 +60,10 @@ internal static class AITestRunFactory
                 OutputType = (AITestOutputType)entity.OutcomeType,
                 OutputValue = entity.OutcomeValue,
                 FinishReason = entity.OutcomeFinishReason,
-                TokenUsageJson = entity.OutcomeTokenUsageJson
+                TokenUsage = tokenUsage
             },
             GraderResults = graderResults,
-            MetadataJson = entity.MetadataJson,
+            Error = error,
             BatchId = entity.BatchId
         };
     }
@@ -76,9 +89,9 @@ internal static class AITestRunFactory
             OutcomeType = run.Outcome != null ? (int)run.Outcome.OutputType : 0,
             OutcomeValue = run.Outcome?.OutputValue,
             OutcomeFinishReason = run.Outcome?.FinishReason,
-            OutcomeTokenUsageJson = run.Outcome?.TokenUsageJson,
-            GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults) : null,
-            MetadataJson = run.MetadataJson,
+            OutcomeTokenUsageJson = run.Outcome?.TokenUsage != null ? JsonSerializer.Serialize(run.Outcome.TokenUsage, Constants.DefaultJsonSerializerOptions) : null,
+            GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults, Constants.DefaultJsonSerializerOptions) : null,
+            MetadataJson = run.Error != null ? JsonSerializer.Serialize(run.Error, Constants.DefaultJsonSerializerOptions) : null,
             BatchId = run.BatchId
         };
     }
@@ -100,9 +113,9 @@ internal static class AITestRunFactory
         entity.OutcomeType = run.Outcome != null ? (int)run.Outcome.OutputType : 0;
         entity.OutcomeValue = run.Outcome?.OutputValue;
         entity.OutcomeFinishReason = run.Outcome?.FinishReason;
-        entity.OutcomeTokenUsageJson = run.Outcome?.TokenUsageJson;
-        entity.GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults) : null;
-        entity.MetadataJson = run.MetadataJson;
+        entity.OutcomeTokenUsageJson = run.Outcome?.TokenUsage != null ? JsonSerializer.Serialize(run.Outcome.TokenUsage, Constants.DefaultJsonSerializerOptions) : null;
+        entity.GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults, Constants.DefaultJsonSerializerOptions) : null;
+        entity.MetadataJson = run.Error != null ? JsonSerializer.Serialize(run.Error, Constants.DefaultJsonSerializerOptions) : null;
         entity.BatchId = run.BatchId;
     }
 }

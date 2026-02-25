@@ -69,32 +69,24 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
 
     /// <inheritdoc />
     /// <remarks>
-    /// Default implementation extracts the "content" property from the transcript's FinalOutputJson.
+    /// Default implementation extracts the "content" property from the transcript's FinalOutput.
     /// Override in derived classes for entity-specific extraction logic.
     /// </remarks>
     public virtual string ExtractOutputValue(AITestTranscript transcript)
     {
-        var outputJson = transcript.FinalOutputJson;
+        var output = transcript.FinalOutput;
 
-        if (string.IsNullOrWhiteSpace(outputJson))
+        if (output.ValueKind == JsonValueKind.Undefined)
         {
             return string.Empty;
         }
 
-        try
+        if (output.TryGetProperty("content", out var content))
         {
-            using var doc = JsonDocument.Parse(outputJson);
-            if (doc.RootElement.TryGetProperty("content", out var content))
-            {
-                return content.GetString() ?? string.Empty;
-            }
-        }
-        catch
-        {
-            // If parsing fails, return raw value
+            return content.GetString() ?? string.Empty;
         }
 
-        return outputJson;
+        return output.GetRawText();
     }
 
     /// <inheritdoc />

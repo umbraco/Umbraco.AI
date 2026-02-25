@@ -10,6 +10,7 @@ using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tests;
+using AIConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Tests;
 
@@ -291,21 +292,21 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
             return new AITestTranscript
             {
                 RunId = Guid.NewGuid(), // Will be set by the runner
-                MessagesJson = JsonSerializer.Serialize(new[]
+                Messages = JsonSerializer.SerializeToElement(new[]
                 {
                     new { role = "system", content = "Agent execution failed" },
                     new { role = "error", content = ex.Message }
-                }),
-                FinalOutputJson = JsonSerializer.Serialize(new
+                }, AIConstants.DefaultJsonSerializerOptions),
+                FinalOutput = JsonSerializer.SerializeToElement(new
                 {
                     error = ex.Message,
                     stackTrace = ex.StackTrace
-                }),
-                TimingJson = JsonSerializer.Serialize(new
+                }, AIConstants.DefaultJsonSerializerOptions),
+                Timing = JsonSerializer.SerializeToElement(new
                 {
                     totalMs = stopwatch.ElapsedMilliseconds,
                     status = "error"
-                })
+                }, AIConstants.DefaultJsonSerializerOptions)
             };
         }
 
@@ -315,22 +316,22 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         return new AITestTranscript
         {
             RunId = Guid.NewGuid(), // Will be set by the runner
-            MessagesJson = JsonSerializer.Serialize(messages),
-            ToolCallsJson = toolCalls.Count > 0 ? JsonSerializer.Serialize(toolCalls) : null,
-            ReasoningJson = reasoning.Count > 0 ? JsonSerializer.Serialize(reasoning) : null,
-            TimingJson = JsonSerializer.Serialize(new
+            Messages = JsonSerializer.SerializeToElement(messages, AIConstants.DefaultJsonSerializerOptions),
+            ToolCalls = toolCalls.Count > 0 ? JsonSerializer.SerializeToElement(toolCalls, AIConstants.DefaultJsonSerializerOptions) : null,
+            Reasoning = reasoning.Count > 0 ? JsonSerializer.SerializeToElement(reasoning, AIConstants.DefaultJsonSerializerOptions) : null,
+            Timing = JsonSerializer.SerializeToElement(new
             {
                 totalMs = stopwatch.ElapsedMilliseconds,
                 status = outcome ?? "success"
-            }),
-            FinalOutputJson = JsonSerializer.Serialize(new
+            }, AIConstants.DefaultJsonSerializerOptions),
+            FinalOutput = JsonSerializer.SerializeToElement(new
             {
                 content = finalContent,
                 outcome,
                 error,
                 toolCallCount = toolCalls.Count,
                 messageCount = messages.Count
-            })
+            }, AIConstants.DefaultJsonSerializerOptions)
         };
     }
 }

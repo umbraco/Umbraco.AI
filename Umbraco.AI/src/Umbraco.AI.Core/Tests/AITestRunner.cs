@@ -1,4 +1,3 @@
-using System.Text.Json;
 
 namespace Umbraco.AI.Core.Tests;
 
@@ -115,7 +114,7 @@ internal sealed class AITestRunner : IAITestRunner
                 OutputType = AITestOutputType.Text, // TODO: Detect from transcript
                 OutputValue = testFeature.ExtractOutputValue(transcript),
                 FinishReason = "completed", // TODO: Get from transcript
-                TokenUsageJson = null // TODO: Extract from transcript timing/metadata if available
+                TokenUsage = null // TODO: Extract from transcript timing/metadata if available
             };
 
             // Store outcome
@@ -137,11 +136,11 @@ internal sealed class AITestRunner : IAITestRunner
         {
             testRun.Status = AITestRunStatus.Error;
             testRun.DurationMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-            testRun.MetadataJson = JsonSerializer.Serialize(new
+            testRun.Error = new AITestRunError
             {
-                error = ex.Message,
-                stackTrace = ex.StackTrace
-            });
+                Message = ex.Message,
+                StackTrace = ex.StackTrace
+            };
         }
 
         return testRun;

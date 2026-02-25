@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Tests;
+using AIConstants = Umbraco.AI.Core.Constants;
 using Umbraco.AI.Prompt.Core.Prompts;
 
 namespace Umbraco.AI.Prompt.Core.Tests;
@@ -89,21 +90,21 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
             return new AITestTranscript
             {
                 RunId = Guid.NewGuid(), // Will be set by the runner
-                MessagesJson = JsonSerializer.Serialize(new[]
+                Messages = JsonSerializer.SerializeToElement(new[]
                 {
                     new { role = "system", content = "Prompt execution failed" },
                     new { role = "error", content = ex.Message }
-                }),
-                FinalOutputJson = JsonSerializer.Serialize(new
+                }, AIConstants.DefaultJsonSerializerOptions),
+                FinalOutput = JsonSerializer.SerializeToElement(new
                 {
                     error = ex.Message,
                     stackTrace = ex.StackTrace
-                }),
-                TimingJson = JsonSerializer.Serialize(new
+                }, AIConstants.DefaultJsonSerializerOptions),
+                Timing = JsonSerializer.SerializeToElement(new
                 {
                     totalMs = stopwatch.ElapsedMilliseconds,
                     status = "error"
-                })
+                }, AIConstants.DefaultJsonSerializerOptions)
             };
         }
 
@@ -126,15 +127,15 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         return new AITestTranscript
         {
             RunId = Guid.NewGuid(), // Will be set by the runner
-            MessagesJson = JsonSerializer.Serialize(messages),
-            ToolCallsJson = null, // Prompts don't typically use tool calls
-            ReasoningJson = null, // No explicit reasoning in simple prompts
-            TimingJson = JsonSerializer.Serialize(new
+            Messages = JsonSerializer.SerializeToElement(messages, AIConstants.DefaultJsonSerializerOptions),
+            ToolCalls = null, // Prompts don't typically use tool calls
+            Reasoning = null, // No explicit reasoning in simple prompts
+            Timing = JsonSerializer.SerializeToElement(new
             {
                 totalMs = stopwatch.ElapsedMilliseconds,
                 status = "success"
-            }),
-            FinalOutputJson = JsonSerializer.Serialize(new
+            }, AIConstants.DefaultJsonSerializerOptions),
+            FinalOutput = JsonSerializer.SerializeToElement(new
             {
                 content = result.Content,
                 usage = result.Usage != null ? new
@@ -144,7 +145,7 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
                     totalTokens = result.Usage.TotalTokenCount
                 } : null,
                 resultOptions = result.ResultOptions
-            })
+            }, AIConstants.DefaultJsonSerializerOptions)
         };
     }
 }

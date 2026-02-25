@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Api.Management.Provider.Models;
@@ -132,7 +131,12 @@ public class TestMapDefinition : IMapDefinition
                     OutputType = source.Outcome.OutputType.ToString(),
                     OutputValue = source.Outcome.OutputValue,
                     FinishReason = source.Outcome.FinishReason,
-                    TokenUsageJson = source.Outcome.TokenUsageJson
+                    TokenUsage = source.Outcome.TokenUsage != null ? new TestTokenUsageResponseModel
+                    {
+                        InputTokens = source.Outcome.TokenUsage.InputTokens,
+                        OutputTokens = source.Outcome.TokenUsage.OutputTokens,
+                        TotalTokens = source.Outcome.TokenUsage.TotalTokens
+                    } : null
                 } : null,
                 GraderResults = source.GraderResults.Select(r =>
                 {
@@ -154,11 +158,15 @@ public class TestMapDefinition : IMapDefinition
                         ActualValue = r.ActualValue,
                         ExpectedValue = r.ExpectedValue,
                         FailureMessage = r.FailureMessage,
-                        MetadataJson = r.MetadataJson,
+                        Metadata = r.Metadata,
                         Severity = r.Severity.ToString()
                     };
                 }).ToList(),
-                MetadataJson = source.MetadataJson,
+                Error = source.Error != null ? new TestRunErrorResponseModel
+                {
+                    Message = source.Error.Message,
+                    StackTrace = source.Error.StackTrace
+                } : null,
                 BatchId = source.BatchId
             };
         });
@@ -167,11 +175,11 @@ public class TestMapDefinition : IMapDefinition
         mapper.Define<AITestTranscript, TestTranscriptResponseModel>((source, context) => new TestTranscriptResponseModel
         {
             Id = source.Id,
-            MessagesJson = source.MessagesJson,
-            ToolCallsJson = source.ToolCallsJson,
-            ReasoningJson = source.ReasoningJson,
-            TimingJson = source.TimingJson,
-            FinalOutputJson = source.FinalOutputJson,
+            Messages = source.Messages,
+            ToolCalls = source.ToolCalls,
+            Reasoning = source.Reasoning,
+            Timing = source.Timing,
+            FinalOutput = source.FinalOutput,
         });
 
         // AITestMetrics -> TestMetricsResponseModel
@@ -220,7 +228,7 @@ public class TestMapDefinition : IMapDefinition
                     ActualValue = r.ActualValue,
                     ExpectedValue = r.ExpectedValue,
                     FailureMessage = r.FailureMessage,
-                    MetadataJson = r.MetadataJson,
+                    Metadata = r.Metadata,
                     Severity = r.Severity.ToString()
                 };
             }

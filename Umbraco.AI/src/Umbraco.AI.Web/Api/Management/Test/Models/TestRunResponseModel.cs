@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace Umbraco.AI.Web.Api.Management.Test.Models;
 
@@ -81,9 +82,9 @@ public class TestRunResponseModel
     public IReadOnlyList<TestGraderResultResponseModel> GraderResults { get; set; } = [];
 
     /// <summary>
-    /// Optional metadata for the run (JSON).
+    /// Error information if the run failed with an exception.
     /// </summary>
-    public string? MetadataJson { get; set; }
+    public TestRunErrorResponseModel? Error { get; set; }
 
     /// <summary>
     /// Optional batch ID if this run is part of a batch execution.
@@ -94,6 +95,23 @@ public class TestRunResponseModel
     /// Whether this run is the baseline run for its test.
     /// </summary>
     public bool IsBaseline { get; set; }
+}
+
+/// <summary>
+/// Response model for a test run error.
+/// </summary>
+public class TestRunErrorResponseModel
+{
+    /// <summary>
+    /// The error message.
+    /// </summary>
+    [Required]
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The stack trace of the error, if available.
+    /// </summary>
+    public string? StackTrace { get; set; }
 }
 
 /// <summary>
@@ -108,29 +126,29 @@ public class TestTranscriptResponseModel
     public Guid Id { get; set; }
 
     /// <summary>
-    /// The messages exchanged during execution (JSON).
+    /// The messages exchanged during execution.
     /// </summary>
-    public string? MessagesJson { get; set; }
+    public JsonElement? Messages { get; set; }
 
     /// <summary>
-    /// Tool calls made during execution (JSON).
+    /// Tool calls made during execution.
     /// </summary>
-    public string? ToolCallsJson { get; set; }
+    public JsonElement? ToolCalls { get; set; }
 
     /// <summary>
-    /// Reasoning steps or intermediate outputs (JSON).
+    /// Reasoning steps or intermediate outputs.
     /// </summary>
-    public string? ReasoningJson { get; set; }
+    public JsonElement? Reasoning { get; set; }
 
     /// <summary>
-    /// Timing information for the execution (JSON).
+    /// Timing information for the execution.
     /// </summary>
-    public string? TimingJson { get; set; }
+    public JsonElement? Timing { get; set; }
 
     /// <summary>
-    /// The final output from the execution (JSON).
+    /// The final output from the execution.
     /// </summary>
-    public string? FinalOutputJson { get; set; }
+    public JsonElement? FinalOutput { get; set; }
 }
 
 /// <summary>
@@ -155,9 +173,30 @@ public class TestOutcomeResponseModel
     public string? FinishReason { get; set; }
 
     /// <summary>
-    /// Token usage information (JSON).
+    /// Token usage statistics for the execution.
     /// </summary>
-    public string? TokenUsageJson { get; set; }
+    public TestTokenUsageResponseModel? TokenUsage { get; set; }
+}
+
+/// <summary>
+/// Response model for token usage statistics.
+/// </summary>
+public class TestTokenUsageResponseModel
+{
+    /// <summary>
+    /// Number of input tokens consumed.
+    /// </summary>
+    public int InputTokens { get; set; }
+
+    /// <summary>
+    /// Number of output tokens generated.
+    /// </summary>
+    public int OutputTokens { get; set; }
+
+    /// <summary>
+    /// Total tokens (input + output).
+    /// </summary>
+    public int TotalTokens { get; set; }
 }
 
 /// <summary>
@@ -222,9 +261,9 @@ public class TestGraderResultResponseModel
     public string? FailureMessage { get; set; }
 
     /// <summary>
-    /// Optional metadata from the grader (JSON).
+    /// Optional metadata from the grader.
     /// </summary>
-    public string? MetadataJson { get; set; }
+    public JsonElement? Metadata { get; set; }
 
     /// <summary>
     /// Severity level (Info, Warning, Error).

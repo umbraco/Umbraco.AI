@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Umbraco.AI.Core.Tests;
 
 /// <summary>
@@ -38,10 +40,10 @@ public sealed class AITestGraderResult
     public string? FailureMessage { get; set; }
 
     /// <summary>
-    /// Optional metadata from the grader (JSON).
-    /// Can store additional analysis data.
+    /// Optional metadata from the grader.
+    /// Contains grader-specific analysis data (e.g., regex match details, LLM reasoning).
     /// </summary>
-    public string? MetadataJson { get; set; }
+    public JsonElement? Metadata { get; set; }
 
     /// <summary>
     /// Severity level of this grader result (inherited from grader configuration).

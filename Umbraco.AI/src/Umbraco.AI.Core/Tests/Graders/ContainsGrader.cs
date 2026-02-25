@@ -55,7 +55,7 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
         // Deserialize configuration
         var config = graderConfig.Config is not { } configElement
             ? new ContainsGraderConfig()
-            : JsonSerializer.Deserialize<ContainsGraderConfig>(configElement)
+            : configElement.Deserialize<ContainsGraderConfig>(Constants.DefaultJsonSerializerOptions)
                 ?? new ContainsGraderConfig();
 
         // Output value is already extracted by the test feature

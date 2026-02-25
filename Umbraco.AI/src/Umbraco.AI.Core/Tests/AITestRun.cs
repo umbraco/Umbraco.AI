@@ -75,10 +75,9 @@ public sealed class AITestRun
     public IReadOnlyList<AITestGraderResult> GraderResults { get; set; } = Array.Empty<AITestGraderResult>();
 
     /// <summary>
-    /// Optional metadata for this run (JSON).
-    /// Can store custom data for analysis.
+    /// Error information if the run failed with an exception.
     /// </summary>
-    public string? MetadataJson { get; set; }
+    public AITestRunError? Error { get; set; }
 
     /// <summary>
     /// Optional batch ID if this run was part of a batch execution.

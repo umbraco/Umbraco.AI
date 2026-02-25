@@ -25,10 +25,9 @@ public sealed class AITestOutcome
     public string? FinishReason { get; set; }
 
     /// <summary>
-    /// Token usage statistics (JSON object).
-    /// Structure: { inputTokens: 123, outputTokens: 456, totalTokens: 579 }
+    /// Token usage statistics for the execution.
     /// </summary>
-    public string? TokenUsageJson { get; set; }
+    public AITestTokenUsage? TokenUsage { get; set; }
 }
 
 /// <summary>

@@ -67,7 +67,7 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
         // Deserialize configuration
         var config = graderConfig.Config is not { } configElement
             ? new ToolCallGraderConfig()
-            : JsonSerializer.Deserialize<ToolCallGraderConfig>(configElement)
+            : configElement.Deserialize<ToolCallGraderConfig>(Constants.DefaultJsonSerializerOptions)
                 ?? new ToolCallGraderConfig();
 
         // Parse expected tools
@@ -76,7 +76,7 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
             .ToList();
 
         // Extract actual tool calls from transcript
-        var actualTools = ExtractToolCallsFromTranscript(transcript.ToolCallsJson);
+        var actualTools = ExtractToolCallsFromTranscript(transcript.ToolCalls);
 
         // Validate based on mode
         bool passed;
@@ -146,36 +146,25 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
         });
     }
 
-    private static List<string> ExtractToolCallsFromTranscript(string? toolCallsJson)
+    private static List<string> ExtractToolCallsFromTranscript(JsonElement? toolCalls)
     {
         var toolNames = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(toolCallsJson))
+        if (toolCalls is not { ValueKind: JsonValueKind.Array } element)
         {
             return toolNames;
         }
 
-        try
+        foreach (var item in element.EnumerateArray())
         {
-            using var doc = JsonDocument.Parse(toolCallsJson);
-            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            if (item.TryGetProperty("name", out var name))
             {
-                foreach (var item in doc.RootElement.EnumerateArray())
+                var toolName = name.GetString();
+                if (!string.IsNullOrEmpty(toolName))
                 {
-                    if (item.TryGetProperty("name", out var name))
-                    {
-                        var toolName = name.GetString();
-                        if (!string.IsNullOrEmpty(toolName))
-                        {
-                            toolNames.Add(toolName);
-                        }
-                    }
+                    toolNames.Add(toolName);
                 }
             }
-        }
-        catch
-        {
-            // If parsing fails, return empty list
         }
 
         return toolNames;

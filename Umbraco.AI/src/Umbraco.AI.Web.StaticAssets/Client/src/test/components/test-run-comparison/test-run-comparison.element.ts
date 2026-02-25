@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
-import { AITestRepository } from "../../repository/test.repository.js";
+import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
 import type { TestRunComparisonResponseModel, TestGraderComparisonResponseModel } from "../../../api/types.gen.js";
 
 /**
@@ -24,11 +24,11 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
     @state()
     private _error?: string;
 
-    private _repository!: AITestRepository;
+    private _repository!: UaiTestRunDetailRepository;
 
     constructor() {
         super();
-        this._repository = new AITestRepository(this);
+        this._repository = new UaiTestRunDetailRepository(this);
     }
 
     async connectedCallback() {
@@ -41,17 +41,17 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
     private async _loadComparison() {
         this._isLoading = true;
         this._error = undefined;
-        try {
-            this._comparison = await this._repository.compareRuns(
-                this.baselineRunId!,
-                this.comparisonRunId!,
-            );
-        } catch (error) {
+        const { data, error } = await this._repository.requestComparison(
+            this.baselineRunId!,
+            this.comparisonRunId!,
+        );
+        if (error) {
             console.error("Failed to load comparison:", error);
             this._error = "Failed to load comparison data.";
-        } finally {
-            this._isLoading = false;
+        } else {
+            this._comparison = data;
         }
+        this._isLoading = false;
     }
 
     private _getStatusColor(status: string): string {

@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
-import { AITestRepository } from "../../repository/test.repository.js";
+import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
 import type { TestTranscriptResponseModel } from "../../../api/types.gen.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
@@ -41,11 +41,11 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     @state()
     private _reasoningExpanded = false;
 
-    private _repository!: AITestRepository;
+    private _repository!: UaiTestRunDetailRepository;
 
     constructor() {
         super();
-        this._repository = new AITestRepository(this);
+        this._repository = new UaiTestRunDetailRepository(this);
     }
 
     async connectedCallback() {
@@ -59,13 +59,13 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
 
     private async _loadTranscript() {
         this._isLoading = true;
-        try {
-            this._transcript = await this._repository.getTestRunTranscript(this.runId!) ?? undefined;
-        } catch (error) {
+        const { data, error } = await this._repository.requestTranscript(this.runId!);
+        if (error) {
             console.error("Failed to load transcript:", error);
-        } finally {
-            this._isLoading = false;
+        } else {
+            this._transcript = data;
         }
+        this._isLoading = false;
     }
 
     private _parseJson<T>(json: string | null | undefined): T | null {

@@ -7,14 +7,14 @@ import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
 import type { TestFeatureResponseModel } from "../../../../api/types.gen.js";
 import type { UaiTestDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
-import { AITestRepository } from "../../../repository/test.repository.js";
+import { UaiTestFeatureItemRepository } from "../../../repository/test-feature/test-feature-item.repository.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
 
 @customElement("umbraco-ai-test-details-workspace-view")
 export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixin(UmbLitElement) {
 	#workspaceContext?: typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE;
 	#notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
-	#repository!: AITestRepository;
+	#repository!: UaiTestFeatureItemRepository;
 
 	@state()
 	private _model?: UaiTestDetailModel;
@@ -25,7 +25,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 	constructor() {
 		super();
 
-		this.#repository = new AITestRepository(this);
+		this.#repository = new UaiTestFeatureItemRepository(this);
 
 		this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
 			if (!context) return;
@@ -49,14 +49,15 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 	}
 
 	async #loadTestFeatureDetails(testFeatureId: string) {
-		try {
-			this._testFeature = await this.#repository.getTestFeatureById(testFeatureId);
-		} catch (error) {
+		const { data, error } = await this.#repository.requestById(testFeatureId);
+		if (error) {
 			console.error("Failed to load test feature details:", error);
 			this._testFeature = null;
 			this.#notificationContext?.peek("danger", {
 				data: { message: "Failed to load test feature details" },
 			});
+		} else {
+			this._testFeature = data ?? null;
 		}
 	}
 

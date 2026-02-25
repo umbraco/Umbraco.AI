@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
-import { AITestRepository } from "../../repository/test.repository.js";
+import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
 import type { TestRunResponseModel, TestGraderResultResponseModel } from "../../../api/types.gen.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
@@ -21,11 +21,11 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
     @state()
     private _isLoading = true;
 
-    private _repository!: AITestRepository;
+    private _repository!: UaiTestRunDetailRepository;
 
     constructor() {
         super();
-        this._repository = new AITestRepository(this);
+        this._repository = new UaiTestRunDetailRepository(this);
     }
 
     async connectedCallback() {
@@ -37,13 +37,13 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
     private async _loadRun() {
         this._isLoading = true;
-        try {
-            this._run = await this._repository.getRunById(this.runId!) || undefined;
-        } catch (error) {
+        const { data, error } = await this._repository.requestById(this.runId!);
+        if (error) {
             console.error("Failed to load run:", error);
-        } finally {
-            this._isLoading = false;
+        } else {
+            this._run = data;
         }
+        this._isLoading = false;
     }
 
     private _getStatusColor(status: string): string {

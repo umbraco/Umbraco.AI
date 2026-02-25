@@ -3,7 +3,7 @@ import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
-import { AITestRepository } from "../repository/test.repository.js";
+import { UaiTestRunDetailRepository } from "../repository/test-run-detail/test-run-detail.repository.js";
 
 /**
  * Entity action for deleting a test run.
@@ -25,8 +25,8 @@ export class UaiTestRunDeleteEntityAction extends UmbEntityActionBase<never> {
 			confirmLabel: "Delete",
 		});
 
-		const repository = new AITestRepository(this);
-		await repository.deleteRun(unique);
+		const repository = new UaiTestRunDetailRepository(this);
+		await repository.requestDelete(unique);
 
 		const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);
 		collectionContext?.loadCollection();

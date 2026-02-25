@@ -2,6 +2,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import { UaiTestFeatureItemServerDataSource } from "./test-feature-item.server.data-source.js";
 import type { UaiTestFeatureItemModel } from "../../types.js";
+import type { TestFeatureResponseModel } from "../../../api/types.gen.js";
 
 /**
  * Repository for fetching test feature items.
@@ -20,5 +21,12 @@ export class UaiTestFeatureItemRepository extends UmbControllerBase {
      */
     async requestItems(): Promise<{ data?: UaiTestFeatureItemModel[]; error?: unknown }> {
         return this.#dataSource.getItems();
+    }
+
+    /**
+     * Requests a test feature by ID (includes schema).
+     */
+    async requestById(id: string): Promise<{ data?: TestFeatureResponseModel; error?: unknown }> {
+        return this.#dataSource.getById(id);
     }
 }

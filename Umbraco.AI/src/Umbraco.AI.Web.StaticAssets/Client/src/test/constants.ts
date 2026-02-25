@@ -26,6 +26,11 @@ export const UAI_TEST_RUN_ENTITY_TYPE = "uai:test-run";
 export const UAI_TEST_RUN_COLLECTION_ALIAS = "UmbracoAI.Collection.TestRun";
 export const UAI_TEST_RUN_COLLECTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.TestRun.Collection";
 
+// Test Execution / Run Detail / Grader aliases
+export const UAI_TEST_EXECUTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test.Execution";
+export const UAI_TEST_RUN_DETAIL_REPOSITORY_ALIAS = "UmbracoAI.Repository.TestRun.Detail";
+export const UAI_TEST_GRADER_ITEM_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test.GraderItem";
+
 // Icons
 export const UAI_TEST_ICON = "icon-lab";
 export const UAI_TEST_RUN_ICON = "icon-timer";

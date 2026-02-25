@@ -1,7 +1,7 @@
 import { UmbEntityBulkActionBase } from "@umbraco-cms/backoffice/entity-bulk-action";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
-import { AITestRepository } from "../../repository/test.repository.js";
+import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
 
 /**
  * Bulk action for deleting test runs.
@@ -17,9 +17,9 @@ export class UaiTestRunBulkDeleteAction extends UmbEntityBulkActionBase<never> {
             confirmLabel: "#actions_delete",
         });
 
-        const repository = new AITestRepository(this);
+        const repository = new UaiTestRunDetailRepository(this);
         for (const runId of this.selection) {
-            await repository.deleteRun(runId);
+            await repository.requestDelete(runId);
         }
 
         const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);

@@ -7,7 +7,7 @@ import type {
 import type { UaiTestGraderConfig } from "../../types.js";
 import { createEmptyGraderConfig } from "../../types.js";
 import type { EditableModelSchemaModel } from "../../../api/types.gen.js";
-import { TestsService } from "../../../api/sdk.gen.js";
+import { UaiTestGraderItemRepository } from "../../repository/test-grader/test-grader-item.repository.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../core/components/exports.js";
 
 @customElement("uai-grader-config-editor-modal")
@@ -48,17 +48,16 @@ export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
             return;
         }
 
-        try {
-            const { data } = await TestsService.getTestGraderById({
-                path: { id: this.data.graderTypeId },
-            });
+        const repository = new UaiTestGraderItemRepository(this);
+        const { data, error } = await repository.requestById(this.data.graderTypeId);
 
-            this._schema = data?.configSchema || null;
-        } catch (error) {
+        if (error) {
             console.error("Error fetching grader schema:", error);
-        } finally {
-            this._loading = false;
+        } else {
+            this._schema = data?.configSchema || null;
         }
+
+        this._loading = false;
     }
 
     #onNameChange(e: Event) {

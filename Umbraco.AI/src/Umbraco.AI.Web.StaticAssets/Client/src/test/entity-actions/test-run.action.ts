@@ -2,7 +2,7 @@ import type { UmbEntityActionArgs } from "@umbraco-cms/backoffice/entity-action"
 import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
-import { AITestRepository } from "../repository/test.repository.js";
+import { UaiTestExecutionRepository } from "../repository/test-execution/test-execution.repository.js";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../workspace/test/test-workspace.context-token.js";
 
 /**
@@ -20,27 +20,28 @@ export class UaiTestRunEntityAction extends UmbEntityActionBase<never> {
 
         const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
 
-        try {
-            const repository = new AITestRepository(this);
-            const metrics = await repository.runTest(unique);
+        const repository = new UaiTestExecutionRepository(this);
+        const { data: metrics, error } = await repository.requestRunTest(unique);
 
-            const status = metrics.passAtK > 0 ? "positive" : "warning";
-            const headline = metrics.passAtK > 0 ? "Test Passed" : "Test Failed";
-            const message = `Pass@K: ${(metrics.passAtK * 100).toFixed(0)}% | ${metrics.totalRuns} run(s)`;
-
-            notificationContext?.peek(status, {
-                data: { headline, message },
-            });
-
-            this.#signalTestRunCompleted();
-        } catch (error) {
+        if (error || !metrics) {
             notificationContext?.peek("danger", {
                 data: {
                     headline: "Test Run Failed",
-                    message: error instanceof Error ? error.message : "An unexpected error occurred.",
+                    message: "An unexpected error occurred.",
                 },
             });
+            return;
         }
+
+        const status = metrics.passAtK > 0 ? "positive" : "warning";
+        const headline = metrics.passAtK > 0 ? "Test Passed" : "Test Failed";
+        const message = `Pass@K: ${(metrics.passAtK * 100).toFixed(0)}% | ${metrics.totalRuns} run(s)`;
+
+        notificationContext?.peek(status, {
+            data: { headline, message },
+        });
+
+        this.#signalTestRunCompleted();
     }
 
     #signalTestRunCompleted() {

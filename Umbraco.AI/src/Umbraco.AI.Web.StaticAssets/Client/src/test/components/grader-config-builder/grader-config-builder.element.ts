@@ -9,7 +9,7 @@ import { UaiSelectedEvent } from "../../../core/events/selected.event.js";
 import { UAI_GRADER_CONFIG_EDITOR_MODAL } from "../../modals/grader-config-editor/index.js";
 import type { UaiTestGraderConfig } from "../../types.js";
 import { getGraderSummary } from "../../types.js";
-import { TestsService } from "../../../api/sdk.gen.js";
+import { UaiTestGraderItemRepository } from "../../repository/test-grader/test-grader-item.repository.js";
 import type { TestGraderInfoModel } from "../../../api/types.gen.js";
 
 @customElement("uai-grader-config-builder")
@@ -51,11 +51,12 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
     }
 
     async #fetchGraders() {
-        try {
-            const { data } = await TestsService.getAllTestGraders();
-            this._graders = data ?? [];
-        } catch (error) {
+        const repository = new UaiTestGraderItemRepository(this);
+        const { data, error } = await repository.requestItems();
+        if (error) {
             console.error("Failed to fetch grader types:", error);
+        } else {
+            this._graders = data ?? [];
         }
     }
 

@@ -1,8 +1,8 @@
-import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
+import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { AITestRepository } from "../../repository/test.repository.js";
-import type { TestRunResponseModel } from "../../../api/types.gen.js";
+import type { TestRunResponseModel, TestGraderResultResponseModel } from "../../../api/types.gen.js";
 
 /**
  * Individual test run detail viewer.
@@ -18,6 +18,9 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
     @state()
     private _isLoading = true;
+
+    @state()
+    private _expandedGraders = new Set<number>();
 
     private _repository!: AITestRepository;
 
@@ -37,11 +40,34 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
         this._isLoading = true;
         try {
             this._run = await this._repository.getRunById(this.runId!) || undefined;
+            if (this._run) {
+                this._initExpandedGraders();
+            }
         } catch (error) {
             console.error("Failed to load run:", error);
         } finally {
             this._isLoading = false;
         }
+    }
+
+    private _initExpandedGraders() {
+        const expanded = new Set<number>();
+        this._run?.graderResults.forEach((result, index) => {
+            if (!result.passed) {
+                expanded.add(index);
+            }
+        });
+        this._expandedGraders = expanded;
+    }
+
+    private _toggleGrader(index: number) {
+        const newSet = new Set(this._expandedGraders);
+        if (newSet.has(index)) {
+            newSet.delete(index);
+        } else {
+            newSet.add(index);
+        }
+        this._expandedGraders = newSet;
     }
 
     private _renderStatus(status: string) {
@@ -96,28 +122,39 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
         return html`
             <div class="graders-list">
-                ${this._run.graderResults.map(result => html`
-                    <div class="grader-result ${result.passed ? 'passed' : 'failed'}">
-                        <div class="grader-header">
-                            <span class="grader-status">${result.passed ? '\u2713' : '\u2717'}</span>
-                            <span class="grader-score">Score: ${(result.score * 100).toFixed(1)}%</span>
-                        </div>
-                        ${result.actualValue
-                            ? html`
-                                <div class="grader-field">
-                                    <label>Actual Value</label>
-                                    <pre class="code-block">${result.actualValue}</pre>
-                                </div>
-                            `
-                            : null}
-                        ${result.expectedValue
-                            ? html`
-                                <div class="grader-field">
-                                    <label>Expected Value</label>
-                                    <pre class="code-block">${result.expectedValue}</pre>
-                                </div>
-                            `
-                            : null}
+                ${this._run.graderResults.map((result, index) => this._renderGraderCard(result, index))}
+            </div>
+        `;
+    }
+
+    private _renderGraderCard(result: TestGraderResultResponseModel, index: number) {
+        const isExpanded = this._expandedGraders.has(index);
+        const graderName = result.graderName || "Grader";
+
+        return html`
+            <div class="grader-result ${result.passed ? 'passed' : 'failed'}">
+                <button
+                    class="grader-card-header"
+                    @click=${() => this._toggleGrader(index)}
+                >
+                    <span class="grader-status">${result.passed ? '\u2713' : '\u2717'}</span>
+                    <span class="grader-name">${graderName}</span>
+                    <span class="grader-header-meta">
+                        ${result.graderType
+                            ? html`<span class="grader-type-badge">${result.graderType}</span>`
+                            : nothing}
+                        ${result.weight !== 1.0
+                            ? html`<span class="grader-weight">Weight: ${result.weight}</span>`
+                            : nothing}
+                        ${result.negate
+                            ? html`<span class="grader-negate-badge">NEGATED</span>`
+                            : nothing}
+                    </span>
+                    <span class="grader-score">Score: ${(result.score * 100).toFixed(1)}%</span>
+                    <span class="chevron">${isExpanded ? '\u25BC' : '\u25B6'}</span>
+                </button>
+                ${isExpanded ? html`
+                    <div class="grader-card-body">
                         ${result.failureMessage
                             ? html`
                                 <div class="grader-field">
@@ -125,14 +162,83 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                                     <div class="failure-message">${result.failureMessage}</div>
                                 </div>
                             `
-                            : null}
+                            : nothing}
+                        ${result.expectedValue
+                            ? html`
+                                <div class="grader-field">
+                                    <label>Expected Value</label>
+                                    <pre class="code-block">${this._formatJson(result.expectedValue)}</pre>
+                                </div>
+                            `
+                            : nothing}
+                        ${result.actualValue
+                            ? html`
+                                <div class="grader-field">
+                                    <label>Actual Value</label>
+                                    <pre class="code-block">${this._formatJson(result.actualValue)}</pre>
+                                </div>
+                            `
+                            : nothing}
+                        ${result.metadataJson
+                            ? html`
+                                <div class="grader-field">
+                                    <label>Metadata</label>
+                                    ${this._renderMetadata(result.metadataJson)}
+                                </div>
+                            `
+                            : nothing}
                         <div class="grader-meta">
                             <span>Severity: ${result.severity}</span>
+                            ${result.graderTypeId
+                                ? html`<span>Type ID: ${result.graderTypeId}</span>`
+                                : nothing}
                         </div>
                     </div>
-                `)}
+                ` : nothing}
             </div>
         `;
+    }
+
+    private _renderMetadata(metadataJson: string) {
+        try {
+            const parsed = JSON.parse(metadataJson);
+            if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                return html`
+                    <table class="metadata-table">
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(parsed).map(([key, value]) => html`
+                                <tr>
+                                    <td>${key}</td>
+                                    <td>${this._renderMetadataValue(value)}</td>
+                                </tr>
+                            `)}
+                        </tbody>
+                    </table>
+                `;
+            }
+            return html`<pre class="code-block">${this._formatJson(metadataJson)}</pre>`;
+        } catch {
+            return html`<pre class="code-block">${metadataJson}</pre>`;
+        }
+    }
+
+    private _renderMetadataValue(value: unknown) {
+        if (typeof value === 'string') {
+            if (value.length > 100) {
+                return html`<pre class="code-block">${value}</pre>`;
+            }
+            return html`${value}`;
+        }
+        if (typeof value === 'number' || typeof value === 'boolean') {
+            return html`<code>${String(value)}</code>`;
+        }
+        return html`<pre class="code-block">${JSON.stringify(value, null, 2)}</pre>`;
     }
 
     private _formatJson(json: string): string {
@@ -322,19 +428,21 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             font-family: monospace;
             font-size: 12px;
             margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .graders-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         .grader-result {
-            background: var(--uui-color-surface-alt);
-            padding: 15px;
             border-radius: 6px;
+            border: 1px solid var(--uui-color-border);
             border-left: 4px solid;
+            overflow: hidden;
         }
 
         .grader-result.passed {
@@ -345,16 +453,28 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             border-left-color: var(--uui-color-danger);
         }
 
-        .grader-header {
+        /* Grader card header */
+        .grader-card-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            font-weight: 600;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--uui-color-surface-alt);
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            color: var(--uui-color-text);
+        }
+
+        .grader-card-header:hover {
+            background: var(--uui-color-surface-emphasis);
         }
 
         .grader-status {
-            font-size: 20px;
+            font-size: 18px;
+            flex-shrink: 0;
         }
 
         .grader-result.passed .grader-status {
@@ -365,8 +485,67 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             color: var(--uui-color-danger);
         }
 
+        .grader-name {
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .grader-header-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .grader-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            background: var(--uui-color-surface);
+            color: var(--uui-color-text-alt);
+            border: 1px solid var(--uui-color-border);
+        }
+
+        .grader-negate-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--uui-color-warning);
+            color: white;
+        }
+
+        .grader-weight {
+            font-size: 12px;
+            color: var(--uui-color-text-alt);
+        }
+
+        .grader-score {
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .chevron {
+            font-size: 10px;
+            color: var(--uui-color-text-alt);
+            flex-shrink: 0;
+        }
+
+        /* Grader card body */
+        .grader-card-body {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         .grader-field {
-            margin-top: 10px;
+            margin: 0;
         }
 
         .failure-message {
@@ -377,9 +556,41 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
         }
 
         .grader-meta {
-            margin-top: 10px;
+            display: flex;
+            gap: 15px;
             font-size: 12px;
             color: var(--uui-color-text-alt);
+        }
+
+        /* Metadata table */
+        .metadata-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .metadata-table th,
+        .metadata-table td {
+            text-align: left;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--uui-color-border);
+            font-size: 13px;
+        }
+
+        .metadata-table th {
+            font-weight: 600;
+            color: var(--uui-color-text-alt);
+            font-size: 12px;
+        }
+
+        .metadata-table td:first-child {
+            font-weight: 500;
+            white-space: nowrap;
+            width: 1%;
+        }
+
+        .metadata-table code {
+            font-family: monospace;
+            font-size: 12px;
         }
     `;
 }

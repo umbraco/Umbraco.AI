@@ -444,6 +444,11 @@ export type TestGraderResponseModel = {
 
 export type TestGraderResultResponseModel = {
     graderId: string;
+    graderName?: string | null;
+    graderTypeId?: string | null;
+    graderType?: string | null;
+    weight: number;
+    negate: boolean;
     passed: boolean;
     score: number;
     actualValue?: string | null;

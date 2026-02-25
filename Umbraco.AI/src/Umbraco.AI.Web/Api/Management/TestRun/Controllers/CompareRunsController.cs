@@ -17,14 +17,22 @@ namespace Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 public class CompareRunsController : TestRunControllerBase
 {
     private readonly IAITestRunService _runService;
+    private readonly IAITestService _testService;
+    private readonly AITestGraderCollection _graderCollection;
     private readonly IUmbracoMapper _mapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompareRunsController"/> class.
     /// </summary>
-    public CompareRunsController(IAITestRunService runService, IUmbracoMapper mapper)
+    public CompareRunsController(
+        IAITestRunService runService,
+        IAITestService testService,
+        AITestGraderCollection graderCollection,
+        IUmbracoMapper mapper)
     {
         _runService = runService;
+        _testService = testService;
+        _graderCollection = graderCollection;
         _mapper = mapper;
     }
 
@@ -50,7 +58,15 @@ public class CompareRunsController : TestRunControllerBase
                 requestModel.ComparisonTestRunId,
                 cancellationToken);
 
-            var responseModel = _mapper.Map<TestRunComparisonResponseModel>(comparison)!;
+            var test = await _testService.GetTestAsync(comparison.BaselineRun.TestId, cancellationToken);
+            var graderConfigs = test?.Graders.ToDictionary(g => g.Id);
+
+            var responseModel = _mapper.Map<TestRunComparisonResponseModel>(comparison, ctx =>
+            {
+                ctx.Items["graderConfigs"] = graderConfigs;
+                ctx.Items["graderCollection"] = _graderCollection;
+            })!;
+
             return Ok(responseModel);
         }
         catch (InvalidOperationException ex)

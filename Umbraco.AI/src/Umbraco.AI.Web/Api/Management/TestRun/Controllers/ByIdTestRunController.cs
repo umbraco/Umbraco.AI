@@ -18,14 +18,22 @@ namespace Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 public class ByIdTestRunController : TestRunControllerBase
 {
     private readonly IAITestRunService _runService;
+    private readonly IAITestService _testService;
+    private readonly AITestGraderCollection _graderCollection;
     private readonly IUmbracoMapper _mapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByIdTestRunController"/> class.
     /// </summary>
-    public ByIdTestRunController(IAITestRunService runService, IUmbracoMapper mapper)
+    public ByIdTestRunController(
+        IAITestRunService runService,
+        IAITestService testService,
+        AITestGraderCollection graderCollection,
+        IUmbracoMapper mapper)
     {
         _runService = runService;
+        _testService = testService;
+        _graderCollection = graderCollection;
         _mapper = mapper;
     }
 
@@ -50,7 +58,15 @@ public class ByIdTestRunController : TestRunControllerBase
             return NotFound(CreateProblemDetails("Test run not found", "The requested test run could not be found."));
         }
 
-        var responseModel = _mapper.Map<TestRunResponseModel>(run)!;
+        var test = await _testService.GetTestAsync(run.TestId, cancellationToken);
+        var graderConfigs = test?.Graders.ToDictionary(g => g.Id);
+
+        var responseModel = _mapper.Map<TestRunResponseModel>(run, ctx =>
+        {
+            ctx.Items["graderConfigs"] = graderConfigs;
+            ctx.Items["graderCollection"] = _graderCollection;
+        })!;
+
         return Ok(responseModel);
     }
 }

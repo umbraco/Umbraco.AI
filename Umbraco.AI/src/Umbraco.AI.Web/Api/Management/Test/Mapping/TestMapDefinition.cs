@@ -99,39 +99,62 @@ public class TestMapDefinition : IMapDefinition
         }, MapFromUpdateRequest);
 
         // AITestRun -> TestRunResponseModel
-        mapper.Define<AITestRun, TestRunResponseModel>((source, context) => new TestRunResponseModel
+        mapper.Define<AITestRun, TestRunResponseModel>((source, context) =>
         {
-            Id = source.Id,
-            TestId = source.TestId,
-            TestVersion = source.TestVersion,
-            RunNumber = source.RunNumber,
-            ProfileId = source.ProfileId,
-            ContextIds = source.ContextIds,
-            ExecutedAt = source.ExecutedAt,
-            ExecutedByUserId = source.ExecutedByUserId,
-            Status = source.Status.ToString(),
-            DurationMs = source.DurationMs,
-            TranscriptId = source.TranscriptId,
-            Outcome = source.Outcome != null ? new TestOutcomeResponseModel
+            var graderConfigs = context.HasItems
+                && context.Items.TryGetValue("graderConfigs", out var cfgs)
+                ? cfgs as Dictionary<Guid, AITestGraderConfig> : null;
+            var graderCollection = context.HasItems
+                && context.Items.TryGetValue("graderCollection", out var coll)
+                ? coll as AITestGraderCollection : null;
+
+            return new TestRunResponseModel
             {
-                OutputType = source.Outcome.OutputType.ToString(),
-                OutputValue = source.Outcome.OutputValue,
-                FinishReason = source.Outcome.FinishReason,
-                TokenUsageJson = source.Outcome.TokenUsageJson
-            } : null,
-            GraderResults = source.GraderResults.Select(r => new TestGraderResultResponseModel
-            {
-                GraderId = r.GraderId,
-                Passed = r.Passed,
-                Score = r.Score,
-                ActualValue = r.ActualValue,
-                ExpectedValue = r.ExpectedValue,
-                FailureMessage = r.FailureMessage,
-                MetadataJson = r.MetadataJson,
-                Severity = r.Severity.ToString()
-            }).ToList(),
-            MetadataJson = source.MetadataJson,
-            BatchId = source.BatchId
+                Id = source.Id,
+                TestId = source.TestId,
+                TestVersion = source.TestVersion,
+                RunNumber = source.RunNumber,
+                ProfileId = source.ProfileId,
+                ContextIds = source.ContextIds,
+                ExecutedAt = source.ExecutedAt,
+                ExecutedByUserId = source.ExecutedByUserId,
+                Status = source.Status.ToString(),
+                DurationMs = source.DurationMs,
+                TranscriptId = source.TranscriptId,
+                Outcome = source.Outcome != null ? new TestOutcomeResponseModel
+                {
+                    OutputType = source.Outcome.OutputType.ToString(),
+                    OutputValue = source.Outcome.OutputValue,
+                    FinishReason = source.Outcome.FinishReason,
+                    TokenUsageJson = source.Outcome.TokenUsageJson
+                } : null,
+                GraderResults = source.GraderResults.Select(r =>
+                {
+                    AITestGraderConfig? config = null;
+                    graderConfigs?.TryGetValue(r.GraderId, out config);
+                    var graderDef = config != null
+                        ? graderCollection?.GetById(config.GraderTypeId) : null;
+
+                    return new TestGraderResultResponseModel
+                    {
+                        GraderId = r.GraderId,
+                        GraderName = config?.Name,
+                        GraderTypeId = config?.GraderTypeId,
+                        GraderType = graderDef?.Type.ToString(),
+                        Weight = config?.Weight ?? 1.0,
+                        Negate = config?.Negate ?? false,
+                        Passed = r.Passed,
+                        Score = r.Score,
+                        ActualValue = r.ActualValue,
+                        ExpectedValue = r.ExpectedValue,
+                        FailureMessage = r.FailureMessage,
+                        MetadataJson = r.MetadataJson,
+                        Severity = r.Severity.ToString()
+                    };
+                }).ToList(),
+                MetadataJson = source.MetadataJson,
+                BatchId = source.BatchId
+            };
         });
 
         // AITestTranscript -> TestTranscriptResponseModel
@@ -157,42 +180,59 @@ public class TestMapDefinition : IMapDefinition
         });
 
         // AITestRunComparison -> TestRunComparisonResponseModel
-        mapper.Define<AITestRunComparison, TestRunComparisonResponseModel>((source, context) => new TestRunComparisonResponseModel
+        mapper.Define<AITestRunComparison, TestRunComparisonResponseModel>((source, context) =>
         {
-            BaselineRun = context.Map<TestRunResponseModel>(source.BaselineRun)!,
-            ComparisonRun = context.Map<TestRunResponseModel>(source.ComparisonRun)!,
-            IsRegression = source.IsRegression,
-            IsImprovement = source.IsImprovement,
-            DurationChangeMs = source.DurationChangeMs,
-            GraderComparisons = source.GraderComparisons.Select(gc => new TestGraderComparisonResponseModel
+            var graderConfigs = context.HasItems
+                && context.Items.TryGetValue("graderConfigs", out var cfgs)
+                ? cfgs as Dictionary<Guid, AITestGraderConfig> : null;
+            var graderCollection = context.HasItems
+                && context.Items.TryGetValue("graderCollection", out var coll)
+                ? coll as AITestGraderCollection : null;
+
+            TestGraderResultResponseModel? MapGraderResult(AITestGraderResult? r)
             {
-                GraderId = gc.GraderId,
-                GraderName = gc.GraderName,
-                BaselineResult = gc.BaselineResult != null ? new TestGraderResultResponseModel
+                if (r is null) return null;
+
+                AITestGraderConfig? config = null;
+                graderConfigs?.TryGetValue(r.GraderId, out config);
+                var graderDef = config != null
+                    ? graderCollection?.GetById(config.GraderTypeId) : null;
+
+                return new TestGraderResultResponseModel
                 {
-                    GraderId = gc.BaselineResult.GraderId,
-                    Passed = gc.BaselineResult.Passed,
-                    Score = gc.BaselineResult.Score,
-                    ActualValue = gc.BaselineResult.ActualValue,
-                    ExpectedValue = gc.BaselineResult.ExpectedValue,
-                    FailureMessage = gc.BaselineResult.FailureMessage,
-                    MetadataJson = gc.BaselineResult.MetadataJson,
-                    Severity = gc.BaselineResult.Severity.ToString()
-                } : null,
-                ComparisonResult = gc.ComparisonResult != null ? new TestGraderResultResponseModel
+                    GraderId = r.GraderId,
+                    GraderName = config?.Name,
+                    GraderTypeId = config?.GraderTypeId,
+                    GraderType = graderDef?.Type.ToString(),
+                    Weight = config?.Weight ?? 1.0,
+                    Negate = config?.Negate ?? false,
+                    Passed = r.Passed,
+                    Score = r.Score,
+                    ActualValue = r.ActualValue,
+                    ExpectedValue = r.ExpectedValue,
+                    FailureMessage = r.FailureMessage,
+                    MetadataJson = r.MetadataJson,
+                    Severity = r.Severity.ToString()
+                };
+            }
+
+            return new TestRunComparisonResponseModel
+            {
+                BaselineRun = context.Map<TestRunResponseModel>(source.BaselineRun)!,
+                ComparisonRun = context.Map<TestRunResponseModel>(source.ComparisonRun)!,
+                IsRegression = source.IsRegression,
+                IsImprovement = source.IsImprovement,
+                DurationChangeMs = source.DurationChangeMs,
+                GraderComparisons = source.GraderComparisons.Select(gc => new TestGraderComparisonResponseModel
                 {
-                    GraderId = gc.ComparisonResult.GraderId,
-                    Passed = gc.ComparisonResult.Passed,
-                    Score = gc.ComparisonResult.Score,
-                    ActualValue = gc.ComparisonResult.ActualValue,
-                    ExpectedValue = gc.ComparisonResult.ExpectedValue,
-                    FailureMessage = gc.ComparisonResult.FailureMessage,
-                    MetadataJson = gc.ComparisonResult.MetadataJson,
-                    Severity = gc.ComparisonResult.Severity.ToString()
-                } : null,
-                Changed = gc.Changed,
-                ScoreChange = gc.ScoreChange
-            }).ToList()
+                    GraderId = gc.GraderId,
+                    GraderName = gc.GraderName,
+                    BaselineResult = MapGraderResult(gc.BaselineResult),
+                    ComparisonResult = MapGraderResult(gc.ComparisonResult),
+                    Changed = gc.Changed,
+                    ScoreChange = gc.ScoreChange
+                }).ToList()
+            };
         });
     }
 

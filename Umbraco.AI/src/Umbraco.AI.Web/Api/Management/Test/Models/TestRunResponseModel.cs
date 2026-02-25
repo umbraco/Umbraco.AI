@@ -162,6 +162,31 @@ public class TestGraderResultResponseModel
     public Guid GraderId { get; set; }
 
     /// <summary>
+    /// The display name of the grader (from test configuration).
+    /// </summary>
+    public string? GraderName { get; set; }
+
+    /// <summary>
+    /// The grader type identifier (e.g., "exact-match", "llm-judge").
+    /// </summary>
+    public string? GraderTypeId { get; set; }
+
+    /// <summary>
+    /// The grader type category (e.g., "CodeBased", "ModelBased").
+    /// </summary>
+    public string? GraderType { get; set; }
+
+    /// <summary>
+    /// The weight of this grader for aggregate scoring (0-1).
+    /// </summary>
+    public double Weight { get; set; } = 1.0;
+
+    /// <summary>
+    /// Whether the grader result is negated (pass becomes fail, fail becomes pass).
+    /// </summary>
+    public bool Negate { get; set; }
+
+    /// <summary>
     /// Whether the grader passed.
     /// </summary>
     public bool Passed { get; set; }

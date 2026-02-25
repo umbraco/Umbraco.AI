@@ -17,6 +17,7 @@ export interface UaiTestDetailModel extends UmbEntityModel {
     graders: TestGraderModel[];
     runCount: number;
     tags: string[];
+    baselineRunId?: string | null;
     dateCreated: string | null;
     dateModified: string | null;
     version: number;

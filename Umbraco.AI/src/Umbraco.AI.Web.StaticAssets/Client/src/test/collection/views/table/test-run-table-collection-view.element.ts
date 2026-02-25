@@ -16,6 +16,7 @@ import { formatDateTime } from "../../../../core/index.js";
 import type { UaiTestRunItemModel } from "../../../types.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
 import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
+import { UAI_TEST_WORKSPACE_CONTEXT } from "../../../workspace/test/test-workspace.context-token.js";
 
 interface RunMetrics {
     totalRuns: number;
@@ -44,6 +45,9 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     @state()
     private _metrics?: RunMetrics;
 
+    @state()
+    private _baselineRunId?: string | null;
+
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
@@ -63,6 +67,16 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             this.#collectionContext = instance;
             this.#collectionContext?.selection.setSelectable(true);
             this.#observeCollectionItems();
+        });
+        this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
+            if (!context) return;
+            this.observe(
+                context.model,
+                (model) => {
+                    this._baselineRunId = model?.baselineRunId;
+                },
+                "umbBaselineRunIdObserver",
+            );
         });
     }
 
@@ -113,7 +127,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         if (!modalManager) return;
 
         modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
-            data: { runId },
+            data: { runId, baselineRunId: this._baselineRunId ?? undefined },
         });
     }
 
@@ -185,7 +199,9 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         color=${this.#getStatusColor(item.status)}
                         look="primary"
                         >${item.status}</uui-tag
-                    >`,
+                    >${item.unique === this._baselineRunId
+                        ? html` <uui-tag color="default" look="outline">Baseline</uui-tag>`
+                        : nothing}`,
                 },
                 {
                     columnAlias: "duration",

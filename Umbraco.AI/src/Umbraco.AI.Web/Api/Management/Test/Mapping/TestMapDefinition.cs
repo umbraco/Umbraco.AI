@@ -44,6 +44,7 @@ public class TestMapDefinition : IMapDefinition
             }).ToList(),
             RunCount = source.RunCount,
             Tags = source.Tags,
+            BaselineRunId = source.BaselineRunId,
             DateCreated = source.DateCreated,
             DateModified = source.DateModified,
             Version = source.Version

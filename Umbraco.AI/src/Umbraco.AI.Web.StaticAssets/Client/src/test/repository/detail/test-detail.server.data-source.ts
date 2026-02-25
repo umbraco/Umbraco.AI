@@ -33,6 +33,7 @@ export class UaiTestDetailServerDataSource implements UmbDetailDataSource<UaiTes
             graders: [],
             runCount: 1,
             tags: [],
+            baselineRunId: null,
             dateCreated: null,
             dateModified: null,
             version: 0,

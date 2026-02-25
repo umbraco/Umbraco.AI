@@ -180,6 +180,15 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 						</uui-button>
 					`,
 				)}
+				${when(
+					!this._isNew && this._model?.baselineRunId,
+					() => html`
+						<div slot="actions" class="baseline-indicator">
+							<uui-icon name="icon-flag"></uui-icon>
+							Baseline set
+						</div>
+					`,
+				)}
 
 				<div slot="footer-info" id="footer">
 					<a href=${UAI_TEST_ROOT_WORKSPACE_PATH}>Tests</a>
@@ -221,6 +230,14 @@ export class UmbracoAITestWorkspaceEditorElement extends UmbFormControlMixin(Umb
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
+			}
+
+			.baseline-indicator {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				font-size: 13px;
+				color: var(--uui-color-text-alt);
 			}
 		`,
 	];

@@ -75,6 +75,11 @@ public class TestResponseModel
     public DateTime DateModified { get; set; }
 
     /// <summary>
+    /// The ID of the baseline test run for comparison, if set.
+    /// </summary>
+    public Guid? BaselineRunId { get; set; }
+
+    /// <summary>
     /// The current version number of the entity.
     /// </summary>
     public int Version { get; set; }

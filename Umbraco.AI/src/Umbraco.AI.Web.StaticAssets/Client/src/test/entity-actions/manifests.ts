@@ -44,6 +44,19 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
+		alias: "UmbracoAI.EntityAction.TestRun.SetBaseline",
+		name: "Set Baseline Test Run Entity Action",
+		weight: 900,
+		api: () => import("./test-run-set-baseline.action.js"),
+		forEntityTypes: [UAI_TEST_RUN_ENTITY_TYPE],
+		meta: {
+			icon: "icon-flag",
+			label: "Set as Baseline",
+		},
+	},
+	{
+		type: "entityAction",
+		kind: "default",
 		alias: "UmbracoAI.EntityAction.TestRun.Delete",
 		name: "Delete Test Run Entity Action",
 		weight: 100,

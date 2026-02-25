@@ -5,9 +5,10 @@ import type { UaiTestRunDetailModalData, UaiTestRunDetailModalValue } from "./te
 // Ensure components are loaded
 import "../../components/test-run-detail/test-run-detail.element.js";
 import "../../components/test-run-transcript/test-run-transcript.element.js";
+import "../../components/test-run-comparison/test-run-comparison.element.js";
 
 /**
- * Sidebar modal that wraps the test run detail and transcript components with tabs.
+ * Sidebar modal that wraps the test run detail, transcript, and comparison components with tabs.
  */
 @customElement("uai-test-run-detail-modal")
 export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
@@ -15,7 +16,18 @@ export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
     UaiTestRunDetailModalValue
 > {
     @state()
-    private _activeTab: 'details' | 'transcript' = 'details';
+    private _activeTab: 'details' | 'transcript' | 'comparison' = 'details';
+
+    #hasComparison(): boolean {
+        return !!this.data?.baselineRunId
+            && this.data.baselineRunId !== this.data.runId;
+    }
+
+    #onShowComparison() {
+        if (this.#hasComparison()) {
+            this._activeTab = 'comparison';
+        }
+    }
 
     render() {
         return html`
@@ -37,18 +49,39 @@ export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
                         <uui-icon slot="icon" name="icon-chat"></uui-icon>
                         Transcript
                     </uui-tab>
+                    ${this.#hasComparison()
+                        ? html`
+                            <uui-tab
+                                label="Comparison"
+                                ?active=${this._activeTab === 'comparison'}
+                                @click=${() => { this._activeTab = 'comparison'; }}
+                            >
+                                <uui-icon slot="icon" name="icon-split"></uui-icon>
+                                Comparison
+                            </uui-tab>
+                        `
+                        : ''}
                 </uui-tab-group>
 
                 ${this._activeTab === 'details'
                     ? html`
                         <uai-test-run-detail
                             .runId=${this.data?.runId}
+                            .baselineRunId=${this.data?.baselineRunId}
+                            @show-comparison=${this.#onShowComparison}
                         ></uai-test-run-detail>
                     `
-                    : html`
+                    : this._activeTab === 'transcript'
+                    ? html`
                         <uai-test-run-transcript
                             .runId=${this.data?.runId}
                         ></uai-test-run-transcript>
+                    `
+                    : html`
+                        <uai-test-run-comparison
+                            .baselineRunId=${this.data?.baselineRunId}
+                            .comparisonRunId=${this.data?.runId}
+                        ></uai-test-run-comparison>
                     `}
 
                 <div slot="actions">

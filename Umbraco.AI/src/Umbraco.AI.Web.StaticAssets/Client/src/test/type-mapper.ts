@@ -23,6 +23,7 @@ export const UaiTestTypeMapper = {
             graders: response.graders,
             runCount: response.runCount,
             tags: response.tags,
+            baselineRunId: (response as any).baselineRunId ?? null,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
             version: response.version,

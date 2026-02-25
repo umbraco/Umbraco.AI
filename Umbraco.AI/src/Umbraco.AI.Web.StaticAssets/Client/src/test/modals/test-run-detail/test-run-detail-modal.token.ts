@@ -2,6 +2,7 @@ import { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 
 export interface UaiTestRunDetailModalData {
     runId: string;
+    baselineRunId?: string;
 }
 
 export type UaiTestRunDetailModalValue = never;

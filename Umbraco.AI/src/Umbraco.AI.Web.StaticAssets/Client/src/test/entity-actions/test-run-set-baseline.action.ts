@@ -2,9 +2,10 @@ import type { UmbEntityActionArgs } from "@umbraco-cms/backoffice/entity-action"
 import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
-import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { AITestRepository } from "../repository/test.repository.js";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../workspace/test/test-workspace.context-token.js";
+import { UaiPartialUpdateCommand } from "../../core/command/implement/partial-update.command.js";
+import type { UaiTestDetailModel } from "../types.js";
 
 /**
  * Entity action for setting a test run as the baseline.
@@ -33,12 +34,10 @@ export class UaiTestRunSetBaselineEntityAction extends UmbEntityActionBase<never
 				data: { headline: "Baseline Set", message: "Test run has been set as the baseline." },
 			});
 
-			// Refresh workspace model to pick up new baselineRunId
-			await workspaceContext.reload();
-
-			// Refresh collection table
-			const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);
-			collectionContext?.loadCollection();
+			// Update baselineRunId on the model in-place (avoids full workspace reload)
+			workspaceContext.handleCommand(
+				new UaiPartialUpdateCommand<UaiTestDetailModel>({ baselineRunId: runId }, "baseline"),
+			);
 		} catch (error) {
 			const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
 			notificationContext?.peek("danger", {

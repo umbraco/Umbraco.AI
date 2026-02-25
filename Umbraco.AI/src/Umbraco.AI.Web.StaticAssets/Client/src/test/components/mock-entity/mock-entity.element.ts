@@ -3,12 +3,17 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import type { UmbModalManagerContext, UmbModalContext } from "@umbraco-cms/backoffice/modal";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { UaiSelectedEvent } from "../../../core/events/selected.event.js";
 import { TestsService } from "../../../api/sdk.gen.js";
 import type { TestEntityTypeResponseModel, TestEntitySubTypeResponseModel } from "../../../api/types.gen.js";
 import { UAI_MOCK_ENTITY_EDITOR_MODAL } from "./mock-entity-editor-modal.token.js";
+import {
+    UAI_TEST_MOCK_ENTITY_EDITOR_EXTENSION_TYPE,
+    type ManifestTestMockEntityEditor,
+} from "./mock-entity-editor-extension-type.js";
 
 const elementName = "uai-mock-entity";
 
@@ -66,6 +71,18 @@ export class UaiMockEntityElement extends UmbLitElement {
         return !!this.value?.mockEntity;
     }
 
+    #getEditorManifest(entityType: string): ManifestTestMockEntityEditor | undefined {
+        const extensions = umbExtensionsRegistry.getByType(
+            UAI_TEST_MOCK_ENTITY_EDITOR_EXTENSION_TYPE,
+        ) as ManifestTestMockEntityEditor[];
+        return extensions.find((ext) => ext.forEntityTypes.includes(entityType));
+    }
+
+    get #hasCustomEditor(): boolean {
+        if (!this.value?.entityType) return false;
+        return !!this.#getEditorManifest(this.value.entityType);
+    }
+
     async #onCreate() {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
         if (!modalManager) return;
@@ -84,10 +101,11 @@ export class UaiMockEntityElement extends UmbLitElement {
                 (et) => et.entityType === selectedType.value,
             );
 
+            const editorManifest = this.#getEditorManifest(selectedType.value);
             if (entityTypeInfo?.hasSubTypes) {
-                this.#openSubTypePicker(modalManager, typeModal, selectedType.value);
+                this.#openSubTypePicker(modalManager, typeModal, selectedType.value, editorManifest);
             } else {
-                this.#openMockEditor(modalManager, [typeModal], selectedType.value);
+                this.#openMockEditor(modalManager, [typeModal], selectedType.value, undefined, undefined, undefined, editorManifest);
             }
         });
     }
@@ -96,6 +114,7 @@ export class UaiMockEntityElement extends UmbLitElement {
         modalManager: UmbModalManagerContext,
         typeModal: UmbModalContext,
         entityType: string,
+        editorManifest?: ManifestTestMockEntityEditor,
     ) {
         const subTypeModal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
@@ -114,6 +133,7 @@ export class UaiMockEntityElement extends UmbLitElement {
                 selectedSubType.value,
                 selectedSubType.meta?.unique,
                 selectedSubType.label,
+                editorManifest,
             );
         });
     }
@@ -125,6 +145,7 @@ export class UaiMockEntityElement extends UmbLitElement {
         subTypeAlias?: string,
         subTypeUnique?: string,
         subTypeName?: string,
+        editorManifest?: ManifestTestMockEntityEditor,
     ) {
         const editorModal = modalManager.open(this, UAI_MOCK_ENTITY_EDITOR_MODAL, {
             data: {
@@ -132,6 +153,7 @@ export class UaiMockEntityElement extends UmbLitElement {
                 subTypeAlias,
                 subTypeUnique,
                 subTypeName,
+                editorManifest,
             },
         });
 
@@ -148,6 +170,17 @@ export class UaiMockEntityElement extends UmbLitElement {
     }
 
     async #onEdit() {
+        if (!this.value) return;
+        const editorManifest = this.#getEditorManifest(this.value.entityType);
+        await this.#openExistingEditor(editorManifest);
+    }
+
+    async #onEditJson() {
+        if (!this.value) return;
+        await this.#openExistingEditor(undefined);
+    }
+
+    async #openExistingEditor(editorManifest?: ManifestTestMockEntityEditor) {
         if (!this.value) return;
 
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
@@ -178,6 +211,7 @@ export class UaiMockEntityElement extends UmbLitElement {
                 existingValue: this.value.mockEntity
                     ? JSON.stringify(this.value.mockEntity, null, 2)
                     : undefined,
+                editorManifest,
             },
         });
 
@@ -295,6 +329,7 @@ export class UaiMockEntityElement extends UmbLitElement {
 
     #renderSummaryCard() {
         const summary = this.#getMockEntitySummary();
+        const hasCustomEditor = this.#hasCustomEditor;
 
         return html`
             <uui-ref-node
@@ -305,8 +340,13 @@ export class UaiMockEntityElement extends UmbLitElement {
                 ${!this.readonly
                     ? html`
                           <uui-action-bar slot="actions">
-                              <uui-button label="Edit" @click=${this.#onEdit}>
-                                  <uui-icon name="icon-edit"></uui-icon>
+                              ${hasCustomEditor
+                                  ? html`<uui-button label="Edit" @click=${this.#onEdit}>
+                                        <uui-icon name="icon-edit"></uui-icon>
+                                    </uui-button>`
+                                  : nothing}
+                              <uui-button label="Edit JSON" @click=${this.#onEditJson}>
+                                  <uui-icon name="icon-code"></uui-icon>
                               </uui-button>
                               <uui-button label="Delete" @click=${this.#onDelete}>
                                   <uui-icon name="icon-trash"></uui-icon>

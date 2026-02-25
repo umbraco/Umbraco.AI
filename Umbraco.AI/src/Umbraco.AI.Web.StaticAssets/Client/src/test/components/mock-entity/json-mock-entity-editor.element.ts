@@ -1,6 +1,8 @@
 import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import "@umbraco-cms/backoffice/code-editor";
+import type { UmbCodeEditorElement } from "@umbraco-cms/backoffice/code-editor";
 
 const elementName = "uai-json-mock-entity-editor";
 
@@ -43,8 +45,8 @@ export class UaiJsonMockEntityEditorElement extends UmbLitElement {
     private _jsonError?: string;
 
     #onChange(e: Event) {
-        const textarea = e.target as HTMLTextAreaElement;
-        const raw = textarea.value;
+        const editor = e.target as UmbCodeEditorElement;
+        const raw = editor.code;
 
         // Validate JSON
         try {
@@ -72,12 +74,13 @@ export class UaiJsonMockEntityEditorElement extends UmbLitElement {
     override render() {
         return html`
             <div class="json-editor">
-                <textarea
-                    .value=${this.value ?? ""}
-                    rows="12"
-                    ?disabled=${this.readonly}
-                    placeholder=${MOCK_ENTITY_TEMPLATE}
-                    @input=${this.#onChange}></textarea>
+                <umb-code-editor
+                    language="json"
+                    .code=${this.value ?? ""}
+                    ?readonly=${this.readonly}
+                    disable-minimap
+                    @input=${this.#onChange}
+                ></umb-code-editor>
                 ${this._jsonError
                     ? html`<div class="json-error">${this._jsonError}</div>`
                     : html``}
@@ -94,29 +97,27 @@ export class UaiJsonMockEntityEditorElement extends UmbLitElement {
 
     static override styles = css`
         :host {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
         }
         .json-editor {
             display: flex;
             flex-direction: column;
+            flex: 1;
+            min-height: 0;
             gap: var(--uui-size-space-2);
         }
-        textarea {
-            width: 100%;
-            font-family: monospace;
-            font-size: 12px;
-            padding: var(--uui-size-space-3);
-            border: 1px solid var(--uui-color-border);
-            border-radius: var(--uui-border-radius);
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        textarea:disabled {
-            opacity: 0.7;
+        umb-code-editor {
+            flex: 1;
+            min-height: 0;
+            background-color: var(--uui-color-surface-alt);
         }
         .json-error {
             color: var(--uui-color-danger);
             font-size: 12px;
+            padding: 0 var(--uui-size-space-3);
         }
     `;
 }

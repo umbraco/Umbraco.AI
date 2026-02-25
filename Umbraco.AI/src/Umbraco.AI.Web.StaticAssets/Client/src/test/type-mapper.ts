@@ -47,6 +47,7 @@ export const UaiTestTypeMapper = {
             unique: response.id,
             entityType: UAI_TEST_RUN_ENTITY_TYPE,
             testId: response.testId,
+            testName: (response as any).testName,
             runNumber: response.runNumber,
             status: response.status,
             durationMs: response.durationMs,

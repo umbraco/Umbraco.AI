@@ -1,4 +1,4 @@
-import { html, customElement, state, css } from "@umbraco-cms/backoffice/external/lit";
+import { html, customElement, state, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type {
     UmbTableColumn,
@@ -17,6 +17,14 @@ import type { UaiTestRunItemModel } from "../../../types.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
 import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
 
+interface RunMetrics {
+    totalRuns: number;
+    passedRuns: number;
+    failedRuns: number;
+    passAtK: number;
+    passToTheK: number;
+}
+
 /**
  * Table view for the Test Run collection.
  */
@@ -33,12 +41,15 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     @state()
     private _selection: Array<string> = [];
 
+    @state()
+    private _metrics?: RunMetrics;
+
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
         { name: "Run ID", alias: "runId" },
         { name: "Batch ID", alias: "batchId" },
-        { name: "Test ID", alias: "testId" },
+        { name: "Test", alias: "testId" },
         { name: "Run #", alias: "runNumber" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
@@ -105,7 +116,28 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         });
     }
 
+    #computeMetrics(items: UaiTestRunItemModel[]) {
+        const completed = items.filter((i) => {
+            const s = i.status.toLowerCase();
+            return s === "passed" || s === "failed" || s === "error";
+        });
+        if (completed.length === 0) {
+            this._metrics = undefined;
+            return;
+        }
+        const passedRuns = completed.filter((i) => i.status.toLowerCase() === "passed").length;
+        const totalRuns = completed.length;
+        this._metrics = {
+            totalRuns,
+            passedRuns,
+            failedRuns: totalRuns - passedRuns,
+            passAtK: totalRuns > 0 ? passedRuns / totalRuns : 0,
+            passToTheK: passedRuns === totalRuns ? 1.0 : 0.0,
+        };
+    }
+
     #createTableItems(items: UaiTestRunItemModel[]) {
+        this.#computeMetrics(items);
         this._items = items.map((item) => ({
             id: item.unique,
             icon: UAI_TEST_RUN_ICON,
@@ -132,7 +164,15 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 },
                 {
                     columnAlias: "testId",
-                    value: html`<span title=${item.testId}>${this.#truncateGuid(item.testId)}</span>`,
+                    value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
+                        <div>${item.testName ?? item.testId}</div>
+                        <div
+                            style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
+                            title=${item.testId}
+                        >
+                            ${this.#truncateGuid(item.testId)}
+                        </div>
+                    </div>`,
                 },
                 {
                     columnAlias: "runNumber",
@@ -170,15 +210,54 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         this.#collectionContext?.selection.setSelection(table.selection);
     }
 
+    #renderMetrics() {
+        if (!this._metrics || this._metrics.totalRuns === 0) return nothing;
+
+        const m = this._metrics;
+        const passPercent = m.passAtK * 100;
+        const barClass = m.failedRuns === 0 ? "success" : passPercent >= 50 ? "partial" : "failure";
+
+        return html`
+            <div class="metrics-panel">
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <span class="metric-label">Total Runs</span>
+                        <span class="metric-value">${m.totalRuns}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Passed</span>
+                        <span class="metric-value ${barClass}">${m.passedRuns}/${m.totalRuns}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">pass@k</span>
+                        <span class="metric-value">${passPercent.toFixed(1)}%</span>
+                        <span class="metric-desc">&ge;1 success</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">pass^k</span>
+                        <span class="metric-value">${(m.passToTheK * 100).toFixed(1)}%</span>
+                        <span class="metric-desc">all succeed</span>
+                    </div>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-bar-fill ${barClass}" style="width: ${passPercent}%"></div>
+                </div>
+            </div>
+        `;
+    }
+
     render() {
-        return html`<umb-table
-            .config=${this._tableConfig}
-            .columns=${this._columns}
-            .items=${this._items}
-            .selection=${this._selection}
-            @selected=${this.#handleSelect}
-            @deselected=${this.#handleDeselect}
-        ></umb-table>`;
+        return html`
+            ${this.#renderMetrics()}
+            <umb-table
+                .config=${this._tableConfig}
+                .columns=${this._columns}
+                .items=${this._items}
+                .selection=${this._selection}
+                @selected=${this.#handleSelect}
+                @deselected=${this.#handleDeselect}
+            ></umb-table>
+        `;
     }
 
     static styles = [
@@ -191,6 +270,90 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             }
             .run-link:hover {
                 text-decoration: underline;
+            }
+
+            .metrics-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 16px 20px;
+                background: var(--uui-color-surface);
+                border: 1px solid var(--uui-color-border);
+                border-radius: 6px;
+                margin-bottom: 16px;
+            }
+
+            .metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
+            }
+
+            .metric {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                min-height: 52px;
+            }
+
+            .metric-label {
+                font-size: 12px;
+                color: var(--uui-color-text-alt);
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .metric-value {
+                font-size: 32px;
+                font-weight: 600;
+                color: var(--uui-color-text);
+                line-height: 1.2;
+            }
+
+            .metric-value.success {
+                color: var(--uui-color-positive);
+            }
+
+            .metric-value.partial {
+                color: var(--uui-color-warning);
+            }
+
+            .metric-value.failure {
+                color: var(--uui-color-danger);
+            }
+
+            .metric-desc {
+                font-size: 10px;
+                color: var(--uui-color-text-alt);
+                line-height: 1;
+            }
+
+            .metric-bar {
+                width: 100%;
+                height: 6px;
+                background: var(--uui-color-surface-alt);
+                border-radius: 3px;
+                overflow: hidden;
+                margin-top: var(--uui-size-space-3);
+            }
+
+            .metric-bar-fill {
+                height: 100%;
+                transition: width 0.3s ease;
+            }
+
+            .metric-bar-fill.success {
+                background: var(--uui-color-positive);
+            }
+
+            .metric-bar-fill.partial {
+                background: var(--uui-color-warning);
+            }
+
+            .metric-bar-fill.failure {
+                background: var(--uui-color-danger);
             }
         `,
     ];

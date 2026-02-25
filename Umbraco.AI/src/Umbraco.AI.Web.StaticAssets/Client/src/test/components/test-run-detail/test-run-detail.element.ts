@@ -1,14 +1,14 @@
-import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
+import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { AITestRepository } from "../../repository/test.repository.js";
-import type { TestRunResponseModel } from "../../../api/types.gen.js";
+import type { TestRunResponseModel, TestGraderResultResponseModel } from "../../../api/types.gen.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
 
 /**
  * Individual test run detail viewer.
- * Shows single run details including outcome, grader results, and transcript reference.
+ * Shows single run details including outcome, scores, grader results, and transcript reference.
  */
 @customElement("uai-test-run-detail")
 export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
@@ -58,6 +58,49 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
     private _renderStatus(status: string) {
         return html`<uui-tag look="primary" color=${this._getStatusColor(status)}>${status}</uui-tag>`;
+    }
+
+    private _computeScores(graderResults: TestGraderResultResponseModel[]) {
+        if (graderResults.length === 0) return null;
+
+        const totalWeight = graderResults.reduce((sum, r) => sum + r.weight, 0);
+        const weightedScore = totalWeight > 0
+            ? graderResults.reduce((sum, r) => sum + r.score * r.weight, 0) / totalWeight
+            : 0;
+        const passed = graderResults.filter((r) => r.passed).length;
+        const failed = graderResults.length - passed;
+
+        return { weightedScore, passed, failed, total: graderResults.length };
+    }
+
+    private _renderScores() {
+        if (!this._run?.graderResults?.length) return nothing;
+
+        const scores = this._computeScores(this._run.graderResults);
+        if (!scores) return nothing;
+
+        const percentage = scores.weightedScore * 100;
+        const barClass = scores.failed === 0 ? "success" : percentage >= 50 ? "partial" : "failure";
+
+        return html`
+            <uui-box headline="Score">
+                <div class="scores-container">
+                    <div class="scores-grid">
+                        <div class="score-card">
+                            <div class="score-label">Weighted Score</div>
+                            <div class="score-value ${barClass}">${percentage.toFixed(1)}%</div>
+                        </div>
+                        <div class="score-card">
+                            <div class="score-label">Graders Passed</div>
+                            <div class="score-value ${scores.failed === 0 ? "success" : "partial"}">${scores.passed} / ${scores.total}</div>
+                        </div>
+                    </div>
+                    <div class="score-bar">
+                        <div class="score-bar-fill ${barClass}" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            </uui-box>
+        `;
     }
 
     private _renderOutcome() {
@@ -124,6 +167,8 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                         : null}
                 </uai-info-grid>
 
+                ${this._renderScores()}
+
                 <uui-box headline="Outcome">
                     ${this._renderOutcome()}
                 </uui-box>
@@ -169,6 +214,70 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             display: flex;
             flex-direction: column;
             gap: 15px;
+        }
+
+        .scores-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .score-card {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: var(--uui-color-text-alt);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .score-value.success {
+            color: var(--uui-color-positive);
+        }
+
+        .score-value.partial {
+            color: var(--uui-color-warning);
+        }
+
+        .score-value.failure {
+            color: var(--uui-color-danger);
+        }
+
+        .score-bar {
+            height: 6px;
+            background: var(--uui-color-surface-alt);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .score-bar-fill.success {
+            background: var(--uui-color-positive);
+        }
+
+        .score-bar-fill.partial {
+            background: var(--uui-color-warning);
+        }
+
+        .score-bar-fill.failure {
+            background: var(--uui-color-danger);
         }
 
         ${codeBlockStyles}

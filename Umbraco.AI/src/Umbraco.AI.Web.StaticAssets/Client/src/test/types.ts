@@ -78,6 +78,7 @@ export interface UaiTestRunItemModel extends UmbEntityModel {
     unique: string;
     entityType: string;
     testId: string;
+    testName?: string | null;
     runNumber: number;
     status: string;
     durationMs: number;

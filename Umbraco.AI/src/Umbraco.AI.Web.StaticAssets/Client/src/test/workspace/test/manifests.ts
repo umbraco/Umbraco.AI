@@ -33,14 +33,14 @@ export const manifests: Array<UmbExtensionManifest> = [
 	},
     {
         type: "workspaceView",
-        alias: "UmbracoAI.Workspace.Test.View.Scoring",
-        name: "Test Scoring Workspace View",
-        js: () => import("./views/test-scoring-workspace-view.element.js"),
+        alias: "UmbracoAI.Workspace.Test.View.Grading",
+        name: "Test Grading Workspace View",
+        js: () => import("./views/test-grading-workspace-view.element.js"),
         weight: 200,
         meta: {
-            label: "Scoring",
-            pathname: "scoring",
-            icon: "icon-speed-gauge",
+            label: "Grading",
+            pathname: "grading",
+            icon: "icon-equalizer",
         },
         conditions: [
             {

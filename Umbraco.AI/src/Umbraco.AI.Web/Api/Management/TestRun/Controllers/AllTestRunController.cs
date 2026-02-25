@@ -19,14 +19,16 @@ namespace Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 public class AllTestRunController : TestRunControllerBase
 {
     private readonly IAITestRunService _runService;
+    private readonly IAITestService _testService;
     private readonly IUmbracoMapper _mapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AllTestRunController"/> class.
     /// </summary>
-    public AllTestRunController(IAITestRunService runService, IUmbracoMapper mapper)
+    public AllTestRunController(IAITestRunService runService, IAITestService testService, IUmbracoMapper mapper)
     {
         _runService = runService;
+        _testService = testService;
         _mapper = mapper;
     }
 
@@ -60,7 +62,24 @@ public class AllTestRunController : TestRunControllerBase
 
         var pagedRuns = await _runService.GetRunsPagedAsync(testId, batchId, statusFilter, skip, take, cancellationToken);
 
-        var responseItems = pagedRuns.Items.Select(run => _mapper.Map<TestRunResponseModel>(run)!);
+        // Look up test names for all distinct test IDs in the result set
+        var testIds = pagedRuns.Items.Select(r => r.TestId).Distinct().ToList();
+        var testNames = new Dictionary<Guid, string>();
+        foreach (var id in testIds)
+        {
+            var test = await _testService.GetTestAsync(id, cancellationToken);
+            if (test != null)
+            {
+                testNames[id] = test.Name;
+            }
+        }
+
+        var responseItems = pagedRuns.Items.Select(run =>
+        {
+            var model = _mapper.Map<TestRunResponseModel>(run)!;
+            model.TestName = testNames.GetValueOrDefault(run.TestId);
+            return model;
+        });
 
         return Ok(new PagedModel<TestRunResponseModel>(pagedRuns.Total, responseItems));
     }

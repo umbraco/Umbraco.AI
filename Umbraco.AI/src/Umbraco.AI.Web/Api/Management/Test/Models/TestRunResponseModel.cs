@@ -20,6 +20,11 @@ public class TestRunResponseModel
     public Guid TestId { get; set; }
 
     /// <summary>
+    /// The name of the test that was run.
+    /// </summary>
+    public string? TestName { get; set; }
+
+    /// <summary>
     /// The version of the test at the time of execution.
     /// </summary>
     public int TestVersion { get; set; }

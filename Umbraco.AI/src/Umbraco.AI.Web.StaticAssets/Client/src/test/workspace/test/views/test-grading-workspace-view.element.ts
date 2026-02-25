@@ -8,8 +8,8 @@ import type { UaiTestDetailModel, UaiTestGraderConfig } from "../../../types.js"
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
 import type { UaiGraderConfigBuilderElement } from "../../../components/grader-config-builder/grader-config-builder.element.js";
 
-@customElement("umbraco-ai-test-scoring-workspace-view")
-export class UmbracoAITestScoringWorkspaceViewElement extends UmbFormControlMixin(UmbLitElement) {
+@customElement("umbraco-ai-test-grading-workspace-view")
+export class UmbracoAITestGradingWorkspaceViewElement extends UmbFormControlMixin(UmbLitElement) {
 	#workspaceContext?: typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE;
 
 	@state()
@@ -141,10 +141,10 @@ export class UmbracoAITestScoringWorkspaceViewElement extends UmbFormControlMixi
 	];
 }
 
-export default UmbracoAITestScoringWorkspaceViewElement;
+export default UmbracoAITestGradingWorkspaceViewElement;
 
 declare global {
 	interface HTMLElementTagNameMap {
-		"umbraco-ai-test-scoring-workspace-view": UmbracoAITestScoringWorkspaceViewElement;
+		"umbraco-ai-test-grading-workspace-view": UmbracoAITestGradingWorkspaceViewElement;
 	}
 }

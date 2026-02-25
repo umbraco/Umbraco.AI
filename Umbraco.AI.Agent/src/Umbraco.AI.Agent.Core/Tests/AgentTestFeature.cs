@@ -5,8 +5,10 @@ using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Events.Messages;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tests;
 
 namespace Umbraco.AI.Agent.Core.Tests;
@@ -19,6 +21,9 @@ namespace Umbraco.AI.Agent.Core.Tests;
 public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
 {
     private readonly IAIAgentService _agentService;
+    private readonly IAGUIContextConverter _contextConverter;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <inheritdoc />
     public override string Description => "Tests agent execution with messages, tools, and context";
@@ -28,11 +33,38 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
     /// </summary>
     public AgentTestFeature(
         IAIAgentService agentService,
+        IAGUIContextConverter contextConverter,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors,
         AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
         : base(contextResolver, schemaBuilder)
     {
         _agentService = agentService;
+        _contextConverter = contextConverter;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
+    }
+
+    /// <summary>
+    /// Flushes any buffered message content into the messages list.
+    /// </summary>
+    private static void FlushCurrentMessage(
+        List<object> messages,
+        List<string> currentMessageContent,
+        ref string? finalContent,
+        ref string? currentMessageId)
+    {
+        if (currentMessageContent.Count == 0)
+        {
+            return;
+        }
+
+        var content = string.Concat(currentMessageContent);
+        messages.Add(new { role = "assistant", content });
+        finalContent = content;
+        currentMessageContent.Clear();
+        currentMessageId = null;
     }
 
     /// <inheritdoc />
@@ -92,6 +124,34 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         var currentMessageContent = new List<string>();
         string? currentMessageId = null;
 
+        // Resolve the full system message (context contributor parts + agent instructions)
+        // This mirrors what ScopedAIAgent.InjectSystemMessageParts does at runtime
+        var agent = await _agentService.GetAgentAsync(agentId, cancellationToken);
+        var requestContextItems = _contextConverter.ConvertToRequestContextItems(mergedContext);
+        using (var scope = _scopeProvider.CreateScope(requestContextItems))
+        {
+            _contributors.Populate(scope.Context);
+
+            var systemParts = new List<string>();
+            if (scope.Context.SystemMessageParts.Count > 0)
+            {
+                systemParts.Add(string.Join("\n\n", scope.Context.SystemMessageParts));
+            }
+
+            if (!string.IsNullOrEmpty(agent?.Instructions))
+            {
+                systemParts.Add(agent.Instructions);
+            }
+
+            if (systemParts.Count > 0)
+            {
+                messages.Add(new { role = "system", content = string.Join("\n\n", systemParts) });
+            }
+        }
+
+        // Add the user's input message to the transcript
+        messages.Add(new { role = "user", content = config.Message });
+
         // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
         var effectiveContextIds = ResolveEffectiveContextIds(config, contextIdsOverride);
 
@@ -112,6 +172,9 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                 }
                 else if (evt is RunFinishedEvent runFinished)
                 {
+                    // Flush any buffered message content before finishing
+                    FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
+
                     outcome = runFinished.Outcome.ToString().ToLowerInvariant();
                     messages.Add(new { role = "system", content = $"Run finished: {runFinished.Outcome}" });
                 }
@@ -120,18 +183,23 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                     error = runError.Message;
                     messages.Add(new { role = "error", content = runError.Message });
                 }
-                // Track message events
+                // Track message events - handle both convenience (chunk-only) and full lifecycle patterns
                 else if (evt is TextMessageStartEvent msgStart)
                 {
+                    // Full lifecycle: flush previous message, start new one
+                    FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
                     currentMessageId = msgStart.MessageId;
-                    currentMessageContent.Clear();
                 }
                 else if (evt is TextMessageChunkEvent msgChunk)
                 {
-                    if (msgChunk.MessageId == currentMessageId)
+                    // If the message ID changed, flush the previous message and start a new one
+                    if (currentMessageId != null && msgChunk.MessageId != currentMessageId)
                     {
-                        currentMessageContent.Add(msgChunk.Delta ?? string.Empty);
+                        FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
                     }
+
+                    currentMessageId ??= msgChunk.MessageId;
+                    currentMessageContent.Add(msgChunk.Delta ?? string.Empty);
                 }
                 else if (evt is TextMessageContentEvent msgContent)
                 {
@@ -139,16 +207,25 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                 }
                 else if (evt is TextMessageEndEvent msgEnd)
                 {
-                    if (msgEnd.MessageId == currentMessageId)
+                    if (currentMessageId == null || msgEnd.MessageId == currentMessageId)
                     {
-                        var content = string.Concat(currentMessageContent);
-                        messages.Add(new { role = "assistant", content });
-                        finalContent = content;
-                        currentMessageContent.Clear();
-                        currentMessageId = null;
+                        FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
                     }
                 }
-                // Track tool call events
+                // Track tool call events - handle both convenience (chunk) and full lifecycle patterns
+                else if (evt is ToolCallChunkEvent toolChunk)
+                {
+                    // Convenience combined event: flush any buffered text, then record tool call
+                    FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
+
+                    toolCalls.Add(new
+                    {
+                        id = toolChunk.ToolCallId,
+                        name = toolChunk.ToolCallName,
+                        args = toolChunk.Delta,
+                        status = "called"
+                    });
+                }
                 else if (evt is ToolCallStartEvent toolStart)
                 {
                     toolCalls.Add(new
@@ -202,6 +279,9 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                     });
                 }
             }
+
+            // Flush any remaining buffered message content (e.g. if stream ended without RunFinished)
+            FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
         }
         catch (Exception ex)
         {

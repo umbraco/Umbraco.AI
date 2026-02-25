@@ -32,6 +32,9 @@ export class UaiTestWorkspaceContext
     #unique = new UmbBasicState<string | undefined>(undefined);
     readonly unique = this.#unique.asObservable();
 
+    #testRunVersion = new UmbBasicState<number>(0);
+    readonly testRunVersion = this.#testRunVersion.asObservable();
+
     #model = new UmbObjectState<UaiTestDetailModel | undefined>(undefined);
     readonly model = this.#model.asObservable();
 
@@ -224,6 +227,13 @@ export class UaiTestWorkspaceContext
         }
     }
 
+    /**
+     * Signals that a test run has completed, prompting collection views to refresh.
+     */
+    signalTestRunCompleted() {
+        this.#testRunVersion.setValue(this.#testRunVersion.getValue() + 1);
+    }
+
     async delete() {
         const unique = this.getUnique();
         if (unique) {
@@ -234,6 +244,7 @@ export class UaiTestWorkspaceContext
     public destroy(): void {
         this.#model.destroy();
         this.#unique.destroy();
+        this.#testRunVersion.destroy();
         super.destroy();
     }
 }

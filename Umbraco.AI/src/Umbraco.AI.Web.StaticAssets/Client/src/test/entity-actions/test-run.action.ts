@@ -3,6 +3,7 @@ import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { AITestRepository } from "../repository/test.repository.js";
+import { UAI_TEST_WORKSPACE_CONTEXT } from "../workspace/test/test-workspace.context-token.js";
 
 /**
  * Entity action for running a test.
@@ -30,6 +31,8 @@ export class UaiTestRunEntityAction extends UmbEntityActionBase<never> {
             notificationContext?.peek(status, {
                 data: { headline, message },
             });
+
+            this.#signalTestRunCompleted();
         } catch (error) {
             notificationContext?.peek("danger", {
                 data: {
@@ -38,6 +41,12 @@ export class UaiTestRunEntityAction extends UmbEntityActionBase<never> {
                 },
             });
         }
+    }
+
+    #signalTestRunCompleted() {
+        (this.getContext(UAI_TEST_WORKSPACE_CONTEXT) as Promise<typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE | undefined>).then(
+            (context) => context?.signalTestRunCompleted(),
+        );
     }
 }
 

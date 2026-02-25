@@ -48,7 +48,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     @state()
     private _baselineRunId?: string | null;
 
-    #rawItems: UaiTestRunItemModel[] = [];
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
@@ -74,13 +73,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             this.observe(
                 context.model,
                 (model) => {
-                    const newId = model?.baselineRunId;
-                    if (newId !== this._baselineRunId) {
-                        this._baselineRunId = newId;
-                        if (this.#rawItems.length > 0) {
-                            this.#createTableItems(this.#rawItems);
-                        }
-                    }
+                    this._baselineRunId = model?.baselineRunId;
                 },
                 "umbBaselineRunIdObserver",
             );
@@ -159,11 +152,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     }
 
     #createTableItems(items: UaiTestRunItemModel[]) {
-        this.#rawItems = items;
         this.#computeMetrics(items);
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: item.unique === this._baselineRunId ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
+            icon: item.isBaseline ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
             data: [
                 {
                     columnAlias: "runId",

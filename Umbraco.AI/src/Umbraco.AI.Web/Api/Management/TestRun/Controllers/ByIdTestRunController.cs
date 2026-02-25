@@ -59,11 +59,10 @@ public class ByIdTestRunController : TestRunControllerBase
         }
 
         var test = await _testService.GetTestAsync(run.TestId, cancellationToken);
-        var graderConfigs = test?.Graders.ToDictionary(g => g.Id);
 
         var responseModel = _mapper.Map<TestRunResponseModel>(run, ctx =>
         {
-            ctx.Items["graderConfigs"] = graderConfigs;
+            ctx.Items["test"] = test;
             ctx.Items["graderCollection"] = _graderCollection;
         })!;
 

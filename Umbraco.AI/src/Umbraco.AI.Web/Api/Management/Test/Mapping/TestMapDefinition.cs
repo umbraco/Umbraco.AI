@@ -102,9 +102,12 @@ public class TestMapDefinition : IMapDefinition
         // AITestRun -> TestRunResponseModel
         mapper.Define<AITestRun, TestRunResponseModel>((source, context) =>
         {
-            var graderConfigs = context.HasItems
-                && context.Items.TryGetValue("graderConfigs", out var cfgs)
-                ? cfgs as Dictionary<Guid, AITestGraderConfig> : null;
+            var test = context.HasItems
+                && context.Items.TryGetValue("test", out var t)
+                ? t as AITest : null;
+            var graderConfigs = test?.Graders.ToDictionary(g => g.Id)
+                ?? (context.HasItems && context.Items.TryGetValue("graderConfigs", out var cfgs)
+                    ? cfgs as Dictionary<Guid, AITestGraderConfig> : null);
             var graderCollection = context.HasItems
                 && context.Items.TryGetValue("graderCollection", out var coll)
                 ? coll as AITestGraderCollection : null;
@@ -113,6 +116,7 @@ public class TestMapDefinition : IMapDefinition
             {
                 Id = source.Id,
                 TestId = source.TestId,
+                TestName = test?.Name,
                 TestVersion = source.TestVersion,
                 RunNumber = source.RunNumber,
                 ProfileId = source.ProfileId,
@@ -122,6 +126,7 @@ public class TestMapDefinition : IMapDefinition
                 Status = source.Status.ToString(),
                 DurationMs = source.DurationMs,
                 TranscriptId = source.TranscriptId,
+                IsBaseline = test?.BaselineRunId == source.Id,
                 Outcome = source.Outcome != null ? new TestOutcomeResponseModel
                 {
                     OutputType = source.Outcome.OutputType.ToString(),
@@ -183,9 +188,12 @@ public class TestMapDefinition : IMapDefinition
         // AITestRunComparison -> TestRunComparisonResponseModel
         mapper.Define<AITestRunComparison, TestRunComparisonResponseModel>((source, context) =>
         {
-            var graderConfigs = context.HasItems
-                && context.Items.TryGetValue("graderConfigs", out var cfgs)
-                ? cfgs as Dictionary<Guid, AITestGraderConfig> : null;
+            var test = context.HasItems
+                && context.Items.TryGetValue("test", out var t)
+                ? t as AITest : null;
+            var graderConfigs = test?.Graders.ToDictionary(g => g.Id)
+                ?? (context.HasItems && context.Items.TryGetValue("graderConfigs", out var cfgs)
+                    ? cfgs as Dictionary<Guid, AITestGraderConfig> : null);
             var graderCollection = context.HasItems
                 && context.Items.TryGetValue("graderCollection", out var coll)
                 ? coll as AITestGraderCollection : null;

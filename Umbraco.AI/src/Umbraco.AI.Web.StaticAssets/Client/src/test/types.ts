@@ -86,6 +86,7 @@ export interface UaiTestRunItemModel extends UmbEntityModel {
     executedAt: string;
     batchId?: string | null;
     profileId?: string | null;
+    isBaseline: boolean;
 }
 
 /**

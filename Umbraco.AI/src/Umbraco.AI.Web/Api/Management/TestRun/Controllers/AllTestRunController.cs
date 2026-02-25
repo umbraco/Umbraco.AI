@@ -62,23 +62,25 @@ public class AllTestRunController : TestRunControllerBase
 
         var pagedRuns = await _runService.GetRunsPagedAsync(testId, batchId, statusFilter, skip, take, cancellationToken);
 
-        // Look up test names for all distinct test IDs in the result set
+        // Look up tests for all distinct test IDs in the result set
         var testIds = pagedRuns.Items.Select(r => r.TestId).Distinct().ToList();
-        var testNames = new Dictionary<Guid, string>();
+        var tests = new Dictionary<Guid, AITest>();
         foreach (var id in testIds)
         {
             var test = await _testService.GetTestAsync(id, cancellationToken);
             if (test != null)
             {
-                testNames[id] = test.Name;
+                tests[id] = test;
             }
         }
 
         var responseItems = pagedRuns.Items.Select(run =>
         {
-            var model = _mapper.Map<TestRunResponseModel>(run)!;
-            model.TestName = testNames.GetValueOrDefault(run.TestId);
-            return model;
+            tests.TryGetValue(run.TestId, out var test);
+            return _mapper.Map<TestRunResponseModel>(run, ctx =>
+            {
+                ctx.Items["test"] = test;
+            })!;
         });
 
         return Ok(new PagedModel<TestRunResponseModel>(pagedRuns.Total, responseItems));

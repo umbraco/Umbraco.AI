@@ -59,11 +59,10 @@ public class CompareRunsController : TestRunControllerBase
                 cancellationToken);
 
             var test = await _testService.GetTestAsync(comparison.BaselineRun.TestId, cancellationToken);
-            var graderConfigs = test?.Graders.ToDictionary(g => g.Id);
 
             var responseModel = _mapper.Map<TestRunComparisonResponseModel>(comparison, ctx =>
             {
-                ctx.Items["graderConfigs"] = graderConfigs;
+                ctx.Items["test"] = test;
                 ctx.Items["graderCollection"] = _graderCollection;
             })!;
 

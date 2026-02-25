@@ -89,6 +89,11 @@ public class TestRunResponseModel
     /// Optional batch ID if this run is part of a batch execution.
     /// </summary>
     public Guid? BatchId { get; set; }
+
+    /// <summary>
+    /// Whether this run is the baseline run for its test.
+    /// </summary>
+    public bool IsBaseline { get; set; }
 }
 
 /// <summary>

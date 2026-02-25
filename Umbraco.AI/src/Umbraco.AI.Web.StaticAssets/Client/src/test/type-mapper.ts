@@ -55,6 +55,7 @@ export const UaiTestTypeMapper = {
             executedAt: response.executedAt,
             batchId: response.batchId,
             profileId: response.profileId,
+            isBaseline: (response as any).isBaseline ?? false,
         };
     },
 

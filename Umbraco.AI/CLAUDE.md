@@ -367,6 +367,20 @@ Located in `src/Umbraco.AI.Web.StaticAssets/Client/`:
 - Compiled to `wwwroot/` and served from `App_Plugins/UmbracoAI`
 - API client generated from OpenAPI spec using `@hey-api/openapi-ts`
 
+### Component Registration via Barrel Exports
+
+All custom elements are registered through barrel `index.ts` files that chain up to the app entry point (`app.ts` → `index.ts` → feature `index.ts` → `components/index.ts`). This means every component exported in a barrel is already registered by the time any chunk loads.
+
+**Do NOT add side-effect imports** (e.g., `import "../some-component/some-component.element.js"`) for components that are already exported in the barrel chain. The barrel export handles registration; redundant imports add noise and can cause confusion about which mechanism is authoritative.
+
+```ts
+// BAD — redundant, component is already in the barrel chain
+import "../grader-result-card/grader-result-card.element.js";
+
+// GOOD — just use the element in your template; the barrel ensures it's registered
+html`<uai-grader-result-card .result=${r}></uai-grader-result-card>`;
+```
+
 ## Creating a New Provider
 
 1. Create a new project referencing `Umbraco.AI.Core`

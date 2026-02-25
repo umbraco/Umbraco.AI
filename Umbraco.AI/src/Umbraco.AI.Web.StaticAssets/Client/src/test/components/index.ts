@@ -1,5 +1,7 @@
 export * from "./test-feature-entity-picker/test-feature-entity-picker.element.js";
 export * from "./grader-config-builder/grader-config-builder.element.js";
+export * from "./grader-result-card/grader-result-card.element.js";
+export * from "./grader-result-list/grader-result-list.element.js";
 export * from "./test-run-detail/test-run-detail.element.js";
 export * from "./test-run-results/test-run-results.element.js";
 export * from "./mock-entity/mock-entity.element.js";

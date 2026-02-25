@@ -3,6 +3,7 @@ import { customElement, property, state } from "@umbraco-cms/backoffice/external
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { AITestRepository } from "../../repository/test.repository.js";
 import type { TestTranscriptResponseModel } from "../../../api/types.gen.js";
+import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
 interface TranscriptMessage {
     role: string;
@@ -445,18 +446,7 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
             font-family: monospace;
         }
 
-        /* Code block */
-        .code-block {
-            background: var(--uui-color-surface-alt);
-            padding: 12px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-family: monospace;
-            font-size: 12px;
-            margin: 0;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
+        ${codeBlockStyles}
     `;
 }
 

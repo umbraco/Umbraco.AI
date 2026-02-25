@@ -88,6 +88,11 @@ internal sealed class AITestRunService : IAITestRunService
         // Calculate duration change
         var durationChange = comparisonRun.DurationMs - baselineRun.DurationMs;
 
+        // Load test to get grader names
+        var test = await _testRepository.GetByIdAsync(baselineRun.TestId, cancellationToken);
+        var graderNames = test?.Graders.ToDictionary(g => g.Id, g => g.Name)
+            ?? new Dictionary<Guid, string>();
+
         // Compare grader results
         var graderComparisons = new List<AITestGraderComparison>();
 
@@ -120,7 +125,7 @@ internal sealed class AITestRunService : IAITestRunService
             graderComparisons.Add(new AITestGraderComparison
             {
                 GraderId = graderId,
-                GraderName = baselineResult?.ToString() ?? comparisonResult?.ToString() ?? "Unknown",
+                GraderName = graderNames.TryGetValue(graderId, out var name) ? name : graderId.ToString(),
                 BaselineResult = baselineResult,
                 ComparisonResult = comparisonResult,
                 Changed = changed,

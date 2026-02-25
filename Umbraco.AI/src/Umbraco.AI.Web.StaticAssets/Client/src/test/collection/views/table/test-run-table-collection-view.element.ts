@@ -163,7 +163,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         this.#computeMetrics(items);
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: UAI_TEST_RUN_ICON,
+            icon: item.unique === this._baselineRunId ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
             data: [
                 {
                     columnAlias: "runId",
@@ -207,9 +207,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         color=${this.#getStatusColor(item.status)}
                         look="primary"
                         >${item.status}</uui-tag
-                    >${item.unique === this._baselineRunId
-                        ? html` <uui-tag color="default" look="outline">Baseline</uui-tag>`
-                        : nothing}`,
+                    >`,
                 },
                 {
                     columnAlias: "duration",

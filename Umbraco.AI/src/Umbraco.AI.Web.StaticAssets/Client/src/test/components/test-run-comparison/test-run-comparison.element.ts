@@ -76,12 +76,12 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
     }
 
     private _getVerdict() {
-        if (!this._comparison) return { color: "default", label: "Unknown", icon: "icon-check" };
+        if (!this._comparison) return { color: "default", label: "Unknown" };
         const { isRegression, isImprovement } = this._comparison;
 
-        if (isRegression) return { color: "danger", label: "Regression", icon: "icon-arrow-down" };
-        if (isImprovement) return { color: "positive", label: "Improvement", icon: "icon-arrow-up" };
-        return { color: "default", label: "No Change", icon: "icon-check" };
+        if (isRegression) return { color: "danger", label: "Regression" };
+        if (isImprovement) return { color: "positive", label: "Improvement" };
+        return { color: "default", label: "No Change" };
     }
 
     private _renderSummary() {
@@ -91,13 +91,19 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
         const verdict = this._getVerdict();
 
         return html`
-            <div class="summary">
-                <div class="summary-header verdict-${verdict.color}">
-                    <uui-icon name=${verdict.icon}></uui-icon>
-                    <span class="verdict-label">${verdict.label}</span>
-                    <span class="verdict-runs">Run #${baselineRun.runNumber} vs #${comparisonRun.runNumber}</span>
-                </div>
+            <uui-box headline="Result">
+                <uui-tag slot="header-actions" color=${verdict.color} look="primary">
+                    ${verdict.label}
+                </uui-tag>
                 <div class="summary-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">Runs</span>
+                        <span class="metric-value">
+                            #${baselineRun.runNumber}
+                            <uui-icon name="icon-arrow-right" class="metric-arrow"></uui-icon>
+                            #${comparisonRun.runNumber}
+                        </span>
+                    </div>
                     <div class="metric-item">
                         <span class="metric-label">Status</span>
                         <span class="metric-value">
@@ -118,7 +124,7 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
                         </span>
                     </div>
                 </div>
-            </div>
+            </uui-box>
         `;
     }
 
@@ -216,53 +222,11 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
             color: var(--uui-color-danger);
         }
 
-        /* --- Summary panel --- */
-
-        .summary {
-            border: 1px solid var(--uui-color-border);
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .summary-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .summary-header.verdict-positive {
-            background: color-mix(in srgb, var(--uui-color-positive) 10%, transparent);
-            color: var(--uui-color-positive-standalone);
-        }
-
-        .summary-header.verdict-danger {
-            background: color-mix(in srgb, var(--uui-color-danger) 10%, transparent);
-            color: var(--uui-color-danger-standalone);
-        }
-
-        .summary-header.verdict-default {
-            background: var(--uui-color-surface-alt);
-            color: var(--uui-color-text);
-        }
-
-        .verdict-label {
-            flex: 0 0 auto;
-        }
-
-        .verdict-runs {
-            margin-left: auto;
-            font-weight: 400;
-            font-size: 12px;
-            opacity: 0.7;
-        }
+        /* --- Summary metrics --- */
 
         .summary-metrics {
             display: flex;
             flex-direction: column;
-            padding: 16px 20px;
             gap: 12px;
         }
 
@@ -305,7 +269,7 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
 
         /* --- Grader comparisons --- */
 
-        uui-box {
+        uui-box + uui-box {
             margin-top: 20px;
         }
 

@@ -15,9 +15,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
     @property({ type: String })
     runId?: string;
 
-    @property({ type: String })
-    baselineRunId?: string;
-
     @state()
     private _run?: TestRunResponseModel;
 
@@ -144,38 +141,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
         }
     }
 
-    private _onCompareToBaseline() {
-        this.dispatchEvent(new CustomEvent("show-comparison", { bubbles: true, composed: true }));
-    }
-
-    private _renderBaselineInfo() {
-        if (!this.baselineRunId) return nothing;
-
-        if (this.runId === this.baselineRunId) {
-            return html`
-                <div class="baseline-banner">
-                    <uui-tag color="default" look="outline">
-                        <uui-icon name="icon-flag"></uui-icon>
-                        This is the baseline run
-                    </uui-tag>
-                </div>
-            `;
-        }
-
-        return html`
-            <div class="baseline-banner">
-                <uui-button
-                    look="outline"
-                    label="Compare to Baseline"
-                    @click=${this._onCompareToBaseline}
-                >
-                    <uui-icon name="icon-split"></uui-icon>
-                    Compare to Baseline
-                </uui-button>
-            </div>
-        `;
-    }
-
     render() {
         if (this._isLoading) {
             return html`<div class="loading">Loading run details...</div>`;
@@ -187,8 +152,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
         return html`
             <div class="container">
-                ${this._renderBaselineInfo()}
-
                 <uai-info-grid>
                     <uai-info-card label="Run ID">${this._run.id}</uai-info-card>
                     <uai-info-card label="Test ID">${this._run.testId}</uai-info-card>
@@ -315,16 +278,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
         .score-bar-fill.failure {
             background: var(--uui-color-danger);
-        }
-
-        .baseline-banner {
-            margin-bottom: 16px;
-        }
-
-        .baseline-banner uui-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
         }
 
         ${codeBlockStyles}

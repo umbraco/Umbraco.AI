@@ -23,15 +23,18 @@ export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
             && this.data.baselineRunId !== this.data.runId;
     }
 
-    #onShowComparison() {
-        if (this.#hasComparison()) {
-            this._activeTab = 'comparison';
-        }
-    }
-
     render() {
         return html`
-            <umb-body-layout headline="Test Run Detail">
+            <umb-body-layout>
+                <div slot="header" style="display: flex; align-items: center; gap: 20px;">
+                    <h3 id="headline" title="Test Run Detail">Test Run Detail</h3>
+                    ${this.data?.baselineRunId && this.data.baselineRunId === this.data.runId
+                        ? html`<uui-tag color="default" look="outline">
+                            <uui-icon name="icon-flag"></uui-icon>
+                            This is the baseline run
+                        </uui-tag>`
+                        : ''}
+                </div>
                 <uui-tab-group slot="navigation">
                     <uui-tab
                         label="Details"
@@ -52,12 +55,12 @@ export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
                     ${this.#hasComparison()
                         ? html`
                             <uui-tab
-                                label="Comparison"
+                                label="Compare"
                                 ?active=${this._activeTab === 'comparison'}
                                 @click=${() => { this._activeTab = 'comparison'; }}
                             >
                                 <uui-icon slot="icon" name="icon-split"></uui-icon>
-                                Comparison
+                                Compare
                             </uui-tab>
                         `
                         : ''}
@@ -67,8 +70,6 @@ export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
                     ? html`
                         <uai-test-run-detail
                             .runId=${this.data?.runId}
-                            .baselineRunId=${this.data?.baselineRunId}
-                            @show-comparison=${this.#onShowComparison}
                         ></uai-test-run-detail>
                     `
                     : this._activeTab === 'transcript'

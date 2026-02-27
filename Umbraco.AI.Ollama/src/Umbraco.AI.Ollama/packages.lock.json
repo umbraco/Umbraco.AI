@@ -2,16 +2,6 @@
   "version": 2,
   "dependencies": {
     "net10.0": {
-      "Microsoft.Extensions.AI.OpenAI": {
-        "type": "Direct",
-        "requested": "[10.2.0-preview.1.26063.2, )",
-        "resolved": "10.2.0-preview.1.26063.2",
-        "contentHash": "5rySSma4ubLQr5SF8EOeKhpVsWsqVnHE4uT/ezJnNBX779xUMU+/wMqejUvjYw9RsiSc3NwxqmlGNq9TDDJEAg==",
-        "dependencies": {
-          "Microsoft.Extensions.AI.Abstractions": "10.2.0",
-          "OpenAI": "2.8.0"
-        }
-      },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
         "requested": "[1.1.1, )",
@@ -27,6 +17,15 @@
         "requested": "[3.8.118, )",
         "resolved": "3.8.118",
         "contentHash": "cRaG+ICcECG+CzbtQyUV2WftH7yl2B02AjYGGNScXx8TwYavZYwhCewBTiC0qTcsac7m6AzBUYna5xzBWmTGYw=="
+      },
+      "OllamaSharp": {
+        "type": "Direct",
+        "requested": "[5.4.18, )",
+        "resolved": "5.4.18",
+        "contentHash": "ewr40khtUzuHR8l6+BxgT5+X7S+MbmcU4NMnsUBqbsguKnJJav08XMHfpP04jqisurjohy5Ao/sTBUBaaD0gXg==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.0.0"
+        }
       },
       "Umbraco.Code": {
         "type": "Direct",
@@ -724,14 +723,6 @@
         "resolved": "6.1.0",
         "contentHash": "iFBuhhdUF7SF38c+FYWBzBIYsepSGxKl9QnSt/x1fuBEReW3Es0yDOxdQC7i7cY6QANlqOgPTkaO4gCQYjKHzA=="
       },
-      "OpenAI": {
-        "type": "Transitive",
-        "resolved": "2.8.0",
-        "contentHash": "KcYpZ9IhuxFD2hGAJlL5vABtkr00CjeJU0SY8CjZQyzvzkzLop8jhdX3iDvteVJg6e3y4TEiY+Kti4gDJAagnA==",
-        "dependencies": {
-          "System.ClientModel": "1.8.1"
-        }
-      },
       "OpenIddict.Abstractions": {
         "type": "Transitive",
         "resolved": "7.2.0",
@@ -873,15 +864,6 @@
           "Serilog": "4.0.0"
         }
       },
-      "System.ClientModel": {
-        "type": "Transitive",
-        "resolved": "1.8.1",
-        "contentHash": "4oUQgw/vaO4FBOk3YsH40hbrjxRED1l95rRLvTMtHXfQxapXya9IfPpm/KgwValFFtYTfYGFOs/qzGmGyexicQ==",
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.3",
-          "System.Memory.Data": "8.0.1"
-        }
-      },
       "System.Composition": {
         "type": "Transitive",
         "resolved": "9.0.0",
@@ -942,11 +924,6 @@
         "dependencies": {
           "System.Interactive.Async": "7.0.0"
         }
-      },
-      "System.Memory.Data": {
-        "type": "Transitive",
-        "resolved": "8.0.1",
-        "contentHash": "BVYuec3jV23EMRDeR7Dr1/qhx7369dZzJ9IWy2xylvb4YfXsrUxspWc4UWYid/tj4zZK58uGZqn2WQiaDMhmAg=="
       },
       "System.Numerics.Tensors": {
         "type": "Transitive",

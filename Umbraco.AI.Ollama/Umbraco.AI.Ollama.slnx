@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Umbraco.AI.Ollama/Umbraco.AI.Ollama.csproj" />
+  </Folder>
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
+</Solution>

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Use prompts directly from property editors in the backoffice.
+    Use prompts directly from property editors in the backoffice.
 ---
 
 # Property Actions
@@ -34,13 +34,13 @@ When you create an active prompt:
 
 Property actions appear on text-based editors:
 
-| Editor | Support |
-|--------|---------|
-| Textstring | Yes |
-| Textarea | Yes |
-| Rich Text Editor | Yes |
-| Markdown | Yes |
-| Block Editors | Yes (on text properties within blocks) |
+| Editor           | Support                                |
+| ---------------- | -------------------------------------- |
+| Textstring       | Yes                                    |
+| Textarea         | Yes                                    |
+| Rich Text Editor | Yes                                    |
+| Markdown         | Yes                                    |
+| Block Editors    | Yes (on text properties within blocks) |
 
 ## Scoping Property Actions
 
@@ -124,14 +124,14 @@ Opens a slide-in sidebar panel:
 
 When a property action executes, it automatically extracts context:
 
-| Context | Description |
-|---------|-------------|
-| `entityId` | The content/media item ID |
-| `entityType` | "document" or "media" |
-| `propertyAlias` | The property being edited |
-| `culture` | Current culture variant |
-| `segment` | Current segment (if applicable) |
-| `currentValue` | Current property value |
+| Context         | Description                     |
+| --------------- | ------------------------------- |
+| `entityId`      | The content/media item ID       |
+| `entityType`    | "document" or "media"           |
+| `propertyAlias` | The property being edited       |
+| `culture`       | Current culture variant         |
+| `segment`       | Current segment (if applicable) |
+| `currentValue`  | Current property value          |
 
 This context is available in your prompt template:
 
@@ -213,7 +213,7 @@ Original:
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Prompts**
+1. Navigate to the **AI** section > **Prompts**
 2. Create or edit a prompt
 3. Configure the scope settings
 4. Set `IsActive` to true
@@ -239,6 +239,6 @@ Only active prompts appear as property actions. Deactivate a prompt to remove it
 
 ## Related
 
-* [Concepts](concepts.md) - Prompt fundamentals
-* [Template Syntax](template-syntax.md) - Variable interpolation
-* [Scoping](scoping.md) - Content type rules
+- [Concepts](concepts.md) - Prompt fundamentals
+- [Template Syntax](template-syntax.md) - Variable interpolation
+- [Scoping](scoping.md) - Content type rules

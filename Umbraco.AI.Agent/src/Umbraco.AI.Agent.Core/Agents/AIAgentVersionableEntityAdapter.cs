@@ -35,7 +35,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             entity.Description,
             entity.ProfileId,
             ContextIds = entity.ContextIds.Count > 0 ? string.Join(',', entity.ContextIds) : null,
-            ScopeIds = entity.ScopeIds.Count > 0 ? string.Join(',', entity.ScopeIds) : null,
+            SurfaceIds = entity.SurfaceIds.Count > 0 ? string.Join(',', entity.SurfaceIds) : null,
             entity.Instructions,
             entity.IsActive,
             entity.Version,
@@ -75,14 +75,14 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 }
             }
 
-            IReadOnlyList<string> scopeIds = Array.Empty<string>();
-            if (root.TryGetProperty("scopeIds", out var scopeIdsElement) &&
-                scopeIdsElement.ValueKind == JsonValueKind.String)
+            IReadOnlyList<string> surfaceIds = Array.Empty<string>();
+            if (root.TryGetProperty("surfaceIds", out var surfaceIdsElement) &&
+                surfaceIdsElement.ValueKind == JsonValueKind.String)
             {
-                var scopeIdsString = scopeIdsElement.GetString();
-                if (!string.IsNullOrEmpty(scopeIdsString))
+                var surfaceIdsString = surfaceIdsElement.GetString();
+                if (!string.IsNullOrEmpty(surfaceIdsString))
                 {
-                    scopeIds = scopeIdsString
+                    surfaceIds = surfaceIdsString
                         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                         .ToList();
                 }
@@ -97,7 +97,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                     ? descEl.GetString() : null,
                 ProfileId = root.GetProperty("profileId").GetGuid(),
                 ContextIds = contextIds,
-                ScopeIds = scopeIds,
+                SurfaceIds = surfaceIds,
                 Instructions = root.TryGetProperty("instructions", out var instrEl) && instrEl.ValueKind == JsonValueKind.String
                     ? instrEl.GetString() : null,
                 IsActive = root.GetProperty("isActive").GetBoolean(),
@@ -118,28 +118,28 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIAgent from, AIAgent to)
+    protected override IReadOnlyList<AIValueChange> CompareVersions(AIAgent from, AIAgent to)
     {
-        var changes = new List<AIPropertyChange>();
+        var changes = new List<AIValueChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIValueChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIValueChange("Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AIPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIValueChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.ProfileId != to.ProfileId)
         {
-            changes.Add(new AIPropertyChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
+            changes.Add(new AIValueChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
         }
 
         // Compare context IDs
@@ -147,25 +147,25 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
         var toContextIds = string.Join(",", to.ContextIds);
         if (fromContextIds != toContextIds)
         {
-            changes.Add(new AIPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+            changes.Add(new AIValueChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
         }
 
         // Compare scope IDs
-        var fromScopeIds = string.Join(",", from.ScopeIds);
-        var toScopeIds = string.Join(",", to.ScopeIds);
-        if (fromScopeIds != toScopeIds)
+        var fromSurfaceIds = string.Join(",", from.SurfaceIds);
+        var toSurfaceIds = string.Join(",", to.SurfaceIds);
+        if (fromSurfaceIds != toSurfaceIds)
         {
-            changes.Add(new AIPropertyChange("ScopeIds", fromScopeIds.Length > 0 ? fromScopeIds : "(none)", toScopeIds.Length > 0 ? toScopeIds : "(none)"));
+            changes.Add(new AIValueChange("SurfaceIds", fromSurfaceIds.Length > 0 ? fromSurfaceIds : "(none)", toSurfaceIds.Length > 0 ? toSurfaceIds : "(none)"));
         }
 
         if (from.Instructions != to.Instructions)
         {
-            changes.Add(new AIPropertyChange("Instructions", "(modified)", "(modified)"));
+            changes.Add(new AIValueChange("Instructions", "(modified)", "(modified)"));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIValueChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         return changes;

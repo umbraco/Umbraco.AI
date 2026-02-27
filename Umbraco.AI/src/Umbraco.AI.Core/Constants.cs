@@ -10,11 +10,11 @@ namespace Umbraco.AI.Core;
 public static class Constants
 {
     /// <summary>
-    /// Default JSON serializer options for Umbraco.AI. 
+    /// Default JSON serializer options for Umbraco.AI.
     /// </summary>
     public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase, 
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
         Converters =
@@ -23,6 +23,17 @@ public static class Constants
             new JsonStringTypeConverter()
         }
     };
+
+    /// <summary>
+    /// Section constants for Umbraco.AI. These can be used for checking the current section in Umbraco backoffice or for storing section information in metadata, etc.
+    /// </summary>
+    internal static class Sections
+    {
+        /// <summary>
+        /// Section alias for Umbraco.AI.
+        /// </summary>
+        public const string AI = "ai";
+    }
 
     /// <summary>
     /// Property editor constants for Umbraco.AI.
@@ -40,7 +51,7 @@ public static class Constants
             public const string ContextPicker = "Uai.ContextPicker";
         }
     }
-    
+
     /// <summary>
     /// Keys for metadata in metadata collections.
     /// </summary>
@@ -50,32 +61,32 @@ public static class Constants
         /// Key for profile ID in metadata collections.
         /// </summary>
         public const string ProfileId = "Umbraco.AI.ProfileId";
-    
+
         /// <summary>
         /// Key for profile alias in metadata collections.
         /// </summary>
         public const string ProfileAlias = "Umbraco.AI.ProfileAlias";
-    
+
         /// <summary>
         /// Key for provider ID in metadata collections.
         /// </summary>
         public const string ProviderId = "Umbraco.AI.ProviderId";
-    
+
         /// <summary>
         /// Key for model ID in metadata collections.
         /// </summary>
         public const string ModelId = "Umbraco.AI.ModelId";
-    
+
         /// <summary>
         /// Key for feature ID in metadata collections.
         /// </summary>
         public const string FeatureId = "Umbraco.AI.FeatureId";
-    
+
         /// <summary>
         /// Key for feature alias in metadata collections.
         /// </summary>
         public const string FeatureAlias = "Umbraco.AI.FeatureAlias";
-    
+
         /// <summary>
         /// Key for feature type in metadata collections.
         /// </summary>
@@ -95,17 +106,23 @@ public static class Constants
         /// Key for entity ID in metadata collections.
         /// </summary>
         public const string EntityId = "Umbraco.AI.EntityId";
-    
+
         /// <summary>
         /// Key for entity type in metadata collections.
         /// </summary>
         public const string EntityType = "Umbraco.AI.EntityType";
-    
+
+        /// <summary>
+        /// Key for section pathname in metadata collections.
+        /// </summary>
+        /// <example>"content", "media", "settings"</example>
+        public const string Section = "Umbraco.AI.Section";
+
         /// <summary>
         /// Key for log keys in metadata collections.
         /// </summary>
         public const string LogKeys = "Umbraco.AI.LogKeys";
-        
+
         /// <summary>
         /// Key for <see cref="EntityAdapter.AISerializedEntity"/> data.
         /// </summary>

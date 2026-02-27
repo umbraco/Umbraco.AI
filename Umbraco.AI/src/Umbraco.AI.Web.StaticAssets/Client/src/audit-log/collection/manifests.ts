@@ -1,4 +1,8 @@
-import { UAI_AUDIT_LOG_COLLECTION_ALIAS, UAI_AUDIT_LOG_COLLECTION_REPOSITORY_ALIAS, UAI_AUDIT_LOG_TABLE_VIEW_ALIAS } from "../constants.js";
+import {
+    UAI_AUDIT_LOG_COLLECTION_ALIAS,
+    UAI_AUDIT_LOG_COLLECTION_REPOSITORY_ALIAS,
+    UAI_AUDIT_LOG_TABLE_VIEW_ALIAS,
+} from "../constants.js";
 import { auditLogDetailsModalManifests } from "./modals/manifests.ts";
 import { auditLogBulkActionManifests } from "./bulk-action/manifests.js";
 

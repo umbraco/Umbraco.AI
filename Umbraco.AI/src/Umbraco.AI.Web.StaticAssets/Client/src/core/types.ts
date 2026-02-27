@@ -1,4 +1,3 @@
-
 /**
  * Editable model schema for UI consumption.
  */
@@ -19,4 +18,5 @@ export interface UaiEditableModelFieldModel {
     defaultValue?: unknown;
     sortOrder: number;
     isRequired: boolean;
+    group?: string;
 }

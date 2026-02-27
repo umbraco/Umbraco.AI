@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Web.Api.Management.Analytics.Controllers;
 using Umbraco.AI.Web.Api.Management.Analytics.Usage.Models;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 
@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 /// Controller to get usage breakdown by dimension.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class UsageBreakdownController : AnalyticsControllerBase
 {
     private readonly IAIUsageAnalyticsService _analyticsService;

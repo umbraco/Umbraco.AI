@@ -78,6 +78,13 @@ internal sealed class AIEditableModelSerializer : IAIEditableModelSerializer
                 var stringValue = jsonValue.GetValue<string>();
                 if (!string.IsNullOrEmpty(stringValue))
                 {
+                    // Skip encryption for configuration references (values starting with $)
+                    // These are pointers to IConfiguration, not actual secrets
+                    if (stringValue.StartsWith("$", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
                     var encrypted = _protector.Protect(stringValue);
                     jsonObject[property.Key] = encrypted;
                 }

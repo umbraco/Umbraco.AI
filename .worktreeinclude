@@ -1,12 +1,21 @@
-# .NET
+# Files matching these patterns are copied from the main repo into new worktrees.
+# Uses gitignore syntax: globs, directory patterns, ! for negation.
+# See: https://git-scm.com/docs/gitignore#_pattern_format
+
+# .NET config
 appsettings.Development.json
 appsettings.Local.json
 *.user
 
-# Typescript
+# Typescript config
 .env*
 !.env.template
 
-# Demo
-demo/*
+# Demo site
+demo/
 *.local.sln
+
+# Exclude non-source directories that contain pattern matches
+!refs/**
+!node_modules/**
+!.worktrees/**

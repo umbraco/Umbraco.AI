@@ -37,9 +37,34 @@ public class AgentResponseModel
     public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
-    /// Scope IDs that categorize this agent for specific purposes.
+    /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
-    public IEnumerable<string> ScopeIds { get; set; } = [];
+    public IEnumerable<string> SurfaceIds { get; set; } = [];
+
+    /// <summary>
+    /// Optional scope defining where this agent is available.
+    /// If null, agent is available in all contexts (backwards compatible).
+    /// </summary>
+    public AIAgentScopeModel? Scope { get; set; }
+
+    /// <summary>
+    /// Allowed tool IDs for this agent.
+    /// Tools must be explicitly allowed or belong to an allowed scope.
+    /// System tools are always allowed.
+    /// </summary>
+    public IEnumerable<string> AllowedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// Allowed tool scope IDs for this agent.
+    /// Tools belonging to these scopes are automatically allowed.
+    /// </summary>
+    public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
+
+    /// <summary>
+    /// User group-specific permission overrides.
+    /// Dictionary key is UserGroupId (Guid).
+    /// </summary>
+    public Dictionary<Guid, AIAgentUserGroupPermissionsModel> UserGroupPermissions { get; set; } = [];
 
     /// <summary>
     /// Instructions that define how the agent behaves.

@@ -31,7 +31,6 @@ export type AuditLogDetailResponseModel = {
     totalTokens?: number | null;
     promptSnapshot?: string | null;
     responseSnapshot?: string | null;
-    detailLevel: string;
     metadata?: Array<KeyValuePair2> | null;
 };
 
@@ -179,6 +178,7 @@ export type EditableModelFieldModel = {
     defaultValue?: unknown;
     sortOrder: number;
     isRequired: boolean;
+    group?: string | null;
 };
 
 export type EditableModelSchemaModel = {
@@ -202,7 +202,7 @@ export type EmbeddingResponseModel = {
 export type EntityVersionComparisonResponseModel = {
     fromVersion: number;
     toVersion: number;
-    changes: Array<PropertyChangeModel>;
+    changes: Array<ValueChangeModel>;
 };
 
 export type EntityVersionHistoryResponseModel = {
@@ -309,12 +309,6 @@ export type ProfileSettingsModel = {
     [key: string]: never;
 };
 
-export type PropertyChangeModel = {
-    propertyName: string;
-    oldValue?: string | null;
-    newValue?: string | null;
-};
-
 export type ProviderItemResponseModel = {
     id: string;
     name: string;
@@ -331,6 +325,22 @@ export type ProviderResponseModel = {
 export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+};
+
+export type ToolItemResponseModel = {
+    id: string;
+    name: string;
+    description: string;
+    scopeId: string;
+    isDestructive: boolean;
+    tags: Array<string>;
+};
+
+export type ToolScopeItemResponseModel = {
+    id: string;
+    icon: string;
+    isDestructive: boolean;
+    domain: string;
 };
 
 export type UpdateConnectionRequestModel = {
@@ -393,6 +403,12 @@ export type UsageTimeSeriesPointModel = {
     outputTokens: number;
     successCount: number;
     failureCount: number;
+};
+
+export type ValueChangeModel = {
+    path: string;
+    oldValue?: string | null;
+    newValue?: string | null;
 };
 
 export type GetUsageBreakdownByModelData = {
@@ -796,6 +812,33 @@ export type CreateConnectionResponses = {
     201: unknown;
 };
 
+export type ConnectionAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/connections/{alias}/exists';
+};
+
+export type ConnectionAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type ConnectionAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type ConnectionAliasExistsResponse = ConnectionAliasExistsResponses[keyof ConnectionAliasExistsResponses];
+
 export type DeleteConnectionData = {
     body?: never;
     path: {
@@ -1119,6 +1162,33 @@ export type CreateContextResponses = {
     201: unknown;
 };
 
+export type ContextAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/contexts/{alias}/exists';
+};
+
+export type ContextAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type ContextAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type ContextAliasExistsResponse = ContextAliasExistsResponses[keyof ContextAliasExistsResponses];
+
 export type DeleteContextData = {
     body?: never;
     path: {
@@ -1303,6 +1373,33 @@ export type CreateProfileResponses = {
      */
     201: unknown;
 };
+
+export type ProfileAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/profiles/{alias}/exists';
+};
+
+export type ProfileAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type ProfileAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type ProfileAliasExistsResponse = ProfileAliasExistsResponses[keyof ProfileAliasExistsResponses];
 
 export type DeleteProfileData = {
     body?: never;
@@ -1496,6 +1593,52 @@ export type UpdateSettingsResponses = {
 };
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
+
+export type GetAllToolsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tools';
+};
+
+export type GetAllToolsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllToolsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ToolItemResponseModel>;
+};
+
+export type GetAllToolsResponse = GetAllToolsResponses[keyof GetAllToolsResponses];
+
+export type GetAllToolScopesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tools/scopes';
+};
+
+export type GetAllToolScopesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllToolScopesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ToolScopeItemResponseModel>;
+};
+
+export type GetAllToolScopesResponse = GetAllToolScopesResponses[keyof GetAllToolScopesResponses];
 
 export type GetVersionHistoryData = {
     body?: never;

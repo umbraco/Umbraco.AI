@@ -301,9 +301,6 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.PromptSnapshot);
             entity.Property(e => e.ResponseSnapshot);
 
-            entity.Property(e => e.DetailLevel)
-                .IsRequired();
-
             entity.Property(e => e.ParentAuditLogId);
 
             entity.Property(e => e.Metadata);

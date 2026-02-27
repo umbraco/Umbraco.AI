@@ -12,6 +12,7 @@
  * the full public API for consumers.
  */
 
+import type { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension-registry";
 import { sectionManifests } from "./section/manifests.js";
 import { analyticsManifests } from "./analytics/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
@@ -26,22 +27,24 @@ import { manifests as langManifests } from "./lang/manifests.js";
 import { manifests as coreManifests } from "./core/manifests.js";
 import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
 import { settingsManifests } from "./settings/manifests.js";
+import { requestContextManifests } from "./request-context/manifests.js";
 
 // Aggregate all manifests into a single bundle
 // IMPORTANT: This should only include manifest arrays and nothing else
-export const manifests: Array<UmbExtensionManifest> = [
-  ...sectionManifests,
-  ...analyticsManifests,
-  ...connectionManifests,
-  ...contextResourceTypeManifests,
-  ...contextManifests,
-  ...entityAdapterManifests,
-  ...profileManifests,
-  ...providerManifests,
-  ...propertyEditorManifests,
-  ...auditLogManifests,
-  ...langManifests,
-  ...coreManifests,
-  ...workspaceRegistryManifests,
-  ...settingsManifests,
+export const manifests: Array<UmbExtensionManifest | UmbExtensionManifestKind> = [
+    ...sectionManifests,
+    ...analyticsManifests,
+    ...connectionManifests,
+    ...contextResourceTypeManifests,
+    ...contextManifests,
+    ...entityAdapterManifests,
+    ...profileManifests,
+    ...providerManifests,
+    ...propertyEditorManifests,
+    ...auditLogManifests,
+    ...langManifests,
+    ...coreManifests,
+    ...workspaceRegistryManifests,
+    ...settingsManifests,
+    ...requestContextManifests,
 ];

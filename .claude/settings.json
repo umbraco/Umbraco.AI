@@ -1,15 +1,37 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/scripts/setup-dotnet-proxy.sh"
-          }
+    "hooks": {
+        "SessionStart": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash .claude/scripts/setup-dotnet-proxy.sh"
+                    }
+                ]
+            }
+        ],
+        "WorktreeCreate": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worktree-create.sh",
+                        "timeout": 60
+                    }
+                ]
+            }
+        ],
+        "WorktreeRemove": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worktree-remove.sh",
+                        "timeout": 30
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  }
+    }
 }

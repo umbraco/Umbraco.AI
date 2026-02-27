@@ -7,7 +7,7 @@
     <Product>Umbraco AI Agent</Product>
     <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Agent</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
-    <PackageTags>umbraco ai agent umbraco-marketplace</PackageTags>
+    <PackageTags>umbraco ai agent</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>

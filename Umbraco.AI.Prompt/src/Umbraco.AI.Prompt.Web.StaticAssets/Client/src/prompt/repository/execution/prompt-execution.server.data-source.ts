@@ -14,12 +14,12 @@ export interface UaiPromptContextItem {
 }
 
 /**
- * Represents a property change to be applied to the entity.
- * Matches backend PropertyChangeModel and Core's UaiPropertyChange.
+ * Represents a value change to be applied to the entity.
+ * Matches backend ValueChangeModel and Core's UaiValueChange.
  */
-export interface UaiPromptPropertyChange {
-    /** The property alias. */
-    alias: string;
+export interface UaiPromptValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount"). */
+    path: string;
     /** The new value to set. */
     value: unknown;
     /** The culture for variant content. */
@@ -47,6 +47,16 @@ export interface UaiPromptExecutionRequest {
 }
 
 /**
+ * A single result option that can be displayed and optionally applied.
+ */
+export interface UaiPromptResultOption {
+    label: string;
+    displayValue: string;
+    description?: string | null;
+    valueChange?: UaiPromptValueChange | null;
+}
+
+/**
  * Response model for prompt execution.
  */
 export interface UaiPromptExecutionResponse {
@@ -58,8 +68,13 @@ export interface UaiPromptExecutionResponse {
         outputTokens?: number;
         totalTokens?: number;
     };
-    /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    /**
+     * Available result options. Always present, may be empty.
+     * - Empty array: Informational only
+     * - Single item: One value to insert
+     * - Multiple items: User selects one
+     */
+    resultOptions: UaiPromptResultOption[];
 }
 
 /**
@@ -81,7 +96,7 @@ export class UaiPromptExecutionServerDataSource {
     async execute(
         promptIdOrAlias: string,
         request: UaiPromptExecutionRequest,
-        _signal?: AbortSignal
+        _signal?: AbortSignal,
     ): Promise<{ data?: UaiPromptExecutionResponse; error?: unknown }> {
         // Build the body with context items array (typed as any to bypass generated type mismatch)
         const body = {
@@ -98,7 +113,7 @@ export class UaiPromptExecutionServerDataSource {
             PromptsService.executePrompt({
                 path: { promptIdOrAlias },
                 body,
-            })
+            }),
         );
 
         if (error || !data) {
@@ -108,17 +123,27 @@ export class UaiPromptExecutionServerDataSource {
         return {
             data: {
                 content: data.content,
-                usage: data.usage ? {
-                    inputTokens: data.usage.inputTokens ?? undefined,
-                    outputTokens: data.usage.outputTokens ?? undefined,
-                    totalTokens: data.usage.totalTokens ?? undefined,
-                } : undefined,
-                propertyChanges: data.propertyChanges?.map((change) => ({
-                    alias: change.alias,
-                    value: change.value,
-                    culture: change.culture ?? undefined,
-                    segment: change.segment ?? undefined,
-                })),
+                usage: data.usage
+                    ? {
+                          inputTokens: data.usage.inputTokens ?? undefined,
+                          outputTokens: data.usage.outputTokens ?? undefined,
+                          totalTokens: data.usage.totalTokens ?? undefined,
+                      }
+                    : undefined,
+                resultOptions:
+                    data.resultOptions?.map((option) => ({
+                        label: option.label,
+                        displayValue: option.displayValue,
+                        description: option.description ?? undefined,
+                        valueChange: option.valueChange
+                            ? {
+                                  path: option.valueChange.path,
+                                  value: option.valueChange.value,
+                                  culture: option.valueChange.culture ?? undefined,
+                                  segment: option.valueChange.segment ?? undefined,
+                              }
+                            : undefined,
+                    })) ?? [],
             },
         };
     }

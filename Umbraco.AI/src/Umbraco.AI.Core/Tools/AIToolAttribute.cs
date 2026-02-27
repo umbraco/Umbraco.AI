@@ -17,9 +17,13 @@ public sealed class AIToolAttribute : Attribute
     public string Name { get; }
 
     /// <summary>
-    /// Gets or sets the category of the tool for grouping purposes.
+    /// Gets or sets the scope identifier for permission and grouping purposes.
     /// </summary>
-    public string Category { get; set; } = "General";
+    /// <remarks>
+    /// Examples: "content-read", "content-write", "media-read", "search"
+    /// Defaults to "general" if not specified.
+    /// </remarks>
+    public string ScopeId { get; set; } = "general";
 
     /// <summary>
     /// Gets or sets whether the tool performs destructive operations.

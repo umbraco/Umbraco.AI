@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Validation.AspNetCore;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Analytics.Usage.Middleware;
@@ -25,6 +26,7 @@ using Umbraco.AI.Core.RuntimeContext.Middleware;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
 using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Tools.Web;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Prompt.Core.Media;
@@ -87,6 +89,10 @@ public static partial class UmbracoBuilderExtensions
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITool, AIToolAttribute>(cache: true));
+
+        // Tool scope infrastructure - auto-discover scopes via [AIToolScope] attribute
+        builder.AIToolScopes()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIToolScope, AIToolScopeAttribute>(cache: true));
 
         // Web fetch tool services
         services.AddSingleton<IUrlValidator, UrlValidator>();
@@ -178,6 +184,11 @@ public static partial class UmbracoBuilderExtensions
         // Entity adapter infrastructure
         services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
 
+        // Entity formatter infrastructure - auto-discover formatters
+        builder.AIEntityFormatters()
+            .Add<AIGenericEntityFormatter>()   // Default formatter (EntityType = null)
+            .Add<AIDocumentEntityFormatter>(); // CMS document/media formatter
+
         // Runtime context infrastructure
         // Single instance implements both accessor (for reading) and scope provider (for creating)
         services.AddSingleton<AIRuntimeContextScopeProvider>();
@@ -188,11 +199,12 @@ public static partial class UmbracoBuilderExtensions
         builder.AIRuntimeContextContributors()
             .Append<UserContextContributor>()           // Ambient: adds current user info
             .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
+            .Append<SectionContextContributor>()        // Item-based: extracts section pathname for context filtering
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items
 
         // Register media image resolver
         builder.Services.AddSingleton<IAIUmbracoMediaResolver, AIUmbracoMediaResolver>();
-        
+
         // AuditLog infrastructure
         // Note: IAIAuditLogRepository is registered by persistence layer
         services.AddSingleton<IAIAuditLogFactory, AIAuditLogFactory>();

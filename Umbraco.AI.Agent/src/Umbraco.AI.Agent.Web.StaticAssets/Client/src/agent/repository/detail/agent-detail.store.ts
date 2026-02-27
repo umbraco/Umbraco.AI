@@ -3,9 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UaiAgentDetailModel } from "../../types.js";
 
-export const UAI_AGENT_DETAIL_STORE_CONTEXT = new UmbContextToken<UaiAgentDetailStore>(
-    "UaiAgentDetailStore"
-);
+export const UAI_AGENT_DETAIL_STORE_CONTEXT = new UmbContextToken<UaiAgentDetailStore>("UaiAgentDetailStore");
 
 /**
  * Store for Agent detail data.

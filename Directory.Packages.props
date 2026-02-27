@@ -23,6 +23,11 @@
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.1.0, 17.999.999)" />
   </ItemGroup>
 
+  <!-- Umbraco Deploy -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[17.0.0, 17.999.999)" />
+  </ItemGroup>
+
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.2.0" />
@@ -32,13 +37,14 @@
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.AGUI" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.2.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[1.2.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.AGUI" Version="[1.2.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[1.2.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[1.2.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[1.2.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[1.0.0-alpha2, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[1.0.0-alpha3, 1.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->
@@ -55,7 +61,7 @@
     <PackageVersion Include="Azure.AI.Inference" Version="1.0.0-beta.5" />
     <PackageVersion Include="Google.GenAI" Version="0.13.1" />
     <PackageVersion Include="Microsoft.Extensions.AI.AzureAIInference" Version="10.0.0-preview.1.25559.3" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.2.0-preview.1.26063.2" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
     <PackageVersion Include="OllamaSharp" Version="5.4.18" />
   </ItemGroup>
 

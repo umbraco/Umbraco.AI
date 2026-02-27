@@ -1,13 +1,4 @@
-import {
-    css,
-    customElement,
-    html,
-    nothing,
-    property,
-    repeat,
-    state,
-    when,
-} from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, repeat, state, when } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
@@ -17,6 +8,7 @@ import { UaiUnifiedVersionHistoryRepository } from "../../repository/unified-ver
 import { UmbUserItemModel, UmbUserItemRepository } from "@umbraco-cms/backoffice/user";
 import { formatDateTime } from "../../../utils";
 import { UAI_EMPTY_GUID } from "../../../index.js";
+import { UUIPaginationEvent } from "@umbraco-cms/backoffice/external/uui";
 
 const PAGE_SIZE = 10;
 
@@ -29,10 +21,9 @@ const PAGE_SIZE = 10;
  */
 @customElement("uai-version-history")
 export class UaiVersionHistoryElement extends UmbLitElement {
-    
     #versionRepository = new UaiUnifiedVersionHistoryRepository(this);
     #userItemRepository = new UmbUserItemRepository(this);
-    
+
     #modalManager?: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE;
 
     #userMap = new Map<string, UmbUserItemModel>();
@@ -118,7 +109,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 this.entityType,
                 this.entityId,
                 skip,
-                PAGE_SIZE
+                PAGE_SIZE,
             );
             if (response) {
                 this._versions = response.versions;
@@ -131,8 +122,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
         }
     }
 
-    async #requestAndCacheUserItems() 
-    {
+    async #requestAndCacheUserItems() {
         const allUsers = this._versions?.map((item) => item.createdByUserId?.toString()).filter(Boolean) as string[];
         const uniqueUsers = [...new Set(allUsers)];
         const uncachedUsers = uniqueUsers.filter((unique) => !this.#userMap.has(unique));
@@ -146,7 +136,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
             items.forEach((item) => {
                 // cache the user item
                 this.#userMap.set(item.unique, item);
-                this.requestUpdate('_versions');
+                this.requestUpdate("_versions");
             });
         }
     }
@@ -163,7 +153,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
             this.entityType,
             this.entityId,
             version,
-            this._currentVersion
+            this._currentVersion,
         );
         if (!comparison) return;
 
@@ -178,11 +168,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
 
         const result = await modalContext.onSubmit().catch(() => undefined);
         if (result?.rollback) {
-            const success = await this.#versionRepository.rollback(
-                this.entityType,
-                this.entityId,
-                version
-            );
+            const success = await this.#versionRepository.rollback(this.entityType, this.entityId, version);
             if (success) {
                 // Dispatch event so parent can reload entity data
                 this.dispatchEvent(new CustomEvent("rollback", { bubbles: true, composed: true }));
@@ -191,18 +177,9 @@ export class UaiVersionHistoryElement extends UmbLitElement {
         }
     }
 
-    #onPreviousPage() {
-        if (this._currentPage > 1) {
-            this._currentPage--;
-            this.#loadVersionHistory();
-        }
-    }
-
-    #onNextPage() {
-        if (this._currentPage < this.#totalPages) {
-            this._currentPage++;
-            this.#loadVersionHistory();
-        }
+    #onPageChange(event: UUIPaginationEvent) {
+        this._currentPage= event.target.current;
+        this.#loadVersionHistory();
     }
 
     override render() {
@@ -220,7 +197,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                             <uui-loader></uui-loader>
                         </div>
                     `,
-                    () => this.#renderContent()
+                    () => this.#renderContent(),
                 )}
             </uui-box>
         `;
@@ -228,11 +205,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
 
     #renderContent() {
         if (this._versions.length === 0) {
-            return html`
-                <p class="no-versions">
-                    ${this.localize.term("uaiVersionHistory_noVersionsYet")}
-                </p>
-            `;
+            return html` <p class="no-versions">${this.localize.term("uaiVersionHistory_noVersionsYet")}</p> `;
         }
 
         return html`
@@ -240,7 +213,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 ${repeat(
                     this._versions,
                     (v) => v.id,
-                    (v) => this.#renderItem(v)
+                    (v) => this.#renderItem(v),
                 )}
             </div>
             ${this.#totalPages > 1 ? this.#renderPagination() : nothing}
@@ -264,55 +237,46 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                     </div>
                 </div>
                 <div>
-                    ${isCurrent ? html`
-                        <div>
-                            <uui-tag look="primary">
-                                Current
-                            </uui-tag>
-                        </div>
-                    `: html`
-                        <uui-tag look="secondary">
-                                v${version.version}
-                        </uui-tag>
-                    `}
+                    ${
+                        isCurrent
+                            ? html`
+                                  <div>
+                                      <uui-tag look="primary"> Current </uui-tag>
+                                  </div>
+                              `
+                            : html` <uui-tag look="secondary"> v${version.version} </uui-tag> `
+                    }
                 </div>
-                ${!isCurrent ? html`
-                    <div class="actions">
-                        <uui-button
-                                look="secondary"
-                                label=${this.localize.term("uaiVersionHistory_compare")}
-                                @click=${() => this.#onCompareClick(version.version)}>
-                            ${this.localize.term("uaiVersionHistory_compare")}
-                        </uui-button>
-                    </div>
-                `: nothing }
+                ${
+                    !isCurrent
+                        ? html`
+                              <div class="actions">
+                                  <uui-button
+                                      look="secondary"
+                                      label=${this.localize.term("uaiVersionHistory_compare")}
+                                      @click=${() => this.#onCompareClick(version.version)}
+                                  >
+                                      ${this.localize.term("uaiVersionHistory_compare")}
+                                  </uui-button>
+                              </div>
+                          `
+                        : nothing
+                }
             </umb-history-item>
         `;
     }
 
     #renderPagination() {
         return html`
-            <div class="pagination">
-                <uui-button
-                    look="secondary"
-                    compact
-                    ?disabled=${this._currentPage <= 1}
-                    @click=${this.#onPreviousPage}>
-                    <uui-icon name="icon-arrow-left"></uui-icon>
-                </uui-button>
-                <span class="page-info">
-                    ${this.localize.term("uaiVersionHistory_pageInfo", [
-                        this._currentPage,
-                        this.#totalPages,
-                    ])}
-                </span>
-                <uui-button
-                    look="secondary"
-                    compact
-                    ?disabled=${this._currentPage >= this.#totalPages}
-                    @click=${this.#onNextPage}>
-                    <uui-icon name="icon-arrow-right"></uui-icon>
-                </uui-button>
+            <div class="pagination-wrapper">
+                <uui-pagination
+                    .current=${this._currentPage}
+                    .total=${this.#totalPages}
+                    firstlabel=${this.localize.term('general_first')}
+                    previouslabel=${this.localize.term('general_previous')}
+                    nextlabel=${this.localize.term('general_next')}
+                    lastlabel=${this.localize.term('general_last')}
+                    @change=${this.#onPageChange}></uui-pagination>
             </div>
         `;
     }
@@ -347,8 +311,14 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 display: flex;
                 gap: var(--uui-size-space-5);
                 align-items: center;
+                border-bottom: 1px solid var(--uui-color-border);
+                padding-bottom: var(--uui-size-space-4);
             }
-            
+
+            .version-item:last-child {
+                border-bottom: none;
+            }
+
             .actions {
                 flex: 1;
                 display: flex;
@@ -374,19 +344,10 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 line-height: 1;
             }
 
-            .pagination {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: var(--uui-size-space-3);
-                padding: var(--uui-size-space-4) 0;
+            .pagination-wrapper {
+                display: block;
+                padding-top: var(--uui-size-space-5);
                 border-top: 1px solid var(--uui-color-border);
-                margin-top: var(--uui-size-space-4);
-            }
-
-            .page-info {
-                color: var(--uui-color-text-alt);
-                font-size: 0.9em;
             }
         `,
     ];

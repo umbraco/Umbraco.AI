@@ -1,5 +1,3 @@
-import { contextPickerPropertyEditorManifests } from './context-picker/manifests.js';
+import { contextPickerPropertyEditorManifests } from "./context-picker/manifests.js";
 
-export const propertyEditorManifests = [
-    ...contextPickerPropertyEditorManifests,
-];
+export const propertyEditorManifests = [...contextPickerPropertyEditorManifests];

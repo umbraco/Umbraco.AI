@@ -1,14 +1,7 @@
-import {
-    css,
-    customElement,
-    html,
-    property,
-    repeat,
-    type TemplateResult,
-} from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, repeat, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import type { UaiVersionPropertyChange } from "../../types.js";
+import type { UaiVersionValueChange } from "../../types.js";
 import { diffWords, type Change } from "diff";
 
 /**
@@ -23,7 +16,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
      * The list of property changes to display.
      */
     @property({ attribute: false })
-    changes: UaiVersionPropertyChange[] = [];
+    changes: UaiVersionValueChange[] = [];
 
     override render() {
         if (this.changes.length === 0) {
@@ -39,30 +32,30 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
             <uui-table>
                 <uui-table-column style="width: 0"></uui-table-column>
                 <uui-table-column></uui-table-column>
-                
+
                 <uui-table-head>
-                    <uui-table-head-cell>${this.localize.term('general_alias')}</uui-table-head-cell>
-                    <uui-table-head-cell>${this.localize.term('general_value')}</uui-table-head-cell>
+                    <uui-table-head-cell>${this.localize.term("general_name")}</uui-table-head-cell>
+                    <uui-table-head-cell>${this.localize.term("general_value")}</uui-table-head-cell>
                 </uui-table-head>
-                
+
                 ${repeat(
-                        this.changes,
-                        (change) => change.propertyName,
-                        (change) => this.#renderChange(change)
+                    this.changes,
+                    (change) => change.path,
+                    (change) => this.#renderChange(change),
                 )}
             </uui-table>
         `;
     }
 
-    #renderChange(change: UaiVersionPropertyChange) {
+    #renderChange(change: UaiVersionValueChange) {
         const isAddition = !change.oldValue && change.newValue;
         const isDeletion = change.oldValue && !change.newValue;
 
         return html`
             <uui-table-row>
-                <uui-table-cell>${change.propertyName}</uui-table-cell>
+                <uui-table-cell>${change.path}</uui-table-cell>
                 <uui-table-cell>
-                    <div class="diff-container ${isAddition ? 'addition' : ''} ${isDeletion ? 'deletion' : ''}">
+                    <div class="diff-container ${isAddition ? "addition" : ""} ${isDeletion ? "deletion" : ""}">
                         ${this.#renderInlineDiff(change.oldValue, change.newValue)}
                     </div>
                 </uui-table-cell>
@@ -91,9 +84,9 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
             const isMultiline = formattedOld.includes("\n") || formattedNew.includes("\n");
 
             return html`
-                <pre class="diff-value ${isMultiline ? 'multiline' : ''}">${changes.map(
-                    (part) => this.#renderDiffPart(part)
-                )}</pre>
+                <pre class="diff-value ${isMultiline ? "multiline" : ""}">
+${changes.map((part) => this.#renderDiffPart(part))}</pre
+                >
             `;
         }
 
@@ -220,7 +213,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
                 background-color: rgba(0, 196, 62, 0.25);
                 color: var(--uui-color-positive-emphasis);
                 border-radius: 2px;
-                padding: 0 1px; 
+                padding: 0 1px;
             }
 
             .diff-removed {

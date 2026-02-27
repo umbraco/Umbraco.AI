@@ -33,6 +33,14 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("AllowedToolIds")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("AllowedToolScopeIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<string>("ContextIds")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
@@ -69,9 +77,15 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ScopeIds")
+                    b.Property<string>("Scope")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SurfaceIds")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("UserGroupPermissions")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Version")
                         .ValueGeneratedOnAdd()

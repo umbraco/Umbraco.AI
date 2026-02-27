@@ -141,7 +141,11 @@ add_product_projects "Umbraco.AI.Prompt" "Prompt"
 echo "Adding Umbraco.AI.Agent projects..."
 add_product_projects "Umbraco.AI.Agent" "Agent"
 
-# Step 8.1: Add Agent Copilot projects
+# Step 8.1: Add Agent UI projects
+echo "Adding Umbraco.AI.Agent.UI projects..."
+add_product_projects "Umbraco.AI.Agent.UI" "AgentUI"
+
+# Step 8.2: Add Agent Copilot projects
 echo "Adding Umbraco.AI.Agent.Copilot projects..."
 add_product_projects "Umbraco.AI.Agent.Copilot" "AgentCopilot"
 
@@ -208,6 +212,11 @@ fi
 if [ -f "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj"
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Umbraco.AI.Agent.Web.StaticAssets.csproj"
+fi
+
+# Agent UI library (frontend-only static assets)
+if [ -f "Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.csproj"
 fi
 
 # Agent Copilot add-on (frontend-only static assets)

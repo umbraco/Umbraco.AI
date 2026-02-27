@@ -1,6 +1,6 @@
 ---
 description: >-
-  Model representing an AI context with resources.
+    Model representing an AI context with resources.
 ---
 
 # AIContext
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Contexts;
 ## Definition
 
 {% code title="AIContext" %}
+
 ```csharp
 public class AIContext : IAIVersionableEntity
 {
@@ -34,25 +35,27 @@ public class AIContext : IAIVersionableEntity
     public int Version { get; internal set; } = 1;
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Unique identifier (auto-generated) |
-| `Alias` | `string` | Unique alias for programmatic lookup (required) |
-| `Name` | `string` | Display name (required) |
-| `Resources` | `IList<AIContextResource>` | Collection of resources |
-| `DateCreated` | `DateTime` | When created (UTC) |
-| `DateModified` | `DateTime` | When last modified (UTC) |
-| `CreatedByUserId` | `Guid?` | User who created |
-| `ModifiedByUserId` | `Guid?` | User who last modified |
-| `Version` | `int` | Current version number |
+| Property           | Type                       | Description                                     |
+| ------------------ | -------------------------- | ----------------------------------------------- |
+| `Id`               | `Guid`                     | Unique identifier (auto-generated)              |
+| `Alias`            | `string`                   | Unique alias for programmatic lookup (required) |
+| `Name`             | `string`                   | Display name (required)                         |
+| `Resources`        | `IList<AIContextResource>` | Collection of resources                         |
+| `DateCreated`      | `DateTime`                 | When created (UTC)                              |
+| `DateModified`     | `DateTime`                 | When last modified (UTC)                        |
+| `CreatedByUserId`  | `Guid?`                    | User who created                                |
+| `ModifiedByUserId` | `Guid?`                    | User who last modified                          |
+| `Version`          | `int`                      | Current version number                          |
 
 ## Example
 
 {% code title="Example" %}
+
 ```csharp
 var context = new AIContext
 {
@@ -79,12 +82,13 @@ var context = new AIContext
     }
 };
 ```
+
 {% endcode %}
 
 ## Related
 
-* [AIContextResource](#aicontextresource) - Resource model
-* [IAIContextService](../services/ai-context-service.md) - Context service
+- [AIContextResource](#aicontextresource) - Resource model
+- [IAIContextService](../services/ai-context-service.md) - Context service
 
 ---
 
@@ -95,6 +99,7 @@ Represents a single resource within a context.
 ## Definition
 
 {% code title="AIContextResource" %}
+
 ```csharp
 public class AIContextResource
 {
@@ -107,31 +112,33 @@ public class AIContextResource
     public AIContextResourceInjectionMode InjectionMode { get; set; } = AIContextResourceInjectionMode.Always;
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Unique identifier (auto-generated) |
-| `ResourceTypeId` | `string` | Type of resource (required, immutable) |
-| `Name` | `string` | Display name (required) |
-| `Description` | `string?` | Optional description |
-| `SortOrder` | `int` | Order for injection |
-| `Data` | `object?` | Resource content (type-specific) |
-| `InjectionMode` | `AIContextResourceInjectionMode` | When to inject |
+| Property         | Type                             | Description                            |
+| ---------------- | -------------------------------- | -------------------------------------- |
+| `Id`             | `Guid`                           | Unique identifier (auto-generated)     |
+| `ResourceTypeId` | `string`                         | Type of resource (required, immutable) |
+| `Name`           | `string`                         | Display name (required)                |
+| `Description`    | `string?`                        | Optional description                   |
+| `SortOrder`      | `int`                            | Order for injection                    |
+| `Data`           | `object?`                        | Resource content (type-specific)       |
+| `InjectionMode`  | `AIContextResourceInjectionMode` | When to inject                         |
 
 ## Resource Types
 
-| Type ID | Data Type | Description |
-|---------|-----------|-------------|
-| `text` | `string` | Plain text content |
-| `document` | `object` | Structured document |
-| `url` | `string` | URL reference |
+| Type ID    | Data Type | Description         |
+| ---------- | --------- | ------------------- |
+| `text`     | `string`  | Plain text content  |
+| `document` | `object`  | Structured document |
+| `url`      | `string`  | URL reference       |
 
 ## Injection Modes
 
 {% code title="AIContextResourceInjectionMode" %}
+
 ```csharp
 public enum AIContextResourceInjectionMode
 {
@@ -139,4 +146,5 @@ public enum AIContextResourceInjectionMode
     OnDemand = 1  // Only inject when explicitly requested
 }
 ```
+
 {% endcode %}

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get started with Agent Runtime.
+    Get started with Agent Runtime.
 ---
 
 # Getting Started with Agents
@@ -18,26 +18,28 @@ Before starting, ensure you have:
 ## Step 1: Install the Package
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.Agent
 ```
+
 {% endcode %}
 
 Restart your application to run database migrations.
 
 ## Step 2: Create an Agent in Backoffice
 
-1. Navigate to **Settings** > **AI** > **Agents**
+1. Navigate to the **AI** section > **Agents**
 2. Click **Create Agent**
 3. Fill in the details:
 
-| Field | Value |
-|-------|-------|
-| Alias | `writing-assistant` |
-| Name | Writing Assistant |
-| Description | Helps improve and edit content |
-| Instructions | See below |
-| Profile | (select your chat profile) |
+| Field        | Value                          |
+| ------------ | ------------------------------ |
+| Alias        | `writing-assistant`            |
+| Name         | Writing Assistant              |
+| Description  | Helps improve and edit content |
+| Instructions | See below                      |
+| Profile      | (select your chat profile)     |
 
 **Instructions:**
 
@@ -64,6 +66,7 @@ Guidelines:
 Create a controller to expose the agent:
 
 {% code title="AgentController.cs" %}
+
 ```csharp
 [ApiController]
 [Route("api/agent")]
@@ -124,65 +127,66 @@ public class MessageDto
     public string Content { get; set; } = "";
 }
 ```
+
 {% endcode %}
 
 ## Step 4: Create a Frontend Client
 
 {% code title="agent-client.ts" %}
+
 ```typescript
 interface AgentEvent {
-  type: string;
-  content?: string;
-  error?: string;
+    type: string;
+    content?: string;
+    error?: string;
 }
 
 async function runAgent(alias: string, messages: { role: string; content: string }[]) {
-  const response = await fetch(`/api/agent/${alias}/run`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages })
-  });
+    const response = await fetch(`/api/agent/${alias}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages }),
+    });
 
-  const reader = response.body!.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const event: AgentEvent = JSON.parse(line.slice(6));
-        handleEvent(event);
-      }
+        for (const line of lines) {
+            if (line.startsWith("data: ")) {
+                const event: AgentEvent = JSON.parse(line.slice(6));
+                handleEvent(event);
+            }
+        }
     }
-  }
 }
 
 function handleEvent(event: AgentEvent) {
-  switch (event.type) {
-    case 'text_message_content':
-      console.log('Content:', event.content);
-      break;
-    case 'run_finished':
-      console.log('Agent finished');
-      break;
-    case 'run_error':
-      console.error('Error:', event.error);
-      break;
-  }
+    switch (event.type) {
+        case "text_message_content":
+            console.log("Content:", event.content);
+            break;
+        case "run_finished":
+            console.log("Agent finished");
+            break;
+        case "run_error":
+            console.error("Error:", event.error);
+            break;
+    }
 }
 
 // Usage
-runAgent('writing-assistant', [
-  { role: 'user', content: 'Help me improve this sentence: The quick brown fox jumps.' }
-]);
+runAgent("writing-assistant", [{ role: "user", content: "Help me improve this sentence: The quick brown fox jumps." }]);
 ```
+
 {% endcode %}
 
 ## Step 5: Test the Agent

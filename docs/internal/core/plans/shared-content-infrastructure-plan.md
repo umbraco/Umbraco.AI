@@ -5,6 +5,7 @@
 Create shared infrastructure in `Umbraco.AI.Core` that serves both the Entity Snapshot Service and the Nested Element Support feature for the Prompt add-on. The Prompt service will leverage `IAIEntitySnapshotService.CreateSnapshot(IPublishedElement)` for rich template context.
 
 **Key Simplification (v1)**: Instead of path-based element resolution, use an **element index map** approach:
+
 - Iterate the content model once to build a `Dictionary<Guid, IPublishedElement>`
 - Look up elements directly by their key
 - Frontend only needs to pass `elementKey` (Guid), not a complex path
@@ -198,6 +199,7 @@ internal static class BlockStructureHelper
 ```
 
 **Design notes:**
+
 - **Generic traversal**: Iterates over all object properties using reflection rather than explicit type checks for `BlockListModel`, `BlockGridModel`, etc. This automatically supports any property editor that contains nested `IPublishedElement` instances.
 - **Stops at IPublishedContent boundaries**: When encountering `IPublishedContent` (from content pickers, media pickers, etc.), traversal stops. These are links to other content nodes, not nested elements within the current content. We only index `IPublishedElement` instances that are true nested elements.
 - **Circular reference detection**: Uses `HashSet<object>` with `ReferenceEqualityComparer.Instance` to track visited object references and prevent infinite loops.
@@ -459,6 +461,7 @@ public class AITemplateContext
 **File**: `src/Umbraco.AI.Core/Templates/AITemplateResolver.cs` (moved)
 
 The implementation remains largely the same but the data dictionary now includes:
+
 - `content` → Content snapshot
 - `element` → Element snapshot (if present)
 - `propertyAlias` → Property being edited
@@ -641,6 +644,7 @@ internal sealed class AIPromptService : IAIPromptService
 ```
 
 **Key changes:**
+
 - Removed `IAIPromptTemplateService` - uses shared `IAITemplateResolver` instead
 - Uses `IAIContextBuilder` for all content resolution and snapshot creation
 - Clean separation: resolve → validate → build context → execute
@@ -674,6 +678,7 @@ With the element index map approach, the frontend implementation is **dramatical
 ### 4.1 Frontend Changes (Umbraco.AI.Prompt)
 
 The frontend only needs to:
+
 1. Get the current element's key from the block entry context
 2. Pass it to the API
 
@@ -697,6 +702,7 @@ interface PromptExecutionRequest {
 ### 4.2 No Complex Path Building Required
 
 The previous open issue about context hierarchy traversal is **no longer relevant**. We don't need to:
+
 - Build element paths
 - Walk up the host hierarchy
 - Query multiple context levels
@@ -732,95 +738,95 @@ Culture: {{culture}}
 
 ### New Files (Umbraco.AI.Core)
 
-| File | Purpose |
-|------|---------|
-| `Content/IPublishedContentResolver.cs` | Interface for content resolution |
-| `Content/PublishedContentResolver.cs` | Implementation using UmbracoContext |
-| `Content/IPropertyEditorInfoResolver.cs` | Interface for editor UI alias |
-| `Content/PropertyEditorInfoResolver.cs` | Implementation using DataTypeService |
-| `Content/IAIContextBuilder.cs` | High-level context builder interface |
-| `Content/AIContextBuilder.cs` | Context builder with element index |
-| `Content/AIContextRequest.cs` | Request model (with ElementKey) |
-| `Content/AIResolvedContent.cs` | Lightweight resolved content model |
-| `Content/Internal/BlockStructureHelper.cs` | Shared block traversal + element indexing |
-| `Configuration/UmbracoBuilderExtensions.Content.cs` | DI registration for Content services |
-| `Templates/IAITemplateResolver.cs` | Moved from Snapshots/ |
-| `Templates/AITemplateResolver.cs` | Moved from Snapshots/ |
-| `Templates/AITemplateContext.cs` | Moved from Snapshots/, enhanced with Element |
-| `Configuration/UmbracoBuilderExtensions.Templates.cs` | DI registration for Templates services |
+| File                                                  | Purpose                                      |
+| ----------------------------------------------------- | -------------------------------------------- |
+| `Content/IPublishedContentResolver.cs`                | Interface for content resolution             |
+| `Content/PublishedContentResolver.cs`                 | Implementation using UmbracoContext          |
+| `Content/IPropertyEditorInfoResolver.cs`              | Interface for editor UI alias                |
+| `Content/PropertyEditorInfoResolver.cs`               | Implementation using DataTypeService         |
+| `Content/IAIContextBuilder.cs`                        | High-level context builder interface         |
+| `Content/AIContextBuilder.cs`                         | Context builder with element index           |
+| `Content/AIContextRequest.cs`                         | Request model (with ElementKey)              |
+| `Content/AIResolvedContent.cs`                        | Lightweight resolved content model           |
+| `Content/Internal/BlockStructureHelper.cs`            | Shared block traversal + element indexing    |
+| `Configuration/UmbracoBuilderExtensions.Content.cs`   | DI registration for Content services         |
+| `Templates/IAITemplateResolver.cs`                    | Moved from Snapshots/                        |
+| `Templates/AITemplateResolver.cs`                     | Moved from Snapshots/                        |
+| `Templates/AITemplateContext.cs`                      | Moved from Snapshots/, enhanced with Element |
+| `Configuration/UmbracoBuilderExtensions.Templates.cs` | DI registration for Templates services       |
 
 ### Modified Files (Umbraco.AI.Core)
 
-| File | Change |
-|------|--------|
-| `Snapshots/AIEntitySnapshotService.cs` | Use `IPublishedContentResolver` |
+| File                                                            | Change                                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------- |
+| `Snapshots/AIEntitySnapshotService.cs`                          | Use `IPublishedContentResolver`                         |
 | `Snapshots/Serializers/BlockEditorAIPropertyValueSerializer.cs` | Can optionally use `BlockStructureHelper` for traversal |
 
 ### Deleted Files (Umbraco.AI.Core)
 
-| File | Reason |
-|------|--------|
-| `Snapshots/AIRequestContext.cs` | Redundant - fields flattened into `AITemplateContext` |
-| `Snapshots/IAITemplateResolver.cs` | Moved to `Templates/` |
-| `Snapshots/AITemplateResolver.cs` | Moved to `Templates/` |
-| `Snapshots/AITemplateContext.cs` | Moved to `Templates/` |
+| File                               | Reason                                                |
+| ---------------------------------- | ----------------------------------------------------- |
+| `Snapshots/AIRequestContext.cs`    | Redundant - fields flattened into `AITemplateContext` |
+| `Snapshots/IAITemplateResolver.cs` | Moved to `Templates/`                                 |
+| `Snapshots/AITemplateResolver.cs`  | Moved to `Templates/`                                 |
+| `Snapshots/AITemplateContext.cs`   | Moved to `Templates/`                                 |
 
 ### Modified Files (Umbraco.AI.Prompt)
 
-| File | Change |
-|------|--------|
-| `Core/Prompts/AIPromptExecutionRequest.cs` | Add `ElementKey` property (Guid?) |
-| `Core/Prompts/IAIPromptScopeValidator.cs` | Signature change: accepts `IPublishedElement` |
-| `Core/Prompts/AIPromptScopeValidator.cs` | Simplified: uses `IPropertyEditorInfoResolver` |
-| `Core/Prompts/AIPromptService.cs` | Use `IAIContextBuilder` + `IAITemplateResolver` |
-| `Web/.../Models/PromptExecutionRequestModel.cs` | Add `ElementKey` property |
-| `Web/.../Mapping/PromptExecutionMapDefinition.cs` | Map element key |
-| `Client/.../prompt-insert.property-action.ts` | Get element key from block context |
-| `Client/.../prompt-execution.server.data-source.ts` | Send element key to API |
+| File                                                | Change                                          |
+| --------------------------------------------------- | ----------------------------------------------- |
+| `Core/Prompts/AIPromptExecutionRequest.cs`          | Add `ElementKey` property (Guid?)               |
+| `Core/Prompts/IAIPromptScopeValidator.cs`           | Signature change: accepts `IPublishedElement`   |
+| `Core/Prompts/AIPromptScopeValidator.cs`            | Simplified: uses `IPropertyEditorInfoResolver`  |
+| `Core/Prompts/AIPromptService.cs`                   | Use `IAIContextBuilder` + `IAITemplateResolver` |
+| `Web/.../Models/PromptExecutionRequestModel.cs`     | Add `ElementKey` property                       |
+| `Web/.../Mapping/PromptExecutionMapDefinition.cs`   | Map element key                                 |
+| `Client/.../prompt-insert.property-action.ts`       | Get element key from block context              |
+| `Client/.../prompt-execution.server.data-source.ts` | Send element key to API                         |
 
 ### Deleted Files (Umbraco.AI.Prompt)
 
-| File | Reason |
-|------|--------|
+| File                                       | Reason                                   |
+| ------------------------------------------ | ---------------------------------------- |
 | `Core/Prompts/IAIPromptTemplateService.cs` | Replaced by shared `IAITemplateResolver` |
-| `Core/Prompts/AIPromptTemplateService.cs` | Replaced by shared `IAITemplateResolver` |
+| `Core/Prompts/AIPromptTemplateService.cs`  | Replaced by shared `IAITemplateResolver` |
 
 ---
 
 ## Implementation Order
 
 1. **Phase 1a**: Create `Content/` feature in Umbraco.AI.Core
-   - `IPublishedContentResolver`, `PublishedContentResolver`
-   - `IPropertyEditorInfoResolver`, `PropertyEditorInfoResolver`
-   - `BlockStructureHelper` with `BuildElementIndex()`
-   - `IAIContextBuilder`, `AIContextBuilder`, `AIContextRequest`, `AIResolvedContent`
+    - `IPublishedContentResolver`, `PublishedContentResolver`
+    - `IPropertyEditorInfoResolver`, `PropertyEditorInfoResolver`
+    - `BlockStructureHelper` with `BuildElementIndex()`
+    - `IAIContextBuilder`, `AIContextBuilder`, `AIContextRequest`, `AIResolvedContent`
 
 2. **Phase 1b**: Create `Templates/` feature in Umbraco.AI.Core
-   - Move `IAITemplateResolver`, `AITemplateResolver` from Snapshots/
-   - Update `AITemplateContext` with flattened properties + Element support
-   - Delete `AIRequestContext`
+    - Move `IAITemplateResolver`, `AITemplateResolver` from Snapshots/
+    - Update `AITemplateContext` with flattened properties + Element support
+    - Delete `AIRequestContext`
 
 3. **Phase 2**: Refactor `Snapshots/` in Umbraco.AI.Core
-   - Update `AIEntitySnapshotService` to use `IPublishedContentResolver`
+    - Update `AIEntitySnapshotService` to use `IPublishedContentResolver`
 
 4. **Phase 3**: Update Umbraco.AI.Prompt.Core
-   - Add `ElementKey` to `AIPromptExecutionRequest`
-   - Update `IAIPromptScopeValidator` signature
-   - Refactor `AIPromptService` to use `IAIContextBuilder` + `IAITemplateResolver`
-   - Delete `IAIPromptTemplateService` and implementation
+    - Add `ElementKey` to `AIPromptExecutionRequest`
+    - Update `IAIPromptScopeValidator` signature
+    - Refactor `AIPromptService` to use `IAIContextBuilder` + `IAITemplateResolver`
+    - Delete `IAIPromptTemplateService` and implementation
 
 5. **Phase 4**: Update Umbraco.AI.Prompt.Web API layer
-   - Add `ElementKey` to request model
-   - Update mapping
+    - Add `ElementKey` to request model
+    - Update mapping
 
 6. **Phase 5**: Frontend implementation
-   - Read element key from block context
-   - Pass to API
+    - Read element key from block context
+    - Pass to API
 
 7. **Phase 6**: Testing
-   - Unit tests for element index building
-   - Unit tests for context builder
-   - Integration tests with nested blocks
+    - Unit tests for element index building
+    - Unit tests for context builder
+    - Integration tests with nested blocks
 
 ---
 

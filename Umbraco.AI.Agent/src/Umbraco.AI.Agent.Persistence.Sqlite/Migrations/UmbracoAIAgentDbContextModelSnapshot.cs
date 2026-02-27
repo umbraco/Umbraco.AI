@@ -28,6 +28,14 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AllowedToolIds")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AllowedToolScopeIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ContextIds")
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
@@ -64,8 +72,14 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ScopeIds")
+                    b.Property<string>("Scope")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SurfaceIds")
                         .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserGroupPermissions")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Version")

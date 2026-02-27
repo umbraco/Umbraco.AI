@@ -3,9 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UaiProfileDetailModel } from "../../types.js";
 
-export const UAI_PROFILE_DETAIL_STORE_CONTEXT = new UmbContextToken<UaiProfileDetailStore>(
-    "UaiProfileDetailStore"
-);
+export const UAI_PROFILE_DETAIL_STORE_CONTEXT = new UmbContextToken<UaiProfileDetailStore>("UaiProfileDetailStore");
 
 /**
  * Store for Profile detail data.

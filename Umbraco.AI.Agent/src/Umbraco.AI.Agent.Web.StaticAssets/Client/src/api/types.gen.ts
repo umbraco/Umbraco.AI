@@ -59,6 +59,23 @@ export type AGUIToolParametersModel = {
     required?: Array<string> | null;
 };
 
+export type AiAgentScopeModel = {
+    allowRules: Array<AiAgentScopeRuleModel>;
+    denyRules: Array<AiAgentScopeRuleModel>;
+};
+
+export type AiAgentScopeRuleModel = {
+    sections?: Array<string> | null;
+    entityTypes?: Array<string> | null;
+};
+
+export type AiAgentUserGroupPermissionsModel = {
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
+    deniedToolIds: Array<string>;
+    deniedToolScopeIds: Array<string>;
+};
+
 export type AgentItemResponseModel = {
     id: string;
     alias: string;
@@ -66,7 +83,10 @@ export type AgentItemResponseModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds: Array<string>;
-    scopeIds: Array<string>;
+    surfaceIds: Array<string>;
+    scope?: AiAgentScopeModel | null;
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -79,7 +99,13 @@ export type AgentResponseModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds: Array<string>;
-    scopeIds: Array<string>;
+    surfaceIds: Array<string>;
+    scope?: AiAgentScopeModel | null;
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
+    userGroupPermissions: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    };
     instructions?: string | null;
     isActive: boolean;
     dateCreated: string;
@@ -87,9 +113,10 @@ export type AgentResponseModel = {
     version: number;
 };
 
-export type AgentScopeItemResponseModel = {
+export type AgentSurfaceItemResponseModel = {
     id: string;
     icon: string;
+    supportedScopeDimensions: Array<string>;
 };
 
 export type CreateAgentRequestModel = {
@@ -98,7 +125,13 @@ export type CreateAgentRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
-    scopeIds?: Array<string> | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
     instructions?: string | null;
 };
 
@@ -130,7 +163,13 @@ export type UpdateAgentRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
-    scopeIds?: Array<string> | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
     instructions?: string | null;
     isActive: boolean;
 };
@@ -342,25 +381,52 @@ export type RunAgentResponses = {
 
 export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];
 
-export type GetAgentScopesData = {
+export type AgentAliasExistsData = {
     body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/agents/scopes';
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/agents/{alias}/exists';
 };
 
-export type GetAgentScopesErrors = {
+export type AgentAliasExistsErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type GetAgentScopesResponses = {
+export type AgentAliasExistsResponses = {
     /**
      * OK
      */
-    200: Array<AgentScopeItemResponseModel>;
+    200: boolean;
 };
 
-export type GetAgentScopesResponse = GetAgentScopesResponses[keyof GetAgentScopesResponses];
+export type AgentAliasExistsResponse = AgentAliasExistsResponses[keyof AgentAliasExistsResponses];
+
+export type GetAgentSurfacesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/surfaces';
+};
+
+export type GetAgentSurfacesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAgentSurfacesResponses = {
+    /**
+     * OK
+     */
+    200: Array<AgentSurfaceItemResponseModel>;
+};
+
+export type GetAgentSurfacesResponse = GetAgentSurfacesResponses[keyof GetAgentSurfacesResponses];

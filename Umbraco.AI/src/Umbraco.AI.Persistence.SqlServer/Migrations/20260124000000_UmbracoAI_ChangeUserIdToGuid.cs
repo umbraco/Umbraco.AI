@@ -60,6 +60,20 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 table: "umbracoAIEntityVersion",
                 type: "uniqueidentifier",
                 nullable: true);
+
+            // umbracoAISettings
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAISettings");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAISettings");
+            migrationBuilder.AddColumn<Guid>(
+                name: "CreatedByUserId",
+                table: "umbracoAISettings",
+                type: "uniqueidentifier",
+                nullable: true);
+            migrationBuilder.AddColumn<Guid>(
+                name: "ModifiedByUserId",
+                table: "umbracoAISettings",
+                type: "uniqueidentifier",
+                nullable: true);
         }
 
         /// <inheritdoc />
@@ -112,6 +126,20 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
                 table: "umbracoAIEntityVersion",
+                type: "int",
+                nullable: true);
+
+            // umbracoAISettings - revert to int
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAISettings");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAISettings");
+            migrationBuilder.AddColumn<int>(
+                name: "CreatedByUserId",
+                table: "umbracoAISettings",
+                type: "int",
+                nullable: true);
+            migrationBuilder.AddColumn<int>(
+                name: "ModifiedByUserId",
+                table: "umbracoAISettings",
                 type: "int",
                 nullable: true);
         }

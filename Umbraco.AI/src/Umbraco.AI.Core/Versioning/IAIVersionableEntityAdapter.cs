@@ -50,12 +50,12 @@ public interface IAIVersionableEntityAdapter
     object? RestoreFromSnapshot(string json);
 
     /// <summary>
-    /// Compares two entity versions and returns the list of property changes.
+    /// Compares two entity versions and returns the list of value changes.
     /// </summary>
     /// <param name="from">The older entity version.</param>
     /// <param name="to">The newer entity version.</param>
-    /// <returns>A list of property changes between the versions.</returns>
-    IReadOnlyList<AIPropertyChange> CompareVersions(object from, object to);
+    /// <returns>A list of value changes between the versions.</returns>
+    IReadOnlyList<AIValueChange> CompareVersions(object from, object to);
 
     /// <summary>
     /// Rolls back an entity to a previous version.

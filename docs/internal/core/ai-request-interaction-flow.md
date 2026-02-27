@@ -28,7 +28,7 @@ The system consists of two parallel pipelines that converge:
 │  └────────────┬─────────────┘     │  - canHandle()              │               │
 │               │                   │  - extractEntityContext()   │               │
 │               │                   │  - serializeForLlm()        │               │
-│               │                   │  - applyPropertyChange()    │               │
+│               │                   │  - applyValueChange()    │               │
 │               │                   └─────────────────────────────┘               │
 │               │                                                                 │
 │               ▼                                                                 │
@@ -156,8 +156,8 @@ The system consists of two parallel pipelines that converge:
 │  │  AIPromptExecutionResult {                                              │   │
 │  │    Content: string,              // LLM response text                   │   │
 │  │    Usage: UsageDetails,          // Token counts                        │   │
-│  │    PropertyChanges: [            // Optional structured changes         │   │
-│  │      { Alias, Value, Culture?, Segment? }                               │   │
+│  │    ValueChanges: [               // Optional structured changes         │   │
+│  │      { Path, Value, Culture?, Segment? }                                │   │
 │  │    ]                                                                    │   │
 │  │  }                                                                      │   │
 │  │                                                                         │   │
@@ -166,24 +166,24 @@ The system consists of two parallel pipelines that converge:
 │  │  PromptExecutionResponseModel {                                         │   │
 │  │    Content: string,                                                     │   │
 │  │    Usage: UsageModel,                                                   │   │
-│  │    PropertyChanges: PropertyChangeModel[]                               │   │
+│  │    ValueChanges: ValueChangeModel[]                                  │   │
 │  │  }                                                                      │   │
 │  │                                                                         │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                              │                                                 │
 └──────────────────────────────┼─────────────────────────────────────────────────┘
                                │
-                    HTTP Response (with PropertyChanges[])
+                    HTTP Response (with ValueChanges[])
                                │
                                ▼
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │                    FRONTEND: APPLY PROPERTY CHANGES                            │
 ├────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                │
-│  For each PropertyChangeModel in response:                                     │
+│  For each ValueChangeModel in response:                                     │
 │                                                                                │
-│    UaiPropertyChange {                                                         │
-│      alias: string,           // Property to update                            │
+│    UaiValueChange {                                                         │
+│      path: string,            // JSON path to value                             │
 │      value: unknown,          // New value                                     │
 │      culture?: string,        // For variant content                           │
 │      segment?: string         // For segmented content                         │
@@ -191,11 +191,11 @@ The system consists of two parallel pipelines that converge:
 │                                                                                │
 │                        ↓                                                       │
 │                                                                                │
-│    adapter.applyPropertyChange(workspaceContext, change)                       │
+│    adapter.applyValueChange(workspaceContext, change)                          │
 │                                                                                │
 │                        ↓                                                       │
 │                                                                                │
-│    UaiPropertyChangeResult {                                                   │
+│    UaiValueChangeResult {                                                   │
 │      success: boolean,        // Whether change was applied                    │
 │      error?: string           // Error message if failed                       │
 │    }                                                                           │
@@ -207,21 +207,22 @@ The system consists of two parallel pipelines that converge:
 
 ## Key Component Responsibilities
 
-| Component | Phase | Responsibility |
-|-----------|-------|----------------|
-| `UAI_WORKSPACE_REGISTRY_CONTEXT` | Frontend | Tracks all active workspaces globally |
-| `UaiEntityAdapterContext` | Frontend | Matches adapters, serializes entities |
-| `uaiEntityAdapter` | Frontend | Plugin system for entity-specific serialization |
-| `IAIRequestContextProcessor` | Backend Phase 1 | Extracts variables, system parts, typed data |
-| `IAIPromptTemplateService` | Backend Phase 2 | Variable substitution in prompts |
-| `IAIContextResolver` | Backend Phase 3 | Resolves knowledge base resources |
-| `ContextInjectingChatClient` | Backend Phase 4 | Assembles final LLM request |
-| `AIPromptExecutionResult` | Backend Phase 5 | Packages LLM response with property changes |
-| `uaiEntityAdapter.applyPropertyChange` | Frontend Response | Stages property changes in workspace |
+| Component                              | Phase             | Responsibility                                  |
+| -------------------------------------- | ----------------- | ----------------------------------------------- |
+| `UAI_WORKSPACE_REGISTRY_CONTEXT`       | Frontend          | Tracks all active workspaces globally           |
+| `UaiEntityAdapterContext`              | Frontend          | Matches adapters, serializes entities           |
+| `uaiEntityAdapter`                     | Frontend          | Plugin system for entity-specific serialization |
+| `IAIRequestContextProcessor`           | Backend Phase 1   | Extracts variables, system parts, typed data    |
+| `IAIPromptTemplateService`             | Backend Phase 2   | Variable substitution in prompts                |
+| `IAIContextResolver`                   | Backend Phase 3   | Resolves knowledge base resources               |
+| `ContextInjectingChatClient`           | Backend Phase 4   | Assembles final LLM request                     |
+| `AIPromptExecutionResult`              | Backend Phase 5   | Packages LLM response with property changes     |
+| `uaiEntityAdapter.applyValueChange` | Frontend Response | Stages property changes in workspace            |
 
 ## Data Transformation Summary
 
 ### Request Path
+
 ```
 Frontend Entity → UaiSerializedEntity → UaiRequestContextItem[]
                                                 │
@@ -239,23 +240,24 @@ Frontend Entity → UaiSerializedEntity → UaiRequestContextItem[]
 ```
 
 ### Response Path
+
 ```
 LLM Response
      │
      ▼
-AIPromptExecutionResult { Content, Usage, PropertyChanges[] }
+AIPromptExecutionResult { Content, Usage, ValueChanges[] }
      │
      ▼ (API mapping)
-PromptExecutionResponseModel { Content, Usage, PropertyChanges[] }
+PromptExecutionResponseModel { Content, Usage, ValueChanges[] }
      │
      ▼ (HTTP Response)
-Frontend receives PropertyChangeModel[]
+Frontend receives ValueChangeModel[]
      │
      ▼ (for each change)
-adapter.applyPropertyChange(workspaceContext, UaiPropertyChange)
+adapter.applyValueChange(workspaceContext, UaiValueChange)
      │
      ▼
-UaiPropertyChangeResult { success, error? }
+UaiValueChangeResult { success, error? }
      │
      ▼
 Changes STAGED in workspace (user saves to persist)
@@ -268,16 +270,19 @@ Changes STAGED in workspace (user saves to persist)
 The `AIRequestContextProcessorCollection` processes incoming context items from the frontend:
 
 **SerializedEntityProcessor** (`Umbraco.AI.Core/RequestContext/Processors/SerializedEntityProcessor.cs`):
+
 - Deserializes `UaiSerializedEntity` from JSON
 - Extracts `EntityId`, `EntityType`, `ParentEntityId`
 - Builds template variables (e.g., `$Document_Title`, `$Document_Body`)
 - Generates system message parts describing the entity being edited
 
 **DefaultSystemMessageProcessor** (`Umbraco.AI.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs`):
+
 - Fallback processor for unhandled items
 - Adds item descriptions to system message parts
 
 **Output: `AIRequestContext`**
+
 ```csharp
 {
     Items,              // Original context items
@@ -301,14 +306,15 @@ Output: "Write description for My Article"
 
 Multiple `IAIContextResolver` implementations check `ChatOptions.AdditionalProperties` to resolve knowledge base resources:
 
-| Resolver | Key | Source |
-|----------|-----|--------|
-| `ProfileContextResolver` | `ProfileIdKey` | Profile's configured contexts |
+| Resolver                 | Key                            | Source                                  |
+| ------------------------ | ------------------------------ | --------------------------------------- |
+| `ProfileContextResolver` | `ProfileIdKey`                 | Profile's configured contexts           |
 | `ContentContextResolver` | `ContentId` / `ParentEntityId` | Content tree Context Picker inheritance |
-| `PromptContextResolver` | `PromptIdKey` | Prompt's configured contexts |
-| `AgentContextResolver` | `AgentIdKey` | Agent's configured contexts |
+| `PromptContextResolver`  | `PromptIdKey`                  | Prompt's configured contexts            |
+| `AgentContextResolver`   | `AgentIdKey`                   | Agent's configured contexts             |
 
 **Output: `AIResolvedContext`**
+
 ```csharp
 {
     Sources,            // Which resolvers contributed
@@ -322,12 +328,14 @@ Multiple `IAIContextResolver` implementations check `ChatOptions.AdditionalPrope
 The `ContextInjectingChatClient` middleware assembles the final LLM request:
 
 **System Message**:
+
 - Base instructions
 - `RequestContext.SystemMessageParts[]`
 - Formatted `InjectedResources`
 - List of available `OnDemandResources`
 
 **User Message**:
+
 - Processed prompt template (from Phase 2)
 
 ### Phase 5: Response Processing & Property Changes
@@ -338,7 +346,7 @@ The LLM response is packaged into `AIPromptExecutionResult` which may include pr
 
 ```csharp
 // Request to change a property value
-public class AIPropertyChange
+public class AIValueChange
 {
     public required string Alias { get; init; }  // Property alias
     public object? Value { get; init; }          // New value
@@ -347,7 +355,7 @@ public class AIPropertyChange
 }
 
 // Result of applying a property change
-public class AIPropertyChangeResult
+public class AIValueChangeResult
 {
     public required bool Success { get; init; }  // Whether change was applied
     public string? Error { get; init; }          // Error message if failed
@@ -362,11 +370,11 @@ public class PromptExecutionResponseModel
 {
     public required string Content { get; init; }              // LLM response text
     public UsageModel? Usage { get; init; }                    // Token counts
-    public IReadOnlyList<PropertyChangeModel>? PropertyChanges { get; init; }
+    public IReadOnlyList<ValueChangeModel>? ValueChanges { get; init; }
 }
 
 // Property change in API response
-public class PropertyChangeModel
+public class ValueChangeModel
 {
     public required string Alias { get; init; }
     public object? Value { get; init; }
@@ -378,18 +386,18 @@ public class PropertyChangeModel
 **Frontend Types** (`Umbraco.AI/Client/src/entity-adapter/types.ts`):
 
 ```typescript
-// Request to change a property
-interface UaiPropertyChange {
-    alias: string;      // Property alias
-    value: unknown;     // New value
-    culture?: string;   // For variant content
-    segment?: string;   // For segmented content
+// Request to change a value via JSON path
+interface UaiValueChange {
+    path: string; // JSON path to the value (e.g., "title", "price.amount")
+    value: unknown; // New value
+    culture?: string; // For variant content
+    segment?: string; // For segmented content
 }
 
 // Result of property change operation
-interface UaiPropertyChangeResult {
-    success: boolean;   // Whether change was applied
-    error?: string;     // Error message if failed
+interface UaiValueChangeResult {
+    success: boolean; // Whether change was applied
+    error?: string; // Error message if failed
 }
 ```
 
@@ -402,27 +410,27 @@ interface UaiPropertyChangeResult {
 
 ## Key Files Reference
 
-| Component | File |
-|-----------|------|
-| Workspace Registry | `Umbraco.AI/Client/src/workspace-registry/workspace-registry.context.ts` |
-| Entity Adapter Context | `Umbraco.AI/Client/src/entity-adapter/entity-adapter.context.ts` |
-| Entity Adapter Types | `Umbraco.AI/Client/src/entity-adapter/types.ts` |
-| Request Context Item | `Umbraco.AI/Client/src/request-context/types.ts` |
-| Processor Collection | `Umbraco.AI.Core/RequestContext/AIRequestContextProcessorCollection.cs` |
-| Serialized Entity Processor | `Umbraco.AI.Core/RequestContext/Processors/SerializedEntityProcessor.cs` |
-| Default System Message Processor | `Umbraco.AI.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs` |
-| Request Context | `Umbraco.AI.Core/RequestContext/AIRequestContext.cs` |
-| Context Resolution Service | `Umbraco.AI.Core/Contexts/AIContextResolutionService.cs` |
-| Context Injecting Client | `Umbraco.AI.Core/Contexts/Middleware/ContextInjectingChatClient.cs` |
-| Profile Context Resolver | `Umbraco.AI.Core/Contexts/Resolvers/ProfileContextResolver.cs` |
-| Content Context Resolver | `Umbraco.AI.Core/Contexts/Resolvers/ContentContextResolver.cs` |
-| Prompt Context Resolver | `Umbraco.AI.Prompt.Core/Context/PromptContextResolver.cs` |
-| Agent Context Resolver | `Umbraco.AI.Agent.Core/Context/AgentContextResolver.cs` |
-| Property Change (Core) | `Umbraco.AI.Core/EntityAdapter/AIPropertyChange.cs` |
-| Property Change Result (Core) | `Umbraco.AI.Core/EntityAdapter/AIPropertyChangeResult.cs` |
-| Property Change Model (API) | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PropertyChangeModel.cs` |
-| Execution Result (Core) | `Umbraco.AI.Prompt.Core/Prompts/AIPromptExecutionResult.cs` |
-| Execution Response (API) | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionResponseModel.cs` |
+| Component                        | File                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| Workspace Registry               | `Umbraco.AI/Client/src/workspace-registry/workspace-registry.context.ts`             |
+| Entity Adapter Context           | `Umbraco.AI/Client/src/entity-adapter/entity-adapter.context.ts`                     |
+| Entity Adapter Types             | `Umbraco.AI/Client/src/entity-adapter/types.ts`                                      |
+| Request Context Item             | `Umbraco.AI/Client/src/request-context/types.ts`                                     |
+| Processor Collection             | `Umbraco.AI.Core/RequestContext/AIRequestContextProcessorCollection.cs`              |
+| Serialized Entity Processor      | `Umbraco.AI.Core/RequestContext/Processors/SerializedEntityProcessor.cs`             |
+| Default System Message Processor | `Umbraco.AI.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs`         |
+| Request Context                  | `Umbraco.AI.Core/RequestContext/AIRequestContext.cs`                                 |
+| Context Resolution Service       | `Umbraco.AI.Core/Contexts/AIContextResolutionService.cs`                             |
+| Context Injecting Client         | `Umbraco.AI.Core/Contexts/Middleware/ContextInjectingChatClient.cs`                  |
+| Profile Context Resolver         | `Umbraco.AI.Core/Contexts/Resolvers/ProfileContextResolver.cs`                       |
+| Content Context Resolver         | `Umbraco.AI.Core/Contexts/Resolvers/ContentContextResolver.cs`                       |
+| Prompt Context Resolver          | `Umbraco.AI.Prompt.Core/Context/PromptContextResolver.cs`                            |
+| Agent Context Resolver           | `Umbraco.AI.Agent.Core/Context/AgentContextResolver.cs`                              |
+| Property Change (Core)           | `Umbraco.AI.Core/EntityAdapter/AIValueChange.cs`                                  |
+| Property Change Result (Core)    | `Umbraco.AI.Core/EntityAdapter/AIValueChangeResult.cs`                            |
+| Property Change Model (API)      | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/ValueChangeModel.cs`          |
+| Execution Result (Core)          | `Umbraco.AI.Prompt.Core/Prompts/AIPromptExecutionResult.cs`                          |
+| Execution Response (API)         | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionResponseModel.cs` |
 
 ## Extension Points
 

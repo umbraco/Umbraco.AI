@@ -43,8 +43,8 @@ After installation, create a connection in the Umbraco backoffice:
 
 ```json
 {
-  "ApiKey": "sk-...",
-  "OrganizationId": "org-..." // Optional
+    "ApiKey": "sk-...",
+    "OrganizationId": "org-..." // Optional
 }
 ```
 
@@ -52,21 +52,23 @@ After installation, create a connection in the Umbraco backoffice:
 
 ```json
 {
-  "Endpoint": "https://your-resource.openai.azure.com/",
-  "ApiKey": "your-azure-api-key",
-  "DeploymentName": "your-deployment-name"
+    "Endpoint": "https://your-resource.openai.azure.com/",
+    "ApiKey": "your-azure-api-key",
+    "DeploymentName": "your-deployment-name"
 }
 ```
 
 ## Supported Models
 
 **Chat Models:**
+
 - GPT-4o
 - GPT-4 Turbo
 - GPT-4
 - GPT-3.5 Turbo
 
 **Embedding Models:**
+
 - text-embedding-3-large
 - text-embedding-3-small
 - text-embedding-ada-002

@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.AuditLog;
-using Umbraco.AI.Web.Api.Common.Configuration;
-using Umbraco.AI.Web.Api.Management.Configuration;
-using Umbraco.Cms.Web.Common.Authorization;
+using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 
@@ -13,7 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 /// Controller to clean up old audit-log logs based on retention policy.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class CleanupAuditLogsController : AuditLogControllerBase
 {
     private readonly IAIAuditLogService _auditLogService;

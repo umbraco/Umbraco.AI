@@ -1,6 +1,6 @@
 ---
 description: >-
-  Implement the chat capability for your custom provider.
+    Implement the chat capability for your custom provider.
 ---
 
 # Chat Capability
@@ -10,6 +10,7 @@ The chat capability enables conversational AI features. Implement it by extendin
 ## Base Class
 
 {% code title="AIChatCapabilityBase<TSettings>" %}
+
 ```csharp
 public abstract class AIChatCapabilityBase<TSettings> : IAIChatCapability
     where TSettings : class
@@ -23,11 +24,13 @@ public abstract class AIChatCapabilityBase<TSettings> : IAIChatCapability
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Basic Implementation
 
 {% code title="MyChatCapability.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
@@ -55,6 +58,7 @@ public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ## Implementing IChatClient
@@ -62,6 +66,7 @@ public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
 The `IChatClient` interface from Microsoft.Extensions.AI:
 
 {% code title="IChatClient Interface" %}
+
 ```csharp
 public interface IChatClient : IDisposable
 {
@@ -80,11 +85,13 @@ public interface IChatClient : IDisposable
     object? GetService(Type serviceType, object? serviceKey = null);
 }
 ```
+
 {% endcode %}
 
 ## Complete IChatClient Example
 
 {% code title="MyChatClient.cs" %}
+
 ```csharp
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -268,6 +275,7 @@ internal class DeltaContent
     public string? Content { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Using Existing M.E.AI Clients
@@ -275,6 +283,7 @@ internal class DeltaContent
 If your AI service already has an M.E.AI client, use it directly:
 
 {% code title="Using Existing Client" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using OpenAI;
@@ -307,6 +316,7 @@ public class MyOpenAICompatibleCapability : AIChatCapabilityBase<MyProviderSetti
     }
 }
 ```
+
 {% endcode %}
 
 ## Handling ChatOptions
@@ -314,6 +324,7 @@ public class MyOpenAICompatibleCapability : AIChatCapabilityBase<MyProviderSetti
 Profile settings and request options are merged into `ChatOptions`:
 
 {% code title="Using ChatOptions" %}
+
 ```csharp
 protected override IChatClient CreateClient(MyProviderSettings settings, string? modelId)
 {
@@ -340,4 +351,5 @@ public async Task<ChatResponse> GetResponseAsync(
     // Send request...
 }
 ```
+
 {% endcode %}

@@ -1,6 +1,7 @@
 # API Security Hardening Implementation Plan
 
 This plan addresses security improvements for the Chat and Embedding API endpoints, focusing on:
+
 - P0: Rate Limiting
 - P0: Input Size Validation (MaxLength)
 - P1: Error Response Sanitization
@@ -14,12 +15,12 @@ This plan addresses security improvements for the Chat and Embedding API endpoin
 
 ### Current State
 
-| Area | Status | Risk |
-|------|--------|------|
-| Rate Limiting | Not implemented | High - cost amplification attacks |
-| Input Validation | Partial (`[Required]`, `[MinLength]` only) | High - DoS via large payloads |
-| Error Handling | Exception details exposed to clients | Medium - information disclosure |
-| Audit Logging | M.E.AI logging middleware exists | Low - no API-level audit trail |
+| Area             | Status                                     | Risk                              |
+| ---------------- | ------------------------------------------ | --------------------------------- |
+| Rate Limiting    | Not implemented                            | High - cost amplification attacks |
+| Input Validation | Partial (`[Required]`, `[MinLength]` only) | High - DoS via large payloads     |
+| Error Handling   | Exception details exposed to clients       | Medium - information disclosure   |
+| Audit Logging    | M.E.AI logging middleware exists           | Low - no API-level audit trail    |
 
 ### Target State
 
@@ -831,24 +832,24 @@ public async Task<IActionResult> GenerateEmbeddings(...)
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "DefaultChatProfileAlias": "default-chat",
-      "RateLimiting": {
-        "Enabled": true,
-        "Chat": {
-          "PermitLimit": 60,
-          "WindowSeconds": 60,
-          "QueueLimit": 2
-        },
-        "Embedding": {
-          "PermitLimit": 100,
-          "WindowSeconds": 60,
-          "QueueLimit": 5
+    "Umbraco": {
+        "AI": {
+            "DefaultChatProfileAlias": "default-chat",
+            "RateLimiting": {
+                "Enabled": true,
+                "Chat": {
+                    "PermitLimit": 60,
+                    "WindowSeconds": 60,
+                    "QueueLimit": 2
+                },
+                "Embedding": {
+                    "PermitLimit": 100,
+                    "WindowSeconds": 60,
+                    "QueueLimit": 5
+                }
+            }
         }
-      }
     }
-  }
 }
 ```
 
@@ -1076,6 +1077,7 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 ## Implementation Order
 
 ### Sprint 1: Input Validation (P0)
+
 1. Add `Validation` static class to `Constants.cs`
 2. Create `MaxItemLengthAttribute.cs`
 3. Update `ChatRequestModel.cs` and `ChatMessageModel.cs`
@@ -1084,6 +1086,7 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 6. Write validation tests
 
 ### Sprint 2: Error Sanitization (P1)
+
 1. Create `AIException.cs` hierarchy
 2. Create `AIProblemDetailsFactory.cs`
 3. Update `CompleteChatController.cs`
@@ -1093,6 +1096,7 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 7. Write error handling tests
 
 ### Sprint 3: Rate Limiting (P0)
+
 1. Add `RateLimiting` static class to `Constants.cs`
 2. Create `AIRateLimitOptions.cs`
 3. Update `AIOptions.cs`
@@ -1102,6 +1106,7 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 7. Write rate limiting integration tests
 
 ### Sprint 4: Audit Logging (P2)
+
 1. Create `AIAuditEntry.cs`
 2. Create `IAIAuditLogger.cs`
 3. Create `StructuredAIAuditLogger.cs`
@@ -1114,34 +1119,34 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 
 ## Files to Create
 
-| File | Phase |
-|------|-------|
-| `src/Umbraco.AI.Web/Api/Management/Common/Validation/MaxItemLengthAttribute.cs` | 1 |
-| `src/Umbraco.AI.Core/Exceptions/AIException.cs` | 2 |
-| `src/Umbraco.AI.Web/Api/Management/Common/Errors/AIProblemDetailsFactory.cs` | 2 |
-| `src/Umbraco.AI.Core/Models/AIRateLimitOptions.cs` | 3 |
-| `src/Umbraco.AI.Web/Configuration/UmbracoAIRateLimitingPipelineFilter.cs` | 3 |
-| `src/Umbraco.AI.Core/Audit/AIAuditEntry.cs` | 4 |
-| `src/Umbraco.AI.Core/Audit/IAIAuditLogger.cs` | 4 |
-| `src/Umbraco.AI.Core/Audit/StructuredAIAuditLogger.cs` | 4 |
-| `src/Umbraco.AI.Web/Api/Management/Common/Filters/AIAuditLogFilter.cs` | 4 |
+| File                                                                            | Phase |
+| ------------------------------------------------------------------------------- | ----- |
+| `src/Umbraco.AI.Web/Api/Management/Common/Validation/MaxItemLengthAttribute.cs` | 1     |
+| `src/Umbraco.AI.Core/Exceptions/AIException.cs`                                 | 2     |
+| `src/Umbraco.AI.Web/Api/Management/Common/Errors/AIProblemDetailsFactory.cs`    | 2     |
+| `src/Umbraco.AI.Core/Models/AIRateLimitOptions.cs`                              | 3     |
+| `src/Umbraco.AI.Web/Configuration/UmbracoAIRateLimitingPipelineFilter.cs`       | 3     |
+| `src/Umbraco.AI.Core/Audit/AIAuditEntry.cs`                                     | 4     |
+| `src/Umbraco.AI.Core/Audit/IAIAuditLogger.cs`                                   | 4     |
+| `src/Umbraco.AI.Core/Audit/StructuredAIAuditLogger.cs`                          | 4     |
+| `src/Umbraco.AI.Web/Api/Management/Common/Filters/AIAuditLogFilter.cs`          | 4     |
 
 ## Files to Modify
 
-| File | Phase |
-|------|-------|
-| `src/Umbraco.AI.Web/Constants.cs` | 1, 3 |
-| `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatRequestModel.cs` | 1 |
-| `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatMessageModel.cs` | 1 |
-| `src/Umbraco.AI.Web/Api/Management/Embedding/Models/GenerateEmbeddingRequestModel.cs` | 1 |
-| `src/Umbraco.AI.Web/Api/Management/Connection/Models/CreateConnectionRequestModel.cs` | 1 |
-| `src/Umbraco.AI.Web/Api/Management/Profile/Models/CreateProfileRequestModel.cs` | 1 |
-| `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/CompleteChatController.cs` | 2, 3 |
-| `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/StreamChatController.cs` | 2, 3 |
-| `src/Umbraco.AI.Web/Api/Management/Embedding/Controllers/GenerateEmbeddingController.cs` | 2, 3 |
-| `src/Umbraco.AI.Core/Models/AIOptions.cs` | 3 |
-| `src/Umbraco.AI.Web/Configuration/UmbracoBuilderExtensions.cs` | 3, 4 |
-| `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` | 4 |
+| File                                                                                     | Phase |
+| ---------------------------------------------------------------------------------------- | ----- |
+| `src/Umbraco.AI.Web/Constants.cs`                                                        | 1, 3  |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatRequestModel.cs`                      | 1     |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatMessageModel.cs`                      | 1     |
+| `src/Umbraco.AI.Web/Api/Management/Embedding/Models/GenerateEmbeddingRequestModel.cs`    | 1     |
+| `src/Umbraco.AI.Web/Api/Management/Connection/Models/CreateConnectionRequestModel.cs`    | 1     |
+| `src/Umbraco.AI.Web/Api/Management/Profile/Models/CreateProfileRequestModel.cs`          | 1     |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/CompleteChatController.cs`           | 2, 3  |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/StreamChatController.cs`             | 2, 3  |
+| `src/Umbraco.AI.Web/Api/Management/Embedding/Controllers/GenerateEmbeddingController.cs` | 2, 3  |
+| `src/Umbraco.AI.Core/Models/AIOptions.cs`                                                | 3     |
+| `src/Umbraco.AI.Web/Configuration/UmbracoBuilderExtensions.cs`                           | 3, 4  |
+| `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs`                          | 4     |
 
 ---
 
@@ -1149,41 +1154,42 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 
 Add to `docs/public/configuration.md`:
 
-```markdown
+````markdown
 ## Rate Limiting
 
 Umbraco.AI includes built-in rate limiting to prevent abuse of AI endpoints.
 
 ### Default Limits
 
-| Endpoint | Requests | Window | Queue |
-|----------|----------|--------|-------|
-| Chat | 60 | 1 minute | 2 |
-| Embedding | 100 | 1 minute | 5 |
+| Endpoint  | Requests | Window   | Queue |
+| --------- | -------- | -------- | ----- |
+| Chat      | 60       | 1 minute | 2     |
+| Embedding | 100      | 1 minute | 5     |
 
 ### Configuration
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "RateLimiting": {
-        "Enabled": true,
-        "Chat": {
-          "PermitLimit": 60,
-          "WindowSeconds": 60,
-          "QueueLimit": 2
-        },
-        "Embedding": {
-          "PermitLimit": 100,
-          "WindowSeconds": 60,
-          "QueueLimit": 5
+    "Umbraco": {
+        "AI": {
+            "RateLimiting": {
+                "Enabled": true,
+                "Chat": {
+                    "PermitLimit": 60,
+                    "WindowSeconds": 60,
+                    "QueueLimit": 2
+                },
+                "Embedding": {
+                    "PermitLimit": 100,
+                    "WindowSeconds": 60,
+                    "QueueLimit": 5
+                }
+            }
         }
-      }
     }
-  }
 }
 ```
+````
 
 ### Disabling Rate Limiting
 
@@ -1191,15 +1197,16 @@ Set `Enabled` to `false` to disable rate limiting (not recommended for productio
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "RateLimiting": {
-        "Enabled": false
-      }
+    "Umbraco": {
+        "AI": {
+            "RateLimiting": {
+                "Enabled": false
+            }
+        }
     }
-  }
 }
 ```
+
 ```
 
 ---
@@ -1223,3 +1230,4 @@ Set `Enabled` to `false` to disable rate limiting (not recommended for productio
 - Verify 429 responses with correct headers
 - Verify generic error messages (no stack traces)
 - Verify audit logs appear in logging output
+```

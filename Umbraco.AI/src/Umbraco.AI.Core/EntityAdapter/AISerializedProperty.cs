@@ -3,6 +3,20 @@ namespace Umbraco.AI.Core.EntityAdapter;
 /// <summary>
 /// Represents a serialized property for LLM context.
 /// </summary>
+/// <remarks>
+/// This class is obsolete and kept for reference only.
+/// Entity data is now stored in the <see cref="AISerializedEntity.Data"/> field as free-form JSON.
+/// For CMS entities, properties are nested inside the data field as:
+/// <code>
+/// {
+///   "contentType": "blogPost",
+///   "properties": [
+///     { "alias": "title", "label": "Title", "editorAlias": "Umbraco.TextBox", "value": "Hello" }
+///   ]
+/// }
+/// </code>
+/// </remarks>
+[Obsolete("Entity data is now stored in AISerializedEntity.Data as free-form JSON. This class is kept for reference only.")]
 public sealed class AISerializedProperty
 {
     /// <summary>

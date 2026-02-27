@@ -1,6 +1,6 @@
 ---
 description: >-
-  Middleware provides an extensible pipeline for adding cross-cutting concerns to AI requests.
+    Middleware provides an extensible pipeline for adding cross-cutting concerns to AI requests.
 ---
 
 # Middleware
@@ -11,10 +11,10 @@ Middleware wraps AI clients to add functionality like logging, caching, rate lim
 
 Middleware uses the decorator pattern. Each middleware wraps the client and can:
 
-* Modify requests before they're sent
-* Modify responses before they're returned
-* Add side effects (logging, metrics)
-* Short-circuit requests (caching)
+- Modify requests before they're sent
+- Modify responses before they're returned
+- Add side effects (logging, metrics)
+- Short-circuit requests (caching)
 
 ```
 Request → [Middleware 1] → [Middleware 2] → [Middleware 3] → Provider
@@ -29,12 +29,14 @@ Response ← [Middleware 1] ← [Middleware 2] ← [Middleware 3] ← Provider
 Wraps `IChatClient` instances:
 
 {% code title="IAIChatMiddleware.cs" %}
+
 ```csharp
 public interface IAIChatMiddleware
 {
     IChatClient Apply(IChatClient client);
 }
 ```
+
 {% endcode %}
 
 ### Embedding Middleware
@@ -42,6 +44,7 @@ public interface IAIChatMiddleware
 Wraps `IEmbeddingGenerator<string, Embedding<float>>` instances:
 
 {% code title="IAIEmbeddingMiddleware.cs" %}
+
 ```csharp
 public interface IAIEmbeddingMiddleware
 {
@@ -49,11 +52,13 @@ public interface IAIEmbeddingMiddleware
         IEmbeddingGenerator<string, Embedding<float>> generator);
 }
 ```
+
 {% endcode %}
 
 ## Example: Logging Middleware
 
 {% code title="LoggingChatMiddleware.cs" %}
+
 ```csharp
 public class LoggingChatMiddleware : IAIChatMiddleware
 {
@@ -96,6 +101,7 @@ public class LoggingChatClient : DelegatingChatClient
     }
 }
 ```
+
 {% endcode %}
 
 ## Registering Middleware
@@ -103,6 +109,7 @@ public class LoggingChatClient : DelegatingChatClient
 Register middleware in a Composer using the collection builder:
 
 {% code title="AIComposer.cs" %}
+
 ```csharp
 public class AIComposer : IComposer
 {
@@ -113,6 +120,7 @@ public class AIComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Middleware Ordering
@@ -120,6 +128,7 @@ public class AIComposer : IComposer
 Middleware executes in the order it's registered. Use collection builder methods to control order:
 
 {% code title="Example.cs" %}
+
 ```csharp
 builder.AIChatMiddleware()
     .Append<LoggingMiddleware>()           // Added first
@@ -127,9 +136,11 @@ builder.AIChatMiddleware()
     .InsertBefore<LoggingMiddleware, TracingMiddleware>()  // Before logging
     .InsertAfter<CachingMiddleware, MetricsMiddleware>();  // After caching
 ```
+
 {% endcode %}
 
 Resulting order:
+
 1. TracingMiddleware
 2. LoggingMiddleware
 3. CachingMiddleware
@@ -185,11 +196,12 @@ public IChatClient Apply(IChatClient client)
 
 Microsoft.Extensions.AI provides middleware you can use:
 
-* `OpenTelemetryChatClient` - Distributed tracing
-* `LoggingChatClient` - Structured logging
-* `FunctionInvokingChatClient` - Tool/function calling
+- `OpenTelemetryChatClient` - Distributed tracing
+- `LoggingChatClient` - Structured logging
+- `FunctionInvokingChatClient` - Tool/function calling
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class OpenTelemetryMiddleware : IAIChatMiddleware
 {
@@ -201,6 +213,7 @@ public class OpenTelemetryMiddleware : IAIChatMiddleware
     }
 }
 ```
+
 {% endcode %}
 
 ## Creating Custom Middleware
@@ -213,5 +226,5 @@ See the extending guide for detailed instructions:
 
 ## Related
 
-* [Chat API](../using-the-api/chat/README.md) - How middleware affects chat requests
-* [Creating Chat Middleware](../extending/middleware/chat-middleware.md) - Build custom middleware
+- [Chat API](../using-the-api/chat/README.md) - How middleware affects chat requests
+- [Creating Chat Middleware](../extending/middleware/chat-middleware.md) - Build custom middleware

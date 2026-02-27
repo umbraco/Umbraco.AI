@@ -1,7 +1,10 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiPromptExecutionRepository } from "../repository/execution/prompt-execution.repository.js";
-import type { UaiPromptContextItem, UaiPromptPropertyChange } from "../repository/execution/prompt-execution.server.data-source.js";
+import type {
+    UaiPromptContextItem,
+    UaiPromptResultOption,
+} from "../repository/execution/prompt-execution.server.data-source.js";
 
 /**
  * Options for prompt execution.
@@ -29,8 +32,13 @@ export interface UaiPromptExecuteOptions {
 export interface UaiPromptExecuteResult {
     /** The generated response content. */
     content: string;
-    /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    /**
+     * Available result options. Always present, may be empty.
+     * - Empty array: Informational only
+     * - Single item: One value to insert
+     * - Multiple items: User selects one
+     */
+    resultOptions: UaiPromptResultOption[];
 }
 
 /**
@@ -84,7 +92,7 @@ export class UaiPromptController extends UmbControllerBase {
      */
     async execute(
         promptIdOrAlias: string,
-        options: UaiPromptExecuteOptions
+        options: UaiPromptExecuteOptions,
     ): Promise<{ data?: UaiPromptExecuteResult; error?: Error }> {
         try {
             const { data, error } = await this.#repository.execute(
@@ -97,14 +105,13 @@ export class UaiPromptController extends UmbControllerBase {
                     segment: options.segment,
                     context: options.context,
                 },
-                options.signal
+                options.signal,
             );
 
             if (error) {
+                const detail = (error as any)?.detail;
                 return {
-                    error: error instanceof Error
-                        ? error
-                        : new Error('Failed to execute prompt')
+                    error: error instanceof Error ? error : new Error(`Failed to execute prompt${detail ? `: ${detail}` : ""}`),
                 };
             }
 
@@ -112,20 +119,18 @@ export class UaiPromptController extends UmbControllerBase {
                 return {
                     data: {
                         content: data.content,
-                        propertyChanges: data.propertyChanges,
-                    }
+                        resultOptions: data.resultOptions,
+                    },
                 };
             }
 
-            return { error: new Error('No response received') };
+            return { error: new Error("No response received") };
         } catch (err) {
-            if ((err as Error)?.name === 'AbortError') {
+            if ((err as Error)?.name === "AbortError") {
                 return { error: err as Error };
             }
             return {
-                error: err instanceof Error
-                    ? err
-                    : new Error('Failed to execute prompt')
+                error: err instanceof Error ? err : new Error("Failed to execute prompt"),
             };
         }
     }

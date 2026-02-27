@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get started with Prompt Management.
+    Get started with Prompt Management.
 ---
 
 # Getting Started with Prompts
@@ -18,26 +18,28 @@ Before starting, ensure you have:
 ## Step 1: Install the Package
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.Prompt
 ```
+
 {% endcode %}
 
 Restart your application to run database migrations.
 
 ## Step 2: Create a Prompt in Backoffice
 
-1. Navigate to **Settings** > **AI** > **Prompts**
+1. Navigate to the **AI** section > **Prompts**
 2. Click **Create Prompt**
 3. Fill in the details:
 
-| Field | Value |
-|-------|-------|
-| Alias | `meta-description` |
-| Name | Generate Meta Description |
-| Description | Creates SEO-friendly meta descriptions |
-| Instructions | See below |
-| Profile | (select your chat profile) |
+| Field        | Value                                  |
+| ------------ | -------------------------------------- |
+| Alias        | `meta-description`                     |
+| Name         | Generate Meta Description              |
+| Description  | Creates SEO-friendly meta descriptions |
+| Instructions | See below                              |
+| Profile      | (select your chat profile)             |
 
 **Instructions:**
 
@@ -61,8 +63,8 @@ Requirements:
 In the prompt editor, use the **Test** panel:
 
 1. Enter test variables:
-   - `title`: "How to Bake Sourdough Bread"
-   - `content`: "This guide covers everything from creating your starter to achieving the perfect crust..."
+    - `title`: "How to Bake Sourdough Bread"
+    - `content`: "This guide covers everything from creating your starter to achieving the perfect crust..."
 2. Click **Execute**
 3. Review the response
 
@@ -71,6 +73,7 @@ In the prompt editor, use the **Test** panel:
 ### Via Service
 
 {% code title="MetaDescriptionGenerator.cs" %}
+
 ```csharp
 public class MetaDescriptionGenerator
 {
@@ -100,11 +103,13 @@ public class MetaDescriptionGenerator
     }
 }
 ```
+
 {% endcode %}
 
 ### Via API
 
 {% code title="cURL" %}
+
 ```bash
 curl -X POST "https://your-site.com/umbraco/ai/management/api/v1/prompt/meta-description/execute" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -116,6 +121,7 @@ curl -X POST "https://your-site.com/umbraco/ai/management/api/v1/prompt/meta-des
     }
   }'
 ```
+
 {% endcode %}
 
 ## Step 5: Add Contexts (Optional)

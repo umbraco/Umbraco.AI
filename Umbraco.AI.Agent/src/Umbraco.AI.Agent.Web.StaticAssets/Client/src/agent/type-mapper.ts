@@ -1,7 +1,11 @@
-import type { AgentResponseModel, AgentItemResponseModel, CreateAgentRequestModel, UpdateAgentRequestModel } from "../api/types.gen.js";
+import type {
+    AgentResponseModel,
+    AgentItemResponseModel,
+    CreateAgentRequestModel,
+    UpdateAgentRequestModel,
+} from "../api/types.gen.js";
 import { UAI_AGENT_ENTITY_TYPE } from "./constants.js";
 import type { UaiAgentDetailModel, UaiAgentItemModel } from "./types.js";
-
 
 export const UaiAgentTypeMapper = {
     toDetailModel(response: AgentResponseModel): UaiAgentDetailModel {
@@ -13,7 +17,11 @@ export const UaiAgentTypeMapper = {
             description: response.description ?? null,
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
-            scopeIds: response.scopeIds ?? [],
+            surfaceIds: response.surfaceIds ?? [],
+            scope: (response as any).scope ?? null,
+            allowedToolIds: response.allowedToolIds ?? [],
+            allowedToolScopeIds: response.allowedToolScopeIds ?? [],
+            userGroupPermissions: (response as any).userGroupPermissions ?? {},
             instructions: response.instructions ?? null,
             isActive: response.isActive,
             dateCreated: response.dateCreated,
@@ -31,7 +39,10 @@ export const UaiAgentTypeMapper = {
             description: response.description ?? null,
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
-            scopeIds: response.scopeIds ?? [],
+            surfaceIds: response.surfaceIds ?? [],
+            scope: (response as any).scope ?? null,
+            allowedToolIds: response.allowedToolIds ?? [],
+            allowedToolScopeIds: response.allowedToolScopeIds ?? [],
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -45,9 +56,13 @@ export const UaiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             contextIds: model.contextIds,
-            scopeIds: model.scopeIds,
+            surfaceIds: model.surfaceIds,
+            scope: model.scope,
+            allowedToolIds: model.allowedToolIds,
+            allowedToolScopeIds: model.allowedToolScopeIds,
+            userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
-        };
+        } as CreateAgentRequestModel;
     },
 
     toUpdateRequest(model: UaiAgentDetailModel): UpdateAgentRequestModel {
@@ -57,9 +72,13 @@ export const UaiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             contextIds: model.contextIds,
-            scopeIds: model.scopeIds,
+            surfaceIds: model.surfaceIds,
+            scope: model.scope,
+            allowedToolIds: model.allowedToolIds,
+            allowedToolScopeIds: model.allowedToolScopeIds,
+            userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
             isActive: model.isActive,
-        };
+        } as UpdateAgentRequestModel;
     },
 };

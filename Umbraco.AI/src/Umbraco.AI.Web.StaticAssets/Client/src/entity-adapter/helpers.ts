@@ -33,42 +33,35 @@ const adapterCache = new Map<string, UaiEntityAdapterApi>();
  * }
  * ```
  */
-export async function resolveEntityAdapterByType(
-	entityType: string,
-): Promise<UaiEntityAdapterApi | undefined> {
-	// Find adapter manifest by entity type
-	const manifests = umbExtensionsRegistry.getByType(
-		UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
-	) as ManifestEntityAdapter[];
+export async function resolveEntityAdapterByType(entityType: string): Promise<UaiEntityAdapterApi | undefined> {
+    // Find adapter manifest by entity type
+    const manifests = umbExtensionsRegistry.getByType(UAI_ENTITY_ADAPTER_EXTENSION_TYPE) as ManifestEntityAdapter[];
 
-	const manifest = manifests.find((m) => m.forEntityType === entityType);
-	if (!manifest) {
-		return undefined;
-	}
+    const manifest = manifests.find((m) => m.forEntityType === entityType);
+    if (!manifest) {
+        return undefined;
+    }
 
-	// Check cache first
-	let adapter = adapterCache.get(manifest.alias);
-	if (adapter) {
-		return adapter;
-	}
+    // Check cache first
+    let adapter = adapterCache.get(manifest.alias);
+    if (adapter) {
+        return adapter;
+    }
 
-	// Load the adapter API module
-	try {
-		const ApiModule = await loadManifestApi(manifest.api);
-		if (ApiModule) {
-			const ApiClass = (ApiModule as any).default ?? ApiModule;
-			adapter = new ApiClass() as UaiEntityAdapterApi;
-			adapterCache.set(manifest.alias, adapter);
-			return adapter;
-		}
-	} catch (e) {
-		console.error(
-			`[resolveEntityAdapterByType] Failed to load adapter for entity type "${entityType}":`,
-			e,
-		);
-	}
+    // Load the adapter API module
+    try {
+        const ApiModule = await loadManifestApi(manifest.api);
+        if (ApiModule) {
+            const ApiClass = (ApiModule as any).default ?? ApiModule;
+            adapter = new ApiClass() as UaiEntityAdapterApi;
+            adapterCache.set(manifest.alias, adapter);
+            return adapter;
+        }
+    } catch (e) {
+        console.error(`[resolveEntityAdapterByType] Failed to load adapter for entity type "${entityType}":`, e);
+    }
 
-	return undefined;
+    return undefined;
 }
 
 /**
@@ -78,9 +71,7 @@ export async function resolveEntityAdapterByType(
  * @returns True if an adapter is registered for this entity type
  */
 export function hasEntityAdapter(entityType: string): boolean {
-	const manifests = umbExtensionsRegistry.getByType(
-		UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
-	) as ManifestEntityAdapter[];
+    const manifests = umbExtensionsRegistry.getByType(UAI_ENTITY_ADAPTER_EXTENSION_TYPE) as ManifestEntityAdapter[];
 
-	return manifests.some((m) => m.forEntityType === entityType);
+    return manifests.some((m) => m.forEntityType === entityType);
 }

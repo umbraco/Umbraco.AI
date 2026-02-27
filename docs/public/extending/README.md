@@ -1,6 +1,6 @@
 ---
 description: >-
-  Extend Umbraco.AI with custom providers, middleware, and tools.
+    Extend Umbraco.AI with custom providers, middleware, and tools.
 ---
 
 # Extending Umbraco.AI
@@ -29,6 +29,10 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 <td><strong>Custom Tools</strong></td>
 <td>Create tools that AI agents can use to perform actions</td>
 </tr>
+<tr>
+<td><strong>Notifications</strong></td>
+<td>Subscribe to entity lifecycle events for validation and automation</td>
+</tr>
 </tbody>
 </table>
 
@@ -36,22 +40,29 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 
 ### Create a Custom Provider When
 
-* You need to connect to an AI service without an existing provider
-* You want to use a self-hosted AI model
-* You need custom authentication or API handling
+- You need to connect to an AI service without an existing provider
+- You want to use a self-hosted AI model
+- You need custom authentication or API handling
 
 ### Create Middleware When
 
-* You want to log all AI requests and responses
-* You need to cache responses for identical requests
-* You want to add rate limiting or retry logic
-* You need to modify requests or responses globally
+- You want to log all AI requests and responses
+- You need to cache responses for identical requests
+- You want to add rate limiting or retry logic
+- You need to modify requests or responses globally
 
 ### Create Custom Tools When
 
-* You want AI agents to interact with your systems
-* You need to expose business logic to AI
-* You want to enable AI to query databases or APIs
+- You want AI agents to interact with your systems
+- You need to expose business logic to AI
+- You want to enable AI to query databases or APIs
+
+### Subscribe to Notifications When
+
+- You need to validate operations before they execute
+- You want to audit changes for compliance
+- You need to trigger automation in response to events
+- You want to maintain data consistency across systems
 
 ## Architecture Overview
 
@@ -89,4 +100,8 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 
 {% content-ref url="tools/README.md" %}
 [Custom Tools](tools/README.md)
+{% endcontent-ref %}
+
+{% content-ref url="notifications/README.md" %}
+[Notifications](notifications/README.md)
 {% endcontent-ref %}

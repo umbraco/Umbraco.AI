@@ -2,6 +2,7 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
@@ -9,8 +10,8 @@ import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js
 import "@umbraco-cms/backoffice/markdown-editor";
 
 /**
- * Workspace view for Agent details.
- * Displays system prompt, description, profile, and contexts.
+ * Workspace view for Agent settings.
+ * Configures agent behavior: profile, description, contexts, and instructions.
  */
 @customElement("uai-agent-details-workspace-view")
 export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
@@ -22,7 +23,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
-            if (context) { 
+            if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
@@ -35,7 +36,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ description: value || null }, "description")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ description: value || null }, "description"),
         );
     }
 
@@ -43,7 +44,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ instructions: value || null }, "instructions")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ instructions: value || null }, "instructions"),
         );
     }
 
@@ -52,7 +53,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const picker = event.target as HTMLElement & { value: string | undefined };
         const profileId = picker.value ?? null;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId }, "profileId")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId }, "profileId"),
         );
     }
 
@@ -60,21 +61,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { contextIds: picker.value ?? [] },
-                "contextIds"
-            )
-        );
-    }
-
-    #onScopeIdsChange(event: UmbChangeEvent) {
-        event.stopPropagation();
-        const picker = event.target as HTMLElement & { value: string[] | undefined };
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { scopeIds: picker.value ?? [] },
-                "scopeIds"
-            )
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextIds: picker.value ?? [] }, "contextIds"),
         );
     }
 
@@ -83,7 +70,10 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="AI Profile" description="Select a profile or leave empty to use the default Chat profile from Settings">
+                <umb-property-layout
+                    label="AI Profile"
+                    description="Select a profile or leave empty to use the default Chat profile from Settings"
+                >
                     <uai-profile-picker
                         slot="editor"
                         .value=${this._model.profileId || undefined}
@@ -100,7 +90,10 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-input>
                 </umb-property-layout>
 
-                <umb-property-layout label="Contexts" description="Predefined contexts to include when running this agent">
+                <umb-property-layout
+                    label="Contexts"
+                    description="Predefined contexts to include when running this agent"
+                >
                     <uai-context-picker
                         slot="editor"
                         multiple
@@ -109,22 +102,14 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-context-picker>
                 </umb-property-layout>
 
-                <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">
+                <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves" mandatory>
                     <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
+                        required
+                        ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
-                </umb-property-layout>
-            </uui-box>
-            <uui-box headline="Scope">
-                <umb-property-layout label="Scopes" description="Select how this agent can be used (e.g., Copilot chat)">
-                    <uai-scope-picker
-                            slot="editor"
-                            multiple
-                            .value=${this._model.scopeIds}
-                            @change=${this.#onScopeIdsChange}
-                    ></uai-scope-picker>
                 </umb-property-layout>
             </uui-box>
         `;

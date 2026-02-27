@@ -1,6 +1,6 @@
 ---
 description: >-
-  Connections store the credentials and settings needed to authenticate with an AI provider.
+    Connections store the credentials and settings needed to authenticate with an AI provider.
 ---
 
 # Connections
@@ -9,21 +9,21 @@ A connection represents a configured instance of an AI provider with credentials
 
 ## What Connections Store
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique identifier (GUID) |
-| `Alias` | Unique string for programmatic lookup |
-| `Name` | Display name shown in the backoffice |
-| `ProviderId` | Which provider this connection uses |
-| `Settings` | Provider-specific settings (API key, endpoint, and so on) |
-| `IsActive` | Whether the connection is enabled |
+| Property     | Description                                               |
+| ------------ | --------------------------------------------------------- |
+| `Id`         | Unique identifier (GUID)                                  |
+| `Alias`      | Unique string for programmatic lookup                     |
+| `Name`       | Display name shown in the backoffice                      |
+| `ProviderId` | Which provider this connection uses                       |
+| `Settings`   | Provider-specific settings (API key, endpoint, and so on) |
+| `IsActive`   | Whether the connection is enabled                         |
 
 ## Connection vs Provider
 
 Think of it this way:
 
-* **Provider** = The service (for example, "OpenAI")
-* **Connection** = Your account with that service (for example, "My OpenAI API Key")
+- **Provider** = The service (for example, "OpenAI")
+- **Connection** = Your account with that service (for example, "My OpenAI API Key")
 
 You can have multiple connections to the same provider:
 
@@ -38,7 +38,7 @@ OpenAI Provider
 
 Connections are typically created through the Umbraco backoffice:
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. Click **Create Connection**
 3. Select a provider
 4. Enter the required settings
@@ -49,32 +49,37 @@ Connections are typically created through the Umbraco backoffice:
 Connection settings support configuration references. Values starting with `$` are resolved from `appsettings.json` at runtime.
 
 {% code title="Connection Settings" %}
+
 ```
 API Key: $OpenAI:ApiKey
 ```
+
 {% endcode %}
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "OpenAI": {
-    "ApiKey": "sk-your-actual-key"
-  }
+    "OpenAI": {
+        "ApiKey": "sk-your-actual-key"
+    }
 }
 ```
+
 {% endcode %}
 
 Benefits of configuration references:
 
-* Sensitive values stay out of the database
-* Different values per environment (dev/staging/prod)
-* Works with Azure Key Vault, environment variables, and more
+- Sensitive values stay out of the database
+- Different values per environment (dev/staging/prod)
+- Works with Azure Key Vault, environment variables, and more
 
 ## Accessing Connections in Code
 
 Use `IAIConnectionService` to work with connections:
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ConnectionExample
 {
@@ -96,14 +101,15 @@ public class ConnectionExample
     }
 }
 ```
+
 {% endcode %}
 
 ## Enabling and Disabling Connections
 
 The `IsActive` flag controls whether a connection is available for use:
 
-* **Active (`IsActive = true`)** - Connection can be used by profiles
-* **Inactive (`IsActive = false`)** - Connection is disabled and cannot be used
+- **Active (`IsActive = true`)** - Connection can be used by profiles
+- **Inactive (`IsActive = false`)** - Connection is disabled and cannot be used
 
 {% hint style="info" %}
 Deactivating a connection is useful when you need to temporarily disable an API key without deleting the connection configuration.
@@ -114,6 +120,7 @@ Deactivating a connection is useful when you need to temporarily disable an API 
 You can test a connection via the Management API to verify credentials work:
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Using HttpClient to call the Management API
 var response = await httpClient.PostAsync(
@@ -130,6 +137,7 @@ else
     // Check result.ErrorMessage for details
 }
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -149,5 +157,5 @@ Deleting a connection that profiles depend on will break those profiles. Deactiv
 
 ## Related
 
-* [Providers](providers.md) - The services connections authenticate with
-* [Profiles](profiles.md) - Use connections to make AI requests
+- [Providers](providers.md) - The services connections authenticate with
+- [Profiles](profiles.md) - Use connections to make AI requests

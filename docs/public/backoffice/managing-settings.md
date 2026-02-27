@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configure global AI settings in the Umbraco backoffice.
+    Configure global AI settings in the Umbraco backoffice.
 ---
 
 # Managing Settings
@@ -9,9 +9,8 @@ AI Settings provide a central place to configure system-wide defaults, including
 
 ## Accessing Settings
 
-1. Navigate to **Settings** in the left sidebar
-2. Expand **AI**
-3. Click **Settings**
+1. Navigate to the **AI** section in the main navigation
+2. Click **Settings** in the tree
 
 ## Available Settings
 
@@ -19,11 +18,12 @@ AI Settings provide a central place to configure system-wide defaults, including
 
 The profile used for chat operations when no profile is explicitly specified.
 
-| Field | Description |
-|-------|-------------|
+| Field                | Description                         |
+| -------------------- | ----------------------------------- |
 | Default Chat Profile | Select from available chat profiles |
 
 When set, this profile is used by:
+
 - `IAIChatService.GetChatResponseAsync()` without a profile ID
 - Prompts without an associated profile
 - Agents without an associated profile
@@ -32,16 +32,17 @@ When set, this profile is used by:
 
 The profile used for embedding operations when no profile is explicitly specified.
 
-| Field | Description |
-|-------|-------------|
+| Field                     | Description                              |
+| ------------------------- | ---------------------------------------- |
 | Default Embedding Profile | Select from available embedding profiles |
 
 When set, this profile is used by:
+
 - `IAIEmbeddingService.GenerateEmbeddingsAsync()` without a profile ID
 
 ## Configuring Settings
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select the desired profiles from the dropdowns
 3. Click **Save**
 
@@ -58,14 +59,14 @@ For advanced scenarios like CI/CD or infrastructure-as-code, defaults can also b
 
 ## When Defaults Are Used
 
-| Scenario | Default Used |
-|----------|-------------|
-| `_chatService.GetChatResponseAsync(messages)` | Yes |
+| Scenario                                                 | Default Used  |
+| -------------------------------------------------------- | ------------- |
+| `_chatService.GetChatResponseAsync(messages)`            | Yes           |
 | `_chatService.GetChatResponseAsync(profileId, messages)` | No (explicit) |
-| Prompt without ProfileId | Yes |
-| Prompt with ProfileId | No (explicit) |
-| Agent without ProfileId | Yes |
-| Agent with ProfileId | No (explicit) |
+| Prompt without ProfileId                                 | Yes           |
+| Prompt with ProfileId                                    | No (explicit) |
+| Agent without ProfileId                                  | Yes           |
+| Agent with ProfileId                                     | No (explicit) |
 
 ## Clearing Defaults
 
@@ -76,16 +77,17 @@ To remove a default:
 3. Save
 
 When no default is configured:
+
 - Operations without an explicit profile will fail with an error
 
 ## Audit Trail
 
 Changes to settings are tracked in the audit log:
 
-1. Navigate to **Settings** > **AI** > **Audit Logs**
+1. Navigate to the **AI** section > **Audit Logs**
 2. Filter by entity type "Settings"
 
 ## Related
 
-* [Settings Concept](../concepts/settings.md) - Understanding settings
-* [Profiles](../concepts/profiles.md) - Profile configuration
+- [Settings Concept](../concepts/settings.md) - Understanding settings
+- [Profiles](../concepts/profiles.md) - Profile configuration

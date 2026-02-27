@@ -1,9 +1,9 @@
-import type { UaiContextEntityType } from './entity.js';
+import type { UaiContextEntityType } from "./entity.js";
 
 /**
  * Injection modes for context resources.
  */
-export type UaiContextResourceInjectionMode = 'Always' | 'OnDemand';
+export type UaiContextResourceInjectionMode = "Always" | "OnDemand";
 
 /**
  * Resource within a context.

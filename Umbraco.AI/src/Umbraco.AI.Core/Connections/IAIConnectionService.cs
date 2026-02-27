@@ -128,4 +128,13 @@ public interface IAIConnectionService
         Guid connectionId,
         int targetVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a connection with the given alias exists.
+    /// </summary>
+    /// <param name="alias">The alias to check.</param>
+    /// <param name="excludeId">Optional connection ID to exclude from the check (for edit scenarios).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if a connection with the alias exists (excluding the specified ID if provided), false otherwise.</returns>
+    Task<bool> ConnectionAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 }

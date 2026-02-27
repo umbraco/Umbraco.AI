@@ -1,25 +1,16 @@
-import {
-    css,
-    customElement,
-    html,
-    nothing,
-    property,
-    repeat,
-    state,
-    when,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
-import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
-import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import { tryExecute } from '@umbraco-cms/backoffice/resources';
-import { ContextsService } from '../../../api/sdk.gen.js';
-import { UAI_ITEM_PICKER_MODAL } from '../../../core/modals/item-picker/item-picker-modal.token.js';
-import type { UaiPickableItemModel } from '../../../core/modals/item-picker/types.js';
-import { UaiContextTypeMapper } from '../../type-mapper.js';
-import type { UaiContextItemModel } from '../../types.js';
+import { css, customElement, html, nothing, property, repeat, state, when } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { ContextsService } from "../../../api/sdk.gen.js";
+import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
+import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import { UaiContextTypeMapper } from "../../type-mapper.js";
+import type { UaiContextItemModel } from "../../types.js";
 
-const elementName = 'uai-context-picker';
+const elementName = "uai-context-picker";
 
 @customElement(elementName)
 export class UaiContextPickerElement extends UmbFormControlMixin<
@@ -93,16 +84,13 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
         this._loading = true;
 
         // Fetch all contexts and filter to selected ones
-        const { data, error } = await tryExecute(
-            this,
-            ContextsService.getAllContexts({ query: { take: 1000 } })
-        );
+        const { data, error } = await tryExecute(this, ContextsService.getAllContexts({ query: { take: 1000 } }));
 
         if (!error && data) {
             const allItems = data.items.map(UaiContextTypeMapper.toItemModel);
             // Preserve selection order
             this._items = this._selection
-                .map(id => allItems.find(item => item.unique === id))
+                .map((id) => allItems.find((item) => item.unique === id))
                 .filter((item): item is UaiContextItemModel => item !== undefined);
         }
 
@@ -116,9 +104,9 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
         const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
                 fetchItems: () => this.#fetchAvailableContexts(),
-                selectionMode: this.multiple ? 'multiple' : 'single',
-                title: this.localize.term('uaiContext_selectContext'),
-                noResultsMessage: this.localize.term('uaiContext_noContextsAvailable'),
+                selectionMode: this.multiple ? "multiple" : "single",
+                title: this.localize.term("uaiContext_selectContext"),
+                noResultsMessage: this.localize.term("uaiContext_noContextsAvailable"),
             },
         });
 
@@ -133,29 +121,24 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     }
 
     async #fetchAvailableContexts(): Promise<UaiPickableItemModel[]> {
-        const { data } = await tryExecute(
-            this,
-            ContextsService.getAllContexts({ query: { take: 1000 } })
-        );
+        const { data } = await tryExecute(this, ContextsService.getAllContexts({ query: { take: 1000 } }));
 
         if (!data) return [];
 
         // Filter out already selected items
         return data.items
-            .filter(ctx => !this._selection.includes(ctx.id))
-            .map(ctx => ({
+            .filter((ctx) => !this._selection.includes(ctx.id))
+            .map((ctx) => ({
                 value: ctx.id,
                 label: ctx.name,
                 description: ctx.alias,
-                icon: 'icon-wand',
+                icon: "icon-wand",
             }));
     }
 
     #addSelections(items: UaiPickableItemModel[]) {
         // Filter out already selected items
-        const newValues = items
-            .map(item => item.value)
-            .filter(value => !this._selection.includes(value));
+        const newValues = items.map((item) => item.value).filter((value) => !this._selection.includes(value));
 
         if (newValues.length === 0) return;
 
@@ -171,18 +154,13 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     }
 
     #onRemove(id: string) {
-        this._selection = this._selection.filter(x => x !== id);
-        this._items = this._items.filter(x => x.unique !== id);
+        this._selection = this._selection.filter((x) => x !== id);
+        this._items = this._items.filter((x) => x.unique !== id);
         this.dispatchEvent(new UmbChangeEvent());
     }
 
     override render() {
-        return html`
-            <div class="container">
-                ${this.#renderItems()}
-                ${this.#renderAddButton()}
-            </div>
-        `;
+        return html` <div class="container">${this.#renderItems()} ${this.#renderAddButton()}</div> `;
     }
 
     #renderItems() {
@@ -205,26 +183,28 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
 
     #renderItem(item: UaiContextItemModel) {
         return html`
-            <uui-ref-node
-                name=${item.name}
-                detail=${item.alias}
-                readonly>
+            <uui-ref-node name=${item.name} detail=${item.alias} readonly>
                 <umb-icon slot="icon" name="icon-wand"></umb-icon>
-                ${when(item.resourceCount > 0, () => html`
-                    <uui-tag slot="tag" look="secondary">${item.resourceCount} resources</uui-tag>
-                `)}
-                ${when(!this.readonly, () => html`
-                    <uui-action-bar slot="actions">
-                        <uui-button
-                            label="Remove"
-                            @click=${(e: Event) => {
-                                e.stopPropagation();
-                                this.#onRemove(item.unique);
-                            }}>
-                            <uui-icon name="icon-trash"></uui-icon>
-                        </uui-button>
-                    </uui-action-bar>
-                `)}
+                ${when(
+                    item.resourceCount > 0,
+                    () => html` <uui-tag slot="tag" look="secondary">${item.resourceCount} resources</uui-tag> `,
+                )}
+                ${when(
+                    !this.readonly,
+                    () => html`
+                        <uui-action-bar slot="actions">
+                            <uui-button
+                                label="Remove"
+                                @click=${(e: Event) => {
+                                    e.stopPropagation();
+                                    this.#onRemove(item.unique);
+                                }}
+                            >
+                                <uui-icon name="icon-trash"></uui-icon>
+                            </uui-button>
+                        </uui-action-bar>
+                    `,
+                )}
             </uui-ref-node>
         `;
     }
@@ -240,9 +220,10 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term('uaiContext_addContext')}>
+                label=${this.localize.term("uaiContext_addContext")}
+            >
                 <uui-icon name="icon-add"></uui-icon>
-                ${this.localize.term('general_add')}
+                ${this.localize.term("general_add")}
             </uui-button>
         `;
     }

@@ -1,6 +1,6 @@
 ---
 description: >-
-  View and restore previous versions of AI entities.
+    View and restore previous versions of AI entities.
 ---
 
 # Version History
@@ -9,17 +9,17 @@ Umbraco.AI automatically tracks version history for connections, profiles, conte
 
 ## Viewing Version History
 
-1. Navigate to the entity (e.g., **Settings** > **AI** > **Profiles**)
+1. Navigate to the entity (e.g., the **AI** section > **Profiles**)
 2. Select the entity you want to view
 3. Click the **Version History** tab (or icon)
 
 The version history shows:
 
-| Column | Description |
-|--------|-------------|
-| Version | Sequential version number |
-| Date | When the version was created |
-| User | Who made the change |
+| Column      | Description                      |
+| ----------- | -------------------------------- |
+| Version     | Sequential version number        |
+| Date        | When the version was created     |
+| User        | Who made the change              |
 | Description | Change description (if provided) |
 
 ## Comparing Versions
@@ -68,22 +68,22 @@ Rollback creates a new version with the restored content. No versions are delete
 
 After rolling back to version 3:
 
-| Version | Description |
-|---------|-------------|
-| 6 | Restored from version 3 |
-| 5 | Previous state |
-| 4 | ... |
-| 3 | Target version |
+| Version | Description             |
+| ------- | ----------------------- |
+| 6       | Restored from version 3 |
+| 5       | Previous state          |
+| 4       | ...                     |
+| 3       | Target version          |
 
 ## Supported Entities
 
-| Entity | Package | Location |
-|--------|---------|----------|
-| Connections | Umbraco.AI | Settings > AI > Connections |
-| Profiles | Umbraco.AI | Settings > AI > Profiles |
-| Contexts | Umbraco.AI | Settings > AI > Contexts |
-| Prompts | Umbraco.AI.Prompt | Settings > AI > Prompts |
-| Agents | Umbraco.AI.Agent | Settings > AI > Agents |
+| Entity      | Package           | Location                    |
+| ----------- | ----------------- | --------------------------- |
+| Connections | Umbraco.AI        | Settings > AI > Connections |
+| Profiles    | Umbraco.AI        | Settings > AI > Profiles    |
+| Contexts    | Umbraco.AI        | Settings > AI > Contexts    |
+| Prompts     | Umbraco.AI.Prompt | Settings > AI > Prompts     |
+| Agents      | Umbraco.AI.Agent  | Settings > AI > Agents      |
 
 ## Version Cleanup
 
@@ -94,18 +94,20 @@ To prevent unbounded growth, old versions can be cleaned up:
 Configure in `appsettings.json`:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "Versioning": {
-        "MaxVersionsPerEntity": 50,
-        "CleanupIntervalDays": 7
-      }
+    "Umbraco": {
+        "AI": {
+            "Versioning": {
+                "MaxVersionsPerEntity": 50,
+                "CleanupIntervalDays": 7
+            }
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 ### Manual Cleanup
@@ -129,5 +131,5 @@ See [Versions API](../management-api/versions/README.md) for programmatic access
 
 ## Related
 
-* [Version History Concept](../concepts/versioning.md) - Understanding versioning
-* [Versions API](../management-api/versions/README.md) - Management API
+- [Version History Concept](../concepts/versioning.md) - Understanding versioning
+- [Versions API](../management-api/versions/README.md) - Management API

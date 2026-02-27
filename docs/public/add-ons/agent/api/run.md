@@ -1,6 +1,6 @@
 ---
 description: >-
-  Run an agent with SSE streaming.
+    Run an agent with SSE streaming.
 ---
 
 # Run Agent
@@ -15,46 +15,48 @@ POST /umbraco/ai/management/api/v1/agent/{idOrAlias}/run
 
 ### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter   | Type   | Description         |
+| ----------- | ------ | ------------------- |
 | `idOrAlias` | string | Agent GUID or alias |
 
 ### Request Body
 
 {% code title="Request" %}
+
 ```json
 {
-  "messages": [
-    {
-      "role": "user",
-      "content": "Help me write a blog post about AI"
-    }
-  ],
-  "frontendTools": [
-    {
-      "name": "insert_content",
-      "description": "Insert content at the cursor",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "content": { "type": "string" }
-        },
-        "required": ["content"]
-      }
-    }
-  ]
+    "messages": [
+        {
+            "role": "user",
+            "content": "Help me write a blog post about AI"
+        }
+    ],
+    "frontendTools": [
+        {
+            "name": "insert_content",
+            "description": "Insert content at the cursor",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "content": { "type": "string" }
+                },
+                "required": ["content"]
+            }
+        }
+    ]
 }
 ```
+
 {% endcode %}
 
 ### Request Properties
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `messages` | array | Yes | Conversation messages |
-| `messages[].role` | string | Yes | Message role: `user`, `assistant`, or `system` |
-| `messages[].content` | string | Yes | Message content |
-| `frontendTools` | array | No | Frontend tool definitions |
+| Property             | Type   | Required | Description                                    |
+| -------------------- | ------ | -------- | ---------------------------------------------- |
+| `messages`           | array  | Yes      | Conversation messages                          |
+| `messages[].role`    | string | Yes      | Message role: `user`, `assistant`, or `system` |
+| `messages[].content` | string | Yes      | Message content                                |
+| `frontendTools`      | array  | No       | Frontend tool definitions                      |
 
 ## Response
 
@@ -84,40 +86,44 @@ data: {"type":"run_finished","runId":"abc123"}
 
 ### Event Types
 
-| Event | Description |
-|-------|-------------|
-| `run_started` | Agent run has begun |
-| `text_message_start` | Beginning of a text message |
-| `text_message_content` | Text content chunk |
-| `text_message_end` | End of a text message |
-| `tool_call_start` | Tool call initiated |
-| `tool_call_args` | Tool argument chunk |
-| `tool_call_end` | Tool call complete |
-| `run_finished` | Agent run completed |
-| `run_error` | Agent run failed |
+| Event                  | Description                 |
+| ---------------------- | --------------------------- |
+| `run_started`          | Agent run has begun         |
+| `text_message_start`   | Beginning of a text message |
+| `text_message_content` | Text content chunk          |
+| `text_message_end`     | End of a text message       |
+| `tool_call_start`      | Tool call initiated         |
+| `tool_call_args`       | Tool argument chunk         |
+| `tool_call_end`        | Tool call complete          |
+| `run_finished`         | Agent run completed         |
+| `run_error`            | Agent run failed            |
 
 ### Error Response
 
 {% code title="404 Not Found" %}
+
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "Agent not found"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "Agent not found"
 }
 ```
+
 {% endcode %}
 
 {% code title="400 Bad Request" %}
+
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "Agent is not active"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "Agent is not active"
 }
 ```
+
 {% endcode %}
 
 ## Examples
@@ -125,6 +131,7 @@ data: {"type":"run_finished","runId":"abc123"}
 ### Basic Run
 
 {% code title="cURL" %}
+
 ```bash
 curl -N -X POST "https://your-site.com/umbraco/ai/management/api/v1/agent/content-assistant/run" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -135,11 +142,13 @@ curl -N -X POST "https://your-site.com/umbraco/ai/management/api/v1/agent/conten
     ]
   }'
 ```
+
 {% endcode %}
 
 ### With Conversation History
 
 {% code title="cURL" %}
+
 ```bash
 curl -N -X POST "https://your-site.com/umbraco/ai/management/api/v1/agent/content-assistant/run" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -152,11 +161,13 @@ curl -N -X POST "https://your-site.com/umbraco/ai/management/api/v1/agent/conten
     ]
   }'
 ```
+
 {% endcode %}
 
 ### With Frontend Tools
 
 {% code title="cURL" %}
+
 ```bash
 curl -N -X POST "https://your-site.com/umbraco/ai/management/api/v1/agent/content-assistant/run" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -180,9 +191,10 @@ curl -N -X POST "https://your-site.com/umbraco/ai/management/api/v1/agent/conten
     ]
   }'
 ```
+
 {% endcode %}
 
 ## Related
 
-* [Streaming](../streaming.md) - Event handling details
-* [Frontend Tools](../frontend-tools.md) - Tool definitions
+- [Streaming](../streaming.md) - Event handling details
+- [Frontend Tools](../frontend-tools.md) - Tool definitions

@@ -2,7 +2,6 @@ import { UaiEditableModelFieldModel, UaiEditableModelSchemaModel } from "./types
 import { EditableModelFieldModel, EditableModelSchemaModel } from "../api";
 
 export const UaiCommonTypeMapper = {
-    
     toEditableModelSchemaModel(response: EditableModelSchemaModel): UaiEditableModelSchemaModel {
         return {
             type: response.type ?? undefined,
@@ -20,6 +19,7 @@ export const UaiCommonTypeMapper = {
             defaultValue: response.defaultValue ?? undefined,
             sortOrder: response.sortOrder,
             isRequired: response.isRequired,
+            group: response.group ?? undefined,
         };
     },
 };

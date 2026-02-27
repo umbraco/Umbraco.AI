@@ -69,20 +69,22 @@ After installation, create a connection in the Umbraco backoffice:
 
 ```json
 {
-  "Region": "us-east-1",
-  "AccessKeyId": "AKIA...",
-  "SecretAccessKey": "..."
+    "Region": "us-east-1",
+    "AccessKeyId": "AKIA...",
+    "SecretAccessKey": "..."
 }
 ```
 
 ## Supported Models
 
 **Chat Models:**
+
 - Amazon Nova family (`amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0`, etc.)
 - Claude via Bedrock (`anthropic.claude-3-sonnet`, `anthropic.claude-3-haiku`, etc.) This requires permission from Anthropic to use.
 - Mistral models (`mistral.mistral-large`, etc.)
 
 **Embedding Models:**
+
 - Amazon Titan Embeddings (`amazon.titan-embed-text-v2:0`, etc.)
 - Cohere Embed models (`cohere.embed-english-v3`, etc.)
 

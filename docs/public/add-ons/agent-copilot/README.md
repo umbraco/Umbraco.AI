@@ -1,6 +1,6 @@
 ---
 description: >-
-  Copilot chat UI add-on for AI agents with sidebar, tool execution, and HITL support.
+    Copilot chat UI add-on for AI agents with sidebar, tool execution, and HITL support.
 ---
 
 # Agent Copilot
@@ -12,19 +12,23 @@ The Agent Copilot add-on (`Umbraco.AI.Agent.Copilot`) provides an interactive AI
 Install both the Agent Runtime and Copilot packages:
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.Agent
 Install-Package Umbraco.AI.Agent.Copilot
 ```
+
 {% endcode %}
 
 Or via .NET CLI:
 
 {% code title="Terminal" %}
+
 ```bash
 dotnet add package Umbraco.AI.Agent
 dotnet add package Umbraco.AI.Agent.Copilot
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -51,17 +55,19 @@ dotnet add package Umbraco.AI.Agent.Copilot
 
 ### 2. Create an Agent
 
-In the backoffice, navigate to **Settings** > **AI** > **Agents** and create an agent configured for Copilot use.
+In the backoffice, navigate to the **AI** section > **Agents** and create an agent configured for Copilot use.
 
 ### 3. Configure Default Copilot Agent
 
 {% code title="Program.cs" %}
+
 ```csharp
 services.Configure<AIAgentOptions>(options =>
 {
     options.DefaultCopilotAgentAlias = "content-assistant";
 });
 ```
+
 {% endcode %}
 
 ### 4. Access the Copilot
@@ -85,12 +91,14 @@ The Copilot sidebar appears in the Content and Media sections. Click the **AI As
 ```
 
 The Agent package provides:
+
 - Agent CRUD operations
 - AG-UI streaming endpoints
 - Backend tool execution
 - Management API
 
 The Copilot package provides:
+
 - Sidebar chat interface
 - Frontend tool framework
 - HITL approval elements
@@ -98,13 +106,13 @@ The Copilot package provides:
 
 ## Documentation
 
-| Section | Description |
-|---------|-------------|
-| [Copilot Usage](copilot.md) | Using the chat interface |
+| Section                             | Description                       |
+| ----------------------------------- | --------------------------------- |
+| [Copilot Usage](copilot.md)         | Using the chat interface          |
 | [Frontend Tools](frontend-tools.md) | Creating browser-executable tools |
 
 ## Related
 
-* [Agent Runtime](../agent/README.md) - Backend agent functionality
-* [Add-ons Overview](../README.md) - All add-on packages
-* [AI Contexts](../../concepts/contexts.md) - Brand voice and guidelines
+- [Agent Runtime](../agent/README.md) - Backend agent functionality
+- [Add-ons Overview](../README.md) - All add-on packages
+- [AI Contexts](../../concepts/contexts.md) - Brand voice and guidelines

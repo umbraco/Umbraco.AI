@@ -1,17 +1,14 @@
-import {
-    css,
-    customElement,
-    html,
-    repeat,
-    state,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbModalBaseElement, UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import { UmbTextStyles } from '@umbraco-cms/backoffice/style';
-import type { UaiContextResourceTypeItemModel } from '../../../context-resource-type/types.js';
-import type { UaiContextResourceTypePickerModalData, UaiContextResourceTypePickerModalValue } from './context-resource-type-picker-modal.token.js';
-import { UAI_RESOURCE_OPTIONS_MODAL } from './resource-options-modal.token.js';
+import { css, customElement, html, repeat, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbModalBaseElement, UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import type { UaiContextResourceTypeItemModel } from "../../../context-resource-type/types.js";
+import type {
+    UaiContextResourceTypePickerModalData,
+    UaiContextResourceTypePickerModalValue,
+} from "./context-resource-type-picker-modal.token.js";
+import { UAI_RESOURCE_OPTIONS_MODAL } from "./resource-options-modal.token.js";
 
-const elementName = 'uai-context-resource-type-picker-modal';
+const elementName = "uai-context-resource-type-picker-modal";
 
 @customElement(elementName)
 export class UaiContextResourceTypePickerModalElement extends UmbModalBaseElement<
@@ -52,7 +49,7 @@ export class UaiContextResourceTypePickerModalElement extends UmbModalBaseElemen
 
     override render() {
         return html`
-            <umb-body-layout headline=${this.data?.headline ?? 'Select Resource Type'}>
+            <umb-body-layout headline=${this.data?.headline ?? "Select Resource Type"}>
                 <div id="main">
                     <uui-box>
                         <uui-ref-list>
@@ -64,11 +61,8 @@ export class UaiContextResourceTypePickerModalElement extends UmbModalBaseElemen
                         </uui-ref-list>
                     </uui-box>
                 </div>
-                <uui-button
-                    slot="actions"
-                    label=${this.localize.term('general_close')}
-                    @click=${this._rejectModal}>
-                    ${this.localize.term('general_close')}
+                <uui-button slot="actions" label=${this.localize.term("general_close")} @click=${this._rejectModal}>
+                    ${this.localize.term("general_close")}
                 </uui-button>
             </umb-body-layout>
         `;
@@ -76,11 +70,8 @@ export class UaiContextResourceTypePickerModalElement extends UmbModalBaseElemen
 
     #renderContextResourceType(type: UaiContextResourceTypeItemModel) {
         return html`
-            <uui-ref-node
-                name=${type.name}
-                detail=${type.description ?? ''}
-                @open=${() => this.#handleSelect(type)}>
-                <umb-icon slot="icon" name=${type.icon ?? 'icon-document'}></umb-icon>
+            <uui-ref-node name=${type.name} detail=${type.description ?? ""} @open=${() => this.#handleSelect(type)}>
+                <umb-icon slot="icon" name=${type.icon ?? "icon-document"}></umb-icon>
             </uui-ref-node>
         `;
     }

@@ -5,6 +5,7 @@
 This document describes the testing strategy for Umbraco.AI, focusing on critical paths rather than 100% coverage.
 
 **Key Decisions:**
+
 - **Assertion Library**: Shouldly (fluent assertions)
 - **Mocking Framework**: Moq
 - **Test Framework**: xUnit
@@ -44,11 +45,11 @@ tests/
 
 ## Test Projects
 
-| Project | Type | Purpose |
-|---------|------|---------|
-| `Umbraco.AI.Tests.Unit` | xUnit | Unit tests for core services, providers, middleware, registry, and Management API controllers |
-| `Umbraco.AI.Tests.Integration` | xUnit | Integration tests for DI container and end-to-end service flows |
-| `Umbraco.AI.Tests.Common` | Class Library | Shared test utilities, builders, and fakes (not executable) |
+| Project                        | Type          | Purpose                                                                                       |
+| ------------------------------ | ------------- | --------------------------------------------------------------------------------------------- |
+| `Umbraco.AI.Tests.Unit`        | xUnit         | Unit tests for core services, providers, middleware, registry, and Management API controllers |
+| `Umbraco.AI.Tests.Integration` | xUnit         | Integration tests for DI container and end-to-end service flows                               |
+| `Umbraco.AI.Tests.Common`      | Class Library | Shared test utilities, builders, and fakes (not executable)                                   |
 
 ---
 
@@ -101,13 +102,13 @@ var model = new AIModelRefBuilder()
 
 Test doubles for isolated testing:
 
-| Fake | Purpose |
-|------|---------|
-| `FakeAIProvider` | Configurable provider with fluent API for adding capabilities |
-| `FakeChatCapability` | Chat capability implementation without real API calls |
-| `FakeChatClient` | M.E.AI `IChatClient` implementation for testing |
-| `FakeEmbeddingCapability` | Embedding capability implementation |
-| `FakeProviderSettings` | Simple settings class for testing |
+| Fake                      | Purpose                                                       |
+| ------------------------- | ------------------------------------------------------------- |
+| `FakeAIProvider`          | Configurable provider with fluent API for adding capabilities |
+| `FakeChatCapability`      | Chat capability implementation without real API calls         |
+| `FakeChatClient`          | M.E.AI `IChatClient` implementation for testing               |
+| `FakeEmbeddingCapability` | Embedding capability implementation                           |
+| `FakeProviderSettings`    | Simple settings class for testing                             |
 
 Example usage:
 
@@ -215,21 +216,22 @@ Umbraco.AI.Tests.Unit/
 
 ### Core Service Tests
 
-| Test Class | Covers |
-|------------|--------|
-| `AIEditableModelResolverTests` | JSON deserialization, `$ConfigKey` resolution, validation |
-| `AIChatClientFactoryTests` | Client creation, connection validation, middleware application |
-| `AIProfileServiceTests` | Profile CRUD, default profile resolution |
-| `AIConnectionServiceTests` | Connection CRUD, validation, test connection |
-| `AIChatServiceTests` | Chat completion via profile ID/alias, streaming |
-| `AIEmbeddingServiceTests` | Embedding generation via profile |
-| `AIRegistryTests` | Provider lookup, capability retrieval |
-| `MiddlewarePipelineTests` | Middleware ordering and application |
-| `AIProviderBaseTests` | Provider capability registration |
+| Test Class                     | Covers                                                         |
+| ------------------------------ | -------------------------------------------------------------- |
+| `AIEditableModelResolverTests` | JSON deserialization, `$ConfigKey` resolution, validation      |
+| `AIChatClientFactoryTests`     | Client creation, connection validation, middleware application |
+| `AIProfileServiceTests`        | Profile CRUD, default profile resolution                       |
+| `AIConnectionServiceTests`     | Connection CRUD, validation, test connection                   |
+| `AIChatServiceTests`           | Chat completion via profile ID/alias, streaming                |
+| `AIEmbeddingServiceTests`      | Embedding generation via profile                               |
+| `AIRegistryTests`              | Provider lookup, capability retrieval                          |
+| `MiddlewarePipelineTests`      | Middleware ordering and application                            |
+| `AIProviderBaseTests`          | Provider capability registration                               |
 
 ### Management API Controller Tests
 
 Controller tests mock dependencies and verify:
+
 - Correct HTTP status codes (200, 404, etc.)
 - Response model mapping via `IUmbracoMapper`
 - Repository/service method invocation
@@ -365,18 +367,21 @@ dotnet test Umbraco.AI.sln --collect:"XPlat Code Coverage" --results-directory .
 When JS services are created (mirroring C# services for Management API consumption):
 
 ### Testing Infrastructure
+
 - **Framework**: Vitest (fast, ESM-native, good TypeScript support)
 - **Location**: `src/Umbraco.AI.Web.StaticAssets/Client/src/**/*.test.ts`
 
 ### Services to Test (when created)
-| Service | Purpose |
-|---------|---------|
-| `AIProviderService` | Fetch providers from API |
+
+| Service               | Purpose                         |
+| --------------------- | ------------------------------- |
+| `AIProviderService`   | Fetch providers from API        |
 | `AIConnectionService` | CRUD operations for connections |
-| `AIProfileService` | CRUD operations for profiles |
-| `AIChatService` | Chat completions via API |
+| `AIProfileService`    | CRUD operations for profiles    |
+| `AIChatService`       | Chat completions via API        |
 
 ### Test Approach
+
 - Mock `fetch` or use MSW (Mock Service Worker) for API mocking
 - Test service methods return correct types
 - Test error handling (401, 404, 500 responses)
@@ -386,24 +391,24 @@ When JS services are created (mirroring C# services for Management API consumpti
 
 ## Success Criteria
 
-| Metric | Target |
-|--------|--------|
-| Critical path coverage | 90%+ |
-| Overall code coverage | 60-70% |
-| Build time with tests | < 2 minutes |
-| Flaky test rate | < 1% |
+| Metric                 | Target      |
+| ---------------------- | ----------- |
+| Critical path coverage | 90%+        |
+| Overall code coverage  | 60-70%      |
+| Build time with tests  | < 2 minutes |
+| Flaky test rate        | < 1%        |
 
 ---
 
 ## Critical Source Files Under Test
 
-| File | Purpose |
-|------|---------|
+| File                                                            | Purpose                         |
+| --------------------------------------------------------------- | ------------------------------- |
 | `src/Umbraco.AI.Core/EditableModels/AIEditableModelResolver.cs` | Editable model resolution logic |
-| `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs` | Client creation and middleware |
-| `src/Umbraco.AI.Core/Profiles/AIProfileService.cs` | Profile CRUD |
-| `src/Umbraco.AI.Core/Connections/AIConnectionService.cs` | Connection CRUD |
-| `src/Umbraco.AI.Core/Services/AIChatService.cs` | High-level chat API |
-| `src/Umbraco.AI.Core/Services/AIEmbeddingService.cs` | High-level embedding API |
-| `src/Umbraco.AI.Core/Registry/AIRegistry.cs` | Provider registry |
-| `src/Umbraco.AI.Web/Api/Management/**/*.cs` | Management API controllers |
+| `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs`          | Client creation and middleware  |
+| `src/Umbraco.AI.Core/Profiles/AIProfileService.cs`              | Profile CRUD                    |
+| `src/Umbraco.AI.Core/Connections/AIConnectionService.cs`        | Connection CRUD                 |
+| `src/Umbraco.AI.Core/Services/AIChatService.cs`                 | High-level chat API             |
+| `src/Umbraco.AI.Core/Services/AIEmbeddingService.cs`            | High-level embedding API        |
+| `src/Umbraco.AI.Core/Registry/AIRegistry.cs`                    | Provider registry               |
+| `src/Umbraco.AI.Web/Api/Management/**/*.cs`                     | Management API controllers      |

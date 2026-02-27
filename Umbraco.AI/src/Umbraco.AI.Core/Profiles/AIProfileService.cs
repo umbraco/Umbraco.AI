@@ -2,6 +2,8 @@ using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Versioning;
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Core.Profiles;
@@ -13,18 +15,21 @@ internal sealed class AIProfileService : IAIProfileService
     private readonly AIOptions _options;
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIProfileService(
         IAIProfileRepository repository,
         IAISettingsService settingsService,
         IOptions<AIOptions> options,
         IAIEntityVersionService versionService,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _settingsService = settingsService;
         _options = options.Value;
         _versionService = versionService;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -118,6 +123,18 @@ internal sealed class AIProfileService : IAIProfileService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIProfileSavingNotification(profile, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Profile save cancelled: {errorMessages}");
+        }
+
         // Check if this is an update - if so, create a version snapshot of the current state
         var existing = await _repository.GetByIdAsync(profile.Id, cancellationToken);
         if (existing is not null)
@@ -125,17 +142,45 @@ internal sealed class AIProfileService : IAIProfileService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(profile, userId, cancellationToken);
+        // Perform save
+        var savedProfile = await _repository.SaveAsync(profile, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIProfileSavedNotification(savedProfile, messages)
+            .WithStateFrom(savingNotification);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return savedProfile;
     }
 
     public async Task<bool> DeleteProfileAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIProfileDeletingNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Profile delete cancelled: {errorMessages}");
+        }
+
         // Delete version history for this entity
         await _versionService.DeleteVersionsAsync(id, "Profile", cancellationToken);
 
-        return await _repository.DeleteAsync(id, cancellationToken);
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIProfileDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
     }
 
     public Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
@@ -172,6 +217,18 @@ internal sealed class AIProfileService : IAIProfileService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish rolling back notification (before rollback)
+        var messages = new EventMessages();
+        var rollingBackNotification = new AIProfileRollingBackNotification(profileId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rollingBackNotification, cancellationToken);
+
+        // Check if cancelled
+        if (rollingBackNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Profile rollback cancelled: {errorMessages}");
+        }
+
         // Save the current state to version history before rolling back
         await _versionService.SaveVersionAsync(currentProfile, userId, null, cancellationToken);
 
@@ -190,6 +247,20 @@ internal sealed class AIProfileService : IAIProfileService
             // The repository will handle version increment and dates
         };
 
-        return await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
+        var savedProfile = await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
+
+        // Publish rolled back notification (after rollback)
+        var rolledBackNotification = new AIProfileRolledBackNotification(savedProfile, targetVersion, messages)
+            .WithStateFrom(rollingBackNotification);
+        await _eventAggregator.PublishAsync(rolledBackNotification, cancellationToken);
+
+        return savedProfile;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ProfileAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var existing = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return existing is not null && (!excludeId.HasValue || existing.Id != excludeId.Value);
     }
 }

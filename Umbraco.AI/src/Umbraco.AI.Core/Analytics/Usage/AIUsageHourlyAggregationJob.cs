@@ -137,7 +137,7 @@ internal sealed class AIUsageHourlyAggregationJob : RecurringHostedServiceBase
         {
             try
             {
-                _logger.LogInformation("Aggregating hour: {Hour}", currentHour);
+                _logger.LogDebug("Aggregating hour: {Hour}", currentHour);
                 await _aggregationService.AggregateHourlyAsync(currentHour, ct);
                 processedCount++;
             }

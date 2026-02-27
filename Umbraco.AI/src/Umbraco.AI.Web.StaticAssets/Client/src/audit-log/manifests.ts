@@ -7,7 +7,7 @@ import { auditLogMenuManifests } from "./menu/manifests.js";
  * Manifests for the AuditLog feature.
  *
  * Phase 5 includes:
- * - Repository manifests (collection and detail) 
+ * - Repository manifests (collection and detail)
  * - Collection manifests (collection and table view)
  *
  * Phase 8.1 includes:

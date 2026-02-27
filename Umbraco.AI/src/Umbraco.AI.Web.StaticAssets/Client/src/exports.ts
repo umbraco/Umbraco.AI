@@ -1,8 +1,14 @@
-export * from './chat/exports.js';
-export * from './context/exports.js';
-export * from './core/exports.js';
-export * from './embeddings/exports.js';
-export * from './entity-adapter/exports.js';
-export * from './profile/exports.js';
-export * from './request-context/exports.js';
-export * from './workspace-registry/exports.js';
+export * from "./chat/exports.js";
+export * from "./context/exports.js";
+export * from "./core/exports.js";
+export * from "./embeddings/exports.js";
+export * from "./entity-adapter/exports.js";
+export * from "./profile/exports.js";
+export * from "./request-context/exports.js";
+export * from "./tool/exports.js";
+export * from "./workspace-registry/exports.js";
+export * from "./section/exports.js";
+export * from "./constants.js";
+
+// Export client ready promise for nested packages to wait on
+export { coreClientReady } from "./app.js";

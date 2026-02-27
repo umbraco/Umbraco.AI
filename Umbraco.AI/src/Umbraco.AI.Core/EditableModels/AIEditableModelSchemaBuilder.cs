@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Serialization;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.EditableModels;
 
@@ -11,17 +12,36 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
     public AIEditableModelSchema BuildForType<TModel>(string modelId)
         where TModel : class
     {
-        var properties = typeof(TModel)
+        var modelType = typeof(TModel);
+        var properties = modelType
             .GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        var fields = properties.Select(property => BuildFieldForProperty(property, modelId)).ToList();
-        return new AIEditableModelSchema(typeof(TModel), fields);
+
+        // Create an instance to read default values from property initializers
+        var modelInstance = Activator.CreateInstance(modelType);
+
+        var fields = properties.Select(property => BuildFieldForProperty(property, modelId, modelInstance)).ToList();
+        return new AIEditableModelSchema(modelType, fields);
     }
 
-    private AIEditableModelField BuildFieldForProperty(PropertyInfo property, string modelId)
+    private AIEditableModelField BuildFieldForProperty(PropertyInfo property, string modelId, object? modelInstance)
     {
         var attr = property.GetCustomAttribute<AIEditableModelFieldAttribute>();
         var key = property.Name.ToCamelCase();
         var modelKey = modelId.ToCamelCase();
+
+        // Read default value from the model instance's property initializer
+        object? defaultValue = null;
+        if (modelInstance != null && property.CanRead)
+        {
+            try
+            {
+                defaultValue = property.GetValue(modelInstance);
+            }
+            catch
+            {
+                // If we can't read the property value, just leave it as null
+            }
+        }
 
         return new AIEditableModelField
         {
@@ -34,10 +54,12 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
             EditorConfig = attr?.EditorConfig != null
                 ? JsonSerializer.Deserialize<JsonElement>(attr.EditorConfig, Constants.DefaultJsonSerializerOptions)
                 : null,
-            DefaultValue = attr?.DefaultValue,
+            DefaultValue = defaultValue,
             ValidationRules = InferValidationAttributes(property),
             SortOrder = attr?.SortOrder ?? 0,
-            IsSensitive = attr?.IsSensitive ?? false
+            IsSensitive = attr?.IsSensitive ?? false,
+            Group = (attr?.Group).IsNullOrWhiteSpace() ? null :
+                attr.Group.StartsWith("#") ? attr.Group :  $"#uaiFieldGroups_{attr.Group.ToCamelCase()}Label"
         };
     }
 

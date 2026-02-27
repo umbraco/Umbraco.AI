@@ -1,6 +1,6 @@
 ---
 description: >-
-  Categorize agents with scopes for filtering and organization.
+    Categorize agents with scopes for filtering and organization.
 ---
 
 # Agent Scopes
@@ -24,8 +24,8 @@ An agent with no scopes will appear in general listings but will not be returned
 
 The **Agent Copilot** add-on registers the `copilot` scope, which indicates agents that should appear in the copilot chat sidebar.
 
-| Scope ID | Package | Icon | Description |
-|----------|---------|------|-------------|
+| Scope ID  | Package                  | Icon        | Description                                  |
+| --------- | ------------------------ | ----------- | -------------------------------------------- |
 | `copilot` | Umbraco.AI.Agent.Copilot | `icon-chat` | Agents available in the copilot chat sidebar |
 
 ## Assigning Scopes to Agents
@@ -39,14 +39,16 @@ When creating or editing an agent in the backoffice, you can assign scopes in th
 Include `scopeIds` when creating or updating an agent:
 
 {% code title="Request" %}
+
 ```json
 {
-  "alias": "content-assistant",
-  "name": "Content Assistant",
-  "scopeIds": ["copilot"],
-  "instructions": "You are a helpful content assistant."
+    "alias": "content-assistant",
+    "name": "Content Assistant",
+    "scopeIds": ["copilot"],
+    "instructions": "You are a helpful content assistant."
 }
 ```
+
 {% endcode %}
 
 ### Via Code
@@ -82,14 +84,16 @@ GET /umbraco/ai/management/api/v1/agent/scopes
 ```
 
 {% code title="200 OK" %}
+
 ```json
 [
-  {
-    "id": "copilot",
-    "icon": "icon-chat"
-  }
+    {
+        "id": "copilot",
+        "icon": "icon-chat"
+    }
 ]
 ```
+
 {% endcode %}
 
 ### Via Service
@@ -115,6 +119,7 @@ Add-on packages can register their own scopes to categorize agents for their spe
 Create a class that derives from `AIAgentScopeBase` and decorate it with the `[AIAgentScope]` attribute:
 
 {% code title="MyFeatureScope.cs" %}
+
 ```csharp
 using Umbraco.AI.Agent.Core.Scopes;
 
@@ -129,6 +134,7 @@ public class MyFeatureScope : AIAgentScopeBase
     public const string ScopeId = "my-feature";
 }
 ```
+
 {% endcode %}
 
 ### 2. Automatic Registration
@@ -140,6 +146,7 @@ Scopes are automatically discovered and registered during application startup. T
 For more control, you can manually register scopes in a composer:
 
 {% code title="MyComposer.cs" %}
+
 ```csharp
 using Umbraco.Cms.Core.Composing;
 using Umbraco.AI.Agent.Core.Configuration;
@@ -155,6 +162,7 @@ public class MyComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ### 4. Query Agents by Your Scope
@@ -204,20 +212,22 @@ public interface IAIAgentScope
 
 Scope names and descriptions are localized on the frontend using a naming convention:
 
-| Key Pattern | Purpose |
-|-------------|---------|
-| `uaiAgentScope_{scopeId}Label` | Display name for the scope |
-| `uaiAgentScope_{scopeId}Description` | Description shown in UI |
+| Key Pattern                          | Purpose                    |
+| ------------------------------------ | -------------------------- |
+| `uaiAgentScope_{scopeId}Label`       | Display name for the scope |
+| `uaiAgentScope_{scopeId}Description` | Description shown in UI    |
 
 **Example for a custom "content-editing" scope:**
 
 {% code title="en.ts" %}
+
 ```typescript
 export default {
-  uaiAgentScope_contentEditingLabel: "Content Editing",
-  uaiAgentScope_contentEditingDescription: "Agents for inline content editing"
+    uaiAgentScope_contentEditingLabel: "Content Editing",
+    uaiAgentScope_contentEditingDescription: "Agents for inline content editing",
 };
 ```
+
 {% endcode %}
 
 ## Scope Collection
@@ -279,6 +289,6 @@ var versatileAgent = new AIAgent
 
 ## Related
 
-* [Agent Concepts](concepts.md) - Agent overview
-* [API: List Agents](api/list.md) - List endpoint with scope filtering
-* [Agent Copilot](../agent-copilot/README.md) - Copilot scope usage
+- [Agent Concepts](concepts.md) - Agent overview
+- [API: List Agents](api/list.md) - List endpoint with scope filtering
+- [Agent Copilot](../agent-copilot/README.md) - Copilot scope usage

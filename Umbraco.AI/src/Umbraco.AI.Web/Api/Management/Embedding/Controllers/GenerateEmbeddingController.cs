@@ -10,7 +10,6 @@ using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Embedding.Controllers;
 

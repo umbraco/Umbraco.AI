@@ -37,9 +37,26 @@ public class AgentItemResponseModel
     public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
-    /// Scope IDs that categorize this agent for specific purposes.
+    /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
-    public IEnumerable<string> ScopeIds { get; set; } = [];
+    public IEnumerable<string> SurfaceIds { get; set; } = [];
+
+    /// <summary>
+    /// Defines where this agent is available using allow and deny rules.
+    /// Null means available everywhere (backwards compatible).
+    /// </summary>
+    public AIAgentScopeModel? Scope { get; set; }
+
+    /// <summary>
+    /// List of explicitly allowed tool IDs for this agent.
+    /// </summary>
+    public IEnumerable<string> AllowedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// List of allowed tool scope IDs for this agent.
+    /// Grants access to all tools within the specified scopes.
+    /// </summary>
+    public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
 
     /// <summary>
     /// Whether the agent is active.

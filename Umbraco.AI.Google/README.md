@@ -40,13 +40,14 @@ After installation, create a connection in the Umbraco backoffice:
 
 ```json
 {
-  "ApiKey": "AIza..."
+    "ApiKey": "AIza..."
 }
 ```
 
 ## Supported Models
 
 **Chat Models:**
+
 - Gemini 2.0 Flash
 - Gemini 2.0 Flash Lite
 - Gemini 1.5 Pro

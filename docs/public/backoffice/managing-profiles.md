@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create and manage AI profiles in the Umbraco backoffice.
+    Create and manage AI profiles in the Umbraco backoffice.
 ---
 
 # Managing Profiles
@@ -9,7 +9,7 @@ Profiles combine a connection with model settings for specific use cases. Create
 
 ## Viewing Profiles
 
-1. Navigate to **Settings** > **AI** > **Profiles**
+1. Navigate to the **AI** section > **Profiles**
 2. The profile list shows all configured profiles
 3. Use filters to find profiles by capability (Chat, Embedding)
 4. Click a profile to view or edit its details
@@ -19,13 +19,13 @@ Profiles combine a connection with model settings for specific use cases. Create
 1. Click **Create Profile** in the Profiles section
 2. Fill in the required fields:
 
-| Field | Description |
-|-------|-------------|
-| **Name** | Display name for the profile |
-| **Alias** | Unique identifier (used in code and as default) |
-| **Capability** | Type of AI operation (Chat, Embedding) |
-| **Connection** | Which connection to use |
-| **Model** | The specific AI model |
+| Field          | Description                                     |
+| -------------- | ----------------------------------------------- |
+| **Name**       | Display name for the profile                    |
+| **Alias**      | Unique identifier (used in code and as default) |
+| **Capability** | Type of AI operation (Chat, Embedding)          |
+| **Connection** | Which connection to use                         |
+| **Model**      | The specific AI model                           |
 
 3. Configure capability-specific settings
 4. Click **Save**
@@ -34,19 +34,19 @@ Profiles combine a connection with model settings for specific use cases. Create
 
 For profiles with the **Chat** capability:
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| **Temperature** | Controls randomness (0-2). Lower = more focused, higher = more creative | Model default |
-| **Max Tokens** | Maximum tokens in the response | Model default |
-| **System Prompt** | Instructions sent with every request | None |
+| Setting           | Description                                                             | Default       |
+| ----------------- | ----------------------------------------------------------------------- | ------------- |
+| **Temperature**   | Controls randomness (0-2). Lower = more focused, higher = more creative | Model default |
+| **Max Tokens**    | Maximum tokens in the response                                          | Model default |
+| **System Prompt** | Instructions sent with every request                                    | None          |
 
 ### Temperature Guidelines
 
-| Value | Best For |
-|-------|----------|
+| Value     | Best For                                            |
+| --------- | --------------------------------------------------- |
 | 0.0 - 0.3 | Factual responses, code generation, data extraction |
-| 0.4 - 0.7 | Balanced responses, general assistance |
-| 0.8 - 1.2 | Creative writing, brainstorming |
+| 0.4 - 0.7 | Balanced responses, general assistance              |
+| 0.8 - 1.2 | Creative writing, brainstorming                     |
 
 ### System Prompts
 
@@ -66,16 +66,16 @@ Leave settings empty to use the model's default values. Only configure what you 
 
 Embedding profiles currently use model defaults. Select the appropriate embedding model for your use case:
 
-| Model | Dimensions | Best For |
-|-------|------------|----------|
-| text-embedding-3-small | 1536 | Cost-effective, general purpose |
-| text-embedding-3-large | 3072 | Higher accuracy, more storage |
+| Model                  | Dimensions | Best For                        |
+| ---------------------- | ---------- | ------------------------------- |
+| text-embedding-3-small | 1536       | Cost-effective, general purpose |
+| text-embedding-3-large | 3072       | Higher accuracy, more storage   |
 
 ## Setting Default Profiles
 
 To use a profile as the default when no profile is specified in code:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select your chat profile from the **Default Chat Profile** dropdown
 3. Select your embedding profile from the **Default Embedding Profile** dropdown
 4. Click **Save**
@@ -118,26 +118,26 @@ Example tags: `production`, `content-team`, `experimental`
 
 ### Content Writer
 
-* **Capability**: Chat
-* **Model**: gpt-4o
-* **Temperature**: 0.7
-* **System Prompt**: "You are a professional content writer. Write engaging, SEO-friendly content."
+- **Capability**: Chat
+- **Model**: gpt-4o
+- **Temperature**: 0.7
+- **System Prompt**: "You are a professional content writer. Write engaging, SEO-friendly content."
 
 ### Code Assistant
 
-* **Capability**: Chat
-* **Model**: gpt-4o
-* **Temperature**: 0.2
-* **System Prompt**: "You are a coding assistant. Provide clear, well-documented code examples."
+- **Capability**: Chat
+- **Model**: gpt-4o
+- **Temperature**: 0.2
+- **System Prompt**: "You are a coding assistant. Provide clear, well-documented code examples."
 
 ### Search Embeddings
 
-* **Capability**: Embedding
-* **Model**: text-embedding-3-small
-* **Tags**: `search`, `production`
+- **Capability**: Embedding
+- **Model**: text-embedding-3-small
+- **Tags**: `search`, `production`
 
 ## Related
 
-* [Managing Connections](managing-connections.md) - Connections are required for profiles
-* [Profiles Concept](../concepts/profiles.md) - Deeper explanation of profiles
-* [Using Profiles in Code](../using-the-api/chat/basic-chat.md) - How to use profiles programmatically
+- [Managing Connections](managing-connections.md) - Connections are required for profiles
+- [Profiles Concept](../concepts/profiles.md) - Deeper explanation of profiles
+- [Using Profiles in Code](../using-the-api/chat/basic-chat.md) - How to use profiles programmatically

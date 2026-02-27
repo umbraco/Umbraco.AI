@@ -1,6 +1,6 @@
 ---
 description: >-
-  Delete an AI profile.
+    Delete an AI profile.
 ---
 
 # Delete Profile
@@ -15,8 +15,8 @@ DELETE /umbraco/ai/management/api/v1/profile/{idOrAlias}
 
 ### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter   | Type   | Description           |
+| ----------- | ------ | --------------------- |
 | `idOrAlias` | string | Profile GUID or alias |
 
 ## Response
@@ -24,22 +24,26 @@ DELETE /umbraco/ai/management/api/v1/profile/{idOrAlias}
 ### Success
 
 {% code title="200 OK" %}
+
 ```
 (empty body)
 ```
+
 {% endcode %}
 
 ### Not Found
 
 {% code title="404 Not Found" %}
+
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "Profile not found"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "Profile not found"
 }
 ```
+
 {% endcode %}
 
 ## Examples
@@ -47,19 +51,23 @@ DELETE /umbraco/ai/management/api/v1/profile/{idOrAlias}
 ### Delete by ID
 
 {% code title="cURL" %}
+
 ```bash
 curl -X DELETE "https://your-site.com/umbraco/ai/management/api/v1/profile/3fa85f64-5717-4562-b3fc-2c963f66afa6" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
+
 {% endcode %}
 
 ### Delete by Alias
 
 {% code title="cURL" %}
+
 ```bash
 curl -X DELETE "https://your-site.com/umbraco/ai/management/api/v1/profile/content-assistant" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
+
 {% endcode %}
 
 {% hint style="warning" %}

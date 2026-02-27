@@ -3,10 +3,16 @@ import { client } from "./api/client.gen.ts";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 
 // Ensure all exports from index are available from the bundle
-export * from './index.js';
+export * from "./index.js";
 
 // Re-export the public API
-export * from './exports.js';
+export * from "./exports.js";
+
+// Promise that resolves when the agent client is configured with auth
+let agentClientReadyResolve: (() => void) | undefined;
+export const agentClientReady = new Promise<void>((resolve) => {
+    agentClientReadyResolve = resolve;
+});
 
 // Entry point initialization
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
@@ -20,6 +26,12 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
             baseUrl: config?.base ?? "",
             credentials: config?.credentials ?? "same-origin",
         });
+
+        // Resolve the ready promise once auth is configured
+        if (agentClientReadyResolve) {
+            agentClientReadyResolve();
+            agentClientReadyResolve = undefined;
+        }
     });
 };
 

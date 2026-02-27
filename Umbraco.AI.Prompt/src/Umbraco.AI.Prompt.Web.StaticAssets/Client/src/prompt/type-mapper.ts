@@ -15,7 +15,11 @@ function mapScopeFromApi(apiScope: ScopeModel | null | undefined): UaiPromptScop
     };
 }
 
-function mapScopeRuleFromApi(rule: { propertyEditorUiAliases?: string[] | null; propertyAliases?: string[] | null; contentTypeAliases?: string[] | null }): UaiScopeRule {
+function mapScopeRuleFromApi(rule: {
+    propertyEditorUiAliases?: string[] | null;
+    propertyAliases?: string[] | null;
+    contentTypeAliases?: string[] | null;
+}): UaiScopeRule {
     return {
         propertyEditorUiAliases: rule.propertyEditorUiAliases ?? null,
         propertyAliases: rule.propertyAliases ?? null,
@@ -30,12 +34,12 @@ function mapScopeToApi(scope: UaiPromptScope | null): ScopeModel | null {
     if (!scope) return null;
 
     return {
-        allowRules: scope.allowRules.map(rule => ({
+        allowRules: scope.allowRules.map((rule) => ({
             propertyEditorUiAliases: rule.propertyEditorUiAliases,
             propertyAliases: rule.propertyAliases,
             contentTypeAliases: rule.contentTypeAliases,
         })),
-        denyRules: scope.denyRules.map(rule => ({
+        denyRules: scope.denyRules.map((rule) => ({
             propertyEditorUiAliases: rule.propertyEditorUiAliases,
             propertyAliases: rule.propertyAliases,
             contentTypeAliases: rule.contentTypeAliases,
@@ -58,6 +62,7 @@ export const UaiPromptTypeMapper = {
             scope: mapScopeFromApi(response.scope),
             isActive: response.isActive,
             includeEntityContext: response.includeEntityContext,
+            optionCount: response.optionCount ?? 1,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
             version: response.version,
@@ -87,6 +92,7 @@ export const UaiPromptTypeMapper = {
             tags: model.tags,
             scope: mapScopeToApi(model.scope),
             includeEntityContext: model.includeEntityContext,
+            optionCount: model.optionCount,
         };
     },
 
@@ -102,6 +108,7 @@ export const UaiPromptTypeMapper = {
             scope: mapScopeToApi(model.scope),
             isActive: model.isActive,
             includeEntityContext: model.includeEntityContext,
+            optionCount: model.optionCount,
         };
     },
 };

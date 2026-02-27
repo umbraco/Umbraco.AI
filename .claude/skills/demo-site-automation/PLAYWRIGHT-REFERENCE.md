@@ -10,16 +10,16 @@ Quick reference for Playwright MCP tools used in demo site browser automation.
 
 ## Core Tools
 
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `browser_navigate` | Go to URL | Initial navigation, section changes |
-| `browser_snapshot` | Capture page state | Before/after actions, discovery |
-| `browser_click` | Click element | Buttons, links, icons |
-| `browser_fill_form` | Fill multiple fields | Login, create/edit forms |
-| `browser_type` | Type text slowly | Rich text editors, search boxes |
-| `browser_wait_for` | Wait for element/text | After navigation, async loading |
-| `browser_take_screenshot` | Visual screenshot | Debugging, visual confirmation |
-| `browser_evaluate` | Run JavaScript | Complex interactions, data extraction |
+| Tool                      | Purpose               | When to Use                           |
+| ------------------------- | --------------------- | ------------------------------------- |
+| `browser_navigate`        | Go to URL             | Initial navigation, section changes   |
+| `browser_snapshot`        | Capture page state    | Before/after actions, discovery       |
+| `browser_click`           | Click element         | Buttons, links, icons                 |
+| `browser_fill_form`       | Fill multiple fields  | Login, create/edit forms              |
+| `browser_type`            | Type text slowly      | Rich text editors, search boxes       |
+| `browser_wait_for`        | Wait for element/text | After navigation, async loading       |
+| `browser_take_screenshot` | Visual screenshot     | Debugging, visual confirmation        |
+| `browser_evaluate`        | Run JavaScript        | Complex interactions, data extraction |
 
 ## Tool Details
 

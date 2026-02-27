@@ -2,11 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Web.Api.Management.Common.Models;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
 
@@ -18,7 +19,7 @@ namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
 /// (Connection, Profile, Context, Prompt, Agent). The entity type is specified as a route parameter.
 /// </remarks>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class EntityVersionHistoryController : VersioningControllerBase
 {
     private readonly IAIEntityVersionService _versionService;
@@ -197,9 +198,9 @@ public class EntityVersionHistoryController : VersioningControllerBase
         {
             FromVersion = comparison.FromVersion,
             ToVersion = comparison.ToVersion,
-            Changes = comparison.Changes.Select(c => new PropertyChangeModel
+            Changes = comparison.Changes.Select(c => new ValueChangeModel
             {
-                PropertyName = c.PropertyName,
+                Path = c.Path,
                 OldValue = c.OldValue,
                 NewValue = c.NewValue
             }).ToList()

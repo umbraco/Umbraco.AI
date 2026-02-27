@@ -1,0 +1,36 @@
+{
+    "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+    "AuthorDetails": {
+        "Name": "Umbraco HQ",
+        "Description": "Umbraco HQ",
+        "Url": "https://umbraco.com",
+        "ImageUrl": "https://avatars.githubusercontent.com/u/1419552?s=200&v=4"
+    },
+    "Category": "Artificial Intelligence",
+    "LicenseTypes": ["Free"],
+    "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Prompt.Deploy",
+    "IssueTrackerUrl": "https://github.com/umbraco/Umbraco.AI/issues",
+    "PackageType": "Package",
+    "PackagesByAuthor": [
+        "Umbraco.Forms",
+        "Umbraco.Workflow",
+        "Umbraco.Deploy.OnPrem",
+        "Umbraco.Commerce",
+        "Umbraco.Engage"
+    ],
+    "RelatedPackages": [
+        {
+            "PackageId": "Umbraco.AI.Prompt",
+            "Description": "Prompt template management for Umbraco.AI"
+        },
+        {
+            "PackageId": "Umbraco.AI.Deploy",
+            "Description": "Core Deploy support for Umbraco.AI"
+        },
+        {
+            "PackageId": "Umbraco.AI.Agent.Deploy",
+            "Description": "Deploy support for AI agents"
+        }
+    ],
+    "Tags": ["umbraco", "ai", "deploy", "prompt", "templates"]
+}

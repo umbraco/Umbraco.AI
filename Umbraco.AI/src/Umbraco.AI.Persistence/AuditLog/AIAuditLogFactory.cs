@@ -56,7 +56,6 @@ internal static class AIAuditLogFactory
             TotalTokens = entity.TotalTokens,
             PromptSnapshot = entity.PromptSnapshot,
             ResponseSnapshot = entity.ResponseSnapshot,
-            DetailLevel = (AIAuditLogDetailLevel)entity.DetailLevel,
             ParentAuditLogId = entity.ParentAuditLogId, // New: Parent audit-log tracking
             Metadata = metadata // New: Extensible metadata
         };
@@ -102,7 +101,6 @@ internal static class AIAuditLogFactory
             TotalTokens = audit.TotalTokens,
             PromptSnapshot = audit.PromptSnapshot,
             ResponseSnapshot = audit.ResponseSnapshot,
-            DetailLevel = (int)audit.DetailLevel,
             ParentAuditLogId = audit.ParentAuditLogId, // New: Parent audit-log tracking
             Metadata = metadataJson // New: Extensible metadata
         };
@@ -145,7 +143,6 @@ internal static class AIAuditLogFactory
         entity.TotalTokens = audit.TotalTokens;
         entity.PromptSnapshot = audit.PromptSnapshot;
         entity.ResponseSnapshot = audit.ResponseSnapshot;
-        entity.DetailLevel = (int)audit.DetailLevel;
         entity.ParentAuditLogId = audit.ParentAuditLogId; // New: Parent audit-log tracking
         entity.Metadata = metadataJson; // New: Extensible metadata
     }

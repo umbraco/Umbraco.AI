@@ -40,13 +40,67 @@ public sealed class AIAgent : IAIVersionableEntity
     public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
-    /// Scope IDs that categorize this agent for specific purposes.
+    /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
     /// <remarks>
-    /// Agents can belong to multiple scopes. An agent with no scopes will appear
-    /// in general listings but not in any scoped queries.
+    /// Agents can belong to multiple surfaces. An agent with no surfaces will appear
+    /// in general listings but not in any surface-specific queries.
     /// </remarks>
-    public IReadOnlyList<string> ScopeIds { get; set; } = [];
+    public IReadOnlyList<string> SurfaceIds { get; set; } = [];
+
+    /// <summary>
+    /// Optional scope defining where this agent is available.
+    /// If null, agent is available in all contexts (backwards compatible).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Follows the same pattern as <c>AIPromptScope</c> with allow and deny rules.
+    /// Different agent surfaces (copilot, API, workflow) may check different scope dimensions.
+    /// </para>
+    /// <para>
+    /// Example: A content-only agent would have:
+    /// <code>
+    /// Scope = new AIAgentScope
+    /// {
+    ///     AllowRules = [new AIAgentScopeRule { Sections = ["content"] }]
+    /// }
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public AIAgentScope? Scope { get; set; }
+
+    /// <summary>
+    /// Tool IDs explicitly allowed for this agent.
+    /// Empty list means no specific tools are allowed (only scopes apply).
+    /// </summary>
+    /// <remarks>
+    /// Tool permissions control which tools are available to the agent during execution.
+    /// System tools are always included regardless of this setting.
+    /// </remarks>
+    public IReadOnlyList<string> AllowedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// Tool scopes allowed for this agent.
+    /// Tools matching these scopes will be included automatically.
+    /// System tools are always included regardless of this setting.
+    /// </summary>
+    /// <remarks>
+    /// Tool scopes provide bulk permission for related tools (e.g., "content-read", "search").
+    /// Both AllowedToolIds and AllowedToolScopeIds are combined when resolving available tools.
+    /// </remarks>
+    public IReadOnlyList<string> AllowedToolScopeIds { get; set; } = [];
+
+    /// <summary>
+    /// User group-specific permission overrides.
+    /// Dictionary key is UserGroupId (Guid).
+    /// </summary>
+    /// <remarks>
+    /// User groups can override agent defaults by adding or removing tool permissions.
+    /// Resolution order: Agent Defaults + User Group Additions - User Group Restrictions.
+    /// System tools are always included and cannot be denied.
+    /// </remarks>
+    public IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> UserGroupPermissions { get; set; }
+        = new Dictionary<Guid, AIAgentUserGroupPermissions>();
 
     /// <summary>
     /// Instructions that define how the agent behaves.

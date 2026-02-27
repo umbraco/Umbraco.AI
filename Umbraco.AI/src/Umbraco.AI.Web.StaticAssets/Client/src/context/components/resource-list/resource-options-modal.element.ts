@@ -1,19 +1,14 @@
-import {
-    css,
-    customElement,
-    html,
-    state,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbModalBaseElement } from '@umbraco-cms/backoffice/modal';
-import type { UaiContextResourceInjectionMode } from '../../types.js';
+import { css, customElement, html, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
+import type { UaiContextResourceInjectionMode } from "../../types.js";
 import type {
     UaiResourceOptionsModalData,
     UaiResourceOptionsModalValue,
     UaiResourceOptionsData,
-} from './resource-options-modal.token.js';
-import type { UaiModelEditorChangeEventDetail } from '../../../core/components/exports.js';
+} from "./resource-options-modal.token.js";
+import type { UaiModelEditorChangeEventDetail } from "../../../core/components/exports.js";
 
-const elementName = 'uai-resource-options-modal';
+const elementName = "uai-resource-options-modal";
 
 @customElement(elementName)
 export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
@@ -21,16 +16,16 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
     UaiResourceOptionsModalValue
 > {
     @state()
-    private _resourceName = '';
+    private _resourceName = "";
 
     @state()
-    private _resourceDescription = '';
+    private _resourceDescription = "";
 
     @state()
     private _resourceData: Record<string, unknown> = {};
 
     @state()
-    private _injectionMode: UaiContextResourceInjectionMode = 'Always';
+    private _injectionMode: UaiContextResourceInjectionMode = "Always";
 
     override connectedCallback() {
         super.connectedCallback();
@@ -38,12 +33,12 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         // Populate from existing resource if editing
         if (this.data?.resource) {
             this._resourceName = this.data.resource.name;
-            this._resourceDescription = this.data.resource.description ?? '';
+            this._resourceDescription = this.data.resource.description ?? "";
             this._resourceData = this.data.resource.data ?? {};
             this._injectionMode = this.data.resource.injectionMode;
         } else {
             // Default name from resource type
-            this._resourceName = this.data?.resourceType?.name ?? 'New Resource';
+            this._resourceName = this.data?.resourceType?.name ?? "New Resource";
         }
     }
 
@@ -84,70 +79,88 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
     override render() {
         const isEditing = !!this.data?.resource;
         const headline = isEditing
-            ? `Edit ${this.data?.resourceType?.name ?? 'Resource'}`
-            : `Add ${this.data?.resourceType?.name ?? 'Resource'}`;
+            ? `Edit ${this.data?.resourceType?.name ?? "Resource"}`
+            : `Add ${this.data?.resourceType?.name ?? "Resource"}`;
 
         return html`
             <umb-body-layout headline=${headline}>
-                <div >
+                <div>
                     <uui-box headline="General">
-                        <umb-property-layout label="Name" description="The name of the resource as referenced by AI models.">
+                        <umb-property-layout
+                            label="Name"
+                            description="The name of the resource as referenced by AI models."
+                        >
                             <div slot="editor">
                                 <uui-input
                                     id="name"
                                     .value=${this._resourceName}
                                     @input=${this.#onNameChange}
                                     placeholder="Enter resource name"
-                                    required></uui-input>
+                                    required
+                                ></uui-input>
                             </div>
                         </umb-property-layout>
 
-                        <umb-property-layout label="Description" description="An optional description for the resource.">
+                        <umb-property-layout
+                            label="Description"
+                            description="An optional description for the resource."
+                        >
                             <div slot="editor">
                                 <uui-input
                                     id="description"
                                     .value=${this._resourceDescription}
                                     @input=${this.#onDescriptionChange}
-                                    placeholder="Enter description"></uui-input>
+                                    placeholder="Enter description"
+                                ></uui-input>
                             </div>
                         </umb-property-layout>
 
-                        <umb-property-layout label="Injection Mode" description="How this resource should be injected into AI requests">
+                        <umb-property-layout
+                            label="Injection Mode"
+                            description="How this resource should be injected into AI requests"
+                        >
                             <div slot="editor">
                                 <uui-select
-                                        id="injectionMode"
-                                        .value=${this._injectionMode}
-                                        .options=${[
-                                            { value: 'Always', name: ' Always - Include in every request', selected: this._injectionMode === 'Always' },
-                                            { value: 'OnDemand', name: 'On-Demand - Available via tool for LLM to retrieve', selected: this._injectionMode === 'OnDemand' },
-                                        ]}
-                                        @change=${this.#onInjectionModeChange}>
+                                    id="injectionMode"
+                                    .value=${this._injectionMode}
+                                    .options=${[
+                                        {
+                                            value: "Always",
+                                            name: " Always - Include in every request",
+                                            selected: this._injectionMode === "Always",
+                                        },
+                                        {
+                                            value: "OnDemand",
+                                            name: "On-Demand - Available via tool for LLM to retrieve",
+                                            selected: this._injectionMode === "OnDemand",
+                                        },
+                                    ]}
+                                    @change=${this.#onInjectionModeChange}
+                                >
                                 </uui-select>
                             </div>
                         </umb-property-layout>
                     </uui-box>
 
-                    <uui-box headline="Data">
-                        <uai-model-editor
-                            .schema=${this.data?.resourceType?.dataSchema}
-                            .model=${this._resourceData}
-                            @change=${this.#onDataChange}>
-                        </uai-model-editor>
-                    </uui-box>
+                    <uai-model-editor
+                        .schema=${this.data?.resourceType?.dataSchema}
+                        .model=${this._resourceData}
+                        @change=${this.#onDataChange}
+                        default-group="#uaiFieldGroups_dataLabel"
+                        style="margin-top: var(--uui-size-layout-1);"
+                    >
+                    </uai-model-editor>
                 </div>
                 <div slot="actions">
-                    <uui-button
-                        label="Cancel"
-                        @click=${this.#handleCancel}>
-                        Cancel
-                    </uui-button>
+                    <uui-button label="Cancel" @click=${this.#handleCancel}> Cancel </uui-button>
                     <uui-button
                         look="primary"
                         color="positive"
-                        label=${isEditing ? 'Save' : 'Add'}
+                        label=${isEditing ? "Save" : "Add"}
                         @click=${this.#handleSubmit}
-                        ?disabled=${!this._resourceName.trim()}>
-                        ${isEditing ? 'Save' : 'Add'}
+                        ?disabled=${!this._resourceName.trim()}
+                    >
+                        ${isEditing ? "Save" : "Add"}
                     </uui-button>
                 </div>
             </umb-body-layout>

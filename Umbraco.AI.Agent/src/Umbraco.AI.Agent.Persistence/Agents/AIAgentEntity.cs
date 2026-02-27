@@ -37,9 +37,32 @@ internal class AIAgentEntity
     public string? ContextIds { get; set; }
 
     /// <summary>
-    /// JSON-serialized array of scope IDs.
+    /// JSON-serialized array of surface IDs.
     /// </summary>
-    public string? ScopeIds { get; set; }
+    public string? SurfaceIds { get; set; }
+
+    /// <summary>
+    /// JSON-serialized scope (AllowRules and DenyRules).
+    /// Defines where the agent is available (section, entity type, workspace).
+    /// Null means available everywhere (backwards compatible).
+    /// </summary>
+    public string? Scope { get; set; }
+
+    /// <summary>
+    /// JSON-serialized array of allowed tool IDs.
+    /// </summary>
+    public string? AllowedToolIds { get; set; }
+
+    /// <summary>
+    /// JSON-serialized array of allowed tool scope IDs.
+    /// </summary>
+    public string? AllowedToolScopeIds { get; set; }
+
+    /// <summary>
+    /// JSON-serialized dictionary of user group permission overrides.
+    /// Key: UserGroupId (Guid), Value: AIAgentUserGroupPermissions
+    /// </summary>
+    public string? UserGroupPermissions { get; set; }
 
     /// <summary>
     /// Instructions that define how the agent behaves.

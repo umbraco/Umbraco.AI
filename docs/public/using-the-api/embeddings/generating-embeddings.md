@@ -1,6 +1,6 @@
 ---
 description: >-
-  Generate vector embeddings for individual text values.
+    Generate vector embeddings for individual text values.
 ---
 
 # Generating Embeddings
@@ -10,6 +10,7 @@ Generate a single embedding vector for a piece of text. This is the most common 
 ## Basic Example
 
 {% code title="BasicEmbedding.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Embeddings;
@@ -32,19 +33,21 @@ public class EmbeddingExample
     }
 }
 ```
+
 {% endcode %}
 
 ## Understanding the Response
 
 The `Embedding<float>` type contains:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Vector` | `ReadOnlyMemory<float>` | The embedding vector |
-| `ModelId` | `string?` | The model that generated the embedding |
-| `CreatedAt` | `DateTimeOffset?` | When the embedding was generated |
+| Property    | Type                    | Description                            |
+| ----------- | ----------------------- | -------------------------------------- |
+| `Vector`    | `ReadOnlyMemory<float>` | The embedding vector                   |
+| `ModelId`   | `string?`               | The model that generated the embedding |
+| `CreatedAt` | `DateTimeOffset?`       | When the embedding was generated       |
 
 {% code title="EmbeddingDetails.cs" %}
+
 ```csharp
 var embedding = await _embeddingService.GenerateEmbeddingAsync(text);
 
@@ -58,11 +61,13 @@ float[] array = vector.ToArray();
 // Check which model was used
 string? model = embedding.ModelId;
 ```
+
 {% endcode %}
 
 ## Using a Specific Profile
 
 {% code title="WithProfile.cs" %}
+
 ```csharp
 public class ProfiledEmbeddingService
 {
@@ -90,6 +95,7 @@ public class ProfiledEmbeddingService
     }
 }
 ```
+
 {% endcode %}
 
 ## Indexing Content
@@ -97,6 +103,7 @@ public class ProfiledEmbeddingService
 A common pattern for search indexing:
 
 {% code title="ContentIndexer.cs" %}
+
 ```csharp
 public class ContentIndexer
 {
@@ -133,6 +140,7 @@ public class ContentIndexer
     }
 }
 ```
+
 {% endcode %}
 
 ## Computing Similarity
@@ -140,6 +148,7 @@ public class ContentIndexer
 Compare two embeddings using cosine similarity:
 
 {% code title="Similarity.cs" %}
+
 ```csharp
 public class SimilarityService
 {
@@ -175,6 +184,7 @@ public class SimilarityService
     }
 }
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -184,6 +194,7 @@ Cosine similarity returns a value between -1 and 1, where 1 means identical, 0 m
 ## Error Handling
 
 {% code title="ErrorHandling.cs" %}
+
 ```csharp
 public async Task<float[]?> SafeGenerateEmbedding(string text)
 {
@@ -204,6 +215,7 @@ public async Task<float[]?> SafeGenerateEmbedding(string text)
     }
 }
 ```
+
 {% endcode %}
 
 ## Best Practices

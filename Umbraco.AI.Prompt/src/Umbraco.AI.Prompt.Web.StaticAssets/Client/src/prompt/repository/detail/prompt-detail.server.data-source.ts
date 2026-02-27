@@ -6,8 +6,7 @@ import { UaiPromptTypeMapper } from "../../type-mapper.js";
 import type { UaiPromptDetailModel } from "../../types.js";
 import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
 import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../property-actions/constants.js";
-
-const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+import { UAI_EMPTY_GUID } from "@umbraco-ai/core";
 
 /**
  * Server data source for Prompt detail operations.
@@ -34,15 +33,18 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             contextIds: [],
             tags: [],
             scope: {
-                allowRules: [{
-                    propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
-                    propertyAliases: null,
-                    contentTypeAliases: null,
-                }],
+                allowRules: [
+                    {
+                        propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
+                        propertyAliases: null,
+                        contentTypeAliases: null,
+                    },
+                ],
                 denyRules: [],
             },
             isActive: true,
             includeEntityContext: true,
+            optionCount: 1,
             dateCreated: null,
             dateModified: null,
             version: 0,
@@ -58,7 +60,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } })
+            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } }),
         );
 
         if (error || !data) {
@@ -74,10 +76,9 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async create(model: UaiPromptDetailModel, _parentUnique: string | null) {
         const requestBody = UaiPromptTypeMapper.toCreateRequest(model);
 
-        const { response, error } = await tryExecute(
-            this.#host,
-            PromptsService.createPrompt({ body: requestBody })
-        );
+        const { response, error } = await tryExecute(this.#host, PromptsService.createPrompt({
+            body: requestBody
+        }));
 
         if (error) {
             return { error };
@@ -106,7 +107,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             PromptsService.updatePrompt({
                 path: { promptIdOrAlias: model.unique },
                 body: requestBody,
-            })
+            }),
         );
 
         if (error) {
@@ -123,7 +124,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            PromptsService.deletePrompt({ path: { promptIdOrAlias: unique } })
+            PromptsService.deletePrompt({ path: { promptIdOrAlias: unique } }),
         );
 
         if (error) {

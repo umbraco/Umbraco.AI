@@ -1,4 +1,4 @@
-import type { UaiPromptScope, UaiScopeRule } from './types.js';
+import type { UaiPromptScope, UaiScopeRule } from "./types.js";
 
 /**
  * Context information available when determining if a prompt is allowed.
@@ -20,10 +20,7 @@ export interface PropertyActionContext {
  * - If any denyRule matches = not allowed
  * - If any allowRule matches = allowed
  */
-export function isPromptAllowed(
-    scope: UaiPromptScope | null,
-    context: PropertyActionContext
-): boolean {
+export function isPromptAllowed(scope: UaiPromptScope | null, context: PropertyActionContext): boolean {
     // No scope = not allowed anywhere (denied by default)
     if (!scope) {
         return false;

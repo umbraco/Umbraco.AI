@@ -12,7 +12,7 @@ This document explores **AI Prompts**, a system for executing pre-defined, singl
 
 AI Prompts are pre-defined, single-step operations that editors can execute with one click directly from property editors. They provide a simple way to leverage AI for common content tasks.
 
-**Key Distinction**: Prompts are *human-initiated* (clicked in the UI), while AI Workflows are *automatic* (triggered by events like save/publish).
+**Key Distinction**: Prompts are _human-initiated_ (clicked in the UI), while AI Workflows are _automatic_ (triggered by events like save/publish).
 
 **Core Concept**: One prompt, one result, one click.
 
@@ -26,6 +26,7 @@ AI Prompt
 ```
 
 **Example Use Cases**:
+
 - Generate SEO meta description from page content
 - Write alt text for an image
 - Summarize body content
@@ -108,6 +109,7 @@ public class AIPrompt
 ```
 
 **Resolution Example**:
+
 - "Generate SEO Meta" → appears on `metaDescription` properties
 - "Improve Text" → appears on all TextArea/TinyMCE editors
 - "Translate to French" → appears on all text editors (for French site)
@@ -123,17 +125,17 @@ Target audience: {context.audience}. Tone: {context.tone}."
 
 **Available Variables**:
 
-| Variable | Description |
-|----------|-------------|
-| `{content}` | Current field value |
-| `{documentContent}` | All text content from the document |
-| `{propertyName}` | Display name of the current property |
-| `{propertyAlias}` | Alias of the current property |
-| `{contentType}` | Current content type alias |
-| `{context.tone}` | From AI Context (brand voice) |
-| `{context.audience}` | From AI Context (target audience) |
-| `{context.hint}` | Property-specific hint from AI Context |
-| `{maxLength}` | Configured max length (if applicable) |
+| Variable             | Description                            |
+| -------------------- | -------------------------------------- |
+| `{content}`          | Current field value                    |
+| `{documentContent}`  | All text content from the document     |
+| `{propertyName}`     | Display name of the current property   |
+| `{propertyAlias}`    | Alias of the current property          |
+| `{contentType}`      | Current content type alias             |
+| `{context.tone}`     | From AI Context (brand voice)          |
+| `{context.audience}` | From AI Context (target audience)      |
+| `{context.hint}`     | Property-specific hint from AI Context |
+| `{maxLength}`        | Configured max length (if applicable)  |
 
 ### 5. Editor-Configurable
 
@@ -326,15 +328,15 @@ Clicking the button shows available prompts:
 
 Initial set of prompts to ship with Umbraco.AI:
 
-| Prompt | Description | Applicable Editors |
-|--------|-------------|-------------------|
-| Generate SEO Meta | SEO-optimized meta description | TextBox, TextArea |
-| Generate Alt Text | Accessibility-focused alt text | MediaPicker |
-| Summarize Content | Create a brief summary | TextArea, TinyMCE |
-| Improve Readability | Enhance clarity and flow | TextArea, TinyMCE |
-| Expand Content | Add more detail | TextArea, TinyMCE |
-| Check Grammar | Fix grammar and spelling | TextBox, TextArea, TinyMCE |
-| Translate | Translate to target language | TextBox, TextArea, TinyMCE |
+| Prompt              | Description                    | Applicable Editors         |
+| ------------------- | ------------------------------ | -------------------------- |
+| Generate SEO Meta   | SEO-optimized meta description | TextBox, TextArea          |
+| Generate Alt Text   | Accessibility-focused alt text | MediaPicker                |
+| Summarize Content   | Create a brief summary         | TextArea, TinyMCE          |
+| Improve Readability | Enhance clarity and flow       | TextArea, TinyMCE          |
+| Expand Content      | Add more detail                | TextArea, TinyMCE          |
+| Check Grammar       | Fix grammar and spelling       | TextBox, TextArea, TinyMCE |
+| Translate           | Translate to target language   | TextBox, TextArea, TinyMCE |
 
 ---
 
@@ -384,16 +386,17 @@ public class AIPromptExecutor
 
 ## Relationship to Other Features
 
-| Aspect | AI Prompts | AI Workflows | Agents |
-|--------|------------|--------------|--------|
-| **Initiation** | Human-initiated (UI click) | Automatic (event-driven) | Human-initiated (conversation) |
-| **Steps** | Single step only | One or more (chainable) | Dynamic (tool calls) |
-| **Trigger** | Inline button click | OnSave, OnPublish, Scheduled | User conversation |
-| **Output** | Single property value | Property values | Chat responses + tool calls |
-| **Use case** | Quick content assistance | Automation pipelines | Complex reasoning & exploration |
-| **Configuration** | Per editor/property | Per document type | Per agent definition |
+| Aspect            | AI Prompts                 | AI Workflows                 | Agents                          |
+| ----------------- | -------------------------- | ---------------------------- | ------------------------------- |
+| **Initiation**    | Human-initiated (UI click) | Automatic (event-driven)     | Human-initiated (conversation)  |
+| **Steps**         | Single step only           | One or more (chainable)      | Dynamic (tool calls)            |
+| **Trigger**       | Inline button click        | OnSave, OnPublish, Scheduled | User conversation               |
+| **Output**        | Single property value      | Property values              | Chat responses + tool calls     |
+| **Use case**      | Quick content assistance   | Automation pipelines         | Complex reasoning & exploration |
+| **Configuration** | Per editor/property        | Per document type            | Per agent definition            |
 
 **When to use which**:
+
 - **AI Prompts**: "I want to generate a meta description for this field" (human clicks button)
 - **AI Workflows**: "When I publish, auto-generate summary + tags + translation" (automatic)
 - **Agents**: "Help me rewrite this entire page for a different audience" (conversation)
@@ -457,6 +460,7 @@ POST   /umbraco/ai/api/v1/prompts/{alias}/execute               # Execute a prom
 ### 1. Naming
 
 "AI Prompts" is a working name. Alternatives considered:
+
 - AI Quick Actions
 - AI Assists
 - AI Operations
@@ -493,12 +497,14 @@ Should editors be able to create one-off prompts for specific content items?
 **Consider for Phase 2**, alongside AI Context.
 
 ### Prerequisites
+
 1. Stable Profile and Connection management
 2. Chat capability working end-to-end
 3. AI Context system (for brand voice injection)
 4. Property editor extension points in Umbraco backoffice
 
 ### Implementation Order
+
 1. AIPrompt model and repository
 2. Prompt execution service
 3. API endpoints
@@ -520,11 +526,11 @@ Should editors be able to create one-off prompts for specific content items?
 
 ## Related Decisions
 
-| Decision | Current Choice |
-|----------|----------------|
-| Naming | "AI Prompts" (working name, may change) |
-| Scope | Single-step operations only |
-| Configuration | Editor-configurable via backoffice UI |
+| Decision      | Current Choice                                          |
+| ------------- | ------------------------------------------------------- |
+| Naming        | "AI Prompts" (working name, may change)                 |
+| Scope         | Single-step operations only                             |
+| Configuration | Editor-configurable via backoffice UI                   |
 | Applicability | Filter by property editor, content type, property alias |
-| Output modes | Replace, Append, Preview |
-| Integration | Inline property editor buttons |
+| Output modes  | Replace, Append, Preview                                |
+| Integration   | Inline property editor buttons                          |

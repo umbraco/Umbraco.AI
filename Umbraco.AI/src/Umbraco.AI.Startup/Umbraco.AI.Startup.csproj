@@ -7,6 +7,7 @@
 
     <ItemGroup>
         <PackageReference Include="Umbraco.Cms.Core" />
+        <PackageReference Include="Umbraco.Cms.Web.Common" />
     </ItemGroup>
 
     <ItemGroup>

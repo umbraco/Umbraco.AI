@@ -1,5 +1,7 @@
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Versioning;
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Core.Contexts;
@@ -12,20 +14,24 @@ internal sealed class AIContextService : IAIContextService
     private readonly IAIContextRepository _repository;
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly IEventAggregator _eventAggregator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextService"/> class.
     /// </summary>
     /// <param name="repository">The context repository.</param>
     /// <param name="versionService">The unified versioning service.</param>
+    /// <param name="eventAggregator">The event aggregator for publishing notifications.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user tracking.</param>
     public AIContextService(
         IAIContextRepository repository,
         IAIEntityVersionService versionService,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _versionService = versionService;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -76,6 +82,18 @@ internal sealed class AIContextService : IAIContextService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIContextSavingNotification(context, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Context save cancelled: {errorMessages}");
+        }
+
         // Check if this is an update - if so, create a version snapshot of the current state
         var existing = await _repository.GetByIdAsync(context.Id, cancellationToken);
         if (existing is not null)
@@ -83,16 +101,51 @@ internal sealed class AIContextService : IAIContextService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(context, userId, cancellationToken);
+        // Perform save
+        var savedContext = await _repository.SaveAsync(context, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIContextSavedNotification(savedContext, messages)
+            .WithStateFrom(savingNotification);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return savedContext;
     }
 
     /// <inheritdoc />
     public async Task<bool> DeleteContextAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIContextDeletingNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Context delete cancelled: {errorMessages}");
+        }
+
         // Delete version history for this entity
         await _versionService.DeleteVersionsAsync(id, "Context", cancellationToken);
 
-        return await _repository.DeleteAsync(id, cancellationToken);
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIContextDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ContextAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var existing = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return existing is not null && (!excludeId.HasValue || existing.Id != excludeId.Value);
     }
 
     /// <inheritdoc />
@@ -132,6 +185,18 @@ internal sealed class AIContextService : IAIContextService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish rolling back notification (before rollback)
+        var messages = new EventMessages();
+        var rollingBackNotification = new AIContextRollingBackNotification(contextId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rollingBackNotification, cancellationToken);
+
+        // Check if cancelled
+        if (rollingBackNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Context rollback cancelled: {errorMessages}");
+        }
+
         // Save the current state to version history before rolling back
         await _versionService.SaveVersionAsync(currentContext, userId, null, cancellationToken);
 
@@ -152,6 +217,13 @@ internal sealed class AIContextService : IAIContextService
             }).ToList(),
         };
 
-        return await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
+        var savedContext = await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
+
+        // Publish rolled back notification (after rollback)
+        var rolledBackNotification = new AIContextRolledBackNotification(savedContext, targetVersion, messages)
+            .WithStateFrom(rollingBackNotification);
+        await _eventAggregator.PublishAsync(rolledBackNotification, cancellationToken);
+
+        return savedContext;
     }
 }

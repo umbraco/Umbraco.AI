@@ -42,7 +42,7 @@ export class UaiContextDetailServerDataSource implements UmbDetailDataSource<Uai
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            ContextsService.getContextByIdOrAlias({ path: { contextIdOrAlias: unique } })
+            ContextsService.getContextByIdOrAlias({ path: { contextIdOrAlias: unique } }),
         );
 
         if (error || !data) {
@@ -58,10 +58,7 @@ export class UaiContextDetailServerDataSource implements UmbDetailDataSource<Uai
     async create(model: UaiContextDetailModel, _parentUnique: string | null) {
         const requestBody = UaiContextTypeMapper.toCreateRequest(model);
 
-        const { response, error } = await tryExecute(
-            this.#host,
-            ContextsService.createContext({ body: requestBody })
-        );
+        const { response, error } = await tryExecute(this.#host, ContextsService.createContext({ body: requestBody }));
 
         if (error) {
             return { error };
@@ -90,7 +87,7 @@ export class UaiContextDetailServerDataSource implements UmbDetailDataSource<Uai
             ContextsService.updateContext({
                 path: { contextIdOrAlias: model.unique },
                 body: requestBody,
-            })
+            }),
         );
 
         if (error) {
@@ -107,7 +104,7 @@ export class UaiContextDetailServerDataSource implements UmbDetailDataSource<Uai
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            ContextsService.deleteContext({ path: { contextIdOrAlias: unique } })
+            ContextsService.deleteContext({ path: { contextIdOrAlias: unique } }),
         );
 
         if (error) {

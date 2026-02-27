@@ -1,6 +1,6 @@
 ---
 description: >-
-  Generate vector embeddings for semantic search, similarity matching, and RAG applications.
+    Generate vector embeddings for semantic search, similarity matching, and RAG applications.
 ---
 
 # Embeddings
@@ -11,16 +11,17 @@ The embeddings API generates vector representations of text. Use embeddings for 
 
 Embeddings convert text into numerical vectors that capture semantic meaning. Similar texts produce similar vectors, enabling:
 
-* **Semantic search** - Find content by meaning, beyond keyword matching
-* **Document similarity** - Compare how related two pieces of content are
-* **Clustering** - Group similar content together
-* **RAG** - Retrieve relevant context for AI responses
+- **Semantic search** - Find content by meaning, beyond keyword matching
+- **Document similarity** - Compare how related two pieces of content are
+- **Clustering** - Group similar content together
+- **RAG** - Retrieve relevant context for AI responses
 
 ## IAIEmbeddingService
 
 The primary interface for embedding operations:
 
 {% code title="IAIEmbeddingService.cs" %}
+
 ```csharp
 public interface IAIEmbeddingService
 {
@@ -54,11 +55,13 @@ public interface IAIEmbeddingService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Basic Usage
 
 {% code title="Example.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Embeddings;
@@ -79,6 +82,7 @@ public class SearchService
     }
 }
 ```
+
 {% endcode %}
 
 ## Choosing a Profile
@@ -87,7 +91,7 @@ public class SearchService
 
 Configure a default profile through the backoffice:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select your embedding profile from the **Default Embedding Profile** dropdown
 3. Click **Save**
 

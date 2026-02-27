@@ -2,6 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
 import { isChatSettings } from "../../../types.js";
@@ -91,7 +92,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const connectionId = event.target.value as string;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ connectionId, model: null }, "connectionId")
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ connectionId, model: null }, "connectionId"),
         );
         // Load models for the new connection
         if (connectionId && this._model?.capability) {
@@ -106,16 +107,14 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const value = event.target.value as string;
         if (!value) {
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model: null }, "model")
+                new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model: null }, "model"),
             );
             return;
         }
 
         const [providerId, modelId] = value.split("|");
         const model: UaiModelRef = { providerId, modelId };
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model }, "model")
-        );
+        this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model }, "model"));
     }
 
     #onTemperatureChange(event: Event) {
@@ -162,7 +161,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             };
 
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings")
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings"),
         );
     }
 
@@ -170,7 +169,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
      * Gets the current chat settings, or null if not a chat profile.
      */
     #getChatSettings(): UaiChatProfileSettings | null {
-        return isChatSettings(this._model?.settings ?? null) ? this._model!.settings as UaiChatProfileSettings : null;
+        return isChatSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiChatProfileSettings) : null;
     }
 
     /**
@@ -197,7 +196,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="Settings">
-                <umb-property-layout label="Temperature" description="Controls randomness (0.0 = deterministic, 2.0 = very random)">
+                <umb-property-layout
+                    label="Temperature"
+                    description="Controls randomness (0.0 = deterministic, 2.0 = very random)"
+                >
                     <umb-input-slider
                         slot="editor"
                         label="Temperature"
@@ -287,41 +289,47 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="Connection" description="Select the AI connection to use">
+                <umb-property-layout label="Connection" description="Select the AI connection to use" mandatory>
                     <uui-select
                         slot="editor"
+                        name="connectionId"
                         .value=${this._model.connectionId}
                         .options=${this.#getConnectionOptions()}
                         @change=${this.#onConnectionChange}
                         placeholder="Select a connection"
+                        required
+                        ${umbBindToValidation(this, "$.connectionId", this._model.connectionId)}
                     ></uui-select>
                 </umb-property-layout>
 
-                <umb-property-layout label="Model" description="Select the AI model to use">
-                    ${this._loadingModels
-                        ? html`<uui-loader-bar slot="editor"></uui-loader-bar>`
-                        : html`
-                            <uui-select
-                                slot="editor"
-                                .value=${this.#getCurrentModelValue()}
-                                .options=${this.#getModelOptions()}
-                                @change=${this.#onModelChange}
-                                placeholder="Select a model"
-                                ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
-                            ></uui-select>
-                        `}
+                <umb-property-layout label="Model" description="Select the AI model to use" mandatory>
+                    <div slot="editor">
+                        ${this._loadingModels ? html`<uui-loader-bar></uui-loader-bar>` : nothing}
+                        <uui-select
+                            name="model" 
+                            .value=${this.#getCurrentModelValue()}
+                            .options=${this.#getModelOptions()}
+                            @change=${this.#onModelChange}
+                            placeholder="Select a model"
+                            ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
+                            required
+                            ${umbBindToValidation(this, "$.model", this._model.model)}
+                            class="${this._loadingModels ? "hidden" : ""}" 
+                        ></uui-select>
+                    </div>
                 </umb-property-layout>
             </uui-box>
 
             ${this.#renderCapabilitySettings()}
-
-            ${this._model.tags.length > 0 ? html`
-                <uui-box headline="Tags">
-                    <div class="tags-container">
-                        ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
-                    </div>
-                </uui-box>
-            ` : nothing}
+            ${this._model.tags.length > 0
+                ? html`
+                      <uui-box headline="Tags">
+                          <div class="tags-container">
+                              ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
+                          </div>
+                      </uui-box>
+                  `
+                : nothing}
         `;
     }
 
@@ -367,6 +375,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+            }
+
+            .hidden {
+                display: none;
             }
         `,
     ];

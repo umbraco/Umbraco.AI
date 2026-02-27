@@ -15,14 +15,7 @@ export class UaiAgentCreateCollectionActionElement extends UmbLitElement {
 
     render() {
         return html`
-            <uui-button
-                color="default"
-                look="outline"
-                label="Create"
-                @click=${this.#onClick}
-            >
-                Create
-            </uui-button>
+            <uui-button color="default" look="outline" label="Create" @click=${this.#onClick}> Create </uui-button>
         `;
     }
 

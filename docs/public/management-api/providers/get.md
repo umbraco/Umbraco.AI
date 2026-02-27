@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get detailed information about a specific AI provider.
+    Get detailed information about a specific AI provider.
 ---
 
 # Get Provider
@@ -15,15 +15,15 @@ GET /umbraco/ai/management/api/v1/provider/{id}
 
 ### Headers
 
-| Header | Value |
-|--------|-------|
+| Header          | Value                  |
+| --------------- | ---------------------- |
 | `Authorization` | Bearer token or cookie |
 
 ### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | string | The provider's unique identifier |
+| Parameter | Type   | Description                      |
+| --------- | ------ | -------------------------------- |
+| `id`      | string | The provider's unique identifier |
 
 ## Response
 
@@ -32,81 +32,85 @@ GET /umbraco/ai/management/api/v1/provider/{id}
 Returns the provider with its full settings schema.
 
 {% code title="Response" %}
+
 ```json
 {
-  "id": "openai",
-  "name": "OpenAI",
-  "capabilities": ["Chat", "Embedding"],
-  "settings": [
-    {
-      "alias": "apiKey",
-      "name": "API Key",
-      "description": "Your OpenAI API key from platform.openai.com",
-      "type": "string",
-      "isRequired": true,
-      "isSensitive": true,
-      "defaultValue": null,
-      "options": null
-    },
-    {
-      "alias": "organizationId",
-      "name": "Organization ID",
-      "description": "Optional organization identifier",
-      "type": "string",
-      "isRequired": false,
-      "isSensitive": false,
-      "defaultValue": null,
-      "options": null
-    },
-    {
-      "alias": "baseUrl",
-      "name": "Base URL",
-      "description": "Custom API endpoint (for proxies)",
-      "type": "string",
-      "isRequired": false,
-      "isSensitive": false,
-      "defaultValue": "https://api.openai.com/v1",
-      "options": null
-    }
-  ]
+    "id": "openai",
+    "name": "OpenAI",
+    "capabilities": ["Chat", "Embedding"],
+    "settings": [
+        {
+            "alias": "apiKey",
+            "name": "API Key",
+            "description": "Your OpenAI API key from platform.openai.com",
+            "type": "string",
+            "isRequired": true,
+            "isSensitive": true,
+            "defaultValue": null,
+            "options": null
+        },
+        {
+            "alias": "organizationId",
+            "name": "Organization ID",
+            "description": "Optional organization identifier",
+            "type": "string",
+            "isRequired": false,
+            "isSensitive": false,
+            "defaultValue": null,
+            "options": null
+        },
+        {
+            "alias": "baseUrl",
+            "name": "Base URL",
+            "description": "Custom API endpoint (for proxies)",
+            "type": "string",
+            "isRequired": false,
+            "isSensitive": false,
+            "defaultValue": "https://api.openai.com/v1",
+            "options": null
+        }
+    ]
 }
 ```
+
 {% endcode %}
 
 ### Response Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | string | Unique provider identifier |
-| `name` | string | Display name |
-| `capabilities` | string[] | Supported capabilities |
-| `settings` | array | Settings schema definitions |
+| Property       | Type     | Description                 |
+| -------------- | -------- | --------------------------- |
+| `id`           | string   | Unique provider identifier  |
+| `name`         | string   | Display name                |
+| `capabilities` | string[] | Supported capabilities      |
+| `settings`     | array    | Settings schema definitions |
 
 ### Setting Definition Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `alias` | string | Setting identifier used in connection settings |
-| `name` | string | Human-readable display name |
-| `description` | string? | Help text for the setting |
-| `type` | string | Data type: `string`, `number`, `boolean` |
-| `isRequired` | bool | Whether the setting must be provided |
-| `isSensitive` | bool | Whether to mask in UI (passwords, keys) |
-| `defaultValue` | string? | Default value if not specified |
-| `options` | string[]? | Valid options for dropdown selection |
+| Property       | Type      | Description                                    |
+| -------------- | --------- | ---------------------------------------------- |
+| `alias`        | string    | Setting identifier used in connection settings |
+| `name`         | string    | Human-readable display name                    |
+| `description`  | string?   | Help text for the setting                      |
+| `type`         | string    | Data type: `string`, `number`, `boolean`       |
+| `isRequired`   | bool      | Whether the setting must be provided           |
+| `isSensitive`  | bool      | Whether to mask in UI (passwords, keys)        |
+| `defaultValue` | string?   | Default value if not specified                 |
+| `options`      | string[]? | Valid options for dropdown selection           |
 
 ### Not Found (404)
 
 Returned when the provider ID doesn't exist.
 
 {% code title="Response" %}
+
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404
 }
 ```
+
 {% endcode %}
 
 ## Example
@@ -121,6 +125,7 @@ curl -X GET "https://localhost:44331/umbraco/ai/management/api/v1/provider/opena
 ### C# HttpClient
 
 {% code title="Example" %}
+
 ```csharp
 using var client = new HttpClient();
 client.DefaultRequestHeaders.Authorization =
@@ -143,27 +148,30 @@ if (response.IsSuccessStatusCode)
     }
 }
 ```
+
 {% endcode %}
 
 ### JavaScript
 
 {% code title="Example" %}
+
 ```javascript
-const response = await fetch('/umbraco/ai/management/api/v1/provider/openai', {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
+const response = await fetch("/umbraco/ai/management/api/v1/provider/openai", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
 });
 
 if (response.ok) {
-  const provider = await response.json();
-  console.log(`Provider: ${provider.name}`);
+    const provider = await response.json();
+    console.log(`Provider: ${provider.name}`);
 
-  provider.settings.forEach(setting => {
-    console.log(`${setting.name}: ${setting.type}${setting.isRequired ? ' (required)' : ''}`);
-  });
+    provider.settings.forEach((setting) => {
+        console.log(`${setting.name}: ${setting.type}${setting.isRequired ? " (required)" : ""}`);
+    });
 }
 ```
+
 {% endcode %}
 
 ## Use Cases
@@ -173,25 +181,28 @@ if (response.ok) {
 Use the settings schema to dynamically generate connection configuration forms:
 
 {% code title="Example" %}
+
 ```javascript
 function renderSettingsForm(settings) {
-  return settings.map(setting => {
-    const inputType = setting.isSensitive ? 'password' :
-                      setting.type === 'boolean' ? 'checkbox' : 'text';
+    return settings
+        .map((setting) => {
+            const inputType = setting.isSensitive ? "password" : setting.type === "boolean" ? "checkbox" : "text";
 
-    return `
+            return `
       <div class="form-group">
-        <label>${setting.name}${setting.isRequired ? ' *' : ''}</label>
+        <label>${setting.name}${setting.isRequired ? " *" : ""}</label>
         <input type="${inputType}"
                name="${setting.alias}"
-               value="${setting.defaultValue || ''}"
-               ${setting.isRequired ? 'required' : ''}>
-        ${setting.description ? `<small>${setting.description}</small>` : ''}
+               value="${setting.defaultValue || ""}"
+               ${setting.isRequired ? "required" : ""}>
+        ${setting.description ? `<small>${setting.description}</small>` : ""}
       </div>
     `;
-  }).join('');
+        })
+        .join("");
 }
 ```
+
 {% endcode %}
 
 ### Validating Connection Settings
@@ -199,6 +210,7 @@ function renderSettingsForm(settings) {
 Use the schema to validate settings before saving:
 
 {% code title="Example" %}
+
 ```csharp
 public bool ValidateSettings(ProviderResponseModel provider, Dictionary<string, object> settings)
 {
@@ -213,6 +225,7 @@ public bool ValidateSettings(ProviderResponseModel provider, Dictionary<string, 
     return true;
 }
 ```
+
 {% endcode %}
 
 ## Notes

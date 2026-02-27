@@ -1,9 +1,11 @@
+import type { ManifestPropertyAction } from "@umbraco-cms/backoffice/property-action";
+
 /**
  * UI mode for prompt property actions.
  * - 'modal': Shows a centered dialog (default)
  * - 'panel': Shows a slide-in side panel
  */
-export type UaiPromptUiMode = 'modal' | 'panel';
+export type UaiPromptUiMode = "modal" | "panel";
 
 /**
  * A single scope rule that determines where a prompt can run.
@@ -12,11 +14,11 @@ export type UaiPromptUiMode = 'modal' | 'panel';
  */
 export interface UaiScopeRule {
     /** Property Editor UI aliases to match (OR within array). Null/empty = any. */
-    propertyEditorUiAliases: string[] | null;
+    propertyEditorUiAliases?: string[] | null;
     /** Property aliases to match (OR within array). Null/empty = any. */
-    propertyAliases: string[] | null;
+    propertyAliases?: string[] | null;
     /** Content type aliases to match (OR within array). Null/empty = any. */
-    contentTypeAliases: string[] | null;
+    contentTypeAliases?: string[] | null;
 }
 
 /**
@@ -36,12 +38,14 @@ export interface UaiPromptRegistrationModel {
     unique: string;
     alias: string;
     name: string;
-    description: string | null;
+    description?: string | null;
     instructions: string;
-    profileId: string | null;
-    scope: UaiPromptScope | null;
+    profileId?: string | null;
+    scope?: UaiPromptScope | null;
     /** UI mode for the property action. Defaults to 'modal'. */
-    uiMode?: UaiPromptUiMode;
+    uiMode?: UaiPromptUiMode | null;
+    /** Whether the prompt is active and should be registered. */
+    isActive: boolean;
 }
 
 /**
@@ -70,6 +74,16 @@ export interface UaiPromptContextItem {
 }
 
 /**
+ * A single result option that can be displayed and optionally applied.
+ */
+export interface UaiPromptResultOption {
+    label: string;
+    displayValue: string;
+    description?: string | null;
+    valueChange?: UaiPromptValueChange | null;
+}
+
+/**
  * Data passed to the prompt preview modal.
  * Contains entity context for server-side execution.
  */
@@ -87,15 +101,20 @@ export interface UaiPromptPreviewModalData {
     context?: UaiPromptContextItem[];
     /** Maximum characters from property editor config (for character indicator) */
     maxChars?: number;
+    /**
+     * Number of options the prompt should generate.
+     * 0 = informational, 1 = single, 2+ = multiple
+     */
+    optionCount: number;
 }
 
 /**
- * Property change to be applied to the entity.
- * Matches core UaiPropertyChange type.
+ * Value change to be applied to the entity.
+ * Matches core UaiValueChange type.
  */
-export interface UaiPromptPropertyChange {
-    /** The property alias. */
-    alias: string;
+export interface UaiPromptValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount"). */
+    path: string;
     /** The new value to set. */
     value: unknown;
     /** The culture for variant content. */
@@ -108,8 +127,18 @@ export interface UaiPromptPropertyChange {
  * Value returned from the prompt preview modal.
  */
 export interface UaiPromptPreviewModalValue {
-    action: 'insert' | 'copy' | 'cancel';
+    action: "insert" | "copy" | "cancel";
     content?: string;
-    /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    /** Value changes to apply to the entity. */
+    valueChanges?: UaiPromptValueChange[];
+}
+
+/**
+ * Entry for a prompt manifest pending registration.
+ * Weights are assigned at sync time based on alphabetical order.
+ */
+export interface PromptManifestEntry {
+    unique: string;
+    alias: string;
+    manifest: ManifestPropertyAction<UaiPromptPropertyActionMeta>;
 }

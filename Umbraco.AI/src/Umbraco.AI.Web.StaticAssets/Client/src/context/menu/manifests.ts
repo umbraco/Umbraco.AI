@@ -1,9 +1,11 @@
-import type { ManifestMenuItem } from "@umbraco-cms/backoffice/menu";
-import { UAI_CONTEXT_ROOT_ENTITY_TYPE, UAI_CONTEXT_ICON } from "../constants.js";
+import type { UaiEntityContainerMenuItemManifest } from "../../core/menu/types.js";
+import { UAI_CONTEXT_ROOT_ENTITY_TYPE, UAI_CONTEXT_ENTITY_TYPE, UAI_CONTEXT_ICON } from "../constants.js";
+import { UAI_CORE_MENU_ALIAS } from "../../section/constants.ts";
 
-export const contextMenuManifests: ManifestMenuItem[] = [
+export const contextMenuManifests: Array<UaiEntityContainerMenuItemManifest> = [
     {
         type: "menuItem",
+        kind: "entityContainer",
         alias: "UmbracoAI.MenuItem.Contexts",
         name: "Contexts Menu Item",
         weight: 0,
@@ -11,7 +13,8 @@ export const contextMenuManifests: ManifestMenuItem[] = [
             label: "Contexts",
             icon: UAI_CONTEXT_ICON,
             entityType: UAI_CONTEXT_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAI.Menu.Settings"],
+            childEntityTypes: [UAI_CONTEXT_ENTITY_TYPE],
+            menus: [UAI_CORE_MENU_ALIAS],
         },
     },
 ];

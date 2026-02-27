@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for managing and running agents.
+    Service for managing and running agents.
 ---
 
 # IAIAgentService
@@ -16,6 +16,7 @@ using Umbraco.AI.Agent.Core.Agents;
 ## Interface
 
 {% code title="IAIAgentService" %}
+
 ```csharp
 public interface IAIAgentService
 {
@@ -50,6 +51,7 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -58,9 +60,9 @@ public interface IAIAgentService
 
 Gets an agent by its unique identifier.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The agent ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The agent ID       |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The agent if found, otherwise `null`.
@@ -69,9 +71,9 @@ Gets an agent by its unique identifier.
 
 Gets an agent by its alias.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `alias` | `string` | The agent alias |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `alias`             | `string`            | The agent alias    |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The agent if found, otherwise `null`.
@@ -86,14 +88,14 @@ Gets all agents.
 
 Gets agents with pagination and filtering.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `skip` | `int` | Items to skip |
-| `take` | `int` | Items to take |
-| `filter` | `string?` | Filter by name |
-| `profileId` | `Guid?` | Filter by profile |
-| `scopeId` | `string?` | Filter by scope (e.g., "copilot") |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description                       |
+| ------------------- | ------------------- | --------------------------------- |
+| `skip`              | `int`               | Items to skip                     |
+| `take`              | `int`               | Items to take                     |
+| `filter`            | `string?`           | Filter by name                    |
+| `profileId`         | `Guid?`             | Filter by profile                 |
+| `scopeId`           | `string?`           | Filter by scope (e.g., "copilot") |
+| `cancellationToken` | `CancellationToken` | Cancellation token                |
 
 **Returns**: Paged result with items and total count.
 
@@ -101,10 +103,10 @@ Gets agents with pagination and filtering.
 
 Gets all agents belonging to a specific scope.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `scopeId` | `string` | The scope ID to filter by |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description               |
+| ------------------- | ------------------- | ------------------------- |
+| `scopeId`           | `string`            | The scope ID to filter by |
+| `cancellationToken` | `CancellationToken` | Cancellation token        |
 
 **Returns**: All agents with the specified scope.
 
@@ -112,9 +114,9 @@ Gets all agents belonging to a specific scope.
 
 Creates or updates an agent.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `agent` | `AIAgent` | The agent to save |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `agent`             | `AIAgent`           | The agent to save  |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved agent with ID and version.
@@ -123,9 +125,9 @@ Creates or updates an agent.
 
 Deletes an agent by ID.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The agent ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The agent ID       |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: `true` if deleted, `false` if not found.
@@ -134,11 +136,11 @@ Deletes an agent by ID.
 
 Checks if an alias is in use.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `alias` | `string` | The alias to check |
-| `excludeId` | `Guid?` | Optional ID to exclude |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description            |
+| ------------------- | ------------------- | ---------------------- |
+| `alias`             | `string`            | The alias to check     |
+| `excludeId`         | `Guid?`             | Optional ID to exclude |
+| `cancellationToken` | `CancellationToken` | Cancellation token     |
 
 **Returns**: `true` if alias exists.
 
@@ -146,16 +148,17 @@ Checks if an alias is in use.
 
 Runs an agent and streams AG-UI events.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `agentId` | `Guid` | The agent ID |
-| `request` | `AIAgentRunRequest` | Run parameters |
-| `frontendToolDefinitions` | `IEnumerable<AIFrontendToolDefinition>?` | Frontend tools |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter                 | Type                                     | Description        |
+| ------------------------- | ---------------------------------------- | ------------------ |
+| `agentId`                 | `Guid`                                   | The agent ID       |
+| `request`                 | `AIAgentRunRequest`                      | Run parameters     |
+| `frontendToolDefinitions` | `IEnumerable<AIFrontendToolDefinition>?` | Frontend tools     |
+| `cancellationToken`       | `CancellationToken`                      | Cancellation token |
 
 **Returns**: Async enumerable of AG-UI events.
 
 {% code title="Example" %}
+
 ```csharp
 await foreach (var evt in _agentService.StreamAgentAsync(
     agentId,
@@ -178,6 +181,7 @@ await foreach (var evt in _agentService.StreamAgentAsync(
     }
 }
 ```
+
 {% endcode %}
 
 ## Related Models
@@ -185,17 +189,20 @@ await foreach (var evt in _agentService.StreamAgentAsync(
 ### AIAgentRunRequest
 
 {% code title="AIAgentRunRequest" %}
+
 ```csharp
 public class AIAgentRunRequest
 {
     public IReadOnlyList<AIAgentMessage> Messages { get; set; } = Array.Empty<AIAgentMessage>();
 }
 ```
+
 {% endcode %}
 
 ### AIAgentMessage
 
 {% code title="AIAgentMessage" %}
+
 ```csharp
 public class AIAgentMessage
 {
@@ -203,11 +210,13 @@ public class AIAgentMessage
     public string Content { get; set; } = string.Empty;
 }
 ```
+
 {% endcode %}
 
 ### AIFrontendToolDefinition
 
 {% code title="AIFrontendToolDefinition" %}
+
 ```csharp
 public class AIFrontendToolDefinition
 {
@@ -216,10 +225,11 @@ public class AIFrontendToolDefinition
     public JsonNode? Parameters { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [AIAgent Model](ai-agent.md) - Agent model reference
-* [Agent Concepts](../concepts.md) - Concepts overview
-* [Scopes](../scopes.md) - Agent categorization
+- [AIAgent Model](ai-agent.md) - Agent model reference
+- [Agent Concepts](../concepts.md) - Concepts overview
+- [Scopes](../scopes.md) - Agent categorization

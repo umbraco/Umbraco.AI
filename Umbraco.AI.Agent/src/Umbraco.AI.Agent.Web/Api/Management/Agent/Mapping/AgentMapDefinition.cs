@@ -1,5 +1,5 @@
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Strings;
@@ -28,9 +28,9 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             Alias = string.Empty,
             Name = string.Empty
         }, MapFromUpdateRequest);
-        
-        // Scope mappings
-        mapper.Define<IAIAgentScope, AgentScopeItemResponseModel>((_, _) => new AgentScopeItemResponseModel(), MapToResponse);
+
+        // Surface mappings
+        mapper.Define<IAIAgentSurface, AgentSurfaceItemResponseModel>((_, _) => new AgentSurfaceItemResponseModel(), MapToResponse);
     }
 
     private AIAgent CreateAgentFactory(CreateAgentRequestModel source, MapperContext context)
@@ -54,7 +54,11 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
-        target.ScopeIds = source.ScopeIds?.ToList() ?? [];
+        target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
+        target.Scope = MapScopeFromRequest(source.Scope);
+        target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
+        target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
         target.Instructions = source.Instructions;
         target.IsActive = true;
     }
@@ -67,7 +71,11 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
-        target.ScopeIds = source.ScopeIds?.ToList() ?? [];
+        target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
+        target.Scope = MapScopeFromRequest(source.Scope);
+        target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
+        target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
     }
@@ -81,7 +89,11 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
-        target.ScopeIds = source.ScopeIds;
+        target.SurfaceIds = source.SurfaceIds;
+        target.Scope = MapScopeToResponse(source.Scope);
+        target.AllowedToolIds = source.AllowedToolIds;
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds;
+        target.UserGroupPermissions = MapUserGroupPermissionsToResponse(source.UserGroupPermissions);
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
@@ -98,15 +110,113 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
-        target.ScopeIds = source.ScopeIds;
+        target.SurfaceIds = source.SurfaceIds;
+        target.Scope = MapScopeToResponse(source.Scope);
+        target.AllowedToolIds = source.AllowedToolIds;
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
     }
 
-    private static void MapToResponse(IAIAgentScope source, AgentScopeItemResponseModel target, MapperContext context)
+    private static void MapToResponse(IAIAgentSurface source, AgentSurfaceItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Icon = source.Icon;
+        target.SupportedScopeDimensions = source.SupportedScopeDimensions;
+    }
+
+    /// <summary>
+    /// Maps user group permissions from request models to domain models.
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> MapUserGroupPermissionsFromRequest(
+        Dictionary<Guid, AIAgentUserGroupPermissionsModel>? source)
+    {
+        if (source is null || source.Count == 0)
+        {
+            return new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        }
+
+        return source.ToDictionary(
+            kvp => kvp.Key,
+            kvp => new AIAgentUserGroupPermissions
+            {
+                AllowedToolIds = kvp.Value.AllowedToolIds.ToList(),
+                AllowedToolScopeIds = kvp.Value.AllowedToolScopeIds.ToList(),
+                DeniedToolIds = kvp.Value.DeniedToolIds.ToList(),
+                DeniedToolScopeIds = kvp.Value.DeniedToolScopeIds.ToList()
+            });
+    }
+
+    /// <summary>
+    /// Maps user group permissions from domain models to response models.
+    /// </summary>
+    private static Dictionary<Guid, AIAgentUserGroupPermissionsModel> MapUserGroupPermissionsToResponse(
+        IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> source)
+    {
+        if (source.Count == 0)
+        {
+            return [];
+        }
+
+        return source.ToDictionary(
+            kvp => kvp.Key,
+            kvp => new AIAgentUserGroupPermissionsModel
+            {
+                AllowedToolIds = kvp.Value.AllowedToolIds,
+                AllowedToolScopeIds = kvp.Value.AllowedToolScopeIds,
+                DeniedToolIds = kvp.Value.DeniedToolIds,
+                DeniedToolScopeIds = kvp.Value.DeniedToolScopeIds
+            });
+    }
+
+    /// <summary>
+    /// Maps agent scope from request model to domain model.
+    /// </summary>
+    private static AIAgentScope? MapScopeFromRequest(AIAgentScopeModel? source)
+    {
+        if (source is null)
+        {
+            return null;
+        }
+
+        return new AIAgentScope
+        {
+            AllowRules = source.AllowRules.Select(r => new AIAgentScopeRule
+            {
+                Sections = r.Sections?.ToList(),
+                EntityTypes = r.EntityTypes?.ToList()
+            }).ToList(),
+            DenyRules = source.DenyRules.Select(r => new AIAgentScopeRule
+            {
+                Sections = r.Sections?.ToList(),
+                EntityTypes = r.EntityTypes?.ToList()
+            }).ToList()
+        };
+    }
+
+    /// <summary>
+    /// Maps agent scope from domain model to response model.
+    /// </summary>
+    private static AIAgentScopeModel? MapScopeToResponse(AIAgentScope? source)
+    {
+        if (source is null)
+        {
+            return null;
+        }
+
+        return new AIAgentScopeModel
+        {
+            AllowRules = source.AllowRules.Select(r => new AIAgentScopeRuleModel
+            {
+                Sections = r.Sections?.ToList(),
+                EntityTypes = r.EntityTypes?.ToList()
+            }).ToList(),
+            DenyRules = source.DenyRules.Select(r => new AIAgentScopeRuleModel
+            {
+                Sections = r.Sections?.ToList(),
+                EntityTypes = r.EntityTypes?.ToList()
+            }).ToList()
+        };
     }
 }

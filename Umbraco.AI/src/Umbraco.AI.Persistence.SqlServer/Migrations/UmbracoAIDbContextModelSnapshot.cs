@@ -285,9 +285,6 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<int>("Capability")
                         .HasColumnType("int");
 
-                    b.Property<int>("DetailLevel")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("EndTime")
                         .HasColumnType("datetime2");
 
@@ -600,6 +597,41 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAIProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.Settings.AISettingsEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAISettings", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Versioning.AIEntityVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -639,41 +671,6 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsUnique();
 
                     b.ToTable("umbracoAIEntityVersion", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.AI.Persistence.Settings.AISettingsEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateModified")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid?>("ModifiedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Value")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAISettings", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.AI.Persistence.Context.AIContextResourceEntity", b =>

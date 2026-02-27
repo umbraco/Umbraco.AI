@@ -1,6 +1,6 @@
 ---
 description: >-
-  Version history tracks changes to AI entities and enables rollback to previous states.
+    Version history tracks changes to AI entities and enables rollback to previous states.
 ---
 
 # Version History
@@ -9,13 +9,13 @@ Umbraco.AI automatically tracks version history for key entities. Every time you
 
 ## Supported Entity Types
 
-| Entity Type | Package | Description |
-|-------------|---------|-------------|
-| `connection` | Umbraco.AI | API credentials and provider settings |
-| `profile` | Umbraco.AI | Model configuration and settings |
-| `context` | Umbraco.AI | Brand voice and content resources |
-| `prompt` | Umbraco.AI.Prompt | Prompt templates |
-| `agent` | Umbraco.AI.Agent | AI agent definitions |
+| Entity Type  | Package           | Description                           |
+| ------------ | ----------------- | ------------------------------------- |
+| `connection` | Umbraco.AI        | API credentials and provider settings |
+| `profile`    | Umbraco.AI        | Model configuration and settings      |
+| `context`    | Umbraco.AI        | Brand voice and content resources     |
+| `prompt`     | Umbraco.AI.Prompt | Prompt templates                      |
+| `agent`      | Umbraco.AI.Agent  | AI agent definitions                  |
 
 ## How Versioning Works
 
@@ -42,22 +42,23 @@ When you save an entity:
 
 Each version record stores:
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique identifier for the version record |
-| `EntityId` | The ID of the versioned entity |
-| `EntityType` | Discriminator (e.g., "profile", "context") |
-| `Version` | Sequential version number |
-| `Snapshot` | JSON serialization of the entity state |
-| `DateCreated` | When this version was created |
-| `CreatedByUserId` | Who created this version |
-| `ChangeDescription` | Optional description of changes |
+| Property            | Description                                |
+| ------------------- | ------------------------------------------ |
+| `Id`                | Unique identifier for the version record   |
+| `EntityId`          | The ID of the versioned entity             |
+| `EntityType`        | Discriminator (e.g., "profile", "context") |
+| `Version`           | Sequential version number                  |
+| `Snapshot`          | JSON serialization of the entity state     |
+| `DateCreated`       | When this version was created              |
+| `CreatedByUserId`   | Who created this version                   |
+| `ChangeDescription` | Optional description of changes            |
 
 ## Using Version History in Code
 
 ### Getting Version History
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class VersioningExample
 {
@@ -80,11 +81,13 @@ public class VersioningExample
     }
 }
 ```
+
 {% endcode %}
 
 ### Getting a Specific Version
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task<AIProfile?> GetProfileAtVersion(Guid profileId, int version)
 {
@@ -93,11 +96,13 @@ public async Task<AIProfile?> GetProfileAtVersion(Guid profileId, int version)
         version);
 }
 ```
+
 {% endcode %}
 
 ### Comparing Versions
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task<AIVersionComparison?> CompareVersions(
     Guid entityId,
@@ -111,6 +116,7 @@ public async Task<AIVersionComparison?> CompareVersions(
         toVersion);
 }
 ```
+
 {% endcode %}
 
 ## Rolling Back
@@ -121,6 +127,7 @@ To roll back to a previous version:
 2. Save the restored entity (which creates a new version)
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task RollbackProfile(Guid profileId, int targetVersion)
 {
@@ -136,6 +143,7 @@ public async Task RollbackProfile(Guid profileId, int targetVersion)
     }
 }
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -147,36 +155,40 @@ Rolling back creates a new version rather than deleting versions. This preserves
 Over time, version history can accumulate. You can configure automatic cleanup:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "Versioning": {
-        "MaxVersionsPerEntity": 50,
-        "CleanupIntervalDays": 7
-      }
+    "Umbraco": {
+        "AI": {
+            "Versioning": {
+                "MaxVersionsPerEntity": 50,
+                "CleanupIntervalDays": 7
+            }
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 ### Manual Cleanup
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task<AIVersionCleanupResult> CleanupOldVersions()
 {
     return await _versionService.CleanupVersionsAsync();
 }
 ```
+
 {% endcode %}
 
 ## Viewing Version History
 
 ### Via Backoffice
 
-1. Navigate to the entity (e.g., **Settings** > **AI** > **Profiles**)
+1. Navigate to the entity (e.g., the **AI** section > **Profiles**)
 2. Select the entity you want to view
 3. Click the **Version History** tab
 4. View, compare, or restore previous versions
@@ -203,7 +215,7 @@ See [Versions API](../management-api/versions/README.md) for details.
 
 ## Related
 
-* [Connections](connections.md) - Versioned credential storage
-* [Profiles](profiles.md) - Versioned model configurations
-* [Contexts](contexts.md) - Versioned content collections
-* [Audit Logs](../backoffice/audit-logs.md) - Operational audit trail
+- [Connections](connections.md) - Versioned credential storage
+- [Profiles](profiles.md) - Versioned model configurations
+- [Contexts](contexts.md) - Versioned content collections
+- [Audit Logs](../backoffice/audit-logs.md) - Operational audit trail

@@ -28,11 +28,6 @@ public class AIEditableModelFieldAttribute : Attribute
     public string? EditorConfig { get; set; }
 
     /// <summary>
-    /// Default value for the field.
-    /// </summary>
-    public object? DefaultValue { get; set; }
-
-    /// <summary>
     /// Sort order for displaying fields in UI.
     /// </summary>
     public int SortOrder { get; set; }
@@ -42,6 +37,14 @@ public class AIEditableModelFieldAttribute : Attribute
     /// When true, the field value will be encrypted during persistence and the UI may mask the value.
     /// </summary>
     public bool IsSensitive { get; set; }
+
+    /// <summary>
+    /// Optional group name used to visually group related fields in the UI.
+    /// Fields with the same group name are rendered together in a separate section.
+    /// The value should be a simple PascalCase identifier (e.g., "Features", "Advanced").
+    /// The frontend constructs the localization key by convention: <c>#uaiGroups_{camelCase(group)}Label</c>.
+    /// </summary>
+    public string? Group { get; set; }
 }
 
 /// <summary>

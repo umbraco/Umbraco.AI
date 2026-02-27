@@ -1,6 +1,6 @@
 ---
 description: >-
-  View and analyze AI operation audit logs.
+    View and analyze AI operation audit logs.
 ---
 
 # Audit Logs
@@ -17,30 +17,30 @@ Every AI operation (chat completion, embedding generation) is logged with detail
 
 The log list shows recent AI operations:
 
-| Column | Description |
-|--------|-------------|
-| Time | When the operation started |
-| Status | Outcome (Succeeded, Failed, etc.) |
-| Capability | Type of operation (Chat, Embedding) |
-| Profile | Which profile was used |
-| Provider | AI provider (OpenAI, Anthropic, etc.) |
-| Model | Specific model used |
-| User | Who initiated the operation |
-| Tokens | Total tokens used |
-| Duration | How long the operation took |
+| Column     | Description                           |
+| ---------- | ------------------------------------- |
+| Time       | When the operation started            |
+| Status     | Outcome (Succeeded, Failed, etc.)     |
+| Capability | Type of operation (Chat, Embedding)   |
+| Profile    | Which profile was used                |
+| Provider   | AI provider (OpenAI, Anthropic, etc.) |
+| Model      | Specific model used                   |
+| User       | Who initiated the operation           |
+| Tokens     | Total tokens used                     |
+| Duration   | How long the operation took           |
 
 ## Filtering Logs
 
 Use the filter options to narrow results:
 
-| Filter | Description |
-|--------|-------------|
-| Date Range | From and To dates |
-| Status | Success, Failed, Running |
-| Capability | Chat, Embedding |
-| Profile | Specific profile |
-| Provider | Specific provider |
-| User | Specific user |
+| Filter     | Description              |
+| ---------- | ------------------------ |
+| Date Range | From and To dates        |
+| Status     | Success, Failed, Running |
+| Capability | Chat, Embedding          |
+| Profile    | Specific profile         |
+| Provider   | Specific provider        |
+| User       | Specific user            |
 
 ### Example Filters
 
@@ -72,37 +72,37 @@ Click a log entry to view full details:
 
 ### Content (if captured)
 
-Depending on the detail level configuration:
+Depending on the configuration:
 
-- **Prompt snapshot** - The actual request sent
-- **Response snapshot** - The AI's response
+- **Prompt snapshot** - The actual request sent (if `PersistPrompts` is enabled)
+- **Response snapshot** - The AI's response (if `PersistResponses` is enabled)
 
 {% hint style="info" %}
-Content snapshots are only available when the detail level is set to "Full" in configuration.
+Content snapshots are controlled by the `PersistPrompts` and `PersistResponses` configuration options. Both default to true.
 {% endhint %}
 
 ## Status Values
 
-| Status | Description |
-|--------|-------------|
-| **Succeeded** | Operation completed successfully |
-| **Failed** | Operation encountered an error |
-| **Running** | Operation is in progress |
-| **Cancelled** | Operation was cancelled |
+| Status             | Description                       |
+| ------------------ | --------------------------------- |
+| **Succeeded**      | Operation completed successfully  |
+| **Failed**         | Operation encountered an error    |
+| **Running**        | Operation is in progress          |
+| **Cancelled**      | Operation was cancelled           |
 | **PartialSuccess** | Some parts succeeded, some failed |
 
 ## Error Categories
 
 When operations fail, the error category helps diagnose the issue:
 
-| Category | Description | Typical Cause |
-|----------|-------------|---------------|
-| Authentication | Credential issues | Invalid or expired API key |
-| RateLimit | Too many requests | Provider rate limit exceeded |
-| Timeout | Request timed out | Slow response or network issues |
-| InvalidRequest | Bad request format | Invalid parameters or content |
-| ModelError | Model processing error | Content policy violation |
-| NetworkError | Connection issues | Network connectivity |
+| Category       | Description            | Typical Cause                   |
+| -------------- | ---------------------- | ------------------------------- |
+| Authentication | Credential issues      | Invalid or expired API key      |
+| RateLimit      | Too many requests      | Provider rate limit exceeded    |
+| Timeout        | Request timed out      | Slow response or network issues |
+| InvalidRequest | Bad request format     | Invalid parameters or content   |
+| ModelError     | Model processing error | Content policy violation        |
+| NetworkError   | Connection issues      | Network connectivity            |
 
 ## Deleting Logs
 
@@ -129,19 +129,21 @@ To remove old logs:
 Configure automatic cleanup in `appsettings.json`:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "AuditLog": {
-        "RetentionDays": 90,
-        "AutoCleanupEnabled": true,
-        "AutoCleanupIntervalHours": 24
-      }
+    "Umbraco": {
+        "AI": {
+            "AuditLog": {
+                "RetentionDays": 90,
+                "AutoCleanupEnabled": true,
+                "AutoCleanupIntervalHours": 24
+            }
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 ## Use Cases
@@ -167,5 +169,5 @@ Configure automatic cleanup in `appsettings.json`:
 
 ## Related
 
-* [Usage Analytics](usage-analytics.md) - Aggregated statistics
-* [Audit Logs API](../management-api/audit-logs/README.md) - Programmatic access
+- [Usage Analytics](usage-analytics.md) - Aggregated statistics
+- [Audit Logs API](../management-api/audit-logs/README.md) - Programmatic access

@@ -1,10 +1,7 @@
 /**
  * Public API exports for the approval module.
+ * Types now re-exported from @umbraco-ai/agent-ui.
  */
-
-// Approval extension types
 export type {
-  UaiAgentApprovalElementProps,
-  UaiAgentApprovalElement,
-  ManifestUaiAgentApprovalElement,
-} from './uai-agent-approval-element.extension.js';
+    ManifestUaiAgentApprovalElement,
+} from "@umbraco-ai/agent-ui";

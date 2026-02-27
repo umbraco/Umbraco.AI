@@ -1,6 +1,6 @@
 ---
 description: >-
-  Implement the embedding capability for your custom provider.
+    Implement the embedding capability for your custom provider.
 ---
 
 # Embedding Capability
@@ -10,6 +10,7 @@ The embedding capability enables vector embedding generation. Implement it by ex
 ## Base Class
 
 {% code title="AIEmbeddingCapabilityBase<TSettings>" %}
+
 ```csharp
 public abstract class AIEmbeddingCapabilityBase<TSettings> : IAIEmbeddingCapability
     where TSettings : class
@@ -25,11 +26,13 @@ public abstract class AIEmbeddingCapabilityBase<TSettings> : IAIEmbeddingCapabil
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Basic Implementation
 
 {% code title="MyEmbeddingCapability.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
@@ -59,6 +62,7 @@ public class MyEmbeddingCapability : AIEmbeddingCapabilityBase<MyProviderSetting
     }
 }
 ```
+
 {% endcode %}
 
 ## Register in Provider
@@ -66,6 +70,7 @@ public class MyEmbeddingCapability : AIEmbeddingCapabilityBase<MyProviderSetting
 Add the embedding capability in your provider constructor:
 
 {% code title="MyProvider.cs" %}
+
 ```csharp
 [AIProvider("myprovider", "My AI Provider")]
 public class MyProvider : AIProviderBase<MyProviderSettings>
@@ -78,6 +83,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ## Implementing IEmbeddingGenerator
@@ -85,6 +91,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 The `IEmbeddingGenerator<TInput, TEmbedding>` interface:
 
 {% code title="IEmbeddingGenerator Interface" %}
+
 ```csharp
 public interface IEmbeddingGenerator<TInput, TEmbedding> : IDisposable
 {
@@ -98,11 +105,13 @@ public interface IEmbeddingGenerator<TInput, TEmbedding> : IDisposable
     object? GetService(Type serviceType, object? serviceKey = null);
 }
 ```
+
 {% endcode %}
 
 ## Complete IEmbeddingGenerator Example
 
 {% code title="MyEmbeddingGenerator.cs" %}
+
 ```csharp
 using System.Text.Json;
 using Microsoft.Extensions.AI;
@@ -194,6 +203,7 @@ internal class EmbeddingUsage
     public int TotalTokens { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Using Existing M.E.AI Generators
@@ -201,6 +211,7 @@ internal class EmbeddingUsage
 If your service has an existing M.E.AI embedding generator:
 
 {% code title="Using Existing Generator" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using OpenAI;
@@ -233,6 +244,7 @@ public class MyOpenAICompatibleEmbeddingCapability : AIEmbeddingCapabilityBase<M
     }
 }
 ```
+
 {% endcode %}
 
 ## Handling Batches
@@ -240,6 +252,7 @@ public class MyOpenAICompatibleEmbeddingCapability : AIEmbeddingCapabilityBase<M
 The `GenerateAsync` method receives multiple inputs. Handle batching appropriately:
 
 {% code title="Batch Handling" %}
+
 ```csharp
 public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
     IEnumerable<string> values,
@@ -269,6 +282,7 @@ public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
     return await GenerateBatchAsync(inputList, cancellationToken);
 }
 ```
+
 {% endcode %}
 
 ## Dimension Information
@@ -276,6 +290,7 @@ public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
 If your API returns dimension information, include it in the model descriptors:
 
 {% code title="With Dimensions" %}
+
 ```csharp
 protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
     MyProviderSettings settings,
@@ -289,4 +304,5 @@ protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
     return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
 }
 ```
+
 {% endcode %}

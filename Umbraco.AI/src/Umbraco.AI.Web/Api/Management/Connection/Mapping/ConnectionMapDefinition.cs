@@ -50,11 +50,12 @@ public class ConnectionMapDefinition : IMapDefinition
         target.DateModified = DateTime.UtcNow;
     }
 
-    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -DateModified -CreatedByUserId -ModifiedByUserId -Version
+    // Umbraco.Code.MapAll -Id -ProviderId -DateCreated -DateModified -CreatedByUserId -ModifiedByUserId -Version
     private static void MapFromUpdateRequest(UpdateConnectionRequestModel source, AIConnection target, MapperContext context)
     {
-        // Note: Id, Alias, ProviderId, DateCreated are preserved from the existing entity
+        // Note: Id, ProviderId, DateCreated are preserved from the existing entity
         // DateModified and Version will be set by the service/repository
+        target.Alias = source.Alias;
         target.Name = source.Name;
         target.Settings = source.Settings;
         target.IsActive = source.IsActive;

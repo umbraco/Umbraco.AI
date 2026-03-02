@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Events;
@@ -14,6 +15,7 @@ namespace Umbraco.AI.Core.Connections;
 internal sealed class AIConnectionService : IAIConnectionService
 {
     private readonly IAIConnectionRepository _repository;
+    private readonly IAIProfileService _profileService;
     private readonly AIProviderCollection _providers;
     private readonly IAIEditableModelResolver _modelResolver;
     private readonly IAIEntityVersionService _versionService;
@@ -22,6 +24,7 @@ internal sealed class AIConnectionService : IAIConnectionService
 
     public AIConnectionService(
         IAIConnectionRepository repository,
+        IAIProfileService profileService,
         AIProviderCollection providers,
         IAIEditableModelResolver modelResolver,
         IAIEntityVersionService versionService,
@@ -29,6 +32,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
+        _profileService = profileService;
         _providers = providers;
         _modelResolver = modelResolver;
         _versionService = versionService;
@@ -150,8 +154,12 @@ internal sealed class AIConnectionService : IAIConnectionService
             throw new InvalidOperationException($"Connection with ID '{id}' not found.");
         }
 
-        // TODO: Check if connection is in use by profiles before deletion
-        // This will require IAIProfileService when implemented
+        // Check if connection is in use by any profiles before deletion
+        var profilesExist = await _profileService.ProfilesExistByConnectionAsync(id, cancellationToken);
+        if (profilesExist)
+        {
+            throw new InvalidOperationException($"Connection is in use by one or more profiles and cannot be deleted.");
+        }
 
         // Publish deleting notification (before delete)
         var messages = new EventMessages();

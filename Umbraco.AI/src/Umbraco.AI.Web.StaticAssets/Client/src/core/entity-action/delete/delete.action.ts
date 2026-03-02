@@ -1,5 +1,6 @@
 import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
@@ -47,7 +48,16 @@ export abstract class UaiDeleteActionBase extends UmbEntityActionBase<never> {
         const { error } = await repository.delete(this.args.unique);
 
         if (error) {
-            throw error;
+            const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const errorBody = (error as any)?.body;
+            notificationContext.peek("danger", {
+                data: {
+                    headline: errorBody?.title ?? "Delete failed",
+                    message: errorBody?.detail ?? "An error occurred while deleting the item.",
+                },
+            });
+            return;
         }
 
         // Event is dispatched by the repository after successful delete

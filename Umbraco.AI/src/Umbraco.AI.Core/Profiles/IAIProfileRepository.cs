@@ -71,4 +71,12 @@ internal interface IAIProfileRepository
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks whether any AI profiles exist that reference the specified connection.
+    /// </summary>
+    /// <param name="connectionId">The connection ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if at least one profile references the connection; otherwise false.</returns>
+    Task<bool> ExistsByConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }

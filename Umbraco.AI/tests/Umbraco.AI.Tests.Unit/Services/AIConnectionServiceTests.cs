@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Versioning;
@@ -12,6 +13,7 @@ namespace Umbraco.AI.Tests.Unit.Services;
 public class AIConnectionServiceTests
 {
     private readonly Mock<IAIConnectionRepository> _repositoryMock;
+    private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IAIEditableModelResolver> _settingsResolverMock;
     private readonly Mock<IAIEntityVersionService> _versionServiceMock;
     private readonly Mock<IEventAggregator> _eventAggregatorMock;
@@ -19,6 +21,7 @@ public class AIConnectionServiceTests
     public AIConnectionServiceTests()
     {
         _repositoryMock = new Mock<IAIConnectionRepository>();
+        _profileServiceMock = new Mock<IAIProfileService>();
         _settingsResolverMock = new Mock<IAIEditableModelResolver>();
         _versionServiceMock = new Mock<IAIEntityVersionService>();
         _eventAggregatorMock = new Mock<IEventAggregator>();
@@ -29,6 +32,7 @@ public class AIConnectionServiceTests
         var collection = new AIProviderCollection(() => providers);
         return new AIConnectionService(
             _repositoryMock.Object,
+            _profileServiceMock.Object,
             collection,
             _settingsResolverMock.Object,
             _versionServiceMock.Object,
@@ -345,6 +349,10 @@ public class AIConnectionServiceTests
             .Setup(x => x.ExistsAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
+        _profileServiceMock
+            .Setup(x => x.ProfilesExistByConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
         _repositoryMock
             .Setup(x => x.DeleteAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -373,6 +381,30 @@ public class AIConnectionServiceTests
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain($"Connection with ID '{connectionId}' not found");
+    }
+
+    [Fact]
+    public async Task DeleteConnectionAsync_WhenConnectionIsInUseByProfiles_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var service = CreateService();
+
+        _repositoryMock
+            .Setup(x => x.ExistsAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _profileServiceMock
+            .Setup(x => x.ProfilesExistByConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var act = () => service.DeleteConnectionAsync(connectionId);
+
+        // Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("in use");
+        _repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

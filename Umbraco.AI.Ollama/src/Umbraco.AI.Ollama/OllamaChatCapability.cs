@@ -52,18 +52,12 @@ public class OllamaChatCapability(OllamaProvider provider, ILogger<OllamaChatCap
     {
         var ollamaClient = OllamaProvider.CreateOllamaClient(settings);
 
-        // Set the selected model
-        if (!string.IsNullOrWhiteSpace(modelId))
-        {
-            ollamaClient.SelectedModel = modelId;
-        }
-        else
-        {
-            ollamaClient.SelectedModel = DefaultChatModel;
-        }
+        // Set the selected model (OllamaApiClient implements IChatClient natively)
+        ollamaClient.SelectedModel = string.IsNullOrWhiteSpace(modelId)
+            ? DefaultChatModel
+            : modelId;
 
-        // Wrap OllamaApiClient in an IChatClient adapter
-        return new OllamaChatClientAdapter(ollamaClient);
+        return ollamaClient;
     }
 
     private static bool IsChatModel(string modelId)

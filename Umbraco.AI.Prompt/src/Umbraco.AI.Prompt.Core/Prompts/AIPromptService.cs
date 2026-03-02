@@ -167,6 +167,10 @@ internal sealed class AIPromptService : IAIPromptService
     }
 
     /// <inheritdoc />
+    public Task<bool> PromptsExistWithProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+        => _repository.ExistsWithProfileIdAsync(profileId, cancellationToken);
+
+    /// <inheritdoc />
     public Task<bool> PromptAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 

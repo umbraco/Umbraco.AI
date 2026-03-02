@@ -64,6 +64,14 @@ public interface IAIPromptService
     Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks whether any prompts reference the specified profile.
+    /// </summary>
+    /// <param name="profileId">The profile ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if one or more prompts reference the profile, otherwise false.</returns>
+    Task<bool> PromptsExistWithProfileAsync(Guid profileId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if a prompt with the given alias exists.
     /// </summary>
     /// <param name="alias">The prompt alias.</param>

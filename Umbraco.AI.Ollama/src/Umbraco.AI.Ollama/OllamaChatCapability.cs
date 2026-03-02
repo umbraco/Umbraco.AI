@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
@@ -9,7 +10,7 @@ namespace Umbraco.AI.Ollama;
 /// <summary>
 /// AI chat capability for Ollama provider.
 /// </summary>
-public class OllamaChatCapability(OllamaProvider provider) : AIChatCapabilityBase<OllamaProviderSettings>(provider)
+public class OllamaChatCapability(OllamaProvider provider, ILogger<OllamaChatCapability> logger) : AIChatCapabilityBase<OllamaProviderSettings>(provider)
 {
     private const string DefaultChatModel = "llama3.2";
 
@@ -41,7 +42,7 @@ public class OllamaChatCapability(OllamaProvider provider) : AIChatCapabilityBas
         }
         catch (Exception ex)
         {
-            // Log the error and return an empty list to prevent capability failure
+            logger.LogError(ex, "Failed to retrieve available chat models from Ollama. Returning empty list to prevent capability failure.");
             return Array.Empty<AIModelDescriptor>();
         }
     }

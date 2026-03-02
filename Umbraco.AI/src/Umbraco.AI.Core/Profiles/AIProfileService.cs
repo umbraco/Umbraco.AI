@@ -265,6 +265,6 @@ internal sealed class AIProfileService : IAIProfileService
     }
 
     /// <inheritdoc />
-    public Task<bool> ProfilesExistByConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
-        => _repository.ExistsByConnectionIdAsync(connectionId, cancellationToken);
+    public Task<bool> ProfilesExistWithConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
+        => _repository.ExistsWithConnectionIdAsync(connectionId, cancellationToken);
 }

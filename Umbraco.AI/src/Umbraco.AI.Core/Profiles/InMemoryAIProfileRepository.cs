@@ -67,7 +67,7 @@ internal sealed class InMemoryAIProfileRepository : IAIProfileRepository
         return Task.FromResult(_profiles.TryRemove(id, out _));
     }
 
-    public Task<bool> ExistsByConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public Task<bool> ExistsWithConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_profiles.Values.Any(p => p.ConnectionId == connectionId));
     }

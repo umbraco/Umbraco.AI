@@ -21,7 +21,7 @@ internal sealed class AIConnectionDeletingNotificationHandler
     /// <inheritdoc />
     public async Task HandleAsync(AIConnectionDeletingNotification notification, CancellationToken cancellationToken)
     {
-        if (await _profileService.ProfilesExistByConnectionAsync(notification.EntityId, cancellationToken))
+        if (await _profileService.ProfilesExistWithConnectionAsync(notification.EntityId, cancellationToken))
         {
             notification.Messages.Add(new EventMessage(
                 "Connection in use",

@@ -180,7 +180,7 @@ internal class EfCoreAIProfileRepository : IAIProfileRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExistsByConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsWithConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 

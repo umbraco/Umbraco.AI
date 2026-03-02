@@ -24,7 +24,7 @@ public class AIConnectionDeletingNotificationHandlerTests
         var notification = new AIConnectionDeletingNotification(connectionId, messages);
 
         _profileServiceMock
-            .Setup(x => x.ProfilesExistByConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.ProfilesExistWithConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -44,7 +44,7 @@ public class AIConnectionDeletingNotificationHandlerTests
         var notification = new AIConnectionDeletingNotification(connectionId, messages);
 
         _profileServiceMock
-            .Setup(x => x.ProfilesExistByConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.ProfilesExistWithConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
@@ -64,7 +64,7 @@ public class AIConnectionDeletingNotificationHandlerTests
         var notification = new AIConnectionDeletingNotification(connectionId, messages);
 
         _profileServiceMock
-            .Setup(x => x.ProfilesExistByConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.ProfilesExistWithConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act

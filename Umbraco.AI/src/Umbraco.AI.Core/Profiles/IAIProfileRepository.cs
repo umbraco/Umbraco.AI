@@ -78,5 +78,5 @@ internal interface IAIProfileRepository
     /// <param name="connectionId">The connection ID to check.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if one or more profiles reference the connection, otherwise false.</returns>
-    Task<bool> ExistsByConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsWithConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }

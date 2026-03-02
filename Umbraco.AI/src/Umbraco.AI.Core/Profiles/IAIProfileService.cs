@@ -134,5 +134,5 @@ public interface IAIProfileService
     /// <param name="connectionId">The connection ID to check.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if one or more profiles reference the connection, otherwise false.</returns>
-    Task<bool> ProfilesExistByConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default);
+    Task<bool> ProfilesExistWithConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }

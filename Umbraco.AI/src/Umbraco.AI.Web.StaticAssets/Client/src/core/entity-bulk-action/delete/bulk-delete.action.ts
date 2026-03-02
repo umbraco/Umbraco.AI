@@ -1,5 +1,6 @@
 import { UmbEntityBulkActionBase } from "@umbraco-cms/backoffice/entity-bulk-action";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
+import { umbPeekError } from "@umbraco-cms/backoffice/notification";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
@@ -49,7 +50,14 @@ export abstract class UaiBulkDeleteActionBase extends UmbEntityBulkActionBase<ne
         const repository = getRepository(this);
 
         for (const unique of this.selection) {
-            await repository.delete(unique);
+            const { error } = await repository.delete(unique);
+            if (error) {
+                const problemDetails = error as { title?: string; detail?: string };
+                await umbPeekError(this, {
+                    headline: problemDetails.title,
+                    message: problemDetails.detail ?? problemDetails.title ?? "An item could not be deleted.",
+                });
+            }
             // Event is dispatched by the repository for each successful delete
         }
     }

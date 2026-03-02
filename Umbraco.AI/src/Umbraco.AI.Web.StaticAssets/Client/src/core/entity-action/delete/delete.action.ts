@@ -1,5 +1,6 @@
 import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
+import { umbPeekError } from "@umbraco-cms/backoffice/notification";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
@@ -47,6 +48,11 @@ export abstract class UaiDeleteActionBase extends UmbEntityActionBase<never> {
         const { error } = await repository.delete(this.args.unique);
 
         if (error) {
+            const problemDetails = error as { title?: string; detail?: string };
+            await umbPeekError(this, {
+                headline: problemDetails.title,
+                message: problemDetails.detail ?? problemDetails.title ?? "The item could not be deleted.",
+            });
             throw error;
         }
 

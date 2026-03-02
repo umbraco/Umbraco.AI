@@ -441,7 +441,7 @@ function Get-ChangedProducts {
         if ($LASTEXITCODE -eq 0) {
             $anyTag = $anyTag.Trim()
             $rootChangedFiles = git diff --name-only "$anyTag..HEAD" 2>&1 | Where-Object { $_ -is [string] }
-            $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json", ".gitignore")
+            $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json")
 
             foreach ($file in $rootChangedFiles) {
                 if ($globalFiles -contains $file) {
@@ -503,7 +503,7 @@ function Get-ChangedProducts {
     }
 
     # Check root-level files that affect all products
-    $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json", ".gitignore")
+    $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json")
     foreach ($file in $changedFiles) {
         if ($globalFiles -contains $file) {
             Write-Host "  ✓ Root file changed: $file (affects all products)" -ForegroundColor Yellow

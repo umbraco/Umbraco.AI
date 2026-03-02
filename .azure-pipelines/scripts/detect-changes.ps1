@@ -371,10 +371,11 @@ function Get-ChangedProducts {
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
         }
     }
-    elseif ($SourceBranch -match '^refs/heads/hotfix/') {
-        # Hotfix branches: per-product tag-based comparison
+    elseif ($SourceBranch -match '^refs/heads/(release|hotfix)/') {
+        # Release/hotfix branches: per-product tag-based comparison
         # Each product compares against its own latest release tag
-        Write-Host "  Hotfix branch detected - using per-product tag comparison" -ForegroundColor Cyan
+        $branchType = if ($SourceBranch -match 'release/') { "Release" } else { "Hotfix" }
+        Write-Host "  $branchType branch detected - using per-product tag comparison" -ForegroundColor Cyan
 
         # Process each product independently
         foreach ($productKey in $Products.Keys) {
@@ -454,14 +455,13 @@ function Get-ChangedProducts {
         return $changed
     }
     else {
-        # For feature/release branches: compare with merge-base against appropriate base
-        $baseBranch = if ($SourceBranch -match '^refs/heads/release/') { "main" } else { "dev" }
-        Write-Host "  Feature/release branch detected, comparing against $baseBranch" -ForegroundColor Cyan
+        # For feature branches: compare with merge-base against dev
+        Write-Host "  Feature branch detected, comparing against dev" -ForegroundColor Cyan
 
-        $mergeBase = git merge-base "origin/$baseBranch" HEAD 2>&1
+        $mergeBase = git merge-base "origin/dev" HEAD 2>&1
         if ($LASTEXITCODE -eq 0) {
             $comparisonBase = $mergeBase.Trim()
-            Write-Host "  Using merge-base with $baseBranch`: $comparisonBase" -ForegroundColor Cyan
+            Write-Host "  Using merge-base with dev: $comparisonBase" -ForegroundColor Cyan
             $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
         }
     }
@@ -491,41 +491,13 @@ function Get-ChangedProducts {
     $changedFiles = $changedFiles | Where-Object { $_ -is [string] }
 
     # Check product folders
-    # For release branches, track files per product to filter non-substantive changes
-    $isRelease = $SourceBranch -match '^refs/heads/release/'
-    $productFiles = @{}
-    $Products.Keys | ForEach-Object { $productFiles[$_] = @() }
-
+    # Note: release/hotfix branches use per-product tag comparison and return early above
     foreach ($file in $changedFiles) {
         foreach ($productKey in $Products.Keys) {
             if ($file.StartsWith($Products[$productKey].Path)) {
-                $productFiles[$productKey] += $file
-
-                if ($isRelease) {
-                    # On release branches, only mark as changed if substantive
-                    if (Test-SubstantiveChange -FilePath $file) {
-                        $changed[$productKey] = $true
-                        Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
-                    }
-                    else {
-                        Write-Host "  ~ $productKey non-substantive change (file: $file)" -ForegroundColor DarkGray
-                    }
-                }
-                else {
-                    # On other branches, any change counts
-                    $changed[$productKey] = $true
-                    Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
-                }
+                $changed[$productKey] = $true
+                Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
                 break
-            }
-        }
-    }
-
-    # Log products with only non-substantive changes
-    if ($isRelease) {
-        foreach ($productKey in $Products.Keys) {
-            if ($productFiles[$productKey].Count -gt 0 -and -not $changed[$productKey]) {
-                Write-Host "  ⊘ $productKey skipped (only non-substantive changes: CHANGELOG.md, version.json)" -ForegroundColor Yellow
             }
         }
     }

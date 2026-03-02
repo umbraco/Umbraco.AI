@@ -178,4 +178,16 @@ internal class EfCoreAIProfileRepository : IAIProfileRepository
         scope.Complete();
         return deleted;
     }
+
+    /// <inheritdoc />
+    public async Task<bool> ExistsByConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        bool exists = await scope.ExecuteWithContextAsync(async db =>
+            await db.Profiles.AnyAsync(p => p.ConnectionId == connectionId, cancellationToken));
+
+        scope.Complete();
+        return exists;
+    }
 }

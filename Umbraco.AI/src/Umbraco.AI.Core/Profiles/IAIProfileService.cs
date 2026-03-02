@@ -127,4 +127,12 @@ public interface IAIProfileService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if a profile with the alias exists (excluding the specified ID if provided), false otherwise.</returns>
     Task<bool> ProfileAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks whether any profiles reference the specified connection.
+    /// </summary>
+    /// <param name="connectionId">The connection ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if one or more profiles reference the connection, otherwise false.</returns>
+    Task<bool> ProfilesExistByConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }

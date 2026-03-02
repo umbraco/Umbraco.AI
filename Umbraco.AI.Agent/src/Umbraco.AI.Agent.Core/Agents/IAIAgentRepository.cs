@@ -85,6 +85,14 @@ internal interface IAIAgentRepository
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks if any agents reference the specified profile.
+    /// </summary>
+    /// <param name="profileId">The profile ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if one or more agents reference the profile.</returns>
+    Task<bool> ExistsWithProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if a agent with the given alias exists.
     /// </summary>
     /// <param name="alias">The agent alias.</param>

@@ -180,6 +180,10 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
+    public Task<bool> AgentsExistWithProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+        => _repository.ExistsWithProfileIdAsync(profileId, cancellationToken);
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
         AIAgent agent,
         IEnumerable<Guid>? userGroupIds = null,

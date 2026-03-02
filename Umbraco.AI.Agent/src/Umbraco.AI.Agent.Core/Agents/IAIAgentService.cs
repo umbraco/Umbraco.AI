@@ -87,6 +87,14 @@ public interface IAIAgentService
     Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks whether any agents reference the specified profile.
+    /// </summary>
+    /// <param name="profileId">The profile ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if one or more agents reference the profile, otherwise false.</returns>
+    Task<bool> AgentsExistWithProfileAsync(Guid profileId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the tools that are allowed for the specified agent.
     /// Includes system tools (always) + user tools matching agent configuration.
     /// If user group IDs are provided, applies user group permission overrides.

@@ -211,6 +211,19 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> ExistsWithProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+
+        var exists = await scope.ExecuteWithContextAsync(async db =>
+            await db.Agents.AnyAsync(e => e.ProfileId == profileId, cancellationToken));
+
+        scope.Complete();
+
+        return exists;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();

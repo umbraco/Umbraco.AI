@@ -140,6 +140,7 @@ public static partial class UmbracoBuilderExtensions
         // Profile resolution
         services.AddSingleton<IAIProfileRepository, InMemoryAIProfileRepository>();
         services.AddSingleton<IAIProfileService, AIProfileService>();
+        builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingNotificationHandler>();
 
         // Settings
         services.AddSingleton<IAISettingsRepository, InMemoryAISettingsRepository>();

@@ -217,15 +217,6 @@ async function generateChangelog(product, version, options = {}) {
                 return null;
             }
 
-            // Strip "Co-Authored-By" lines from commit body
-            if (commit.body) {
-                commit.body = commit.body
-                    .split('\n')
-                    .filter(line => !line.trim().startsWith('Co-Authored-By:'))
-                    .join('\n')
-                    .trim();
-            }
-
             // Filter by scope (primary filter)
             if (commit.scope) {
                 const scopes = commit.scope.split(",").map((s) => s.trim());
@@ -298,8 +289,19 @@ async function generateChangelog(product, version, options = {}) {
             includedCommits++;
 
             // Create a new commit object with our additions (don't modify immutable original)
+            // Strip "Co-Authored-By" lines from commit body
+            let cleanBody = commit.body;
+            if (cleanBody) {
+                cleanBody = cleanBody
+                    .split('\n')
+                    .filter(line => !line.trim().startsWith('Co-Authored-By:'))
+                    .join('\n')
+                    .trim();
+            }
+
             const transformedCommit = {
                 ...commit,
+                body: cleanBody,
                 breaking: commit.notes && commit.notes.length > 0,
                 shortHash: commit.hash ? commit.hash.substring(0, 7) : undefined,
                 hashUrl: commit.hash ? `https://github.com/umbraco/Umbraco.AI/commit/${commit.hash}` : undefined,

@@ -1,0 +1,12 @@
+[
+  "Umbraco.AI",
+  "Umbraco.AI.Agent",
+  "Umbraco.AI.Agent.Deploy",
+  "Umbraco.AI.Anthropic",
+  "Umbraco.AI.Deploy",
+  "Umbraco.AI.Google",
+  "Umbraco.AI.MicrosoftFoundry",
+  "Umbraco.AI.OpenAI",
+  "Umbraco.AI.Prompt",
+  "Umbraco.AI.Prompt.Deploy"
+]

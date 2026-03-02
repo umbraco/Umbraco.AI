@@ -50,7 +50,7 @@ public class OllamaChatCapability(OllamaProvider provider, ILogger<OllamaChatCap
     /// <inheritdoc />
     protected override IChatClient CreateClient(OllamaProviderSettings settings, string? modelId)
     {
-        var ollamaClient = OllamaProvider.CreateOllamaClient(settings);
+        var ollamaClient = Provider.CreateOllamaClient(settings);
 
         // Set the selected model (OllamaApiClient implements IChatClient natively)
         ollamaClient.SelectedModel = string.IsNullOrWhiteSpace(modelId)

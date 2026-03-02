@@ -14,16 +14,19 @@ public class OllamaProvider : AIProviderBase<OllamaProviderSettings>
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OllamaProvider"/> class.
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public OllamaProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
+    /// <param name="httpClientFactory">The HTTP client factory.</param>
+    public OllamaProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache, IHttpClientFactory httpClientFactory)
         : base(infrastructure)
     {
         _cache = cache;
+        _httpClientFactory = httpClientFactory;
 
         WithCapability<OllamaChatCapability>();
     }
@@ -61,7 +64,7 @@ public class OllamaProvider : AIProviderBase<OllamaProviderSettings>
     /// <summary>
     /// Creates an Ollama client configured with the provided settings.
     /// </summary>
-    internal static OllamaApiClient CreateOllamaClient(OllamaProviderSettings settings)
+    internal OllamaApiClient CreateOllamaClient(OllamaProviderSettings settings)
     {
         var endpoint = string.IsNullOrWhiteSpace(settings.Endpoint)
             ? "http://localhost:11434"
@@ -73,7 +76,7 @@ public class OllamaProvider : AIProviderBase<OllamaProviderSettings>
         HttpClient? httpClient = null;
         if (!string.IsNullOrWhiteSpace(settings.CustomHeaders))
         {
-            httpClient = new HttpClient();
+            httpClient = _httpClientFactory.CreateClient();
             var headers = ParseCustomHeaders(settings.CustomHeaders);
             foreach (var (name, value) in headers)
             {

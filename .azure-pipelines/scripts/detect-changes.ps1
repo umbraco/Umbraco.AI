@@ -319,6 +319,85 @@ function Test-SubstantiveChange {
     return $nonSubstantiveFiles -notcontains $fileName
 }
 
+function Get-AffectedProductsFromPackageProps {
+    <#
+    .SYNOPSIS
+    Determines which products are affected by changes to Directory.Packages.props.
+
+    .DESCRIPTION
+    Parses the git diff of Directory.Packages.props to find changed package names,
+    then searches .csproj files to find which products reference those packages.
+    Returns only the product keys that are actually affected.
+
+    For Directory.Build.props and global.json, all products are affected (returns all keys).
+    #>
+    param(
+        [string]$ComparisonRef,
+        [hashtable]$Products,
+        [string]$RootPath
+    )
+
+    # Parse the diff to extract changed package names
+    $diff = git diff "$ComparisonRef..HEAD" -- "Directory.Packages.props" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "    Could not diff Directory.Packages.props, assuming all affected" -ForegroundColor Yellow
+        return @($Products.Keys)
+    }
+
+    $changedPackages = @()
+    foreach ($line in $diff) {
+        if ($line -is [string] -and $line -match '^[+-].*<PackageVersion\s+Include="([^"]+)"') {
+            $packageName = $Matches[1]
+            if ($changedPackages -notcontains $packageName) {
+                $changedPackages += $packageName
+            }
+        }
+    }
+
+    if ($changedPackages.Count -eq 0) {
+        Write-Host "    No package version changes detected in diff" -ForegroundColor Gray
+        return @()
+    }
+
+    Write-Host "    Changed packages: $($changedPackages -join ', ')" -ForegroundColor Cyan
+
+    # Find which products reference these packages
+    $affectedKeys = @()
+    foreach ($productKey in $Products.Keys) {
+        $product = $Products[$productKey]
+        $srcFolder = Join-Path $RootPath ($product.Path.TrimEnd('/')) | Join-Path -ChildPath "src"
+
+        if (-not (Test-Path $srcFolder)) { continue }
+
+        $csprojFiles = Get-ChildItem -Path $srcFolder -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
+        $isAffected = $false
+
+        foreach ($csproj in $csprojFiles) {
+            if ($isAffected) { break }
+
+            try {
+                $content = Get-Content $csproj.FullName -Raw -ErrorAction Stop
+                foreach ($pkg in $changedPackages) {
+                    if ($content -match [regex]::Escape($pkg)) {
+                        $isAffected = $true
+                        Write-Host "    ✓ $($product.DisplayName) references $pkg" -ForegroundColor Green
+                        break
+                    }
+                }
+            }
+            catch {
+                # If we can't read a csproj, skip it
+            }
+        }
+
+        if ($isAffected -and $affectedKeys -notcontains $productKey) {
+            $affectedKeys += $productKey
+        }
+    }
+
+    return $affectedKeys
+}
+
 function Get-ChangedProducts {
     <#
     .SYNOPSIS
@@ -436,15 +515,24 @@ function Get-ChangedProducts {
             }
         }
 
-        # Check root-level files (use most recent tag of any product)
+        # Check root-level build files for changes
         $anyTag = git describe --tags --abbrev=0 2>&1
         if ($LASTEXITCODE -eq 0) {
             $anyTag = $anyTag.Trim()
             $rootChangedFiles = git diff --name-only "$anyTag..HEAD" 2>&1 | Where-Object { $_ -is [string] }
-            $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json")
 
             foreach ($file in $rootChangedFiles) {
-                if ($globalFiles -contains $file) {
+                if ($file -eq "Directory.Packages.props") {
+                    # Smart detection: trace changed packages to affected products
+                    Write-Host "  Root file changed: Directory.Packages.props - tracing affected products" -ForegroundColor Yellow
+                    $affectedKeys = Get-AffectedProductsFromPackageProps -ComparisonRef $anyTag -Products $Products -RootPath (Get-Location).Path
+                    foreach ($key in $affectedKeys) {
+                        $changed[$key] = $true
+                        Write-Host "  ✓ $key affected by Directory.Packages.props change" -ForegroundColor Green
+                    }
+                }
+                elseif ($file -eq "Directory.Build.props" -or $file -eq "global.json") {
+                    # These truly affect all products
                     Write-Host "  ✓ Root file changed: $file (affects all products)" -ForegroundColor Yellow
                     $Products.Keys | ForEach-Object { $changed[$_] = $true }
                     break
@@ -502,10 +590,19 @@ function Get-ChangedProducts {
         }
     }
 
-    # Check root-level files that affect all products
-    $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json")
+    # Check root-level build files
     foreach ($file in $changedFiles) {
-        if ($globalFiles -contains $file) {
+        if ($file -eq "Directory.Packages.props") {
+            # Smart detection: trace changed packages to affected products
+            Write-Host "  Root file changed: Directory.Packages.props - tracing affected products" -ForegroundColor Yellow
+            $affectedKeys = Get-AffectedProductsFromPackageProps -ComparisonRef $comparisonBase -Products $Products -RootPath $RootPath
+            foreach ($key in $affectedKeys) {
+                $changed[$key] = $true
+                Write-Host "  ✓ $key affected by Directory.Packages.props change" -ForegroundColor Green
+            }
+        }
+        elseif ($file -eq "Directory.Build.props" -or $file -eq "global.json") {
+            # These truly affect all products
             Write-Host "  ✓ Root file changed: $file (affects all products)" -ForegroundColor Yellow
             $Products.Keys | ForEach-Object { $changed[$_] = $true }
             break

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Caching.Memory;
 using OllamaSharp;
 using Umbraco.AI.Core.Providers;
@@ -114,7 +116,13 @@ public class OllamaProvider : AIProviderBase<OllamaProviderSettings>
     {
         // Cache per endpoint + API key combination
         var endpoint = settings.Endpoint ?? "default";
-        var apiKeyHash = settings.ApiKey?.GetHashCode() ?? 0;
+
+        // Use stable hash instead of GetHashCode (which is non-deterministic across processes)
+        // for ollama, the chances are the apikey isn't actually being used.
+        var apiKeyHash = string.IsNullOrWhiteSpace(settings.ApiKey)
+            ? "no-api-key"
+            : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(settings.ApiKey ?? "")))[..16];
+
         return $"{CacheKeyPrefix}{endpoint}:{apiKeyHash}";
     }
 }

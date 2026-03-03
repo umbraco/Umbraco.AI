@@ -237,6 +237,19 @@ public class TestMapDefinition : IMapDefinition
             AggregateMetrics = context.Map<TestMetricsResponseModel>(source.AggregateMetrics)!
         });
 
+        // AITestVariationComparison -> TestVariationComparisonResponseModel
+        mapper.Define<AITestVariationComparison, TestVariationComparisonResponseModel>((source, context) => new TestVariationComparisonResponseModel
+        {
+            SourceVariationName = source.SourceVariationName,
+            SourceMetrics = context.Map<TestMetricsResponseModel>(source.SourceMetrics)!,
+            ComparisonVariationName = source.ComparisonVariationName,
+            ComparisonMetrics = context.Map<TestMetricsResponseModel>(source.ComparisonMetrics)!,
+            PassRateDelta = source.PassRateDelta,
+            AverageDurationDeltaMs = source.AverageDurationDeltaMs,
+            IsRegression = source.IsRegression,
+            IsImprovement = source.IsImprovement
+        });
+
         // AITestRunComparison -> TestRunComparisonResponseModel
         mapper.Define<AITestRunComparison, TestRunComparisonResponseModel>((source, context) =>
         {

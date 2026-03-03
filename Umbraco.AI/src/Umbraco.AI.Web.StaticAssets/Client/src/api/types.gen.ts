@@ -454,7 +454,7 @@ export type TestGraderResultResponseModel = {
     actualValue?: string | null;
     expectedValue?: string | null;
     failureMessage?: string | null;
-    metadataJson?: string | null;
+    metadata?: unknown;
     severity: string;
 };
 
@@ -484,7 +484,7 @@ export type TestOutcomeResponseModel = {
     outputType: string;
     outputValue?: string | null;
     finishReason?: string | null;
-    tokenUsageJson?: string | null;
+    tokenUsage?: TestTokenUsageResponseModel | null;
 };
 
 export type TestResponseModel = {
@@ -500,6 +500,7 @@ export type TestResponseModel = {
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
+    baselineRunId?: string | null;
     version: number;
 };
 
@@ -512,9 +513,15 @@ export type TestRunComparisonResponseModel = {
     graderComparisons: Array<TestGraderComparisonResponseModel>;
 };
 
+export type TestRunErrorResponseModel = {
+    message: string;
+    stackTrace?: string | null;
+};
+
 export type TestRunResponseModel = {
     id: string;
     testId: string;
+    testName?: string | null;
     testVersion: number;
     runNumber: number;
     profileId?: string | null;
@@ -526,17 +533,25 @@ export type TestRunResponseModel = {
     transcriptId?: string | null;
     outcome?: TestOutcomeResponseModel | null;
     graderResults: Array<TestGraderResultResponseModel>;
-    metadataJson?: string | null;
+    error?: TestRunErrorResponseModel | null;
     batchId?: string | null;
+    isBaseline: boolean;
+    baselineRunId?: string | null;
+};
+
+export type TestTokenUsageResponseModel = {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
 };
 
 export type TestTranscriptResponseModel = {
     id: string;
-    messagesJson?: string | null;
-    toolCallsJson?: string | null;
-    reasoningJson?: string | null;
-    timingJson?: string | null;
-    finalOutputJson?: string | null;
+    messages?: unknown;
+    toolCalls?: unknown;
+    reasoning?: unknown;
+    timing?: unknown;
+    finalOutput?: unknown;
 };
 
 export type ToolItemResponseModel = {

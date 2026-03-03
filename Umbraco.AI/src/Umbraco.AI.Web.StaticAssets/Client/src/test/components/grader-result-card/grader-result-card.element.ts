@@ -49,35 +49,30 @@ export class UaiGraderResultCardElement extends LitElement {
         return html`<pre class="code-block">${JSON.stringify(value, null, 2)}</pre>`;
     }
 
-    private _renderMetadata(metadataJson: string) {
-        try {
-            const parsed = JSON.parse(metadataJson);
-            if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
-                return html`
-                    <table class="metadata-table">
-                        <thead>
-                            <tr>
-                                <th>Key</th>
-                                <th>Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${Object.entries(parsed).map(
-                                ([key, value]) => html`
-                                    <tr>
-                                        <td>${key}</td>
-                                        <td>${this._renderMetadataValue(value)}</td>
-                                    </tr>
-                                `,
-                            )}
-                        </tbody>
-                    </table>
-                `;
-            }
-            return html`<pre class="code-block">${this._formatJson(metadataJson)}</pre>`;
-        } catch {
-            return html`<pre class="code-block">${metadataJson}</pre>`;
+    private _renderMetadata(metadata: unknown) {
+        if (typeof metadata === "object" && metadata !== null && !Array.isArray(metadata)) {
+            return html`
+                <table class="metadata-table">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(metadata).map(
+                            ([key, value]) => html`
+                                <tr>
+                                    <td>${key}</td>
+                                    <td>${this._renderMetadataValue(value)}</td>
+                                </tr>
+                            `,
+                        )}
+                    </tbody>
+                </table>
+            `;
         }
+        return html`<pre class="code-block">${JSON.stringify(metadata, null, 2)}</pre>`;
     }
 
     render() {
@@ -133,11 +128,11 @@ export class UaiGraderResultCardElement extends LitElement {
                                         </div>
                                     `
                                   : nothing}
-                              ${result.metadataJson
+                              ${result.metadata
                                   ? html`
                                         <div class="grader-field">
                                             <label>Metadata</label>
-                                            ${this._renderMetadata(result.metadataJson)}
+                                            ${this._renderMetadata(result.metadata)}
                                         </div>
                                     `
                                   : nothing}

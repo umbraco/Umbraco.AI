@@ -122,23 +122,15 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                 ${outcome.finishReason
                     ? html`<uai-labeled-field label="Finish Reason">${outcome.finishReason}</uai-labeled-field>`
                     : null}
-                ${outcome.tokenUsageJson
+                ${outcome.tokenUsage
                     ? html`
                         <uai-labeled-field label="Token Usage">
-                            <pre class="code-block">${this._formatJson(outcome.tokenUsageJson)}</pre>
+                            <pre class="code-block">${JSON.stringify(outcome.tokenUsage, null, 2)}</pre>
                         </uai-labeled-field>
                     `
                     : null}
             </div>
         `;
-    }
-
-    private _formatJson(json: string): string {
-        try {
-            return JSON.stringify(JSON.parse(json), null, 2);
-        } catch {
-            return json;
-        }
     }
 
     render() {
@@ -176,14 +168,6 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                 <uui-box headline="Grader Results">
                     <uai-grader-result-list .results=${this._run.graderResults}></uai-grader-result-list>
                 </uui-box>
-
-                ${this._run.metadataJson
-                    ? html`
-                        <uui-box headline="Metadata">
-                            <pre class="code-block">${this._formatJson(this._run.metadataJson)}</pre>
-                        </uui-box>
-                    `
-                    : null}
             </div>
         `;
     }

@@ -68,13 +68,16 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
         this._isLoading = false;
     }
 
-    private _parseJson<T>(json: string | null | undefined): T | null {
-        if (!json) return null;
-        try {
-            return JSON.parse(json) as T;
-        } catch {
-            return null;
+    private _asTyped<T>(value: unknown): T | null {
+        if (value == null) return null;
+        if (typeof value === "string") {
+            try {
+                return JSON.parse(value) as T;
+            } catch {
+                return null;
+            }
         }
+        return value as T;
     }
 
     private _formatJson(json: string): string {
@@ -96,7 +99,7 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     }
 
     private _renderMessages() {
-        const messages = this._parseJson<TranscriptMessage[]>(this._transcript?.messagesJson);
+        const messages = this._asTyped<TranscriptMessage[]>(this._transcript?.messages);
         if (!messages || messages.length === 0) {
             return html`<div class="section-empty">No messages recorded</div>`;
         }
@@ -114,7 +117,7 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     }
 
     private _renderToolCalls() {
-        const toolCalls = this._parseJson<TranscriptToolCall[]>(this._transcript?.toolCallsJson);
+        const toolCalls = this._asTyped<TranscriptToolCall[]>(this._transcript?.toolCalls);
         if (!toolCalls || toolCalls.length === 0) {
             return html`<div class="section-empty">No tool calls recorded</div>`;
         }
@@ -153,7 +156,7 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     }
 
     private _renderReasoning() {
-        const reasoning = this._parseJson<string[]>(this._transcript?.reasoningJson);
+        const reasoning = this._asTyped<string[]>(this._transcript?.reasoning);
         if (!reasoning || reasoning.length === 0) {
             return html`<div class="section-empty">No reasoning recorded</div>`;
         }
@@ -182,7 +185,7 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     }
 
     private _renderTiming() {
-        const timing = this._parseJson<TranscriptTiming>(this._transcript?.timingJson);
+        const timing = this._asTyped<TranscriptTiming>(this._transcript?.timing);
         if (!timing || Object.keys(timing).length === 0) {
             return html`<div class="section-empty">No timing data recorded</div>`;
         }
@@ -208,12 +211,12 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     }
 
     private _renderFinalOutput() {
-        if (!this._transcript?.finalOutputJson) {
+        if (!this._transcript?.finalOutput) {
             return html`<div class="section-empty">No final output recorded</div>`;
         }
 
         return html`
-            <pre class="code-block">${this._formatJson(this._transcript.finalOutputJson)}</pre>
+            <pre class="code-block">${JSON.stringify(this._transcript.finalOutput, null, 2)}</pre>
         `;
     }
 

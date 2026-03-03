@@ -36,6 +36,16 @@ internal class AITestEntity
     public Guid TestTargetId { get; set; }
 
     /// <summary>
+    /// Optional default profile ID for test execution.
+    /// </summary>
+    public Guid? ProfileId { get; set; }
+
+    /// <summary>
+    /// Default context IDs, serialized as comma-separated Guids.
+    /// </summary>
+    public string? ContextIds { get; set; }
+
+    /// <summary>
     /// Test feature configuration as JSON.
     /// </summary>
     public string TestFeatureConfigJson { get; set; } = string.Empty;
@@ -44,6 +54,11 @@ internal class AITestEntity
     /// Graders serialized as JSON array.
     /// </summary>
     public string? GradersJson { get; set; }
+
+    /// <summary>
+    /// Variations serialized as JSON array.
+    /// </summary>
+    public string? VariationsJson { get; set; }
 
     /// <summary>
     /// Number of times to run this test.

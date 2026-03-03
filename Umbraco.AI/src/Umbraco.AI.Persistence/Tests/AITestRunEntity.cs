@@ -94,4 +94,19 @@ internal class AITestRunEntity
     /// Optional batch ID if part of batch execution.
     /// </summary>
     public Guid? BatchId { get; set; }
+
+    /// <summary>
+    /// Groups all runs from one test execution (default + variations).
+    /// </summary>
+    public Guid ExecutionId { get; set; }
+
+    /// <summary>
+    /// The variation ID within the execution (null = default config).
+    /// </summary>
+    public Guid? VariationId { get; set; }
+
+    /// <summary>
+    /// Denormalized variation name for display.
+    /// </summary>
+    public string? VariationName { get; set; }
 }

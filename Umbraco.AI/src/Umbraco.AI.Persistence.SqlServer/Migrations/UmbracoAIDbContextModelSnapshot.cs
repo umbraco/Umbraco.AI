@@ -646,6 +646,10 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("BaselineRunId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ContextIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -675,6 +679,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<Guid?>("ProfileId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("RunCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -684,9 +691,6 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<Guid>("TestTargetId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("TestFeatureConfigJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -695,6 +699,12 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("TestTargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VariationsJson")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Version")
                         .ValueGeneratedOnAdd()
@@ -733,6 +743,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("ExecutedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ExecutionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("GraderResultsJson")
@@ -774,13 +787,24 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("TranscriptId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("VariationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VariationName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BatchId");
 
                     b.HasIndex("ExecutedAt");
 
+                    b.HasIndex("ExecutionId");
+
                     b.HasIndex("TestId");
+
+                    b.HasIndex("VariationId");
 
                     b.HasIndex("TestId", "ExecutedAt");
 

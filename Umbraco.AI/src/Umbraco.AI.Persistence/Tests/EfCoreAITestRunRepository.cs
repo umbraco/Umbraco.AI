@@ -48,6 +48,8 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,
+        Guid? executionId = null,
+        Guid? variationId = null,
         int skip = 0,
         int take = 20,
         CancellationToken cancellationToken = default)
@@ -74,6 +76,16 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
                 query = query.Where(r => r.Status == (int)status.Value);
             }
 
+            if (executionId.HasValue)
+            {
+                query = query.Where(r => r.ExecutionId == executionId.Value);
+            }
+
+            if (variationId.HasValue)
+            {
+                query = query.Where(r => r.VariationId == variationId.Value);
+            }
+
             int total = await query.CountAsync(cancellationToken);
 
             List<AITestRunEntity> items = await query
@@ -87,6 +99,21 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
 
         scope.Complete();
         return (result.items.Select(AITestRunFactory.BuildDomain), result.total);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<AITestRun>> GetByExecutionIdAsync(Guid executionId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        List<AITestRunEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+            await db.TestRuns
+                .Where(r => r.ExecutionId == executionId)
+                .OrderBy(r => r.RunNumber)
+                .ToListAsync(cancellationToken));
+
+        scope.Complete();
+        return entities.Select(AITestRunFactory.BuildDomain);
     }
 
     /// <inheritdoc />

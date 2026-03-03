@@ -613,10 +613,17 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.TestTargetId)
                 .IsRequired();
 
+            entity.Property(e => e.ProfileId);
+
+            entity.Property(e => e.ContextIds)
+                .HasMaxLength(2000);
+
             entity.Property(e => e.TestFeatureConfigJson)
                 .IsRequired();
 
             entity.Property(e => e.GradersJson);
+
+            entity.Property(e => e.VariationsJson);
 
             entity.Property(e => e.RunCount)
                 .IsRequired()
@@ -700,9 +707,19 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.BatchId);
 
+            entity.Property(e => e.ExecutionId)
+                .IsRequired();
+
+            entity.Property(e => e.VariationId);
+
+            entity.Property(e => e.VariationName)
+                .HasMaxLength(255);
+
             entity.HasIndex(e => e.TestId);
             entity.HasIndex(e => e.ExecutedAt);
             entity.HasIndex(e => e.BatchId);
+            entity.HasIndex(e => e.ExecutionId);
+            entity.HasIndex(e => e.VariationId);
             entity.HasIndex(e => new { e.TestId, e.ExecutedAt });
         });
 

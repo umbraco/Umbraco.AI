@@ -29,6 +29,8 @@ public class TestMapDefinition : IMapDefinition
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
+            ProfileId = source.ProfileId,
+            ContextIds = source.ContextIds,
             TestFeatureConfig = source.TestFeatureConfig,
             Graders = source.Graders.Select(g => new TestGraderModel
             {
@@ -40,6 +42,16 @@ public class TestMapDefinition : IMapDefinition
                 Negate = g.Negate,
                 Severity = g.Severity.ToString(),
                 Weight = g.Weight
+            }).ToList(),
+            Variations = source.Variations.Select(v => new TestVariationModel
+            {
+                Id = v.Id,
+                Name = v.Name,
+                Description = v.Description,
+                ProfileId = v.ProfileId,
+                RunCount = v.RunCount,
+                ContextIds = v.ContextIds,
+                TestFeatureConfig = v.TestFeatureConfig
             }).ToList(),
             RunCount = source.RunCount,
             Tags = source.Tags,
@@ -72,6 +84,8 @@ public class TestMapDefinition : IMapDefinition
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
+            ProfileId = source.ProfileId,
+            ContextIds = source.ContextIds?.ToList() ?? [],
             TestFeatureConfig = source.TestFeatureConfig,
             Graders = source.Graders.Select(g => new AITestGraderConfig
             {
@@ -84,6 +98,16 @@ public class TestMapDefinition : IMapDefinition
                 Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
                 Weight = g.Weight
             }).ToList(),
+            Variations = source.Variations?.Select(v => new AITestVariation
+            {
+                Id = v.Id,
+                Name = v.Name,
+                Description = v.Description,
+                ProfileId = v.ProfileId,
+                RunCount = v.RunCount,
+                ContextIds = v.ContextIds,
+                TestFeatureConfig = v.TestFeatureConfig
+            }).ToList() ?? [],
             RunCount = source.RunCount,
             Tags = source.Tags.ToList()
         });
@@ -168,7 +192,10 @@ public class TestMapDefinition : IMapDefinition
                     Message = source.Error.Message,
                     StackTrace = source.Error.StackTrace
                 } : null,
-                BatchId = source.BatchId
+                BatchId = source.BatchId,
+                ExecutionId = source.ExecutionId,
+                VariationId = source.VariationId,
+                VariationName = source.VariationName
             };
         });
 
@@ -263,6 +290,8 @@ public class TestMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.TestTargetId = source.TestTargetId;
+        target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.TestFeatureConfig = source.TestFeatureConfig;
         target.Graders = source.Graders.Select(g => new AITestGraderConfig
         {
@@ -275,6 +304,16 @@ public class TestMapDefinition : IMapDefinition
             Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
             Weight = g.Weight
         }).ToList();
+        target.Variations = source.Variations?.Select(v => new AITestVariation
+        {
+            Id = v.Id,
+            Name = v.Name,
+            Description = v.Description,
+            ProfileId = v.ProfileId,
+            RunCount = v.RunCount,
+            ContextIds = v.ContextIds,
+            TestFeatureConfig = v.TestFeatureConfig
+        }).ToList() ?? [];
         target.RunCount = source.RunCount;
         target.Tags = source.Tags.ToList();
     }

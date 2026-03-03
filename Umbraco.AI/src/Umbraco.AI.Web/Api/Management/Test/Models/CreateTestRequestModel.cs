@@ -38,6 +38,16 @@ public class CreateTestRequestModel
     public Guid TestTargetId { get; set; }
 
     /// <summary>
+    /// Optional default profile ID for test execution.
+    /// </summary>
+    public Guid? ProfileId { get; set; }
+
+    /// <summary>
+    /// Optional default context IDs for test execution.
+    /// </summary>
+    public IReadOnlyList<Guid>? ContextIds { get; set; }
+
+    /// <summary>
     /// Test feature configuration as JsonElement.
     /// Structure depends on the test feature's ConfigType.
     /// </summary>
@@ -48,6 +58,11 @@ public class CreateTestRequestModel
     /// </summary>
     [MinLength(1)]
     public IReadOnlyList<TestGraderModel> Graders { get; set; } = [];
+
+    /// <summary>
+    /// Named configuration overrides for A/B testing.
+    /// </summary>
+    public IReadOnlyList<TestVariationModel>? Variations { get; set; }
 
     /// <summary>
     /// Number of times to run this test for pass@k calculation.

@@ -37,10 +37,12 @@ internal sealed class AITestRunService : IAITestRunService
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,
+        Guid? executionId = null,
+        Guid? variationId = null,
         int skip = 0,
         int take = 20,
         CancellationToken cancellationToken = default)
-        => _runRepository.GetPagedAsync(testId, batchId, status, skip, take, cancellationToken);
+        => _runRepository.GetPagedAsync(testId, batchId, status, executionId, variationId, skip, take, cancellationToken);
 
     /// <inheritdoc />
     public Task<AITestRun?> GetLatestTestRunAsync(Guid testId, CancellationToken cancellationToken = default)

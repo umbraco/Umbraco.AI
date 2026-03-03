@@ -40,6 +40,21 @@ internal sealed class AITestFactory : IAITestFactory
             graders = DeserializeGraders(entity.GradersJson);
         }
 
+        IReadOnlyList<AITestVariation> variations = Array.Empty<AITestVariation>();
+        if (!string.IsNullOrEmpty(entity.VariationsJson))
+        {
+            variations = DeserializeVariations(entity.VariationsJson);
+        }
+
+        IReadOnlyList<Guid> contextIds = Array.Empty<Guid>();
+        if (!string.IsNullOrEmpty(entity.ContextIds))
+        {
+            contextIds = entity.ContextIds
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(Guid.Parse)
+                .ToList();
+        }
+
         JsonElement? testFeatureConfig = null;
         if (!string.IsNullOrEmpty(entity.TestFeatureConfigJson))
         {
@@ -55,8 +70,11 @@ internal sealed class AITestFactory : IAITestFactory
             Description = entity.Description,
             TestFeatureId = entity.TestFeatureId,
             TestTargetId = entity.TestTargetId,
+            ProfileId = entity.ProfileId,
+            ContextIds = contextIds,
             TestFeatureConfig = testFeatureConfig,
             Graders = graders,
+            Variations = variations,
             RunCount = entity.RunCount,
             Tags = tags,
             IsActive = entity.IsActive,
@@ -80,8 +98,11 @@ internal sealed class AITestFactory : IAITestFactory
             Description = test.Description,
             TestFeatureId = test.TestFeatureId,
             TestTargetId = test.TestTargetId,
+            ProfileId = test.ProfileId,
+            ContextIds = test.ContextIds.Count > 0 ? string.Join(',', test.ContextIds) : null,
             TestFeatureConfigJson = SerializeTestFeatureConfig(test),
             GradersJson = SerializeGraders(test.Graders, test),
+            VariationsJson = SerializeVariations(test.Variations),
             RunCount = test.RunCount,
             Tags = test.Tags.Count > 0 ? string.Join(',', test.Tags) : null,
             IsActive = test.IsActive,
@@ -102,8 +123,11 @@ internal sealed class AITestFactory : IAITestFactory
         entity.Description = test.Description;
         entity.TestFeatureId = test.TestFeatureId;
         entity.TestTargetId = test.TestTargetId;
+        entity.ProfileId = test.ProfileId;
+        entity.ContextIds = test.ContextIds.Count > 0 ? string.Join(',', test.ContextIds) : null;
         entity.TestFeatureConfigJson = SerializeTestFeatureConfig(test);
         entity.GradersJson = SerializeGraders(test.Graders, test);
+        entity.VariationsJson = SerializeVariations(test.Variations);
         entity.RunCount = test.RunCount;
         entity.Tags = test.Tags.Count > 0 ? string.Join(',', test.Tags) : null;
         entity.IsActive = test.IsActive;
@@ -220,6 +244,116 @@ internal sealed class AITestFactory : IAITestFactory
             };
 
             result.Add(grader);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Serializes the variations list to a JSON string for database storage.
+    /// </summary>
+    private static string? SerializeVariations(IReadOnlyList<AITestVariation> variations)
+    {
+        if (variations.Count == 0)
+        {
+            return null;
+        }
+
+        var array = new JsonArray();
+
+        foreach (var variation in variations)
+        {
+            var obj = new JsonObject
+            {
+                [nameof(AITestVariation.Id)] = variation.Id,
+                [nameof(AITestVariation.Name)] = variation.Name,
+                [nameof(AITestVariation.Description)] = variation.Description,
+                [nameof(AITestVariation.ProfileId)] = variation.ProfileId,
+                [nameof(AITestVariation.RunCount)] = variation.RunCount,
+            };
+
+            if (variation.ContextIds is { } contextIds)
+            {
+                var contextArray = new JsonArray();
+                foreach (var contextId in contextIds)
+                {
+                    contextArray.Add(contextId.ToString());
+                }
+                obj[nameof(AITestVariation.ContextIds)] = contextArray;
+            }
+            else
+            {
+                obj[nameof(AITestVariation.ContextIds)] = null;
+            }
+
+            if (variation.TestFeatureConfig is { } config)
+            {
+                obj["TestFeatureConfigJson"] = config.GetRawText();
+            }
+            else
+            {
+                obj["TestFeatureConfigJson"] = null;
+            }
+
+            array.Add(obj);
+        }
+
+        return array.ToJsonString();
+    }
+
+    /// <summary>
+    /// Deserializes the variations list from database JSON.
+    /// </summary>
+    private static IReadOnlyList<AITestVariation> DeserializeVariations(string variationsJson)
+    {
+        using var doc = JsonDocument.Parse(variationsJson);
+        if (doc.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<AITestVariation>();
+        }
+
+        var result = new List<AITestVariation>();
+
+        foreach (var element in doc.RootElement.EnumerateArray())
+        {
+            IReadOnlyList<Guid>? contextIds = null;
+            if (element.TryGetProperty(nameof(AITestVariation.ContextIds), out var contextIdsProp) &&
+                contextIdsProp.ValueKind == JsonValueKind.Array)
+            {
+                contextIds = contextIdsProp.EnumerateArray()
+                    .Select(e => Guid.Parse(e.GetString()!))
+                    .ToList();
+            }
+
+            JsonElement? testFeatureConfig = null;
+            if (element.TryGetProperty("TestFeatureConfigJson", out var configProp) &&
+                configProp.ValueKind == JsonValueKind.String)
+            {
+                var configStr = configProp.GetString();
+                if (!string.IsNullOrWhiteSpace(configStr))
+                {
+                    testFeatureConfig = JsonSerializer.Deserialize<JsonElement>(configStr);
+                }
+            }
+
+            var variation = new AITestVariation
+            {
+                Id = element.GetProperty(nameof(AITestVariation.Id)).GetGuid(),
+                Name = element.GetProperty(nameof(AITestVariation.Name)).GetString()!,
+                Description = element.TryGetProperty(nameof(AITestVariation.Description), out var descProp) && descProp.ValueKind == JsonValueKind.String
+                    ? descProp.GetString()
+                    : null,
+                ProfileId = element.TryGetProperty(nameof(AITestVariation.ProfileId), out var profileProp) && profileProp.ValueKind != JsonValueKind.Null
+                    ? profileProp.GetGuid()
+                    : null,
+                RunCount = element.TryGetProperty(nameof(AITestVariation.RunCount), out var runCountProp) && runCountProp.ValueKind != JsonValueKind.Null
+                    ? runCountProp.GetInt32()
+                    : null,
+                ContextIds = contextIds,
+                TestFeatureConfig = testFeatureConfig
+            };
+
+            result.Add(variation);
         }
 
         return result;

@@ -38,6 +38,8 @@ public class AllTestRunController : TestRunControllerBase
     /// <param name="testId">Optional test ID to filter by.</param>
     /// <param name="batchId">Optional batch ID to filter by.</param>
     /// <param name="status">Optional status to filter by (Running, Passed, Failed, Error).</param>
+    /// <param name="executionId">Optional execution ID to filter by.</param>
+    /// <param name="variationId">Optional variation ID to filter by.</param>
     /// <param name="skip">Number of items to skip.</param>
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -49,6 +51,8 @@ public class AllTestRunController : TestRunControllerBase
         [FromQuery] Guid? testId,
         [FromQuery] Guid? batchId,
         [FromQuery] string? status,
+        [FromQuery] Guid? executionId,
+        [FromQuery] Guid? variationId,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default)
@@ -60,7 +64,7 @@ public class AllTestRunController : TestRunControllerBase
             statusFilter = parsedStatus;
         }
 
-        var pagedRuns = await _runService.GetRunsPagedAsync(testId, batchId, statusFilter, skip, take, cancellationToken);
+        var pagedRuns = await _runService.GetRunsPagedAsync(testId, batchId, statusFilter, executionId, variationId, skip, take, cancellationToken);
 
         // Look up tests for all distinct test IDs in the result set
         var testIds = pagedRuns.Items.Select(r => r.TestId).Distinct().ToList();

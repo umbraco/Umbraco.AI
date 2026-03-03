@@ -101,6 +101,21 @@ public class TestRunResponseModel
     /// Used by the frontend to enable comparison views.
     /// </summary>
     public Guid? BaselineRunId { get; set; }
+
+    /// <summary>
+    /// Groups all runs from one test execution (default + all variations).
+    /// </summary>
+    public Guid ExecutionId { get; set; }
+
+    /// <summary>
+    /// The variation ID within the execution, or null for the default config run.
+    /// </summary>
+    public Guid? VariationId { get; set; }
+
+    /// <summary>
+    /// The variation name for display, or null for default config runs.
+    /// </summary>
+    public string? VariationName { get; set; }
 }
 
 /// <summary>

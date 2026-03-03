@@ -30,6 +30,8 @@ public interface IAITestRunService
     /// <param name="testId">Optional test ID to filter by.</param>
     /// <param name="batchId">Optional batch ID to filter by.</param>
     /// <param name="status">Optional status to filter by.</param>
+    /// <param name="executionId">Optional execution ID to filter by.</param>
+    /// <param name="variationId">Optional variation ID to filter by.</param>
     /// <param name="skip">Number of items to skip.</param>
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -38,6 +40,8 @@ public interface IAITestRunService
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,
+        Guid? executionId = null,
+        Guid? variationId = null,
         int skip = 0,
         int take = 20,
         CancellationToken cancellationToken = default);

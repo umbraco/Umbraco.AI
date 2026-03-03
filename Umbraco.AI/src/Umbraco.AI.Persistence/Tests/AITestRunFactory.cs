@@ -64,7 +64,10 @@ internal static class AITestRunFactory
             },
             GraderResults = graderResults,
             Error = error,
-            BatchId = entity.BatchId
+            BatchId = entity.BatchId,
+            ExecutionId = entity.ExecutionId,
+            VariationId = entity.VariationId,
+            VariationName = entity.VariationName
         };
     }
 
@@ -92,7 +95,10 @@ internal static class AITestRunFactory
             OutcomeTokenUsageJson = run.Outcome?.TokenUsage != null ? JsonSerializer.Serialize(run.Outcome.TokenUsage, Constants.DefaultJsonSerializerOptions) : null,
             GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults, Constants.DefaultJsonSerializerOptions) : null,
             MetadataJson = run.Error != null ? JsonSerializer.Serialize(run.Error, Constants.DefaultJsonSerializerOptions) : null,
-            BatchId = run.BatchId
+            BatchId = run.BatchId,
+            ExecutionId = run.ExecutionId,
+            VariationId = run.VariationId,
+            VariationName = run.VariationName
         };
     }
 
@@ -117,5 +123,8 @@ internal static class AITestRunFactory
         entity.GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults, Constants.DefaultJsonSerializerOptions) : null;
         entity.MetadataJson = run.Error != null ? JsonSerializer.Serialize(run.Error, Constants.DefaultJsonSerializerOptions) : null;
         entity.BatchId = run.BatchId;
+        entity.ExecutionId = run.ExecutionId;
+        entity.VariationId = run.VariationId;
+        entity.VariationName = run.VariationName;
     }
 }

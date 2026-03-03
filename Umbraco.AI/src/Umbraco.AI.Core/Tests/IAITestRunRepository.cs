@@ -23,9 +23,16 @@ internal interface IAITestRunRepository
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,
+        Guid? executionId = null,
+        Guid? variationId = null,
         int skip = 0,
         int take = 20,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all runs for a specific execution ID.
+    /// </summary>
+    Task<IEnumerable<AITestRun>> GetByExecutionIdAsync(Guid executionId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the latest run for a test.

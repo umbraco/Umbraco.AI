@@ -55,6 +55,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         { name: "Run ID", alias: "runId" },
         { name: "Batch ID", alias: "batchId" },
         { name: "Test", alias: "testId" },
+        { name: "Variation", alias: "variation" },
         { name: "Run #", alias: "runNumber" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
@@ -193,6 +194,12 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                             ${item.testId}
                         </div>
                     </div>`,
+                },
+                {
+                    columnAlias: "variation",
+                    value: item.variationName
+                        ? html`<uui-tag look="secondary">${item.variationName}</uui-tag>`
+                        : html`<span style="color: var(--uui-color-text-alt);">Default</span>`,
                 },
                 {
                     columnAlias: "runNumber",

@@ -4,9 +4,9 @@ import { TestsService } from "../../../api/sdk.gen.js";
 import type {
     RunTestRequestModel,
     RunTestBatchRequestModel,
-    TestMetricsResponseModel,
     TestBatchResultsResponseModel,
 } from "../../../api/types.gen.js";
+import type { UaiTestExecutionResult } from "./types.js";
 
 /**
  * Server data source for test execution operations.
@@ -20,11 +20,12 @@ export class UaiTestExecutionServerDataSource {
 
     /**
      * Runs a single test by ID or alias.
+     * Returns execution result with per-variation metrics.
      */
     async runTest(
         idOrAlias: string,
         request?: RunTestRequestModel,
-    ): Promise<{ data?: TestMetricsResponseModel; error?: unknown }> {
+    ): Promise<{ data?: UaiTestExecutionResult; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
             TestsService.runTest({ path: { idOrAlias }, body: request }),
@@ -34,7 +35,8 @@ export class UaiTestExecutionServerDataSource {
             return { error };
         }
 
-        return { data };
+        // Cast until API types are regenerated
+        return { data: data as unknown as UaiTestExecutionResult };
     }
 
     /**

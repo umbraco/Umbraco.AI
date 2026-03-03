@@ -21,9 +21,9 @@ export class UaiTestRunEntityAction extends UmbEntityActionBase<never> {
         const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
 
         const repository = new UaiTestExecutionRepository(this);
-        const { data: metrics, error } = await repository.requestRunTest(unique);
+        const { data: result, error } = await repository.requestRunTest(unique);
 
-        if (error || !metrics) {
+        if (error || !result) {
             notificationContext?.peek("danger", {
                 data: {
                     headline: "Test Run Failed",
@@ -33,9 +33,15 @@ export class UaiTestRunEntityAction extends UmbEntityActionBase<never> {
             return;
         }
 
-        const status = metrics.passAtK > 0 ? "positive" : "warning";
-        const headline = metrics.passAtK > 0 ? "Test Passed" : "Test Failed";
-        const message = `Pass@K: ${(metrics.passAtK * 100).toFixed(0)}% | ${metrics.totalRuns} run(s)`;
+        const aggregate = result.aggregateMetrics;
+        const hasVariations = result.variationMetrics.length > 0;
+        const status = aggregate.passAtK > 0 ? "positive" : "warning";
+        const headline = aggregate.passAtK > 0 ? "Test Passed" : "Test Failed";
+
+        let message = `Pass@K: ${(aggregate.passAtK * 100).toFixed(0)}% | ${aggregate.totalRuns} run(s)`;
+        if (hasVariations) {
+            message += ` | ${result.variationMetrics.length} variation(s)`;
+        }
 
         notificationContext?.peek(status, {
             data: { headline, message },

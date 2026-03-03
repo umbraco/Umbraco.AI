@@ -15,6 +15,12 @@ export const testModalManifests: Array<ManifestModal> = [
     },
     {
         type: "modal",
+        alias: "Uai.Modal.VariationConfigEditor",
+        name: "Variation Config Editor Modal",
+        element: () => import("./variation-config-editor/variation-config-editor-modal.element.js"),
+    },
+    {
+        type: "modal",
         alias: "UmbracoAI.Modal.TestRun.Detail",
         name: "Test Run Detail Modal",
         element: () => import("./test-run-detail/test-run-detail-modal.element.js"),

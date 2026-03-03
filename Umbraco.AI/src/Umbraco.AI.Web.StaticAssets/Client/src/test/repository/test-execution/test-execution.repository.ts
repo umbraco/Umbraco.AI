@@ -3,9 +3,9 @@ import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import { UaiTestExecutionServerDataSource } from "./test-execution.server.data-source.js";
 import type {
     RunTestRequestModel,
-    TestMetricsResponseModel,
     TestBatchResultsResponseModel,
 } from "../../../api/types.gen.js";
+import type { UaiTestExecutionResult } from "./types.js";
 
 /**
  * Repository for test execution operations.
@@ -20,11 +20,12 @@ export class UaiTestExecutionRepository extends UmbControllerBase {
 
     /**
      * Requests execution of a single test.
+     * Returns execution result with per-variation metrics.
      */
     async requestRunTest(
         idOrAlias: string,
         request?: RunTestRequestModel,
-    ): Promise<{ data?: TestMetricsResponseModel; error?: unknown }> {
+    ): Promise<{ data?: UaiTestExecutionResult; error?: unknown }> {
         return this.#dataSource.runTest(idOrAlias, request);
     }
 

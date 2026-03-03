@@ -319,6 +319,85 @@ function Test-SubstantiveChange {
     return $nonSubstantiveFiles -notcontains $fileName
 }
 
+function Get-AffectedProductsFromPackageProps {
+    <#
+    .SYNOPSIS
+    Determines which products are affected by changes to Directory.Packages.props.
+
+    .DESCRIPTION
+    Parses the git diff of Directory.Packages.props to find changed package names,
+    then searches .csproj files to find which products reference those packages.
+    Returns only the product keys that are actually affected.
+
+    For Directory.Build.props and global.json, all products are affected (returns all keys).
+    #>
+    param(
+        [string]$ComparisonRef,
+        [hashtable]$Products,
+        [string]$RootPath
+    )
+
+    # Parse the diff to extract changed package names
+    $diff = git diff "$ComparisonRef..HEAD" -- "Directory.Packages.props" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "    Could not diff Directory.Packages.props, assuming all affected" -ForegroundColor Yellow
+        return @($Products.Keys)
+    }
+
+    $changedPackages = @()
+    foreach ($line in $diff) {
+        if ($line -is [string] -and $line -match '^[+-].*<PackageVersion\s+Include="([^"]+)"') {
+            $packageName = $Matches[1]
+            if ($changedPackages -notcontains $packageName) {
+                $changedPackages += $packageName
+            }
+        }
+    }
+
+    if ($changedPackages.Count -eq 0) {
+        Write-Host "    No package version changes detected in diff" -ForegroundColor Gray
+        return @()
+    }
+
+    Write-Host "    Changed packages: $($changedPackages -join ', ')" -ForegroundColor Cyan
+
+    # Find which products reference these packages
+    $affectedKeys = @()
+    foreach ($productKey in $Products.Keys) {
+        $product = $Products[$productKey]
+        $srcFolder = Join-Path $RootPath ($product.Path.TrimEnd('/')) | Join-Path -ChildPath "src"
+
+        if (-not (Test-Path $srcFolder)) { continue }
+
+        $csprojFiles = Get-ChildItem -Path $srcFolder -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
+        $isAffected = $false
+
+        foreach ($csproj in $csprojFiles) {
+            if ($isAffected) { break }
+
+            try {
+                $content = Get-Content $csproj.FullName -Raw -ErrorAction Stop
+                foreach ($pkg in $changedPackages) {
+                    if ($content -match [regex]::Escape($pkg)) {
+                        $isAffected = $true
+                        Write-Host "    ✓ $($product.DisplayName) references $pkg" -ForegroundColor Green
+                        break
+                    }
+                }
+            }
+            catch {
+                # If we can't read a csproj, skip it
+            }
+        }
+
+        if ($isAffected -and $affectedKeys -notcontains $productKey) {
+            $affectedKeys += $productKey
+        }
+    }
+
+    return $affectedKeys
+}
+
 function Get-ChangedProducts {
     <#
     .SYNOPSIS
@@ -371,10 +450,11 @@ function Get-ChangedProducts {
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
         }
     }
-    elseif ($SourceBranch -match '^refs/heads/hotfix/') {
-        # Hotfix branches: per-product tag-based comparison
+    elseif ($SourceBranch -match '^refs/heads/(release|hotfix)/') {
+        # Release/hotfix branches: per-product tag-based comparison
         # Each product compares against its own latest release tag
-        Write-Host "  Hotfix branch detected - using per-product tag comparison" -ForegroundColor Cyan
+        $branchType = if ($SourceBranch -match 'release/') { "Release" } else { "Hotfix" }
+        Write-Host "  $branchType branch detected - using per-product tag comparison" -ForegroundColor Cyan
 
         # Process each product independently
         foreach ($productKey in $Products.Keys) {
@@ -435,15 +515,24 @@ function Get-ChangedProducts {
             }
         }
 
-        # Check root-level files (use most recent tag of any product)
+        # Check root-level build files for changes
         $anyTag = git describe --tags --abbrev=0 2>&1
         if ($LASTEXITCODE -eq 0) {
             $anyTag = $anyTag.Trim()
             $rootChangedFiles = git diff --name-only "$anyTag..HEAD" 2>&1 | Where-Object { $_ -is [string] }
-            $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json", ".gitignore")
 
             foreach ($file in $rootChangedFiles) {
-                if ($globalFiles -contains $file) {
+                if ($file -eq "Directory.Packages.props") {
+                    # Smart detection: trace changed packages to affected products
+                    Write-Host "  Root file changed: Directory.Packages.props - tracing affected products" -ForegroundColor Yellow
+                    $affectedKeys = Get-AffectedProductsFromPackageProps -ComparisonRef $anyTag -Products $Products -RootPath (Get-Location).Path
+                    foreach ($key in $affectedKeys) {
+                        $changed[$key] = $true
+                        Write-Host "  ✓ $key affected by Directory.Packages.props change" -ForegroundColor Green
+                    }
+                }
+                elseif ($file -eq "Directory.Build.props" -or $file -eq "global.json") {
+                    # These truly affect all products
                     Write-Host "  ✓ Root file changed: $file (affects all products)" -ForegroundColor Yellow
                     $Products.Keys | ForEach-Object { $changed[$_] = $true }
                     break
@@ -454,14 +543,13 @@ function Get-ChangedProducts {
         return $changed
     }
     else {
-        # For feature/release branches: compare with merge-base against appropriate base
-        $baseBranch = if ($SourceBranch -match '^refs/heads/release/') { "main" } else { "dev" }
-        Write-Host "  Feature/release branch detected, comparing against $baseBranch" -ForegroundColor Cyan
+        # For feature branches: compare with merge-base against dev
+        Write-Host "  Feature branch detected, comparing against dev" -ForegroundColor Cyan
 
-        $mergeBase = git merge-base "origin/$baseBranch" HEAD 2>&1
+        $mergeBase = git merge-base "origin/dev" HEAD 2>&1
         if ($LASTEXITCODE -eq 0) {
             $comparisonBase = $mergeBase.Trim()
-            Write-Host "  Using merge-base with $baseBranch`: $comparisonBase" -ForegroundColor Cyan
+            Write-Host "  Using merge-base with dev: $comparisonBase" -ForegroundColor Cyan
             $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
         }
     }
@@ -491,49 +579,30 @@ function Get-ChangedProducts {
     $changedFiles = $changedFiles | Where-Object { $_ -is [string] }
 
     # Check product folders
-    # For release branches, track files per product to filter non-substantive changes
-    $isRelease = $SourceBranch -match '^refs/heads/release/'
-    $productFiles = @{}
-    $Products.Keys | ForEach-Object { $productFiles[$_] = @() }
-
+    # Note: release/hotfix branches use per-product tag comparison and return early above
     foreach ($file in $changedFiles) {
         foreach ($productKey in $Products.Keys) {
             if ($file.StartsWith($Products[$productKey].Path)) {
-                $productFiles[$productKey] += $file
-
-                if ($isRelease) {
-                    # On release branches, only mark as changed if substantive
-                    if (Test-SubstantiveChange -FilePath $file) {
-                        $changed[$productKey] = $true
-                        Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
-                    }
-                    else {
-                        Write-Host "  ~ $productKey non-substantive change (file: $file)" -ForegroundColor DarkGray
-                    }
-                }
-                else {
-                    # On other branches, any change counts
-                    $changed[$productKey] = $true
-                    Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
-                }
+                $changed[$productKey] = $true
+                Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
                 break
             }
         }
     }
 
-    # Log products with only non-substantive changes
-    if ($isRelease) {
-        foreach ($productKey in $Products.Keys) {
-            if ($productFiles[$productKey].Count -gt 0 -and -not $changed[$productKey]) {
-                Write-Host "  ⊘ $productKey skipped (only non-substantive changes: CHANGELOG.md, version.json)" -ForegroundColor Yellow
+    # Check root-level build files
+    foreach ($file in $changedFiles) {
+        if ($file -eq "Directory.Packages.props") {
+            # Smart detection: trace changed packages to affected products
+            Write-Host "  Root file changed: Directory.Packages.props - tracing affected products" -ForegroundColor Yellow
+            $affectedKeys = Get-AffectedProductsFromPackageProps -ComparisonRef $comparisonBase -Products $Products -RootPath $RootPath
+            foreach ($key in $affectedKeys) {
+                $changed[$key] = $true
+                Write-Host "  ✓ $key affected by Directory.Packages.props change" -ForegroundColor Green
             }
         }
-    }
-
-    # Check root-level files that affect all products
-    $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json", ".gitignore")
-    foreach ($file in $changedFiles) {
-        if ($globalFiles -contains $file) {
+        elseif ($file -eq "Directory.Build.props" -or $file -eq "global.json") {
+            # These truly affect all products
             Write-Host "  ✓ Root file changed: $file (affects all products)" -ForegroundColor Yellow
             $Products.Keys | ForEach-Object { $changed[$_] = $true }
             break

@@ -95,6 +95,12 @@ public class TestRunResponseModel
     /// Whether this run is the baseline run for its test.
     /// </summary>
     public bool IsBaseline { get; set; }
+
+    /// <summary>
+    /// The baseline run ID for the test this run belongs to.
+    /// Used by the frontend to enable comparison views.
+    /// </summary>
+    public Guid? BaselineRunId { get; set; }
 }
 
 /// <summary>

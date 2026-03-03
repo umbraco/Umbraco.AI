@@ -48,6 +48,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     @state()
     private _baselineRunId?: string | null;
 
+    #runItems = new Map<string, UaiTestRunItemModel>();
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
@@ -126,8 +127,11 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
         if (!modalManager) return;
 
+        // Use workspace context baseline if available, otherwise fall back to the run's own baselineRunId
+        const baselineRunId = this._baselineRunId ?? this.#runItems.get(runId)?.baselineRunId;
+
         modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
-            data: { runId, baselineRunId: this._baselineRunId ?? undefined },
+            data: { runId, baselineRunId: baselineRunId ?? undefined },
         });
     }
 
@@ -153,6 +157,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
     #createTableItems(items: UaiTestRunItemModel[]) {
         this.#computeMetrics(items);
+        this.#runItems = new Map(items.map((item) => [item.unique, item]));
         this._items = items.map((item) => ({
             id: item.unique,
             icon: item.isBaseline ? "icon-flag color-green" : UAI_TEST_RUN_ICON,

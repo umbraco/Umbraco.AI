@@ -126,6 +126,7 @@ public class TestMapDefinition : IMapDefinition
                 DurationMs = source.DurationMs,
                 TranscriptId = source.TranscriptId,
                 IsBaseline = test?.BaselineRunId == source.Id,
+                BaselineRunId = test?.BaselineRunId,
                 Outcome = source.Outcome != null ? new TestOutcomeResponseModel
                 {
                     OutputType = source.Outcome.OutputType.ToString(),

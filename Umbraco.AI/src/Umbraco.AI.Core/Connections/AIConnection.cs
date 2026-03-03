@@ -16,7 +16,7 @@ public class AIConnection : IAIVersionableEntity
     /// <summary>
     /// Unique alias for the connection (used for programmatic lookup).
     /// </summary>
-    public required string Alias { get; init; }
+    public required string Alias { get; set; }
 
     /// <summary>
     /// Display name for the connection (shown in UI).

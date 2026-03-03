@@ -34,7 +34,7 @@ internal sealed class AIUsageAggregationService : IAIUsageAggregationService
 
         var hourEnd = hourStart.AddHours(1);
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "Starting hourly aggregation for period {HourStart} to {HourEnd}",
             hourStart,
             hourEnd);
@@ -51,7 +51,7 @@ internal sealed class AIUsageAggregationService : IAIUsageAggregationService
 
             if (recordList.Count == 0)
             {
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "No usage records found for hour {HourStart}, skipping aggregation",
                     hourStart);
                 return;
@@ -145,7 +145,7 @@ internal sealed class AIUsageAggregationService : IAIUsageAggregationService
 
         var dayEnd = day.AddDays(1);
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "Starting daily aggregation for period {Day} to {DayEnd}",
             day,
             dayEnd);
@@ -163,7 +163,7 @@ internal sealed class AIUsageAggregationService : IAIUsageAggregationService
 
             if (hourlyStatsList.Count == 0)
             {
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "No hourly statistics found for day {Day}, skipping daily aggregation",
                     day);
                 return;

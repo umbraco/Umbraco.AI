@@ -74,6 +74,25 @@ public class DeleteProfileControllerTests
         _profileServiceMock.Verify(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task DeleteProfile_WithProfileInUse_Returns400BadRequest()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+
+        _profileServiceMock
+            .Setup(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Profile delete cancelled: Profile is in use by one or more agents."));
+
+        // Act
+        var result = await _controller.DeleteProfile(new IdOrAlias(profileId));
+
+        // Assert
+        var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
+        var problemDetails = badRequestResult.Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Title.ShouldBe("Profile in use");
+    }
+
     #endregion
 
     #region DeleteProfile - By Alias

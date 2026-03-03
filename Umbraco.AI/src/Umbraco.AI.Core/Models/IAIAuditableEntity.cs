@@ -8,13 +8,8 @@ namespace Umbraco.AI.Core.Models;
 /// For entities that also need version history with snapshots, implement <see cref="Versioning.IAIVersionableEntity"/> instead,
 /// which extends this interface.
 /// </remarks>
-public interface IAIAuditableEntity
+public interface IAIAuditableEntity : IAIEntity
 {
-    /// <summary>
-    /// Unique identifier for the entity.
-    /// </summary>
-    Guid Id { get; }
-
     /// <summary>
     /// When the entity was created.
     /// </summary>

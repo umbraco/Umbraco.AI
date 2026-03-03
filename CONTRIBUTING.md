@@ -424,6 +424,27 @@ The Azure DevOps **release pipeline** automatically triggers after the build com
 
 #### 6. Test Pre-Release
 
+Before merging to main, validate the pre-release packages work correctly:
+
+**Option A: Automated Test Site (Recommended)**
+
+Use the package test site script to create a fresh Umbraco site with all packages:
+
+```bash
+# Windows
+.\scripts\install-package-test-site.ps1 -Feed prereleases -Force
+
+# Linux/Mac
+./scripts/install-package-test-site.sh --feed=prereleases --force
+```
+
+This creates a site at `demo/Umbraco.AI.PackageTestSite` with:
+- All Umbraco.AI packages from MyGet prereleases feed
+- Clean starter kit
+- Configured package source mapping
+
+**Option B: Manual Testing**
+
 ```bash
 # Add MyGet feed
 dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n UmbracoAI
@@ -435,7 +456,16 @@ dotnet add package Umbraco.AI.Core --version 1.1.0-*
 npm install @umbraco-ai/core@next
 ```
 
-Test the packages in a real Umbraco site.
+**Verify the site:**
+
+```bash
+cd demo/Umbraco.AI.PackageTestSite  # or your test site folder
+dotnet run
+# Open https://localhost:44355 in your browser
+# Test all features affected by the release
+```
+
+If issues are found, fix them on the release branch and repeat the testing.
 
 #### 7. Production Release Pipeline
 
@@ -459,7 +489,33 @@ Once testing passes, trigger the production release from Azure DevOps. The relea
 **NuGet URL:** `https://www.nuget.org/packages/Umbraco.AI.Core`
 **npm URL:** `https://www.npmjs.com/package/@umbraco-ai/core`
 
-#### 8. Merge to Main
+#### 8. Verify Production Packages
+
+After deployment to NuGet.org, verify the stable packages work correctly:
+
+```bash
+# Windows
+.\scripts\install-package-test-site.ps1 -Feed release -SiteName "Umbraco.AI.ReleaseSite" -Force
+
+# Linux/Mac
+./scripts/install-package-test-site.sh --feed=release --name="Umbraco.AI.ReleaseSite" --force
+```
+
+This creates a site at `demo/Umbraco.AI.ReleaseSite` with:
+- All Umbraco.AI packages from NuGet.org (stable versions only)
+- No pre-release packages
+- Simplified NuGet.config (no PackageSourceMapping needed)
+
+**Verify the site:**
+
+```bash
+cd demo/Umbraco.AI.ReleaseSite
+dotnet run
+# Open https://localhost:44355 in your browser
+# Verify all features work correctly with production packages
+```
+
+#### 9. Merge to Main
 
 ```bash
 # Create PR: release/2026.01 → main

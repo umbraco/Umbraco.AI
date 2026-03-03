@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Prompt.Core.Context;
 using Umbraco.AI.Prompt.Core.Media;
@@ -46,6 +47,9 @@ public static class UmbracoBuilderExtensions
 
         // Register service (Singleton to match IAIProfileService pattern and allow use in context resolvers)
         builder.Services.AddSingleton<IAIPromptService, AIPromptService>();
+
+        // Prevent deletion of profiles referenced by prompts
+        builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingPromptNotificationHandler>();
 
         // Register prompt context resolver
         builder.AIContextResolvers().Append<PromptContextResolver>();

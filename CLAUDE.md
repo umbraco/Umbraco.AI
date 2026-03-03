@@ -6,18 +6,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo containing Umbraco.AI and its add-on packages:
 
-| Product                         | Description                                | Location                       |
-| ------------------------------- | ------------------------------------------ | ------------------------------ |
-| **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS  | `Umbraco.AI/`                  |
-| **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`           |
-| **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`            |
-| **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`         |
-| **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/`    |
-| **Umbraco.AI.OpenAI**           | OpenAI provider plugin                     | `Umbraco.AI.OpenAI/`           |
-| **Umbraco.AI.Anthropic**        | Anthropic provider plugin                  | `Umbraco.AI.Anthropic/`        |
-| **Umbraco.AI.Amazon**           | Amazon Bedrock provider plugin             | `Umbraco.AI.Amazon/`           |
-| **Umbraco.AI.Google**           | Google Gemini provider plugin              | `Umbraco.AI.Google/`           |
-| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin       | `Umbraco.AI.MicrosoftFoundry/` |
+**Core:**
+
+| Product                         | Description                               | Location          |
+| ------------------------------- | ----------------------------------------- | ----------------- |
+| **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS | `Umbraco.AI/`     |
+
+**Addons:**
+
+| Product                         | Description                                | Location                    |
+| ------------------------------- | ------------------------------------------ | --------------------------- |
+| **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`         |
+| **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`      |
+| **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
+| **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`        |
+
+**Deploy:**
+
+| Product                         | Description                    | Location                    |
+| ------------------------------- | ------------------------------ | --------------------------- |
+| **Umbraco.AI.Deploy**           | Deploy support for AI entities | `Umbraco.AI.Deploy/`        |
+| **Umbraco.AI.Prompt.Deploy**    | Deploy support for prompts     | `Umbraco.AI.Prompt.Deploy/` |
+| **Umbraco.AI.Agent.Deploy**     | Deploy support for agents      | `Umbraco.AI.Agent.Deploy/`  |
+
+**Providers:**
+
+| Product                         | Description                   | Location                       |
+| ------------------------------- | ----------------------------- | ------------------------------ |
+| **Umbraco.AI.OpenAI**           | OpenAI provider plugin        | `Umbraco.AI.OpenAI/`          |
+| **Umbraco.AI.Anthropic**        | Anthropic provider plugin     | `Umbraco.AI.Anthropic/`       |
+| **Umbraco.AI.Amazon**           | Amazon Bedrock provider plugin| `Umbraco.AI.Amazon/`           |
+| **Umbraco.AI.Google**           | Google Gemini provider plugin | `Umbraco.AI.Google/`           |
+| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.AI.MicrosoftFoundry/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
@@ -61,6 +81,37 @@ Use the setup skill for first-time repository configuration:
 - Site address endpoint: `/site-address` (query via named pipe to get HTTPS address)
 - Named pipes auto-cleanup on process exit
 - Multiple worktrees run simultaneously without port conflicts
+
+### Package Testing Site
+
+Test deployed packages from different feeds before and after release:
+
+```bash
+# Test latest nightly builds from MyGet
+.\scripts\install-package-test-site.ps1 -Feed nightly
+
+# Test pre-release packages from MyGet
+.\scripts\install-package-test-site.ps1 -Feed prereleases
+
+# Test stable release packages from NuGet.org
+.\scripts\install-package-test-site.ps1 -Feed release
+
+# Specify custom site name
+.\scripts\install-package-test-site.ps1 -Feed release -SiteName "Umbraco.AI.ReleaseSite"
+
+# Linux/Mac
+./scripts/install-package-test-site.sh --feed=release --name="Umbraco.AI.ReleaseSite"
+```
+
+**Key Differences from Demo Site:**
+
+- Demo site uses project references (for development)
+- Package test site uses deployed NuGet packages (for validation)
+- Sites created in `demo/{SiteName}` folder, separate from development demo
+- Each feed option tests packages from different sources:
+  - `nightly` - Latest builds from MyGet nightly feed
+  - `prereleases` - Pre-release packages from MyGet
+  - `release` - Stable packages from NuGet.org
 
 ## Project Management
 
@@ -113,6 +164,9 @@ dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
 dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
 dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
 dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
+dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.sln
+dotnet build Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.sln
+dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.sln
 
 # Run tests for a product
 dotnet test Umbraco.AI/Umbraco.AI.sln
@@ -167,9 +221,12 @@ Umbraco.AI (Core)
     ├── Umbraco.AI.Google (Provider - depends on Core)
     ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
-    └── Umbraco.AI.Agent (Add-on - depends on Core)
-            ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
-            └── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
+    │   └── Umbraco.AI.Prompt.Deploy (Deploy - depends on Prompt + Deploy)
+    ├── Umbraco.AI.Agent (Add-on - depends on Core)
+    │   ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
+    │   ├── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
+    │   └── Umbraco.AI.Agent.Deploy (Deploy - depends on Agent + Deploy)
+    └── Umbraco.AI.Deploy (Deploy - depends on Core)
 ```
 
 ### Standard Project Structure
@@ -223,6 +280,8 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | --------------------------------------- | -------------------------------------------------------------------------------------- |
 | `scripts/install-demo-site.ps1`         | Creates unified local dev environment (Windows)                                        |
 | `scripts/install-demo-site.sh`          | Creates unified local dev environment (Linux/Mac)                                      |
+| `scripts/install-package-test-site.ps1` | Creates test site from nightly/prerelease/release feeds (Windows)                      |
+| `scripts/install-package-test-site.sh`  | Creates test site from nightly/prerelease/release feeds (Linux/Mac)                    |
 | `scripts/generate-changelog.ps1`        | Generate changelogs for release (Windows)                                              |
 | `scripts/generate-changelog.sh`         | Generate changelogs for release (Linux/Mac)                                            |
 | `scripts/generate-changelog.js`         | Node.js changelog generator (main implementation)                                      |
@@ -570,6 +629,105 @@ docs(core): Update API examples
     - ❌ Don't group unrelated changes: `fix(core,agent,prompt): Various fixes`
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
+
+### Choosing the Right Commit Type
+
+**What Appears in the User-Facing Changelog:**
+
+Only these commit types appear in `CHANGELOG.md`:
+- ✅ `feat:` - New features (appears in changelog)
+- ✅ `fix:` - Bug fixes (appears in changelog)
+- ✅ `perf:` - Performance improvements (appears in changelog)
+- ✅ `BREAKING CHANGE` - Breaking changes (appears in changelog)
+
+These commit types are excluded from the changelog:
+- ❌ `refactor:` - Internal code improvements (hidden)
+- ❌ `chore:` - Maintenance tasks (hidden)
+- ❌ `docs:` - Documentation changes (hidden)
+- ❌ `test:` - Test changes (hidden)
+- ❌ `ci:` - CI/CD changes (hidden)
+- ❌ `build:` - Build system changes (hidden)
+
+**Decision Tree: Which Commit Type to Use?**
+
+Ask yourself these questions in order:
+
+1. **Does this change the public API or break existing code?**
+   → Use `feat:` with `BREAKING CHANGE:` footer or `feat!:`
+
+2. **Is this visible to end users or developers using the library?**
+   - New UI feature, new API method, new capability
+   → Use `feat:`
+
+3. **Does this fix a bug that users experienced?**
+   → Use `fix:`
+
+4. **Is this improving performance in a noticeable way?**
+   → Use `perf:`
+
+5. **Is this restructuring code without changing behavior?**
+   - Extracting methods, renaming variables, reorganizing files
+   → Use `refactor:`
+
+6. **Is this maintenance work?**
+   - Updating dependencies, build scripts, tooling
+   → Use `chore:`
+
+**Examples of User-Facing vs Internal Changes:**
+
+| Change Description | Commit Type | Rationale |
+|--------------------|-------------|-----------|
+| Add "Select All" checkbox to permissions UI | `feat(core):` | User sees new UI feature |
+| Add lifecycle notifications API | `feat(core):` | Developer-facing public API |
+| Add welcome dashboard | `feat(core):` | User sees new dashboard |
+| Fix timezone handling in logs | `fix(core):` | User-visible bug fix |
+| **Register notification publisher in DI** | `chore(core):` | **Internal DI setup, not user-facing** |
+| **Integrate notifications into service** | `refactor(core):` | **Internal plumbing, no behavior change** |
+| **Extract helper method** | `refactor(core):` | **Code organization, not user-facing** |
+| **Add unit tests for service** | `test(core):` | **Test infrastructure** |
+| **Update EF Core dependency** | `chore(deps):` | **Maintenance** |
+
+**When to Batch Related Work:**
+
+Instead of many small commits:
+```bash
+feat(core): Add base notification classes
+feat(core): Add profile notifications
+feat(core): Add connection notifications
+feat(core): Integrate notifications into services
+```
+
+Consider batching into one user-facing commit:
+```bash
+feat(core): Add lifecycle notifications for AI entities
+
+Adds created, updated, deleted, and rollback notifications for:
+- AIProfile (saving, saved, deleted, rolledback)
+- AIConnection (saving, saved, deleted, rolledback)
+- AIContext (saving, saved, deleted, rolledback)
+```
+
+**Guidelines for Batching:**
+- ✅ Batch when commits represent one logical feature from a user's perspective
+- ✅ Batch internal implementation steps (DI setup, service integration, tests)
+- ❌ Don't batch unrelated changes just to reduce changelog size
+- ❌ Don't batch changes to different features
+
+**When to Keep Commits Separate:**
+
+Separate commits are appropriate when:
+- Changes are logically independent (different features)
+- Changes can be released/reverted independently
+- Changes affect different systems/areas
+- Changes have different risk profiles
+
+Example of proper separation:
+```bash
+feat(core): Add tool scope API endpoint
+feat(core): Add tool scope UI components
+feat(agent): Add tool filtering for agents
+```
+These are related but distinct features that could ship independently.
 
 ### Generating Changelogs
 

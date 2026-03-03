@@ -8,6 +8,7 @@ using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -43,6 +44,9 @@ public static class UmbracoBuilderExtensions
 
         // Register service
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
+
+        // Prevent deletion of profiles referenced by agents
+        builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();
 
         // Register agent factory (scoped - depends on scoped IAIChatService)
         builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();

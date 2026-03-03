@@ -69,6 +69,11 @@
 - [Agent Copilot](add-ons/agent-copilot/README.md)
     - [Copilot Usage](add-ons/agent-copilot/copilot.md)
     - [Frontend Tools](add-ons/agent-copilot/frontend-tools.md)
+- [Deploy Support](add-ons/deploy/README.md)
+    - [Installation](add-ons/deploy/installation.md)
+    - [Configuration](add-ons/deploy/configuration.md)
+    - [Deploying Entities](add-ons/deploy/deploying-entities.md)
+    - [Best Practices](add-ons/deploy/best-practices.md)
 
 ## Using the API
 

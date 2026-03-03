@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.2.0...Umbraco.AI.Prompt@1.3.0) (2026-03-02)
+
+### feat
+
+* **prompt:** Add profile deletion protection for prompts ([dccfeca](https://github.com/umbraco/Umbraco.AI/commit/dccfecaa783a57d184ed6ad13b6858b867cb8ab4))
+* **prompt:** Add Umbraco.AI.Deploy.Prompt package ([d1916c9](https://github.com/umbraco/Umbraco.AI/commit/d1916c939d92a2406868f5045293fe14d4191121))
+
+### fix
+
+* **core,prompt,agent:** Fix compilation errors in Deploy packages ([3efbbb2](https://github.com/umbraco/Umbraco.AI/commit/3efbbb2cd780624419f9e069e5996f10494bd843))
+
 ## [1.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.1.0...Umbraco.AI.Prompt@1.2.0) (2026-02-17)
 
 ### feat

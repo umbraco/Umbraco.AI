@@ -100,7 +100,7 @@ steps:
           cd "$CLIENT_DIR"
 
           # Update package.json version and cleanse for publishing
-          # Uses package.peer-dependencies.json to resolve workspace references
+          # Uses peerDependencyVersions from root package.json to resolve workspace references
           node $(Build.SourcesDirectory)/scripts/build/cleanse-package-json.js "$VERSION" "$PRODUCT" "$(Build.SourcesDirectory)"
 
           # Create artifacts/npm directory

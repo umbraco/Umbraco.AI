@@ -1,17 +1,17 @@
 {
-    "name": "Umbraco AI Anthropic Provider",
-    "$schema": "../umbraco-package-schema.json",
-    "extensions": [
-        {
-            "type": "localization",
-            "alias": "Uai.Anthropic.Localization.En",
-            "weight": -100,
-            "name": "English",
-            "meta": {
-                "culture": "en"
-            },
-            "js": "/App_Plugins/UmbracoAIAnthropic/lang/en.js"
-        }
-    ],
-    "version": ""
+  "name": "Umbraco AI Anthropic Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.Anthropic.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAIAnthropic/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
 }

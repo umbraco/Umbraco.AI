@@ -39,6 +39,10 @@ public abstract class ProfileControllerBase : UmbracoAICoreManagementControllerB
                 .WithTitle("Invalid capability")
                 .WithDetail("The specified capability is not supported.")
                 .Build()),
+            ProfileOperationStatus.InUse => BadRequest(problemDetailsBuilder
+                .WithTitle("Profile in use")
+                .WithDetail("The profile cannot be deleted because it is in use by one or more settings, agents, or prompts.")
+                .Build()),
             _ => StatusCode(500, problemDetailsBuilder
                 .WithTitle("Unknown profile operation status")
                 .Build())

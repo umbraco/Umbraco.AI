@@ -95,6 +95,8 @@ export interface UaiPromptPreviewModalData {
     entityId: string;
     entityType: string;
     propertyAlias: string;
+    /** Content type alias for scope validation. For blocks, this is the element type alias. */
+    contentTypeAlias: string;
     culture?: string;
     segment?: string;
     /** Serialized entity context for AI operations */

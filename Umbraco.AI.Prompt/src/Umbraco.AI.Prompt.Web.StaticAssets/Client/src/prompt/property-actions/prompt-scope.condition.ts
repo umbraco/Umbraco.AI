@@ -1,5 +1,6 @@
 import { UMB_PROPERTY_CONTEXT } from "@umbraco-cms/backoffice/property";
 import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/content-type";
+import { UMB_BLOCK_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/block";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type {
     UmbConditionConfigBase,
@@ -19,9 +20,12 @@ export interface UaiPromptScopeConditionConfig extends UmbConditionConfigBase {
 
 const PropertyContextSymbol = Symbol();
 const ContentTypeSymbol = Symbol();
+const BlockContentTypeSymbol = Symbol();
 
 /**
  * Condition that determines if a prompt is allowed based on its scope configuration.
+ * Supports both document/media workspaces (via UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT)
+ * and block workspaces (via UMB_BLOCK_WORKSPACE_CONTEXT).
  */
 export class UaiPromptScopeCondition
     extends UmbConditionBase<UaiPromptScopeConditionConfig>
@@ -58,11 +62,9 @@ export class UaiPromptScopeCondition
             this.#updatePermitted();
         });
 
-        // Get content type context for content type alias
+        // Get content type context for content type alias (available for documents/media)
         this.consumeContext(UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT, (context) => {
             if (!context) {
-                this.#contentTypeAliases = [];
-                this.#updatePermitted();
                 return;
             }
 
@@ -73,6 +75,24 @@ export class UaiPromptScopeCondition
                     this.#updatePermitted();
                 },
                 ContentTypeSymbol,
+            );
+        });
+
+        // Fallback: get content type aliases from block workspace context
+        this.consumeContext(UMB_BLOCK_WORKSPACE_CONTEXT, (context) => {
+            if (!context) {
+                return;
+            }
+
+            this.observe(
+                context.content.structure.contentTypeAliases,
+                (aliases) => {
+                    if (this.#contentTypeAliases.length === 0) {
+                        this.#contentTypeAliases = aliases ?? [];
+                        this.#updatePermitted();
+                    }
+                },
+                BlockContentTypeSymbol,
             );
         });
     }

@@ -112,6 +112,31 @@ public interface IAITestRunService
     Task<AITestMetrics> CalculateMetricsAsync(
         IEnumerable<Guid> runIds,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reconstructs per-variation execution results from stored runs for a given execution.
+    /// This is the primary all-at-once comparison view (all variations side-by-side).
+    /// </summary>
+    /// <param name="executionId">The execution ID to retrieve results for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Execution result with per-variation metrics, or null if no runs found.</returns>
+    Task<AITestExecutionResult?> GetExecutionResultAsync(
+        Guid executionId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Compares two variation groups within an execution (pairwise drill-down).
+    /// </summary>
+    /// <param name="executionId">The execution ID containing both variations.</param>
+    /// <param name="sourceVariationId">The source variation ID (null for default config).</param>
+    /// <param name="comparisonVariationId">The comparison variation ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Variation comparison with metrics deltas.</returns>
+    Task<AITestVariationComparison> CompareVariationsAsync(
+        Guid executionId,
+        Guid? sourceVariationId,
+        Guid comparisonVariationId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

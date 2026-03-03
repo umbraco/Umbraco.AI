@@ -61,7 +61,7 @@ public class RunTestsByTagsController : TestControllerBase
         {
             Results = results.ToDictionary(
                 kvp => kvp.Key,
-                kvp => _mapper.Map<TestMetricsResponseModel>(kvp.Value)!)
+                kvp => _mapper.Map<TestExecutionResultResponseModel>(kvp.Value)!)
         };
 
         return Ok(responseModel);

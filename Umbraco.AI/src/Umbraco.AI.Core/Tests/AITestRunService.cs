@@ -232,7 +232,122 @@ internal sealed class AITestRunService : IAITestRunService
             throw new InvalidOperationException("All runs must belong to the same test");
         }
 
-        // Calculate metrics
+        return CalculateMetricsFromRuns(testId, runs);
+    }
+
+    /// <inheritdoc />
+    public async Task<AITestExecutionResult?> GetExecutionResultAsync(
+        Guid executionId,
+        CancellationToken cancellationToken = default)
+    {
+        var runs = await _runRepository.GetByExecutionIdAsync(executionId, cancellationToken);
+        var runsList = runs.ToList();
+
+        if (runsList.Count == 0)
+        {
+            return null;
+        }
+
+        var testId = runsList[0].TestId;
+        var batchId = runsList[0].BatchId;
+
+        // Split runs by variation
+        var defaultRuns = runsList.Where(r => r.VariationId is null).ToList();
+        var variationGroups = runsList
+            .Where(r => r.VariationId.HasValue)
+            .GroupBy(r => r.VariationId!.Value)
+            .ToList();
+
+        var defaultMetrics = CalculateMetricsFromRuns(testId, defaultRuns);
+
+        var variationMetrics = variationGroups.Select(g => new AITestVariationMetrics
+        {
+            VariationId = g.Key,
+            VariationName = g.First().VariationName ?? g.Key.ToString(),
+            Metrics = CalculateMetricsFromRuns(testId, g.ToList())
+        }).ToList();
+
+        // Aggregate across all runs
+        var aggregateMetrics = CalculateMetricsFromRuns(testId, runsList);
+
+        return new AITestExecutionResult
+        {
+            TestId = testId,
+            ExecutionId = executionId,
+            BatchId = batchId,
+            DefaultMetrics = defaultMetrics,
+            VariationMetrics = variationMetrics,
+            AggregateMetrics = aggregateMetrics
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<AITestVariationComparison> CompareVariationsAsync(
+        Guid executionId,
+        Guid? sourceVariationId,
+        Guid comparisonVariationId,
+        CancellationToken cancellationToken = default)
+    {
+        var runs = await _runRepository.GetByExecutionIdAsync(executionId, cancellationToken);
+        var runsList = runs.ToList();
+
+        if (runsList.Count == 0)
+        {
+            throw new InvalidOperationException($"No runs found for execution {executionId}");
+        }
+
+        var testId = runsList[0].TestId;
+
+        // Get source runs (null variationId = default config)
+        var sourceRuns = runsList.Where(r => r.VariationId == sourceVariationId).ToList();
+        var comparisonRuns = runsList.Where(r => r.VariationId == comparisonVariationId).ToList();
+
+        if (sourceRuns.Count == 0)
+        {
+            throw new InvalidOperationException(
+                sourceVariationId is null
+                    ? $"No default config runs found for execution {executionId}"
+                    : $"No runs found for variation {sourceVariationId} in execution {executionId}");
+        }
+
+        if (comparisonRuns.Count == 0)
+        {
+            throw new InvalidOperationException(
+                $"No runs found for variation {comparisonVariationId} in execution {executionId}");
+        }
+
+        var sourceMetrics = CalculateMetricsFromRuns(testId, sourceRuns);
+        var comparisonMetrics = CalculateMetricsFromRuns(testId, comparisonRuns);
+
+        var sourceName = sourceVariationId is null
+            ? "Default"
+            : sourceRuns.First().VariationName ?? sourceVariationId.Value.ToString();
+        var comparisonName = comparisonRuns.First().VariationName ?? comparisonVariationId.ToString();
+
+        var passRateDelta = comparisonMetrics.PassAtK - sourceMetrics.PassAtK;
+
+        var sourceAvgDuration = sourceRuns.Count > 0 ? sourceRuns.Average(r => r.DurationMs) : 0;
+        var comparisonAvgDuration = comparisonRuns.Count > 0 ? comparisonRuns.Average(r => r.DurationMs) : 0;
+        var durationDelta = comparisonAvgDuration - sourceAvgDuration;
+
+        return new AITestVariationComparison
+        {
+            SourceVariationName = sourceName,
+            SourceMetrics = sourceMetrics,
+            ComparisonVariationName = comparisonName,
+            ComparisonMetrics = comparisonMetrics,
+            PassRateDelta = passRateDelta,
+            AverageDurationDeltaMs = durationDelta,
+            IsRegression = passRateDelta < -0.001,
+            IsImprovement = passRateDelta > 0.001
+        };
+    }
+
+    /// <summary>
+    /// Calculates pass@k metrics from a set of runs.
+    /// </summary>
+    private static AITestMetrics CalculateMetricsFromRuns(Guid testId, IReadOnlyList<AITestRun> runs)
+    {
         var totalRuns = runs.Count;
         var passedRuns = runs.Count(r => r.Status == AITestRunStatus.Passed);
 

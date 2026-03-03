@@ -259,8 +259,11 @@ internal sealed class AITestService : IAITestService
             Description = snapshot.Description,
             TestFeatureId = snapshot.TestFeatureId,
             TestTargetId = snapshot.TestTargetId,
+            ProfileId = snapshot.ProfileId,
+            ContextIds = snapshot.ContextIds,
             TestFeatureConfig = snapshot.TestFeatureConfig,
             Graders = snapshot.Graders,
+            Variations = snapshot.Variations,
             RunCount = snapshot.RunCount,
             Tags = snapshot.Tags,
             IsActive = snapshot.IsActive,
@@ -280,7 +283,7 @@ internal sealed class AITestService : IAITestService
     }
 
     /// <inheritdoc />
-    public async Task<AITestMetrics> RunTestAsync(
+    public async Task<AITestExecutionResult> RunTestAsync(
         Guid testId,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
@@ -296,7 +299,7 @@ internal sealed class AITestService : IAITestService
     }
 
     /// <inheritdoc />
-    public async Task<IDictionary<Guid, AITestMetrics>> RunTestBatchAsync(
+    public async Task<IDictionary<Guid, AITestExecutionResult>> RunTestBatchAsync(
         IEnumerable<Guid> testIds,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
@@ -305,20 +308,20 @@ internal sealed class AITestService : IAITestService
         var testIdsList = testIds.ToList();
         if (testIdsList.Count == 0)
         {
-            return new Dictionary<Guid, AITestMetrics>();
+            return new Dictionary<Guid, AITestExecutionResult>();
         }
 
         // Generate a batch ID for all tests in this batch
         var batchId = Guid.NewGuid();
 
         // Execute all tests with the same batch ID
-        var results = new Dictionary<Guid, AITestMetrics>();
+        var results = new Dictionary<Guid, AITestExecutionResult>();
         foreach (var testId in testIdsList)
         {
             try
             {
-                var metrics = await RunTestAsync(testId, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
-                results[testId] = metrics;
+                var result = await RunTestAsync(testId, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
+                results[testId] = result;
             }
             catch (InvalidOperationException)
             {
@@ -331,7 +334,7 @@ internal sealed class AITestService : IAITestService
     }
 
     /// <inheritdoc />
-    public async Task<IDictionary<Guid, AITestMetrics>> RunTestsByTagsAsync(
+    public async Task<IDictionary<Guid, AITestExecutionResult>> RunTestsByTagsAsync(
         IEnumerable<string> tags,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
@@ -340,7 +343,7 @@ internal sealed class AITestService : IAITestService
         var tagsList = tags.ToList();
         if (tagsList.Count == 0)
         {
-            return new Dictionary<Guid, AITestMetrics>();
+            return new Dictionary<Guid, AITestExecutionResult>();
         }
 
         // Get all tests

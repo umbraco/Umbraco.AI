@@ -221,6 +221,22 @@ public class TestMapDefinition : IMapDefinition
             RunIds = source.RunIds
         });
 
+        // AITestExecutionResult -> TestExecutionResultResponseModel
+        mapper.Define<AITestExecutionResult, TestExecutionResultResponseModel>((source, context) => new TestExecutionResultResponseModel
+        {
+            TestId = source.TestId,
+            ExecutionId = source.ExecutionId,
+            BatchId = source.BatchId,
+            DefaultMetrics = context.Map<TestMetricsResponseModel>(source.DefaultMetrics)!,
+            VariationMetrics = source.VariationMetrics.Select(vm => new TestVariationMetricsResponseModel
+            {
+                VariationId = vm.VariationId,
+                VariationName = vm.VariationName,
+                Metrics = context.Map<TestMetricsResponseModel>(vm.Metrics)!
+            }).ToList(),
+            AggregateMetrics = context.Map<TestMetricsResponseModel>(source.AggregateMetrics)!
+        });
+
         // AITestRunComparison -> TestRunComparisonResponseModel
         mapper.Define<AITestRunComparison, TestRunComparisonResponseModel>((source, context) =>
         {

@@ -90,16 +90,16 @@ public interface IAITestService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Executes a test and returns the metrics.
-    /// Creates N test runs (based on test.RunCount) and calculates pass@k metrics.
+    /// Executes a test and returns per-variation execution results.
+    /// Runs the default config plus all configured variations under a single execution ID.
     /// </summary>
     /// <param name="testId">The test ID to execute.</param>
-    /// <param name="profileIdOverride">Optional profile ID to override the test's default profile.</param>
-    /// <param name="contextIdsOverride">Optional context IDs to override for cross-model comparison.</param>
-    /// <param name="batchId">Optional batch ID to group multiple runs together.</param>
+    /// <param name="profileIdOverride">Optional profile ID to override the test's default profile (applies to default config only).</param>
+    /// <param name="contextIdsOverride">Optional context IDs to override (applies to default config only).</param>
+    /// <param name="batchId">Optional batch ID to group multiple test executions together.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Test metrics with pass@k calculations and run IDs.</returns>
-    Task<AITestMetrics> RunTestAsync(
+    /// <returns>Execution result with per-variation metrics and aggregate metrics.</returns>
+    Task<AITestExecutionResult> RunTestAsync(
         Guid testId,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
@@ -107,30 +107,30 @@ public interface IAITestService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Executes multiple tests in batch and returns metrics for each.
+    /// Executes multiple tests in batch and returns execution results for each.
     /// All tests in the batch share the same batch ID for grouping.
     /// </summary>
     /// <param name="testIds">The test IDs to execute.</param>
     /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
     /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Dictionary of test ID to metrics.</returns>
-    Task<IDictionary<Guid, AITestMetrics>> RunTestBatchAsync(
+    /// <returns>Dictionary of test ID to execution result.</returns>
+    Task<IDictionary<Guid, AITestExecutionResult>> RunTestBatchAsync(
         IEnumerable<Guid> testIds,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Executes all tests with the specified tags and returns metrics for each.
+    /// Executes all tests with the specified tags and returns execution results for each.
     /// All tests in the batch share the same batch ID for grouping.
     /// </summary>
     /// <param name="tags">The tags to filter tests by. Tests must have ALL specified tags.</param>
     /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
     /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Dictionary of test ID to metrics.</returns>
-    Task<IDictionary<Guid, AITestMetrics>> RunTestsByTagsAsync(
+    /// <returns>Dictionary of test ID to execution result.</returns>
+    Task<IDictionary<Guid, AITestExecutionResult>> RunTestsByTagsAsync(
         IEnumerable<string> tags,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,

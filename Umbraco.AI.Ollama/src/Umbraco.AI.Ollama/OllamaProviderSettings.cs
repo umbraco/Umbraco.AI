@@ -11,8 +11,7 @@ public class OllamaProviderSettings
     /// <summary>
     /// The Ollama API endpoint URL.
     /// </summary>
-    [AIField(DefaultValue = "http://localhost:11434")]
-    public string? Endpoint { get; set; }
+    public string? Endpoint { get; set; } = "http://localhost:11434";
 
     /// <summary>
     /// Optional API key for authenticating with remote Ollama instances.

@@ -26,7 +26,7 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
         var embeddingCapability = await GetConfiguredEmbeddingCapabilityAsync(profile, cancellationToken);
 
         // Create base generator from provider with the profile's model
-        var generator = embeddingCapability.CreateGenerator(profile.Model.ModelId);
+        var generator = await embeddingCapability.CreateGeneratorAsync(profile.Model.ModelId, cancellationToken);
 
         // Apply middleware in order
         generator = ApplyMiddleware(generator);
@@ -55,7 +55,7 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
             throw new InvalidOperationException(
                 $"Profile '{profile.Name}' does not specify a valid ConnectionId.");
         }
-        
+
         var connection = await _connectionService.GetConnectionAsync(
             profile.ConnectionId,
             cancellationToken);

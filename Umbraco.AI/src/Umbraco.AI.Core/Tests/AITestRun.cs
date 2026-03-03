@@ -84,6 +84,23 @@ public sealed class AITestRun
     /// All runs in the same batch share this ID.
     /// </summary>
     public Guid? BatchId { get; set; }
+
+    /// <summary>
+    /// Groups all runs from one test execution (default config + all variations).
+    /// Always set when a test is executed.
+    /// </summary>
+    public Guid ExecutionId { get; set; }
+
+    /// <summary>
+    /// The variation ID within the execution, or null for the default config run.
+    /// </summary>
+    public Guid? VariationId { get; set; }
+
+    /// <summary>
+    /// Denormalized variation name for display purposes.
+    /// Null for default config runs.
+    /// </summary>
+    public string? VariationName { get; set; }
 }
 
 /// <summary>

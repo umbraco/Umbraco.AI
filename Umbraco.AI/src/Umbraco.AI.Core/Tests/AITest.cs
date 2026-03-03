@@ -42,6 +42,17 @@ public sealed class AITest : IAIVersionableEntity
     public required Guid TestTargetId { get; set; }
 
     /// <summary>
+    /// Optional default profile ID for test execution.
+    /// When null, falls back to the test feature's default profile resolution.
+    /// </summary>
+    public Guid? ProfileId { get; set; }
+
+    /// <summary>
+    /// Default context IDs for test execution.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = Array.Empty<Guid>();
+
+    /// <summary>
     /// Test feature configuration data as JsonElement.
     /// Stored as JSON in database, deserialized on demand by test features.
     /// </summary>
@@ -52,6 +63,12 @@ public sealed class AITest : IAIVersionableEntity
     /// Multiple graders can be applied to validate different aspects.
     /// </summary>
     public IReadOnlyList<AITestGraderConfig> Graders { get; set; } = Array.Empty<AITestGraderConfig>();
+
+    /// <summary>
+    /// Named configuration overrides for A/B testing across models or configurations.
+    /// Each variation can override profile, contexts, run count, and/or feature config.
+    /// </summary>
+    public IReadOnlyList<AITestVariation> Variations { get; set; } = Array.Empty<AITestVariation>();
 
     /// <summary>
     /// Number of times to run this test (1 to N).

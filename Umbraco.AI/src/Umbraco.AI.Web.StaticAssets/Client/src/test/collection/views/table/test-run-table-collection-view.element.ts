@@ -52,7 +52,8 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     private _columns: UmbTableColumn[] = [
         { name: "Execution", alias: "execution" },
         { name: "Test", alias: "testId" },
-        { name: "Variation / Run", alias: "variationRun" },
+        { name: "Variation", alias: "variation" },
+        { name: "Run", alias: "run" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
         { name: "", alias: "entityActions", align: "right" },
@@ -210,15 +211,15 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             let executionCell;
             if (isFirstInGroup && groupInfo && item.executionId) {
                 const varsLine = groupInfo.variationCount > 0
-                    ? html`<span class="exec-info">${groupInfo.variationCount} variations</span>`
+                    ? html`<span style="font-size: 11px; color: var(--uui-color-text-alt);">${groupInfo.variationCount} variations</span>`
                     : nothing;
-                executionCell = html`<div class="exec-badge">
-                    <span class="exec-date">${this.#formatShortDate(groupInfo.firstDate)}</span>
-                    <span class="exec-info">${groupInfo.runCount} runs</span>
+                executionCell = html`<div style="display: flex; flex-direction: column; gap: 2px; padding: 4px 8px; background: var(--uui-color-surface-alt); border-radius: 4px; border-left: 3px solid var(--uui-color-interactive); line-height: 1.3;">
+                    <span style="font-size: 12px; font-weight: 600; color: var(--uui-color-text);">${this.#formatShortDate(groupInfo.firstDate)}</span>
+                    <span style="font-size: 11px; color: var(--uui-color-text-alt);">${groupInfo.runCount} runs</span>
                     ${varsLine}
                 </div>`;
             } else {
-                executionCell = "—";
+                executionCell = html`<span style="opacity: 0.5;">—</span>`
             }
 
             return {
@@ -231,16 +232,21 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     },
                     {
                         columnAlias: "testId",
-                        value: html`<div class="test-cell">
-                            <div class="test-name">${item.testName ?? item.testId}</div>
-                            <div class="test-id" title=${item.testId}>${item.testId}</div>
+                        value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
+                            <div>${item.testName ?? item.testId}</div>
+                            <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;" title=${item.testId}>${item.testId}</div>
                         </div>`,
                     },
                     {
-                        columnAlias: "variationRun",
+                        columnAlias: "variation",
                         value: html`<span class="variation-run">
                             <uui-tag look="secondary">${item.variationName ?? "Default"}</uui-tag>
-                            <span class="run-number">#${item.runNumber}</span>
+                        </span>`,
+                    },
+                    {
+                        columnAlias: "run",
+                        value: html`<span class="variation-run">
+                            <uui-tag look="secondary">#${item.runNumber}</uui-tag>
                         </span>`,
                     },
                     {
@@ -331,29 +337,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     static styles = [
         UmbTextStyles,
         css`
-            .variation-run {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .run-number {
-                font-weight: 600;
-                color: var(--uui-color-text-alt);
-            }
-
-            .test-cell {
-                font-size: 0.9em;
-                line-height: 1.5;
-                padding: 5px 0;
-            }
-
-            .test-id {
-                color: var(--uui-palette-dusty-grey-dark);
-                font-size: 11px;
-                font-family: monospace;
-            }
-
             .metrics-panel {
                 display: flex;
                 flex-direction: column;
@@ -436,28 +419,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
             .metric-bar-fill.failure {
                 background: var(--uui-color-danger);
-            }
-
-            .exec-badge {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                padding: 4px 8px;
-                background: var(--uui-color-surface-alt);
-                border-radius: 4px;
-                border-left: 3px solid var(--uui-color-interactive);
-                line-height: 1.3;
-            }
-
-            .exec-date {
-                font-size: 12px;
-                font-weight: 600;
-                color: var(--uui-color-text);
-            }
-
-            .exec-info {
-                font-size: 11px;
-                color: var(--uui-color-text-alt);
             }
 
         `,

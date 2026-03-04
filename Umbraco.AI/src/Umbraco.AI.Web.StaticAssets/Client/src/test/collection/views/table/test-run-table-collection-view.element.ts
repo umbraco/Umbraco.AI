@@ -258,16 +258,16 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     {
                         columnAlias: "run",
                         value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div style="font-size: 14px;"><strong>${item.testName ?? item.testId}</strong> — <a
+                            <div style="font-size: 14px;"><a
                                 href="#"
-                                style="color: var(--uui-color-interactive); text-decoration: none;"
+                                style="color: var(--uui-color-interactive);"
                                 title=${item.unique}
                                 @click=${(e: Event) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     this.#openRunDetail(item.unique);
                                 }}
-                                >${item.variationName ?? "Default"}/${item.runNumber}</a></div>
+                                ><strong>${item.testName ?? item.testId}</strong> — ${item.variationName ?? "Default"}/${item.runNumber}</a></div>
                             <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;" title=${item.unique}>${item.unique}</div>
                         </div>`,
                     },

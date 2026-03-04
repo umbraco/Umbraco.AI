@@ -311,6 +311,10 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
                 border-radius: var(--uui-border-radius);
                 border: 1px solid var(--uui-color-divider-standalone);
             }
+
+            uui-tag {
+                white-space: nowrap;
+            }
         `,
     ];
 }

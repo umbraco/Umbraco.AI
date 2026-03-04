@@ -10,9 +10,12 @@ import type {
 } from "@umbraco-cms/backoffice/components";
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiTestRunItemModel } from "../../../types.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
+import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
+import { UAI_TEST_WORKSPACE_CONTEXT } from "../../../workspace/test/test-workspace.context-token.js";
 
 interface RunMetrics {
     totalRuns: number;
@@ -47,12 +50,13 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     @state()
     private _metrics?: RunMetrics;
 
+    @state()
+    private _baselineRunId?: string | null;
+
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
         { name: "Execution", alias: "execution" },
-        { name: "Test", alias: "testId" },
-        { name: "Variation", alias: "variation" },
         { name: "Run", alias: "run" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
@@ -65,6 +69,16 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             this.#collectionContext = instance;
             this.#collectionContext?.selection.setSelectable(true);
             this.#observeCollectionItems();
+        });
+        this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
+            if (!context) return;
+            this.observe(
+                context.model,
+                (model) => {
+                    this._baselineRunId = model?.baselineRunId;
+                },
+                "umbBaselineRunIdObserver",
+            );
         });
     }
 
@@ -104,6 +118,15 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         if (ms < 1000) return `${ms}ms`;
         if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
         return `${(ms / 60000).toFixed(1)}m`;
+    }
+
+    async #openRunDetail(runId: string) {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
+            data: { runId, baselineRunId: this._baselineRunId ?? undefined },
+        });
     }
 
     #computeMetrics(items: UaiTestRunItemModel[]) {
@@ -211,12 +234,14 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             let executionCell;
             if (isFirstInGroup && groupInfo && item.executionId) {
                 const varsLine = groupInfo.variationCount > 0
-                    ? html`<span style="font-size: 11px; color: var(--uui-color-text-alt);">${groupInfo.variationCount} variations</span>`
+                    ? html`<span style="font-size: 12px; color: var(--uui-palette-dusty-grey-dark);"> • ${groupInfo.variationCount} variations</span>`
                     : nothing;
-                executionCell = html`<div style="display: flex; flex-direction: column; gap: 2px; padding: 4px 8px; background: var(--uui-color-surface-alt); border-radius: 4px; border-left: 3px solid var(--uui-color-interactive); line-height: 1.3;">
-                    <span style="font-size: 12px; font-weight: 600; color: var(--uui-color-text);">${this.#formatShortDate(groupInfo.firstDate)}</span>
-                    <span style="font-size: 11px; color: var(--uui-color-text-alt);">${groupInfo.runCount} runs</span>
-                    ${varsLine}
+                executionCell = html`<div style="line-height: 1.2;">
+                    <div style="font-size: 14px; color: var(--uui-color-text);">${this.#formatShortDate(groupInfo.firstDate)}</div>
+                    <div>
+                        <span style="font-size: 11px; color: var(--uui-palette-dusty-grey-dark);">${groupInfo.runCount} total runs</span>
+                        ${varsLine}
+                    </div>
                 </div>`;
             } else {
                 executionCell = html`<span style="opacity: 0.5;">—</span>`
@@ -231,23 +256,20 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         value: executionCell,
                     },
                     {
-                        columnAlias: "testId",
-                        value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div>${item.testName ?? item.testId}</div>
-                            <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;" title=${item.testId}>${item.testId}</div>
-                        </div>`,
-                    },
-                    {
-                        columnAlias: "variation",
-                        value: html`<span class="variation-run">
-                            <uui-tag look="secondary">${item.variationName ?? "Default"}</uui-tag>
-                        </span>`,
-                    },
-                    {
                         columnAlias: "run",
-                        value: html`<span class="variation-run">
-                            <uui-tag look="secondary">#${item.runNumber}</uui-tag>
-                        </span>`,
+                        value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
+                            <div style="font-size: 14px;"><strong>${item.testName ?? item.testId}</strong> — <a
+                                href="#"
+                                style="color: var(--uui-color-interactive); text-decoration: none;"
+                                title=${item.unique}
+                                @click=${(e: Event) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    this.#openRunDetail(item.unique);
+                                }}
+                                >${item.variationName ?? "Default"}/${item.runNumber}</a></div>
+                            <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;" title=${item.unique}>${item.unique}</div>
+                        </div>`,
                     },
                     {
                         columnAlias: "status",

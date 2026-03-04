@@ -25,9 +25,9 @@ public class FakeEmbeddingCapability : IAIEmbeddingCapability
 
     public AICapability Kind => AICapability.Embedding;
 
-    public IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings, string? modelId = null)
+    public Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(object? settings, string? modelId = null, CancellationToken cancellationToken = default)
     {
-        return _generator;
+        return Task.FromResult(_generator);
     }
 
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default)

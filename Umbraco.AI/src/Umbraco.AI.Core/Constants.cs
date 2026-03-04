@@ -32,7 +32,7 @@ public static class Constants
         /// <summary>
         /// Section alias for Umbraco.AI.
         /// </summary>
-        public const string AI = "ai";
+        public const string AI = "Uai.Section.AI";
     }
 
     /// <summary>

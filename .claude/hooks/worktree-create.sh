@@ -85,7 +85,9 @@ DEFAULT_BRANCH="${DEFAULT_BRANCH:-dev}"
 # --- Create worktree ---
 mkdir -p "$WORKTREE_DIR"
 
-if git show-ref --verify --quiet "refs/heads/$BRANCH_NAME" 2>/dev/null; then
+if [[ -d "$WORKTREE_PATH" ]]; then
+  echo "Worktree already exists: $WORKTREE_PATH" >&2
+elif git show-ref --verify --quiet "refs/heads/$BRANCH_NAME" 2>/dev/null; then
   echo "Using existing branch: $BRANCH_NAME" >&2
   git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" >&2
 else

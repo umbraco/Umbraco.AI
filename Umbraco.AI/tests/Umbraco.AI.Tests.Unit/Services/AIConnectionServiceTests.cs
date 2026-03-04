@@ -770,8 +770,8 @@ public class AIConnectionServiceTests
         var result = await service.GetConfiguredProviderAsync(connectionId);
         var chatCapability = result!.GetCapability<IAIConfiguredChatCapability>();
 
-        // Assert - CreateClient() has no settings parameter, settings are baked in
-        var client = chatCapability!.CreateClient();
+        // Assert - CreateClientAsync() has no settings parameter, settings are baked in
+        var client = await chatCapability!.CreateClientAsync();
         client.ShouldBe(fakeChatClient);
     }
 

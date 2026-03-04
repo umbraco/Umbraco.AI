@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.3.0...Umbraco.AI@1.4.0) (2026-03-04)
+
+### feat
+
+* **core:** Make capability client creation async ([5f14ce1](https://github.com/umbraco/Umbraco.AI/commit/5f14ce1893496aac6b314afd56ab0d23f7674cbd))
+
+### fix
+
+* **core:** Prevent ResolveModel from mutating typed settings objects ([7f83734](https://github.com/umbraco/Umbraco.AI/commit/7f83734d6bce74cec4024817fdbd6f12d1d3475a))
+* **core:** Use direct DB access for admin group section assignment migration ([eb43f5d](https://github.com/umbraco/Umbraco.AI/commit/eb43f5d76de3e3b49a8154d89b1402dbdcce0a1c))
+* **frontend:** Prevent tag text wrapping in context and profile pickers ([fa284e0](https://github.com/umbraco/Umbraco.AI/commit/fa284e0f8b99e4874de72fdfebb3c28d5fa49dd8))
+
 ## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.2.0...Umbraco.AI@1.3.0) (2026-03-02)
 
 ### feat

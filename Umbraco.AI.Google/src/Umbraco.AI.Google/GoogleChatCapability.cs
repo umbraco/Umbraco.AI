@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
@@ -8,55 +9,31 @@ namespace Umbraco.AI.Google;
 /// <summary>
 /// AI chat capability for Google provider.
 /// </summary>
-public class GoogleChatCapability(GoogleProvider provider) : AIChatCapabilityBase<GoogleProviderSettings>(provider)
+public partial class GoogleChatCapability(GoogleProvider provider) : AIChatCapabilityBase<GoogleProviderSettings>(provider)
 {
-    private const string DefaultChatModel = "gemini-2.0-flash";
-
     private new GoogleProvider Provider => (GoogleProvider)base.Provider;
 
     /// <summary>
-    /// Known Gemini models that support chat.
+    /// Pattern that matches Gemini chat models (flash, pro variants).
     /// </summary>
-    private static readonly string[] KnownChatModels =
-    [
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-lite",
-        "gemini-1.5-pro",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b",
-    ];
+    [GeneratedRegex(@"^gemini-.*\b(flash|pro)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex IncludePattern();
+
+    /// <summary>
+    /// Pattern that excludes non-chat variants (image generation, TTS, audio, computer-use).
+    /// </summary>
+    [GeneratedRegex(@"image|tts|audio|computer-use", RegexOptions.IgnoreCase)]
+    private static partial Regex ExcludePattern();
 
     /// <inheritdoc />
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         GoogleProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        // Try to get models from API, fall back to known models if API call fails
-        try
-        {
-            var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
+        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
 
-            // Filter to only include known chat models that are available from the API
-            var availableModels = allModels
-                .Where(id => KnownChatModels.Contains(id, StringComparer.OrdinalIgnoreCase))
-                .ToList();
-
-            if (availableModels.Count > 0)
-            {
-                return availableModels
-                    .Select(id => new AIModelDescriptor(
-                        new AIModelRef(Provider.Id, id),
-                        GoogleModelUtilities.FormatDisplayName(id)))
-                    .ToList();
-            }
-        }
-        catch
-        {
-            // Fall through to return known models
-        }
-
-        // Return hardcoded list of known chat models as fallback
-        return KnownChatModels
+        return allModels
+            .Where(IsChatModel)
             .Select(id => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, id),
                 GoogleModelUtilities.FormatDisplayName(id)))
@@ -64,7 +41,45 @@ public class GoogleChatCapability(GoogleProvider provider) : AIChatCapabilityBas
     }
 
     /// <inheritdoc />
-    protected override IChatClient CreateClient(GoogleProviderSettings settings, string? modelId)
-        => GoogleProvider.CreateGoogleClient(settings)
-            .AsIChatClient(modelId ?? DefaultChatModel);
+    protected override async Task<IChatClient> CreateClientAsync(
+        GoogleProviderSettings settings,
+        string? modelId,
+        CancellationToken cancellationToken = default)
+    {
+        if (modelId is null)
+        {
+            modelId = await ResolveDefaultModelAsync(settings, cancellationToken);
+        }
+
+        if (modelId is null)
+        {
+            throw new InvalidOperationException(
+                "No Google chat models are available. " +
+                "Check API credentials, network connectivity, and that the Google API returns available models.");
+        }
+
+        return GoogleProvider.CreateGoogleClient(settings).AsIChatClient(modelId);
+    }
+
+    /// <summary>
+    /// Resolves the default chat model by querying the API for the latest flash model.
+    /// </summary>
+    private async Task<string?> ResolveDefaultModelAsync(
+        GoogleProviderSettings settings,
+        CancellationToken cancellationToken)
+    {
+        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
+
+        // Prefer stable flash models, then fall back to any chat-capable gemini model
+        return allModels
+            .Where(IsChatModel)
+            .OrderByDescending(id => id.Contains("flash", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(id => !id.Contains("preview", StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(id => id)
+            .FirstOrDefault();
+    }
+
+    private static bool IsChatModel(string modelId)
+        => IncludePattern().IsMatch(modelId)
+           && !ExcludePattern().IsMatch(modelId);
 }

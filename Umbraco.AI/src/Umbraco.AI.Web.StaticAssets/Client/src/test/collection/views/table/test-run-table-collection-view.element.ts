@@ -26,6 +26,12 @@ interface RunMetrics {
     passToTheK: number;
 }
 
+interface ExecutionGroupInfo {
+    runCount: number;
+    variationCount: number;
+    firstDate: string;
+}
+
 /**
  * Table view for the Test Run collection.
  */
@@ -54,6 +60,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     private _columns: UmbTableColumn[] = [
         { name: "Run ID", alias: "runId" },
         { name: "Batch ID", alias: "batchId" },
+        { name: "Execution", alias: "execution" },
         { name: "Test", alias: "testId" },
         { name: "Variation", alias: "variation" },
         { name: "Run #", alias: "runNumber" },
@@ -156,79 +163,177 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         };
     }
 
+    #buildExecutionGroups(items: UaiTestRunItemModel[]): Map<string, ExecutionGroupInfo> {
+        const groups = new Map<string, ExecutionGroupInfo>();
+        for (const item of items) {
+            const key = item.executionId ?? item.unique;
+            const existing = groups.get(key);
+            if (existing) {
+                existing.runCount++;
+                if (item.variationName) {
+                    existing.variationCount++;
+                }
+                if (item.executedAt && item.executedAt < existing.firstDate) {
+                    existing.firstDate = item.executedAt;
+                }
+            } else {
+                groups.set(key, {
+                    runCount: 1,
+                    variationCount: item.variationName ? 1 : 0,
+                    firstDate: item.executedAt ?? "",
+                });
+            }
+        }
+        return groups;
+    }
+
+    #sortByExecution(items: UaiTestRunItemModel[]): UaiTestRunItemModel[] {
+        const groups = new Map<string, UaiTestRunItemModel[]>();
+        for (const item of items) {
+            const key = item.executionId ?? item.unique;
+            const group = groups.get(key);
+            if (group) {
+                group.push(item);
+            } else {
+                groups.set(key, [item]);
+            }
+        }
+
+        // Sort groups by newest execution first (max executedAt in group)
+        const sortedGroups = [...groups.entries()].sort(([, a], [, b]) => {
+            const maxA = a.reduce((max, i) => (i.executedAt && i.executedAt > max ? i.executedAt : max), "");
+            const maxB = b.reduce((max, i) => (i.executedAt && i.executedAt > max ? i.executedAt : max), "");
+            return maxB.localeCompare(maxA);
+        });
+
+        // Sort within each group: Default (no variationName) first, then by variationName, then by runNumber
+        const sorted: UaiTestRunItemModel[] = [];
+        for (const [, group] of sortedGroups) {
+            group.sort((a, b) => {
+                const aVar = a.variationName ?? "";
+                const bVar = b.variationName ?? "";
+                if (aVar !== bVar) {
+                    if (!a.variationName) return -1;
+                    if (!b.variationName) return 1;
+                    return aVar.localeCompare(bVar);
+                }
+                return a.runNumber - b.runNumber;
+            });
+            sorted.push(...group);
+        }
+
+        return sorted;
+    }
+
+    #formatShortDate(dateStr: string): string {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
+            ", " +
+            date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    }
+
     #createTableItems(items: UaiTestRunItemModel[]) {
         this.#computeMetrics(items);
         this.#runItems = new Map(items.map((item) => [item.unique, item]));
-        this._items = items.map((item) => ({
-            id: item.unique,
-            icon: item.isBaseline ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
-            data: [
-                {
-                    columnAlias: "runId",
-                    value: html`<a
-                        href="#"
-                        class="run-link"
-                        title=${item.unique}
-                        @click=${(e: Event) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            this.#openRunDetail(item.unique);
-                        }}
-                        >${this.#truncateGuid(item.unique)}</a
-                    >`,
-                },
-                {
-                    columnAlias: "batchId",
-                    value: item.batchId
-                        ? html`<span title=${item.batchId}>${this.#truncateGuid(item.batchId)}</span>`
-                        : "-",
-                },
-                {
-                    columnAlias: "testId",
-                    value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                        <div>${item.testName ?? item.testId}</div>
-                        <div
-                            style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
-                            title=${item.testId}
-                        >
-                            ${item.testId}
-                        </div>
-                    </div>`,
-                },
-                {
-                    columnAlias: "variation",
-                    value: item.variationName
-                        ? html`<uui-tag look="secondary">${item.variationName}</uui-tag>`
-                        : html`<span style="color: var(--uui-color-text-alt);">Default</span>`,
-                },
-                {
-                    columnAlias: "runNumber",
-                    value: `#${item.runNumber}`,
-                },
-                {
-                    columnAlias: "status",
-                    value: html`<uui-tag
-                        color=${this.#getStatusColor(item.status)}
-                        look="primary"
-                        >${item.status}</uui-tag
-                    >`,
-                },
-                {
-                    columnAlias: "duration",
-                    value: this.#formatDuration(item.durationMs),
-                },
-                {
-                    columnAlias: "executedAt",
-                    value: item.executedAt ? formatDateTime(item.executedAt) : "-",
-                },
-                {
-                    columnAlias: "entityActions",
-                    value: html`<umb-entity-actions-table-column-view
-                        .value=${{ entityType: item.entityType, unique: item.unique }}
-                    ></umb-entity-actions-table-column-view>`,
-                },
-            ],
-        }));
+
+        const sorted = this.#sortByExecution(items);
+        const executionGroups = this.#buildExecutionGroups(sorted);
+        let prevExecutionId: string | undefined;
+
+        this._items = sorted.map((item) => {
+            const execKey = item.executionId ?? item.unique;
+            const isFirstInGroup = execKey !== prevExecutionId;
+            prevExecutionId = execKey;
+
+            const groupInfo = executionGroups.get(execKey);
+            let executionCell;
+            if (isFirstInGroup && groupInfo && item.executionId) {
+                const varsLabel = groupInfo.variationCount > 0 ? ` · ${groupInfo.variationCount} vars` : "";
+                executionCell = html`<div class="exec-badge">
+                    <span class="exec-date">${this.#formatShortDate(groupInfo.firstDate)}</span>
+                    <span class="exec-info">${groupInfo.runCount} runs${varsLabel}</span>
+                </div>`;
+            } else if (!isFirstInGroup && item.executionId) {
+                executionCell = html`<span class="exec-cont">\u21B3</span>`;
+            } else {
+                executionCell = "-";
+            }
+
+            return {
+                id: item.unique,
+                icon: item.isBaseline ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
+                data: [
+                    {
+                        columnAlias: "runId",
+                        value: html`<a
+                            href="#"
+                            class="run-link"
+                            title=${item.unique}
+                            @click=${(e: Event) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                this.#openRunDetail(item.unique);
+                            }}
+                            >${this.#truncateGuid(item.unique)}</a
+                        >`,
+                    },
+                    {
+                        columnAlias: "batchId",
+                        value: item.batchId
+                            ? html`<span title=${item.batchId}>${this.#truncateGuid(item.batchId)}</span>`
+                            : "-",
+                    },
+                    {
+                        columnAlias: "execution",
+                        value: executionCell,
+                    },
+                    {
+                        columnAlias: "testId",
+                        value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
+                            <div>${item.testName ?? item.testId}</div>
+                            <div
+                                style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
+                                title=${item.testId}
+                            >
+                                ${item.testId}
+                            </div>
+                        </div>`,
+                    },
+                    {
+                        columnAlias: "variation",
+                        value: item.variationName
+                            ? html`<uui-tag look="secondary">${item.variationName}</uui-tag>`
+                            : html`<uui-tag look="secondary">Default</uui-tag>`,
+                    },
+                    {
+                        columnAlias: "runNumber",
+                        value: `#${item.runNumber}`,
+                    },
+                    {
+                        columnAlias: "status",
+                        value: html`<uui-tag
+                            color=${this.#getStatusColor(item.status)}
+                            look="primary"
+                            >${item.status}</uui-tag
+                        >`,
+                    },
+                    {
+                        columnAlias: "duration",
+                        value: this.#formatDuration(item.durationMs),
+                    },
+                    {
+                        columnAlias: "executedAt",
+                        value: item.executedAt ? formatDateTime(item.executedAt) : "-",
+                    },
+                    {
+                        columnAlias: "entityActions",
+                        value: html`<umb-entity-actions-table-column-view
+                            .value=${{ entityType: item.entityType, unique: item.unique }}
+                        ></umb-entity-actions-table-column-view>`,
+                    },
+                ],
+            };
+        });
     }
 
     #handleSelect(event: UmbTableSelectedEvent) {
@@ -387,6 +492,34 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
             .metric-bar-fill.failure {
                 background: var(--uui-color-danger);
+            }
+
+            .exec-badge {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                padding: 4px 8px;
+                background: var(--uui-color-surface-alt);
+                border-radius: 4px;
+                border-left: 3px solid var(--uui-color-interactive);
+                line-height: 1.3;
+            }
+
+            .exec-date {
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--uui-color-text);
+            }
+
+            .exec-info {
+                font-size: 11px;
+                color: var(--uui-color-text-alt);
+            }
+
+            .exec-cont {
+                color: var(--uui-color-border-emphasis);
+                font-size: 14px;
+                padding-left: 10px;
             }
         `,
     ];

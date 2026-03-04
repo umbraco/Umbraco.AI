@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.4.0...Umbraco.AI@1.4.1) (2026-03-04)
+
+### fix
+
+* **core:** Use simple section alias for endpoint permissions ([bc8ef0b](https://github.com/umbraco/Umbraco.AI/commit/bc8ef0b8a4d8e8dd764a06deb9e1430d8dee59f6))
+
 ## [1.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.3.0...Umbraco.AI@1.4.0) (2026-03-04)
 
 ### feat

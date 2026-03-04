@@ -5,6 +5,8 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha2...Umbraco.AI.Agent.UI@1.0.0-alpha3) (2026-03-04)
+
 ## [1.0.0-alpha2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha1...Umbraco.AI.Agent.UI@1.0.0-alpha2) (2026-02-17)
 
 * Revert "fix(copilot): Fix agent filtering to handle null context gracefully" ([27e3dd8](https://github.com/umbraco/Umbraco.AI/commit/27e3dd85061a5d194f4371190b55461445c82ead))

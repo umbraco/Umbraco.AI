@@ -24,9 +24,9 @@ public class FakeChatCapability : IAIChatCapability
 
     public AICapability Kind => AICapability.Chat;
 
-    public IChatClient CreateClient(object? settings = null, string? modelId = null)
+    public Task<IChatClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default)
     {
-        return _chatClient;
+        return Task.FromResult(_chatClient);
     }
 
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default)

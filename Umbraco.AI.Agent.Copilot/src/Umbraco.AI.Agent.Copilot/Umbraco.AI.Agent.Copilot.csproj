@@ -33,7 +33,7 @@
         <Folder Include="wwwroot\" />
     </ItemGroup>
 
-    <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild"
+    <Target Name="UpdatePackageManifestVersion" BeforeTargets="CoreCompile"
             Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != ''">
         <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
         <ItemGroup>

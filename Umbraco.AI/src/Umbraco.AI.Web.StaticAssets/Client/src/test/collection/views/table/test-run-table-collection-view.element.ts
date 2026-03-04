@@ -58,9 +58,9 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
+        { name: "Execution", alias: "execution" },
         { name: "Run ID", alias: "runId" },
         { name: "Batch ID", alias: "batchId" },
-        { name: "Execution", alias: "execution" },
         { name: "Test", alias: "testId" },
         { name: "Variation", alias: "variation" },
         { name: "Run #", alias: "runNumber" },
@@ -248,21 +248,26 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             const groupInfo = executionGroups.get(execKey);
             let executionCell;
             if (isFirstInGroup && groupInfo && item.executionId) {
-                const varsLabel = groupInfo.variationCount > 0 ? ` · ${groupInfo.variationCount} vars` : "";
+                const varsLine = groupInfo.variationCount > 0
+                    ? html`<span class="exec-info">${groupInfo.variationCount} variations</span>`
+                    : nothing;
                 executionCell = html`<div class="exec-badge">
                     <span class="exec-date">${this.#formatShortDate(groupInfo.firstDate)}</span>
-                    <span class="exec-info">${groupInfo.runCount} runs${varsLabel}</span>
+                    <span class="exec-info">${groupInfo.runCount} runs</span>
+                    ${varsLine}
                 </div>`;
-            } else if (!isFirstInGroup && item.executionId) {
-                executionCell = html`<span class="exec-cont">\u21B3</span>`;
             } else {
-                executionCell = "-";
+                executionCell = "";
             }
 
             return {
                 id: item.unique,
                 icon: item.isBaseline ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
                 data: [
+                    {
+                        columnAlias: "execution",
+                        value: executionCell,
+                    },
                     {
                         columnAlias: "runId",
                         value: html`<a
@@ -282,10 +287,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         value: item.batchId
                             ? html`<span title=${item.batchId}>${this.#truncateGuid(item.batchId)}</span>`
                             : "-",
-                    },
-                    {
-                        columnAlias: "execution",
-                        value: executionCell,
                     },
                     {
                         columnAlias: "testId",
@@ -516,11 +517,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 color: var(--uui-color-text-alt);
             }
 
-            .exec-cont {
-                color: var(--uui-color-border-emphasis);
-                font-size: 14px;
-                padding-left: 10px;
-            }
         `,
     ];
 }

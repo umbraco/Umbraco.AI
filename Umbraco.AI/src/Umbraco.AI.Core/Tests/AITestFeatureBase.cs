@@ -132,9 +132,4 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
         return ContextResolver.ResolveContextItems(entityContext?.MockEntity);
     }
 
-    /// <summary>
-    /// Returns the effective context IDs, preferring per-run override over config value.
-    /// </summary>
-    protected IEnumerable<Guid>? ResolveEffectiveContextIds(TConfig config, IEnumerable<Guid>? contextIdsOverride)
-        => contextIdsOverride ?? config.ContextIds;
 }

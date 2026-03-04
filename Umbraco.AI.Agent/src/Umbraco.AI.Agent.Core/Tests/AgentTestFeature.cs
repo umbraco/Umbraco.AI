@@ -153,15 +153,12 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         // Add the user's input message to the transcript
         messages.Add(new { role = "user", content = config.Message });
 
-        // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
-        var effectiveContextIds = ResolveEffectiveContextIds(config, contextIdsOverride);
-
         try
         {
             var options = new AIAgentExecutionOptions
             {
                 ProfileIdOverride = profileIdOverride,
-                ContextIdsOverride = effectiveContextIds?.ToList()
+                ContextIdsOverride = contextIdsOverride?.ToList()
             };
 
             await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, null, options, cancellationToken))

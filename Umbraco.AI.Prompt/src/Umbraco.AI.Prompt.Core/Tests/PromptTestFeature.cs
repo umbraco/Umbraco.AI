@@ -64,9 +64,6 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
             Context = contextItems.Count > 0 ? contextItems : null
         };
 
-        // Context IDs → options.ContextIdsOverride (per-run override takes precedence)
-        var effectiveContextIds = ResolveEffectiveContextIds(config, contextIdsOverride);
-
         // Execute prompt and capture timing
         var stopwatch = Stopwatch.StartNew();
         AIPromptExecutionResult result;
@@ -77,7 +74,7 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
             {
                 ValidateScope = false,
                 ProfileIdOverride = profileIdOverride,
-                ContextIdsOverride = effectiveContextIds?.ToList()
+                ContextIdsOverride = contextIdsOverride?.ToList()
             };
 
             result = await _promptService.ExecutePromptAsync(promptId, request, options, cancellationToken);

@@ -21,15 +21,4 @@ public class AITestFeatureConfigBase
         SortOrder = -20)]
     public virtual JsonElement? EntityContext { get; set; }
 
-    /// <summary>
-    /// AIContext entity IDs to include (overrides the target's configured contexts).
-    /// </summary>
-    [AIField(
-        Label = "Context Overrides",
-        Description = "Override the target's configured contexts",
-        EditorUiAlias = "Uai.PropertyEditorUi.ContextPicker",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":true}]",
-        Group = "Context",
-        SortOrder = -10)]
-    public virtual List<Guid>? ContextIds { get; set; }
 }

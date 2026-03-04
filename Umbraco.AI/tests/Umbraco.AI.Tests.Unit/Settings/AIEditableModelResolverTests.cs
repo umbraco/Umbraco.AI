@@ -54,7 +54,7 @@ public class AIEditableModelResolverTests
     #region ResolveModel<TModel> - Already typed data
 
     [Fact]
-    public void ResolveModel_WithAlreadyTypedData_ReturnsSameInstance()
+    public void ResolveModel_WithAlreadyTypedData_ReturnsNewInstance()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
@@ -65,7 +65,27 @@ public class AIEditableModelResolverTests
         var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        result.ShouldBeSameAs(settings);
+        result.ShouldNotBeNull();
+        result.ShouldNotBeSameAs(settings);
+        result!.ApiKey.ShouldBe("test-key");
+    }
+
+    [Fact]
+    public void ResolveModel_WithAlreadyTypedData_DoesNotMutateOriginal()
+    {
+        // Arrange
+        var settings = new FakeProviderSettings { ApiKey = "$OpenAI:ApiKey" };
+        SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
+
+        // Act
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+
+        // Assert - original should still have the config reference
+        settings.ApiKey.ShouldBe("$OpenAI:ApiKey");
+        // resolved copy should have the actual value
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("sk-test-key-from-config");
     }
 
     [Fact]

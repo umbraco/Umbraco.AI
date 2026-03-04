@@ -65,13 +65,25 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     private _loading = false;
 
     #setValue(val: string | string[] | undefined) {
-        if (!val) {
-            this._selection = [];
+        // Normalize to array for comparison
+        const newSelection = !val ? [] : Array.isArray(val) ? val : [val];
+
+        // Check if selection actually changed to avoid unnecessary API calls
+        const hasChanged =
+            newSelection.length !== this._selection.length ||
+            newSelection.some((id, index) => id !== this._selection[index]);
+
+        if (!hasChanged) {
+            return;
+        }
+
+        this._selection = newSelection;
+
+        if (newSelection.length === 0) {
             this._items = [];
             return;
         }
-        // Normalize to array internally
-        this._selection = Array.isArray(val) ? val : [val];
+
         this.#loadItems();
     }
 
@@ -257,6 +269,10 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
             uui-ref-node::before {
                 border-radius: var(--uui-border-radius);
                 border: 1px solid var(--uui-color-divider-standalone);
+            }
+
+            uui-tag {
+                white-space: nowrap;
             }
         `,
     ];

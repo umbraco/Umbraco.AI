@@ -34,6 +34,7 @@ using Umbraco.AI.Core.Tools.Web;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Prompt.Core.Media;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Notifications;
 
 namespace Umbraco.AI.Extensions;
 
@@ -137,10 +138,12 @@ public static partial class UmbracoBuilderExtensions
         // Connection system
         services.AddSingleton<IAIConnectionRepository, InMemoryAIConnectionRepository>();
         services.AddSingleton<IAIConnectionService, AIConnectionService>();
+        builder.AddNotificationAsyncHandler<AIConnectionDeletingNotification, AIConnectionDeletingNotificationHandler>();
 
         // Profile resolution
         services.AddSingleton<IAIProfileRepository, InMemoryAIProfileRepository>();
         services.AddSingleton<IAIProfileService, AIProfileService>();
+        builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingNotificationHandler>();
 
         // Settings
         services.AddSingleton<IAISettingsRepository, InMemoryAISettingsRepository>();

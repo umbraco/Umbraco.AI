@@ -88,6 +88,10 @@ internal sealed class InMemoryAIPromptRepository : IAIPromptRepository
         => Task.FromResult(_prompts.ContainsKey(id));
 
     /// <inheritdoc />
+    public Task<bool> ExistsWithProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+        => Task.FromResult(_prompts.Values.Any(p => p.ProfileId == profileId));
+
+    /// <inheritdoc />
     public Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         var exists = _prompts.Values.Any(p =>

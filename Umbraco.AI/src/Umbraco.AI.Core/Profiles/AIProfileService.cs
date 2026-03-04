@@ -263,4 +263,8 @@ internal sealed class AIProfileService : IAIProfileService
         var existing = await _repository.GetByAliasAsync(alias, cancellationToken);
         return existing is not null && (!excludeId.HasValue || existing.Id != excludeId.Value);
     }
+
+    /// <inheritdoc />
+    public Task<bool> ProfilesExistWithConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
+        => _repository.ExistsWithConnectionIdAsync(connectionId, cancellationToken);
 }

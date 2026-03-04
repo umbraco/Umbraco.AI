@@ -5,6 +5,54 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.4.0...Umbraco.AI@1.4.1) (2026-03-04)
+
+### fix
+
+* **core:** Use simple section alias for endpoint permissions ([bc8ef0b](https://github.com/umbraco/Umbraco.AI/commit/bc8ef0b8a4d8e8dd764a06deb9e1430d8dee59f6))
+
+## [1.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.3.0...Umbraco.AI@1.4.0) (2026-03-04)
+
+### feat
+
+* **core:** Make capability client creation async ([5f14ce1](https://github.com/umbraco/Umbraco.AI/commit/5f14ce1893496aac6b314afd56ab0d23f7674cbd))
+
+### fix
+
+* **core:** Prevent ResolveModel from mutating typed settings objects ([7f83734](https://github.com/umbraco/Umbraco.AI/commit/7f83734d6bce74cec4024817fdbd6f12d1d3475a))
+* **core:** Use direct DB access for admin group section assignment migration ([eb43f5d](https://github.com/umbraco/Umbraco.AI/commit/eb43f5d76de3e3b49a8154d89b1402dbdcce0a1c))
+* **frontend:** Prevent tag text wrapping in context and profile pickers ([fa284e0](https://github.com/umbraco/Umbraco.AI/commit/fa284e0f8b99e4874de72fdfebb3c28d5fa49dd8))
+
+## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.2.0...Umbraco.AI@1.3.0) (2026-03-02)
+
+### feat
+
+* **core,deploy:** Add Deploy support for AISettings ([5b16415](https://github.com/umbraco/Umbraco.AI/commit/5b164152cee40ca7a2485a737417148f562c3d5a))
+* **core:** Add concrete service connectors and notification handlers for Deploy ([38013de](https://github.com/umbraco/Umbraco.AI/commit/38013dedc350d38f7646c4cfa094a2370253583c))
+* **core:** Add migration to grant Admin group access to AI section ([53efdc2](https://github.com/umbraco/Umbraco.AI/commit/53efdc27ef227573cea7307a917dddc27223d2a9))
+* **core:** Add profile deletion protection for default settings ([8f93e8d](https://github.com/umbraco/Umbraco.AI/commit/8f93e8dd276efbd074eca06c2900d1aaf8618695))
+* **core:** Add Saving and Deleting notifications for AISettings ([f7c210e](https://github.com/umbraco/Umbraco.AI/commit/f7c210e76123e8e4b82cbd1d8b1fce0424877650))
+* **core:** Add Umbraco.AI.Deploy project structure and base classes ([0135286](https://github.com/umbraco/Umbraco.AI/commit/0135286a967332c8f9e99df28c45267adc72f447))
+* **frontend:** Add entity actions support to container menu items ([11615bc](https://github.com/umbraco/Umbraco.AI/commit/11615bc0db73f437c7979749ed0a84943e26987a))
+
+### fix
+
+* **core,prompt,agent:** Fix compilation errors in Deploy packages ([3efbbb2](https://github.com/umbraco/Umbraco.AI/commit/3efbbb2cd780624419f9e069e5996f10494bd843))
+* **core:** Allow connection alias to be updated on save ([130bceb](https://github.com/umbraco/Umbraco.AI/commit/130bcebc9f1cc99d09834289c101a8077cad2121)), closes [#75](https://github.com/umbraco/Umbraco.AI/issues/75)
+* **core:** Fix raw string literal interpolation in LLMJudgeGrader ([20ca003](https://github.com/umbraco/Umbraco.AI/commit/20ca003464a614443c1e30059a4ba5fae32d2c68))
+* **core:** Handle connection in-use check via AIConnectionDeletingNotification handler ([39dc1e9](https://github.com/umbraco/Umbraco.AI/commit/39dc1e914e3f2c05950e027e61ef10daaf4738f7)), closes [#76](https://github.com/umbraco/Umbraco.AI/issues/76)
+* **core:** Prevent picker components from re-fetching on unchanged value ([07bd268](https://github.com/umbraco/Umbraco.AI/commit/07bd26888df6232646abcaac5d4ce6c4bfacca33)), closes [#70](https://github.com/umbraco/Umbraco.AI/issues/70)
+* **core:** Reduce analytics aggregation log noise ([453fb42](https://github.com/umbraco/Umbraco.AI/commit/453fb42aca44282fff2d2f7f8af951510de3ea3c)), closes [#68](https://github.com/umbraco/Umbraco.AI/issues/68)
+* **core:** Return ProblemDetails response when profile deletion is cancelled ([5e0a695](https://github.com/umbraco/Umbraco.AI/commit/5e0a695da48f8f6aa0bbe99d78fad5307cebe648))
+* **core:** Update notification handler to use Umbraco.AI notification pattern ([fda4fd5](https://github.com/umbraco/Umbraco.AI/commit/fda4fd516a4807474ded2717752c728603675372))
+* **frontend:** Show error toast notifications on delete failures ([ef6073d](https://github.com/umbraco/Umbraco.AI/commit/ef6073d389e13c6b7ded14b2dd3ce117353a904d))
+
+### refactor
+
+* **core,deploy:** Introduce IAIEntity interface to reduce boilerplate ([7b08de1](https://github.com/umbraco/Umbraco.AI/commit/7b08de15fb3faca38a2137902f6b2b2e263fc987))
+* **core,deploy:** Remove deletion notifications for AISettings ([674c893](https://github.com/umbraco/Umbraco.AI/commit/674c89385b2079f9e564f7cc3f05bf579d5b2cdf))
+* **core:** Rename ByConnection to WithConnection ([bf64267](https://github.com/umbraco/Umbraco.AI/commit/bf64267c052d10cc44afd38ad3b10e0e7b405a0a))
+
 ## [1.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.1.0...Umbraco.AI@1.2.0) (2026-02-17)
 
 ### ⚠ Breaking change

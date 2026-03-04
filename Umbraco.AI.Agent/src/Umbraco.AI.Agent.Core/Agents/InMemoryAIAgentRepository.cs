@@ -109,6 +109,10 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
         => Task.FromResult(_agents.ContainsKey(id));
 
     /// <inheritdoc />
+    public Task<bool> ExistsWithProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+        => Task.FromResult(_agents.Values.Any(a => a.ProfileId == profileId));
+
+    /// <inheritdoc />
     public Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         var exists = _agents.Values.Any(p =>

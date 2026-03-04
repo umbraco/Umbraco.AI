@@ -41,6 +41,11 @@ public enum ProfileOperationStatus
     InvalidCapability,
 
     /// <summary>
+    /// The profile cannot be deleted because it is in use.
+    /// </summary>
+    InUse,
+
+    /// <summary>
     /// An unknown error occurred.
     /// </summary>
     Unknown

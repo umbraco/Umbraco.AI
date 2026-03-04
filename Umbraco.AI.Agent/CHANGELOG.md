@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.3.0...Umbraco.AI.Agent@1.3.1) (2026-03-04)
+
+## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.2.0...Umbraco.AI.Agent@1.3.0) (2026-03-02)
+
+### feat
+
+* **agent:** Add profile deletion protection for agents ([c51bd6d](https://github.com/umbraco/Umbraco.AI/commit/c51bd6d4c108d7245996ed855f3356d1c0ccebf3))
+* **agent:** Add Umbraco.AI.Deploy.Agent package ([ada4347](https://github.com/umbraco/Umbraco.AI/commit/ada434714ff511f44252a65071a2be1647317ed0))
+
+### fix
+
+* **core,prompt,agent:** Fix compilation errors in Deploy packages ([3efbbb2](https://github.com/umbraco/Umbraco.AI/commit/3efbbb2cd780624419f9e069e5996f10494bd843))
 
 ## [1.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.1.0...Umbraco.AI.Agent@1.2.0) (2026-02-17)
 

@@ -7,6 +7,7 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Authorization;
 
@@ -38,6 +39,7 @@ public class DeleteProfileController : ProfileControllerBase
     [HttpDelete($"{{{nameof(profileIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProfile(
         IdOrAlias profileIdOrAlias,
@@ -50,12 +52,19 @@ public class DeleteProfileController : ProfileControllerBase
             return ProfileNotFound();
         }
 
-        var deleted = await _profileService.DeleteProfileAsync(profileId.Value, cancellationToken);
-        if (!deleted)
+        try
         {
-            return ProfileNotFound();
-        }
+            var deleted = await _profileService.DeleteProfileAsync(profileId.Value, cancellationToken);
+            if (!deleted)
+            {
+                return ProfileNotFound();
+            }
 
-        return Ok();
+            return Ok();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("cancelled"))
+        {
+            return ProfileOperationStatusResult(ProfileOperationStatus.InUse);
+        }
     }
 }

@@ -175,6 +175,19 @@ internal sealed class EfCoreAIPromptRepository : IAIPromptRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> ExistsWithProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
+
+        var exists = await scope.ExecuteWithContextAsync(async db =>
+            await db.Prompts.AnyAsync(e => e.ProfileId == profileId, cancellationToken));
+
+        scope.Complete();
+
+        return exists;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();

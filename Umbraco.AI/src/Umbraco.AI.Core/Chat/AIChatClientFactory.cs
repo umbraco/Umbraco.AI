@@ -34,7 +34,7 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
         var chatCapability = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
 
         // Create base client from provider with the profile's model
-        var chatClient = chatCapability.CreateClient(profile.Model.ModelId);
+        var chatClient = await chatCapability.CreateClientAsync(profile.Model.ModelId, cancellationToken);
 
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);
@@ -74,7 +74,7 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
             throw new InvalidOperationException(
                 $"Profile '{profile.Name}' does not specify a valid ConnectionId.");
         }
-        
+
         var connection = await _connectionService.GetConnectionAsync(
             profile.ConnectionId,
             cancellationToken);
@@ -89,7 +89,7 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
             throw new InvalidOperationException(
                 $"Connection '{connection.Name}' (ID: {profile.ConnectionId}) is not active.");
         }
-        
+
         var configured = await _connectionService.GetConfiguredProviderAsync(
             profile.ConnectionId,
             cancellationToken);

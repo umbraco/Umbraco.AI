@@ -150,9 +150,6 @@ internal sealed class AIConnectionService : IAIConnectionService
             throw new InvalidOperationException($"Connection with ID '{id}' not found.");
         }
 
-        // TODO: Check if connection is in use by profiles before deletion
-        // This will require IAIProfileService when implemented
-
         // Publish deleting notification (before delete)
         var messages = new EventMessages();
         var deletingNotification = new AIConnectionDeletingNotification(id, messages);

@@ -10,12 +10,9 @@ import type {
 } from "@umbraco-cms/backoffice/components";
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
-import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiTestRunItemModel } from "../../../types.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
-import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
-import { UAI_TEST_WORKSPACE_CONTEXT } from "../../../workspace/test/test-workspace.context-token.js";
 
 interface RunMetrics {
     totalRuns: number;
@@ -50,10 +47,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     @state()
     private _metrics?: RunMetrics;
 
-    @state()
-    private _baselineRunId?: string | null;
-
-    #runItems = new Map<string, UaiTestRunItemModel>();
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
@@ -71,16 +64,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             this.#collectionContext = instance;
             this.#collectionContext?.selection.setSelectable(true);
             this.#observeCollectionItems();
-        });
-        this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
-            if (!context) return;
-            this.observe(
-                context.model,
-                (model) => {
-                    this._baselineRunId = model?.baselineRunId;
-                },
-                "umbBaselineRunIdObserver",
-            );
         });
     }
 
@@ -120,18 +103,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         if (ms < 1000) return `${ms}ms`;
         if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
         return `${(ms / 60000).toFixed(1)}m`;
-    }
-
-    async #openRunDetail(runId: string) {
-        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
-        if (!modalManager) return;
-
-        // Use workspace context baseline if available, otherwise fall back to the run's own baselineRunId
-        const baselineRunId = this._baselineRunId ?? this.#runItems.get(runId)?.baselineRunId;
-
-        modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
-            data: { runId, baselineRunId: baselineRunId ?? undefined },
-        });
     }
 
     #computeMetrics(items: UaiTestRunItemModel[]) {
@@ -225,7 +196,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
     #createTableItems(items: UaiTestRunItemModel[]) {
         this.#computeMetrics(items);
-        this.#runItems = new Map(items.map((item) => [item.unique, item]));
 
         const sorted = this.#sortByExecution(items);
         const executionGroups = this.#buildExecutionGroups(sorted);
@@ -248,7 +218,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     ${varsLine}
                 </div>`;
             } else {
-                executionCell = "";
+                executionCell = "—";
             }
 
             return {
@@ -268,20 +238,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     },
                     {
                         columnAlias: "variationRun",
-                        value: html`<a
-                            href="#"
-                            class="run-link"
-                            title=${item.unique}
-                            @click=${(e: Event) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                this.#openRunDetail(item.unique);
-                            }}
-                            ><uui-tag look="secondary"
-                                >${item.variationName ?? "Default"}</uui-tag
-                            >
-                            <span class="run-number">#${item.runNumber}</span></a
-                        >`,
+                        value: html`<span class="variation-run">
+                            <uui-tag look="secondary">${item.variationName ?? "Default"}</uui-tag>
+                            <span class="run-number">#${item.runNumber}</span>
+                        </span>`,
                     },
                     {
                         columnAlias: "status",
@@ -371,19 +331,15 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     static styles = [
         UmbTextStyles,
         css`
-            .run-link {
+            .variation-run {
                 display: inline-flex;
                 align-items: center;
                 gap: 6px;
-                color: var(--uui-color-interactive);
-                text-decoration: none;
-            }
-            .run-link:hover {
-                text-decoration: underline;
             }
 
             .run-number {
                 font-weight: 600;
+                color: var(--uui-color-text-alt);
             }
 
             .test-cell {

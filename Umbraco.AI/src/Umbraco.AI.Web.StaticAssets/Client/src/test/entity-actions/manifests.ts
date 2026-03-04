@@ -44,6 +44,19 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
+		alias: "UmbracoAI.EntityAction.TestRun.ViewDetail",
+		name: "View Detail Test Run Entity Action",
+		weight: 1000,
+		api: () => import("./test-run-view-detail.action.js"),
+		forEntityTypes: [UAI_TEST_RUN_ENTITY_TYPE],
+		meta: {
+			icon: "icon-eye",
+			label: "View Details",
+		},
+	},
+	{
+		type: "entityAction",
+		kind: "default",
 		alias: "UmbracoAI.EntityAction.TestRun.SetBaseline",
 		name: "Set Baseline Test Run Entity Action",
 		weight: 900,

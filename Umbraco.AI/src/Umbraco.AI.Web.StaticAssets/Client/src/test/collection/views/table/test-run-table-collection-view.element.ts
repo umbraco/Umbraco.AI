@@ -12,7 +12,6 @@ import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collec
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { formatDateTime } from "../../../../core/index.js";
 import type { UaiTestRunItemModel } from "../../../types.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
 import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
@@ -59,14 +58,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
     private _columns: UmbTableColumn[] = [
         { name: "Execution", alias: "execution" },
-        { name: "Run ID", alias: "runId" },
-        { name: "Batch ID", alias: "batchId" },
         { name: "Test", alias: "testId" },
-        { name: "Variation", alias: "variation" },
-        { name: "Run #", alias: "runNumber" },
+        { name: "Variation / Run", alias: "variationRun" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
-        { name: "Executed At", alias: "executedAt" },
         { name: "", alias: "entityActions", align: "right" },
     ];
 
@@ -125,10 +120,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         if (ms < 1000) return `${ms}ms`;
         if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
         return `${(ms / 60000).toFixed(1)}m`;
-    }
-
-    #truncateGuid(guid: string): string {
-        return guid.length > 8 ? guid.substring(0, 8) + "..." : guid;
     }
 
     async #openRunDetail(runId: string) {
@@ -269,7 +260,14 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         value: executionCell,
                     },
                     {
-                        columnAlias: "runId",
+                        columnAlias: "testId",
+                        value: html`<div class="test-cell">
+                            <div class="test-name">${item.testName ?? item.testId}</div>
+                            <div class="test-id" title=${item.testId}>${item.testId}</div>
+                        </div>`,
+                    },
+                    {
+                        columnAlias: "variationRun",
                         value: html`<a
                             href="#"
                             class="run-link"
@@ -279,36 +277,11 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                                 e.stopPropagation();
                                 this.#openRunDetail(item.unique);
                             }}
-                            >${this.#truncateGuid(item.unique)}</a
-                        >`,
-                    },
-                    {
-                        columnAlias: "batchId",
-                        value: item.batchId
-                            ? html`<span title=${item.batchId}>${this.#truncateGuid(item.batchId)}</span>`
-                            : "-",
-                    },
-                    {
-                        columnAlias: "testId",
-                        value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div>${item.testName ?? item.testId}</div>
-                            <div
-                                style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
-                                title=${item.testId}
+                            ><uui-tag look="secondary"
+                                >${item.variationName ?? "Default"}</uui-tag
                             >
-                                ${item.testId}
-                            </div>
-                        </div>`,
-                    },
-                    {
-                        columnAlias: "variation",
-                        value: item.variationName
-                            ? html`<uui-tag look="secondary">${item.variationName}</uui-tag>`
-                            : html`<uui-tag look="secondary">Default</uui-tag>`,
-                    },
-                    {
-                        columnAlias: "runNumber",
-                        value: `#${item.runNumber}`,
+                            <span class="run-number">#${item.runNumber}</span></a
+                        >`,
                     },
                     {
                         columnAlias: "status",
@@ -321,10 +294,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                     {
                         columnAlias: "duration",
                         value: this.#formatDuration(item.durationMs),
-                    },
-                    {
-                        columnAlias: "executedAt",
-                        value: item.executedAt ? formatDateTime(item.executedAt) : "-",
                     },
                     {
                         columnAlias: "entityActions",
@@ -403,12 +372,30 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         UmbTextStyles,
         css`
             .run-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
                 color: var(--uui-color-interactive);
                 text-decoration: none;
-                font-weight: 600;
             }
             .run-link:hover {
                 text-decoration: underline;
+            }
+
+            .run-number {
+                font-weight: 600;
+            }
+
+            .test-cell {
+                font-size: 0.9em;
+                line-height: 1.5;
+                padding: 5px 0;
+            }
+
+            .test-id {
+                color: var(--uui-palette-dusty-grey-dark);
+                font-size: 11px;
+                font-family: monospace;
             }
 
             .metrics-panel {

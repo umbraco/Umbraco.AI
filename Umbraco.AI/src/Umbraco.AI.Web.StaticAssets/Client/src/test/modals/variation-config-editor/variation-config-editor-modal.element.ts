@@ -78,6 +78,14 @@ export class UaiVariationConfigEditorModalElement extends UmbModalBaseElement<
         this._variation = { ...this._variation, profileId: picker.value || null };
     }
 
+    #onContextIdsChange(e: Event) {
+        e.stopPropagation();
+        const picker = e.target as HTMLElement & { value?: string | string[] };
+        const value = picker.value;
+        const contextIds = Array.isArray(value) ? value : value ? [value] : null;
+        this._variation = { ...this._variation, contextIds: contextIds?.length ? contextIds : null };
+    }
+
     #onRunCountChange(e: Event) {
         const input = e.target as HTMLInputElement;
         const value = input.value.trim();
@@ -153,6 +161,16 @@ export class UaiVariationConfigEditorModalElement extends UmbModalBaseElement<
                                     .value=${this._variation.profileId || undefined}
                                     @change=${this.#onProfileChange}
                                 ></uai-profile-picker>
+                            </div>
+                        </umb-property-layout>
+
+                        <umb-property-layout label="Contexts" description="Override the knowledge contexts for this variation">
+                            <div slot="editor">
+                                <uai-context-picker
+                                    multiple
+                                    .value=${this._variation.contextIds?.length ? this._variation.contextIds : undefined}
+                                    @change=${this.#onContextIdsChange}
+                                ></uai-context-picker>
                             </div>
                         </umb-property-layout>
 

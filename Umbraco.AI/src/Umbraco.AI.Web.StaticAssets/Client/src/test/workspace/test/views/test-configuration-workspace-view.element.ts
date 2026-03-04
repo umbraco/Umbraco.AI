@@ -68,6 +68,16 @@ export class UmbracoAITestConfigurationWorkspaceViewElement extends UmbFormContr
         );
     }
 
+    #onContextIdsChange(event: Event) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value?: string | string[] };
+        const value = picker.value;
+        const contextIds = Array.isArray(value) ? value : value ? [value] : [];
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiTestDetailModel>({ contextIds }, "contextIds"),
+        );
+    }
+
     #onRunCountChange(event: Event) {
         const target = event.target as HTMLInputElement;
         const runCount = parseInt(target.value) || 1;
@@ -103,6 +113,16 @@ export class UmbracoAITestConfigurationWorkspaceViewElement extends UmbFormContr
                             .value=${this._model.profileId || undefined}
                             @change=${this.#onProfileChange}
                         ></uai-profile-picker>
+                    </div>
+                </umb-property-layout>
+
+                <umb-property-layout label="Contexts" description="Knowledge contexts to include in test execution (optional)">
+                    <div slot="editor">
+                        <uai-context-picker
+                            multiple
+                            .value=${this._model.contextIds.length > 0 ? this._model.contextIds : undefined}
+                            @change=${this.#onContextIdsChange}
+                        ></uai-context-picker>
                     </div>
                 </umb-property-layout>
 

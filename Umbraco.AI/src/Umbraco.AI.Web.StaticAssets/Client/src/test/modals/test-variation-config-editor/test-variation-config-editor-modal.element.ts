@@ -2,19 +2,19 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import type {
-    UaiVariationConfigEditorModalData,
-    UaiVariationConfigEditorModalValue,
-} from "./variation-config-editor-modal.token.js";
+    UaiTestVariationConfigEditorModalData,
+    UaiTestVariationConfigEditorModalValue,
+} from "./test-variation-config-editor-modal.token.js";
 import type { UaiTestVariation } from "../../types.js";
 import { createEmptyVariation } from "../../types.js";
 import type { EditableModelSchemaModel, TestFeatureResponseModel } from "../../../api/types.gen.js";
 import { UaiTestFeatureItemRepository } from "../../repository/test-feature/test-feature-item.repository.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../core/components/exports.js";
 
-@customElement("uai-variation-config-editor-modal")
-export class UaiVariationConfigEditorModalElement extends UmbModalBaseElement<
-    UaiVariationConfigEditorModalData,
-    UaiVariationConfigEditorModalValue
+@customElement("uai-test-variation-config-editor-modal")
+export class UaiTestVariationConfigEditorModalElement extends UmbModalBaseElement<
+    UaiTestVariationConfigEditorModalData,
+    UaiTestVariationConfigEditorModalValue
 > {
     @state()
     private _variation: UaiTestVariation = createEmptyVariation();
@@ -152,7 +152,6 @@ export class UaiVariationConfigEditorModalElement extends UmbModalBaseElement<
                     </uui-box>
 
                     <uui-box headline="Overrides">
-                        <p class="override-hint">Leave fields empty to inherit from the test's default configuration.</p>
 
                         <umb-property-layout label="Profile" description="Override the AI profile for this variation">
                             <div slot="editor">
@@ -245,10 +244,10 @@ export class UaiVariationConfigEditorModalElement extends UmbModalBaseElement<
     ];
 }
 
-export default UaiVariationConfigEditorModalElement;
+export default UaiTestVariationConfigEditorModalElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-variation-config-editor-modal": UaiVariationConfigEditorModalElement;
+        "uai-test-variation-config-editor-modal": UaiTestVariationConfigEditorModalElement;
     }
 }

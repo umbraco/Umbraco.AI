@@ -2,12 +2,12 @@ import { css, html, customElement, property, repeat } from "@umbraco-cms/backoff
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UAI_VARIATION_CONFIG_EDITOR_MODAL } from "../../modals/variation-config-editor/index.js";
+import { UAI_TEST_VARIATION_CONFIG_EDITOR_MODAL } from "../../modals/test-variation-config-editor/index.js";
 import type { UaiTestVariation } from "../../types.js";
 import { getVariationSummary } from "../../types.js";
 
-@customElement("uai-variation-config-builder")
-export class UaiVariationConfigBuilderElement extends UmbLitElement {
+@customElement("uai-test-variation-config-builder")
+export class UaiTestVariationConfigBuilderElement extends UmbLitElement {
     @property({ type: Array })
     variations: UaiTestVariation[] = [];
 
@@ -18,7 +18,7 @@ export class UaiVariationConfigBuilderElement extends UmbLitElement {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
         if (!modalManager) return;
 
-        const modal = modalManager.open(this, UAI_VARIATION_CONFIG_EDITOR_MODAL, {
+        const modal = modalManager.open(this, UAI_TEST_VARIATION_CONFIG_EDITOR_MODAL, {
             data: {
                 testFeatureId: this.testFeatureId,
             },
@@ -37,7 +37,7 @@ export class UaiVariationConfigBuilderElement extends UmbLitElement {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
         if (!modalManager) return;
 
-        const modal = modalManager.open(this, UAI_VARIATION_CONFIG_EDITOR_MODAL, {
+        const modal = modalManager.open(this, UAI_TEST_VARIATION_CONFIG_EDITOR_MODAL, {
             data: {
                 existingVariation: variation,
                 testFeatureId: this.testFeatureId,
@@ -98,10 +98,10 @@ export class UaiVariationConfigBuilderElement extends UmbLitElement {
     ];
 }
 
-export default UaiVariationConfigBuilderElement;
+export default UaiTestVariationConfigBuilderElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-variation-config-builder": UaiVariationConfigBuilderElement;
+        "uai-test-variation-config-builder": UaiTestVariationConfigBuilderElement;
     }
 }

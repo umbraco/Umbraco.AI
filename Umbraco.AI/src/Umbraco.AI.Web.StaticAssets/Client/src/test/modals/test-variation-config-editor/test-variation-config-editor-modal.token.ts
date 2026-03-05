@@ -1,20 +1,20 @@
 import { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import type { UaiTestVariation } from "../../types.js";
 
-export interface UaiVariationConfigEditorModalData {
+export interface UaiTestVariationConfigEditorModalData {
     existingVariation?: UaiTestVariation;
     testFeatureId: string;
 }
 
-export interface UaiVariationConfigEditorModalValue {
+export interface UaiTestVariationConfigEditorModalValue {
     variation: UaiTestVariation;
 }
 
-export const UAI_VARIATION_CONFIG_EDITOR_MODAL = new UmbModalToken<
-    UaiVariationConfigEditorModalData,
-    UaiVariationConfigEditorModalValue
+export const UAI_TEST_VARIATION_CONFIG_EDITOR_MODAL = new UmbModalToken<
+    UaiTestVariationConfigEditorModalData,
+    UaiTestVariationConfigEditorModalValue
 >(
-    "Uai.Modal.VariationConfigEditor",
+    "Uai.Modal.TestVariationConfigEditor",
     {
         modal: {
             type: "sidebar",

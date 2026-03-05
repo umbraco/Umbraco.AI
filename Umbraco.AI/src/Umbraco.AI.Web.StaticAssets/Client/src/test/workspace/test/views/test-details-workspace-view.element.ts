@@ -5,25 +5,59 @@ import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
 import type { UaiTestDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
+import type { UaiModelEditorChangeEventDetail } from "../../../../core";
+import type { TestFeatureResponseModel } from "../../../../api";
+import { UaiTestFeatureItemRepository } from "../../../repository/test-feature/test-feature-item.repository.ts";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 
 @customElement("umbraco-ai-test-details-workspace-view")
 export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixin(UmbLitElement) {
 	#workspaceContext?: typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE;
+    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
+    #repository!: UaiTestFeatureItemRepository;
 
 	@state()
 	private _model?: UaiTestDetailModel;
 
+    @state()
+    private _testFeature?: TestFeatureResponseModel | null;
+
 	constructor() {
 		super();
+
+        this.#repository = new UaiTestFeatureItemRepository(this);
 
 		this.consumeContext(UAI_TEST_WORKSPACE_CONTEXT, (context) => {
 			if (!context) return;
 			this.#workspaceContext = context;
 			this.observe(context.model, (model) => {
-				this._model = model;
+                const testFeatureChanged = model?.testFeatureId && model.testFeatureId !== this._model?.testFeatureId;
+
+                this._model = model;
+
+                if (testFeatureChanged) {
+                    this.#loadTestFeatureDetails(model!.testFeatureId);
+                }
 			});
 		});
+
+        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+            this.#notificationContext = context;
+        });
 	}
+
+    async #loadTestFeatureDetails(testFeatureId: string) {
+        const { data, error } = await this.#repository.requestById(testFeatureId);
+        if (error) {
+            console.error("Failed to load test feature details:", error);
+            this._testFeature = null;
+            this.#notificationContext?.peek("danger", {
+                data: { message: "Failed to load test feature details" },
+            });
+        } else {
+            this._testFeature = data ?? null;
+        }
+    }
 
 	#onDescriptionChange(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
@@ -41,6 +75,38 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testTargetId }, "testTargetId"),
 		);
 	}
+
+    #onProfileChange(event: Event) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value?: string };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiTestDetailModel>({ profileId: picker.value || null }, "profileId"),
+        );
+    }
+
+    #onContextIdsChange(event: Event) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value?: string | string[] };
+        const value = picker.value;
+        const contextIds = Array.isArray(value) ? value : value ? [value] : [];
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiTestDetailModel>({ contextIds }, "contextIds"),
+        );
+    }
+
+    #onRunCountChange(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const runCount = parseInt(target.value) || 1;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiTestDetailModel>({ runCount }, "runCount"),
+        );
+    }
+
+    #onTestFeatureConfigChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiTestDetailModel>({ testFeatureConfig: e.detail.model }, "testFeatureConfig"),
+        );
+    }
 
 	render() {
 		if (!this._model) return html`<uui-loader></uui-loader>`;
@@ -65,6 +131,47 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 					></uai-test-feature-entity-picker>
 				</umb-property-layout>
 			</uui-box>
+
+            <uui-box headline="Configuration">
+                <umb-property-layout label="Profile" description="AI profile to use for test execution (optional - falls back to feature default)">
+                    <div slot="editor">
+                        <uai-profile-picker
+                            capability="Chat"
+                            .value=${this._model.profileId || undefined}
+                            @change=${this.#onProfileChange}
+                        ></uai-profile-picker>
+                    </div>
+                </umb-property-layout>
+
+                <umb-property-layout label="Contexts" description="Knowledge contexts to include in test execution (optional)">
+                    <div slot="editor">
+                        <uai-context-picker
+                            multiple
+                            .value=${this._model.contextIds.length > 0 ? this._model.contextIds : undefined}
+                            @change=${this.#onContextIdsChange}
+                        ></uai-context-picker>
+                    </div>
+                </umb-property-layout>
+
+                <umb-property-layout label="Run Count" description="Number of times to run this test (for pass@k calculation)">
+                    <uui-input
+                        slot="editor"
+                        type="number"
+                        .value=${this._model.runCount}
+                        @input=${this.#onRunCountChange}
+                        min="1"
+                        max="100"
+                    ></uui-input>
+                </umb-property-layout>
+            </uui-box>
+
+            <uai-model-editor
+                .schema=${this._testFeature?.testFeatureConfigSchema}
+                .model=${this._model.testFeatureConfig}
+                empty-message="This test feature has no configurable parameters."
+                @change=${this.#onTestFeatureConfigChange}
+                default-group="#uaiFieldGroups_configLabel"
+            ></uai-model-editor>
 		`;
 	}
 
@@ -79,6 +186,14 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 			uui-box {
 				--uui-box-default-padding: 0 var(--uui-size-space-5);
 			}
+
+            uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
+            }
+
+            uai-model-editor {
+                margin-top: var(--uui-size-layout-1);
+            }
 
 			uui-loader {
 				display: block;

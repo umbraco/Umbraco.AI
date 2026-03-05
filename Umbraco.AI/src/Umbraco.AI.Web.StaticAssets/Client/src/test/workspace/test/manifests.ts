@@ -33,14 +33,14 @@ export const manifests: Array<UmbExtensionManifest> = [
 	},
     {
         type: "workspaceView",
-        alias: "UmbracoAI.Workspace.Test.View.Configuration",
-        name: "Test Configuration Workspace View",
-        js: () => import("./views/test-configuration-workspace-view.element.js"),
+        alias: "UmbracoAI.Workspace.Test.View.Variations",
+        name: "Test Variations Workspace View",
+        js: () => import("./views/test-config-workspace-view.element.js"),
         weight: 250,
         meta: {
-            label: "Configuration",
-            pathname: "configuration",
-            icon: "icon-wrench",
+            label: "Variations",
+            pathname: "variations",
+            icon: "icon-split-alt",
         },
         conditions: [
             {

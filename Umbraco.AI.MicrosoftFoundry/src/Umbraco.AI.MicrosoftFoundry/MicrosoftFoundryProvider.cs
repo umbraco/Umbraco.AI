@@ -1,20 +1,19 @@
+using System.ClientModel;
 using System.Net.Http.Json;
-using Azure;
-using Azure.AI.Inference;
-using Azure.Core;
-using Azure.Core.Pipeline;
+using Azure.AI.OpenAI;
 using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
-/// AI provider for Microsoft AI Foundry (Azure AI Inference).
+/// AI provider for Microsoft AI Foundry (Azure AI).
 /// </summary>
 /// <remarks>
 /// This provider supports all models available through Microsoft AI Foundry's unified endpoint,
 /// including OpenAI models (GPT-4, GPT-4o), Mistral, Llama, Cohere, Phi, and more.
 /// One endpoint and API key provides access to all deployed models.
+/// Supports both API key and Entra ID authentication.
 /// </remarks>
 [AIProvider("microsoft-foundry", "Microsoft AI Foundry")]
 public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderSettings>
@@ -71,74 +70,16 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     }
 
     /// <summary>
-    /// Creates a ChatCompletionsClient configured with the provided settings.
+    /// Creates an <see cref="AzureOpenAIClient"/> configured with the provided settings.
     /// </summary>
     /// <param name="settings">The provider settings.</param>
-    /// <param name="modelId">The model/deployment name to use.</param>
-    /// <returns>A configured ChatCompletionsClient.</returns>
-    internal static ChatCompletionsClient CreateChatCompletionsClient(MicrosoftFoundryProviderSettings settings, string modelId)
+    /// <returns>A configured AzureOpenAIClient.</returns>
+    internal static AzureOpenAIClient CreateAzureOpenAIClient(MicrosoftFoundryProviderSettings settings)
     {
         ValidateSettings(settings);
 
-        var endpoint = BuildModelEndpoint(settings.Endpoint!, modelId);
-        var credential = new AzureKeyCredential(settings.ApiKey!);
-
-        // For Azure OpenAI endpoints, we need to add the api-key header via policy
-        var options = new AzureAIInferenceClientOptions();
-        options.AddPolicy(new AddApiKeyHeaderPolicy(settings.ApiKey!), HttpPipelinePosition.PerCall);
-
-        return new ChatCompletionsClient(endpoint, credential, options);
-    }
-
-    /// <summary>
-    /// Creates an EmbeddingsClient configured with the provided settings.
-    /// </summary>
-    /// <param name="settings">The provider settings.</param>
-    /// <param name="modelId">The model/deployment name to use.</param>
-    /// <returns>A configured EmbeddingsClient.</returns>
-    internal static EmbeddingsClient CreateEmbeddingsClient(MicrosoftFoundryProviderSettings settings, string modelId)
-    {
-        ValidateSettings(settings);
-
-        var endpoint = BuildModelEndpoint(settings.Endpoint!, modelId);
-        var credential = new AzureKeyCredential(settings.ApiKey!);
-
-        // For Azure OpenAI endpoints, we need to add the api-key header via policy
-        var options = new AzureAIInferenceClientOptions();
-        options.AddPolicy(new AddApiKeyHeaderPolicy(settings.ApiKey!), HttpPipelinePosition.PerCall);
-
-        return new EmbeddingsClient(endpoint, credential, options);
-    }
-
-    /// <summary>
-    /// Builds the full endpoint URL including the model/deployment path.
-    /// </summary>
-    /// <remarks>
-    /// Azure OpenAI endpoints require: https://{resource}.openai.azure.com/openai/deployments/{model}
-    /// Microsoft AI Foundry endpoints require: https://{resource}.services.ai.azure.com/models
-    /// </remarks>
-    private static Uri BuildModelEndpoint(string baseEndpoint, string modelId)
-    {
-        var endpoint = baseEndpoint.TrimEnd('/');
-
-        // Check if this is an Azure OpenAI endpoint
-        if (endpoint.Contains(".openai.azure.com", StringComparison.OrdinalIgnoreCase))
-        {
-            // Azure OpenAI requires the deployment in the path
-            return new Uri($"{endpoint}/openai/deployments/{modelId}");
-        }
-
-        // Check if this is a Microsoft AI Foundry endpoint
-        if (endpoint.Contains(".services.ai.azure.com", StringComparison.OrdinalIgnoreCase))
-        {
-            // AI Foundry requires /models path, model name is passed in request body
-            if (!endpoint.EndsWith("/models", StringComparison.OrdinalIgnoreCase))
-            {
-                return new Uri($"{endpoint}/models");
-            }
-        }
-
-        return new Uri(endpoint);
+        var endpoint = new Uri(settings.Endpoint!);
+        return new AzureOpenAIClient(endpoint, new ApiKeyCredential(settings.ApiKey!));
     }
 
     private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchModelsFromApiAsync(
@@ -202,23 +143,5 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     {
         // Cache per API key + endpoint combination
         return $"{CacheKeyPrefix}{settings.ApiKey?.GetHashCode()}:{settings.Endpoint}";
-    }
-
-    /// <summary>
-    /// HTTP pipeline policy to add the api-key header for Azure OpenAI authentication.
-    /// </summary>
-    private sealed class AddApiKeyHeaderPolicy(string apiKey) : HttpPipelinePolicy
-    {
-        public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
-        {
-            message.Request.Headers.SetValue("api-key", apiKey);
-            ProcessNext(message, pipeline);
-        }
-
-        public override ValueTask ProcessAsync(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
-        {
-            message.Request.Headers.SetValue("api-key", apiKey);
-            return ProcessNextAsync(message, pipeline);
-        }
     }
 }

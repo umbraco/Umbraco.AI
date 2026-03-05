@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
@@ -33,12 +34,11 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) :
     }
 
     /// <inheritdoc />
+    [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(MicrosoftFoundryProviderSettings settings, string? modelId)
-    {
-        var model = modelId ?? DefaultChatModel;
-        return MicrosoftFoundryProvider.CreateChatCompletionsClient(settings, model)
-            .AsIChatClient(model);
-    }
+        => MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)
+            .GetResponsesClient(modelId ?? DefaultChatModel)
+            .AsIChatClient();
 
     private static bool IsChatModel(MicrosoftFoundryModelInfo model)
     {

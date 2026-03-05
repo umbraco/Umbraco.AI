@@ -85,6 +85,12 @@ export type CompareRunsRequestModel = {
     comparisonTestRunId: string;
 };
 
+export type CompareVariationsRequestModel = {
+    executionId: string;
+    sourceVariationId?: string | null;
+    comparisonVariationId: string;
+};
+
 export type ConnectionItemResponseModel = {
     id: string;
     alias: string;
@@ -180,8 +186,11 @@ export type CreateTestRequestModel = {
     description?: string | null;
     testFeatureId: string;
     testTargetId: string;
+    profileId?: string | null;
+    contextIds?: Array<string> | null;
     testFeatureConfig?: unknown;
     graders: Array<TestGraderModel>;
+    variations?: Array<TestVariationModel> | null;
     runCount: number;
     tags: Array<string>;
 };
@@ -373,7 +382,7 @@ export type SettingsResponseModel = {
 
 export type TestBatchResultsResponseModel = {
     results: {
-        [key: string]: TestMetricsResponseModel;
+        [key: string]: TestExecutionResultResponseModel;
     };
 };
 
@@ -390,6 +399,15 @@ export type TestEntityTypeResponseModel = {
     name: string;
     icon?: string | null;
     hasSubTypes: boolean;
+};
+
+export type TestExecutionResultResponseModel = {
+    testId: string;
+    executionId: string;
+    batchId?: string | null;
+    defaultMetrics: TestMetricsResponseModel;
+    variationMetrics: Array<TestVariationMetricsResponseModel>;
+    aggregateMetrics: TestMetricsResponseModel;
 };
 
 export type TestFeatureInfoModel = {
@@ -494,8 +512,11 @@ export type TestResponseModel = {
     description?: string | null;
     testFeatureId: string;
     testTargetId: string;
+    profileId?: string | null;
+    contextIds: Array<string>;
     testFeatureConfig?: unknown;
     graders: Array<TestGraderModel>;
+    variations: Array<TestVariationModel>;
     runCount: number;
     tags: Array<string>;
     dateCreated: string;
@@ -537,6 +558,9 @@ export type TestRunResponseModel = {
     batchId?: string | null;
     isBaseline: boolean;
     baselineRunId?: string | null;
+    executionId: string;
+    variationId?: string | null;
+    variationName?: string | null;
 };
 
 export type TestTokenUsageResponseModel = {
@@ -552,6 +576,33 @@ export type TestTranscriptResponseModel = {
     reasoning?: unknown;
     timing?: unknown;
     finalOutput?: unknown;
+};
+
+export type TestVariationComparisonResponseModel = {
+    sourceVariationName: string;
+    sourceMetrics: TestMetricsResponseModel;
+    comparisonVariationName: string;
+    comparisonMetrics: TestMetricsResponseModel;
+    passRateDelta: number;
+    averageDurationDeltaMs: number;
+    isRegression: boolean;
+    isImprovement: boolean;
+};
+
+export type TestVariationMetricsResponseModel = {
+    variationId: string;
+    variationName: string;
+    metrics: TestMetricsResponseModel;
+};
+
+export type TestVariationModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    runCount?: number | null;
+    contextIds?: Array<string> | null;
+    testFeatureConfig?: unknown;
 };
 
 export type ToolItemResponseModel = {
@@ -602,8 +653,11 @@ export type UpdateTestRequestModel = {
     name: string;
     description?: string | null;
     testTargetId: string;
+    profileId?: string | null;
+    contextIds?: Array<string> | null;
     testFeatureConfig?: unknown;
     graders: Array<TestGraderModel>;
+    variations?: Array<TestVariationModel> | null;
     runCount: number;
     tags: Array<string>;
 };
@@ -1650,6 +1704,10 @@ export type DeleteProfileData = {
 
 export type DeleteProfileErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
@@ -1947,6 +2005,8 @@ export type GetAllTestRunsData = {
         testId?: string;
         batchId?: string;
         status?: string;
+        executionId?: string;
+        variationId?: string;
         skip?: number;
         take?: number;
     };
@@ -2126,6 +2186,66 @@ export type CompareTestRunsResponses = {
 };
 
 export type CompareTestRunsResponse = CompareTestRunsResponses[keyof CompareTestRunsResponses];
+
+export type CompareVariationsData = {
+    body?: CompareVariationsRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/compare-variations';
+};
+
+export type CompareVariationsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type CompareVariationsError = CompareVariationsErrors[keyof CompareVariationsErrors];
+
+export type CompareVariationsResponses = {
+    /**
+     * OK
+     */
+    200: TestVariationComparisonResponseModel;
+};
+
+export type CompareVariationsResponse = CompareVariationsResponses[keyof CompareVariationsResponses];
+
+export type GetExecutionResultData = {
+    body?: never;
+    path: {
+        executionId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/executions/{executionId}';
+};
+
+export type GetExecutionResultErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetExecutionResultError = GetExecutionResultErrors[keyof GetExecutionResultErrors];
+
+export type GetExecutionResultResponses = {
+    /**
+     * OK
+     */
+    200: TestExecutionResultResponseModel;
+};
+
+export type GetExecutionResultResponse = GetExecutionResultResponses[keyof GetExecutionResultResponses];
 
 export type GetLatestTestRunData = {
     body?: never;
@@ -2335,7 +2455,7 @@ export type RunTestResponses = {
     /**
      * OK
      */
-    200: TestMetricsResponseModel;
+    200: TestExecutionResultResponseModel;
 };
 
 export type RunTestResponse = RunTestResponses[keyof RunTestResponses];

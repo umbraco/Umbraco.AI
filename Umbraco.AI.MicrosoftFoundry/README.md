@@ -203,9 +203,17 @@ Microsoft AI Foundry provides access to multiple model providers through a singl
 
 ## Responses API (Optional)
 
-By default, the provider uses the **Chat Completions API**, which is available in all Azure regions. You can opt in to the **OpenAI Responses API** by enabling the **Use Responses API** toggle in the Advanced settings group.
+By default, the provider uses the **Chat Completions API**, which is available in all Azure regions. You can opt in to the **OpenAI Responses API** by enabling the **Use Responses API** toggle in the Advanced settings group of your connection.
 
-The Responses API is the newer OpenAI API and supports additional features, but it is only available in certain Azure regions. If your resource is in a region that does not support the Responses API, you will receive an error when attempting to use it.
+The Responses API is the newer OpenAI API and supports additional features (such as built-in tool use and structured outputs), but it is only available in certain Azure regions. If your resource is in a region that does not support the Responses API, you will receive an error when attempting to use it — disable the toggle to fall back to Chat Completions.
+
+**How to enable:**
+
+1. Navigate to **Settings** > **AI** > **Connections**
+2. Edit your Microsoft AI Foundry connection
+3. Expand the **Advanced** section
+4. Enable the **Use Responses API** toggle
+5. Save the connection
 
 **Regions with Responses API support** (as of March 2026):
 
@@ -215,6 +223,13 @@ The Responses API is the newer OpenAI API and supports additional features, but 
 - Sweden Central
 
 > **Note:** Region availability changes over time. Check [Azure OpenAI model availability](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models) for the latest information.
+
+**Technical details:**
+
+- Chat Completions uses `AzureOpenAIClient` with `{endpoint}/openai/deployments/{model}/chat/completions`
+- Responses API uses `OpenAIClient` with `{endpoint}/openai/v1/responses`
+- Both support API key and Entra ID authentication
+- Embeddings are unaffected — there is no Responses API equivalent for embeddings
 
 ## Configuration from appsettings.json
 
@@ -293,6 +308,17 @@ Then in your connection settings, use:
 - This happens with API key authentication, which cannot access the deployments API
 - Switch to Entra ID authentication and set the **Project Name** to see only deployed models
 - Ensure the service principal has the **Azure AI Developer** role (required for `deployments/read`)
+
+**Responses API errors**
+
+- **"Resource not found" or similar**: The Responses API is not available in your Azure region. Disable the **Use Responses API** toggle to use Chat Completions instead.
+- **Authentication errors with Entra ID**: Check the Umbraco logs for `Failed to acquire Entra ID token for Responses API` — verify your Entra ID credentials and that the service principal has the **Cognitive Services OpenAI Contributor** role.
+
+## Known Limitations
+
+- **Responses API region availability**: The Responses API is only available in certain Azure regions. The Chat Completions API (default) works in all regions. See the [Responses API](#responses-api-optional) section for details.
+- **Deployments API transient auth errors**: Azure's authorization layer may return transient 401 errors when first using a token against a resource (e.g., after changing connection credentials). The provider retries automatically, but if model listing fails, refreshing the page will resolve it. Check the Umbraco logs for `Deployments API returned` warnings.
+- **Deployed model listing requires Entra ID**: The deployments API (which shows only your deployed models) requires Entra ID authentication with the **Azure AI Developer** role. API key authentication falls back to the models catalog API, which lists all available models regardless of deployment status.
 
 ## Requirements
 

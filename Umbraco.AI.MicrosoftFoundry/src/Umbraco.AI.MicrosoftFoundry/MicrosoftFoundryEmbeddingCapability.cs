@@ -28,7 +28,7 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
             .Where(IsEmbeddingModel)
             .Select(m => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, m.Id),
-                MicrosoftFoundryModelUtilities.FormatDisplayName(m.Id)))
+                m.Id))
             .ToList();
     }
 

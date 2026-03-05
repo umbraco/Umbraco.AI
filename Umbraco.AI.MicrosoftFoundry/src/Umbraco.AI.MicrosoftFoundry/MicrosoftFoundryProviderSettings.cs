@@ -35,6 +35,16 @@ public class MicrosoftFoundryProviderSettings
     public string? ApiKey { get; set; }
 
     /// <summary>
+    /// The AI Foundry project name. Required for Entra ID authentication to list deployed models.
+    /// </summary>
+    /// <remarks>
+    /// Found in the AI Foundry portal under project settings.
+    /// Used to build the project-scoped endpoint: {Endpoint}/api/projects/{ProjectName}/deployments
+    /// </remarks>
+    [AIField(Group = "EntraId")]
+    public string? ProjectName { get; set; }
+
+    /// <summary>
     /// The Azure AD tenant ID for Entra ID authentication.
     /// </summary>
     [AIField(Group = "EntraId")]

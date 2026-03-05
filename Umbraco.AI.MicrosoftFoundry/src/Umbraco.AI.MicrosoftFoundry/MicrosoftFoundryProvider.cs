@@ -24,6 +24,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     private const string CacheKeyPrefix = "MicrosoftFoundry_Models_";
     private const string ApiVersion = "2024-10-21";
     private const string CognitiveServicesScope = "https://cognitiveservices.azure.com/.default";
+    private const string AiFoundryScope = "https://ai.azure.com/.default";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
@@ -72,9 +73,9 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 
         IReadOnlyList<MicrosoftFoundryModelInfo> models;
 
-        // When Entra ID is configured, use the deployments API to list only deployed models.
+        // When Entra ID is configured with a project name, use the deployments API to list only deployed models.
         // Fall back to the models API if the deployments call fails.
-        if (HasEntraIdCredentials(settings))
+        if (HasEntraIdCredentials(settings) && !string.IsNullOrWhiteSpace(settings.ProjectName))
         {
             models = await FetchDeploymentsFromApiAsync(settings, cancellationToken);
 
@@ -161,12 +162,12 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         try
         {
             var tokenCredential = BuildTokenCredential(settings);
-            var tokenRequestContext = new Azure.Core.TokenRequestContext([CognitiveServicesScope]);
+            var tokenRequestContext = new Azure.Core.TokenRequestContext([AiFoundryScope]);
             var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
             var client = _httpClientFactory.CreateClient();
             var baseEndpoint = settings.Endpoint!.TrimEnd('/');
-            var deploymentsUrl = $"{baseEndpoint}/deployments?api-version=v1";
+            var deploymentsUrl = $"{baseEndpoint}/api/projects/{settings.ProjectName}/deployments?api-version=v1";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, deploymentsUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
@@ -176,7 +177,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "Deployments API returned {StatusCode}. Ensure the Entra ID principal has 'Cognitive Services OpenAI Contributor' role.",
+                    "Deployments API returned {StatusCode}. Ensure the Entra ID principal has the 'Azure AI Developer' role.",
                     (int)response.StatusCode);
                 return [];
             }
@@ -184,13 +185,12 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             var deploymentsResponse = await response.Content
                 .ReadFromJsonAsync<MicrosoftFoundryDeploymentsResponse>(cancellationToken);
 
-            if (deploymentsResponse?.Value is null)
+            if (deploymentsResponse?.Value is null || deploymentsResponse.Value.Count == 0)
             {
                 return [];
             }
 
             return deploymentsResponse.Value
-                .Where(d => string.Equals(d.Properties?.ProvisioningState, "Succeeded", StringComparison.OrdinalIgnoreCase))
                 .Select(d => new MicrosoftFoundryModelInfo
                 {
                     // Use the deployment name as the model ID (this is what gets passed to the API)
@@ -242,8 +242,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             }
 
             var modelsResponse = await response.Content
-                .ReadFromJsonAsync<MicrosoftFoundryModelsResponse>(cancellationToken)
-                ;
+                .ReadFromJsonAsync<MicrosoftFoundryModelsResponse>(cancellationToken);
 
             if (modelsResponse?.Data is null)
             {

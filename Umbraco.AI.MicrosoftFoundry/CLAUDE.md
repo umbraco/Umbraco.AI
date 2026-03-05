@@ -61,7 +61,7 @@ Authentication is determined at runtime based on which settings fields are popul
 **Chat Capability** (`MicrosoftFoundryChatCapability`):
 
 - Extends `AIChatCapabilityBase<MicrosoftFoundryProviderSettings>`
-- Creates `IChatClient` instances using `AzureOpenAIClient.GetResponsesClient().AsIChatClient()`
+- Creates `IChatClient` instances using `AzureOpenAIClient.GetChatClient().AsIChatClient()`
 - Lists chat models from the models/deployments API
 - Default model: `gpt-4o`
 
@@ -83,8 +83,8 @@ public class MicrosoftFoundryProviderSettings
     [Required]
     public string? Endpoint { get; set; }
 
-    [AIField(IsSensitive = true, Group = "ApiKey")]
-    public string? ApiKey { get; set; }
+    [AIField(Group = "EntraId")]
+    public string? ProjectName { get; set; }
 
     [AIField(Group = "EntraId")]
     public string? TenantId { get; set; }
@@ -94,6 +94,9 @@ public class MicrosoftFoundryProviderSettings
 
     [AIField(IsSensitive = true, Group = "EntraId")]
     public string? ClientSecret { get; set; }
+
+    [AIField(IsSensitive = true, Group = "ApiKey")]
+    public string? ApiKey { get; set; }
 }
 ```
 
@@ -102,7 +105,8 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$MicrosoftF
 ### Model Listing Strategy
 
 - **API Key auth**: Calls `GET {endpoint}/openai/models?api-version=2024-10-21` — returns all models available in the catalog.
-- **Entra ID auth**: Calls `GET {endpoint}/deployments?api-version=v1` — returns only deployed models. Falls back to the models API if the deployments call fails.
+- **Entra ID auth (with ProjectName)**: Calls `GET {endpoint}/api/projects/{ProjectName}/deployments?api-version=v1` using `https://ai.azure.com/.default` scope — returns only deployed models. Falls back to the models API if the deployments call fails. Requires `Azure AI Developer` RBAC role.
+- **Entra ID auth (without ProjectName)**: Falls back to the models API using `https://cognitiveservices.azure.com/.default` scope.
 
 ## Key Namespaces
 
@@ -127,6 +131,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$MicrosoftF
 {
     "MicrosoftFoundry": {
         "Endpoint": "https://your-resource.services.ai.azure.com/",
+        "ProjectName": "your-project-name",
         "TenantId": "your-tenant-id",
         "ClientId": "your-client-id",
         "ClientSecret": "your-client-secret"

@@ -280,7 +280,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         if (HasEntraIdCredentials(settings))
         {
             // Cache per tenant + client + endpoint combination for Entra ID auth
-            return $"{CacheKeyPrefix}entra:{settings.TenantId}:{settings.ClientId}:{settings.Endpoint}";
+            return $"{CacheKeyPrefix}entra:{settings.ProjectName}:{settings.TenantId}:{settings.ClientId}:{settings.Endpoint}";
         }
 
         // Cache per API key + endpoint combination

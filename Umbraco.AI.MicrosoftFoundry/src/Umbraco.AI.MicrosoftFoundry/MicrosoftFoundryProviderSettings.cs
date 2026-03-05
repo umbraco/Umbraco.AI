@@ -9,10 +9,10 @@ namespace Umbraco.AI.MicrosoftFoundry;
 /// <remarks>
 /// Supports two authentication methods:
 /// <list type="bullet">
-/// <item><description><b>API Key</b>: Simple authentication using an API key.</description></item>
 /// <item><description><b>Entra ID</b>: Azure AD authentication using a service principal (TenantId + ClientId + ClientSecret)
 /// or managed identity / DefaultAzureCredential (TenantId only or no Entra ID fields).
 /// When Entra ID is configured, the provider can list deployed models via the deployments API.</description></item>
+/// <item><description><b>API Key</b>: Simple authentication using an API key. Deprecated.</description></item>
 /// </list>
 /// </remarks>
 public class MicrosoftFoundryProviderSettings
@@ -26,13 +26,6 @@ public class MicrosoftFoundryProviderSettings
     [AIField]
     [Required]
     public string? Endpoint { get; set; }
-
-    /// <summary>
-    /// The API key for authenticating with Microsoft AI Foundry services.
-    /// Optional when using Entra ID authentication.
-    /// </summary>
-    [AIField(IsSensitive = true, Group = "ApiKey")]
-    public string? ApiKey { get; set; }
 
     /// <summary>
     /// The AI Foundry project name. Required for Entra ID authentication to list deployed models.
@@ -61,4 +54,11 @@ public class MicrosoftFoundryProviderSettings
     /// </summary>
     [AIField(IsSensitive = true, Group = "EntraId")]
     public string? ClientSecret { get; set; }
+
+    /// <summary>
+    /// The API key for authenticating with Microsoft AI Foundry services.
+    /// Optional when using Entra ID authentication.
+    /// </summary>
+    [AIField(IsSensitive = true, Group = "ApiKey")]
+    public string? ApiKey { get; set; }
 }

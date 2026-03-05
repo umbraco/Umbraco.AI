@@ -14,7 +14,7 @@ export default {
         microsoftFoundryClientSecretDescription: "The client secret for the service principal.",
     },
     uaiFieldGroups: {
-        apiKeyLabel: "API Key Authentication",
+        apiKeyLabel: "API Key Authentication (Deprecated)",
         entraIdLabel: "Entra ID Authentication",
     },
 };

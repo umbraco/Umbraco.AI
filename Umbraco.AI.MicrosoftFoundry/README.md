@@ -122,8 +122,9 @@ In the Umbraco backoffice:
 - Enter your **API Key** in the API Key Authentication section
 
 **Option B: Entra ID / Service Principal (recommended for production)**
-- Enter your **Tenant ID**, **Client ID**, and **Client Secret** in the Entra ID Authentication section
+- Enter your **Project Name**, **Tenant ID**, **Client ID**, and **Client Secret** in the Entra ID Authentication section
 - This enables the model dropdown to show only your deployed models
+- Requires both **Cognitive Services OpenAI Contributor** and **Azure AI Developer** roles (see [Entra ID setup](#entra-id-authentication-setup))
 
 **Option C: Managed Identity / DefaultAzureCredential**
 - Enter only your **Tenant ID** (leave Client ID and Client Secret empty)
@@ -149,23 +150,38 @@ Entra ID authentication allows the provider to list only your deployed models an
 
 ### Assign RBAC Roles
 
-The service principal needs the following role on your Azure AI Services resource:
+The service principal needs two roles on your Azure AI Services resource:
 
 1. Go to your Azure AI Services resource in the Azure Portal
 2. Go to **Access control (IAM)** > **Add role assignment**
-3. Assign **Cognitive Services OpenAI Contributor** to your service principal
+3. Assign the following roles to your service principal:
 
-This role grants access to both the deployments API (for listing models) and the inference API (for chat/embeddings).
+| Role | Purpose |
+|------|---------|
+| **Cognitive Services OpenAI Contributor** | Required for inference (chat completions, embeddings) and listing models via the OpenAI models API |
+| **Azure AI Developer** | Required for listing deployed models via the project-scoped deployments API (`deployments/read` data action) |
+
+> **Note:** Without **Azure AI Developer**, the provider will fall back to the models API which shows all available models instead of just your deployed ones.
+
+### Get Your Project Name
+
+The project name is required for Entra ID authentication to list only your deployed models:
+
+1. Go to [ai.azure.com](https://ai.azure.com) (Microsoft AI Foundry portal)
+2. Open your project
+3. Go to **Project settings** (bottom of left sidebar)
+4. Copy the **Project name**
 
 ## Settings
 
-| Setting      | Group    | Description                                    | Required                         |
-| ------------ | -------- | ---------------------------------------------- | -------------------------------- |
-| Endpoint     | General  | Microsoft AI Foundry endpoint URL              | Yes                              |
-| ApiKey       | API Key  | API key for authentication                     | Required if no Entra ID          |
-| TenantId     | Entra ID | Azure AD tenant ID                             | Required for Entra ID            |
-| ClientId     | Entra ID | Application (client) ID of service principal   | Required for service principal   |
-| ClientSecret | Entra ID | Client secret for service principal            | Required for service principal   |
+| Setting      | Group    | Description                                               | Required                         |
+| ------------ | -------- | --------------------------------------------------------- | -------------------------------- |
+| Endpoint     | General  | Microsoft AI Foundry endpoint URL                         | Yes                              |
+| ProjectName  | Entra ID | AI Foundry project name (for listing deployed models)     | Required to list deployed models |
+| TenantId     | Entra ID | Azure AD tenant ID                                        | Required for Entra ID            |
+| ClientId     | Entra ID | Application (client) ID of service principal              | Required for service principal   |
+| ClientSecret | Entra ID | Client secret for service principal                       | Required for service principal   |
+| ApiKey       | API Key  | API key for authentication (deprecated)                   | Required if no Entra ID          |
 
 ## Supported Models
 
@@ -210,6 +226,7 @@ Then in your connection settings, use:
 {
     "MicrosoftFoundry": {
         "Endpoint": "https://your-resource.services.ai.azure.com/",
+        "ProjectName": "your-project-name",
         "TenantId": "your-tenant-id",
         "ClientId": "your-client-id",
         "ClientSecret": "your-client-secret"
@@ -220,6 +237,7 @@ Then in your connection settings, use:
 Then in your connection settings, use:
 
 - Endpoint: `$MicrosoftFoundry:Endpoint`
+- Project Name: `$MicrosoftFoundry:ProjectName`
 - Tenant ID: `$MicrosoftFoundry:TenantId`
 - Client ID: `$MicrosoftFoundry:ClientId`
 - Client Secret: `$MicrosoftFoundry:ClientSecret`
@@ -234,10 +252,11 @@ Then in your connection settings, use:
 - Verify the model name matches exactly (case-sensitive)
 - Check that the model is deployed in your Microsoft AI Foundry resource
 
-**"Access denied" error**
+**"Access denied" or "PermissionDenied" error**
 
 - Check your API key is correct
-- For Entra ID: verify the service principal has the **Cognitive Services OpenAI Contributor** role
+- For Entra ID inference: verify the service principal has the **Cognitive Services OpenAI Contributor** role
+- For Entra ID model listing: verify the service principal has the **Azure AI Developer** role
 - Verify your Microsoft AI Foundry resource allows access from your IP/network
 
 **"Unavailable model" or "Model not available" error**
@@ -248,14 +267,16 @@ Then in your connection settings, use:
 
 **Model dropdown is empty (Entra ID)**
 
-- Ensure the service principal has the **Cognitive Services OpenAI Contributor** role
-- Check that models are deployed and their provisioning state is "Succeeded"
-- Check the Umbraco logs for warnings from the deployments API
+- Ensure the **Project Name** is set correctly in the Entra ID settings
+- Ensure the service principal has both **Cognitive Services OpenAI Contributor** and **Azure AI Developer** roles
+- Check that models are deployed in your AI Foundry project
+- Check the Umbraco logs for warnings from the deployments API (look for 401/403/404 status codes)
 
 **Model dropdown shows all models instead of deployed ones**
 
 - This happens with API key authentication, which cannot access the deployments API
-- Switch to Entra ID authentication to see only deployed models
+- Switch to Entra ID authentication and set the **Project Name** to see only deployed models
+- Ensure the service principal has the **Azure AI Developer** role (required for `deployments/read`)
 
 ## Requirements
 

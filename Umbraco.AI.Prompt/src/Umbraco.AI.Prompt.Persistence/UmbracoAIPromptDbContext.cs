@@ -61,6 +61,10 @@ public class UmbracoAIPromptDbContext : DbContext
                 .IsRequired()
                 .HasDefaultValue(true);
 
+            entity.Property(e => e.DisplayMode)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             entity.Property(e => e.Scope)
                 .HasMaxLength(4000);
 

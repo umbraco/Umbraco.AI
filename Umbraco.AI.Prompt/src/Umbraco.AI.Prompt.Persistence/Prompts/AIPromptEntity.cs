@@ -61,6 +61,11 @@ internal class AIPromptEntity
     public int OptionCount { get; set; } = 1;
 
     /// <summary>
+    /// Display mode: 0 = PropertyAction, 1 = TipTapTool.
+    /// </summary>
+    public int DisplayMode { get; set; }
+
+    /// <summary>
     /// JSON-serialized scope configuration.
     /// </summary>
     public string? Scope { get; set; }

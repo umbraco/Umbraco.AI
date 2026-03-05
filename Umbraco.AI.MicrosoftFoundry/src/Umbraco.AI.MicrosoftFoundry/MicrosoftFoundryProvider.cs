@@ -1,8 +1,10 @@
 using System.ClientModel;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Azure.AI.OpenAI;
 using Azure.Identity;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.MicrosoftFoundry;
@@ -21,10 +23,12 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 {
     private const string CacheKeyPrefix = "MicrosoftFoundry_Models_";
     private const string ApiVersion = "2024-10-21";
+    private const string CognitiveServicesScope = "https://cognitiveservices.azure.com/.default";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<MicrosoftFoundryProvider> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MicrosoftFoundryProvider"/> class.
@@ -32,14 +36,17 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
     /// <param name="httpClientFactory">The HTTP client factory.</param>
+    /// <param name="logger">The logger.</param>
     public MicrosoftFoundryProvider(
         IAIProviderInfrastructure infrastructure,
         IMemoryCache cache,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        ILogger<MicrosoftFoundryProvider> logger)
         : base(infrastructure)
     {
         _cache = cache;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
         WithCapability<MicrosoftFoundryChatCapability>();
         WithCapability<MicrosoftFoundryEmbeddingCapability>();
     }
@@ -63,7 +70,24 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             return cachedModels;
         }
 
-        var models = await FetchModelsFromApiAsync(settings, cancellationToken);
+        IReadOnlyList<MicrosoftFoundryModelInfo> models;
+
+        // When Entra ID is configured, use the deployments API to list only deployed models.
+        // Fall back to the models API if the deployments call fails.
+        if (HasEntraIdCredentials(settings))
+        {
+            models = await FetchDeploymentsFromApiAsync(settings, cancellationToken);
+
+            if (models.Count == 0)
+            {
+                _logger.LogWarning("Deployments API returned no results; falling back to models API.");
+                models = await FetchModelsFromApiAsync(settings, cancellationToken);
+            }
+        }
+        else
+        {
+            models = await FetchModelsFromApiAsync(settings, cancellationToken);
+        }
 
         _cache.Set(cacheKey, models, CacheDuration);
 
@@ -130,6 +154,58 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         return new DefaultAzureCredential(options);
     }
 
+    private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchDeploymentsFromApiAsync(
+        MicrosoftFoundryProviderSettings settings,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tokenCredential = BuildTokenCredential(settings);
+            var tokenRequestContext = new Azure.Core.TokenRequestContext([CognitiveServicesScope]);
+            var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+
+            var client = _httpClientFactory.CreateClient();
+            var baseEndpoint = settings.Endpoint!.TrimEnd('/');
+            var deploymentsUrl = $"{baseEndpoint}/deployments?api-version=v1";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, deploymentsUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+
+            using var response = await client.SendAsync(request, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Deployments API returned {StatusCode}. Ensure the Entra ID principal has 'Cognitive Services OpenAI Contributor' role.",
+                    (int)response.StatusCode);
+                return [];
+            }
+
+            var deploymentsResponse = await response.Content
+                .ReadFromJsonAsync<MicrosoftFoundryDeploymentsResponse>(cancellationToken);
+
+            if (deploymentsResponse?.Value is null)
+            {
+                return [];
+            }
+
+            return deploymentsResponse.Value
+                .Where(d => string.Equals(d.Properties?.ProvisioningState, "Succeeded", StringComparison.OrdinalIgnoreCase))
+                .Select(d => new MicrosoftFoundryModelInfo
+                {
+                    // Use the deployment name as the model ID (this is what gets passed to the API)
+                    Id = d.Name,
+                })
+                .OrderBy(m => m.Id)
+                .ToList();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or Azure.Identity.AuthenticationFailedException)
+        {
+            _logger.LogWarning(ex, "Failed to fetch deployments from API.");
+            return [];
+        }
+    }
+
     private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchModelsFromApiAsync(
         MicrosoftFoundryProviderSettings settings,
         CancellationToken cancellationToken)
@@ -141,7 +217,19 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         var modelsUrl = $"{baseEndpoint}/openai/models?api-version={ApiVersion}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, modelsUrl);
-        request.Headers.Add("api-key", settings.ApiKey);
+
+        // Use bearer token for Entra ID auth, api-key header for API key auth
+        if (HasEntraIdCredentials(settings))
+        {
+            var tokenCredential = BuildTokenCredential(settings);
+            var tokenRequestContext = new Azure.Core.TokenRequestContext([CognitiveServicesScope]);
+            var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+        }
+        else
+        {
+            request.Headers.Add("api-key", settings.ApiKey);
+        }
 
         try
         {

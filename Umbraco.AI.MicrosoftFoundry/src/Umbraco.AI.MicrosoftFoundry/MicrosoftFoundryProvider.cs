@@ -1,6 +1,7 @@
 using System.ClientModel;
 using System.Net.Http.Json;
 using Azure.AI.OpenAI;
+using Azure.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Core.Providers;
 
@@ -71,6 +72,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 
     /// <summary>
     /// Creates an <see cref="AzureOpenAIClient"/> configured with the provided settings.
+    /// Uses Entra ID authentication when configured, otherwise falls back to API key.
     /// </summary>
     /// <param name="settings">The provider settings.</param>
     /// <returns>A configured AzureOpenAIClient.</returns>
@@ -79,7 +81,53 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         ValidateSettings(settings);
 
         var endpoint = new Uri(settings.Endpoint!);
+
+        if (HasEntraIdCredentials(settings))
+        {
+            return new AzureOpenAIClient(endpoint, BuildTokenCredential(settings));
+        }
+
         return new AzureOpenAIClient(endpoint, new ApiKeyCredential(settings.ApiKey!));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the settings contain any Entra ID credentials.
+    /// </summary>
+    internal static bool HasEntraIdCredentials(MicrosoftFoundryProviderSettings settings)
+        => !string.IsNullOrWhiteSpace(settings.TenantId)
+           || !string.IsNullOrWhiteSpace(settings.ClientId)
+           || !string.IsNullOrWhiteSpace(settings.ClientSecret);
+
+    /// <summary>
+    /// Returns <c>true</c> if the settings contain an API key.
+    /// </summary>
+    internal static bool HasApiKeyCredentials(MicrosoftFoundryProviderSettings settings)
+        => !string.IsNullOrWhiteSpace(settings.ApiKey);
+
+    /// <summary>
+    /// Builds a <see cref="Azure.Core.TokenCredential"/> based on the provided settings.
+    /// If all three Entra ID fields (TenantId, ClientId, ClientSecret) are set, returns a
+    /// <see cref="ClientSecretCredential"/>. Otherwise returns a <see cref="DefaultAzureCredential"/>
+    /// for managed identity or development scenarios.
+    /// </summary>
+    private static Azure.Core.TokenCredential BuildTokenCredential(MicrosoftFoundryProviderSettings settings)
+    {
+        if (!string.IsNullOrWhiteSpace(settings.TenantId)
+            && !string.IsNullOrWhiteSpace(settings.ClientId)
+            && !string.IsNullOrWhiteSpace(settings.ClientSecret))
+        {
+            return new ClientSecretCredential(settings.TenantId, settings.ClientId, settings.ClientSecret);
+        }
+
+        // Fall back to DefaultAzureCredential for managed identity / dev scenarios
+        var options = new DefaultAzureCredentialOptions();
+
+        if (!string.IsNullOrWhiteSpace(settings.TenantId))
+        {
+            options.TenantId = settings.TenantId;
+        }
+
+        return new DefaultAzureCredential(options);
     }
 
     private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchModelsFromApiAsync(
@@ -133,14 +181,21 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             throw new InvalidOperationException("Microsoft AI Foundry endpoint is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        if (!HasApiKeyCredentials(settings) && !HasEntraIdCredentials(settings))
         {
-            throw new InvalidOperationException("Microsoft AI Foundry API key is required.");
+            throw new InvalidOperationException(
+                "Microsoft AI Foundry requires either an API key or Entra ID credentials (TenantId, ClientId, ClientSecret).");
         }
     }
 
     private static string GetCacheKey(MicrosoftFoundryProviderSettings settings)
     {
+        if (HasEntraIdCredentials(settings))
+        {
+            // Cache per tenant + client + endpoint combination for Entra ID auth
+            return $"{CacheKeyPrefix}entra:{settings.TenantId}:{settings.ClientId}:{settings.Endpoint}";
+        }
+
         // Cache per API key + endpoint combination
         return $"{CacheKeyPrefix}{settings.ApiKey?.GetHashCode()}:{settings.Endpoint}";
     }

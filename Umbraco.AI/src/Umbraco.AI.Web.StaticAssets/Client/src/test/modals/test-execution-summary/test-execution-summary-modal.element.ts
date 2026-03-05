@@ -58,30 +58,30 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         return "var(--uui-color-warning)";
     }
 
-    #findBestLabel(): string | undefined {
-        if (!this._result) return undefined;
+    #findBestLabels(): Set<string> {
+        if (!this._result) return new Set();
 
         const candidates = [
             { label: "Default", metrics: this._result.defaultMetrics },
             ...this._result.variationMetrics.map((v) => ({ label: v.variationName, metrics: v.metrics })),
         ];
 
-        if (candidates.length < 2) return undefined;
+        if (candidates.length < 2) return new Set();
 
-        let best = candidates[0];
+        let bestPassAtK = -1;
+        let bestPassToTheK = -1;
         for (const c of candidates) {
-            if (c.metrics.passAtK > best.metrics.passAtK) {
-                best = c;
-            } else if (c.metrics.passAtK === best.metrics.passAtK && c.metrics.passToTheK > best.metrics.passToTheK) {
-                best = c;
+            if (c.metrics.passAtK > bestPassAtK || (c.metrics.passAtK === bestPassAtK && c.metrics.passToTheK > bestPassToTheK)) {
+                bestPassAtK = c.metrics.passAtK;
+                bestPassToTheK = c.metrics.passToTheK;
             }
         }
 
-        // Don't highlight if all are tied
-        const allSame = candidates.every(
-            (c) => c.metrics.passAtK === best.metrics.passAtK && c.metrics.passToTheK === best.metrics.passToTheK,
+        return new Set(
+            candidates
+                .filter((c) => c.metrics.passAtK === bestPassAtK && c.metrics.passToTheK === bestPassToTheK)
+                .map((c) => c.label),
         );
-        return allSame ? undefined : best.label;
     }
 
     #renderVariationRow(label: string, metrics: UaiTestMetrics, index: number, isBest: boolean, isAggregate: boolean) {
@@ -105,7 +105,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
     #renderTable() {
         if (!this._result) return nothing;
 
-        const bestLabel = this.#findBestLabel();
+        const bestLabels = this.#findBestLabels();
 
         const rows: Array<{ label: string; metrics: UaiTestMetrics; isAggregate: boolean }> = [
             { label: "Default", metrics: this._result.defaultMetrics, isAggregate: false },
@@ -127,7 +127,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
                         </tr>
                     </thead>
                     <tbody>
-                        ${rows.map((r, i) => this.#renderVariationRow(r.label, r.metrics, i, r.label === bestLabel, r.isAggregate))}
+                        ${rows.map((r, i) => this.#renderVariationRow(r.label, r.metrics, i, bestLabels.has(r.label), r.isAggregate))}
                     </tbody>
                 </table>
             </uui-box>

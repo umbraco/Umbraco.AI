@@ -58,80 +58,45 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         return "var(--uui-color-warning)";
     }
 
-    #renderMetricsRow(label: string, getValue: (m: UaiTestMetrics) => unknown, index: number) {
-        if (!this._result) return nothing;
-
-        const columns = [
-            getValue(this._result.defaultMetrics),
-            ...this._result.variationMetrics.map((v) => getValue(v.metrics)),
-            getValue(this._result.aggregateMetrics),
-        ];
-
+    #renderVariationRow(label: string, metrics: UaiTestMetrics, index: number) {
         const bg = index % 2 === 1 ? "background: var(--uui-color-surface-alt);" : "";
+        const passAtK = metrics.passAtK;
+        const passToTheK = metrics.passToTheK;
 
         return html`<tr style="${bg}">
             <td style="font-weight: 600; padding: 8px 12px; white-space: nowrap;">${label}</td>
-            ${columns.map(
-                (val) => html`<td style="padding: 8px 12px; text-align: center;">${val}</td>`,
-            )}
-        </tr>`;
-    }
-
-    #renderPercentRow(label: string, getValue: (m: UaiTestMetrics) => number, index: number) {
-        if (!this._result) return nothing;
-
-        const allMetrics = [
-            this._result.defaultMetrics,
-            ...this._result.variationMetrics.map((v) => v.metrics),
-            this._result.aggregateMetrics,
-        ];
-
-        const bg = index % 2 === 1 ? "background: var(--uui-color-surface-alt);" : "";
-
-        return html`<tr style="${bg}">
-            <td style="font-weight: 600; padding: 8px 12px; white-space: nowrap;">${label}</td>
-            ${allMetrics.map((m) => {
-                const val = getValue(m);
-                return html`<td style="padding: 8px 12px; text-align: center; color: ${this.#getPercentColor(val)}; font-weight: 600;">
-                    ${this.#formatPercent(val)}
-                </td>`;
-            })}
+            <td style="padding: 8px 12px; text-align: center;">${metrics.totalRuns}</td>
+            <td style="padding: 8px 12px; text-align: center;">${metrics.passedRuns}<span style="opacity: 0.5;">/${metrics.totalRuns}</span></td>
+            <td style="padding: 8px 12px; text-align: center; color: ${this.#getPercentColor(passAtK)}; font-weight: 600;">${this.#formatPercent(passAtK)}</td>
+            <td style="padding: 8px 12px; text-align: center; color: ${this.#getPercentColor(passToTheK)}; font-weight: 600;">${this.#formatPercent(passToTheK)}</td>
         </tr>`;
     }
 
     #renderTable() {
         if (!this._result) return nothing;
 
-        const headers = [
-            "Default",
-            ...this._result.variationMetrics.map((v) => v.variationName),
-            "Aggregate",
+        const rows: Array<{ label: string; metrics: UaiTestMetrics }> = [
+            { label: "Default", metrics: this._result.defaultMetrics },
+            ...this._result.variationMetrics.map((v) => ({ label: v.variationName, metrics: v.metrics })),
+            { label: "Aggregate", metrics: this._result.aggregateMetrics },
         ];
 
         return html`
             <uui-box headline="Metrics">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--uui-color-border);">
-                                <th style="padding: 8px 12px; text-align: left;">Metric</th>
-                                ${headers.map(
-                                    (h) => html`<th style="padding: 8px 12px; text-align: center; white-space: nowrap;">${h}</th>`,
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${this.#renderMetricsRow("Runs", (m) => m.totalRuns, 0)}
-                            ${this.#renderMetricsRow(
-                                "Passed",
-                                (m) => html`${m.passedRuns}<span style="opacity: 0.5;">/${m.totalRuns}</span>`,
-                                1,
-                            )}
-                            ${this.#renderPercentRow("pass@k", (m) => m.passAtK, 2)}
-                            ${this.#renderPercentRow("pass^k", (m) => m.passToTheK, 3)}
-                        </tbody>
-                    </table>
-                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--uui-color-border);">
+                            <th style="padding: 8px 12px; text-align: left;">Variation</th>
+                            <th style="padding: 8px 12px; text-align: center;">Runs</th>
+                            <th style="padding: 8px 12px; text-align: center;">Passed</th>
+                            <th style="padding: 8px 12px; text-align: center;">pass@k</th>
+                            <th style="padding: 8px 12px; text-align: center;">pass^k</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map((r, i) => this.#renderVariationRow(r.label, r.metrics, i))}
+                    </tbody>
+                </table>
             </uui-box>
         `;
     }

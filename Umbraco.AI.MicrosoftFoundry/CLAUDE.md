@@ -16,7 +16,7 @@ dotnet test Umbraco.AI.MicrosoftFoundry.sln
 
 ## Architecture Overview
 
-Umbraco.AI.MicrosoftFoundry is a provider plugin for Umbraco.AI that enables integration with Microsoft AI Foundry (Azure AI Inference). It follows the provider plugin architecture defined by Umbraco.AI.Core.
+Umbraco.AI.MicrosoftFoundry is a provider plugin for Umbraco.AI that enables integration with Microsoft AI Foundry (Azure AI). It follows the provider plugin architecture defined by Umbraco.AI.Core.
 
 ### Project Structure
 
@@ -34,7 +34,11 @@ The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 [AIProvider("microsoft-foundry", "Microsoft AI Foundry")]
 public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderSettings>
 {
-    public MicrosoftFoundryProvider(IAIProviderInfrastructure infrastructure)
+    public MicrosoftFoundryProvider(
+        IAIProviderInfrastructure infrastructure,
+        IMemoryCache cache,
+        IHttpClientFactory httpClientFactory,
+        ILogger<MicrosoftFoundryProvider> logger)
         : base(infrastructure)
     {
         WithCapability<MicrosoftFoundryChatCapability>();
@@ -43,53 +47,62 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 }
 ```
 
+### Authentication
+
+The provider supports two authentication methods:
+
+- **API Key**: Simple authentication using an API key. Model listing uses the OpenAI models API (shows all available models in the catalog).
+- **Entra ID**: Azure AD authentication via service principal (`ClientSecretCredential`) or managed identity (`DefaultAzureCredential`). Model listing uses the deployments API (shows only deployed models).
+
+Authentication is determined at runtime based on which settings fields are populated. If Entra ID fields are present, Entra ID is used; otherwise API key is used.
+
 ### Capabilities
 
 **Chat Capability** (`MicrosoftFoundryChatCapability`):
 
 - Extends `AIChatCapabilityBase<MicrosoftFoundryProviderSettings>`
-- Creates `IChatClient` instances using Azure.AI.Inference with Microsoft.Extensions.AI.AzureAIInference
-- Returns empty model list (users specify model names in profiles)
+- Creates `IChatClient` instances using `AzureOpenAIClient.GetResponsesClient().AsIChatClient()`
+- Lists chat models from the models/deployments API
 - Default model: `gpt-4o`
 
 **Embedding Capability** (`MicrosoftFoundryEmbeddingCapability`):
 
 - Extends `AIEmbeddingCapabilityBase<MicrosoftFoundryProviderSettings>`
-- Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
-- Returns empty model list (users specify model names in profiles)
+- Creates `IEmbeddingGenerator` instances using `AzureOpenAIClient.GetEmbeddingClient().AsIEmbeddingGenerator()`
+- Lists embedding models from the models/deployments API
 - Default model: `text-embedding-3-small`
 
 ### Settings System
 
-Settings use the `[AIField]` attribute for UI generation:
+Settings use the `[AIField]` attribute with groups for UI organization:
 
 ```csharp
 public class MicrosoftFoundryProviderSettings
 {
     [AIField]
     [Required]
-    public string? Endpoint { get; set; }  // e.g., https://your-resource.services.ai.azure.com/
+    public string? Endpoint { get; set; }
 
-    [AIField]
-    [Required]
+    [AIField(IsSensitive = true, Group = "ApiKey")]
     public string? ApiKey { get; set; }
+
+    [AIField(Group = "EntraId")]
+    public string? TenantId { get; set; }
+
+    [AIField(Group = "EntraId")]
+    public string? ClientId { get; set; }
+
+    [AIField(IsSensitive = true, Group = "EntraId")]
+    public string? ClientSecret { get; set; }
 }
 ```
 
 Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$MicrosoftFoundry:ApiKey"`).
 
-### Microsoft AI Foundry Model Access
+### Model Listing Strategy
 
-Microsoft AI Foundry provides a unified endpoint for multiple model providers:
-
-- **OpenAI models**: GPT-4o, GPT-4, GPT-3.5-turbo, text-embedding-3-\*
-- **Mistral models**: mistral-large, mistral-small
-- **Llama models**: llama-3-70b, llama-3-8b
-- **Cohere models**: command-r, embed-v3
-- **Phi models**: phi-3-medium, phi-3-small
-- And more as deployed in your Azure AI hub
-
-One endpoint + one API key provides access to all deployed models. Users specify the model name in their profile.
+- **API Key auth**: Calls `GET {endpoint}/openai/models?api-version=2024-10-21` — returns all models available in the catalog.
+- **Entra ID auth**: Calls `GET {endpoint}/deployments?api-version=v1` — returns only deployed models. Falls back to the models API if the deployments call fails.
 
 ## Key Namespaces
 
@@ -97,7 +110,7 @@ One endpoint + one API key provides access to all deployed models. Users specify
 
 ## Configuration Examples
 
-### Microsoft AI Foundry
+### API Key Authentication
 
 ```json
 {
@@ -108,12 +121,26 @@ One endpoint + one API key provides access to all deployed models. Users specify
 }
 ```
 
+### Entra ID Authentication (Service Principal)
+
+```json
+{
+    "MicrosoftFoundry": {
+        "Endpoint": "https://your-resource.services.ai.azure.com/",
+        "TenantId": "your-tenant-id",
+        "ClientId": "your-client-id",
+        "ClientSecret": "your-client-secret"
+    }
+}
+```
+
 ## Dependencies
 
 - Umbraco CMS 17.x
 - Umbraco.AI 1.x
-- Azure.AI.Inference
-- Microsoft.Extensions.AI.AzureAIInference
+- Azure.AI.OpenAI
+- Azure.Identity
+- Microsoft.Extensions.AI.OpenAI
 
 ## Target Framework
 

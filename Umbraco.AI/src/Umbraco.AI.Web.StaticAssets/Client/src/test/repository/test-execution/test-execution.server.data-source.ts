@@ -1,7 +1,6 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { TestsService } from "../../../api/sdk.gen.js";
-import { client } from "../../../api/client.gen.js";
 import type {
     RunTestRequestModel,
     RunTestBatchRequestModel,
@@ -60,18 +59,13 @@ export class UaiTestExecutionServerDataSource {
 
     /**
      * Gets the execution result (metrics breakdown) for a given execution ID.
-     * Uses manual client call since the endpoint isn't in the generated SDK yet.
      */
     async getExecutionResult(
         executionId: string,
     ): Promise<{ data?: UaiTestExecutionResult; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            client.get({
-                security: [{ scheme: "bearer", type: "http" }],
-                url: "/umbraco/ai/management/api/v1/executions/{executionId}",
-                path: { executionId },
-            }),
+            TestsService.getExecutionResult({ path: { executionId } }),
         );
 
         if (error || !data) {

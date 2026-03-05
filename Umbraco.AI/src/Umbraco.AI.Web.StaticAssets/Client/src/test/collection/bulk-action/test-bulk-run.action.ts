@@ -43,7 +43,7 @@ export class UaiTestBulkRunAction extends UmbEntityBulkActionBase<never> {
         }
 
         const passed = Object.values(result.results).filter(
-            (m) => m.passAtK > 0,
+            (m) => m.aggregateMetrics.passAtK > 0,
         ).length;
         const failed = Object.values(result.results).length - passed;
 

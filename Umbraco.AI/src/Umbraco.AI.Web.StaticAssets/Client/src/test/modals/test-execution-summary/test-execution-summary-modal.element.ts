@@ -58,27 +58,59 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         return "var(--uui-color-warning)";
     }
 
-    #renderVariationRow(label: string, metrics: UaiTestMetrics, index: number) {
+    #findBestLabel(): string | undefined {
+        if (!this._result) return undefined;
+
+        const candidates = [
+            { label: "Default", metrics: this._result.defaultMetrics },
+            ...this._result.variationMetrics.map((v) => ({ label: v.variationName, metrics: v.metrics })),
+        ];
+
+        if (candidates.length < 2) return undefined;
+
+        let best = candidates[0];
+        for (const c of candidates) {
+            if (c.metrics.passAtK > best.metrics.passAtK) {
+                best = c;
+            } else if (c.metrics.passAtK === best.metrics.passAtK && c.metrics.passToTheK > best.metrics.passToTheK) {
+                best = c;
+            }
+        }
+
+        // Don't highlight if all are tied
+        const allSame = candidates.every(
+            (c) => c.metrics.passAtK === best.metrics.passAtK && c.metrics.passToTheK === best.metrics.passToTheK,
+        );
+        return allSame ? undefined : best.label;
+    }
+
+    #renderVariationRow(label: string, metrics: UaiTestMetrics, index: number, isBest: boolean, isAggregate: boolean) {
         const bg = index % 2 === 1 ? "background: var(--uui-color-surface-alt);" : "";
         const passAtK = metrics.passAtK;
         const passToTheK = metrics.passToTheK;
+        const nameStyle = isAggregate
+            ? "font-weight: 600; padding: 8px 12px; white-space: nowrap; border-top: 2px solid var(--uui-color-border);"
+            : "font-weight: 600; padding: 8px 12px; white-space: nowrap;";
+        const cellBorder = isAggregate ? "border-top: 2px solid var(--uui-color-border);" : "";
 
         return html`<tr style="${bg}">
-            <td style="font-weight: 600; padding: 8px 12px; white-space: nowrap;">${label}</td>
-            <td style="padding: 8px 12px; text-align: center;">${metrics.totalRuns}</td>
-            <td style="padding: 8px 12px; text-align: center;">${metrics.passedRuns}<span style="opacity: 0.5;">/${metrics.totalRuns}</span></td>
-            <td style="padding: 8px 12px; text-align: center; color: ${this.#getPercentColor(passAtK)}; font-weight: 600;">${this.#formatPercent(passAtK)}</td>
-            <td style="padding: 8px 12px; text-align: center; color: ${this.#getPercentColor(passToTheK)}; font-weight: 600;">${this.#formatPercent(passToTheK)}</td>
+            <td style="${nameStyle}">${label} ${isBest ? html`<uui-tag look="primary" color="positive" style="margin-left: 6px; font-size: 10px;">Best</uui-tag>` : nothing}</td>
+            <td style="padding: 8px 12px; text-align: center; ${cellBorder}">${metrics.totalRuns}</td>
+            <td style="padding: 8px 12px; text-align: center; ${cellBorder}">${metrics.passedRuns}<span style="opacity: 0.5;">/${metrics.totalRuns}</span></td>
+            <td style="padding: 8px 12px; text-align: center; ${cellBorder} color: ${this.#getPercentColor(passAtK)}; font-weight: 600;">${this.#formatPercent(passAtK)}</td>
+            <td style="padding: 8px 12px; text-align: center; ${cellBorder} color: ${this.#getPercentColor(passToTheK)}; font-weight: 600;">${this.#formatPercent(passToTheK)}</td>
         </tr>`;
     }
 
     #renderTable() {
         if (!this._result) return nothing;
 
-        const rows: Array<{ label: string; metrics: UaiTestMetrics }> = [
-            { label: "Default", metrics: this._result.defaultMetrics },
-            ...this._result.variationMetrics.map((v) => ({ label: v.variationName, metrics: v.metrics })),
-            { label: "Aggregate", metrics: this._result.aggregateMetrics },
+        const bestLabel = this.#findBestLabel();
+
+        const rows: Array<{ label: string; metrics: UaiTestMetrics; isAggregate: boolean }> = [
+            { label: "Default", metrics: this._result.defaultMetrics, isAggregate: false },
+            ...this._result.variationMetrics.map((v) => ({ label: v.variationName, metrics: v.metrics, isAggregate: false })),
+            { label: "Aggregate", metrics: this._result.aggregateMetrics, isAggregate: true },
         ];
 
         return html`
@@ -94,7 +126,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
                         </tr>
                     </thead>
                     <tbody>
-                        ${rows.map((r, i) => this.#renderVariationRow(r.label, r.metrics, i))}
+                        ${rows.map((r, i) => this.#renderVariationRow(r.label, r.metrics, i, r.label === bestLabel, r.isAggregate))}
                     </tbody>
                 </table>
             </uui-box>

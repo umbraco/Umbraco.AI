@@ -54,6 +54,10 @@ After installation, create a connection in the Umbraco backoffice:
 - Gemini 1.5 Flash
 - Gemini 1.5 Flash 8B
 
+## Known Limitations
+
+- **Billing account required for free-tier models** - Even when using free models (e.g., Gemini Flash), Google requires a billing account with a credit card on file. Without billing enabled, API requests will fail with a "quota exceeded" error. You can set up billing in the [Google AI Studio](https://aistudio.google.com/) or [Google Cloud Console](https://console.cloud.google.com/).
+
 ## Documentation
 
 - **[CLAUDE.md](CLAUDE.md)** - Development guide and technical details (if available)

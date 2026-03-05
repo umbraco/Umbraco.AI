@@ -29,6 +29,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
+    private CancellationTokenSource _cacheEvictionSource = new();
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<MicrosoftFoundryProvider> _logger;
 
@@ -72,6 +73,11 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             return cachedModels;
         }
 
+        // Cache miss — evict all previous entries
+        _cacheEvictionSource.Cancel();
+        _cacheEvictionSource.Dispose();
+        _cacheEvictionSource = new CancellationTokenSource();
+
         IReadOnlyList<MicrosoftFoundryModelInfo> models;
 
         // When Entra ID is configured with a project name, use the deployments API to list only deployed models.
@@ -91,7 +97,10 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             models = await FetchModelsFromApiAsync(settings, cancellationToken);
         }
 
-        _cache.Set(cacheKey, models, CacheDuration);
+        var cacheOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(CacheDuration)
+            .AddExpirationToken(new Microsoft.Extensions.Primitives.CancellationChangeToken(_cacheEvictionSource.Token));
+        _cache.Set(cacheKey, models, cacheOptions);
 
         return models;
     }
@@ -121,8 +130,9 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     /// Uses the <c>{endpoint}/openai/v1/</c> base URL pattern required by AI Foundry.
     /// </summary>
     /// <param name="settings">The provider settings.</param>
+    /// <param name="logger">Optional logger for diagnostic output.</param>
     /// <returns>A configured OpenAIClient.</returns>
-    internal static OpenAIClient CreateOpenAIClient(MicrosoftFoundryProviderSettings settings)
+    internal static OpenAIClient CreateOpenAIClient(MicrosoftFoundryProviderSettings settings, ILogger? logger = null)
     {
         ValidateSettings(settings);
 
@@ -130,9 +140,17 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 
         if (HasEntraIdCredentials(settings))
         {
-            var token = BuildTokenCredential(settings)
-                .GetToken(new Azure.Core.TokenRequestContext([CognitiveServicesScope]), default);
-            return new OpenAIClient(new ApiKeyCredential(token.Token), new OpenAIClientOptions { Endpoint = endpoint });
+            try
+            {
+                var token = BuildTokenCredential(settings)
+                    .GetToken(new Azure.Core.TokenRequestContext([CognitiveServicesScope]), default);
+                return new OpenAIClient(new ApiKeyCredential(token.Token), new OpenAIClientOptions { Endpoint = endpoint });
+            }
+            catch (Azure.Identity.AuthenticationFailedException ex)
+            {
+                logger?.LogError(ex, "Failed to acquire Entra ID token for Responses API (endpoint: {Endpoint}).", settings.Endpoint);
+                throw;
+            }
         }
 
         return new OpenAIClient(new ApiKeyCredential(settings.ApiKey!), new OpenAIClientOptions { Endpoint = endpoint });
@@ -192,16 +210,36 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             var baseEndpoint = settings.Endpoint!.TrimEnd('/');
             var deploymentsUrl = $"{baseEndpoint}/api/projects/{settings.ProjectName}/deployments?api-version=v1";
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, deploymentsUrl);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+            // Azure's authorization layer can return transient 401s when a token is first used
+            // against a resource (e.g., after credential changes). A single retry resolves this.
+            HttpResponseMessage response;
+            const int maxRetries = 1;
 
-            using var response = await client.SendAsync(request, cancellationToken);
+            for (var attempt = 0; ; attempt++)
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, deploymentsUrl);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+                response = await client.SendAsync(request, cancellationToken);
+
+                if (response.IsSuccessStatusCode || attempt >= maxRetries)
+                {
+                    break;
+                }
+
+                _logger.LogDebug("Deployments API returned {StatusCode}, retrying...", (int)response.StatusCode);
+                response.Dispose();
+                await Task.Delay(500, cancellationToken);
+            }
 
             if (!response.IsSuccessStatusCode)
             {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
                 _logger.LogWarning(
-                    "Deployments API returned {StatusCode}. Ensure the Entra ID principal has the 'Azure AI Developer' role.",
-                    (int)response.StatusCode);
+                    "Deployments API ({Url}) returned {StatusCode}: {Body}",
+                    deploymentsUrl,
+                    (int)response.StatusCode,
+                    body);
+                response.Dispose();
                 return [];
             }
 
@@ -260,7 +298,10 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 
             if (!response.IsSuccessStatusCode)
             {
-                // If models endpoint doesn't work, return empty list (user will type model name)
+                _logger.LogWarning(
+                    "Models API ({Url}) returned {StatusCode}.",
+                    modelsUrl,
+                    (int)response.StatusCode);
                 return [];
             }
 

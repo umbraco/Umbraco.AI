@@ -43,6 +43,15 @@ export class UaiTestExecutionRepository extends UmbControllerBase {
             contextIdsOverride,
         });
     }
+
+    /**
+     * Requests the execution result (metrics breakdown) for a given execution ID.
+     */
+    async requestExecutionResult(
+        executionId: string,
+    ): Promise<{ data?: UaiTestExecutionResult; error?: unknown }> {
+        return this.#dataSource.getExecutionResult(executionId);
+    }
 }
 
 export { UaiTestExecutionRepository as api };

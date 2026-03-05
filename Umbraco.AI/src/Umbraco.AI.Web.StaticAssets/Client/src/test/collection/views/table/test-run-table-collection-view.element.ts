@@ -15,6 +15,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiTestRunItemModel } from "../../../types.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
 import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
+import { UAI_TEST_EXECUTION_SUMMARY_MODAL } from "../../../modals/test-execution-summary/test-execution-summary-modal.token.js";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../../../workspace/test/test-workspace.context-token.js";
 
 interface RunMetrics {
@@ -56,8 +57,8 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     #collectionContext?: UmbDefaultCollectionContext<UaiTestRunItemModel>;
 
     private _columns: UmbTableColumn[] = [
-        { name: "Execution", alias: "execution" },
         { name: "Run", alias: "run" },
+        { name: "Execution", alias: "execution" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
         { name: "", alias: "entityActions", align: "right" },
@@ -126,6 +127,15 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
         modalManager.open(this, UAI_TEST_RUN_DETAIL_MODAL, {
             data: { runId, baselineRunId: this._baselineRunId ?? undefined },
+        });
+    }
+
+    async #openExecutionSummary(executionId: string) {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        modalManager.open(this, UAI_TEST_EXECUTION_SUMMARY_MODAL, {
+            data: { executionId },
         });
     }
 
@@ -236,8 +246,16 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 const varsLine = groupInfo.variationCount > 0
                     ? html`<span style="font-size: 12px; color: var(--uui-palette-dusty-grey-dark);"> • ${groupInfo.variationCount} variations</span>`
                     : nothing;
+                const dateContent = groupInfo.runCount >= 2
+                    ? html`<a href="#" style="color: var(--uui-color-interactive);"
+                            @click=${(e: Event) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                this.#openExecutionSummary(item.executionId!);
+                            }}>${this.#formatShortDate(groupInfo.firstDate)}</a>`
+                    : html`${this.#formatShortDate(groupInfo.firstDate)}`;
                 executionCell = html`<div style="line-height: 1.2;">
-                    <div style="font-size: 14px; color: var(--uui-color-text);">${this.#formatShortDate(groupInfo.firstDate)}</div>
+                    <div style="font-size: 14px;">${dateContent}</div>
                     <div>
                         <span style="font-size: 11px; color: var(--uui-palette-dusty-grey-dark);">${groupInfo.runCount} total runs</span>
                         ${varsLine}
@@ -251,10 +269,6 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 id: item.unique,
                 icon: item.isBaseline ? "icon-flag color-green" : UAI_TEST_RUN_ICON,
                 data: [
-                    {
-                        columnAlias: "execution",
-                        value: executionCell,
-                    },
                     {
                         columnAlias: "run",
                         value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
@@ -270,6 +284,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                                 ><strong>${item.testName ?? item.testId}</strong> — ${item.variationName ?? "Default"}/${item.runNumber}</a></div>
                             <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;" title=${item.unique}>${item.unique}</div>
                         </div>`,
+                    },
+                    {
+                        columnAlias: "execution",
+                        value: executionCell,
                     },
                     {
                         columnAlias: "status",

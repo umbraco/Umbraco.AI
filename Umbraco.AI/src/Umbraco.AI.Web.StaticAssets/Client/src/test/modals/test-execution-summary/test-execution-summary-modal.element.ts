@@ -1,6 +1,5 @@
 import { html, css, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
-import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type {
     UaiTestExecutionSummaryModalData,
     UaiTestExecutionSummaryModalValue,
@@ -32,7 +31,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         this.#repository = new UaiTestExecutionRepository(this);
     }
 
-    async firstUpdated() {
+    override async firstUpdated() {
         const executionId = this.data?.executionId;
         if (!executionId) {
             this._error = "No execution ID provided.";
@@ -59,7 +58,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         return "var(--uui-color-warning)";
     }
 
-    #renderMetricsRow(label: string, getValue: (m: UaiTestMetrics) => unknown) {
+    #renderMetricsRow(label: string, getValue: (m: UaiTestMetrics) => unknown, index: number) {
         if (!this._result) return nothing;
 
         const columns = [
@@ -68,7 +67,9 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
             getValue(this._result.aggregateMetrics),
         ];
 
-        return html`<tr>
+        const bg = index % 2 === 1 ? "background: var(--uui-color-surface-alt);" : "";
+
+        return html`<tr style="${bg}">
             <td style="font-weight: 600; padding: 8px 12px; white-space: nowrap;">${label}</td>
             ${columns.map(
                 (val) => html`<td style="padding: 8px 12px; text-align: center;">${val}</td>`,
@@ -76,7 +77,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         </tr>`;
     }
 
-    #renderPercentRow(label: string, getValue: (m: UaiTestMetrics) => number) {
+    #renderPercentRow(label: string, getValue: (m: UaiTestMetrics) => number, index: number) {
         if (!this._result) return nothing;
 
         const allMetrics = [
@@ -85,7 +86,9 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
             this._result.aggregateMetrics,
         ];
 
-        return html`<tr>
+        const bg = index % 2 === 1 ? "background: var(--uui-color-surface-alt);" : "";
+
+        return html`<tr style="${bg}">
             <td style="font-weight: 600; padding: 8px 12px; white-space: nowrap;">${label}</td>
             ${allMetrics.map((m) => {
                 const val = getValue(m);
@@ -106,37 +109,36 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         ];
 
         return html`
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid var(--uui-color-border);">
-                            <th style="padding: 8px 12px; text-align: left;">Metric</th>
-                            ${headers.map(
-                                (h) => html`<th style="padding: 8px 12px; text-align: center; white-space: nowrap;">${h}</th>`,
+            <uui-box headline="Metrics">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--uui-color-border);">
+                                <th style="padding: 8px 12px; text-align: left;">Metric</th>
+                                ${headers.map(
+                                    (h) => html`<th style="padding: 8px 12px; text-align: center; white-space: nowrap;">${h}</th>`,
+                                )}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${this.#renderMetricsRow("Runs", (m) => m.totalRuns, 0)}
+                            ${this.#renderMetricsRow(
+                                "Passed",
+                                (m) => html`${m.passedRuns}<span style="opacity: 0.5;">/${m.totalRuns}</span>`,
+                                1,
                             )}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${this.#renderMetricsRow("Runs", (m) => m.totalRuns)}
-                        ${this.#renderMetricsRow(
-                            "Passed",
-                            (m) => html`${m.passedRuns}<span style="opacity: 0.5;">/${m.totalRuns}</span>`,
-                        )}
-                        ${this.#renderPercentRow("pass@k", (m) => m.passAtK)}
-                        ${this.#renderPercentRow("pass^k", (m) => m.passToTheK)}
-                    </tbody>
-                </table>
-            </div>
+                            ${this.#renderPercentRow("pass@k", (m) => m.passAtK, 2)}
+                            ${this.#renderPercentRow("pass^k", (m) => m.passToTheK, 3)}
+                        </tbody>
+                    </table>
+                </div>
+            </uui-box>
         `;
     }
 
-    render() {
+    override render() {
         return html`
-            <umb-body-layout>
-                <div slot="header">
-                    <h3 style="margin: 0;">Execution Summary</h3>
-                </div>
-
+            <umb-body-layout headline="Execution Summary">
                 ${this._loading
                     ? html`<div style="display: flex; justify-content: center; padding: 40px;">
                         <uui-loader></uui-loader>
@@ -148,30 +150,18 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
                 <div slot="actions">
                     <uui-button
                         label="Close"
-                        look="secondary"
-                        @click=${() => this._rejectModal()}
+                        @click=${this._rejectModal}
                     ></uui-button>
                 </div>
             </umb-body-layout>
         `;
     }
 
-    static styles = [
-        UmbTextStyles,
-        css`
-            :host {
-                display: block;
-            }
-
-            tbody tr:nth-child(odd) {
-                background: var(--uui-color-surface-alt);
-            }
-
-            tbody tr:hover {
-                background: var(--uui-color-surface-emphasis);
-            }
-        `,
-    ];
+    static override styles = css`
+        uui-box {
+            --uui-box-default-padding: 0;
+        }
+    `;
 }
 
 export default UaiTestExecutionSummaryModalElement;

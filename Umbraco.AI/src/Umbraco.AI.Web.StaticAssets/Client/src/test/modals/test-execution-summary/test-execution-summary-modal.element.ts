@@ -157,11 +157,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         `;
     }
 
-    static override styles = css`
-        uui-box {
-            --uui-box-default-padding: 0;
-        }
-    `;
+    static override styles = css``;
 }
 
 export default UaiTestExecutionSummaryModalElement;

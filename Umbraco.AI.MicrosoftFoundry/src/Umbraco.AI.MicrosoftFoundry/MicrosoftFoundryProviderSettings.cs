@@ -56,6 +56,13 @@ public class MicrosoftFoundryProviderSettings
     public string? ClientSecret { get; set; }
 
     /// <summary>
+    /// When enabled, uses the OpenAI Responses API instead of Chat Completions.
+    /// Only available in certain Azure regions.
+    /// </summary>
+    [AIField(Group = "Advanced")]
+    public bool UseResponsesApi { get; set; }
+
+    /// <summary>
     /// The API key for authenticating with Microsoft AI Foundry services.
     /// Optional when using Entra ID authentication.
     /// </summary>

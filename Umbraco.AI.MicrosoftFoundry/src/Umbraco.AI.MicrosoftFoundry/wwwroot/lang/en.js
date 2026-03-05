@@ -12,8 +12,11 @@ export default {
         microsoftFoundryClientIdDescription: "The application (client) ID of the service principal.",
         microsoftFoundryClientSecretLabel: "Client Secret",
         microsoftFoundryClientSecretDescription: "The client secret for the service principal.",
+        microsoftFoundryUseResponsesApiLabel: "Use Responses API",
+        microsoftFoundryUseResponsesApiDescription: "Use the OpenAI Responses API instead of Chat Completions. Only available in certain Azure regions. See documentation for supported regions.",
     },
     uaiFieldGroups: {
+        advancedLabel: "Advanced",
         apiKeyLabel: "API Key Authentication (Deprecated)",
         entraIdLabel: "Entra ID Authentication",
     },

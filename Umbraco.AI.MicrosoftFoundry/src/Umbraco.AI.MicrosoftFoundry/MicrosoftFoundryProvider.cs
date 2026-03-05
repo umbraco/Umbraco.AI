@@ -5,6 +5,7 @@ using Azure.AI.OpenAI;
 using Azure.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using OpenAI;
 using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.MicrosoftFoundry;
@@ -113,6 +114,28 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         }
 
         return new AzureOpenAIClient(endpoint, new ApiKeyCredential(settings.ApiKey!));
+    }
+
+    /// <summary>
+    /// Creates an <see cref="OpenAIClient"/> configured for the Responses API.
+    /// Uses the <c>{endpoint}/openai/v1/</c> base URL pattern required by AI Foundry.
+    /// </summary>
+    /// <param name="settings">The provider settings.</param>
+    /// <returns>A configured OpenAIClient.</returns>
+    internal static OpenAIClient CreateOpenAIClient(MicrosoftFoundryProviderSettings settings)
+    {
+        ValidateSettings(settings);
+
+        var endpoint = new Uri($"{settings.Endpoint!.TrimEnd('/')}/openai/v1/");
+
+        if (HasEntraIdCredentials(settings))
+        {
+            var token = BuildTokenCredential(settings)
+                .GetToken(new Azure.Core.TokenRequestContext([CognitiveServicesScope]), default);
+            return new OpenAIClient(new ApiKeyCredential(token.Token), new OpenAIClientOptions { Endpoint = endpoint });
+        }
+
+        return new OpenAIClient(new ApiKeyCredential(settings.ApiKey!), new OpenAIClientOptions { Endpoint = endpoint });
     }
 
     /// <summary>

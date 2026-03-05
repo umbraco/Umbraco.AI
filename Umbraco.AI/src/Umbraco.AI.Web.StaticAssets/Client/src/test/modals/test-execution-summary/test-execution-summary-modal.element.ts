@@ -88,17 +88,17 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
         const bg = index % 2 === 1 ? "background: var(--uui-color-surface-alt);" : "";
         const passAtK = metrics.passAtK;
         const passToTheK = metrics.passToTheK;
-        const nameStyle = isAggregate
-            ? "font-weight: 600; padding: 8px 12px; white-space: nowrap; border-top: 2px solid var(--uui-color-border);"
-            : "font-weight: 600; padding: 8px 12px; white-space: nowrap;";
-        const cellBorder = isAggregate ? "border-top: 2px solid var(--uui-color-border);" : "";
+        const cellStyle = isAggregate
+            ? "padding: 8px 12px; border-top: 2px solid var(--uui-color-border);"
+            : "padding: 8px 12px;";
 
         return html`<tr style="${bg}">
-            <td style="${nameStyle}">${label} ${isBest ? html`<uui-tag look="primary" color="positive" style="margin-left: 6px; font-size: 10px;">Best</uui-tag>` : nothing}</td>
-            <td style="padding: 8px 12px; text-align: center; ${cellBorder}">${metrics.totalRuns}</td>
-            <td style="padding: 8px 12px; text-align: center; ${cellBorder}">${metrics.passedRuns}<span style="opacity: 0.5;">/${metrics.totalRuns}</span></td>
-            <td style="padding: 8px 12px; text-align: center; ${cellBorder} color: ${this.#getPercentColor(passAtK)}; font-weight: 600;">${this.#formatPercent(passAtK)}</td>
-            <td style="padding: 8px 12px; text-align: center; ${cellBorder} color: ${this.#getPercentColor(passToTheK)}; font-weight: 600;">${this.#formatPercent(passToTheK)}</td>
+            <td style="${cellStyle} font-weight: 600; white-space: nowrap;">${label}</td>
+            <td style="${cellStyle} text-align: center;">${metrics.totalRuns}</td>
+            <td style="${cellStyle} text-align: center;">${metrics.passedRuns}<span style="opacity: 0.5;">/${metrics.totalRuns}</span></td>
+            <td style="${cellStyle} text-align: center; color: ${this.#getPercentColor(passAtK)}; font-weight: 600;">${this.#formatPercent(passAtK)}</td>
+            <td style="${cellStyle} text-align: center; color: ${this.#getPercentColor(passToTheK)}; font-weight: 600;">${this.#formatPercent(passToTheK)}</td>
+            <td style="${cellStyle} text-align: center; width: 24px;">${isBest ? html`<uui-icon name="icon-trophy" style="color: var(--uui-color-positive);"></uui-icon>` : nothing}</td>
         </tr>`;
     }
 
@@ -123,6 +123,7 @@ export class UaiTestExecutionSummaryModalElement extends UmbModalBaseElement<
                             <th style="padding: 8px 12px; text-align: center;">Passed</th>
                             <th style="padding: 8px 12px; text-align: center;">pass@k</th>
                             <th style="padding: 8px 12px; text-align: center;">pass^k</th>
+                            <th style="width: 24px;"></th>
                         </tr>
                     </thead>
                     <tbody>

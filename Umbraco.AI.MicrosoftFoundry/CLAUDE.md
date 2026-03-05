@@ -61,7 +61,8 @@ Authentication is determined at runtime based on which settings fields are popul
 **Chat Capability** (`MicrosoftFoundryChatCapability`):
 
 - Extends `AIChatCapabilityBase<MicrosoftFoundryProviderSettings>`
-- Creates `IChatClient` instances using `AzureOpenAIClient.GetChatClient().AsIChatClient()`
+- Default: Creates `IChatClient` using `AzureOpenAIClient.GetChatClient().AsIChatClient()` (Chat Completions API)
+- Opt-in: When `UseResponsesApi` is enabled, uses `OpenAIClient.GetResponsesClient().AsIChatClient()` (Responses API)
 - Lists chat models from the models/deployments API
 - Default model: `gpt-4o`
 
@@ -82,6 +83,9 @@ public class MicrosoftFoundryProviderSettings
     [AIField]
     [Required]
     public string? Endpoint { get; set; }
+
+    [AIField(Group = "Advanced")]
+    public bool UseResponsesApi { get; set; }
 
     [AIField(Group = "EntraId")]
     public string? ProjectName { get; set; }

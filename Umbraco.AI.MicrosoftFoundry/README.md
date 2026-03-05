@@ -174,14 +174,15 @@ The project name is required for Entra ID authentication to list only your deplo
 
 ## Settings
 
-| Setting      | Group    | Description                                               | Required                         |
-| ------------ | -------- | --------------------------------------------------------- | -------------------------------- |
-| Endpoint     | General  | Microsoft AI Foundry endpoint URL                         | Yes                              |
-| ProjectName  | Entra ID | AI Foundry project name (for listing deployed models)     | Required to list deployed models |
-| TenantId     | Entra ID | Azure AD tenant ID                                        | Required for Entra ID            |
-| ClientId     | Entra ID | Application (client) ID of service principal              | Required for service principal   |
-| ClientSecret | Entra ID | Client secret for service principal                       | Required for service principal   |
-| ApiKey       | API Key  | API key for authentication (deprecated)                   | Required if no Entra ID          |
+| Setting          | Group    | Description                                               | Required                         |
+| ---------------- | -------- | --------------------------------------------------------- | -------------------------------- |
+| Endpoint         | General  | Microsoft AI Foundry endpoint URL                         | Yes                              |
+| UseResponsesApi  | Advanced | Use the OpenAI Responses API instead of Chat Completions  | No (default: off)                |
+| ProjectName      | Entra ID | AI Foundry project name (for listing deployed models)     | Required to list deployed models |
+| TenantId         | Entra ID | Azure AD tenant ID                                        | Required for Entra ID            |
+| ClientId         | Entra ID | Application (client) ID of service principal              | Required for service principal   |
+| ClientSecret     | Entra ID | Client secret for service principal                       | Required for service principal   |
+| ApiKey           | API Key  | API key for authentication (deprecated)                   | Required if no Entra ID          |
 
 ## Supported Models
 
@@ -199,6 +200,21 @@ Microsoft AI Foundry provides access to multiple model providers through a singl
 
 - **OpenAI**: text-embedding-3-large, text-embedding-3-small, text-embedding-ada-002
 - **Cohere**: embed-v3
+
+## Responses API (Optional)
+
+By default, the provider uses the **Chat Completions API**, which is available in all Azure regions. You can opt in to the **OpenAI Responses API** by enabling the **Use Responses API** toggle in the Advanced settings group.
+
+The Responses API is the newer OpenAI API and supports additional features, but it is only available in certain Azure regions. If your resource is in a region that does not support the Responses API, you will receive an error when attempting to use it.
+
+**Regions with Responses API support** (as of March 2026):
+
+- East US, East US 2
+- West US, West US 3
+- UK South
+- Sweden Central
+
+> **Note:** Region availability changes over time. Check [Azure OpenAI model availability](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models) for the latest information.
 
 ## Configuration from appsettings.json
 

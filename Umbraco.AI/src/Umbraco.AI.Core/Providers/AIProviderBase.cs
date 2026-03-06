@@ -19,7 +19,7 @@ public class AIProviderAttribute(string id, string name) : Attribute
     /// The unique identifier of the AI provider.
     /// </summary>
     public string Id { get; } = id;
-    
+
     /// <summary>
     /// The display name of the AI provider.
     /// </summary>
@@ -35,21 +35,21 @@ public abstract class AIProviderBase : IAIProvider
     /// The infrastructure services for AI providers.
     /// </summary>
     protected readonly IAIProviderInfrastructure Infrastructure;
-    
+
     /// <summary>
     /// The capabilities supported by this provider.
     /// </summary>
     protected readonly List<IAICapability> Capabilities = [];
-    
+
     /// <inheritdoc />
     public string Id { get; }
-    
+
     /// <inheritdoc />
     public string Name { get; }
 
     /// <inheritdoc />
     public virtual Type? SettingsType => null;
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIProviderBase"/> class.
     /// </summary>
@@ -57,7 +57,7 @@ public abstract class AIProviderBase : IAIProvider
     protected AIProviderBase(IAIProviderInfrastructure infrastructure)
     {
         Infrastructure = infrastructure;
-        
+
         var attribute = GetType().GetCustomAttribute<AIProviderAttribute>(inherit: false);
         if (attribute == null)
         {
@@ -67,7 +67,7 @@ public abstract class AIProviderBase : IAIProvider
         Id = attribute.Id;
         Name = attribute.Name;
     }
-    
+
     /// <summary>
     /// Gets all capabilities supported by this provider.
     /// </summary>
@@ -86,8 +86,8 @@ public abstract class AIProviderBase : IAIProvider
     /// <inheritdoc />
     public TCapability GetCapability<TCapability>()
         where TCapability : class, IAICapability
-        => TryGetCapability<TCapability>(out var capability) 
-            ? capability! 
+        => TryGetCapability<TCapability>(out var capability)
+            ? capability!
             : throw new InvalidOperationException($"The AI provider '{Id}' does not support the capability '{typeof(TCapability).FullName}'.");
 
     /// <inheritdoc />
@@ -143,33 +143,5 @@ public abstract class AIProviderBase<TSettings> : AIProviderBase
         where TCapability : class, IAICapability<TSettings>
     {
         Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
-    }
-
-    private static string InferEditorUiAlias(Type type)
-    {
-        var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
-
-        // TODO: DateTime, Enum, etc.
-        
-        if (underlyingType == typeof(string)) return "Umb.PropertyEditorUi.TextBox";
-        if (underlyingType == typeof(int)) return "Umb.PropertyEditorUi.Integer";
-        if (underlyingType == typeof(bool)) return "Umb.PropertyEditorUi.Toggle";
-        if (underlyingType == typeof(decimal) || underlyingType == typeof(double) || underlyingType == typeof(float))
-            return "Umb.PropertyEditorUi.Decimal";
-
-        return "Umb.PropertyEditorUi.TextBox"; // fallback
-    }
-    
-    private static IEnumerable<ValidationAttribute> InferValidationAttributes(PropertyInfo property)
-    {
-        var validationAttributes = property.GetCustomAttributes<ValidationAttribute>().ToList();
-        
-        // If the property is non-nullable and doesn't already have a Required attribute, add one
-        if (!property.PropertyType.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
-        {
-            validationAttributes.Add(new RequiredAttribute());
-        }
-
-        return validationAttributes;
     }
 }

@@ -19,7 +19,7 @@ Run the web environment setup script to prepare the environment for .NET develop
 source .claude/scripts/setup-web-environment.sh
 
 # Build
-dotnet build Umbraco.AI.sln
+dotnet build Umbraco.AI.slnx
 ```
 
 ## Workflow
@@ -37,7 +37,7 @@ dotnet build Umbraco.AI.sln
 
 3. **Test the build**:
     ```bash
-    dotnet build Umbraco.AI.sln
+    dotnet build Umbraco.AI.slnx
     ```
 
 ## Problem

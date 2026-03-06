@@ -186,7 +186,7 @@ Umbraco.AI.Agent.UI/
 │       │       ├── manifests.ts
 │       │       └── chat/              # Main module
 │       └── Umbraco.AI.Agent.UI.csproj  # StaticAssets project
-├── Umbraco.AI.Agent.UI.sln
+├── Umbraco.AI.Agent.UI.slnx
 └── CLAUDE.md
 ```
 
@@ -1124,13 +1124,13 @@ Each new product needs:
 
 The commitlint config auto-discovers these -- no changes needed to `commitlint.config.js`.
 
-### `Umbraco.AI.local.sln` update
+### `Umbraco.AI.local.slnx` update
 
 The local unified solution must include the two new projects. Regenerate with:
 
 ```bash
-dotnet sln Umbraco.AI.local.sln add Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.sln
-dotnet sln Umbraco.AI.local.sln add Umbraco.AI.Agent.Chat/Umbraco.AI.Agent.Chat.sln
+dotnet sln Umbraco.AI.local.slnx add Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.slnx
+dotnet sln Umbraco.AI.local.slnx add Umbraco.AI.Agent.Chat/Umbraco.AI.Agent.Chat.slnx
 ```
 
 ### Summary of pipeline file changes

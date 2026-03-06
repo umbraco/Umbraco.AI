@@ -22,7 +22,7 @@ Write-Host ""
 # Check if demo already exists
 if ((Test-Path "demo") -and -not $Force) {
     Write-Host "Demo folder already exists. Use -Force to recreate." -ForegroundColor Yellow
-    Write-Host "Or open the existing Umbraco.AI.local.sln" -ForegroundColor Yellow
+    Write-Host "Or open the existing Umbraco.AI.local.slnx" -ForegroundColor Yellow
     exit 0
 }
 
@@ -32,8 +32,8 @@ if ($Force -and (Test-Path "demo")) {
     Remove-Item -Recurse -Force "demo"
 }
 
-if ($Force -and (Test-Path "Umbraco.AI.local.sln")) {
-    Remove-Item -Force "Umbraco.AI.local.sln"
+if ($Force -and (Test-Path "Umbraco.AI.local.slnx")) {
+    Remove-Item -Force "Umbraco.AI.local.slnx"
 }
 
 # Step 1: Install Umbraco templates
@@ -96,7 +96,7 @@ function Add-ProductProjects {
         $projects = Get-ChildItem -Path $srcPath -Filter "*.csproj" -Recurse
         foreach ($proj in $projects) {
             Write-Host "  Adding $($proj.Name)" -ForegroundColor Gray
-            dotnet sln "Umbraco.AI.local.sln" add $proj.FullName --solution-folder $SolutionFolder 2>$null
+            dotnet sln "Umbraco.AI.local.slnx" add $proj.FullName --solution-folder $SolutionFolder 2>$null
         }
         Write-Host "  Added $($projects.Count) projects" -ForegroundColor DarkGreen
     }
@@ -144,7 +144,7 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
-dotnet sln "Umbraco.AI.local.sln" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
+dotnet sln "Umbraco.AI.local.slnx" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
 
 # Step 13: Add project references to demo site
 Write-Host "Adding project references to demo site..." -ForegroundColor Green
@@ -204,7 +204,7 @@ if (Test-Path "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.
 Write-Host ""
 Write-Host "=== Setup Complete! ===" -ForegroundColor Green
 Write-Host ""
-Write-Host "Solution: Umbraco.AI.local.sln" -ForegroundColor Cyan
+Write-Host "Solution: Umbraco.AI.local.slnx" -ForegroundColor Cyan
 Write-Host "Demo site: demo/Umbraco.AI.DemoSite" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Credentials:" -ForegroundColor Yellow
@@ -212,7 +212,7 @@ Write-Host "  Email: admin@example.com"
 Write-Host "  Password: password1234"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
-Write-Host "  1. Open Umbraco.AI.local.sln in your IDE"
+Write-Host "  1. Open Umbraco.AI.local.slnx in your IDE"
 Write-Host "  2. Build the solution"
 Write-Host "  3. Run the Umbraco.AI.DemoSite project"
 Write-Host ""

@@ -53,7 +53,7 @@ For local development and testing, use the monorepo setup script from the reposi
 ./scripts/install-demo-site.sh   # Linux/Mac
 ```
 
-This creates a unified solution (`Umbraco.AI.local.sln`) with all packages and a demo site. See the [root README](../README.md) for details.
+This creates a unified solution (`Umbraco.AI.local.slnx`) with all packages and a demo site. See the [root README](../README.md) for details.
 
 ## Documentation
 

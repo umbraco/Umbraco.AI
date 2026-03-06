@@ -191,9 +191,11 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
             if (result.action === 'insert' && result.valueChanges?.length) {
                 const valueChange = result.valueChanges[0];
-                const responseHtml = typeof valueChange.value === 'string'
+                const rawValue = typeof valueChange.value === 'string'
                     ? valueChange.value
                     : String(valueChange.value ?? '');
+                const isHtml = /<[a-z][\s\S]*>/i.test(rawValue);
+                const responseHtml = isHtml ? rawValue : rawValue.replace(/\n/g, '<br>');
 
                 if (empty) {
                     // No selection - append response at the end

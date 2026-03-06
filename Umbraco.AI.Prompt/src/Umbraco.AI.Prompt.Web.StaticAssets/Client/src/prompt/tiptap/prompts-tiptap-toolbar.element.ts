@@ -46,9 +46,6 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
     private _prompts: TipTapPromptItem[] = [];
 
     @state()
-    private _open = false;
-
-    @state()
     private _loading = true;
 
     #propertyAlias: string | null = null;
@@ -144,16 +141,9 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
         this._prompts = this.#allPrompts.filter((p) => isPromptAllowed(p.scope, context));
     }
 
-    #onToggleDropdown() {
-        this._open = !this._open;
-    }
-
-    #onCloseDropdown() {
-        this._open = false;
-    }
-
     async #onPromptSelect(prompt: TipTapPromptItem) {
-        this._open = false;
+        // Close the popover
+        this.shadowRoot?.querySelector<HTMLElement>('#ai-prompts-popover')?.hidePopover();
 
         if (!this.editor || !this.#workspaceContext) return;
 
@@ -238,60 +228,50 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
         if (!this._loading && this._prompts.length === 0) return nothing;
 
         return html`
-            <div class="toolbar-wrapper">
-                <uui-button
-                    compact
-                    look="default"
-                    label="AI"
-                    title="AI Prompts"
-                    @click=${this.#onToggleDropdown}
-                    .disabled=${this._loading}>
-                    <umb-icon name="icon-wand"></umb-icon>
-                    <umb-icon name="icon-navigation-down" style="font-size: 8px; margin-left: 2px;"></umb-icon>
-                </uui-button>
-
-                ${this._open
-                    ? html`
-                        <uui-popover-container open @close=${this.#onCloseDropdown}>
-                            <div class="dropdown">
-                                ${this._prompts.map(
-                                    (prompt) => html`
-                                        <button
-                                            class="dropdown-item"
-                                            @click=${() => this.#onPromptSelect(prompt)}>
-                                            <umb-icon name="icon-wand"></umb-icon>
-                                            <div class="dropdown-item-content">
-                                                <span class="dropdown-item-name">${prompt.name}</span>
-                                                ${prompt.description
-                                                    ? html`<span class="dropdown-item-description">${prompt.description}</span>`
-                                                    : nothing}
-                                            </div>
-                                        </button>
-                                    `,
-                                )}
-                            </div>
-                        </uui-popover-container>
-                    `
-                    : nothing}
-            </div>
+            <uui-button
+                compact
+                look="default"
+                label="AI"
+                title="AI Prompts"
+                popovertarget="ai-prompts-popover"
+                .disabled=${this._loading}>
+                <umb-icon name="icon-wand"></umb-icon>
+                <uui-symbol-expand slot="extra" open></uui-symbol-expand>
+            </uui-button>
+            <uui-popover-container id="ai-prompts-popover" placement="bottom-start">
+                <div class="dropdown">
+                    ${this._prompts.map(
+                        (prompt) => html`
+                            <button
+                                class="dropdown-item"
+                                @click=${() => this.#onPromptSelect(prompt)}>
+                                <umb-icon name="icon-wand"></umb-icon>
+                                <div class="dropdown-item-content">
+                                    <span class="dropdown-item-name">${prompt.name}</span>
+                                    ${prompt.description
+                                        ? html`<span class="dropdown-item-description">${prompt.description}</span>`
+                                        : nothing}
+                                </div>
+                            </button>
+                        `,
+                    )}
+                </div>
+            </uui-popover-container>
         `;
     }
 
     static override styles = css`
         :host {
-            display: inline-flex;
-            position: relative;
+            --uui-button-font-weight: normal;
+            margin-left: var(--uui-size-space-1);
+            margin-bottom: var(--uui-size-space-1);
         }
 
-        .toolbar-wrapper {
-            position: relative;
+        uui-button > uui-symbol-expand {
+            margin-left: var(--uui-size-space-2);
         }
 
         .dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            z-index: 10;
             min-width: 220px;
             max-width: 320px;
             background: var(--uui-color-surface);

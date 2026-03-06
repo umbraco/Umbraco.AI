@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, state } from '@umbraco-cms/backoffice/external/lit';
+import { createRef, css, customElement, html, nothing, property, ref, state, type Ref } from '@umbraco-cms/backoffice/external/lit';
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { UMB_PROPERTY_CONTEXT } from '@umbraco-cms/backoffice/property';
 import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content-type';
@@ -47,6 +47,8 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
     @state()
     private _loading = true;
+
+    #popoverRef: Ref<HTMLElement> = createRef();
 
     #propertyAlias: string | null = null;
     #propertyEditorUiAlias: string | null = null;
@@ -143,7 +145,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
     async #onPromptSelect(prompt: TipTapPromptItem) {
         // Close the popover
-        this.shadowRoot?.querySelector<HTMLElement>('#ai-prompts-popover')?.hidePopover();
+        this.#popoverRef.value?.hidePopover();
 
         if (!this.editor || !this.#workspaceContext) return;
 
@@ -238,7 +240,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
                 <umb-icon name="icon-wand"></umb-icon>
                 <uui-symbol-expand slot="extra" open></uui-symbol-expand>
             </uui-button>
-            <uui-popover-container id="ai-prompts-popover" placement="bottom-start">
+            <uui-popover-container id="ai-prompts-popover" placement="bottom-start" ${ref(this.#popoverRef)}>
                 <div class="dropdown">
                     ${this._prompts.map(
                         (prompt) => html`

@@ -13,7 +13,7 @@ appsettings.Local.json
 
 # Demo site
 demo/
-*.local.sln
+*.local.slnx
 
 # Exclude non-source directories that contain pattern matches
 !refs/**

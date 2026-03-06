@@ -292,6 +292,15 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             }
         } catch (e) {}
 
+        // If target property uses RichText editor, wrap in TipTap's expected format
+        if (existingValue?.editorAlias === "Umbraco.RichText") {
+            const currentValue = existingValue.value as { markup?: string; blocks?: object } | undefined;
+            valueToSet = {
+                markup: typeof valueToSet === 'string' ? valueToSet : String(valueToSet),
+                blocks: currentValue?.blocks ?? { layout: {}, contentData: [], settingsData: [], expose: [] },
+            };
+        }
+
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);
             return { success: true };

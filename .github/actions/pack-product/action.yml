@@ -20,12 +20,12 @@ runs:
 
         - name: Restore packages
           shell: bash
-          run: dotnet restore ${{ inputs.product }}/${{ inputs.product }}.sln
+          run: dotnet restore ${{ inputs.product }}/${{ inputs.product }}.slnx
 
         - name: Pack ${{ inputs.product }}
           shell: bash
           run: |
-              dotnet pack ${{ inputs.product }}/${{ inputs.product }}.sln \
+              dotnet pack ${{ inputs.product }}/${{ inputs.product }}.slnx \
                 --configuration Release \
                 --no-build \
                 --output ./artifacts/nupkg \

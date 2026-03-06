@@ -114,13 +114,13 @@ stages:
                       npm run build
                   displayName: Build frontend
 
-                - script: dotnet restore Umbraco.AI.sln
+                - script: dotnet restore Umbraco.AI.slnx
                   displayName: Restore
 
-                - script: dotnet build Umbraco.AI.sln --configuration Release --no-restore -p:DisableCloudBuildNumber=true
+                - script: dotnet build Umbraco.AI.slnx --configuration Release --no-restore -p:DisableCloudBuildNumber=true
                   displayName: Build
 
-                - script: dotnet test Umbraco.AI.sln --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
+                - script: dotnet test Umbraco.AI.slnx --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
                   displayName: Test
 
                 - task: PublishTestResults@2

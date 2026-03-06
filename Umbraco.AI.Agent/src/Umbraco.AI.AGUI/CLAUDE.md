@@ -140,12 +140,12 @@ Umbraco.AI.AGUI/
 
 ## Build Commands
 
-This project is part of the `Umbraco.AI.Agent.sln` solution.
+This project is part of the `Umbraco.AI.Agent.slnx` solution.
 
 ```bash
 # Build from Agent solution root
 cd Umbraco.AI.Agent
-dotnet build Umbraco.AI.Agent.sln
+dotnet build Umbraco.AI.Agent.slnx
 
 # Build this project directly
 dotnet build src/Umbraco.AI.AGUI/Umbraco.AI.AGUI.csproj

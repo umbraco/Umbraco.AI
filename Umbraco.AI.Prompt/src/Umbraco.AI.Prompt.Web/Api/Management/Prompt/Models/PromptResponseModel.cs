@@ -1,3 +1,5 @@
+using Umbraco.AI.Prompt.Core.Prompts;
+
 namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
@@ -49,6 +51,11 @@ public class PromptResponseModel
     /// Whether the prompt is active.
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Determines where this prompt is displayed.
+    /// </summary>
+    public AIPromptDisplayMode DisplayMode { get; set; }
 
     /// <summary>
     /// Scope configuration defining where this prompt can run.

@@ -89,7 +89,7 @@ if is_claude_web_environment; then
 
     echo "=== Setup Complete ==="
     echo ""
-    echo "You can now build with: dotnet build Umbraco.AI.sln"
+    echo "You can now build with: dotnet build Umbraco.AI.slnx"
 else
     echo "Not in Claude Code web environment - no setup needed"
     echo "For local development, use the standard setup: /repo-setup"

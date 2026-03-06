@@ -8,10 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build the solution
-dotnet build Umbraco.AI.Agent.Deploy.sln
+dotnet build Umbraco.AI.Agent.Deploy.slnx
 
 # Run tests
-dotnet test Umbraco.AI.Agent.Deploy.sln
+dotnet test Umbraco.AI.Agent.Deploy.slnx
 ```
 
 ## Architecture Overview

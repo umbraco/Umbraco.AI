@@ -8,10 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build the solution
-dotnet build Umbraco.AI.Google.sln
+dotnet build Umbraco.AI.Google.slnx
 
 # Run tests
-dotnet test Umbraco.AI.Google.sln
+dotnet test Umbraco.AI.Google.slnx
 ```
 
 ## Architecture Overview
@@ -48,8 +48,9 @@ public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
 
 - Extends `AIChatCapabilityBase<GoogleProviderSettings>`
 - Creates `IChatClient` instances using Google.GenAI SDK with `AsIChatClient()` extension
-- Supports Gemini 2.0, 1.5 Pro, 1.5 Flash models
-- Handles model configuration with extended context windows
+- Dynamically discovers available Gemini chat models via API using include/exclude regex patterns
+- Resolves default model dynamically (prefers latest stable flash model)
+- Uses async `CreateClientAsync` override for model resolution
 
 ### Settings System
 
@@ -68,13 +69,11 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 
 ### Supported Models
 
-**Chat Models:**
+**Chat Models:** Dynamically discovered from Google API. Filtered using include/exclude regex patterns:
+- **Include:** Gemini flash and pro variants (`^gemini-.*\b(flash|pro)\b`)
+- **Exclude:** Non-chat variants like image generation, TTS, audio, computer-use (`image|tts|audio|computer-use`)
 
-- `gemini-2.0-flash` (Gemini 2.0 Flash)
-- `gemini-2.0-flash-lite` (Gemini 2.0 Flash Lite)
-- `gemini-1.5-pro` (Gemini 1.5 Pro)
-- `gemini-1.5-flash` (Gemini 1.5 Flash)
-- `gemini-1.5-flash-8b` (Gemini 1.5 Flash 8B)
+No hardcoded model list — the provider adapts automatically as Google adds or deprecates models.
 
 **Key Features:**
 

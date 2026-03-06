@@ -122,6 +122,8 @@ if ($Feed -eq "release") {
     </packageSource>
     <packageSource key="nuget.org">
       <package pattern="*" />
+      <package pattern="Umbraco.AI" />
+      <package pattern="Umbraco.AI.*" />
     </packageSource>
   </packageSourceMapping>
 </configuration>
@@ -136,43 +138,37 @@ Pop-Location
 Write-Host "Installing Umbraco.AI packages from $Feed feed..." -ForegroundColor Green
 Push-Location "demo\$SiteName"
 
-# Determine if we need --prerelease flag (only for nightly/prereleases, not for release)
-$prereleaseFlag = if ($Feed -eq "release") { @() } else { @("--prerelease") }
+# Build the base command arguments for dotnet add package
+# For nightly/prereleases, append --prerelease flag
+function Install-Package {
+    param([string]$PackageName)
+    Write-Host "  Installing $PackageName..." -ForegroundColor Gray
+    if ($Feed -eq "release") {
+        dotnet add package $PackageName
+    } else {
+        dotnet add package $PackageName --prerelease
+    }
+}
 
 # Install Core first to establish the version baseline
-Write-Host "  Installing Umbraco.AI.Core..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Core @prereleaseFlag
+Install-Package "Umbraco.AI.Core"
 
 # Core meta-package (includes Startup + Web.StaticAssets)
-Write-Host "  Installing Umbraco.AI..." -ForegroundColor Gray
-dotnet add package Umbraco.AI @prereleaseFlag
+Install-Package "Umbraco.AI"
 
 # Provider packages
-Write-Host "  Installing Umbraco.AI.OpenAI..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.OpenAI @prereleaseFlag
-
-Write-Host "  Installing Umbraco.AI.Anthropic..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Anthropic @prereleaseFlag
-
-Write-Host "  Installing Umbraco.AI.Google..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Google @prereleaseFlag
-
-Write-Host "  Installing Umbraco.AI.Amazon..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Amazon @prereleaseFlag
-
-Write-Host "  Installing Umbraco.AI.MicrosoftFoundry..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.MicrosoftFoundry @prereleaseFlag
+Install-Package "Umbraco.AI.OpenAI"
+Install-Package "Umbraco.AI.Anthropic"
+Install-Package "Umbraco.AI.Google"
+Install-Package "Umbraco.AI.Amazon"
+Install-Package "Umbraco.AI.MicrosoftFoundry"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
-Write-Host "  Installing Umbraco.AI.Prompt..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Prompt @prereleaseFlag
-
-Write-Host "  Installing Umbraco.AI.Agent..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Agent @prereleaseFlag
+Install-Package "Umbraco.AI.Prompt"
+Install-Package "Umbraco.AI.Agent"
 
 # Agent Copilot (frontend-only static assets)
-Write-Host "  Installing Umbraco.AI.Agent.Copilot..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Agent.Copilot @prereleaseFlag
+Install-Package "Umbraco.AI.Agent.Copilot"
 
 Pop-Location
 

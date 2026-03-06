@@ -188,6 +188,16 @@ Then in your connection settings, use:
 - Go to [ai.azure.com](https://ai.azure.com), open your project, and deploy the model you want to use
 - Once deployed, the model will work through your connection
 
+## Known Limitations
+
+### Model dropdown shows all available models, not just deployed models
+
+The model dropdown when creating a profile displays all models available in the Microsoft AI Foundry catalog, not just the models you have deployed to your project. This is because the Microsoft AI Foundry API does not support listing deployed models using API key authentication alone — it requires Microsoft Entra ID (Azure AD) authentication, which is not currently supported by this provider.
+
+**Workaround:** Select the model name that matches one of your deployed models. If you select a model that is not deployed, you will get an error when trying to use it.
+
+This is tracked in [#81](https://github.com/umbraco/Umbraco.AI/issues/81) and will be addressed in a future release by adding optional Entra ID authentication support for model discovery.
+
 ## Requirements
 
 - Umbraco CMS 17.0.0+

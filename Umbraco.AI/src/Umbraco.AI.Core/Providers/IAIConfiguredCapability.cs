@@ -29,8 +29,9 @@ public interface IAIConfiguredChatCapability : IAIConfiguredCapability
     /// Creates a chat client with the baked-in settings.
     /// </summary>
     /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>
-    IChatClient CreateClient(string? modelId = null);
+    Task<IChatClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -42,6 +43,7 @@ public interface IAIConfiguredEmbeddingCapability : IAIConfiguredCapability
     /// Creates an embedding generator with the baked-in settings.
     /// </summary>
     /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured embedding generator.</returns>
-    IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId = null);
+    Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default);
 }

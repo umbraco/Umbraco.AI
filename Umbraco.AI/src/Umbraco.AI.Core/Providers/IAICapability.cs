@@ -33,7 +33,7 @@ public interface IAICapability
     /// Gets the kind of AI capability.
     /// </summary>
     AICapability Kind { get; }
-    
+
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
@@ -61,8 +61,9 @@ public interface IAIChatCapability : IAICapability
     /// </summary>
     /// <param name="settings">Provider-specific settings (e.g., API key).</param>
     /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>
-    IChatClient CreateClient(object? settings = null, string? modelId = null);
+    Task<IChatClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -75,8 +76,9 @@ public interface IAIEmbeddingCapability : IAICapability
     /// </summary>
     /// <param name="settings">Provider-specific settings (e.g., API key).</param>
     /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured embedding generator.</returns>
-    IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings, string? modelId = null);
+    Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(object? settings, string? modelId = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -88,19 +90,19 @@ public abstract class AICapabilityBase(IAIProvider provider) : IAICapability
     /// Gets or sets the AI provider this capability belongs to.
     /// </summary>
     protected IAIProvider Provider { get; set; } = provider;
-    
+
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
     public abstract AICapability Kind { get; }
-    
+
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
-    
+
     Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
         => GetModelsAsync(cancellationToken);
 }
@@ -115,12 +117,12 @@ public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICap
     /// Gets or sets the AI provider this capability belongs to.
     /// </summary>
     protected IAIProvider Provider { get; set; } = provider;
-    
+
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
     public abstract AICapability Kind { get; }
-    
+
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
@@ -128,7 +130,7 @@ public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICap
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
-    
+
     Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -150,10 +152,24 @@ public abstract class AIChatCapabilityBase(IAIProvider provider) : AICapabilityB
     /// </summary>
     /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
     /// <returns>A configured chat client.</returns>
-    protected abstract IChatClient CreateClient(string? modelId);
+    protected virtual IChatClient CreateClient(string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by chat capability providers.");
+    }
 
-    IChatClient IAIChatCapability.CreateClient(object? settings, string? modelId)
-        => CreateClient(modelId);
+    /// <summary>
+    /// Creates a chat client with the specified model, asynchronously.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured chat client.</returns>
+    protected virtual Task<IChatClient> CreateClientAsync(string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(modelId));
+    }
+
+    Task<IChatClient> IAIChatCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(modelId, cancellationToken);
 }
 
 /// <summary>
@@ -172,14 +188,29 @@ public abstract class AIChatCapabilityBase<TSettings>(IAIProvider provider) : AI
     /// <param name="settings">Provider-specific settings.</param>
     /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
     /// <returns>A configured chat client.</returns>
-    protected abstract IChatClient CreateClient(TSettings settings, string? modelId);
+    protected virtual IChatClient CreateClient(TSettings settings, string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by chat capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a chat client with the provided settings and model, asynchronously.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured chat client.</returns>
+    protected virtual Task<IChatClient> CreateClientAsync(TSettings settings, string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(settings, modelId));
+    }
 
     /// <inheritdoc />
-    IChatClient IAIChatCapability.CreateClient(object? settings, string? modelId)
+    Task<IChatClient> IAIChatCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
-        return CreateClient((TSettings)settings, modelId);
+        return CreateClientAsync((TSettings)settings, modelId, cancellationToken);
     }
 }
 
@@ -196,11 +227,25 @@ public abstract class AIEmbeddingCapabilityBase(IAIProvider provider) : AICapabi
     /// </summary>
     /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
     /// <returns>A configured embedding generator.</returns>
-    protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId);
+    protected virtual IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId)
+    {
+        throw new NotImplementedException("CreateGenerator must be implemented by embedding capability providers.");
+    }
+
+    /// <summary>
+    /// Creates an embedding generator with the specified model, asynchronously.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured embedding generator.</returns>
+    protected virtual Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateGenerator(modelId));
+    }
 
     /// <inheritdoc />
-    IEmbeddingGenerator<string, Embedding<float>> IAIEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
-        => CreateGenerator(modelId);
+    Task<IEmbeddingGenerator<string, Embedding<float>>> IAIEmbeddingCapability.CreateGeneratorAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+        => CreateGeneratorAsync(modelId, cancellationToken);
 }
 
 /// <summary>
@@ -219,13 +264,28 @@ public abstract class AIEmbeddingCapabilityBase<TSettings>(IAIProvider provider)
     /// <param name="settings">Provider-specific settings.</param>
     /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
     /// <returns>A configured embedding generator.</returns>
-    protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(TSettings settings, string? modelId);
+    protected virtual IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(TSettings settings, string? modelId)
+    {
+        throw new NotImplementedException("CreateGenerator must be implemented by embedding capability providers.");
+    }
+
+    /// <summary>
+    /// Creates an embedding generator with the provided settings and model, asynchronously.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured embedding generator.</returns>
+    protected virtual Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(TSettings settings, string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateGenerator(settings, modelId));
+    }
 
     /// <inheritdoc />
-    IEmbeddingGenerator<string, Embedding<float>> IAIEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
+    Task<IEmbeddingGenerator<string, Embedding<float>>> IAIEmbeddingCapability.CreateGeneratorAsync(object? settings, string? modelId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
-        return CreateGenerator((TSettings)settings, modelId);
+        return CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken);
     }
 }

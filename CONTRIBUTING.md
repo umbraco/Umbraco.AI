@@ -38,7 +38,7 @@ cd Umbraco.AI
 ./scripts/setup-git-hooks.sh   # Linux/Mac
 
 # Open unified solution
-start Umbraco.AI.local.sln
+start Umbraco.AI.local.slnx
 ```
 
 ### Repository Structure
@@ -167,8 +167,8 @@ git checkout -b feature/add-embeddings
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
 
 # 3. Build and test
-dotnet build Umbraco.AI/Umbraco.AI.sln
-dotnet test Umbraco.AI/Umbraco.AI.sln
+dotnet build Umbraco.AI/Umbraco.AI.slnx
+dotnet test Umbraco.AI/Umbraco.AI.slnx
 
 # 4. Test in demo site
 cd demo/Umbraco.AI.DemoSite
@@ -197,7 +197,7 @@ git checkout -b feature/shared-context
 # Edit: Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core/...
 
 # 3. Build unified solution (tests everything together)
-dotnet build Umbraco.AI.local.sln
+dotnet build Umbraco.AI.local.slnx
 
 # 4. Test in demo site
 cd demo/Umbraco.AI.DemoSite
@@ -249,11 +249,11 @@ This means:
 
 ```bash
 # Run tests for specific product
-dotnet test Umbraco.AI/Umbraco.AI.sln
-dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.sln
+dotnet test Umbraco.AI/Umbraco.AI.slnx
+dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx
 
 # Run all tests
-dotnet test Umbraco.AI.local.sln
+dotnet test Umbraco.AI.local.slnx
 ```
 
 ## Pull Request Process
@@ -705,7 +705,7 @@ Before releasing, verify dependencies resolve correctly:
 
 ```bash
 # Build with NuGet references (not project references)
-dotnet build Umbraco.AI.local.sln /p:UseProjectReferences=false
+dotnet build Umbraco.AI.local.slnx /p:UseProjectReferences=false
 
 # Verify the correct Core version is resolved
 dotnet list Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Core package --include-transitive | grep Umbraco.AI.Core

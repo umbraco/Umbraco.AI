@@ -52,6 +52,11 @@ export function generatePromptPropertyActionManifest(
     prompt: UaiPromptRegistrationModel,
     weight: number = 100,
 ): ManifestPropertyAction<UaiPromptPropertyActionMeta> | null {
+    // TipTapTool prompts are registered as toolbar extensions, not property actions
+    if (prompt.displayMode === "TipTapTool") {
+        return null;
+    }
+
     const propertyEditorUis = getPropertyEditorUisForScope(prompt);
 
     // If no property editors to show on, don't create a manifest

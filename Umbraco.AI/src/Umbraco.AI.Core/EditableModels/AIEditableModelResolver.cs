@@ -34,12 +34,18 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             return null;
         }
 
-        // If already correct type, just resolve configuration variables and validate
-        if (data is TModel typedModel)
+        // If already correct type, clone via JSON round-trip to avoid mutating the original object,
+        // then resolve configuration variables and validate on the copy
+        if (data is TModel)
         {
-            ResolveConfigurationVariablesInObject(typedModel);
-            ValidateModel(modelId, typedModel);
-            return typedModel;
+            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
+            var deserialized = JsonSerializer.Deserialize<TModel>(json, Constants.DefaultJsonSerializerOptions);
+            if (deserialized is not null)
+            {
+                ResolveConfigurationVariablesInObject(deserialized);
+                ValidateModel(modelId, deserialized);
+            }
+            return deserialized;
         }
 
         // Handle JsonElement deserialization

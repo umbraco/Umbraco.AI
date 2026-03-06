@@ -27,7 +27,7 @@ Perform initial repository setup by running the appropriate setup scripts based 
     - Command: `npm install`
 
 4. **Initial Build** - Build the unified solution
-    - Command: `dotnet build Umbraco.AI.local.sln`
+    - Command: `dotnet build Umbraco.AI.local.slnx`
 
 ## Workflow
 

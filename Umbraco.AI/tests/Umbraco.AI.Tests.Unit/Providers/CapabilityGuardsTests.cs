@@ -56,98 +56,98 @@ public class CapabilityGuardsTests
 
     #endregion
 
-    #region CreateClient with unresolved settings
+    #region CreateClientAsync with unresolved settings
 
     [Fact]
-    public void CreateClient_WithJsonElementSettings_ThrowsInvalidOperationException()
+    public async Task CreateClientAsync_WithJsonElementSettings_ThrowsInvalidOperationException()
     {
         // Arrange
         var capability = new TestChatCapability();
         var jsonElement = JsonDocument.Parse("{}").RootElement;
 
         // Act
-        var act = () => ((IAIChatCapability)capability).CreateClient(jsonElement);
+        var act = () => ((IAIChatCapability)capability).CreateClientAsync(jsonElement);
 
         // Assert
-        var exception = Should.Throw<InvalidOperationException>(act);
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("CreateClient");
         exception.Message.ShouldContain("IAIConfiguredProvider");
     }
 
     [Fact]
-    public void CreateClient_WithResolvedSettings_Succeeds()
+    public async Task CreateClientAsync_WithResolvedSettings_Succeeds()
     {
         // Arrange
         var capability = new TestChatCapability();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
 
         // Act
-        var result = ((IAIChatCapability)capability).CreateClient(settings);
+        var result = await ((IAIChatCapability)capability).CreateClientAsync(settings);
 
         // Assert
         result.ShouldNotBeNull();
     }
 
     [Fact]
-    public void CreateClient_WithNullSettings_ThrowsArgumentNullException()
+    public async Task CreateClientAsync_WithNullSettings_ThrowsArgumentNullException()
     {
         // Arrange
         var capability = new TestChatCapability();
 
         // Act
-        var act = () => ((IAIChatCapability)capability).CreateClient(null);
+        var act = () => ((IAIChatCapability)capability).CreateClientAsync(null);
 
         // Assert
-        Should.Throw<ArgumentNullException>(act);
+        await Should.ThrowAsync<ArgumentNullException>(act);
     }
 
     #endregion
 
-    #region CreateGenerator with unresolved settings
+    #region CreateGeneratorAsync with unresolved settings
 
     [Fact]
-    public void CreateGenerator_WithJsonElementSettings_ThrowsInvalidOperationException()
+    public async Task CreateGeneratorAsync_WithJsonElementSettings_ThrowsInvalidOperationException()
     {
         // Arrange
         var capability = new TestEmbeddingCapability();
         var jsonElement = JsonDocument.Parse("{}").RootElement;
 
         // Act
-        var act = () => ((IAIEmbeddingCapability)capability).CreateGenerator(jsonElement);
+        var act = () => ((IAIEmbeddingCapability)capability).CreateGeneratorAsync(jsonElement);
 
         // Assert
-        var exception = Should.Throw<InvalidOperationException>(act);
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("CreateGenerator");
         exception.Message.ShouldContain("IAIConfiguredProvider");
     }
 
     [Fact]
-    public void CreateGenerator_WithResolvedSettings_Succeeds()
+    public async Task CreateGeneratorAsync_WithResolvedSettings_Succeeds()
     {
         // Arrange
         var capability = new TestEmbeddingCapability();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
 
         // Act
-        var result = ((IAIEmbeddingCapability)capability).CreateGenerator(settings);
+        var result = await ((IAIEmbeddingCapability)capability).CreateGeneratorAsync(settings);
 
         // Assert
         result.ShouldNotBeNull();
     }
 
     [Fact]
-    public void CreateGenerator_WithNullSettings_ThrowsArgumentNullException()
+    public async Task CreateGeneratorAsync_WithNullSettings_ThrowsArgumentNullException()
     {
         // Arrange
         var capability = new TestEmbeddingCapability();
 
         // Act
-        var act = () => ((IAIEmbeddingCapability)capability).CreateGenerator(null);
+        var act = () => ((IAIEmbeddingCapability)capability).CreateGeneratorAsync(null);
 
         // Assert
-        Should.Throw<ArgumentNullException>(act);
+        await Should.ThrowAsync<ArgumentNullException>(act);
     }
 
     #endregion

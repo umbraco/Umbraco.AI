@@ -10,7 +10,7 @@ export const promptTiptapManifests: Array<UmbExtensionManifest> = [
         meta: {
             icon: 'icon-wand',
             label: 'AI Prompts',
-            group: '#tiptap_extGroup_utilities',
+            group: '#tiptapGroup_ai',
         },
     },
     // TipTap toolbar extension: the toolbar dropdown button

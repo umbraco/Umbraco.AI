@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build the solution
-dotnet build Umbraco.AI.sln
+dotnet build Umbraco.AI.slnx
 
 # Build frontend assets (from Client directory)
 cd src/Umbraco.AI.Web.StaticAssets/Client
@@ -25,7 +25,7 @@ npm run generate-client https://localhost:44331/umbraco/swagger/umbraco-ai/swagg
 cd ..
 .\scripts\install-demo-site.ps1  # Windows
 ./scripts/install-demo-site.sh   # Linux/Mac
-# Then open Umbraco.AI.local.sln to work with both package and demo site
+# Then open Umbraco.AI.local.slnx to work with both package and demo site
 ```
 
 ## Testing
@@ -34,16 +34,16 @@ cd ..
 
 ```bash
 # Run all tests
-dotnet test Umbraco.AI.sln
+dotnet test Umbraco.AI.slnx
 
 # Run tests with detailed output
-dotnet test Umbraco.AI.sln --verbosity normal
+dotnet test Umbraco.AI.slnx --verbosity normal
 
 # Run specific test project
 dotnet test tests/Umbraco.AI.Tests.Unit/Umbraco.AI.Tests.Unit.csproj
 
 # Run with code coverage
-dotnet test Umbraco.AI.sln --collect:"XPlat Code Coverage" --results-directory ./coverage
+dotnet test Umbraco.AI.slnx --collect:"XPlat Code Coverage" --results-directory ./coverage
 ```
 
 ### Test Projects
@@ -142,7 +142,7 @@ Provider packages are maintained separately (e.g., `Umbraco.AI.OpenAI`).
 
 ### Solution File Organization
 
-When adding new projects to `Umbraco.AI.sln`:
+When adding new projects to `Umbraco.AI.slnx`:
 
 - **Public/deployable projects** (anything shipped with Umbraco.AI NuGet packages) should be added to the **solution root** - not in a solution folder
 - **Supplementary projects** like tests belong in solution folders (e.g., `Tests/`)

@@ -314,7 +314,7 @@ ProductName/
 │   ├── ProductName.Tests.Integration/
 │   └── ProductName.Tests.Common/
 │
-├── ProductName.sln
+├── ProductName.slnx
 └── CLAUDE.md
 ```
 

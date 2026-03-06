@@ -1,0 +1,68 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/AddOns/" />
+  <Folder Name="/AddOns/Agent/">
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core/Umbraco.AI.Agent.Core.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Persistence.Sqlite/Umbraco.AI.Agent.Persistence.Sqlite.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Persistence.SqlServer/Umbraco.AI.Agent.Persistence.SqlServer.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Persistence/Umbraco.AI.Agent.Persistence.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Umbraco.AI.Agent.Web.StaticAssets.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web/Umbraco.AI.Agent.Web.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent/Umbraco.AI.Agent.csproj" />
+    <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.AGUI/Umbraco.AI.AGUI.csproj" />
+    <Project Path="Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Unit/Umbraco.AI.Agent.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/AddOns/Copilot/">
+    <Project Path="Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj" />
+    <Project Path="Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.csproj" />
+  </Folder>
+  <Folder Name="/AddOns/Prompt/">
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Core/Umbraco.AI.Prompt.Core.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence.Sqlite/Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence.SqlServer/Umbraco.AI.Prompt.Persistence.SqlServer.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence/Umbraco.AI.Prompt.Persistence.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt.Startup.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web/Umbraco.AI.Prompt.Web.csproj" />
+    <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt/Umbraco.AI.Prompt.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Persistence.SqlServer/Umbraco.AI.Persistence.SqlServer.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Persistence/Umbraco.AI.Persistence.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Startup/Umbraco.AI.Startup.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Umbraco.AI.Web.StaticAssets.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI.Web/Umbraco.AI.Web.csproj" />
+    <Project Path="Umbraco.AI/src/Umbraco.AI/Umbraco.AI.csproj" />
+    <Project Path="Umbraco.AI/tests/Umbraco.AI.Tests.Common/Umbraco.AI.Tests.Common.csproj" />
+    <Project Path="Umbraco.AI/tests/Umbraco.AI.Tests.Integration/Umbraco.AI.Tests.Integration.csproj" />
+    <Project Path="Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Umbraco.AI.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Deploy/">
+    <Project Path="Umbraco.AI.Agent.Deploy/src/Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.csproj" />
+    <Project Path="Umbraco.AI.Deploy/src/Umbraco.AI.Deploy/Umbraco.AI.Deploy.csproj" />
+    <Project Path="Umbraco.AI.Prompt.Deploy/src/Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.csproj" />
+  </Folder>
+  <Folder Name="/Providers/" />
+  <Folder Name="/Providers/Amazon/">
+    <Project Path="Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" />
+  </Folder>
+  <Folder Name="/Providers/Anthropic/">
+    <Project Path="Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" />
+  </Folder>
+  <Folder Name="/Providers/Google/">
+    <Project Path="Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj" />
+  </Folder>
+  <Folder Name="/Providers/MicrosoftFoundry/">
+    <Project Path="Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj" />
+  </Folder>
+  <Folder Name="/Providers/OpenAI/">
+    <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
+  </Folder>
+</Solution>

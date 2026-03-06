@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Tests/" />
+  <Project Path="src/Umbraco.AI.Deploy/Umbraco.AI.Deploy.csproj" />
+  <Project Path="tests/Umbraco.AI.Deploy.Tests.Unit/Umbraco.AI.Deploy.Tests.Unit.csproj">
+    <BuildType Project="?" />
+    <Platform Project="?" />
+    <Build Project="false" />
+  </Project>
+</Solution>

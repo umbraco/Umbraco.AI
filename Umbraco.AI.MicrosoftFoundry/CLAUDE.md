@@ -8,10 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build the solution
-dotnet build Umbraco.AI.MicrosoftFoundry.sln
+dotnet build Umbraco.AI.MicrosoftFoundry.slnx
 
 # Run tests
-dotnet test Umbraco.AI.MicrosoftFoundry.sln
+dotnet test Umbraco.AI.MicrosoftFoundry.slnx
 ```
 
 ## Architecture Overview

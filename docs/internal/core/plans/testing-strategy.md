@@ -348,16 +348,16 @@ private static void RegisterAIServices(IServiceCollection services, IConfigurati
 
 ```bash
 # Run all tests
-dotnet test Umbraco.AI.sln
+dotnet test Umbraco.AI.slnx
 
 # Run tests with detailed output
-dotnet test Umbraco.AI.sln --verbosity normal
+dotnet test Umbraco.AI.slnx --verbosity normal
 
 # Run specific test project
 dotnet test tests/Umbraco.AI.Tests.Unit/Umbraco.AI.Tests.Unit.csproj
 
 # Run with code coverage
-dotnet test Umbraco.AI.sln --collect:"XPlat Code Coverage" --results-directory ./coverage
+dotnet test Umbraco.AI.slnx --collect:"XPlat Code Coverage" --results-directory ./coverage
 ```
 
 ---

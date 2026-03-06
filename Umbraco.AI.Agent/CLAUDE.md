@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build the solution
-dotnet build Umbraco.AI.Agent.sln
+dotnet build Umbraco.AI.Agent.slnx
 
 # Build frontend assets (from Client directory)
 cd src/Umbraco.AI.Agent.Web.StaticAssets/Client
@@ -23,7 +23,7 @@ npm run watch
 
 ```bash
 # Run all tests
-dotnet test Umbraco.AI.Agent.sln
+dotnet test Umbraco.AI.Agent.slnx
 
 # Run specific test project
 dotnet test tests/Umbraco.AI.Agent.Tests.Unit/Umbraco.AI.Agent.Tests.Unit.csproj

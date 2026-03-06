@@ -51,7 +51,7 @@ echo ""
 # Check if demo already exists
 if [ -d "demo" ] && [ "$FORCE" = false ]; then
     echo "Demo folder already exists. Use --force to recreate."
-    echo "Or open the existing Umbraco.AI.local.sln"
+    echo "Or open the existing Umbraco.AI.local.slnx"
     exit 0
 fi
 
@@ -61,8 +61,8 @@ if [ "$FORCE" = true ] && [ -d "demo" ]; then
     rm -rf "demo"
 fi
 
-if [ "$FORCE" = true ] && [ -f "Umbraco.AI.local.sln" ]; then
-    rm -f "Umbraco.AI.local.sln"
+if [ "$FORCE" = true ] && [ -f "Umbraco.AI.local.slnx" ]; then
+    rm -f "Umbraco.AI.local.slnx"
 fi
 
 # Step 1: Install Umbraco templates
@@ -118,7 +118,7 @@ add_product_projects() {
         while IFS= read -r -d '' proj; do
             local proj_name=$(basename "$proj")
             echo "  Adding $proj_name"
-            dotnet sln "Umbraco.AI.local.sln" add "$proj" --solution-folder "$solution_folder" 2>/dev/null || true
+            dotnet sln "Umbraco.AI.local.slnx" add "$proj" --solution-folder "$solution_folder" 2>/dev/null || true
             ((count++))
         done < <(find "$src_path" -name "*.csproj" -print0)
         echo "  Added $count projects"
@@ -167,7 +167,7 @@ add_product_projects "Umbraco.AI.Amazon" "Amazon"
 
 # Step 11: Add demo site to solution
 echo "Adding demo site to solution..."
-dotnet sln "Umbraco.AI.local.sln" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
+dotnet sln "Umbraco.AI.local.slnx" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
 
 # Step 13: Add project references to demo site
 echo "Adding project references to demo site..."
@@ -229,7 +229,7 @@ echo "========================================="
 echo "Setup Complete!"
 echo "========================================="
 echo ""
-echo "Solution: Umbraco.AI.local.sln"
+echo "Solution: Umbraco.AI.local.slnx"
 echo "Demo site: demo/Umbraco.AI.DemoSite"
 echo ""
 echo "Credentials:"
@@ -237,7 +237,7 @@ echo "  Email: admin@example.com"
 echo "  Password: password1234"
 echo ""
 echo "Next steps:"
-echo "  1. Open Umbraco.AI.local.sln in your IDE"
+echo "  1. Open Umbraco.AI.local.slnx in your IDE"
 echo "  2. Build the solution"
 echo "  3. Run the Umbraco.AI.DemoSite project"
 echo ""

@@ -36,12 +36,12 @@ steps:
       condition: ${{ parameters.condition }}
       workingDirectory: ${{ parameters.product }}
 
-    - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true
+    - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.slnx --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true
       displayName: Restore packages
       condition: ${{ parameters.condition }}
 
     - script: |
-          dotnet pack ${{ parameters.product }}/${{ parameters.product }}.sln \
+          dotnet pack ${{ parameters.product }}/${{ parameters.product }}.slnx \
             --configuration Release \
             --no-build \
             --output ./artifacts/nupkg \

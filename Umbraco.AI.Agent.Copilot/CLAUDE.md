@@ -36,7 +36,7 @@ npm run build:copilot
 npm run watch:copilot
 
 # Build .NET solution (minimal - just static assets)
-dotnet build Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.sln
+dotnet build Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.slnx
 ```
 
 ## Project Structure
@@ -69,7 +69,7 @@ Umbraco.AI.Agent.Copilot/
 │       │   └── vite.config.ts
 │       └── Umbraco.AI.Agent.Copilot.csproj
 ├── Directory.Build.props
-├── Umbraco.AI.Agent.Copilot.sln
+├── Umbraco.AI.Agent.Copilot.slnx
 ├── changelog.config.json
 ├── version.json
 ├── README.md

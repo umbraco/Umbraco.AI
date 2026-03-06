@@ -4,6 +4,8 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type AIPromptDisplayMode = 'PropertyAction' | 'TipTapTool';
+
 export type CreatePromptRequestModel = {
     alias: string;
     name: string;
@@ -12,6 +14,7 @@ export type CreatePromptRequestModel = {
     profileId?: string | null;
     contextIds?: Array<string> | null;
     tags?: Array<string> | null;
+    displayMode: AIPromptDisplayMode;
     scope?: ScopeModel | null;
     includeEntityContext: boolean;
     optionCount: number;
@@ -75,6 +78,7 @@ export type PromptResponseModel = {
     contextIds: Array<string>;
     tags: Array<string>;
     isActive: boolean;
+    displayMode: AIPromptDisplayMode;
     scope?: ScopeModel | null;
     includeEntityContext: boolean;
     optionCount: number;
@@ -115,6 +119,7 @@ export type UpdatePromptRequestModel = {
     contextIds?: Array<string> | null;
     tags?: Array<string> | null;
     isActive: boolean;
+    displayMode: AIPromptDisplayMode;
     scope?: ScopeModel | null;
     includeEntityContext: boolean;
     optionCount: number;

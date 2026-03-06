@@ -35,6 +35,7 @@ internal static class AIPromptEntityFactory
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
             OptionCount = entity.OptionCount,
+            DisplayMode = (AIPromptDisplayMode)entity.DisplayMode,
             Scope = scope,
             DateCreated = entity.DateCreated,
             DateModified = entity.DateModified,
@@ -62,6 +63,7 @@ internal static class AIPromptEntityFactory
             IsActive = aiPrompt.IsActive,
             IncludeEntityContext = aiPrompt.IncludeEntityContext,
             OptionCount = aiPrompt.OptionCount,
+            DisplayMode = (int)aiPrompt.DisplayMode,
             Scope = SerializeScope(aiPrompt.Scope),
             DateCreated = aiPrompt.DateCreated,
             DateModified = aiPrompt.DateModified,
@@ -86,6 +88,7 @@ internal static class AIPromptEntityFactory
         entity.IsActive = aiPrompt.IsActive;
         entity.IncludeEntityContext = aiPrompt.IncludeEntityContext;
         entity.OptionCount = aiPrompt.OptionCount;
+        entity.DisplayMode = (int)aiPrompt.DisplayMode;
         entity.Scope = SerializeScope(aiPrompt.Scope);
         entity.DateModified = aiPrompt.DateModified;
         entity.ModifiedByUserId = aiPrompt.ModifiedByUserId;

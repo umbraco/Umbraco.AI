@@ -45,6 +45,11 @@ namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("DisplayMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
                     b.Property<bool>("IncludeEntityContext")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")

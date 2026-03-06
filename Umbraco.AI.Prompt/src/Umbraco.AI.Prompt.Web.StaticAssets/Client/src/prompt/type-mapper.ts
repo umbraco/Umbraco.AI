@@ -1,7 +1,7 @@
 import type { PromptResponseModel, PromptItemResponseModel, ScopeModel } from "../api/types.gen.js";
 import { UAI_PROMPT_ENTITY_TYPE } from "./constants.js";
 import type { UaiPromptScope, UaiScopeRule } from "./property-actions/types.js";
-import type { UaiPromptDetailModel, UaiPromptItemModel } from "./types.js";
+import type { UaiPromptDetailModel, UaiPromptDisplayMode, UaiPromptItemModel } from "./types.js";
 
 /**
  * Maps API scope model to internal scope model.
@@ -59,6 +59,7 @@ export const UaiPromptTypeMapper = {
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
             tags: response.tags ?? [],
+            displayMode: (response.displayMode ?? 'PropertyAction') as UaiPromptDisplayMode,
             scope: mapScopeFromApi(response.scope),
             isActive: response.isActive,
             includeEntityContext: response.includeEntityContext,
@@ -90,6 +91,7 @@ export const UaiPromptTypeMapper = {
             profileId: model.profileId,
             contextIds: model.contextIds,
             tags: model.tags,
+            displayMode: model.displayMode,
             scope: mapScopeToApi(model.scope),
             includeEntityContext: model.includeEntityContext,
             optionCount: model.optionCount,
@@ -105,6 +107,7 @@ export const UaiPromptTypeMapper = {
             profileId: model.profileId,
             contextIds: model.contextIds,
             tags: model.tags,
+            displayMode: model.displayMode,
             scope: mapScopeToApi(model.scope),
             isActive: model.isActive,
             includeEntityContext: model.includeEntityContext,

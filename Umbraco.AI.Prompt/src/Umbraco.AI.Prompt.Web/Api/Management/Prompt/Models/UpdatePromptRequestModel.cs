@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.AI.Prompt.Core.Prompts;
 
 namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
@@ -53,6 +54,11 @@ public class UpdatePromptRequestModel
     /// Whether the prompt is active.
     /// </summary>
     public bool IsActive { get; init; } = true;
+
+    /// <summary>
+    /// Determines where this prompt is displayed: as a property action or as a TipTap toolbar tool.
+    /// </summary>
+    public AIPromptDisplayMode DisplayMode { get; init; } = AIPromptDisplayMode.PropertyAction;
 
     /// <summary>
     /// Optional scope configuration defining where this prompt can run.

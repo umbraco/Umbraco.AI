@@ -29,6 +29,14 @@ public class PromptExecutionRequestModel
     public required string PropertyAlias { get; init; }
 
     /// <summary>
+    /// The content type alias for scope validation.
+    /// For documents/media, this is the content type alias.
+    /// For blocks, this is the element type alias.
+    /// </summary>
+    [Required]
+    public required string ContentTypeAlias { get; init; }
+
+    /// <summary>
     /// The culture variant.
     /// </summary>
     public string? Culture { get; init; }

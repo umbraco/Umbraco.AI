@@ -22,4 +22,11 @@ export const entityAdapterManifests: ManifestEntityAdapter[] = [
         forEntityType: "media",
         api: () => import("./document.adapter.js"),
     },
+    {
+        type: UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
+        alias: "UmbracoAI.EntityAdapter.Block",
+        name: "Block Entity Adapter",
+        forEntityType: "block",
+        api: () => import("./block.adapter.js"),
+    },
 ];

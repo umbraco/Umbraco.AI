@@ -3,6 +3,7 @@ import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { UMB_PROPERTY_CONTEXT } from '@umbraco-cms/backoffice/property';
 import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content-type';
 import { UMB_CONTENT_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content';
+import { UMB_BLOCK_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/block';
 import { umbOpenModal } from '@umbraco-cms/backoffice/modal';
 import { tryExecute } from '@umbraco-cms/backoffice/resources';
 import type { Editor } from '@umbraco-cms/backoffice/tiptap';
@@ -16,6 +17,15 @@ import type {
     UaiPromptContextItem,
     UaiPromptPreviewModalData,
 } from '../property-actions/types.js';
+
+/**
+ * Minimal duck-typed interface for workspace contexts.
+ * Both content and block workspace contexts satisfy this interface.
+ */
+interface WorkspaceContextLike {
+    getUnique(): string | null | undefined;
+    getEntityType(): string;
+}
 
 interface TipTapPromptItem {
     unique: string;
@@ -53,7 +63,8 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
     #propertyAlias: string | null = null;
     #propertyEditorUiAlias: string | null = null;
     #contentTypeAliases: string[] = [];
-    #workspaceContext?: typeof UMB_CONTENT_WORKSPACE_CONTEXT.TYPE;
+    #workspaceContext?: WorkspaceContextLike;
+    #savedSelection?: { from: number; to: number; empty: boolean; text: string };
 
     constructor() {
         super();
@@ -67,6 +78,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             });
         });
 
+        // Get content type aliases from structure workspace context (documents/media)
         this.consumeContext(UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT, (context) => {
             if (!context) return;
             this.observe(context.structure.contentTypeAliases, (aliases) => {
@@ -75,8 +87,26 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             });
         });
 
+        // Workspace context resolution: race content vs block workspace
         this.consumeContext(UMB_CONTENT_WORKSPACE_CONTEXT, (context) => {
-            this.#workspaceContext = context;
+            if (!this.#workspaceContext) {
+                this.#workspaceContext = context;
+            }
+        });
+
+        this.consumeContext(UMB_BLOCK_WORKSPACE_CONTEXT, (context) => {
+            if (!this.#workspaceContext) {
+                this.#workspaceContext = context;
+                // For blocks, get content type aliases from block's content structure
+                if (context) {
+                    this.observe(context.content.structure.contentTypeAliases, (aliases) => {
+                        if (this.#contentTypeAliases.length === 0) {
+                            this.#contentTypeAliases = aliases ?? [];
+                            this.#filterPrompts();
+                        }
+                    });
+                }
+            }
         });
 
         this.#loadPrompts();
@@ -143,17 +173,49 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
         this._prompts = this.#allPrompts.filter((p) => isPromptAllowed(p.scope, context));
     }
 
+    /**
+     * Capture editor selection state before the popover opens and steals focus.
+     * Then restore the selection so it remains visually highlighted.
+     */
+    #onToolbarButtonClick() {
+        if (!this.editor) return;
+        const { from, to, empty } = this.editor.state.selection;
+        this.#savedSelection = {
+            from,
+            to,
+            empty,
+            text: empty
+                ? this.editor.getHTML()
+                : this.editor.state.doc.textBetween(from, to, ' '),
+        };
+        // Restore the selection after the popover steals focus.
+        // The popover opens asynchronously, so we need to wait for it to settle
+        // before restoring the editor selection.
+        if (!empty) {
+            setTimeout(() => {
+                this.editor?.chain().focus().setTextSelection({ from, to }).run();
+            }, 50);
+        }
+    }
+
     async #onPromptSelect(prompt: TipTapPromptItem) {
         // Close the popover
         this.#popoverRef.value?.hidePopover();
 
         if (!this.editor || !this.#workspaceContext) return;
 
-        // Capture selection state before opening modal
-        const { from, to, empty } = this.editor.state.selection;
-        const selectedText = empty
-            ? this.editor.getHTML()
-            : this.editor.state.doc.textBetween(from, to, ' ');
+        // Use selection captured when the toolbar button was clicked
+        const { from, to, empty, text: selectedText } = this.#savedSelection ?? {
+            from: 0,
+            to: 0,
+            empty: true,
+            text: this.editor.getHTML(),
+        };
+
+        // Restore the editor selection so it's visually highlighted while the modal is open
+        if (!empty) {
+            this.editor.chain().focus().setTextSelection({ from, to }).run();
+        }
 
         // Build context items
         const contextItems: UaiPromptContextItem[] = [];
@@ -170,7 +232,12 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             contextItems.push(...entityContext);
         }
 
-        const entityId = this.#workspaceContext.getUnique();
+        let entityId: string | null | undefined;
+        try {
+            entityId = this.#workspaceContext.getUnique();
+        } catch {
+            // getUnique() can throw in block workspaces if contentKey is not yet available
+        }
         const entityType = this.#workspaceContext.getEntityType();
 
         if (!entityId || !entityType || !this.#propertyAlias) return;
@@ -182,6 +249,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             entityId,
             entityType,
             propertyAlias: this.#propertyAlias,
+            contentTypeAlias: this.#contentTypeAliases[0] ?? "",
             context: contextItems,
             optionCount: prompt.optionCount,
         };
@@ -239,7 +307,8 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
                 label="AI"
                 title="AI Prompts"
                 popovertarget="ai-prompts-popover"
-                .disabled=${this._loading}>
+                .disabled=${this._loading}
+                @click=${this.#onToolbarButtonClick}>
                 <umb-icon name="icon-wand"></umb-icon>
                 <uui-symbol-expand slot="extra" open></uui-symbol-expand>
             </uui-button>

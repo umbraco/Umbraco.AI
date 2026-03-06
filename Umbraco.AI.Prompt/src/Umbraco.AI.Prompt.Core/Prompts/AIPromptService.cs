@@ -240,14 +240,6 @@ internal sealed class AIPromptService : IAIPromptService
             ? propValue
             : null;
 
-        // Extract selection from unhandled context items (e.g., TipTap editor selection)
-        var selectionItem = runtimeContext.RequestContextItems
-            .FirstOrDefault(item => !runtimeContext.RequestContextItems.IsHandled(item) && !string.IsNullOrEmpty(item.Value));
-        if (selectionItem != null)
-        {
-            templateContext["selection"] = selectionItem.Value;
-        }
-
         // 5. Process template variables (returns multimodal content list)
         var contents = await _templateService.ProcessTemplateAsync(prompt.Instructions, templateContext, cancellationToken);
 

@@ -158,10 +158,10 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
         // Build context items
         const contextItems: UaiPromptContextItem[] = [];
 
-        // Add selection/content as context
+        // Add selection/content as context (structured for SelectionContextContributor)
         contextItems.push({
             description: empty ? 'Full editor content' : 'Selected text from editor',
-            value: selectedText,
+            value: JSON.stringify({ selection: selectedText }),
         });
 
         // Add entity context

@@ -15,6 +15,7 @@ import type {
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
+import { prepareValueForEditor } from "./value-preparation.js";
 
 /**
  * Property structure from content type.
@@ -77,9 +78,15 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
      */
     extractEntityContext(workspaceContext: unknown): UaiEntityContext {
         const ctx = workspaceContext as BlockWorkspaceContextLike;
+        let unique: string | null = null;
+        try {
+            unique = ctx.getUnique() ?? null;
+        } catch {
+            // getUnique() can throw if contentKey is not yet available
+        }
         return {
             entityType: "block",
-            unique: ctx.getUnique() ?? null,
+            unique,
         };
     }
 
@@ -130,7 +137,12 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
     async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
         const ctx = workspaceContext as BlockWorkspaceContextLike;
 
-        const unique = ctx.getUnique();
+        let unique: string | undefined;
+        try {
+            unique = ctx.getUnique();
+        } catch {
+            // getUnique() can throw if contentKey is not yet available
+        }
         const name = ctx.getName() || "Block";
         const contentData = ctx.content.getData();
         const contentTypeKey = contentData?.contentTypeKey;
@@ -217,12 +229,12 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         // Build variant ID from culture/segment
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
-        let valueToSet: unknown = change.value;
-        try {
-            valueToSet = JSON.parse(valueToSet as string);
-        } catch {
-            // Not JSON, use as-is
-        }
+        // Get the current value to determine editor type for value preparation
+        const values = ctx.content.getValues() ?? [];
+        const existingValue = values.find((v) => v.alias === propertyAlias);
+
+        // Prepare value for the target editor type
+        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.content.setPropertyValue(propertyAlias, valueToSet, variantId);

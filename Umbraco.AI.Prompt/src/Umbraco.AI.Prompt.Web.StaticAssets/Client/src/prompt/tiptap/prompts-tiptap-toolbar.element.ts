@@ -196,8 +196,9 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
                     : String(valueChange.value ?? '');
 
                 if (empty) {
-                    // No selection was made - replace entire content
-                    this.editor.chain().focus().setContent(responseHtml).run();
+                    // No selection - append response at the end
+                    const endPos = this.editor.state.doc.content.size;
+                    this.editor.chain().focus().insertContentAt(endPos, responseHtml).run();
                 } else {
                     // Replace selected text
                     this.editor.chain().focus().insertContentAt({ from, to }, responseHtml).run();

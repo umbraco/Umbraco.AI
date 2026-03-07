@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Mapping;
+using Umbraco.AI.Agent.Web.Api.Management.Orchestration.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.AI.Extensions;
@@ -21,7 +22,8 @@ public static class UmbracoBuilderExtensions
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
-            .Add<AgentMapDefinition>(); 
+            .Add<AgentMapDefinition>()
+            .Add<OrchestrationMapDefinition>();
 
         // Configure Management API
         builder.WithUmbracoAIManagementApi(Constants.ManagementApi.ApiName, options =>
@@ -35,7 +37,7 @@ public static class UmbracoBuilderExtensions
                     Description = $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user."
                 });
         });
-        
+
         return builder;
     }
 }

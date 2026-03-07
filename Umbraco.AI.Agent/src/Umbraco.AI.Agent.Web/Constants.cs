@@ -47,6 +47,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Agents";
             }
+
+            /// <summary>
+            /// AIOrchestration feature constants.
+            /// </summary>
+            public static class Orchestration
+            {
+                /// <summary>
+                /// Route segment for orchestration endpoints.
+                /// </summary>
+                public const string RouteSegment = "orchestrations";
+
+                /// <summary>
+                /// Swagger group name for orchestration endpoints.
+                /// </summary>
+                public const string GroupName = "Orchestrations";
+            }
         }
     }
 }

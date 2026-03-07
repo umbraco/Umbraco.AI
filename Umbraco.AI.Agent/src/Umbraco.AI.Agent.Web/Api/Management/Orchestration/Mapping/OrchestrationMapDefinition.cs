@@ -36,7 +36,7 @@ internal class OrchestrationMapDefinition(IShortStringHelper shortStringHelper) 
             Id = Guid.Empty,
             Alias = !string.IsNullOrWhiteSpace(source.Alias)
                 ? source.Alias
-                : shortStringHelper.CleanStringForSafeAlias(source.Alias),
+                : shortStringHelper.CleanStringForSafeAlias(source.Name),
             Name = source.Name,
             ProfileId = source.ProfileId
         };

@@ -4,7 +4,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiOrchestrationGraph, UaiOrchestrationNode } from "../types.js";
 import type { ReteEditorInstance } from "./rete/rete-editor-setup.js";
 import { createReteEditor, addNodeToEditor } from "./rete/rete-editor-setup.js";
-import { getAddableNodeTypes, type NodeTypeDefinition } from "./rete/rete-node-definitions.js";
+import { getAddableNodeTypes } from "./rete/rete-node-definitions.js";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import {
     UAI_ORCHESTRATION_NODE_TYPE_PICKER_MODAL,
@@ -99,7 +99,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
         );
     }
 
-    async #onNodeDoubleClicked(nodeId: string, nodeType: string) {
+    async #onNodeDoubleClicked(nodeId: string, _nodeType: string) {
         // Find the node data from the current graph
         const node = this.graph.nodes.find((n) => n.id === nodeId);
         if (!node) return;

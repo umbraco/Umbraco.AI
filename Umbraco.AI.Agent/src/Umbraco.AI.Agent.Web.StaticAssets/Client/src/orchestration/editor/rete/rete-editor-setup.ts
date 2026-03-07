@@ -35,16 +35,8 @@ export async function createReteEditor(
     // Configure connection plugin
     connection.addPreset(ConnectionPresets.classic.setup());
 
-    // Configure Lit renderer with custom node rendering
-    render.addPreset(
-        LitPresets.classic.setup({
-            customize: {
-                node(_context) {
-                    return undefined; // use default rendering
-                },
-            },
-        }),
-    );
+    // Configure Lit renderer with default rendering
+    render.addPreset(LitPresets.classic.setup());
 
     render.addPreset(LitPresets.minimap.setup());
 
@@ -64,16 +56,19 @@ export async function createReteEditor(
         accumulating: AreaExtensions.accumulateOnCtrl(),
     });
 
-    // Handle node double-click for editing
-    area.addPipe((context) => {
-        if (context.type === "nodedblclick") {
-            const nodeId = context.data.id;
-            const node = editor.getNode(nodeId);
-            if (node instanceof OrchestrationNode) {
-                onNodeClicked(node.nodeId, node.nodeType);
-            }
+    // Handle node double-click for editing via DOM event
+    container.addEventListener("dblclick", (e) => {
+        const target = e.target as HTMLElement;
+        const nodeEl = target.closest("[data-testid='node']");
+        if (!nodeEl) return;
+
+        const reteNodeId = nodeEl.getAttribute("data-id");
+        if (!reteNodeId) return;
+
+        const node = editor.getNode(reteNodeId);
+        if (node instanceof OrchestrationNode) {
+            onNodeClicked(node.nodeId, node.nodeType);
         }
-        return context;
     });
 
     // Load initial graph
@@ -202,9 +197,6 @@ function exportGraph(
     area: AreaPlugin<Schemes, AreaExtra>,
 ): UaiOrchestrationGraph {
     const nodes: UaiOrchestrationNode[] = editor.getNodes().map((node) => {
-        if (!(node instanceof OrchestrationNode)) {
-            return { id: node.id, type: "Agent", label: node.label, x: 0, y: 0, config: {} };
-        }
         const view = area.nodeViews.get(node.id);
         return {
             id: node.nodeId,

@@ -5,6 +5,10 @@ export default {
         deleteConfirm: "Are you sure you want to delete this agent?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} agent(s)?`,
     },
+    uaiOrchestration: {
+        deleteConfirm: "Are you sure you want to delete this orchestration?",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} orchestration(s)?`,
+    },
     uaiAgent: {
         selectScope: "Select Scope",
         addScope: "Add Scope",

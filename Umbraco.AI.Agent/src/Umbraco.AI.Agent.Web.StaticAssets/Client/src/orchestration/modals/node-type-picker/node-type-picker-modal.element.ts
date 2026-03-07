@@ -1,4 +1,4 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type {
@@ -11,11 +11,7 @@ export class UaiOrchestrationNodeTypePickerModalElement extends UmbModalBaseElem
     UaiOrchestrationNodeTypePickerModalData,
     UaiOrchestrationNodeTypePickerModalValue
 > {
-    @state()
-    private _selectedType?: string;
-
     #onTypeSelected(type: string) {
-        this._selectedType = type;
         this.value = { selectedType: type };
         this.modalContext?.submit();
     }

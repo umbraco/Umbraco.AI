@@ -74,7 +74,8 @@ public class UmbracoAIPromptServiceConnector(
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
             OptionCount = entity.OptionCount,
-            Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null
+            Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
+            DisplayMode = entity.DisplayMode
         };
 
         return Task.FromResult<AIPromptArtifact?>(artifact);
@@ -136,6 +137,7 @@ public class UmbracoAIPromptServiceConnector(
         prompt.IncludeEntityContext = artifact.IncludeEntityContext;
         prompt.OptionCount = artifact.OptionCount;
         prompt.Scope = scope;
+        prompt.DisplayMode = artifact.DisplayMode;
 
         state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
     }

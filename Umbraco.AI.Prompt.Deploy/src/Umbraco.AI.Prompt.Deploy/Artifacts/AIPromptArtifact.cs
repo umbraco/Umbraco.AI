@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
 using Umbraco.Deploy.Infrastructure.Artifacts;
@@ -55,4 +56,9 @@ public class AIPromptArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depe
     /// Scoping rules serialized as JSON (where the prompt is available).
     /// </summary>
     public JsonElement? Scope { get; set; }
+
+    /// <summary>
+    /// Determines where this prompt is displayed: as a property action or as a TipTap toolbar tool.
+    /// </summary>
+    public AIPromptDisplayMode DisplayMode { get; set; } = AIPromptDisplayMode.PropertyAction;
 }

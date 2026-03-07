@@ -61,7 +61,8 @@ public class UmbracoAIPromptServiceConnectorTests
                         ContentTypeAliases = ["article"]
                     }
                 ]
-            }
+            },
+            DisplayMode = AIPromptDisplayMode.TipTapTool
         };
 
         var udi = new GuidUdi("umbraco-ai-prompt", prompt.Id);
@@ -79,6 +80,7 @@ public class UmbracoAIPromptServiceConnectorTests
         artifact.IsActive.ShouldBeTrue();
         artifact.IncludeEntityContext.ShouldBeTrue();
         artifact.OptionCount.ShouldBe(3);
+        artifact.DisplayMode.ShouldBe(AIPromptDisplayMode.TipTapTool);
 
         // Profile dependency should be added
         artifact.ProfileUdi.ShouldNotBeNull();
@@ -129,6 +131,7 @@ public class UmbracoAIPromptServiceConnectorTests
         artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "umbraco-ai-profile");
         artifact.Scope.ShouldBeNull();
         artifact.ContextIds.ShouldBeEmpty();
+        artifact.DisplayMode.ShouldBe(AIPromptDisplayMode.PropertyAction);
     }
 
     [Fact]

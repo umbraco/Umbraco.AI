@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses, CreateOrchestrationData, CreateOrchestrationErrors, CreateOrchestrationResponses, DeleteOrchestrationData, DeleteOrchestrationErrors, DeleteOrchestrationResponses, GetAllOrchestrationsData, GetAllOrchestrationsErrors, GetAllOrchestrationsResponses, GetOrchestrationByIdOrAliasData, GetOrchestrationByIdOrAliasErrors, GetOrchestrationByIdOrAliasResponses, OrchestrationAliasExistsData, OrchestrationAliasExistsErrors, OrchestrationAliasExistsResponses, UpdateOrchestrationData, UpdateOrchestrationErrors, UpdateOrchestrationResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -131,6 +131,94 @@ export class AgentsService {
                 }
             ],
             url: '/umbraco/ai/management/api/v1/agents/surfaces',
+            ...options
+        });
+    }
+}
+
+export class OrchestrationsService {
+    public static getAllOrchestrations<ThrowOnError extends boolean = false>(options?: Options<GetAllOrchestrationsData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllOrchestrationsResponses, GetAllOrchestrationsErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/orchestrations',
+            ...options
+        });
+    }
+
+    public static createOrchestration<ThrowOnError extends boolean = false>(options?: Options<CreateOrchestrationData, ThrowOnError>) {
+        return (options?.client ?? client).post<CreateOrchestrationResponses, CreateOrchestrationErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/orchestrations',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
+            }
+        });
+    }
+
+    public static deleteOrchestration<ThrowOnError extends boolean = false>(options: Options<DeleteOrchestrationData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteOrchestrationResponses, DeleteOrchestrationErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}',
+            ...options
+        });
+    }
+
+    public static getOrchestrationByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetOrchestrationByIdOrAliasData, ThrowOnError>) {
+        return (options.client ?? client).get<GetOrchestrationByIdOrAliasResponses, GetOrchestrationByIdOrAliasErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}',
+            ...options
+        });
+    }
+
+    public static updateOrchestration<ThrowOnError extends boolean = false>(options: Options<UpdateOrchestrationData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateOrchestrationResponses, UpdateOrchestrationErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    public static orchestrationAliasExists<ThrowOnError extends boolean = false>(options: Options<OrchestrationAliasExistsData, ThrowOnError>) {
+        return (options.client ?? client).get<OrchestrationAliasExistsResponses, OrchestrationAliasExistsErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/orchestrations/{alias}/exists',
             ...options
         });
     }

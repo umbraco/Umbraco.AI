@@ -430,3 +430,234 @@ export type GetAgentSurfacesResponses = {
 };
 
 export type GetAgentSurfacesResponse = GetAgentSurfacesResponses[keyof GetAgentSurfacesResponses];
+
+// Orchestration types
+
+export type OrchestrationGraphNodeConfigModel = {
+    agentId?: string | null;
+    toolName?: string | null;
+    conditions?: Array<OrchestrationRouteConditionModel> | null;
+    aggregationStrategy?: OrchestrationAggregationStrategyModel | null;
+    managerInstructions?: string | null;
+    managerProfileId?: string | null;
+};
+
+export type OrchestrationAggregationStrategyModel = 'Concat' | 'Vote' | 'Summarize' | 'Custom';
+
+export type OrchestrationRouteConditionModel = {
+    label: string;
+    field: string;
+    operator: OrchestrationRouteOperatorModel;
+    value: string;
+    targetNodeId: string;
+};
+
+export type OrchestrationRouteOperatorModel = 'Equals' | 'Contains' | 'StartsWith' | 'Matches';
+
+export type OrchestrationGraphNodeModel = {
+    id: string;
+    type: OrchestrationNodeTypeModel;
+    label: string;
+    x: number;
+    y: number;
+    config?: OrchestrationGraphNodeConfigModel | null;
+};
+
+export type OrchestrationNodeTypeModel = 'Start' | 'End' | 'Agent' | 'Function' | 'Router' | 'Aggregator' | 'Manager';
+
+export type OrchestrationGraphEdgeModel = {
+    id: string;
+    sourceNodeId: string;
+    targetNodeId: string;
+    isDefault: boolean;
+    priority?: number | null;
+};
+
+export type OrchestrationGraphModel = {
+    nodes: Array<OrchestrationGraphNodeModel>;
+    edges: Array<OrchestrationGraphEdgeModel>;
+};
+
+export type OrchestrationResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    surfaceIds: Array<string>;
+    scope?: AiAgentScopeModel | null;
+    graph: OrchestrationGraphModel;
+    isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+    version: number;
+};
+
+export type OrchestrationItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    surfaceIds: Array<string>;
+    scope?: AiAgentScopeModel | null;
+    isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+};
+
+export type PagedOrchestrationItemResponseModel = {
+    total: number;
+    items: Array<OrchestrationItemResponseModel>;
+};
+
+export type CreateOrchestrationRequestModel = {
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
+    graph?: OrchestrationGraphModel | null;
+};
+
+export type UpdateOrchestrationRequestModel = {
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
+    graph?: OrchestrationGraphModel | null;
+    isActive: boolean;
+};
+
+export type GetAllOrchestrationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        take?: number;
+        filter?: string;
+        surfaceId?: string;
+        isActive?: boolean;
+    };
+    url: '/umbraco/ai/management/api/v1/orchestrations';
+};
+
+export type GetAllOrchestrationsErrors = {
+    401: unknown;
+};
+
+export type GetAllOrchestrationsResponses = {
+    200: PagedOrchestrationItemResponseModel;
+};
+
+export type GetAllOrchestrationsResponse = GetAllOrchestrationsResponses[keyof GetAllOrchestrationsResponses];
+
+export type CreateOrchestrationData = {
+    body?: CreateOrchestrationRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/orchestrations';
+};
+
+export type CreateOrchestrationErrors = {
+    400: ValidationProblemDetails;
+    401: unknown;
+    409: ProblemDetails;
+};
+
+export type CreateOrchestrationError = CreateOrchestrationErrors[keyof CreateOrchestrationErrors];
+
+export type CreateOrchestrationResponses = {
+    201: OrchestrationResponseModel;
+};
+
+export type CreateOrchestrationResponse = CreateOrchestrationResponses[keyof CreateOrchestrationResponses];
+
+export type DeleteOrchestrationData = {
+    body?: never;
+    path: {
+        orchestrationIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}';
+};
+
+export type DeleteOrchestrationErrors = {
+    401: unknown;
+    404: ProblemDetails;
+};
+
+export type DeleteOrchestrationError = DeleteOrchestrationErrors[keyof DeleteOrchestrationErrors];
+
+export type DeleteOrchestrationResponses = {
+    204: void;
+};
+
+export type DeleteOrchestrationResponse = DeleteOrchestrationResponses[keyof DeleteOrchestrationResponses];
+
+export type GetOrchestrationByIdOrAliasData = {
+    body?: never;
+    path: {
+        orchestrationIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}';
+};
+
+export type GetOrchestrationByIdOrAliasErrors = {
+    401: unknown;
+    404: ProblemDetails;
+};
+
+export type GetOrchestrationByIdOrAliasError = GetOrchestrationByIdOrAliasErrors[keyof GetOrchestrationByIdOrAliasErrors];
+
+export type GetOrchestrationByIdOrAliasResponses = {
+    200: OrchestrationResponseModel;
+};
+
+export type GetOrchestrationByIdOrAliasResponse = GetOrchestrationByIdOrAliasResponses[keyof GetOrchestrationByIdOrAliasResponses];
+
+export type UpdateOrchestrationData = {
+    body?: UpdateOrchestrationRequestModel;
+    path: {
+        orchestrationIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}';
+};
+
+export type UpdateOrchestrationErrors = {
+    400: ProblemDetails;
+    401: unknown;
+    404: ProblemDetails;
+};
+
+export type UpdateOrchestrationError = UpdateOrchestrationErrors[keyof UpdateOrchestrationErrors];
+
+export type UpdateOrchestrationResponses = {
+    200: unknown;
+};
+
+export type OrchestrationAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/orchestrations/{alias}/exists';
+};
+
+export type OrchestrationAliasExistsErrors = {
+    401: unknown;
+};
+
+export type OrchestrationAliasExistsResponses = {
+    200: boolean;
+};
+
+export type OrchestrationAliasExistsResponse = OrchestrationAliasExistsResponses[keyof OrchestrationAliasExistsResponses];

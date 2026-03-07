@@ -4,6 +4,7 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
+using Umbraco.AI.Agent.Core.Orchestrations;
 using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Extensions;
@@ -36,14 +37,16 @@ public static class UmbracoBuilderExtensions
         builder.Services.Configure<AIAgentOptions>(
             builder.Config.GetSection(AIAgentOptions.SectionName));
 
-        // Register in-memory repository as fallback (replaced by persistence layer)
+        // Register in-memory repositories as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
+        builder.Services.AddSingleton<IAIOrchestrationRepository, InMemoryAIOrchestrationRepository>();
 
         // Register scope validator
         builder.Services.AddSingleton<AIAgentScopeValidator>();
 
-        // Register service
+        // Register services
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
+        builder.Services.AddSingleton<IAIOrchestrationService, AIOrchestrationService>();
 
         // Prevent deletion of profiles referenced by agents
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();

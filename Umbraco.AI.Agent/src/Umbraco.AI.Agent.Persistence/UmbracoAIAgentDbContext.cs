@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Agent.Persistence.Agents;
+using Umbraco.AI.Agent.Persistence.Orchestrations;
 
 namespace Umbraco.AI.Agent.Persistence;
 
@@ -12,6 +13,11 @@ public class UmbracoAIAgentDbContext : DbContext
     /// Agents table.
     /// </summary>
     internal DbSet<AIAgentEntity> Agents { get; set; } = null!;
+
+    /// <summary>
+    /// Orchestrations table.
+    /// </summary>
+    internal DbSet<AIOrchestrationEntity> Orchestrations { get; set; } = null!;
 
     /// <summary>
     /// Creates a new instance of the DbContext.
@@ -82,6 +88,55 @@ public class UmbracoAIAgentDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.ProfileId);
+        });
+
+        modelBuilder.Entity<AIOrchestrationEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIOrchestration");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Alias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired(false);
+
+            entity.Property(e => e.SurfaceIds)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.Scope);
+
+            entity.Property(e => e.Graph);
+
+            entity.Property(e => e.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            // Indexes
+            entity.HasIndex(e => e.Alias)
+                .IsUnique();
+
+            entity.HasIndex(e => e.ProfileId);
+
+            entity.HasIndex(e => e.IsActive);
         });
     }
 }

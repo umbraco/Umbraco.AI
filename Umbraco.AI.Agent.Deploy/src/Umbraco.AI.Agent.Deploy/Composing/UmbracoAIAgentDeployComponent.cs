@@ -28,11 +28,13 @@ public class UmbracoAIAgentDeployComponent(IDiskEntityService diskEntityService)
     private static void RegisterUdiTypes()
     {
         UdiParser.RegisterUdiType(UmbracoAIAgentConstants.UdiEntityType.Agent, UdiType.GuidUdi);
+        UdiParser.RegisterUdiType(UmbracoAIAgentConstants.UdiEntityType.Orchestration, UdiType.GuidUdi);
     }
 
     private void RegisterDiskEntityTypes()
     {
-        // Register disk entity type for deployment
+        // Register disk entity types for deployment
         diskEntityService.RegisterDiskEntityType(UmbracoAIAgentConstants.UdiEntityType.Agent);
+        diskEntityService.RegisterDiskEntityType(UmbracoAIAgentConstants.UdiEntityType.Orchestration);
     }
 }

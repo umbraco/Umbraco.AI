@@ -47,6 +47,7 @@ public static class UmbracoBuilderExtensions
         // Register services
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
         builder.Services.AddSingleton<IAIOrchestrationService, AIOrchestrationService>();
+        builder.Services.AddSingleton<IAIOrchestrationExecutor, AIOrchestrationExecutor>();
 
         // Prevent deletion of profiles referenced by agents
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();

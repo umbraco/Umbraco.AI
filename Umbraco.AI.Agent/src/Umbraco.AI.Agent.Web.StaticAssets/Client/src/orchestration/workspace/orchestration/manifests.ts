@@ -33,6 +33,24 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
+        alias: "UmbracoAIAgent.Workspace.Orchestration.View.Workflow",
+        name: "Orchestration Workflow Workspace View",
+        js: () => import("./views/orchestration-workflow-workspace-view.element.js"),
+        weight: 290,
+        meta: {
+            label: "Workflow",
+            pathname: "workflow",
+            icon: "icon-mindmap",
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_ORCHESTRATION_WORKSPACE_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "workspaceView",
         alias: "UmbracoAIAgent.Workspace.Orchestration.View.Availability",
         name: "Orchestration Availability Workspace View",
         js: () => import("./views/orchestration-availability-workspace-view.element.js"),

@@ -23,9 +23,16 @@
     },
     "dependencies": {
         "@ag-ui/client": "^0.0.42",
-        "rxjs": "^7.8.2",
+        "@retejs/lit-plugin": "^2.0.7",
         "@umbraco-ai/core": "*",
-        "@umbraco-cms/backoffice": "^17.1.0"
+        "@umbraco-cms/backoffice": "^17.1.0",
+        "rete": "^2.0.6",
+        "rete-area-plugin": "^2.1.5",
+        "rete-auto-arrange-plugin": "^2.0.2",
+        "rete-connection-plugin": "^2.0.5",
+        "rete-minimap-plugin": "^2.0.3",
+        "rete-render-utils": "^2.0.3",
+        "rxjs": "^7.8.2"
     },
     "overrides": {
         "rxjs": "^7.8.2"

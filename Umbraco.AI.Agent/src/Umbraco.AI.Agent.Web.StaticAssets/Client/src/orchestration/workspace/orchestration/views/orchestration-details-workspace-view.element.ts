@@ -74,20 +74,6 @@ export class UaiOrchestrationDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-input>
                 </umb-property-layout>
             </uui-box>
-
-            <uui-box headline="Workflow Graph">
-                <div class="graph-placeholder">
-                    <uui-icon name="icon-mindmap"></uui-icon>
-                    <p>
-                        The visual graph editor will be available in a future update.<br />
-                        The graph can currently be configured via the Management API.
-                    </p>
-                    <p class="graph-stats">
-                        <strong>${this._model.graph.nodes.length}</strong> nodes,
-                        <strong>${this._model.graph.edges.length}</strong> edges
-                    </p>
-                </div>
-            </uui-box>
         `;
     }
 
@@ -108,27 +94,6 @@ export class UaiOrchestrationDetailsWorkspaceViewElement extends UmbLitElement {
 
             uui-input {
                 width: 100%;
-            }
-
-            .graph-placeholder {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: var(--uui-size-layout-2);
-                text-align: center;
-                color: var(--uui-color-text-alt);
-            }
-
-            .graph-placeholder uui-icon {
-                font-size: 48px;
-                margin-bottom: var(--uui-size-space-4);
-                color: var(--uui-color-border-emphasis);
-            }
-
-            .graph-stats {
-                margin-top: var(--uui-size-space-3);
-                color: var(--uui-color-text);
             }
 
             uui-loader {

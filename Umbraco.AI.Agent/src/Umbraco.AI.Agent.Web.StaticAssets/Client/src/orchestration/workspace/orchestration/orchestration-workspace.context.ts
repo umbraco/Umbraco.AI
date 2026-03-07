@@ -11,6 +11,8 @@ import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
+import { generateTemplateGraph } from "../../modals/pattern-template/pattern-templates.js";
+import type { OrchestrationPatternTemplate } from "../../modals/pattern-template/pattern-template-modal.token.js";
 import { UaiOrchestrationDetailRepository } from "../../repository/detail/orchestration-detail.repository.js";
 import { UAI_ORCHESTRATION_WORKSPACE_ALIAS, UAI_ORCHESTRATION_ENTITY_TYPE } from "../../constants.js";
 import type { UaiOrchestrationDetailModel } from "../../types.js";
@@ -94,6 +96,16 @@ export class UaiOrchestrationWorkspaceContext
         this.resetState();
         const { data } = await this.#repository.createScaffold();
         if (data) {
+            // Apply pattern template if specified in URL
+            const url = new URL(window.location.href);
+            const template = url.searchParams.get("template") as OrchestrationPatternTemplate | null;
+            if (template) {
+                data.graph = generateTemplateGraph(template);
+                // Clean up the query param
+                url.searchParams.delete("template");
+                history.replaceState(null, "", url.pathname + url.search);
+            }
+
             this.#unique.setValue(UAI_EMPTY_GUID);
             this.#model.setValue(data);
             this.setIsNew(true);

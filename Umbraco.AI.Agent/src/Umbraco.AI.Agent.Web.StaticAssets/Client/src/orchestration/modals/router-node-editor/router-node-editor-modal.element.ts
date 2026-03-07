@@ -53,6 +53,11 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
         this._conditions = updated;
     }
 
+    #onDelete() {
+        this.value = { node: this._node, deleted: true };
+        this.modalContext?.submit();
+    }
+
     #onSubmit() {
         this._node = {
             ...this._node,
@@ -68,18 +73,19 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
         return html`
             <umb-body-layout headline="Router Node">
                 <div id="main">
-                    <umb-property-layout label="Label" description="Display name for this node">
-                        <uui-input
-                            slot="editor"
-                            .value=${this._node.label}
-                            @input=${this.#onLabelChange}
-                            placeholder="Router"
-                        ></uui-input>
-                    </umb-property-layout>
+                    <uui-box>
+                        <umb-property-layout label="Label" description="Display name for this node">
+                            <uui-input
+                                slot="editor"
+                                .value=${this._node.label}
+                                @input=${this.#onLabelChange}
+                                placeholder="Router"
+                            ></uui-input>
+                        </umb-property-layout>
+                    </uui-box>
 
-                    <div class="conditions-section">
+                    <uui-box headline="Conditions">
                         <div class="conditions-header">
-                            <strong>Conditions</strong>
                             <uui-button
                                 compact
                                 look="outline"
@@ -157,9 +163,15 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
                                 </div>
                             `,
                         )}
-                    </div>
+                    </uui-box>
                 </div>
                 <div slot="actions">
+                    <uui-button
+                        color="danger"
+                        look="primary"
+                        @click=${this.#onDelete}
+                        label="Delete"
+                    ></uui-button>
                     <uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
                     <uui-button
                         look="primary"
@@ -179,15 +191,17 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
                 width: 100%;
             }
 
-            .conditions-section {
-                margin-top: var(--uui-size-space-5);
-            }
-
             .conditions-header {
                 display: flex;
-                justify-content: space-between;
+                justify-content: flex-end;
                 align-items: center;
                 margin-bottom: var(--uui-size-space-3);
+            }
+
+            #main {
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-space-4);
             }
 
             .condition-row {

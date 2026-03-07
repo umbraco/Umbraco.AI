@@ -7,6 +7,7 @@ import type {
     UaiOrchestrationAgentNodeEditorModalValue,
 } from "./agent-node-editor-modal.token.js";
 import type { UaiOrchestrationNode } from "../../types.js";
+import "../../../agent/components/agent-picker/agent-picker.element.js";
 
 /**
  * Modal for editing Agent node configuration.
@@ -39,6 +40,11 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
         };
     }
 
+    #onDelete() {
+        this.value = { node: this._node, deleted: true };
+        this.modalContext?.submit();
+    }
+
     #onSubmit() {
         this.value = { node: this._node };
         this.modalContext?.submit();
@@ -50,27 +56,35 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
         return html`
             <umb-body-layout headline="Agent Node">
                 <div id="main">
-                    <umb-property-layout label="Label" description="Display name for this node">
-                        <uui-input
-                            slot="editor"
-                            .value=${this._node.label}
-                            @input=${this.#onLabelChange}
-                            placeholder="Agent"
-                        ></uui-input>
-                    </umb-property-layout>
+                    <uui-box>
+                        <umb-property-layout label="Label" description="Display name for this node">
+                            <uui-input
+                                slot="editor"
+                                .value=${this._node.label}
+                                @input=${this.#onLabelChange}
+                                placeholder="Agent"
+                            ></uui-input>
+                        </umb-property-layout>
 
-                    <umb-property-layout
-                        label="Agent"
-                        description="Select the AI agent to execute at this step"
-                    >
-                        <uai-agent-picker
-                            slot="editor"
-                            .value=${this._node.config?.agentId || undefined}
-                            @change=${this.#onAgentIdChange}
-                        ></uai-agent-picker>
-                    </umb-property-layout>
+                        <umb-property-layout
+                            label="Agent"
+                            description="Select the AI agent to execute at this step"
+                        >
+                            <uai-agent-picker
+                                slot="editor"
+                                .value=${this._node.config?.agentId || undefined}
+                                @change=${this.#onAgentIdChange}
+                            ></uai-agent-picker>
+                        </umb-property-layout>
+                    </uui-box>
                 </div>
                 <div slot="actions">
+                    <uui-button
+                        color="danger"
+                        look="primary"
+                        @click=${this.#onDelete}
+                        label="Delete"
+                    ></uui-button>
                     <uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
                     <uui-button
                         look="primary"

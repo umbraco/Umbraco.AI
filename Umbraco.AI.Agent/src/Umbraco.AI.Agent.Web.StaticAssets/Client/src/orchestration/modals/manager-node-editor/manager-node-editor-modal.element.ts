@@ -47,6 +47,11 @@ export class UaiOrchestrationManagerNodeEditorModalElement extends UmbModalBaseE
         };
     }
 
+    #onDelete() {
+        this.value = { node: this._node, deleted: true };
+        this.modalContext?.submit();
+    }
+
     #onSubmit() {
         this.value = { node: this._node };
         this.modalContext?.submit();
@@ -58,39 +63,47 @@ export class UaiOrchestrationManagerNodeEditorModalElement extends UmbModalBaseE
         return html`
             <umb-body-layout headline="Manager Node">
                 <div id="main">
-                    <umb-property-layout label="Label" description="Display name for this node">
-                        <uui-input
-                            slot="editor"
-                            .value=${this._node.label}
-                            @input=${this.#onLabelChange}
-                            placeholder="Manager"
-                        ></uui-input>
-                    </umb-property-layout>
+                    <uui-box>
+                        <umb-property-layout label="Label" description="Display name for this node">
+                            <uui-input
+                                slot="editor"
+                                .value=${this._node.label}
+                                @input=${this.#onLabelChange}
+                                placeholder="Manager"
+                            ></uui-input>
+                        </umb-property-layout>
 
-                    <umb-property-layout
-                        label="Instructions"
-                        description="Coordination instructions for the manager agent"
-                    >
-                        <uui-textarea
-                            slot="editor"
-                            .value=${this._node.config?.managerInstructions ?? ""}
-                            @input=${this.#onInstructionsChange}
-                            placeholder="Tell the manager how to delegate work..."
-                        ></uui-textarea>
-                    </umb-property-layout>
+                        <umb-property-layout
+                            label="Instructions"
+                            description="Coordination instructions for the manager agent"
+                        >
+                            <uui-textarea
+                                slot="editor"
+                                .value=${this._node.config?.managerInstructions ?? ""}
+                                @input=${this.#onInstructionsChange}
+                                placeholder="Tell the manager how to delegate work..."
+                            ></uui-textarea>
+                        </umb-property-layout>
 
-                    <umb-property-layout
-                        label="AI Profile"
-                        description="Profile for the manager's LLM calls"
-                    >
-                        <uai-profile-picker
-                            slot="editor"
-                            .value=${this._node.config?.managerProfileId || undefined}
-                            @change=${this.#onProfileChange}
-                        ></uai-profile-picker>
-                    </umb-property-layout>
+                        <umb-property-layout
+                            label="AI Profile"
+                            description="Profile for the manager's LLM calls"
+                        >
+                            <uai-profile-picker
+                                slot="editor"
+                                .value=${this._node.config?.managerProfileId || undefined}
+                                @change=${this.#onProfileChange}
+                            ></uai-profile-picker>
+                        </umb-property-layout>
+                    </uui-box>
                 </div>
                 <div slot="actions">
+                    <uui-button
+                        color="danger"
+                        look="primary"
+                        @click=${this.#onDelete}
+                        label="Delete"
+                    ></uui-button>
                     <uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
                     <uui-button
                         look="primary"

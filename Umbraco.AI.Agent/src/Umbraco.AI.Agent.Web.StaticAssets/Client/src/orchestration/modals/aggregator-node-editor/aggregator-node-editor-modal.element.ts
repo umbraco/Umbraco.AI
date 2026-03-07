@@ -45,6 +45,11 @@ export class UaiOrchestrationAggregatorNodeEditorModalElement extends UmbModalBa
         };
     }
 
+    #onDelete() {
+        this.value = { node: this._node, deleted: true };
+        this.modalContext?.submit();
+    }
+
     #onSubmit() {
         this.value = { node: this._node };
         this.modalContext?.submit();
@@ -56,30 +61,38 @@ export class UaiOrchestrationAggregatorNodeEditorModalElement extends UmbModalBa
         return html`
             <umb-body-layout headline="Aggregator Node">
                 <div id="main">
-                    <umb-property-layout label="Label" description="Display name for this node">
-                        <uui-input
-                            slot="editor"
-                            .value=${this._node.label}
-                            @input=${this.#onLabelChange}
-                            placeholder="Aggregator"
-                        ></uui-input>
-                    </umb-property-layout>
+                    <uui-box>
+                        <umb-property-layout label="Label" description="Display name for this node">
+                            <uui-input
+                                slot="editor"
+                                .value=${this._node.label}
+                                @input=${this.#onLabelChange}
+                                placeholder="Aggregator"
+                            ></uui-input>
+                        </umb-property-layout>
 
-                    <umb-property-layout
-                        label="Strategy"
-                        description="How to merge results from concurrent branches"
-                    >
-                        <uui-select
-                            slot="editor"
-                            .options=${STRATEGIES.map((s) => ({
-                                ...s,
-                                selected: s.value === (this._node.config?.aggregationStrategy ?? "Concat"),
-                            }))}
-                            @change=${this.#onStrategyChange}
-                        ></uui-select>
-                    </umb-property-layout>
+                        <umb-property-layout
+                            label="Strategy"
+                            description="How to merge results from concurrent branches"
+                        >
+                            <uui-select
+                                slot="editor"
+                                .options=${STRATEGIES.map((s) => ({
+                                    ...s,
+                                    selected: s.value === (this._node.config?.aggregationStrategy ?? "Concat"),
+                                }))}
+                                @change=${this.#onStrategyChange}
+                            ></uui-select>
+                        </umb-property-layout>
+                    </uui-box>
                 </div>
                 <div slot="actions">
+                    <uui-button
+                        color="danger"
+                        look="primary"
+                        @click=${this.#onDelete}
+                        label="Delete"
+                    ></uui-button>
                     <uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
                     <uui-button
                         look="primary"

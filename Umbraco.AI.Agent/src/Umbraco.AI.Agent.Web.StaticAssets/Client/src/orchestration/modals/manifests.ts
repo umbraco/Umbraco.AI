@@ -1,12 +1,6 @@
 export const orchestrationModalManifests: Array<UmbExtensionManifest> = [
     {
         type: "modal",
-        alias: "Uai.Modal.OrchestrationNodeTypePicker",
-        name: "Orchestration Node Type Picker Modal",
-        js: () => import("./node-type-picker/node-type-picker-modal.element.js"),
-    },
-    {
-        type: "modal",
         alias: "Uai.Modal.OrchestrationAgentNodeEditor",
         name: "Orchestration Agent Node Editor Modal",
         js: () => import("./agent-node-editor/agent-node-editor-modal.element.js"),

@@ -1,11 +1,13 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type {
     UaiOrchestrationFunctionNodeEditorModalData,
     UaiOrchestrationFunctionNodeEditorModalValue,
 } from "./function-node-editor-modal.token.js";
 import type { UaiOrchestrationNode } from "../../types.js";
+import "@umbraco-ai/core";
 
 /**
  * Modal for editing Function node configuration.
@@ -30,12 +32,18 @@ export class UaiOrchestrationFunctionNodeEditorModalElement extends UmbModalBase
         this._node = { ...this._node, label: (event.target as HTMLInputElement).value };
     }
 
-    #onToolNameChange(event: Event) {
-        const value = (event.target as HTMLInputElement).value;
+    #onToolChange(event: UmbChangeEvent) {
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        const toolIds = picker.value ?? [];
         this._node = {
             ...this._node,
-            config: { ...this._node.config, toolName: value || null },
+            config: { ...this._node.config, toolIds, toolName: toolIds[0] ?? null },
         };
+    }
+
+    #onDelete() {
+        this.value = { node: this._node, deleted: true };
+        this.modalContext?.submit();
     }
 
     #onSubmit() {
@@ -49,28 +57,35 @@ export class UaiOrchestrationFunctionNodeEditorModalElement extends UmbModalBase
         return html`
             <umb-body-layout headline="Function Node">
                 <div id="main">
-                    <umb-property-layout label="Label" description="Display name for this node">
-                        <uui-input
-                            slot="editor"
-                            .value=${this._node.label}
-                            @input=${this.#onLabelChange}
-                            placeholder="Function"
-                        ></uui-input>
-                    </umb-property-layout>
+                    <uui-box>
+                        <umb-property-layout label="Label" description="Display name for this node">
+                            <uui-input
+                                slot="editor"
+                                .value=${this._node.label}
+                                @input=${this.#onLabelChange}
+                                placeholder="Function"
+                            ></uui-input>
+                        </umb-property-layout>
 
-                    <umb-property-layout
-                        label="Tool Name"
-                        description="Name of the registered AI tool to execute"
-                    >
-                        <uui-input
-                            slot="editor"
-                            .value=${this._node.config?.toolName ?? ""}
-                            @input=${this.#onToolNameChange}
-                            placeholder="e.g. umbraco-content-get"
-                        ></uui-input>
-                    </umb-property-layout>
+                        <umb-property-layout
+                            label="Tool"
+                            description="Select the registered AI tool to execute"
+                        >
+                            <uai-tool-picker
+                                slot="editor"
+                                .value=${this._node.config?.toolIds ?? (this._node.config?.toolName ? [this._node.config.toolName] : undefined)}
+                                @change=${this.#onToolChange}
+                            ></uai-tool-picker>
+                        </umb-property-layout>
+                    </uui-box>
                 </div>
                 <div slot="actions">
+                    <uui-button
+                        color="danger"
+                        look="primary"
+                        @click=${this.#onDelete}
+                        label="Delete"
+                    ></uui-button>
                     <uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
                     <uui-button
                         look="primary"

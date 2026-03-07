@@ -27,6 +27,7 @@ export interface UaiOrchestrationNode {
 export interface UaiOrchestrationNodeConfig {
     agentId?: string | null;
     toolName?: string | null;
+    toolIds?: string[];
     conditions?: UaiOrchestrationRouteCondition[] | null;
     aggregationStrategy?: string | null;
     managerInstructions?: string | null;

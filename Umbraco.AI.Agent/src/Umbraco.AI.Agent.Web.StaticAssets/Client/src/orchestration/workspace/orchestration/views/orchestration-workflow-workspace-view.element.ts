@@ -4,7 +4,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiOrchestrationDetailModel, UaiOrchestrationGraph } from "../../../types.js";
 import { UAI_ORCHESTRATION_WORKSPACE_CONTEXT } from "../orchestration-workspace.context-token.js";
-import "../../../editor/orchestration-graph-editor.element.js";
+import "../../../components/orchestration-graph-editor/orchestration-graph-editor.element.js";
 
 /**
  * Workspace view for the visual workflow graph editor.
@@ -54,6 +54,11 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
             :host {
                 display: block;
                 padding: var(--uui-size-layout-1);
+                height: 100%;
+                box-sizing: border-box;
+            }
+
+            uai-orchestration-graph-editor {
                 height: 100%;
             }
 

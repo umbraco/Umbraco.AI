@@ -7,6 +7,7 @@ export interface UaiOrchestrationAggregatorNodeEditorModalData {
 
 export interface UaiOrchestrationAggregatorNodeEditorModalValue {
     node: UaiOrchestrationNode;
+    deleted?: boolean;
 }
 
 export const UAI_ORCHESTRATION_AGGREGATOR_NODE_EDITOR_MODAL = new UmbModalToken<

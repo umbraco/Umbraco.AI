@@ -244,10 +244,7 @@ const OrchestrationFlowInner = forwardRef<
 
     const onConnect: OnConnect = useCallback(
         (connection: Connection) => {
-            edgeCounter++;
-            const newEdge: Edge = {
-                ...connection,
-                id: `edge-new-${edgeCounter}`,
+            const defaultEdgeProps = {
                 markerEnd: {
                     type: MarkerType.ArrowClosed,
                     width: 16,
@@ -256,7 +253,47 @@ const OrchestrationFlowInner = forwardRef<
                 style: { strokeWidth: 2 },
                 data: { isDefault: false, priority: null },
             };
-            setEdges((eds) => addEdge(newEdge, eds));
+
+            edgeCounter++;
+            const newEdge: Edge = {
+                ...connection,
+                id: `edge-new-${edgeCounter}`,
+                ...defaultEdgeProps,
+            };
+
+            // Auto-create reverse edge for Communication Bus connections.
+            // A bus is bidirectional — except when connecting to End (termination).
+            const sourceNode = nodesRef.current.find((n) => n.id === connection.source);
+            const targetNode = nodesRef.current.find((n) => n.id === connection.target);
+            const sourceType = sourceNode ? (sourceNode.data as unknown as OrchestrationNodeData).nodeType : null;
+            const targetType = targetNode ? (targetNode.data as unknown as OrchestrationNodeData).nodeType : null;
+
+            const isBusConnection = sourceType === "CommunicationBus" || targetType === "CommunicationBus";
+            const connectsToEnd = targetType === "End" || sourceType === "End";
+            const connectsToStart = sourceType === "Start" || targetType === "Start";
+
+            setEdges((eds) => {
+                let updated = addEdge(newEdge, eds);
+
+                if (isBusConnection && !connectsToEnd && !connectsToStart) {
+                    // Check if reverse edge already exists
+                    const reverseExists = updated.some(
+                        (e) => e.source === connection.target && e.target === connection.source,
+                    );
+                    if (!reverseExists) {
+                        edgeCounter++;
+                        const reverseEdge: Edge = {
+                            id: `edge-new-${edgeCounter}`,
+                            source: connection.target!,
+                            target: connection.source!,
+                            ...defaultEdgeProps,
+                        };
+                        updated = addEdge(reverseEdge, updated);
+                    }
+                }
+
+                return updated;
+            });
             emitChange();
         },
         [setEdges, emitChange],

@@ -11,7 +11,7 @@ public sealed class AIOrchestrationNode
     public required string Id { get; set; }
 
     /// <summary>
-    /// The type of node (agent, function, router, etc.).
+    /// The type of node (agent, tool call, router, etc.).
     /// </summary>
     public required AIOrchestrationNodeType Type { get; set; }
 
@@ -32,6 +32,7 @@ public sealed class AIOrchestrationNode
 
     /// <summary>
     /// Type-specific configuration for the node.
+    /// The concrete type depends on <see cref="Type"/>.
     /// </summary>
-    public AIOrchestrationNodeConfig Config { get; set; } = new();
+    public IAIOrchestrationNodeConfig Config { get; set; } = new AIOrchestrationStartNodeConfig();
 }

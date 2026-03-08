@@ -13,7 +13,7 @@ namespace Umbraco.AI.Agent.Core.Orchestrations;
 /// <para>
 /// Runs each step in the pipeline sequentially, passing the output of each step
 /// as additional context to the next. Agent steps delegate to their MAF agent,
-/// while Function/Router/Aggregator/Manager steps are handled inline.
+/// while ToolCall/Router/Aggregator/CommunicationBus steps are handled inline.
 /// </para>
 /// <para>
 /// For the initial implementation, steps are executed sequentially.
@@ -61,23 +61,25 @@ internal sealed class OrchestrationPipelineAgent : MsAIAgent
 
         foreach (var step in _steps)
         {
-            if (step.StepType == OrchestrationStepType.End)
-                break;
-
-            if (step.Agent is not null && step.StepType == OrchestrationStepType.Agent)
+            switch (step)
             {
-                lastResponse = await step.Agent.RunAsync(messagesList, session, options, cancellationToken);
+                case EndOrchestrationStep:
+                    goto done;
 
-                // Append agent response as context for next step
-                if (lastResponse?.Messages is not null)
-                {
-                    messagesList.AddRange(lastResponse.Messages);
-                }
+                case AgentOrchestrationStep agentStep:
+                    lastResponse = await agentStep.Agent.RunAsync(messagesList, session, options, cancellationToken);
+                    if (lastResponse?.Messages is not null)
+                    {
+                        messagesList.AddRange(lastResponse.Messages);
+                    }
+                    break;
+
+                // ToolCall, Router, Aggregator, CommunicationBus will be
+                // implemented in future iterations. For now, they are no-ops.
             }
-            // Other step types (Function, Router, Aggregator, Manager) will be
-            // implemented in future iterations. For now, they are no-ops.
         }
 
+        done:
         return lastResponse ?? new AgentResponse { Messages = [] };
     }
 
@@ -91,15 +93,17 @@ internal sealed class OrchestrationPipelineAgent : MsAIAgent
 
         foreach (var step in _steps)
         {
-            if (step.StepType == OrchestrationStepType.End)
-                break;
-
-            if (step.Agent is not null && step.StepType == OrchestrationStepType.Agent)
+            switch (step)
             {
-                await foreach (var update in step.Agent.RunStreamingAsync(messagesList, session, options, cancellationToken))
-                {
-                    yield return update;
-                }
+                case EndOrchestrationStep:
+                    yield break;
+
+                case AgentOrchestrationStep agentStep:
+                    await foreach (var update in agentStep.Agent.RunStreamingAsync(messagesList, session, options, cancellationToken))
+                    {
+                        yield return update;
+                    }
+                    break;
             }
         }
     }

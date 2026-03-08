@@ -1,40 +1,92 @@
+using System.Text.Json.Serialization;
 using Umbraco.AI.Agent.Core.Orchestrations;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// API model for type-specific node configuration.
-/// Only the properties relevant to the node's type are used.
+/// Polymorphic base class for orchestration node type-specific configuration.
 /// </summary>
-public class OrchestrationNodeConfigModel
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(StartNodeConfigModel), "start")]
+[JsonDerivedType(typeof(EndNodeConfigModel), "end")]
+[JsonDerivedType(typeof(AgentNodeConfigModel), "agent")]
+[JsonDerivedType(typeof(ToolCallNodeConfigModel), "toolCall")]
+[JsonDerivedType(typeof(RouterNodeConfigModel), "router")]
+[JsonDerivedType(typeof(AggregatorNodeConfigModel), "aggregator")]
+[JsonDerivedType(typeof(CommunicationBusNodeConfigModel), "communicationBus")]
+public abstract class NodeConfigModel;
+
+/// <summary>
+/// Config for Start nodes (no configuration needed).
+/// </summary>
+public sealed class StartNodeConfigModel : NodeConfigModel;
+
+/// <summary>
+/// Config for End nodes (no configuration needed).
+/// </summary>
+public sealed class EndNodeConfigModel : NodeConfigModel;
+
+/// <summary>
+/// Config for Agent nodes.
+/// </summary>
+public sealed class AgentNodeConfigModel : NodeConfigModel
 {
     /// <summary>
-    /// For Agent nodes: the ID of the referenced agent.
+    /// The ID of the referenced agent.
     /// </summary>
     public Guid? AgentId { get; set; }
 
     /// <summary>
-    /// For Function nodes: the name of a registered AITool.
+    /// When true, this agent acts as the manager in a Communication Bus.
     /// </summary>
-    public string? ToolName { get; set; }
+    public bool IsManager { get; set; }
+}
+
+/// <summary>
+/// Config for Tool Call nodes.
+/// </summary>
+public sealed class ToolCallNodeConfigModel : NodeConfigModel
+{
+    /// <summary>
+    /// The ID of a registered IAITool.
+    /// </summary>
+    public string? ToolId { get; set; }
+}
+
+/// <summary>
+/// Config for Router nodes. Conditions are defined on outgoing edges.
+/// </summary>
+public sealed class RouterNodeConfigModel : NodeConfigModel;
+
+/// <summary>
+/// Config for Aggregator nodes.
+/// </summary>
+public sealed class AggregatorNodeConfigModel : NodeConfigModel
+{
+    /// <summary>
+    /// The strategy used to merge concurrent results.
+    /// </summary>
+    public AIOrchestrationAggregationStrategy AggregationStrategy { get; set; } = AIOrchestrationAggregationStrategy.Concat;
 
     /// <summary>
-    /// For Router nodes: structured conditions that determine routing.
+    /// Optional profile override for the Summarize strategy.
+    /// If null, the orchestrated agent's own profile is used.
     /// </summary>
-    public IList<OrchestrationRouteConditionModel>? Conditions { get; set; }
+    public Guid? ProfileId { get; set; }
+}
+
+/// <summary>
+/// Config for Communication Bus nodes.
+/// </summary>
+public sealed class CommunicationBusNodeConfigModel : NodeConfigModel
+{
+    /// <summary>
+    /// Maximum number of iterations before the bus terminates. Defaults to 40.
+    /// </summary>
+    public int MaxIterations { get; set; } = 40;
 
     /// <summary>
-    /// For Aggregator nodes: the strategy used to merge concurrent results.
+    /// Optional message that signals the bus should terminate.
     /// </summary>
-    public AIOrchestrationAggregationStrategy? AggregationStrategy { get; set; }
-
-    /// <summary>
-    /// For Manager nodes: instructions that tell the manager how to delegate work.
-    /// </summary>
-    public string? ManagerInstructions { get; set; }
-
-    /// <summary>
-    /// For Manager nodes: the profile to use for the manager's LLM calls.
-    /// </summary>
-    public Guid? ManagerProfileId { get; set; }
+    public string? TerminationMessage { get; set; }
 }

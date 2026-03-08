@@ -34,4 +34,14 @@ public class OrchestrationEdgeModel
     /// Evaluation order for conditional edges (lower priority is evaluated first).
     /// </summary>
     public int? Priority { get; set; }
+
+    /// <summary>
+    /// For edges leaving a Router node: the condition for this route.
+    /// </summary>
+    public OrchestrationRouteConditionModel? Condition { get; set; }
+
+    /// <summary>
+    /// Whether traversing this edge requires human approval before continuing.
+    /// </summary>
+    public bool RequiresApproval { get; set; }
 }

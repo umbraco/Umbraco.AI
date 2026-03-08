@@ -4,7 +4,7 @@ using Umbraco.AI.Agent.Core.Orchestrations;
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// API model for a routing condition in a Router node.
+/// API model for a routing condition on an edge leaving a Router node.
 /// </summary>
 public class OrchestrationRouteConditionModel
 {
@@ -31,10 +31,4 @@ public class OrchestrationRouteConditionModel
     /// </summary>
     [Required]
     public required string Value { get; set; }
-
-    /// <summary>
-    /// The target node ID to route to when this condition matches.
-    /// </summary>
-    [Required]
-    public required string TargetNodeId { get; set; }
 }

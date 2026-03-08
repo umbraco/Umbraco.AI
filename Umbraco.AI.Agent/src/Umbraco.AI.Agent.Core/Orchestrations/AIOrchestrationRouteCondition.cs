@@ -1,7 +1,8 @@
 namespace Umbraco.AI.Agent.Core.Orchestrations;
 
 /// <summary>
-/// A structured condition for routing in a <see cref="AIOrchestrationNodeType.Router"/> node.
+/// A structured condition for routing, defined on an <see cref="AIOrchestrationEdge"/>
+/// leaving a <see cref="AIOrchestrationNodeType.Router"/> node.
 /// Conditions are evaluated against the previous node's output metadata.
 /// </summary>
 public sealed class AIOrchestrationRouteCondition
@@ -25,9 +26,4 @@ public sealed class AIOrchestrationRouteCondition
     /// The expected value to compare against.
     /// </summary>
     public required string Value { get; set; }
-
-    /// <summary>
-    /// The target node ID to route to when this condition matches.
-    /// </summary>
-    public required string TargetNodeId { get; set; }
 }

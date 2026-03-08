@@ -17,18 +17,20 @@ public enum AIOrchestrationNodeType
 
     /// <summary>
     /// References an existing <see cref="Agents.AIAgent"/> by ID.
+    /// When <see cref="AIOrchestrationNodeConfig.IsManager"/> is <c>true</c>, the agent acts
+    /// as the group chat manager in a Communication Bus.
     /// </summary>
     Agent,
 
     /// <summary>
-    /// A registered M.E.AI <c>AITool</c> that executes without an LLM.
+    /// Executes a registered <see cref="Umbraco.AI.Core.Tools.IAITool"/> without an LLM.
     /// Used for data transformation, API calls, or aggregation logic.
     /// </summary>
-    Function,
+    ToolCall,
 
     /// <summary>
     /// Conditional routing node (rule-based switch).
-    /// Evaluates structured conditions to determine the next node.
+    /// Conditions are defined on outgoing edges, not on the node itself.
     /// </summary>
     Router,
 
@@ -38,7 +40,9 @@ public enum AIOrchestrationNodeType
     Aggregator,
 
     /// <summary>
-    /// Magentic pattern manager that dynamically delegates to other agents.
+    /// Shared agent collaboration space. All agents connected to this node
+    /// can communicate with each other. If a connected agent has <see cref="AIOrchestrationNodeConfig.IsManager"/>
+    /// set, the pattern maps to MAF GroupChat; otherwise, it maps to MAF Handoff.
     /// </summary>
-    Manager,
+    CommunicationBus,
 }

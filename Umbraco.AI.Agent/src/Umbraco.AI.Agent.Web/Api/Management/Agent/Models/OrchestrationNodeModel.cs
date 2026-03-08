@@ -39,5 +39,5 @@ public class OrchestrationNodeModel
     /// <summary>
     /// Type-specific configuration for the node.
     /// </summary>
-    public OrchestrationNodeConfigModel Config { get; set; } = new();
+    public required NodeConfigModel Config { get; set; }
 }

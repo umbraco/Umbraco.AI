@@ -1,5 +1,3 @@
-using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Chat;
@@ -62,7 +60,7 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
         var agentLookup = await BuildAgentLookupAsync(graph, cancellationToken);
 
         // Build the execution pipeline starting from the Start node
-        var pipeline = BuildPipeline(graph, startNode, agentLookup, agent);
+        var pipeline = BuildPipeline(graph, startNode, agentLookup);
 
         // Wrap the pipeline as a single composite agent
         return new OrchestrationPipelineAgent(
@@ -82,16 +80,17 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
 
         foreach (var node in graph.Nodes.Where(n => n.Type == AIOrchestrationNodeType.Agent))
         {
-            if (node.Config.AgentId is null)
+            var agentConfig = node.Config as AIOrchestrationAgentNodeConfig;
+            if (agentConfig?.AgentId is null)
             {
                 _logger.LogWarning("Agent node '{NodeId}' has no AgentId configured, skipping", node.Id);
                 continue;
             }
 
-            var agentDefinition = await _agentService.GetAgentAsync(node.Config.AgentId.Value, cancellationToken);
+            var agentDefinition = await _agentService.GetAgentAsync(agentConfig.AgentId.Value, cancellationToken);
             if (agentDefinition is null)
             {
-                _logger.LogWarning("Agent '{AgentId}' referenced by node '{NodeId}' not found, skipping", node.Config.AgentId, node.Id);
+                _logger.LogWarning("Agent '{AgentId}' referenced by node '{NodeId}' not found, skipping", agentConfig.AgentId, node.Id);
                 continue;
             }
 
@@ -108,16 +107,14 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
     private List<OrchestrationStep> BuildPipeline(
         AIOrchestrationGraph graph,
         AIOrchestrationNode startNode,
-        Dictionary<string, MsAIAgent> agentLookup,
-        Agents.AIAgent agent)
+        Dictionary<string, MsAIAgent> agentLookup)
     {
         var steps = new List<OrchestrationStep>();
         var visited = new HashSet<string>();
         var queue = new Queue<AIOrchestrationNode>();
 
         // Get successors of Start node
-        var startSuccessors = GetSuccessors(graph, startNode.Id);
-        foreach (var successor in startSuccessors)
+        foreach (var successor in GetSuccessors(graph, startNode.Id))
         {
             queue.Enqueue(successor);
         }
@@ -127,7 +124,7 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
             var node = queue.Dequeue();
             if (!visited.Add(node.Id)) continue;
 
-            var step = CreateStep(graph, node, agentLookup, agent);
+            var step = CreateStep(graph, node, agentLookup);
             if (step is not null)
             {
                 steps.Add(step);
@@ -155,36 +152,106 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
     private OrchestrationStep? CreateStep(
         AIOrchestrationGraph graph,
         AIOrchestrationNode node,
-        Dictionary<string, MsAIAgent> agentLookup,
-        Agents.AIAgent agent)
+        Dictionary<string, MsAIAgent> agentLookup)
     {
         return node.Type switch
         {
-            AIOrchestrationNodeType.Agent => agentLookup.TryGetValue(node.Id, out var mafAgent)
-                ? new OrchestrationStep(node.Id, node.Label, OrchestrationStepType.Agent, Agent: mafAgent)
-                : null,
-
-            AIOrchestrationNodeType.Function => !string.IsNullOrEmpty(node.Config.ToolName)
-                ? new OrchestrationStep(node.Id, node.Label, OrchestrationStepType.Function, ToolName: node.Config.ToolName)
-                : null,
-
-            AIOrchestrationNodeType.Router => new OrchestrationStep(
-                node.Id, node.Label, OrchestrationStepType.Router,
-                Conditions: node.Config.Conditions,
-                SuccessorEdges: graph.Edges.Where(e => e.SourceNodeId == node.Id).ToList()),
-
-            AIOrchestrationNodeType.Aggregator => new OrchestrationStep(
-                node.Id, node.Label, OrchestrationStepType.Aggregator,
-                AggregationStrategy: node.Config.AggregationStrategy ?? AIOrchestrationAggregationStrategy.Concat),
-
-            AIOrchestrationNodeType.Manager => new OrchestrationStep(
-                node.Id, node.Label, OrchestrationStepType.Manager,
-                ManagerInstructions: node.Config.ManagerInstructions),
-
-            AIOrchestrationNodeType.End => new OrchestrationStep(node.Id, node.Label, OrchestrationStepType.End),
-
+            AIOrchestrationNodeType.Agent => CreateAgentStep(node, agentLookup),
+            AIOrchestrationNodeType.ToolCall => CreateToolCallStep(node),
+            AIOrchestrationNodeType.Router => CreateRouterStep(graph, node),
+            AIOrchestrationNodeType.Aggregator => CreateAggregatorStep(node),
+            AIOrchestrationNodeType.CommunicationBus => CreateCommunicationBusStep(graph, node, agentLookup),
+            AIOrchestrationNodeType.End => new EndOrchestrationStep(node.Id, node.Label),
             _ => null,
         };
+    }
+
+    private AgentOrchestrationStep? CreateAgentStep(
+        AIOrchestrationNode node,
+        Dictionary<string, MsAIAgent> agentLookup)
+    {
+        if (!agentLookup.TryGetValue(node.Id, out var mafAgent))
+        {
+            return null;
+        }
+
+        var config = node.Config as AIOrchestrationAgentNodeConfig;
+        return new AgentOrchestrationStep(node.Id, node.Label, mafAgent, config?.IsManager ?? false);
+    }
+
+    private ToolCallOrchestrationStep? CreateToolCallStep(AIOrchestrationNode node)
+    {
+        var config = node.Config as AIOrchestrationToolCallNodeConfig;
+        if (string.IsNullOrEmpty(config?.ToolId))
+        {
+            return null;
+        }
+
+        return new ToolCallOrchestrationStep(node.Id, node.Label, config.ToolId);
+    }
+
+    private RouterOrchestrationStep CreateRouterStep(AIOrchestrationGraph graph, AIOrchestrationNode node)
+    {
+        var outgoingEdges = graph.Edges
+            .Where(e => e.SourceNodeId == node.Id)
+            .OrderBy(e => e.Priority ?? int.MaxValue)
+            .ToList();
+
+        return new RouterOrchestrationStep(node.Id, node.Label, outgoingEdges);
+    }
+
+    private AggregatorOrchestrationStep CreateAggregatorStep(AIOrchestrationNode node)
+    {
+        var config = node.Config as AIOrchestrationAggregatorNodeConfig;
+        return new AggregatorOrchestrationStep(
+            node.Id,
+            node.Label,
+            config?.AggregationStrategy ?? AIOrchestrationAggregationStrategy.Concat,
+            config?.ProfileId);
+    }
+
+    private CommunicationBusOrchestrationStep CreateCommunicationBusStep(
+        AIOrchestrationGraph graph,
+        AIOrchestrationNode node,
+        Dictionary<string, MsAIAgent> agentLookup)
+    {
+        var config = node.Config as AIOrchestrationCommunicationBusNodeConfig;
+
+        // Find all agent nodes connected TO this bus
+        var incomingAgentNodeIds = graph.Edges
+            .Where(e => e.TargetNodeId == node.Id)
+            .Select(e => e.SourceNodeId)
+            .ToList();
+
+        var participants = new List<MsAIAgent>();
+        MsAIAgent? manager = null;
+
+        foreach (var agentNodeId in incomingAgentNodeIds)
+        {
+            var agentNode = graph.Nodes.FirstOrDefault(n => n.Id == agentNodeId);
+            if (agentNode is null || !agentLookup.TryGetValue(agentNodeId, out var mafAgent))
+            {
+                continue;
+            }
+
+            var agentConfig = agentNode.Config as AIOrchestrationAgentNodeConfig;
+            if (agentConfig?.IsManager == true)
+            {
+                manager = mafAgent;
+            }
+            else
+            {
+                participants.Add(mafAgent);
+            }
+        }
+
+        return new CommunicationBusOrchestrationStep(
+            node.Id,
+            node.Label,
+            participants,
+            manager,
+            config?.MaxIterations ?? 40,
+            config?.TerminationMessage);
     }
 
     /// <summary>

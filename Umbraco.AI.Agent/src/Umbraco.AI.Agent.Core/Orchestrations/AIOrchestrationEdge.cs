@@ -22,6 +22,7 @@ public sealed class AIOrchestrationEdge
 
     /// <summary>
     /// Whether this is the default/fallback edge for a router node.
+    /// When no condition matches, the default edge is followed.
     /// </summary>
     public bool IsDefault { get; set; }
 
@@ -29,4 +30,17 @@ public sealed class AIOrchestrationEdge
     /// Evaluation order for conditional edges (lower priority is evaluated first).
     /// </summary>
     public int? Priority { get; set; }
+
+    /// <summary>
+    /// For edges leaving a <see cref="AIOrchestrationNodeType.Router"/> node:
+    /// the condition that must be met for this edge to be followed.
+    /// If <c>null</c> on a router edge, it acts as the default/fallback route.
+    /// </summary>
+    public AIOrchestrationRouteCondition? Condition { get; set; }
+
+    /// <summary>
+    /// Whether traversing this edge requires human approval before continuing.
+    /// When <c>true</c>, execution pauses and waits for an approval decision.
+    /// </summary>
+    public bool RequiresApproval { get; set; }
 }

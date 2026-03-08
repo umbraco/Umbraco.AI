@@ -2,26 +2,28 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import type { UaiOrchestrationDetailModel, UaiOrchestrationGraph } from "../../../types.js";
-import { UAI_ORCHESTRATION_WORKSPACE_CONTEXT } from "../orchestration-workspace.context-token.js";
+import type { UaiAgentDetailModel, UaiOrchestrationGraph, UaiOrchestratedAgentConfig } from "../../../types.js";
+import { isOrchestratedConfig } from "../../../types.js";
+import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 /**
  * Workspace view for the visual workflow graph editor.
+ * Only visible for orchestrated agents.
  * Lazy-loads the React Flow graph editor on first render.
  */
-@customElement("uai-orchestration-workflow-workspace-view")
-export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement {
-    #workspaceContext?: typeof UAI_ORCHESTRATION_WORKSPACE_CONTEXT.TYPE;
+@customElement("uai-agent-workflow-workspace-view")
+export class UaiAgentWorkflowWorkspaceViewElement extends UmbLitElement {
+    #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
-    private _model?: UaiOrchestrationDetailModel;
+    private _model?: UaiAgentDetailModel;
 
     @state()
     private _editorReady = false;
 
     constructor() {
         super();
-        this.consumeContext(UAI_ORCHESTRATION_WORKSPACE_CONTEXT, (context) => {
+        this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
             if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
@@ -35,24 +37,36 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
     }
 
     async #loadEditor() {
-        await import("../../../components/orchestration-graph-editor/orchestration-graph-editor.element.js");
+        await import("../../../components/orchestration-graph/orchestration-graph-editor.element.js");
         this._editorReady = true;
     }
 
     #onGraphChanged(event: CustomEvent<UaiOrchestrationGraph>) {
         event.stopPropagation();
+        if (!this._model || !isOrchestratedConfig(this._model.config)) return;
         const graph = event.detail;
+        const config: UaiOrchestratedAgentConfig = {
+            ...this._model.config,
+            graph,
+        };
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiOrchestrationDetailModel>({ graph }, "graph"),
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.graph"),
         );
     }
 
+    get #graph(): UaiOrchestrationGraph | undefined {
+        if (this._model && isOrchestratedConfig(this._model.config)) {
+            return this._model.config.graph;
+        }
+        return undefined;
+    }
+
     render() {
-        if (!this._model || !this._editorReady) return html`<uui-loader></uui-loader>`;
+        if (!this._model || !this._editorReady || !this.#graph) return html`<uui-loader></uui-loader>`;
 
         return html`
             <uai-orchestration-graph-editor
-                .graph=${this._model.graph}
+                .graph=${this.#graph}
                 @graph-changed=${this.#onGraphChanged}
             ></uai-orchestration-graph-editor>
         `;
@@ -83,10 +97,10 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
     ];
 }
 
-export default UaiOrchestrationWorkflowWorkspaceViewElement;
+export default UaiAgentWorkflowWorkspaceViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-orchestration-workflow-workspace-view": UaiOrchestrationWorkflowWorkspaceViewElement;
+        "uai-agent-workflow-workspace-view": UaiAgentWorkflowWorkspaceViewElement;
     }
 }

@@ -1,8 +1,16 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
+import { UAI_AGENT_TYPE_CONDITION_ALIAS, type UaiAgentTypeConditionConfig } from "./agent-type.condition.js";
 
 export const manifests: Array<UmbExtensionManifest> = [
+    // Workspace condition: matches agent type from workspace context
+    {
+        type: "condition",
+        alias: UAI_AGENT_TYPE_CONDITION_ALIAS,
+        name: "Agent Type Condition",
+        api: () => import("./agent-type.condition.js"),
+    },
     {
         type: "workspace",
         kind: "routable",
@@ -13,6 +21,7 @@ export const manifests: Array<UmbExtensionManifest> = [
             entityType: UAI_AGENT_ENTITY_TYPE,
         },
     },
+    // Settings tab (all agent types)
     {
         type: "workspaceView",
         alias: "UmbracoAIAgent.Workspace.Agent.View.Details",
@@ -31,6 +40,30 @@ export const manifests: Array<UmbExtensionManifest> = [
             },
         ],
     },
+    // Workflow tab (orchestrated agents only)
+    {
+        type: "workspaceView",
+        alias: "UmbracoAIAgent.Workspace.Agent.View.Workflow",
+        name: "Agent Workflow Workspace View",
+        js: () => import("./views/agent-workflow-workspace-view.element.js"),
+        weight: 290,
+        meta: {
+            label: "Workflow",
+            pathname: "workflow",
+            icon: "icon-mindmap",
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_AGENT_WORKSPACE_ALIAS,
+            },
+            {
+                alias: UAI_AGENT_TYPE_CONDITION_ALIAS,
+                match: "orchestrated",
+            } as UaiAgentTypeConditionConfig,
+        ],
+    },
+    // Availability tab (all agent types)
     {
         type: "workspaceView",
         alias: "UmbracoAIAgent.Workspace.Agent.View.Availability",
@@ -49,6 +82,7 @@ export const manifests: Array<UmbExtensionManifest> = [
             },
         ],
     },
+    // Permissions tab (standard agents only)
     {
         type: "workspaceView",
         alias: "UmbracoAIAgent.Workspace.Agent.View.Permissions",
@@ -65,8 +99,13 @@ export const manifests: Array<UmbExtensionManifest> = [
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
                 match: UAI_AGENT_WORKSPACE_ALIAS,
             },
+            {
+                alias: UAI_AGENT_TYPE_CONDITION_ALIAS,
+                match: "standard",
+            } as UaiAgentTypeConditionConfig,
         ],
     },
+    // Info tab (all agent types)
     {
         type: "workspaceView",
         alias: "UmbracoAIAgent.Workspace.Agent.View.Info",

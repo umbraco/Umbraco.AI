@@ -8,7 +8,27 @@ export { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "./entity.js";
 export type { UaiAgentEntityType, UaiAgentRootEntityType } from "./entity.js";
 
 // Domain types
-export type { UaiAgentDetailModel, UaiAgentItemModel, UaiAgentScope, UaiAgentScopeRule } from "./types.js";
+export type {
+    UaiAgentDetailModel,
+    UaiAgentItemModel,
+    UaiAgentScope,
+    UaiAgentScopeRule,
+    UaiAgentType,
+    UaiAgentConfig,
+    UaiStandardAgentConfig,
+    UaiOrchestratedAgentConfig,
+    UaiOrchestrationGraph,
+    UaiOrchestrationNode,
+    UaiOrchestrationNodeConfig,
+    UaiOrchestrationEdge,
+    UaiOrchestrationRouteCondition,
+    UaiAgentNodeConfig,
+    UaiFunctionNodeConfig,
+    UaiRouterNodeConfig,
+    UaiAggregatorNodeConfig,
+    UaiManagerNodeConfig,
+} from "./types.js";
+export { isStandardConfig, isOrchestratedConfig, isStandardAgent, isOrchestratedAgent } from "./types.js";
 export type { UaiUserGroupPermissionsModel, UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
 
 // Repository constants

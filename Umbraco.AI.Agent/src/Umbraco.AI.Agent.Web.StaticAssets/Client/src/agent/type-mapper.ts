@@ -3,26 +3,78 @@ import type {
     AgentItemResponseModel,
     CreateAgentRequestModel,
     UpdateAgentRequestModel,
+    AgentConfigModel,
 } from "../api/types.gen.js";
 import { UAI_AGENT_ENTITY_TYPE } from "./constants.js";
-import type { UaiAgentDetailModel, UaiAgentItemModel } from "./types.js";
+import type {
+    UaiAgentDetailModel,
+    UaiAgentItemModel,
+    UaiAgentConfig,
+    UaiAgentType,
+    UaiStandardAgentConfig,
+    UaiOrchestratedAgentConfig,
+} from "./types.js";
+
+function mapConfigFromResponse(agentType: string, config: AgentConfigModel | null | undefined): UaiAgentConfig {
+    if (agentType === "orchestrated") {
+        const orchestrated = config as { $type?: string; graph?: unknown } | null;
+        return {
+            $type: "orchestrated",
+            graph: (orchestrated?.graph as UaiOrchestratedAgentConfig["graph"]) ?? { nodes: [], edges: [] },
+        } satisfies UaiOrchestratedAgentConfig;
+    }
+
+    // Default: standard
+    const standard = config as {
+        $type?: string;
+        contextIds?: string[];
+        instructions?: string;
+        allowedToolIds?: string[];
+        allowedToolScopeIds?: string[];
+        userGroupPermissions?: Record<string, unknown>;
+    } | null;
+    return {
+        $type: "standard",
+        contextIds: standard?.contextIds ?? [],
+        instructions: standard?.instructions ?? null,
+        allowedToolIds: standard?.allowedToolIds ?? [],
+        allowedToolScopeIds: standard?.allowedToolScopeIds ?? [],
+        userGroupPermissions: (standard?.userGroupPermissions as UaiStandardAgentConfig["userGroupPermissions"]) ?? {},
+    } satisfies UaiStandardAgentConfig;
+}
+
+function mapConfigToRequest(config: UaiAgentConfig): AgentConfigModel {
+    if (config.$type === "orchestrated") {
+        return {
+            $type: "orchestrated",
+            graph: config.graph,
+        } as AgentConfigModel;
+    }
+
+    return {
+        $type: "standard",
+        contextIds: config.contextIds,
+        instructions: config.instructions,
+        allowedToolIds: config.allowedToolIds,
+        allowedToolScopeIds: config.allowedToolScopeIds,
+        userGroupPermissions: config.userGroupPermissions,
+    } as AgentConfigModel;
+}
 
 export const UaiAgentTypeMapper = {
     toDetailModel(response: AgentResponseModel): UaiAgentDetailModel {
+        const agentType = (response.agentType ?? "standard") as UaiAgentType;
         return {
             unique: response.id,
             entityType: UAI_AGENT_ENTITY_TYPE,
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
+            agentType,
             profileId: response.profileId ?? null,
-            contextIds: response.contextIds ?? [],
             surfaceIds: response.surfaceIds ?? [],
             scope: (response as any).scope ?? null,
-            allowedToolIds: response.allowedToolIds ?? [],
-            allowedToolScopeIds: response.allowedToolScopeIds ?? [],
-            userGroupPermissions: (response as any).userGroupPermissions ?? {},
-            instructions: response.instructions ?? null,
+            config: mapConfigFromResponse(agentType, response.config),
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -37,12 +89,10 @@ export const UaiAgentTypeMapper = {
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
+            agentType: (response.agentType ?? "standard") as UaiAgentType,
             profileId: response.profileId ?? null,
-            contextIds: response.contextIds ?? [],
             surfaceIds: response.surfaceIds ?? [],
             scope: (response as any).scope ?? null,
-            allowedToolIds: response.allowedToolIds ?? [],
-            allowedToolScopeIds: response.allowedToolScopeIds ?? [],
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -53,16 +103,13 @@ export const UaiAgentTypeMapper = {
         return {
             alias: model.alias,
             name: model.name,
+            agentType: model.agentType,
             description: model.description,
             profileId: model.profileId,
-            contextIds: model.contextIds,
             surfaceIds: model.surfaceIds,
             scope: model.scope,
-            allowedToolIds: model.allowedToolIds,
-            allowedToolScopeIds: model.allowedToolScopeIds,
-            userGroupPermissions: model.userGroupPermissions,
-            instructions: model.instructions,
-        } as CreateAgentRequestModel;
+            config: mapConfigToRequest(model.config),
+        };
     },
 
     toUpdateRequest(model: UaiAgentDetailModel): UpdateAgentRequestModel {
@@ -71,14 +118,10 @@ export const UaiAgentTypeMapper = {
             name: model.name,
             description: model.description,
             profileId: model.profileId,
-            contextIds: model.contextIds,
             surfaceIds: model.surfaceIds,
             scope: model.scope,
-            allowedToolIds: model.allowedToolIds,
-            allowedToolScopeIds: model.allowedToolScopeIds,
-            userGroupPermissions: model.userGroupPermissions,
-            instructions: model.instructions,
+            config: mapConfigToRequest(model.config),
             isActive: model.isActive,
-        } as UpdateAgentRequestModel;
+        };
     },
 };

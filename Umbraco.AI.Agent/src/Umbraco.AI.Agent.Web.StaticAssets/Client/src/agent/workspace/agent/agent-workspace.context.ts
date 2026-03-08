@@ -13,12 +13,13 @@ import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
 import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-import type { UaiAgentDetailModel } from "../../types.js";
+import type { UaiAgentDetailModel, UaiAgentType } from "../../types.js";
+import { isOrchestratedConfig } from "../../types.js";
 import { UaiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
 /**
- * Workspace context for editing Agent entities.
+ * Workspace context for editing Agent entities (both standard and orchestrated).
  * Handles CRUD operations and state management.
  */
 export class UaiAgentWorkspaceContext
@@ -93,11 +94,42 @@ export class UaiAgentWorkspaceContext
 
     /**
      * Creates a scaffold for a new agent.
+     * Reads `agentType` and optionally `template` from URL query params.
      */
     async scaffold() {
         this.resetState();
-        const { data } = await this.#repository.createScaffold();
+
+        // Read agent type from URL query params (defaults to "standard")
+        const url = new URL(window.location.href);
+        const agentType = (url.searchParams.get("agentType") as UaiAgentType) ?? "standard";
+
+        const { data } = await this.#repository.createScaffold({ agentType });
         if (data) {
+            // Apply pattern template for orchestrated agents if specified
+            if (agentType === "orchestrated" && isOrchestratedConfig(data.config)) {
+                const template = url.searchParams.get("template");
+                if (template) {
+                    try {
+                        const { generateTemplateGraph } = await import(
+                            "../../modals/pattern-template/pattern-templates.js"
+                        );
+                        data.config = {
+                            ...data.config,
+                            graph: generateTemplateGraph(template as any),
+                        };
+                    } catch {
+                        // Template module not available, continue with empty graph
+                    }
+                }
+            }
+
+            // Clean up query params
+            if (url.searchParams.has("agentType") || url.searchParams.has("template")) {
+                url.searchParams.delete("agentType");
+                url.searchParams.delete("template");
+                history.replaceState(null, "", url.pathname + url.search);
+            }
+
             this.#unique.setValue(UAI_EMPTY_GUID);
             this.#model.setValue(data);
             this.setIsNew(true);

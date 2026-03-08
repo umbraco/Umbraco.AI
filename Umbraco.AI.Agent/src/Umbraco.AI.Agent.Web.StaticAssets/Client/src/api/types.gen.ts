@@ -81,12 +81,10 @@ export type AgentItemResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
+    agentType: string;
     profileId?: string | null;
-    contextIds: Array<string>;
     surfaceIds: Array<string>;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds: Array<string>;
-    allowedToolScopeIds: Array<string>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -97,20 +95,33 @@ export type AgentResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
+    agentType: string;
     profileId?: string | null;
-    contextIds: Array<string>;
     surfaceIds: Array<string>;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds: Array<string>;
-    allowedToolScopeIds: Array<string>;
-    userGroupPermissions: {
-        [key: string]: AiAgentUserGroupPermissionsModel;
-    };
-    instructions?: string | null;
+    config?: AgentConfigModel | null;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
     version: number;
+};
+
+export type AgentConfigModel = StandardAgentConfigModel | OrchestratedAgentConfigModel;
+
+export type StandardAgentConfigModel = {
+    $type: 'standard';
+    contextIds?: Array<string> | null;
+    instructions?: string | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
+};
+
+export type OrchestratedAgentConfigModel = {
+    $type: 'orchestrated';
+    graph?: OrchestrationGraphModel | null;
 };
 
 export type AgentSurfaceItemResponseModel = {
@@ -122,17 +133,12 @@ export type AgentSurfaceItemResponseModel = {
 export type CreateAgentRequestModel = {
     alias: string;
     name: string;
+    agentType: string;
     description?: string | null;
     profileId?: string | null;
-    contextIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds?: Array<string> | null;
-    allowedToolScopeIds?: Array<string> | null;
-    userGroupPermissions?: {
-        [key: string]: AiAgentUserGroupPermissionsModel;
-    } | null;
-    instructions?: string | null;
+    config?: AgentConfigModel | null;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -162,15 +168,9 @@ export type UpdateAgentRequestModel = {
     name: string;
     description?: string | null;
     profileId?: string | null;
-    contextIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds?: Array<string> | null;
-    allowedToolScopeIds?: Array<string> | null;
-    userGroupPermissions?: {
-        [key: string]: AiAgentUserGroupPermissionsModel;
-    } | null;
-    instructions?: string | null;
+    config?: AgentConfigModel | null;
     isActive: boolean;
 };
 
@@ -195,6 +195,7 @@ export type GetAllAgentsData = {
         skip?: number;
         take?: number;
         filter?: string;
+        agentType?: string;
         profileId?: string;
         scopeId?: string;
         isActive?: boolean;
@@ -478,186 +479,3 @@ export type OrchestrationGraphModel = {
     edges: Array<OrchestrationGraphEdgeModel>;
 };
 
-export type OrchestrationResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    surfaceIds: Array<string>;
-    scope?: AiAgentScopeModel | null;
-    graph: OrchestrationGraphModel;
-    isActive: boolean;
-    dateCreated: string;
-    dateModified: string;
-    version: number;
-};
-
-export type OrchestrationItemResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    surfaceIds: Array<string>;
-    scope?: AiAgentScopeModel | null;
-    isActive: boolean;
-    dateCreated: string;
-    dateModified: string;
-};
-
-export type PagedOrchestrationItemResponseModel = {
-    total: number;
-    items: Array<OrchestrationItemResponseModel>;
-};
-
-export type CreateOrchestrationRequestModel = {
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    surfaceIds?: Array<string> | null;
-    scope?: AiAgentScopeModel | null;
-    graph?: OrchestrationGraphModel | null;
-};
-
-export type UpdateOrchestrationRequestModel = {
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    surfaceIds?: Array<string> | null;
-    scope?: AiAgentScopeModel | null;
-    graph?: OrchestrationGraphModel | null;
-    isActive: boolean;
-};
-
-export type GetAllOrchestrationsData = {
-    body?: never;
-    path?: never;
-    query?: {
-        skip?: number;
-        take?: number;
-        filter?: string;
-        surfaceId?: string;
-        isActive?: boolean;
-    };
-    url: '/umbraco/ai/management/api/v1/orchestrations';
-};
-
-export type GetAllOrchestrationsErrors = {
-    401: unknown;
-};
-
-export type GetAllOrchestrationsResponses = {
-    200: PagedOrchestrationItemResponseModel;
-};
-
-export type GetAllOrchestrationsResponse = GetAllOrchestrationsResponses[keyof GetAllOrchestrationsResponses];
-
-export type CreateOrchestrationData = {
-    body?: CreateOrchestrationRequestModel;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/orchestrations';
-};
-
-export type CreateOrchestrationErrors = {
-    400: ValidationProblemDetails;
-    401: unknown;
-    409: ProblemDetails;
-};
-
-export type CreateOrchestrationError = CreateOrchestrationErrors[keyof CreateOrchestrationErrors];
-
-export type CreateOrchestrationResponses = {
-    201: OrchestrationResponseModel;
-};
-
-export type CreateOrchestrationResponse = CreateOrchestrationResponses[keyof CreateOrchestrationResponses];
-
-export type DeleteOrchestrationData = {
-    body?: never;
-    path: {
-        orchestrationIdOrAlias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}';
-};
-
-export type DeleteOrchestrationErrors = {
-    401: unknown;
-    404: ProblemDetails;
-};
-
-export type DeleteOrchestrationError = DeleteOrchestrationErrors[keyof DeleteOrchestrationErrors];
-
-export type DeleteOrchestrationResponses = {
-    204: void;
-};
-
-export type DeleteOrchestrationResponse = DeleteOrchestrationResponses[keyof DeleteOrchestrationResponses];
-
-export type GetOrchestrationByIdOrAliasData = {
-    body?: never;
-    path: {
-        orchestrationIdOrAlias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}';
-};
-
-export type GetOrchestrationByIdOrAliasErrors = {
-    401: unknown;
-    404: ProblemDetails;
-};
-
-export type GetOrchestrationByIdOrAliasError = GetOrchestrationByIdOrAliasErrors[keyof GetOrchestrationByIdOrAliasErrors];
-
-export type GetOrchestrationByIdOrAliasResponses = {
-    200: OrchestrationResponseModel;
-};
-
-export type GetOrchestrationByIdOrAliasResponse = GetOrchestrationByIdOrAliasResponses[keyof GetOrchestrationByIdOrAliasResponses];
-
-export type UpdateOrchestrationData = {
-    body?: UpdateOrchestrationRequestModel;
-    path: {
-        orchestrationIdOrAlias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/orchestrations/{orchestrationIdOrAlias}';
-};
-
-export type UpdateOrchestrationErrors = {
-    400: ProblemDetails;
-    401: unknown;
-    404: ProblemDetails;
-};
-
-export type UpdateOrchestrationError = UpdateOrchestrationErrors[keyof UpdateOrchestrationErrors];
-
-export type UpdateOrchestrationResponses = {
-    200: unknown;
-};
-
-export type OrchestrationAliasExistsData = {
-    body?: never;
-    path: {
-        alias: string;
-    };
-    query?: {
-        excludeId?: string;
-    };
-    url: '/umbraco/ai/management/api/v1/orchestrations/{alias}/exists';
-};
-
-export type OrchestrationAliasExistsErrors = {
-    401: unknown;
-};
-
-export type OrchestrationAliasExistsResponses = {
-    200: boolean;
-};
-
-export type OrchestrationAliasExistsResponse = OrchestrationAliasExistsResponses[keyof OrchestrationAliasExistsResponses];

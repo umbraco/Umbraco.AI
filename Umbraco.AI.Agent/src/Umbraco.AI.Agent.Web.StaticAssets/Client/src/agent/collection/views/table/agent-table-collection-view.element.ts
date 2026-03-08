@@ -36,6 +36,7 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
 
     private _columns: UmbTableColumn[] = [
         { name: "Name", alias: "name" },
+        { name: "Type", alias: "agentType" },
         { name: "Alias", alias: "alias" },
         { name: "Description", alias: "description" },
         { name: "Active", alias: "isActive" },
@@ -72,13 +73,21 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
     #createTableItems(items: UaiAgentItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: UAI_AGENT_ICON,
+            icon: item.agentType === "orchestrated" ? "icon-mindmap" : UAI_AGENT_ICON,
             data: [
                 {
                     columnAlias: "name",
                     value: html`<a
                         href=${UAI_EDIT_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({ unique: item.unique })}
                         >${item.name}</a
+                    >`,
+                },
+                {
+                    columnAlias: "agentType",
+                    value: html`<uui-tag
+                        color=${item.agentType === "orchestrated" ? "warning" : "default"}
+                        look="secondary"
+                        >${item.agentType === "orchestrated" ? "Orchestrated" : "Standard"}</uui-tag
                     >`,
                 },
                 {

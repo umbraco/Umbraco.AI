@@ -1,3 +1,4 @@
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Tools;
 
 namespace Umbraco.AI.Agent.Core.Agents;
@@ -35,14 +36,21 @@ internal static class AIAgentToolHelper
             allowedTools.Add(toolId);
         }
 
-        // 2. Add agent default tool IDs
-        foreach (var toolId in agent.AllowedToolIds)
+        // 2. Get standard config; if not a standard agent, return system tools only
+        AIStandardAgentConfig? config = agent.GetStandardConfig();
+        if (config is null)
+        {
+            return allowedTools.ToList();
+        }
+
+        // 3. Add agent default tool IDs
+        foreach (var toolId in config.AllowedToolIds)
         {
             allowedTools.Add(toolId);
         }
 
-        // 3. Add tools from agent default scopes
-        foreach (var scope in agent.AllowedToolScopeIds)
+        // 4. Add tools from agent default scopes
+        foreach (var scope in config.AllowedToolScopeIds)
         {
             var scopeToolIds = toolCollection.GetByScope(scope)
                 .Where(t => t is not IAISystemTool) // Don't duplicate system tools
@@ -53,20 +61,20 @@ internal static class AIAgentToolHelper
             }
         }
 
-        // 4. Apply user group overrides if provided
+        // 5. Apply user group overrides if provided
         if (userGroupIds is not null)
         {
             foreach (var userGroupId in userGroupIds)
             {
-                if (agent.UserGroupPermissions.TryGetValue(userGroupId, out var permissions))
+                if (config.UserGroupPermissions.TryGetValue(userGroupId, out var permissions))
                 {
-                    // 4a. Add allowed tool IDs from user group
+                    // 5a. Add allowed tool IDs from user group
                     foreach (var toolId in permissions.AllowedToolIds)
                     {
                         allowedTools.Add(toolId);
                     }
 
-                    // 4b. Add tools from allowed scopes from user group
+                    // 5b. Add tools from allowed scopes from user group
                     foreach (var scope in permissions.AllowedToolScopeIds)
                     {
                         var scopeToolIds = toolCollection.GetByScope(scope)
@@ -78,13 +86,13 @@ internal static class AIAgentToolHelper
                         }
                     }
 
-                    // 4c. Track denied tool IDs from user group
+                    // 5c. Track denied tool IDs from user group
                     foreach (var toolId in permissions.DeniedToolIds)
                     {
                         deniedTools.Add(toolId);
                     }
 
-                    // 4d. Track denied tools from denied scopes from user group
+                    // 5d. Track denied tools from denied scopes from user group
                     foreach (var scope in permissions.DeniedToolScopeIds)
                     {
                         var scopeToolIds = toolCollection.GetByScope(scope)
@@ -98,11 +106,11 @@ internal static class AIAgentToolHelper
             }
         }
 
-        // 5. Remove denied tools (except system tools)
+        // 6. Remove denied tools (except system tools)
         var systemToolIdSet = new HashSet<string>(systemToolIds, StringComparer.OrdinalIgnoreCase);
         allowedTools.ExceptWith(deniedTools.Where(id => !systemToolIdSet.Contains(id)));
 
-        // 6. Return as list
+        // 7. Return as list
         return allowedTools.ToList();
     }
 
@@ -124,6 +132,12 @@ internal static class AIAgentToolHelper
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentException.ThrowIfNullOrWhiteSpace(toolId);
         ArgumentNullException.ThrowIfNull(toolCollection);
+
+        // Non-standard agents have no tool permissions beyond system tools
+        if (agent.GetStandardConfig() is null)
+        {
+            return toolCollection.Any(t => t is IAISystemTool && string.Equals(t.Id, toolId, StringComparison.OrdinalIgnoreCase));
+        }
 
         // Get all allowed tool IDs (includes user group overrides if provided)
         var allowedToolIds = GetAllowedToolIds(agent, toolCollection, userGroupIds);

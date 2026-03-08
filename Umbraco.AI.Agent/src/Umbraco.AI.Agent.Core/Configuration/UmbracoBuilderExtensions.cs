@@ -39,19 +39,16 @@ public static class UmbracoBuilderExtensions
 
         // Register in-memory repositories as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
-        builder.Services.AddSingleton<IAIOrchestrationRepository, InMemoryAIOrchestrationRepository>();
 
         // Register scope validator
         builder.Services.AddSingleton<AIAgentScopeValidator>();
 
         // Register services
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
-        builder.Services.AddSingleton<IAIOrchestrationService, AIOrchestrationService>();
         builder.Services.AddSingleton<IAIOrchestrationExecutor, AIOrchestrationExecutor>();
 
-        // Prevent deletion of profiles referenced by agents or orchestrations
+        // Prevent deletion of profiles referenced by agents
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();
-        builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingOrchestrationNotificationHandler>();
 
         // Register agent factory (scoped - depends on scoped IAIChatService)
         builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
@@ -72,9 +69,8 @@ public static class UmbracoBuilderExtensions
         // This ensures server-side tools execute before frontend tools trigger termination
         builder.AIChatMiddleware().InsertBefore<AIFunctionInvokingChatMiddleware, AIToolReorderingChatMiddleware>();
 
-        // Register versionable entity adapters for agents and orchestrations
+        // Register versionable entity adapters for agents
         builder.AIVersionableEntityAdapters().Add<AIAgentVersionableEntityAdapter>();
-        builder.AIVersionableEntityAdapters().Add<AIOrchestrationVersionableEntityAdapter>();
 
         // Auto-discover agent surfaces via [AIAgentSurface] attribute
         builder.AIAgentSurfaces()

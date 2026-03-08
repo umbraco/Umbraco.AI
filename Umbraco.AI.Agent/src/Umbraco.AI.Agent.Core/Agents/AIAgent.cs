@@ -1,4 +1,3 @@
-using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Agent.Core.Agents;
@@ -6,6 +5,19 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <summary>
 /// Represents a stored agent definition that can be linked to AI profiles.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Agents come in two types, determined by <see cref="AgentType"/>:
+/// <list type="bullet">
+///   <item><see cref="AIAgentType.Standard"/> — a standard agent with instructions, context injection, and tool permissions.</item>
+///   <item><see cref="AIAgentType.Orchestrated"/> — an orchestrated agent that composes multiple agents into a workflow graph.</item>
+/// </list>
+/// </para>
+/// <para>
+/// Type-specific configuration is stored in <see cref="Config"/> and can be accessed via
+/// <c>GetStandardConfig()</c> or <c>GetOrchestratedConfig()</c> extension methods.
+/// </para>
+/// </remarks>
 public sealed class AIAgent : IAIVersionableEntity
 {
     /// <summary>
@@ -29,15 +41,30 @@ public sealed class AIAgent : IAIVersionableEntity
     public string? Description { get; set; }
 
     /// <summary>
+    /// The type of agent, determining its configuration shape and behavior.
+    /// </summary>
+    /// <remarks>
+    /// Agent type is immutable after creation — it cannot be changed on update.
+    /// </remarks>
+    public AIAgentType AgentType { get; init; } = AIAgentType.Standard;
+
+    /// <summary>
+    /// Type-specific configuration for this agent.
+    /// </summary>
+    /// <remarks>
+    /// The concrete type depends on <see cref="AgentType"/>:
+    /// <list type="bullet">
+    ///   <item><see cref="AIStandardAgentConfig"/> for <see cref="AIAgentType.Standard"/></item>
+    ///   <item><see cref="AIOrchestratedAgentConfig"/> for <see cref="AIAgentType.Orchestrated"/></item>
+    /// </list>
+    /// </remarks>
+    public IAIAgentConfig? Config { get; set; }
+
+    /// <summary>
     /// Profile to use for AI model configuration.
     /// When null, the default chat profile from Settings will be used.
     /// </summary>
     public Guid? ProfileId { get; set; }
-
-    /// <summary>
-    /// Context IDs assigned to this agent for AI context injection.
-    /// </summary>
-    public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
     /// Surface IDs that categorize this agent for specific purposes.
@@ -52,60 +79,7 @@ public sealed class AIAgent : IAIVersionableEntity
     /// Optional scope defining where this agent is available.
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Follows the same pattern as <c>AIPromptScope</c> with allow and deny rules.
-    /// Different agent surfaces (copilot, API, workflow) may check different scope dimensions.
-    /// </para>
-    /// <para>
-    /// Example: A content-only agent would have:
-    /// <code>
-    /// Scope = new AIAgentScope
-    /// {
-    ///     AllowRules = [new AIAgentScopeRule { Sections = ["content"] }]
-    /// }
-    /// </code>
-    /// </para>
-    /// </remarks>
     public AIAgentScope? Scope { get; set; }
-
-    /// <summary>
-    /// Tool IDs explicitly allowed for this agent.
-    /// Empty list means no specific tools are allowed (only scopes apply).
-    /// </summary>
-    /// <remarks>
-    /// Tool permissions control which tools are available to the agent during execution.
-    /// System tools are always included regardless of this setting.
-    /// </remarks>
-    public IReadOnlyList<string> AllowedToolIds { get; set; } = [];
-
-    /// <summary>
-    /// Tool scopes allowed for this agent.
-    /// Tools matching these scopes will be included automatically.
-    /// System tools are always included regardless of this setting.
-    /// </summary>
-    /// <remarks>
-    /// Tool scopes provide bulk permission for related tools (e.g., "content-read", "search").
-    /// Both AllowedToolIds and AllowedToolScopeIds are combined when resolving available tools.
-    /// </remarks>
-    public IReadOnlyList<string> AllowedToolScopeIds { get; set; } = [];
-
-    /// <summary>
-    /// User group-specific permission overrides.
-    /// Dictionary key is UserGroupId (Guid).
-    /// </summary>
-    /// <remarks>
-    /// User groups can override agent defaults by adding or removing tool permissions.
-    /// Resolution order: Agent Defaults + User Group Additions - User Group Restrictions.
-    /// System tools are always included and cannot be denied.
-    /// </remarks>
-    public IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> UserGroupPermissions { get; set; }
-        = new Dictionary<Guid, AIAgentUserGroupPermissions>();
-
-    /// <summary>
-    /// Instructions that define how the agent behaves.
-    /// </summary>
-    public string? Instructions { get; set; }
 
     /// <summary>
     /// Whether this agent is active and available for use.

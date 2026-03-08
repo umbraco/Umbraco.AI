@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Surfaces;
@@ -133,6 +134,13 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
+
+        // Enforce type immutability
+        if (existing is not null && existing.AgentType != agent.AgentType)
+        {
+            throw new InvalidOperationException($"Agent type cannot be changed after creation. Agent '{agent.Alias}' is a {existing.AgentType} agent.");
+        }
+
         if (existing is not null)
         {
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
@@ -411,7 +419,7 @@ internal sealed class AIAgentService : IAIAgentService
                     isPermitted = true;
                 }
                 // Check if tool has scope and scope is allowed
-                else if (frontendTool.Scope is not null && agent.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase))
+                else if (frontendTool.Scope is not null && (agent.GetStandardConfig()?.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false))
                 {
                     isPermitted = true;
                 }

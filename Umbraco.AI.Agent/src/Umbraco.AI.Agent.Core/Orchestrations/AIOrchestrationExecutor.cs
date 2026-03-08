@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Tools;
@@ -11,25 +12,8 @@ using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 namespace Umbraco.AI.Agent.Core.Orchestrations;
 
 /// <summary>
-/// Builds a MAF workflow agent from a stored orchestration graph.
+/// Builds a MAF workflow agent from an orchestrated agent's graph.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Traverses the orchestration graph to create a MAF agent that:
-/// <list type="bullet">
-///   <item>Creates <see cref="ChatClientAgent"/> instances for Agent nodes.</item>
-///   <item>Invokes registered AI tools for Function nodes.</item>
-///   <item>Evaluates conditions for Router nodes.</item>
-///   <item>Aggregates concurrent results for Aggregator nodes.</item>
-///   <item>Delegates dynamically for Manager nodes.</item>
-/// </list>
-/// </para>
-/// <para>
-/// The graph is traversed starting from the single Start node, following edges
-/// to build a sequential execution pipeline. Concurrent branches (fan-out) are
-/// supported when a node has multiple outgoing edges.
-/// </para>
-/// </remarks>
 internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
 {
     private readonly IAIAgentService _agentService;
@@ -60,12 +44,15 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
 
     /// <inheritdoc />
     public async Task<MsAIAgent> BuildWorkflowAgentAsync(
-        AIOrchestration orchestration,
+        Agents.AIAgent agent,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(orchestration);
+        ArgumentNullException.ThrowIfNull(agent);
 
-        var graph = orchestration.Graph;
+        var config = agent.GetOrchestratedConfig()
+            ?? throw new InvalidOperationException($"Agent '{agent.Alias}' is not an orchestrated agent.");
+
+        var graph = config.Graph;
 
         // Find start node
         var startNode = graph.Nodes.FirstOrDefault(n => n.Type == AIOrchestrationNodeType.Start)
@@ -75,12 +62,12 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
         var agentLookup = await BuildAgentLookupAsync(graph, cancellationToken);
 
         // Build the execution pipeline starting from the Start node
-        var pipeline = BuildPipeline(graph, startNode, agentLookup, orchestration);
+        var pipeline = BuildPipeline(graph, startNode, agentLookup, agent);
 
         // Wrap the pipeline as a single composite agent
         return new OrchestrationPipelineAgent(
-            orchestration.Name,
-            orchestration.Description,
+            agent.Name,
+            agent.Description,
             pipeline);
     }
 
@@ -122,7 +109,7 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
         AIOrchestrationGraph graph,
         AIOrchestrationNode startNode,
         Dictionary<string, MsAIAgent> agentLookup,
-        AIOrchestration orchestration)
+        Agents.AIAgent agent)
     {
         var steps = new List<OrchestrationStep>();
         var visited = new HashSet<string>();
@@ -140,7 +127,7 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
             var node = queue.Dequeue();
             if (!visited.Add(node.Id)) continue;
 
-            var step = CreateStep(graph, node, agentLookup, orchestration);
+            var step = CreateStep(graph, node, agentLookup, agent);
             if (step is not null)
             {
                 steps.Add(step);
@@ -169,12 +156,12 @@ internal sealed class AIOrchestrationExecutor : IAIOrchestrationExecutor
         AIOrchestrationGraph graph,
         AIOrchestrationNode node,
         Dictionary<string, MsAIAgent> agentLookup,
-        AIOrchestration orchestration)
+        Agents.AIAgent agent)
     {
         return node.Type switch
         {
-            AIOrchestrationNodeType.Agent => agentLookup.TryGetValue(node.Id, out var agent)
-                ? new OrchestrationStep(node.Id, node.Label, OrchestrationStepType.Agent, Agent: agent)
+            AIOrchestrationNodeType.Agent => agentLookup.TryGetValue(node.Id, out var mafAgent)
+                ? new OrchestrationStep(node.Id, node.Label, OrchestrationStepType.Agent, Agent: mafAgent)
                 : null,
 
             AIOrchestrationNodeType.Function => !string.IsNullOrEmpty(node.Config.ToolName)

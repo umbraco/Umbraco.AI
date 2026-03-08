@@ -7,6 +7,7 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Extensions;
 using CoreConstants = Umbraco.AI.Core.Constants;
 using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -112,7 +113,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         // Create inner MAF agent (without runtime context metadata - that's set in ScopedAIAgent)
         var innerAgent = new ChatClientAgent(
             chatClient,
-            instructions: agent.Instructions,
+            instructions: agent.GetStandardConfig()?.Instructions,
             name: agent.Name,
             description: agent.Description,
             tools: tools);

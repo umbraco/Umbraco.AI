@@ -23,15 +23,11 @@
     },
     "dependencies": {
         "@ag-ui/client": "^0.0.42",
-        "@retejs/lit-plugin": "^2.0.7",
         "@umbraco-ai/core": "*",
         "@umbraco-cms/backoffice": "^17.1.0",
-        "rete": "^2.0.6",
-        "rete-area-plugin": "^2.1.5",
-        "rete-auto-arrange-plugin": "^2.0.2",
-        "rete-connection-plugin": "^2.0.5",
-        "rete-minimap-plugin": "^2.0.3",
-        "rete-render-utils": "^2.0.3",
+        "@xyflow/react": "^12.6.0",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
         "rxjs": "^7.8.2"
     },
     "overrides": {
@@ -40,6 +36,8 @@
     "devDependencies": {
         "@hey-api/openapi-ts": "0.85.0",
         "@microsoft/api-extractor": "^7.55.1",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "node-fetch": "^3.3.2",

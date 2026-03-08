@@ -4,11 +4,10 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiOrchestrationDetailModel, UaiOrchestrationGraph } from "../../../types.js";
 import { UAI_ORCHESTRATION_WORKSPACE_CONTEXT } from "../orchestration-workspace.context-token.js";
-import "../../../components/orchestration-graph-editor/orchestration-graph-editor.element.js";
 
 /**
  * Workspace view for the visual workflow graph editor.
- * Full-width Rete.js canvas for editing orchestration graphs.
+ * Lazy-loads the React Flow graph editor on first render.
  */
 @customElement("uai-orchestration-workflow-workspace-view")
 export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement {
@@ -17,6 +16,9 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
     @state()
     private _model?: UaiOrchestrationDetailModel;
 
+    @state()
+    private _editorReady = false;
+
     constructor() {
         super();
         this.consumeContext(UAI_ORCHESTRATION_WORKSPACE_CONTEXT, (context) => {
@@ -24,9 +26,17 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
+                    if (model && !this._editorReady) {
+                        this.#loadEditor();
+                    }
                 });
             }
         });
+    }
+
+    async #loadEditor() {
+        await import("../../../components/orchestration-graph-editor/orchestration-graph-editor.element.js");
+        this._editorReady = true;
     }
 
     #onGraphChanged(event: CustomEvent<UaiOrchestrationGraph>) {
@@ -38,7 +48,7 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
     }
 
     render() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
+        if (!this._model || !this._editorReady) return html`<uui-loader></uui-loader>`;
 
         return html`
             <uai-orchestration-graph-editor
@@ -53,7 +63,6 @@ export class UaiOrchestrationWorkflowWorkspaceViewElement extends UmbLitElement 
         css`
             :host {
                 display: block;
-                padding: var(--uui-size-layout-1);
                 height: 100%;
                 box-sizing: border-box;
             }

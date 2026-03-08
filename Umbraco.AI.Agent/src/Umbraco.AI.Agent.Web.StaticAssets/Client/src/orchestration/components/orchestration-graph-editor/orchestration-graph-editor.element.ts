@@ -2,9 +2,9 @@ import { css, html, customElement, state, property } from "@umbraco-cms/backoffi
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiOrchestrationGraph, UaiOrchestrationNode } from "../../types.js";
-import type { ReteEditorInstance } from "./rete/rete-editor-setup.js";
-import { createReteEditor, addNodeToEditor, removeNodeFromEditor } from "./rete/rete-editor-setup.js";
-import { getAddableNodeTypes } from "./rete/rete-node-definitions.js";
+import type { FlowBridgeInstance } from "./react-flow/bridge.js";
+import { createFlowBridge } from "./react-flow/bridge.js";
+import { getAddableNodeTypes } from "./node-definitions.js";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import {
     UAI_ITEM_PICKER_MODAL,
@@ -28,7 +28,7 @@ import {
 
 /**
  * Graph editor for orchestration workflows.
- * Uses Rete.js for visual node-based editing.
+ * Uses React Flow for visual node-based editing, mounted inside this Lit element's shadow DOM.
  *
  * @fires graph-changed - Dispatched when the graph structure changes
  */
@@ -38,7 +38,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
     graph: UaiOrchestrationGraph = { nodes: [], edges: [] };
 
     @state()
-    private _editorInstance?: ReteEditorInstance;
+    private _bridge?: FlowBridgeInstance;
 
     @state()
     private _isLoading = true;
@@ -59,12 +59,12 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
         await this.updateComplete;
 
         // Wait a frame for the container to have proper dimensions
-        requestAnimationFrame(async () => {
-            const container = this.renderRoot.querySelector<HTMLElement>("#rete-container");
+        requestAnimationFrame(() => {
+            const container = this.renderRoot.querySelector<HTMLElement>("#flow-container");
             if (!container) return;
 
             try {
-                this._editorInstance = await createReteEditor(
+                this._bridge = createFlowBridge(
                     container,
                     this.graph,
                     (updatedGraph) => this.#onGraphChanged(updatedGraph),
@@ -77,7 +77,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
                     return isNaN(num) ? max : Math.max(max, num);
                 }, 0);
             } catch (error) {
-                console.error("Failed to initialize Rete editor:", error);
+                console.error("Failed to initialize graph editor:", error);
             } finally {
                 this._isLoading = false;
             }
@@ -86,7 +86,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
 
     disconnectedCallback() {
         super.disconnectedCallback();
-        this._editorInstance?.destroy();
+        this._bridge?.destroy();
     }
 
     #onGraphChanged(updatedGraph: UaiOrchestrationGraph) {
@@ -141,9 +141,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
             config: {},
         };
 
-        if (this._editorInstance) {
-            await addNodeToEditor(this._editorInstance, newNode);
-        }
+        this._bridge?.addNode(newNode);
 
         // Open the editor modal for the new node
         await this.#openNodeEditorModal(newNode);
@@ -180,22 +178,11 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
         }
 
         if (result?.deleted) {
-            await this.#onDeleteNode(node.id);
+            this._bridge?.removeNode(node.id);
         } else if (result?.node) {
+            this._bridge?.updateNodeData(result.node);
             this.#updateNodeInGraph(result.node);
         }
-    }
-
-    async #onDeleteNode(nodeId: string) {
-        if (!this._editorInstance) return;
-
-        // Find the rete node by our domain node ID
-        const reteNode = this._editorInstance.editor
-            .getNodes()
-            .find((n) => (n as any).nodeId === nodeId);
-        if (!reteNode) return;
-
-        await removeNodeFromEditor(this._editorInstance, reteNode.id);
     }
 
     #updateNodeInGraph(updatedNode: UaiOrchestrationNode) {
@@ -225,7 +212,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
                         ${this.graph.nodes.length} nodes, ${this.graph.edges.length} edges
                     </span>
                 </div>
-                <div id="rete-container" class="rete-container">
+                <div id="flow-container" class="flow-container">
                     ${this._isLoading ? html`<uui-loader></uui-loader>` : ""}
                 </div>
             </div>
@@ -246,8 +233,6 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
                 flex-direction: column;
                 width: 100%;
                 height: 100%;
-                border: 1px solid var(--uui-color-border);
-                border-radius: var(--uui-border-radius);
                 overflow: hidden;
             }
 
@@ -266,17 +251,10 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
                 color: var(--uui-color-text-alt);
             }
 
-            .rete-container {
+            .flow-container {
                 position: relative;
                 flex: 1;
                 width: 100%;
-                background-color: var(--uui-color-surface-alt);
-                background-image: radial-gradient(
-                    circle,
-                    var(--uui-color-border) 1px,
-                    transparent 1px
-                );
-                background-size: 20px 20px;
             }
 
             uui-loader {

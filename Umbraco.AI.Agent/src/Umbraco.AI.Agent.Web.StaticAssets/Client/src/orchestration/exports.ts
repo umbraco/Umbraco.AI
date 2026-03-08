@@ -14,6 +14,11 @@ export type {
     UaiOrchestrationGraph,
     UaiOrchestrationNode,
     UaiOrchestrationNodeConfig,
+    UaiAgentNodeConfig,
+    UaiFunctionNodeConfig,
+    UaiRouterNodeConfig,
+    UaiAggregatorNodeConfig,
+    UaiManagerNodeConfig,
     UaiOrchestrationEdge,
     UaiOrchestrationRouteCondition,
 } from "./types.js";

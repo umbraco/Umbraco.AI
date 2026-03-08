@@ -6,7 +6,7 @@ import type {
     UaiOrchestrationAgentNodeEditorModalData,
     UaiOrchestrationAgentNodeEditorModalValue,
 } from "./agent-node-editor-modal.token.js";
-import type { UaiOrchestrationNode } from "../../types.js";
+import type { UaiOrchestrationNode, UaiAgentNodeConfig } from "../../types.js";
 import "../../../agent/components/agent-picker/agent-picker.element.js";
 
 /**
@@ -32,12 +32,14 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
         this._node = { ...this._node, label: (event.target as HTMLInputElement).value };
     }
 
+    get #config(): UaiAgentNodeConfig {
+        return this._node.config as UaiAgentNodeConfig;
+    }
+
     #onAgentIdChange(event: UmbChangeEvent) {
         const picker = event.target as HTMLElement & { value: string | undefined };
-        this._node = {
-            ...this._node,
-            config: { ...this._node.config, agentId: picker.value ?? null },
-        };
+        const config: UaiAgentNodeConfig = { ...this.#config, agentId: picker.value ?? null };
+        this._node = { ...this._node, config };
     }
 
     #onDelete() {
@@ -72,7 +74,7 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
                         >
                             <uai-agent-picker
                                 slot="editor"
-                                .value=${this._node.config?.agentId || undefined}
+                                .value=${this.#config.agentId || undefined}
                                 @change=${this.#onAgentIdChange}
                             ></uai-agent-picker>
                         </umb-property-layout>

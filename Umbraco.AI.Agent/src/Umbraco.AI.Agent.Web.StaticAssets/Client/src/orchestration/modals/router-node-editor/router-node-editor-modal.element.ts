@@ -5,7 +5,7 @@ import type {
     UaiOrchestrationRouterNodeEditorModalData,
     UaiOrchestrationRouterNodeEditorModalValue,
 } from "./router-node-editor-modal.token.js";
-import type { UaiOrchestrationNode, UaiOrchestrationRouteCondition } from "../../types.js";
+import type { UaiOrchestrationNode, UaiOrchestrationRouteCondition, UaiRouterNodeConfig } from "../../types.js";
 
 const OPERATORS = ["Equals", "Contains", "StartsWith", "Matches"];
 
@@ -24,11 +24,15 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
     @state()
     private _conditions: UaiOrchestrationRouteCondition[] = [];
 
+    get #config(): UaiRouterNodeConfig {
+        return this._node.config as UaiRouterNodeConfig;
+    }
+
     connectedCallback() {
         super.connectedCallback();
         if (this.data?.node) {
             this._node = structuredClone(this.data.node);
-            this._conditions = [...(this._node.config?.conditions ?? [])];
+            this._conditions = [...(this.#config.conditions ?? [])];
         }
     }
 
@@ -61,7 +65,7 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
     #onSubmit() {
         this._node = {
             ...this._node,
-            config: { ...this._node.config, conditions: this._conditions },
+            config: { ...this.#config, conditions: this._conditions } satisfies UaiRouterNodeConfig,
         };
         this.value = { node: this._node };
         this.modalContext?.submit();

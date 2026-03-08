@@ -6,7 +6,7 @@ import type {
     UaiOrchestrationManagerNodeEditorModalData,
     UaiOrchestrationManagerNodeEditorModalValue,
 } from "./manager-node-editor-modal.token.js";
-import type { UaiOrchestrationNode } from "../../types.js";
+import type { UaiOrchestrationNode, UaiManagerNodeConfig } from "../../types.js";
 
 /**
  * Modal for editing Manager node configuration (Magentic pattern).
@@ -31,20 +31,20 @@ export class UaiOrchestrationManagerNodeEditorModalElement extends UmbModalBaseE
         this._node = { ...this._node, label: (event.target as HTMLInputElement).value };
     }
 
+    get #config(): UaiManagerNodeConfig {
+        return this._node.config as UaiManagerNodeConfig;
+    }
+
     #onInstructionsChange(event: Event) {
         const value = (event.target as HTMLTextAreaElement).value;
-        this._node = {
-            ...this._node,
-            config: { ...this._node.config, managerInstructions: value || null },
-        };
+        const config: UaiManagerNodeConfig = { ...this.#config, managerInstructions: value || null };
+        this._node = { ...this._node, config };
     }
 
     #onProfileChange(event: UmbChangeEvent) {
         const picker = event.target as HTMLElement & { value: string | undefined };
-        this._node = {
-            ...this._node,
-            config: { ...this._node.config, managerProfileId: picker.value ?? null },
-        };
+        const config: UaiManagerNodeConfig = { ...this.#config, managerProfileId: picker.value ?? null };
+        this._node = { ...this._node, config };
     }
 
     #onDelete() {
@@ -79,7 +79,7 @@ export class UaiOrchestrationManagerNodeEditorModalElement extends UmbModalBaseE
                         >
                             <uui-textarea
                                 slot="editor"
-                                .value=${this._node.config?.managerInstructions ?? ""}
+                                .value=${this.#config.managerInstructions ?? ""}
                                 @input=${this.#onInstructionsChange}
                                 placeholder="Tell the manager how to delegate work..."
                             ></uui-textarea>
@@ -91,7 +91,7 @@ export class UaiOrchestrationManagerNodeEditorModalElement extends UmbModalBaseE
                         >
                             <uai-profile-picker
                                 slot="editor"
-                                .value=${this._node.config?.managerProfileId || undefined}
+                                .value=${this.#config.managerProfileId || undefined}
                                 @change=${this.#onProfileChange}
                             ></uai-profile-picker>
                         </umb-property-layout>

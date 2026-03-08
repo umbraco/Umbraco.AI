@@ -5,7 +5,7 @@ import type {
     UaiOrchestrationAggregatorNodeEditorModalData,
     UaiOrchestrationAggregatorNodeEditorModalValue,
 } from "./aggregator-node-editor-modal.token.js";
-import type { UaiOrchestrationNode } from "../../types.js";
+import type { UaiOrchestrationNode, UaiAggregatorNodeConfig } from "../../types.js";
 
 const STRATEGIES = [
     { name: "Concatenate", value: "Concat" },
@@ -37,12 +37,14 @@ export class UaiOrchestrationAggregatorNodeEditorModalElement extends UmbModalBa
         this._node = { ...this._node, label: (event.target as HTMLInputElement).value };
     }
 
+    get #config(): UaiAggregatorNodeConfig {
+        return this._node.config as UaiAggregatorNodeConfig;
+    }
+
     #onStrategyChange(event: Event) {
         const value = (event.target as HTMLSelectElement).value;
-        this._node = {
-            ...this._node,
-            config: { ...this._node.config, aggregationStrategy: value || null },
-        };
+        const config: UaiAggregatorNodeConfig = { ...this.#config, aggregationStrategy: value || null };
+        this._node = { ...this._node, config };
     }
 
     #onDelete() {
@@ -79,7 +81,7 @@ export class UaiOrchestrationAggregatorNodeEditorModalElement extends UmbModalBa
                                 slot="editor"
                                 .options=${STRATEGIES.map((s) => ({
                                     ...s,
-                                    selected: s.value === (this._node.config?.aggregationStrategy ?? "Concat"),
+                                    selected: s.value === (this.#config.aggregationStrategy ?? "Concat"),
                                 }))}
                                 @change=${this.#onStrategyChange}
                             ></uui-select>

@@ -21,18 +21,41 @@ export interface UaiOrchestrationNode {
     config: UaiOrchestrationNodeConfig;
 }
 
-/**
- * Type-specific configuration for a node.
- */
-export interface UaiOrchestrationNodeConfig {
+// ── Per-node-type config interfaces ─────────────────────────────────────
+
+export interface UaiAgentNodeConfig {
     agentId?: string | null;
-    toolName?: string | null;
+}
+
+export interface UaiFunctionNodeConfig {
     toolIds?: string[];
+    toolName?: string | null;
+}
+
+export interface UaiRouterNodeConfig {
     conditions?: UaiOrchestrationRouteCondition[] | null;
+}
+
+export interface UaiAggregatorNodeConfig {
     aggregationStrategy?: string | null;
+}
+
+export interface UaiManagerNodeConfig {
     managerInstructions?: string | null;
     managerProfileId?: string | null;
 }
+
+/**
+ * Union of all node config types.
+ * Start and End nodes use an empty config object.
+ */
+export type UaiOrchestrationNodeConfig =
+    | UaiAgentNodeConfig
+    | UaiFunctionNodeConfig
+    | UaiRouterNodeConfig
+    | UaiAggregatorNodeConfig
+    | UaiManagerNodeConfig
+    | Record<string, never>;
 
 /**
  * Routing condition for Router nodes.

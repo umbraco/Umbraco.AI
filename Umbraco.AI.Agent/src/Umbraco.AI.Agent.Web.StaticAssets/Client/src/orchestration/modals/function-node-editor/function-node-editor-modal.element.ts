@@ -6,7 +6,7 @@ import type {
     UaiOrchestrationFunctionNodeEditorModalData,
     UaiOrchestrationFunctionNodeEditorModalValue,
 } from "./function-node-editor-modal.token.js";
-import type { UaiOrchestrationNode } from "../../types.js";
+import type { UaiOrchestrationNode, UaiFunctionNodeConfig } from "../../types.js";
 import "@umbraco-ai/core";
 
 /**
@@ -32,13 +32,15 @@ export class UaiOrchestrationFunctionNodeEditorModalElement extends UmbModalBase
         this._node = { ...this._node, label: (event.target as HTMLInputElement).value };
     }
 
+    get #config(): UaiFunctionNodeConfig {
+        return this._node.config as UaiFunctionNodeConfig;
+    }
+
     #onToolChange(event: UmbChangeEvent) {
         const picker = event.target as HTMLElement & { value: string[] | undefined };
         const toolIds = picker.value ?? [];
-        this._node = {
-            ...this._node,
-            config: { ...this._node.config, toolIds, toolName: toolIds[0] ?? null },
-        };
+        const config: UaiFunctionNodeConfig = { ...this.#config, toolIds, toolName: toolIds[0] ?? null };
+        this._node = { ...this._node, config };
     }
 
     #onDelete() {
@@ -73,7 +75,7 @@ export class UaiOrchestrationFunctionNodeEditorModalElement extends UmbModalBase
                         >
                             <uai-tool-picker
                                 slot="editor"
-                                .value=${this._node.config?.toolIds ?? (this._node.config?.toolName ? [this._node.config.toolName] : undefined)}
+                                .value=${this.#config.toolIds ?? (this.#config.toolName ? [this.#config.toolName] : undefined)}
                                 @change=${this.#onToolChange}
                             ></uai-tool-picker>
                         </umb-property-layout>

@@ -13,7 +13,8 @@ import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
 import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-import type { UaiAgentDetailModel, UaiAgentType } from "../../types.js";
+import type { UaiAgentDetailModel, UaiAgentType, UaiOrchestrationGraph } from "../../types.js";
+import { isOrchestratedConfig } from "../../types.js";
 import { UaiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
@@ -171,6 +172,46 @@ export class UaiAgentWorkspaceContext
     }
 
     /**
+     * Validates an orchestration graph before save.
+     */
+    #validateGraph(graph: UaiOrchestrationGraph): string[] {
+        const errors: string[] = [];
+
+        const startNodes = graph.nodes.filter((n) => n.type === "Start");
+        const endNodes = graph.nodes.filter((n) => n.type === "End");
+
+        if (startNodes.length === 0) {
+            errors.push("The workflow must have a Start node.");
+        }
+        if (startNodes.length > 1) {
+            errors.push("The workflow must have exactly one Start node.");
+        }
+        if (endNodes.length === 0) {
+            errors.push("The workflow must have at least one End node.");
+        }
+
+        // Every non-Start node must be reachable (have at least one incoming edge)
+        const nodesWithIncoming = new Set(graph.edges.map((e) => e.targetNodeId));
+        for (const node of graph.nodes) {
+            if (node.type === "Start") continue;
+            if (!nodesWithIncoming.has(node.id)) {
+                errors.push(`Node "${node.label}" has no incoming connections.`);
+            }
+        }
+
+        // Every non-End node must have at least one outgoing edge
+        const nodesWithOutgoing = new Set(graph.edges.map((e) => e.sourceNodeId));
+        for (const node of graph.nodes) {
+            if (node.type === "End") continue;
+            if (!nodesWithOutgoing.has(node.id)) {
+                errors.push(`Node "${node.label}" has no outgoing connections.`);
+            }
+        }
+
+        return errors;
+    }
+
+    /**
      * Saves the agent (create or update).
      */
     async submit() {
@@ -184,6 +225,18 @@ export class UaiAgentWorkspaceContext
             // Validation failed - focus first invalid element
             this.#validationContext.focusFirstInvalidElement();
             return;
+        }
+
+        // Validate orchestration graph if applicable
+        if (isOrchestratedConfig(model.config)) {
+            const errors = this.#validateGraph(model.config.graph);
+            if (errors.length > 0) {
+                // Add validation messages and abort
+                for (const error of errors) {
+                    this.#validationContext.messages.addMessage("server", "$", error);
+                }
+                return;
+            }
         }
 
         // Mute command store during submit

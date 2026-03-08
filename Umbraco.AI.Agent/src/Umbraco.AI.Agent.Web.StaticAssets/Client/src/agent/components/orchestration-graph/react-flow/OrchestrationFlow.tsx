@@ -270,35 +270,25 @@ const OrchestrationFlowInner = forwardRef<
         [onNodeClicked],
     );
 
-    // Handle Delete/Backspace for selected nodes
-    const onKeyDown = useCallback(
-        (event: React.KeyboardEvent) => {
-            if (event.key !== "Delete" && event.key !== "Backspace") return;
+    // Guard node deletion: prevent Start and last End from being deleted.
+    // Edges are always deletable. React Flow calls this before any delete.
+    const onBeforeDelete = useCallback(
+        async ({ nodes: nodesToDelete, edges: edgesToDelete }: { nodes: Node[]; edges: Edge[] }) => {
             const allNodes = nodesRef.current;
-            const selected = allNodes.filter((n) => n.selected);
             const endNodeCount = allNodes.filter(
                 (n) => (n.data as unknown as OrchestrationNodeData).nodeType === "End",
             ).length;
 
-            const toRemove = selected.filter((n) => {
+            const allowedNodes = nodesToDelete.filter((n) => {
                 const d = n.data as unknown as OrchestrationNodeData;
-                // Never delete Start
                 if (d.nodeType === "Start") return false;
-                // Don't delete the last End node
                 if (d.nodeType === "End" && endNodeCount <= 1) return false;
                 return true;
             });
-            if (toRemove.length === 0) return;
-            const removeIds = new Set(toRemove.map((n) => n.id));
-            setNodes((nds) => nds.filter((n) => !removeIds.has(n.id)));
-            setEdges((eds) =>
-                eds.filter(
-                    (e) => !removeIds.has(e.source) && !removeIds.has(e.target),
-                ),
-            );
-            emitChange();
+
+            return { nodes: allowedNodes, edges: edgesToDelete };
         },
-        [setNodes, setEdges, emitChange],
+        [],
     );
 
     // Expose imperative methods to bridge
@@ -374,7 +364,6 @@ const OrchestrationFlowInner = forwardRef<
     return (
         <div
             style={{ width: "100%", height: "100%" }}
-            onKeyDown={onKeyDown}
             tabIndex={0}
         >
             <ReactFlow
@@ -385,10 +374,11 @@ const OrchestrationFlowInner = forwardRef<
                 onConnect={onConnect}
                 onNodeDoubleClick={onNodeDoubleClick}
                 isValidConnection={isValidConnection}
+                onBeforeDelete={onBeforeDelete}
                 nodeTypes={nodeTypes}
                 fitView
                 fitViewOptions={{ padding: 0.5, maxZoom: 1 }}
-                deleteKeyCode={null}
+                deleteKeyCode="Delete"
                 proOptions={{ hideAttribution: true }}
                 defaultEdgeOptions={{
                     markerEnd: {

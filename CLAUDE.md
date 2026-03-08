@@ -919,3 +919,5 @@ public interface IAIProfileRepository
 All extension methods MUST be placed in the `Umbraco.AI.Extensions` namespace (or the product-specific equivalent like `Umbraco.AI.Prompt.Extensions`) for ease of discovery via IntelliSense.
 
 # Lessons Learned
+
+- don't imort lit components by path, they should instead be exported through index.ts or export.ts files to become globally accessible

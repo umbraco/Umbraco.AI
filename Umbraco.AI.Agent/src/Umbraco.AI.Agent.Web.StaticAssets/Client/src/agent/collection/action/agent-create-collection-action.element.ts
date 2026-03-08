@@ -14,8 +14,7 @@ export class UaiAgentCreateCollectionActionElement extends UmbLitElement {
     private _popoverOpen = false;
 
     #navigate(agentType: UaiAgentType) {
-        const basePath = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
-        const path = agentType === "standard" ? basePath : `${basePath}?agentType=${agentType}`;
+        const path = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({ agentType });
         history.pushState(null, "", path);
         this._popoverOpen = false;
     }

@@ -63,10 +63,11 @@ export class UaiAgentWorkspaceContext
 
         this.routes.setRoutes([
             {
-                path: "create",
+                path: "create/:agentType",
                 component: UaiAgentWorkspaceEditorElement,
-                setup: async () => {
-                    await this.scaffold();
+                setup: async (_component, info) => {
+                    const agentType = (info.match.params.agentType as UaiAgentType) ?? "standard";
+                    await this.scaffold(agentType);
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
@@ -94,19 +95,16 @@ export class UaiAgentWorkspaceContext
 
     /**
      * Creates a scaffold for a new agent.
-     * Reads `agentType` and optionally `template` from URL query params.
+     * @param agentType - The type of agent to create (from the route path parameter).
      */
-    async scaffold() {
+    async scaffold(agentType: UaiAgentType = "standard") {
         this.resetState();
-
-        // Read agent type from URL query params (defaults to "standard")
-        const url = new URL(window.location.href);
-        const agentType = (url.searchParams.get("agentType") as UaiAgentType) ?? "standard";
 
         const { data } = await this.#repository.createScaffold({ agentType });
         if (data) {
-            // Apply pattern template for orchestrated agents if specified
+            // Apply pattern template for orchestrated agents if specified via query param
             if (agentType === "orchestrated" && isOrchestratedConfig(data.config)) {
+                const url = new URL(window.location.href);
                 const template = url.searchParams.get("template");
                 if (template) {
                     try {
@@ -120,14 +118,10 @@ export class UaiAgentWorkspaceContext
                     } catch {
                         // Template module not available, continue with empty graph
                     }
+                    // Clean up template query param
+                    url.searchParams.delete("template");
+                    history.replaceState(null, "", url.pathname + url.search);
                 }
-            }
-
-            // Clean up query params
-            if (url.searchParams.has("agentType") || url.searchParams.has("template")) {
-                url.searchParams.delete("agentType");
-                url.searchParams.delete("template");
-                history.replaceState(null, "", url.pathname + url.search);
             }
 
             this.#unique.setValue(UAI_EMPTY_GUID);

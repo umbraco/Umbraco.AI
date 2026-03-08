@@ -27,10 +27,11 @@ export class UaiAgentCreateEntityAction extends UmbEntityActionBase<never> {
 
         if (!result?.agentType) return;
 
-        const path = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
+        const path = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({
+            agentType: result.agentType,
+        });
 
-        // Pass the agent type as a query parameter for the workspace to read
-        history.pushState(null, "", `${path}?agentType=${result.agentType}`);
+        history.pushState(null, "", path);
     }
 }
 

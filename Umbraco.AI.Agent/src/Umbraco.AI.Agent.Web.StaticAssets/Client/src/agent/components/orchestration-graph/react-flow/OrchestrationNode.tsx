@@ -1,14 +1,16 @@
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 
-import type { UaiOrchestrationNodeConfig } from "../../../types.js";
+import type { UaiNodeConfig } from "../../../types.js";
 
 export interface OrchestrationNodeData extends Record<string, unknown> {
     label: string;
     nodeType: string;
     color: string;
     icon: string;
-    config: UaiOrchestrationNodeConfig | Record<string, never>;
+    config: UaiNodeConfig;
+    onEdit?: (nodeId: string) => void;
+    onDelete?: (nodeId: string) => void;
 }
 
 const nodeStyle: React.CSSProperties = {
@@ -36,11 +38,35 @@ const headerStyle = (color: string): React.CSSProperties => ({
     letterSpacing: "0.05em",
 });
 
-const labelStyle: React.CSSProperties = {
+const bodyStyle: React.CSSProperties = {
     padding: "10px 12px",
     fontSize: 13,
     color: "#1e293b",
     fontWeight: 500,
+};
+
+const subtitleStyle: React.CSSProperties = {
+    fontSize: 11,
+    color: "#64748b",
+    fontWeight: 400,
+    marginTop: 2,
+};
+
+const actionsStyle: React.CSSProperties = {
+    display: "flex",
+    gap: 4,
+    marginLeft: "auto",
+};
+
+const actionBtnStyle: React.CSSProperties = {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 2,
+    borderRadius: 4,
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+    lineHeight: 1,
 };
 
 const handleStyle: React.CSSProperties = {
@@ -53,10 +79,50 @@ const handleStyle: React.CSSProperties = {
 
 const selectedRing = "0 0 0 2px #3b82f6";
 
-function OrchestrationNodeComponent({ data, selected }: NodeProps) {
-    const { label, nodeType, color, icon } = data as unknown as OrchestrationNodeData;
+/**
+ * Get a contextual subtitle for a node based on its config.
+ */
+function getSubtitle(nodeType: string, config: UaiNodeConfig): string | null {
+    switch (nodeType) {
+        case "Agent": {
+            const c = config as { agentId?: string | null; isManager?: boolean };
+            if (c.isManager) return "Manager";
+            return c.agentId ? "Agent selected" : "No agent selected";
+        }
+        case "ToolCall": {
+            const c = config as { toolId?: string | null };
+            return c.toolId ?? "No tool selected";
+        }
+        case "Aggregator": {
+            const c = config as { aggregationStrategy?: string | null };
+            return c.aggregationStrategy ?? "Concat";
+        }
+        case "CommunicationBus": {
+            const c = config as { maxIterations?: number };
+            return `Max ${c.maxIterations ?? 40} iterations`;
+        }
+        default:
+            return null;
+    }
+}
+
+function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
+    const { label, nodeType, color, icon, config, onEdit, onDelete } = data as unknown as OrchestrationNodeData;
     const isStart = nodeType === "Start";
     const isEnd = nodeType === "End";
+    const isStructural = isStart || isEnd;
+
+    const subtitle = !isStructural ? getSubtitle(nodeType, config) : null;
+
+    const handleEdit = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onEdit?.(id);
+    }, [id, onEdit]);
+
+    const handleDelete = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDelete?.(id);
+    }, [id, onDelete]);
 
     return (
         <div
@@ -76,11 +142,32 @@ function OrchestrationNodeComponent({ data, selected }: NodeProps) {
 
             <div style={headerStyle(color)}>
                 <uui-icon name={icon} style={{ fontSize: 14, color: "#fff" } as React.CSSProperties}></uui-icon>
-                {nodeType}
+                {nodeType === "CommunicationBus" ? "Bus" : nodeType}
+                {!isStructural && (
+                    <div style={actionsStyle}>
+                        <button
+                            style={actionBtnStyle}
+                            onClick={handleEdit}
+                            title="Edit"
+                        >
+                            <uui-icon name="icon-edit" style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
+                        </button>
+                        <button
+                            style={actionBtnStyle}
+                            onClick={handleDelete}
+                            title="Delete"
+                        >
+                            <uui-icon name="icon-trash" style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {!isStart && !isEnd && (
-                <div style={labelStyle}>{label}</div>
+            {!isStructural && (
+                <div style={bodyStyle}>
+                    {label}
+                    {subtitle && <div style={subtitleStyle}>{subtitle}</div>}
+                </div>
             )}
 
             {!isEnd && (

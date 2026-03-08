@@ -21,9 +21,9 @@ const modals: Array<ManifestModal> = [
 	},
 	{
 		type: "modal",
-		alias: "Uai.Modal.OrchestrationFunctionNodeEditor",
-		name: "Orchestration Function Node Editor Modal",
-		js: () => import("./function-node-editor/function-node-editor-modal.element.js"),
+		alias: "Uai.Modal.OrchestrationToolCallNodeEditor",
+		name: "Orchestration Tool Call Node Editor Modal",
+		js: () => import("./tool-call-node-editor/tool-call-node-editor-modal.element.js"),
 	},
 	{
 		type: "modal",
@@ -39,9 +39,9 @@ const modals: Array<ManifestModal> = [
 	},
 	{
 		type: "modal",
-		alias: "Uai.Modal.OrchestrationManagerNodeEditor",
-		name: "Orchestration Manager Node Editor Modal",
-		js: () => import("./manager-node-editor/manager-node-editor-modal.element.js"),
+		alias: "Uai.Modal.OrchestrationCommunicationBusNodeEditor",
+		name: "Orchestration Communication Bus Node Editor Modal",
+		js: () => import("./communication-bus-node-editor/communication-bus-node-editor-modal.element.js"),
 	},
 	{
 		type: "modal",

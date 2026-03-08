@@ -74,49 +74,98 @@ export interface UaiOrchestrationNode {
     label: string;
     x: number;
     y: number;
-    config: UaiOrchestrationNodeConfig;
+    config: UaiNodeConfig;
+}
+
+// ── Per-node-type configs (polymorphic via $type) ───────────────────────
+
+export interface UaiStartNodeConfig {
+    $type: "start";
+}
+
+export interface UaiEndNodeConfig {
+    $type: "end";
 }
 
 export interface UaiAgentNodeConfig {
+    $type: "agent";
     agentId?: string | null;
+    isManager?: boolean;
 }
 
-export interface UaiFunctionNodeConfig {
-    toolIds?: string[];
-    toolName?: string | null;
+export interface UaiToolCallNodeConfig {
+    $type: "toolCall";
+    toolId?: string | null;
 }
 
 export interface UaiRouterNodeConfig {
-    conditions?: UaiOrchestrationRouteCondition[] | null;
+    $type: "router";
 }
 
 export interface UaiAggregatorNodeConfig {
+    $type: "aggregator";
     aggregationStrategy?: string | null;
+    profileId?: string | null;
 }
 
-export interface UaiManagerNodeConfig {
-    managerInstructions?: string | null;
-    managerProfileId?: string | null;
+export interface UaiCommunicationBusNodeConfig {
+    $type: "communicationBus";
+    maxIterations?: number;
+    terminationMessage?: string | null;
 }
 
 /**
- * Union of all node config types.
- * Start and End nodes use an empty config object.
+ * Union of all node config types, discriminated by $type.
  */
-export type UaiOrchestrationNodeConfig =
+export type UaiNodeConfig =
+    | UaiStartNodeConfig
+    | UaiEndNodeConfig
     | UaiAgentNodeConfig
-    | UaiFunctionNodeConfig
+    | UaiToolCallNodeConfig
     | UaiRouterNodeConfig
     | UaiAggregatorNodeConfig
-    | UaiManagerNodeConfig
-    | Record<string, never>;
+    | UaiCommunicationBusNodeConfig;
+
+// ── Node config type guards ─────────────────────────────────────────────
+
+export function isAgentNodeConfig(config: UaiNodeConfig): config is UaiAgentNodeConfig {
+    return config.$type === "agent";
+}
+
+export function isToolCallNodeConfig(config: UaiNodeConfig): config is UaiToolCallNodeConfig {
+    return config.$type === "toolCall";
+}
+
+export function isAggregatorNodeConfig(config: UaiNodeConfig): config is UaiAggregatorNodeConfig {
+    return config.$type === "aggregator";
+}
+
+export function isCommunicationBusNodeConfig(config: UaiNodeConfig): config is UaiCommunicationBusNodeConfig {
+    return config.$type === "communicationBus";
+}
+
+// ── Node config factory ─────────────────────────────────────────────────
+
+export function createDefaultNodeConfig(nodeType: string): UaiNodeConfig {
+    switch (nodeType) {
+        case "Start": return { $type: "start" };
+        case "End": return { $type: "end" };
+        case "Agent": return { $type: "agent" };
+        case "ToolCall": return { $type: "toolCall" };
+        case "Router": return { $type: "router" };
+        case "Aggregator": return { $type: "aggregator", aggregationStrategy: "Concat" };
+        case "CommunicationBus": return { $type: "communicationBus", maxIterations: 40 };
+        default: return { $type: "start" };
+    }
+}
+
+// ── Edge types ──────────────────────────────────────────────────────────
 
 export interface UaiOrchestrationRouteCondition {
     label: string;
     field: string;
     operator: string;
     value: string;
-    targetNodeId: string;
 }
 
 export interface UaiOrchestrationEdge {
@@ -125,6 +174,8 @@ export interface UaiOrchestrationEdge {
     targetNodeId: string;
     isDefault: boolean;
     priority?: number | null;
+    condition?: UaiOrchestrationRouteCondition | null;
+    requiresApproval?: boolean;
 }
 
 // ── Detail and item models ──────────────────────────────────────────────

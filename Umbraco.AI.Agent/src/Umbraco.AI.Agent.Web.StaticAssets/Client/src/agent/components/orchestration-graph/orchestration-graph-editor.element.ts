@@ -2,6 +2,7 @@ import { css, html, customElement, state, property } from "@umbraco-cms/backoffi
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiOrchestrationGraph, UaiOrchestrationNode } from "../../types.js";
+import { createDefaultNodeConfig } from "../../types.js";
 import type { FlowBridgeInstance } from "./react-flow/bridge.js";
 import { createFlowBridge } from "./react-flow/bridge.js";
 import { getAddableNodeTypes } from "./node-definitions.js";
@@ -14,8 +15,8 @@ import {
     UAI_ORCHESTRATION_AGENT_NODE_EDITOR_MODAL,
 } from "../../modals/agent-node-editor/agent-node-editor-modal.token.js";
 import {
-    UAI_ORCHESTRATION_FUNCTION_NODE_EDITOR_MODAL,
-} from "../../modals/function-node-editor/function-node-editor-modal.token.js";
+    UAI_ORCHESTRATION_TOOL_CALL_NODE_EDITOR_MODAL,
+} from "../../modals/tool-call-node-editor/tool-call-node-editor-modal.token.js";
 import {
     UAI_ORCHESTRATION_ROUTER_NODE_EDITOR_MODAL,
 } from "../../modals/router-node-editor/router-node-editor-modal.token.js";
@@ -23,8 +24,8 @@ import {
     UAI_ORCHESTRATION_AGGREGATOR_NODE_EDITOR_MODAL,
 } from "../../modals/aggregator-node-editor/aggregator-node-editor-modal.token.js";
 import {
-    UAI_ORCHESTRATION_MANAGER_NODE_EDITOR_MODAL,
-} from "../../modals/manager-node-editor/manager-node-editor-modal.token.js";
+    UAI_ORCHESTRATION_COMMUNICATION_BUS_NODE_EDITOR_MODAL,
+} from "../../modals/communication-bus-node-editor/communication-bus-node-editor-modal.token.js";
 
 /**
  * Graph editor for orchestration workflows.
@@ -69,6 +70,8 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
                     this.graph,
                     (updatedGraph) => this.#onGraphChanged(updatedGraph),
                     (nodeId, nodeType) => this.#onNodeClicked(nodeId, nodeType),
+                    (nodeId, nodeType) => this.#onNodeEditRequested(nodeId, nodeType),
+                    (nodeId, nodeType) => this.#onNodeDeleteRequested(nodeId, nodeType),
                 );
 
                 // Track highest node counter for generating unique IDs
@@ -100,11 +103,26 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
     }
 
     async #onNodeClicked(nodeId: string, _nodeType: string) {
-        // Find the node data from the current graph
         const node = this.graph.nodes.find((n) => n.id === nodeId);
         if (!node) return;
-
         await this.#openNodeEditorModal(node);
+    }
+
+    async #onNodeEditRequested(nodeId: string, _nodeType: string) {
+        const node = this.graph.nodes.find((n) => n.id === nodeId);
+        if (!node) return;
+        await this.#openNodeEditorModal(node);
+    }
+
+    #onNodeDeleteRequested(nodeId: string, nodeType: string) {
+        // Never delete Start
+        if (nodeType === "Start") return;
+        // Don't delete the last End node
+        if (nodeType === "End") {
+            const endCount = this.graph.nodes.filter((n) => n.type === "End").length;
+            if (endCount <= 1) return;
+        }
+        this._bridge?.removeNode(nodeId);
     }
 
     async #onAddNodeClicked() {
@@ -130,15 +148,16 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
         const selectedType = result?.selection?.[0]?.value;
         if (!selectedType) return;
 
-        // Create new node
+        // Create new node with typed default config
         this._nodeCounter++;
+        const definition = getAddableNodeTypes().find((d) => d.type === selectedType);
         const newNode: UaiOrchestrationNode = {
             id: `node-${this._nodeCounter}`,
             type: selectedType,
-            label: selectedType,
+            label: definition?.label ?? selectedType,
             x: 0,
             y: 0,
-            config: {},
+            config: createDefaultNodeConfig(selectedType),
         };
 
         this._bridge?.addNode(newNode);
@@ -163,8 +182,8 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
             case "Agent":
                 result = await openAndWait(UAI_ORCHESTRATION_AGENT_NODE_EDITOR_MODAL);
                 break;
-            case "Function":
-                result = await openAndWait(UAI_ORCHESTRATION_FUNCTION_NODE_EDITOR_MODAL);
+            case "ToolCall":
+                result = await openAndWait(UAI_ORCHESTRATION_TOOL_CALL_NODE_EDITOR_MODAL);
                 break;
             case "Router":
                 result = await openAndWait(UAI_ORCHESTRATION_ROUTER_NODE_EDITOR_MODAL);
@@ -172,8 +191,8 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
             case "Aggregator":
                 result = await openAndWait(UAI_ORCHESTRATION_AGGREGATOR_NODE_EDITOR_MODAL);
                 break;
-            case "Manager":
-                result = await openAndWait(UAI_ORCHESTRATION_MANAGER_NODE_EDITOR_MODAL);
+            case "CommunicationBus":
+                result = await openAndWait(UAI_ORCHESTRATION_COMMUNICATION_BUS_NODE_EDITOR_MODAL);
                 break;
         }
 

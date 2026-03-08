@@ -47,6 +47,8 @@ export function createFlowBridge(
     graph: UaiOrchestrationGraph,
     onGraphChanged: (graph: UaiOrchestrationGraph) => void,
     onNodeClicked: (nodeId: string, nodeType: string) => void,
+    onNodeEdit: (nodeId: string, nodeType: string) => void,
+    onNodeDelete: (nodeId: string, nodeType: string) => void,
 ): FlowBridgeInstance {
     ensureStyles(container);
 
@@ -62,6 +64,8 @@ export function createFlowBridge(
                 initialGraph: graph,
                 onGraphChanged,
                 onNodeClicked,
+                onNodeEdit,
+                onNodeDelete,
             }),
         ),
     );

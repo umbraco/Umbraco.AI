@@ -19,16 +19,28 @@ export type {
     UaiOrchestratedAgentConfig,
     UaiOrchestrationGraph,
     UaiOrchestrationNode,
-    UaiOrchestrationNodeConfig,
+    UaiNodeConfig,
     UaiOrchestrationEdge,
     UaiOrchestrationRouteCondition,
+    UaiStartNodeConfig,
+    UaiEndNodeConfig,
     UaiAgentNodeConfig,
-    UaiFunctionNodeConfig,
+    UaiToolCallNodeConfig,
     UaiRouterNodeConfig,
     UaiAggregatorNodeConfig,
-    UaiManagerNodeConfig,
+    UaiCommunicationBusNodeConfig,
 } from "./types.js";
-export { isStandardConfig, isOrchestratedConfig, isStandardAgent, isOrchestratedAgent } from "./types.js";
+export {
+    isStandardConfig,
+    isOrchestratedConfig,
+    isStandardAgent,
+    isOrchestratedAgent,
+    isAgentNodeConfig,
+    isToolCallNodeConfig,
+    isAggregatorNodeConfig,
+    isCommunicationBusNodeConfig,
+    createDefaultNodeConfig,
+} from "./types.js";
 export type { UaiUserGroupPermissionsModel, UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
 
 // Repository constants

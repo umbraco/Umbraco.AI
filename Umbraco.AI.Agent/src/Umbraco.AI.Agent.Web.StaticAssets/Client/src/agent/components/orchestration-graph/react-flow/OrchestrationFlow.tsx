@@ -35,7 +35,11 @@ import { getNodeColor, getNodeIcon } from "../node-definitions.js";
 
 // ── Mapping helpers ─────────────────────────────────────────────────────
 
-function domainNodeToFlow(n: UaiOrchestrationNode): Node {
+function domainNodeToFlow(
+    n: UaiOrchestrationNode,
+    onEdit?: (nodeId: string) => void,
+    onDelete?: (nodeId: string) => void,
+): Node {
     return {
         id: n.id,
         type: "orchestration",
@@ -46,6 +50,8 @@ function domainNodeToFlow(n: UaiOrchestrationNode): Node {
             color: getNodeColor(n.type) ?? "#64748b",
             icon: getNodeIcon(n.type),
             config: n.config ?? {},
+            onEdit,
+            onDelete,
         } satisfies OrchestrationNodeData,
         sourcePosition: Position.Bottom,
         targetPosition: Position.Top,
@@ -59,9 +65,12 @@ function domainEdgeToFlow(e: UaiOrchestrationEdge): Edge {
         target: e.targetNodeId,
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         style: { strokeWidth: 2 },
+        label: e.condition?.label || (e.requiresApproval ? "Approval" : undefined),
         data: {
             isDefault: e.isDefault,
             priority: e.priority,
+            condition: e.condition ?? null,
+            requiresApproval: e.requiresApproval ?? false,
         },
     };
 }
@@ -88,6 +97,8 @@ function flowNodesToGraph(
             targetNodeId: e.target,
             isDefault: (e.data as any)?.isDefault ?? false,
             priority: (e.data as any)?.priority ?? null,
+            condition: (e.data as any)?.condition ?? null,
+            requiresApproval: (e.data as any)?.requiresApproval ?? false,
         })),
     };
 }
@@ -106,6 +117,8 @@ interface OrchestrationFlowProps {
     initialGraph: UaiOrchestrationGraph;
     onGraphChanged: (graph: UaiOrchestrationGraph) => void;
     onNodeClicked: (nodeId: string, nodeType: string) => void;
+    onNodeEdit: (nodeId: string, nodeType: string) => void;
+    onNodeDelete: (nodeId: string, nodeType: string) => void;
 }
 
 // ── Component (inner, needs ReactFlowProvider ancestor) ─────────────────
@@ -118,13 +131,38 @@ const OrchestrationFlowInner = forwardRef<
     OrchestrationFlowHandle,
     OrchestrationFlowProps
 >(function OrchestrationFlowInner(
-    { initialGraph, onGraphChanged, onNodeClicked },
+    { initialGraph, onGraphChanged, onNodeClicked, onNodeEdit, onNodeDelete },
     ref,
 ) {
     const reactFlow = useReactFlow();
 
+    // Refs declared early so callbacks can reference them
+    const nodesRef = useRef<Node[]>([]);
+    const edgesRef = useRef<Edge[]>([]);
+
+    // Stable callbacks for node edit/delete (used by OrchestrationNode buttons)
+    const handleNodeEdit = useCallback(
+        (nodeId: string) => {
+            const node = nodesRef.current.find((n) => n.id === nodeId);
+            if (!node) return;
+            const d = node.data as unknown as OrchestrationNodeData;
+            onNodeEdit(nodeId, d.nodeType);
+        },
+        [onNodeEdit],
+    );
+
+    const handleNodeDelete = useCallback(
+        (nodeId: string) => {
+            const node = nodesRef.current.find((n) => n.id === nodeId);
+            if (!node) return;
+            const d = node.data as unknown as OrchestrationNodeData;
+            onNodeDelete(nodeId, d.nodeType);
+        },
+        [onNodeDelete],
+    );
+
     const initialNodes = useMemo(
-        () => initialGraph.nodes.map(domainNodeToFlow),
+        () => initialGraph.nodes.map((n) => domainNodeToFlow(n, handleNodeEdit, handleNodeDelete)),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
@@ -137,10 +175,8 @@ const OrchestrationFlowInner = forwardRef<
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-    // Keep refs so callbacks always see latest state
-    const nodesRef = useRef(nodes);
+    // Keep refs synced so callbacks always see latest state
     nodesRef.current = nodes;
-    const edgesRef = useRef(edges);
     edgesRef.current = edges;
 
     const emitChange = useCallback(() => {
@@ -177,6 +213,22 @@ const OrchestrationFlowInner = forwardRef<
         [onEdgesChange, emitChange],
     );
 
+    // Connection validation: no incoming to Start, no outgoing from End
+    const isValidConnection = useCallback(
+        (connection: Connection | Edge) => {
+            const sourceNode = nodesRef.current.find((n) => n.id === connection.source);
+            const targetNode = nodesRef.current.find((n) => n.id === connection.target);
+            if (!sourceNode || !targetNode) return false;
+            const sourceType = (sourceNode.data as unknown as OrchestrationNodeData).nodeType;
+            const targetType = (targetNode.data as unknown as OrchestrationNodeData).nodeType;
+            // Cannot connect FROM End nodes or TO Start nodes
+            if (sourceType === "End") return false;
+            if (targetType === "Start") return false;
+            return true;
+        },
+        [],
+    );
+
     const onConnect: OnConnect = useCallback(
         (connection: Connection) => {
             edgeCounter++;
@@ -209,10 +261,19 @@ const OrchestrationFlowInner = forwardRef<
     const onKeyDown = useCallback(
         (event: React.KeyboardEvent) => {
             if (event.key !== "Delete" && event.key !== "Backspace") return;
-            const selected = nodesRef.current.filter((n) => n.selected);
+            const allNodes = nodesRef.current;
+            const selected = allNodes.filter((n) => n.selected);
+            const endNodeCount = allNodes.filter(
+                (n) => (n.data as unknown as OrchestrationNodeData).nodeType === "End",
+            ).length;
+
             const toRemove = selected.filter((n) => {
                 const d = n.data as unknown as OrchestrationNodeData;
-                return d.nodeType !== "Start" && d.nodeType !== "End";
+                // Never delete Start
+                if (d.nodeType === "Start") return false;
+                // Don't delete the last End node
+                if (d.nodeType === "End" && endNodeCount <= 1) return false;
+                return true;
             });
             if (toRemove.length === 0) return;
             const removeIds = new Set(toRemove.map((n) => n.id));
@@ -232,7 +293,7 @@ const OrchestrationFlowInner = forwardRef<
         ref,
         () => ({
             addNode(node: UaiOrchestrationNode) {
-                const flowNode = domainNodeToFlow(node);
+                const flowNode = domainNodeToFlow(node, handleNodeEdit, handleNodeDelete);
 
                 // Position at center of viewport
                 const viewport = reactFlow.getViewport();
@@ -278,6 +339,8 @@ const OrchestrationFlowInner = forwardRef<
                                           getNodeColor(node.type) ?? "#64748b",
                                       icon: getNodeIcon(node.type),
                                       config: node.config ?? {},
+                                      onEdit: handleNodeEdit,
+                                      onDelete: handleNodeDelete,
                                   },
                               }
                             : n,
@@ -286,7 +349,7 @@ const OrchestrationFlowInner = forwardRef<
                 emitChange();
             },
         }),
-        [reactFlow, setNodes, setEdges, emitChange],
+        [reactFlow, setNodes, setEdges, emitChange, handleNodeEdit, handleNodeDelete],
     );
 
     // Minimap node color
@@ -308,6 +371,7 @@ const OrchestrationFlowInner = forwardRef<
                 onEdgesChange={handleEdgesChange}
                 onConnect={onConnect}
                 onNodeDoubleClick={onNodeDoubleClick}
+                isValidConnection={isValidConnection}
                 nodeTypes={nodeTypes}
                 fitView
                 fitViewOptions={{ padding: 0.5, maxZoom: 1 }}

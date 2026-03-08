@@ -33,8 +33,8 @@ export const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
         color: "#3b82f6",
     },
     {
-        type: "Function",
-        label: "Function",
+        type: "ToolCall",
+        label: "Tool Call",
         description: "Executes a registered AI tool without LLM",
         icon: "icon-wand",
         color: "#f59e0b",
@@ -42,7 +42,7 @@ export const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
     {
         type: "Router",
         label: "Router",
-        description: "Conditional routing based on output rules",
+        description: "Conditional routing based on edge conditions",
         icon: "icon-split",
         color: "#8b5cf6",
     },
@@ -54,10 +54,10 @@ export const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
         color: "#06b6d4",
     },
     {
-        type: "Manager",
-        label: "Manager",
-        description: "Magentic pattern: delegates work dynamically",
-        icon: "icon-crown",
+        type: "CommunicationBus",
+        label: "Communication Bus",
+        description: "Shared space for agent collaboration (group chat / handoff)",
+        icon: "icon-chat",
         color: "#ec4899",
     },
 ];
@@ -77,8 +77,10 @@ export function getNodeColor(nodeType: string): string | undefined {
 }
 
 /**
- * Get the user-addable node types (excludes Start/End which are managed automatically).
+ * Get the user-addable node types.
+ * Start is never addable (exactly one, auto-created).
+ * End is addable (users can add additional exit points).
  */
 export function getAddableNodeTypes(): NodeTypeDefinition[] {
-    return NODE_TYPE_DEFINITIONS.filter((d) => d.type !== "Start" && d.type !== "End");
+    return NODE_TYPE_DEFINITIONS.filter((d) => d.type !== "Start");
 }

@@ -37,7 +37,15 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
                 agentType === "orchestrated"
                     ? {
                             $type: "orchestrated",
-                            graph: { nodes: [], edges: [] },
+                            graph: {
+                                nodes: [
+                                    { id: "node-1", type: "Start", label: "Start", x: 250, y: 50, config: { $type: "start" } },
+                                    { id: "node-2", type: "End", label: "End", x: 250, y: 300, config: { $type: "end" } },
+                                ],
+                                edges: [
+                                    { id: "edge-1", sourceNodeId: "node-1", targetNodeId: "node-2", isDefault: false },
+                                ],
+                            },
                       }
                     : {
                             $type: "standard",

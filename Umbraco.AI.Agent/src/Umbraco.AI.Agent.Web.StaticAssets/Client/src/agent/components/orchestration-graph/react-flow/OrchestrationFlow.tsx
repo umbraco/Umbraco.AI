@@ -60,21 +60,57 @@ function domainNodeToFlow(
     };
 }
 
-function domainEdgeToFlow(e: UaiOrchestrationEdge): Edge {
-    return {
-        id: e.id,
-        source: e.sourceNodeId,
-        target: e.targetNodeId,
-        markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-        style: { strokeWidth: 2 },
-        label: e.condition?.label || (e.requiresApproval ? "Approval" : undefined),
-        data: {
-            isDefault: e.isDefault,
-            priority: e.priority,
-            condition: e.condition ?? null,
-            requiresApproval: e.requiresApproval ?? false,
-        },
-    };
+/**
+ * Convert domain edges to flow edges.
+ * Collapses reverse-pair edges (A→B + B→A) into a single bidirectional edge
+ * with arrows on both ends, to avoid visual clutter on Communication Bus connections.
+ */
+function domainEdgesToFlow(
+    edges: UaiOrchestrationEdge[],
+): Edge[] {
+    const result: Edge[] = [];
+    const consumed = new Set<string>();
+
+    for (const e of edges) {
+        if (consumed.has(e.id)) continue;
+
+        // Look for a matching reverse edge
+        const reverse = edges.find(
+            (r) =>
+                r.id !== e.id &&
+                !consumed.has(r.id) &&
+                r.sourceNodeId === e.targetNodeId &&
+                r.targetNodeId === e.sourceNodeId,
+        );
+
+        const isBidirectional = !!reverse;
+
+        if (reverse) {
+            consumed.add(reverse.id);
+        }
+
+        result.push({
+            id: e.id,
+            source: e.sourceNodeId,
+            target: e.targetNodeId,
+            markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+            ...(isBidirectional
+                ? { markerStart: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }
+                : {}),
+            style: { strokeWidth: 2 },
+            label: e.condition?.label || (e.requiresApproval ? "Approval" : undefined),
+            data: {
+                isDefault: e.isDefault,
+                priority: e.priority,
+                condition: e.condition ?? null,
+                requiresApproval: e.requiresApproval ?? false,
+                isBidirectional,
+                reverseEdgeId: reverse?.id ?? null,
+            },
+        });
+    }
+
+    return result;
 }
 
 /**
@@ -104,15 +140,32 @@ function flowNodesToGraph(
                 config: ensureTypedConfig(d.config, d.nodeType),
             };
         }),
-        edges: edges.map((e, idx) => ({
-            id: e.id || `edge-${idx}`,
-            sourceNodeId: e.source,
-            targetNodeId: e.target,
-            isDefault: (e.data as any)?.isDefault ?? false,
-            priority: (e.data as any)?.priority ?? null,
-            condition: (e.data as any)?.condition ?? null,
-            requiresApproval: (e.data as any)?.requiresApproval ?? false,
-        })),
+        edges: edges.flatMap((e, idx) => {
+            const data = e.data as any;
+            const forward: UaiOrchestrationEdge = {
+                id: e.id || `edge-${idx}`,
+                sourceNodeId: e.source,
+                targetNodeId: e.target,
+                isDefault: data?.isDefault ?? false,
+                priority: data?.priority ?? null,
+                condition: data?.condition ?? null,
+                requiresApproval: data?.requiresApproval ?? false,
+            };
+
+            // Expand bidirectional edges into a forward + reverse pair
+            if (data?.isBidirectional) {
+                edgeCounter++;
+                const reverse: UaiOrchestrationEdge = {
+                    id: data.reverseEdgeId || `edge-rev-${edgeCounter}`,
+                    sourceNodeId: e.target,
+                    targetNodeId: e.source,
+                    isDefault: false,
+                };
+                return [forward, reverse];
+            }
+
+            return [forward];
+        }),
     };
 }
 
@@ -180,7 +233,7 @@ const OrchestrationFlowInner = forwardRef<
         [],
     );
     const initialEdges = useMemo(
-        () => initialGraph.edges.map(domainEdgeToFlow),
+        () => domainEdgesToFlow(initialGraph.edges),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
@@ -244,25 +297,7 @@ const OrchestrationFlowInner = forwardRef<
 
     const onConnect: OnConnect = useCallback(
         (connection: Connection) => {
-            const defaultEdgeProps = {
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    width: 16,
-                    height: 16,
-                },
-                style: { strokeWidth: 2 },
-                data: { isDefault: false, priority: null },
-            };
-
-            edgeCounter++;
-            const newEdge: Edge = {
-                ...connection,
-                id: `edge-new-${edgeCounter}`,
-                ...defaultEdgeProps,
-            };
-
-            // Auto-create reverse edge for Communication Bus connections.
-            // A bus is bidirectional — except when connecting to End (termination).
+            // Determine if this is a bidirectional bus connection
             const sourceNode = nodesRef.current.find((n) => n.id === connection.source);
             const targetNode = nodesRef.current.find((n) => n.id === connection.target);
             const sourceType = sourceNode ? (sourceNode.data as unknown as OrchestrationNodeData).nodeType : null;
@@ -271,29 +306,21 @@ const OrchestrationFlowInner = forwardRef<
             const isBusConnection = sourceType === "CommunicationBus" || targetType === "CommunicationBus";
             const connectsToEnd = targetType === "End" || sourceType === "End";
             const connectsToStart = sourceType === "Start" || targetType === "Start";
+            const bidirectional = isBusConnection && !connectsToEnd && !connectsToStart;
 
-            setEdges((eds) => {
-                let updated = addEdge(newEdge, eds);
+            edgeCounter++;
+            const newEdge: Edge = {
+                ...connection,
+                id: `edge-new-${edgeCounter}`,
+                markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+                ...(bidirectional
+                    ? { markerStart: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }
+                    : {}),
+                style: { strokeWidth: 2 },
+                data: { isDefault: false, priority: null, isBidirectional: bidirectional },
+            };
 
-                if (isBusConnection && !connectsToEnd && !connectsToStart) {
-                    // Check if reverse edge already exists
-                    const reverseExists = updated.some(
-                        (e) => e.source === connection.target && e.target === connection.source,
-                    );
-                    if (!reverseExists) {
-                        edgeCounter++;
-                        const reverseEdge: Edge = {
-                            id: `edge-new-${edgeCounter}`,
-                            source: connection.target!,
-                            target: connection.source!,
-                            ...defaultEdgeProps,
-                        };
-                        updated = addEdge(reverseEdge, updated);
-                    }
-                }
-
-                return updated;
-            });
+            setEdges((eds) => addEdge(newEdge, eds));
             emitChange();
         },
         [setEdges, emitChange],

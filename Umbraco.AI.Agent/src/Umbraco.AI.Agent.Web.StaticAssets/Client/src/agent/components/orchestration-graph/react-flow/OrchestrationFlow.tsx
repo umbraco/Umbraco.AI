@@ -30,7 +30,9 @@ import type {
     UaiOrchestrationGraph,
     UaiOrchestrationNode,
     UaiOrchestrationEdge,
+    UaiNodeConfig,
 } from "../../../types.js";
+import { createDefaultNodeConfig } from "../../../types.js";
 import { getNodeColor, getNodeIcon } from "../node-definitions.js";
 
 // ── Mapping helpers ─────────────────────────────────────────────────────
@@ -49,7 +51,7 @@ function domainNodeToFlow(
             nodeType: n.type,
             color: getNodeColor(n.type) ?? "#64748b",
             icon: getNodeIcon(n.type),
-            config: n.config ?? {},
+            config: ensureTypedConfig(n.config, n.type),
             onEdit,
             onDelete,
         } satisfies OrchestrationNodeData,
@@ -75,6 +77,17 @@ function domainEdgeToFlow(e: UaiOrchestrationEdge): Edge {
     };
 }
 
+/**
+ * Ensure a config object has a $type discriminator.
+ * Falls back to creating a default config for the node type if missing.
+ */
+function ensureTypedConfig(config: UaiNodeConfig | Record<string, unknown> | undefined, nodeType: string): UaiNodeConfig {
+    if (config && "$type" in config && config.$type) {
+        return config as UaiNodeConfig;
+    }
+    return createDefaultNodeConfig(nodeType);
+}
+
 function flowNodesToGraph(
     nodes: Node[],
     edges: Edge[],
@@ -88,7 +101,7 @@ function flowNodesToGraph(
                 label: d.label,
                 x: n.position.x,
                 y: n.position.y,
-                config: d.config ?? {},
+                config: ensureTypedConfig(d.config, d.nodeType),
             };
         }),
         edges: edges.map((e, idx) => ({
@@ -338,7 +351,7 @@ const OrchestrationFlowInner = forwardRef<
                                       color:
                                           getNodeColor(node.type) ?? "#64748b",
                                       icon: getNodeIcon(node.type),
-                                      config: node.config ?? {},
+                                      config: ensureTypedConfig(node.config, node.type),
                                       onEdit: handleNodeEdit,
                                       onDelete: handleNodeDelete,
                                   },

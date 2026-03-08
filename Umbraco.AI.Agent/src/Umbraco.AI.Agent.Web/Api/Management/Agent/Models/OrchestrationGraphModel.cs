@@ -1,4 +1,4 @@
-namespace Umbraco.AI.Agent.Web.Api.Management.Orchestration.Models;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
 /// API model for the orchestration workflow graph.

@@ -1,5 +1,7 @@
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Orchestrations;
 using Umbraco.AI.Agent.Core.Surfaces;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Strings;
@@ -19,7 +21,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         mapper.Define<AIAgent, AgentItemResponseModel>((_, _) => new AgentItemResponseModel(), MapToItemResponse);
 
         // Request mappings (request -> domain)
-        // Create: Factory sets init-only properties (Id, Alias), Map sets the rest
+        // Create: Factory sets init-only properties (Id, Alias, AgentType), Map sets the rest
         mapper.Define<CreateAgentRequestModel, AIAgent>(CreateAgentFactory, MapFromCreateRequest);
         // Update: Maps onto existing entity, so init-only properties are already set
         mapper.Define<UpdateAgentRequestModel, AIAgent>((_, _) => new AIAgent
@@ -42,41 +44,34 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
                 ? source.Alias
                 : shortStringHelper.CleanStringForSafeAlias(source.Alias),
             Name = source.Name,
+            AgentType = ParseAgentType(source.AgentType),
             ProfileId = source.ProfileId
         };
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Id -AgentType -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreateAgentRequestModel source, AIAgent target, MapperContext context)
     {
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
-        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
-        target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
-        target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
-        target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
-        target.Instructions = source.Instructions;
+        target.Config = MapConfigFromRequest(source.Config);
         target.IsActive = true;
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Id -AgentType -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateAgentRequestModel source, AIAgent target, MapperContext context)
     {
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
-        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
-        target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
-        target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
-        target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
-        target.Instructions = source.Instructions;
+        target.Config = MapConfigFromRequest(source.Config);
         target.IsActive = source.IsActive;
     }
 
@@ -87,33 +82,28 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.Description = source.Description;
+        target.AgentType = FormatAgentType(source.AgentType);
         target.ProfileId = source.ProfileId;
-        target.ContextIds = source.ContextIds;
         target.SurfaceIds = source.SurfaceIds;
         target.Scope = MapScopeToResponse(source.Scope);
-        target.AllowedToolIds = source.AllowedToolIds;
-        target.AllowedToolScopeIds = source.AllowedToolScopeIds;
-        target.UserGroupPermissions = MapUserGroupPermissionsToResponse(source.UserGroupPermissions);
-        target.Instructions = source.Instructions;
+        target.Config = MapConfigToResponse(source);
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
         target.Version = source.Version;
     }
 
-    // Umbraco.Code.MapAll -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Config -Version -CreatedByUserId -ModifiedByUserId
     private static void MapToItemResponse(AIAgent source, AgentItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.Description = source.Description;
+        target.AgentType = FormatAgentType(source.AgentType);
         target.ProfileId = source.ProfileId;
-        target.ContextIds = source.ContextIds;
         target.SurfaceIds = source.SurfaceIds;
         target.Scope = MapScopeToResponse(source.Scope);
-        target.AllowedToolIds = source.AllowedToolIds;
-        target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
@@ -125,6 +115,75 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Icon = source.Icon;
         target.SupportedScopeDimensions = source.SupportedScopeDimensions;
     }
+
+    #region AgentType helpers
+
+    private static AIAgentType ParseAgentType(string agentType)
+        => agentType.ToLowerInvariant() switch
+        {
+            "standard" => AIAgentType.Standard,
+            "orchestrated" => AIAgentType.Orchestrated,
+            _ => throw new ArgumentException($"Unknown agent type: {agentType}", nameof(agentType))
+        };
+
+    private static string FormatAgentType(AIAgentType agentType)
+        => agentType switch
+        {
+            AIAgentType.Standard => "standard",
+            AIAgentType.Orchestrated => "orchestrated",
+            _ => throw new ArgumentOutOfRangeException(nameof(agentType), agentType, null)
+        };
+
+    #endregion
+
+    #region Config mapping
+
+    private static IAIAgentConfig? MapConfigFromRequest(AgentConfigModel? source)
+    {
+        return source switch
+        {
+            StandardAgentConfigModel standard => new AIStandardAgentConfig
+            {
+                ContextIds = standard.ContextIds?.ToList() ?? [],
+                Instructions = standard.Instructions,
+                AllowedToolIds = standard.AllowedToolIds?.ToList() ?? [],
+                AllowedToolScopeIds = standard.AllowedToolScopeIds?.ToList() ?? [],
+                UserGroupPermissions = MapUserGroupPermissionsFromRequest(standard.UserGroupPermissions)
+            },
+            OrchestratedAgentConfigModel orchestrated => new AIOrchestratedAgentConfig
+            {
+                Graph = orchestrated.Graph is not null
+                    ? MapGraphFromRequest(orchestrated.Graph)
+                    : new AIOrchestrationGraph()
+            },
+            null => null,
+            _ => throw new ArgumentException($"Unknown config model type: {source.GetType().Name}", nameof(source))
+        };
+    }
+
+    private static AgentConfigModel? MapConfigToResponse(AIAgent source)
+    {
+        return source.AgentType switch
+        {
+            AIAgentType.Standard when source.Config is AIStandardAgentConfig standard => new StandardAgentConfigModel
+            {
+                ContextIds = standard.ContextIds.ToList(),
+                Instructions = standard.Instructions,
+                AllowedToolIds = standard.AllowedToolIds.ToList(),
+                AllowedToolScopeIds = standard.AllowedToolScopeIds.ToList(),
+                UserGroupPermissions = MapUserGroupPermissionsToResponse(standard.UserGroupPermissions)
+            },
+            AIAgentType.Orchestrated when source.Config is AIOrchestratedAgentConfig orchestrated => new OrchestratedAgentConfigModel
+            {
+                Graph = MapGraphToResponse(orchestrated.Graph)
+            },
+            _ => null
+        };
+    }
+
+    #endregion
+
+    #region UserGroupPermissions mapping
 
     /// <summary>
     /// Maps user group permissions from request models to domain models.
@@ -169,6 +228,102 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
                 DeniedToolScopeIds = kvp.Value.DeniedToolScopeIds
             });
     }
+
+    #endregion
+
+    #region Graph mapping
+
+    private static AIOrchestrationGraph MapGraphFromRequest(OrchestrationGraphModel source)
+    {
+        return new AIOrchestrationGraph
+        {
+            Nodes = source.Nodes.Select(n => new AIOrchestrationNode
+            {
+                Id = n.Id,
+                Type = n.Type,
+                Label = n.Label,
+                X = n.X,
+                Y = n.Y,
+                Config = MapNodeConfigFromRequest(n.Config)
+            }).ToList<AIOrchestrationNode>(),
+            Edges = source.Edges.Select(e => new AIOrchestrationEdge
+            {
+                Id = e.Id,
+                SourceNodeId = e.SourceNodeId,
+                TargetNodeId = e.TargetNodeId,
+                IsDefault = e.IsDefault,
+                Priority = e.Priority
+            }).ToList<AIOrchestrationEdge>()
+        };
+    }
+
+    private static AIOrchestrationNodeConfig MapNodeConfigFromRequest(OrchestrationNodeConfigModel source)
+    {
+        return new AIOrchestrationNodeConfig
+        {
+            AgentId = source.AgentId,
+            ToolName = source.ToolName,
+            Conditions = source.Conditions?.Select(c => new AIOrchestrationRouteCondition
+            {
+                Label = c.Label,
+                Field = c.Field,
+                Operator = c.Operator,
+                Value = c.Value,
+                TargetNodeId = c.TargetNodeId
+            }).ToList(),
+            AggregationStrategy = source.AggregationStrategy,
+            ManagerInstructions = source.ManagerInstructions,
+            ManagerProfileId = source.ManagerProfileId
+        };
+    }
+
+    private static OrchestrationGraphModel MapGraphToResponse(AIOrchestrationGraph source)
+    {
+        return new OrchestrationGraphModel
+        {
+            Nodes = source.Nodes.Select(n => new OrchestrationNodeModel
+            {
+                Id = n.Id,
+                Type = n.Type,
+                Label = n.Label,
+                X = n.X,
+                Y = n.Y,
+                Config = MapNodeConfigToResponse(n.Config)
+            }).ToList(),
+            Edges = source.Edges.Select(e => new OrchestrationEdgeModel
+            {
+                Id = e.Id,
+                SourceNodeId = e.SourceNodeId,
+                TargetNodeId = e.TargetNodeId,
+                IsDefault = e.IsDefault,
+                Priority = e.Priority
+            }).ToList()
+        };
+    }
+
+    private static OrchestrationNodeConfigModel MapNodeConfigToResponse(AIOrchestrationNodeConfig source)
+    {
+        return new OrchestrationNodeConfigModel
+        {
+            AgentId = source.AgentId,
+            ToolName = source.ToolName,
+            Conditions = source.Conditions?.Select(c => new OrchestrationRouteConditionModel
+            {
+                Label = c.Label,
+                Field = c.Field,
+                Operator = c.Operator,
+                Value = c.Value,
+                TargetNodeId = c.TargetNodeId
+            }).ToList(),
+            AggregationStrategy = source.AggregationStrategy,
+            ManagerInstructions = source.ManagerInstructions,
+            ManagerProfileId = source.ManagerProfileId
+        };
+    }
+
+    #endregion
+
+    #region Scope mapping
 
     /// <summary>
     /// Maps agent scope from request model to domain model.
@@ -219,4 +374,6 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             }).ToList()
         };
     }
+
+    #endregion
 }

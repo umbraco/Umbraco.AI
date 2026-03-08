@@ -26,15 +26,15 @@ public class AgentItemResponseModel
     public string? Description { get; set; }
 
     /// <summary>
+    /// The type of agent ("standard" or "orchestrated").
+    /// </summary>
+    public string AgentType { get; set; } = string.Empty;
+
+    /// <summary>
     /// The linked profile ID.
     /// When null, the default chat profile from Settings will be used.
     /// </summary>
     public Guid? ProfileId { get; set; }
-
-    /// <summary>
-    /// Context IDs for AI context injection.
-    /// </summary>
-    public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
     /// Surface IDs that categorize this agent for specific purposes.
@@ -46,17 +46,6 @@ public class AgentItemResponseModel
     /// Null means available everywhere (backwards compatible).
     /// </summary>
     public AIAgentScopeModel? Scope { get; set; }
-
-    /// <summary>
-    /// List of explicitly allowed tool IDs for this agent.
-    /// </summary>
-    public IEnumerable<string> AllowedToolIds { get; set; } = [];
-
-    /// <summary>
-    /// List of allowed tool scope IDs for this agent.
-    /// Grants access to all tools within the specified scopes.
-    /// </summary>
-    public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
 
     /// <summary>
     /// Whether the agent is active.

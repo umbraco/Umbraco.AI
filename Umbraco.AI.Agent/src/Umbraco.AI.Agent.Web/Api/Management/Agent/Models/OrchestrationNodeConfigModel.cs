@@ -1,6 +1,6 @@
 using Umbraco.AI.Agent.Core.Orchestrations;
 
-namespace Umbraco.AI.Agent.Web.Api.Management.Orchestration.Models;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
 /// API model for type-specific node configuration.

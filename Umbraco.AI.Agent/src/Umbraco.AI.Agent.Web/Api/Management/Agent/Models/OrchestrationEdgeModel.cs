@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.AI.Agent.Web.Api.Management.Orchestration.Models;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
 /// API model for a directed edge connecting two nodes in the graph.

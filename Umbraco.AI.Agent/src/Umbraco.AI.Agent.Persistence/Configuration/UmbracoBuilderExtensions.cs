@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Orchestrations;
 using Umbraco.AI.Agent.Persistence.Notifications;
 using Umbraco.AI.Agent.Persistence.Agents;
-using Umbraco.AI.Agent.Persistence.Orchestrations;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -30,9 +28,8 @@ public static class UmbracoBuilderExtensions
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
-        // Replace in-memory repositories with EF Core implementations
+        // Replace in-memory repository with EF Core implementation
         builder.Services.AddSingleton<IAIAgentRepository, EfCoreAIAgentRepository>();
-        builder.Services.AddSingleton<IAIOrchestrationRepository, EfCoreAIOrchestrationRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAgentMigrationNotificationHandler>();

@@ -91,8 +91,9 @@ internal sealed class AIAgentService : IAIAgentService
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, cancellationToken);
+        => _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, cancellationToken);
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)

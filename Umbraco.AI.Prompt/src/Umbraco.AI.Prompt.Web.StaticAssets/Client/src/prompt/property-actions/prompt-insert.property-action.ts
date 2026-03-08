@@ -2,33 +2,85 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbPropertyActionBase, type UmbPropertyActionArgs } from "@umbraco-cms/backoffice/property-action";
 import { UMB_PROPERTY_CONTEXT } from "@umbraco-cms/backoffice/property";
 import { UMB_CONTENT_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/content";
+import { UMB_BLOCK_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/block";
+import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/content-type";
 import { umbOpenModal } from "@umbraco-cms/backoffice/modal";
 import { createEntityContextItem, resolveEntityAdapterByType, type UaiEntityAdapterApi } from "@umbraco-ai/core";
 import { UAI_PROMPT_PREVIEW_MODAL, UAI_PROMPT_PREVIEW_SIDEBAR } from "./prompt-preview-modal.token.js";
 import type { UaiPromptPropertyActionMeta, UaiPromptContextItem, UaiPromptPreviewModalData } from "./types.js";
 
 /**
+ * Minimal duck-typed interface for workspace contexts.
+ * Both content and block workspace contexts satisfy this interface.
+ */
+interface WorkspaceContextLike {
+    getUnique(): string | null | undefined;
+    getEntityType(): string;
+}
+
+/**
  * Property action that opens a modal or sidebar to preview and insert prompt content.
  * The UI mode is determined by the meta.uiMode property:
  * - 'modal' (default): Centered dialog
  * - 'panel': Slide-in sidebar from the right
+ *
+ * Supports both document/media workspaces (UMB_CONTENT_WORKSPACE_CONTEXT)
+ * and block workspaces (UMB_BLOCK_WORKSPACE_CONTEXT).
  */
 export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiPromptPropertyActionMeta> {
     #propertyContext?: typeof UMB_PROPERTY_CONTEXT.TYPE;
-    #workspaceContext?: typeof UMB_CONTENT_WORKSPACE_CONTEXT.TYPE;
+    #workspaceContext?: WorkspaceContextLike;
+    #contentTypeAlias?: string;
     #init: Promise<unknown>;
     #workspaceAdapter?: UaiEntityAdapterApi;
 
     constructor(host: UmbControllerHost, args: UmbPropertyActionArgs<UaiPromptPropertyActionMeta>) {
         super(host, args);
 
+        // Workspace context resolution: race content vs block workspace
+        const workspaceResolved = new Promise<void>((resolve) => {
+            this.consumeContext(UMB_CONTENT_WORKSPACE_CONTEXT, (ctx) => {
+                if (!this.#workspaceContext) {
+                    this.#workspaceContext = ctx;
+                    resolve();
+                }
+            });
+
+            this.consumeContext(UMB_BLOCK_WORKSPACE_CONTEXT, (ctx) => {
+                if (!this.#workspaceContext) {
+                    this.#workspaceContext = ctx;
+                    // For blocks, get content type alias from the content element manager's structure
+                    if (ctx) {
+                        this.observe(
+                            ctx.content.structure.contentTypeAliases,
+                            (aliases) => {
+                                this.#contentTypeAlias ??= aliases?.[0];
+                            },
+                        );
+                    }
+                    resolve();
+                }
+            });
+        });
+
         this.#init = Promise.all([
             this.consumeContext(UMB_PROPERTY_CONTEXT, (context) => {
                 this.#propertyContext = context;
             }).asPromise({ preventTimeout: true }),
-            this.consumeContext(UMB_CONTENT_WORKSPACE_CONTEXT, (context) => {
-                this.#workspaceContext = context;
-            }).asPromise({ preventTimeout: true }),
+            workspaceResolved,
+            // Get content type alias from the structure workspace context (available for documents/media, not blocks)
+            this.consumeContext(UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT, (ctx) => {
+                if (ctx) {
+                    this.observe(
+                        ctx.structure.contentTypeAliases,
+                        (aliases) => {
+                            this.#contentTypeAlias ??= aliases?.[0];
+                        },
+                    );
+                }
+            }).asPromise().catch(() => {
+                // Not available inside block workspaces - contentTypeAlias resolved from block context instead
+            }),
         ]);
     }
 
@@ -81,6 +133,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             entityId,
             entityType,
             propertyAlias,
+            contentTypeAlias: this.#contentTypeAlias ?? "",
             culture: this.#propertyContext.getVariantId?.()?.culture ?? undefined,
             segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
             context,

@@ -14,10 +14,12 @@ export interface UaiPromptExecuteOptions {
     signal?: AbortSignal;
     /** The entity ID for context. Required for scope validation. */
     entityId: string;
-    /** The entity type (e.g., "document", "media"). Required for scope validation. */
+    /** The entity type (e.g., "document", "media", "block"). Required for scope validation. */
     entityType: string;
     /** The property alias being edited. Required for scope validation. */
     propertyAlias: string;
+    /** The content type alias for scope validation. For blocks, this is the element type alias. */
+    contentTypeAlias: string;
     /** The culture variant. */
     culture?: string;
     /** The segment variant. */
@@ -101,6 +103,7 @@ export class UaiPromptController extends UmbControllerBase {
                     entityId: options.entityId,
                     entityType: options.entityType,
                     propertyAlias: options.propertyAlias,
+                    contentTypeAlias: options.contentTypeAlias,
                     culture: options.culture,
                     segment: options.segment,
                     context: options.context,

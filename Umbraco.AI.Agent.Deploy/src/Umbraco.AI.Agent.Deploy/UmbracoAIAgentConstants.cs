@@ -14,10 +14,5 @@ public static class UmbracoAIAgentConstants
         /// UDI entity type for AI agents.
         /// </summary>
         public const string Agent = "umbraco-ai-agent";
-
-        /// <summary>
-        /// UDI entity type for AI orchestrations.
-        /// </summary>
-        public const string Orchestration = "umbraco-ai-orchestration";
     }
 }

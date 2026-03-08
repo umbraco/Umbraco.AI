@@ -110,6 +110,7 @@ function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
     const { label, nodeType, color, icon, config, onEdit, onDelete } = data as unknown as OrchestrationNodeData;
     const isStart = nodeType === "Start";
     const isEnd = nodeType === "End";
+    const isBus = nodeType === "CommunicationBus";
     const isStructural = isStart || isEnd;
 
     const subtitle = !isStructural ? getSubtitle(nodeType, config) : null;
@@ -132,7 +133,25 @@ function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
                 boxShadow: selected ? selectedRing : nodeStyle.boxShadow,
             }}
         >
-            {!isStart && (
+            {/* Communication Bus: handles on all four sides, each both source + target */}
+            {isBus && (
+                <>
+                    <Handle type="target" position={Position.Top} id="top-target" style={handleStyle} />
+                    <Handle type="source" position={Position.Top} id="top-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
+
+                    <Handle type="target" position={Position.Bottom} id="bottom-target" style={handleStyle} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
+
+                    <Handle type="target" position={Position.Left} id="left-target" style={handleStyle} />
+                    <Handle type="source" position={Position.Left} id="left-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
+
+                    <Handle type="target" position={Position.Right} id="right-target" style={handleStyle} />
+                    <Handle type="source" position={Position.Right} id="right-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
+                </>
+            )}
+
+            {/* Standard nodes: top target, bottom source */}
+            {!isBus && !isStart && (
                 <Handle
                     type="target"
                     position={Position.Top}
@@ -170,7 +189,7 @@ function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
                 </div>
             )}
 
-            {!isEnd && (
+            {!isBus && !isEnd && (
                 <Handle
                     type="source"
                     position={Position.Bottom}

@@ -69,7 +69,8 @@ public abstract class AIAgentWorkflowBase<TSettings> : AIAgentWorkflowBase
         }
 
         var typedSettings =
-            settings.Value.Deserialize<TSettings>(Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)!;
+            settings.Value.Deserialize<TSettings>(Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
+            ?? throw new ArgumentException($"Failed to deserialize settings for workflow '{Id}'.");
 
         return BuildWorkflowAsync(agent, typedSettings, cancellationToken);
     }

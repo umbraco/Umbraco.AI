@@ -103,7 +103,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const config: UaiOrchestratedAgentConfig = {
             ...this._model.config,
             workflowId,
-            settings: null, // Reset settings when workflow changes
+            settings: workflowId ? {} : null, // Initialize empty settings so defaults are persisted
         };
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.workflowId"),

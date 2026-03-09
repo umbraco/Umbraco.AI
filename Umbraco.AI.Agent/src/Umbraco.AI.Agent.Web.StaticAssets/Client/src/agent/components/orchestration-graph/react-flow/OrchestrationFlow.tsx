@@ -618,7 +618,7 @@ const OrchestrationFlowInner = forwardRef<
                 edgeTypes={edgeTypes}
                 connectionMode={ConnectionMode.Loose}
                 fitView
-                fitViewOptions={{ padding: 0.5, maxZoom: 1 }}
+                fitViewOptions={{ padding: 0.2, maxZoom: 1.5 }}
                 deleteKeyCode="Delete"
                 proOptions={{ hideAttribution: true }}
                 defaultEdgeOptions={{

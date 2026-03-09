@@ -14,8 +14,10 @@ import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
 import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-import type { UaiAgentDetailModel, UaiAgentType, UaiOrchestrationGraph } from "../../types.js";
-import { isOrchestratedConfig } from "../../types.js";
+import type { UaiAgentDetailModel, UaiAgentType, UaiOrchestrationGraph, UaiAgentNodeConfig } from "../../types.js";
+import { isOrchestratedConfig, isAgentNodeConfig } from "../../types.js";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { AgentsService } from "../../../api/index.js";
 import { UaiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
@@ -138,6 +140,11 @@ export class UaiAgentWorkspaceContext
             );
         }
 
+        // Enrich agent node names after initial load
+        if (data) {
+            await this.#enrichAgentNames(data);
+        }
+
         return data;
     }
 
@@ -175,6 +182,44 @@ export class UaiAgentWorkspaceContext
 
     getEntityType(): string {
         return UAI_AGENT_ENTITY_TYPE;
+    }
+
+    /**
+     * Resolves agent names for Agent nodes in an orchestrated graph.
+     * Called after loading so the graph displays agent names immediately.
+     */
+    async #enrichAgentNames(model: UaiAgentDetailModel) {
+        if (!isOrchestratedConfig(model.config)) return;
+
+        const agentNodes = model.config.graph.nodes.filter(
+            (n) => n.type === "Agent" && isAgentNodeConfig(n.config) && n.config.agentId && !n.config.agentName,
+        );
+        if (agentNodes.length === 0) return;
+
+        const { data } = await tryExecute(
+            this,
+            AgentsService.getAllAgents({ query: { skip: 0, take: 100 } }),
+        );
+        if (!data?.items) return;
+
+        const nameMap = new Map(data.items.map((a) => [a.id?.toLowerCase(), a.name]));
+        const updatedModel = structuredClone(model);
+        if (!isOrchestratedConfig(updatedModel.config)) return;
+
+        let changed = false;
+        for (const node of updatedModel.config.graph.nodes) {
+            if (node.type === "Agent" && isAgentNodeConfig(node.config) && node.config.agentId) {
+                const name = nameMap.get(node.config.agentId.toLowerCase());
+                if (name) {
+                    (node.config as UaiAgentNodeConfig).agentName = name;
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            this.#model.setValue(updatedModel);
+        }
     }
 
     /**

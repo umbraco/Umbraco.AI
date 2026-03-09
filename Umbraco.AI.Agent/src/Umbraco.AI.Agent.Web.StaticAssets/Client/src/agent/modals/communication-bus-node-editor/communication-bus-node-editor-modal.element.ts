@@ -72,7 +72,7 @@ export class UaiOrchestrationCommunicationBusNodeEditorModalElement extends UmbM
 		return html`
 			<umb-body-layout headline="Communication Bus Node">
 				<div id="main">
-					<uui-box>
+					<uui-box headline="General">
 						<umb-property-layout label="Label" description="Display name for this node">
 							<uui-input
 								slot="editor"

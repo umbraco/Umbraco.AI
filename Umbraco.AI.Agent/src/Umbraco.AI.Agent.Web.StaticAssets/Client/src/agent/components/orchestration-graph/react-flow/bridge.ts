@@ -16,6 +16,7 @@ export interface FlowBridgeInstance {
     addNode(node: UaiOrchestrationNode): void;
     removeNode(nodeId: string): void;
     updateNodeData(node: UaiOrchestrationNode): void;
+    updateEdgeData(edgeId: string, data: Record<string, unknown>): void;
     destroy(): void;
 }
 
@@ -49,6 +50,7 @@ export function createFlowBridge(
     onNodeClicked: (nodeId: string, nodeType: string) => void,
     onNodeEdit: (nodeId: string, nodeType: string) => void,
     onNodeDelete: (nodeId: string, nodeType: string) => void,
+    onEdgeDoubleClick?: (edgeId: string, sourceNodeType: string) => void,
 ): FlowBridgeInstance {
     ensureStyles(container);
 
@@ -66,6 +68,7 @@ export function createFlowBridge(
                 onNodeClicked,
                 onNodeEdit,
                 onNodeDelete,
+                onEdgeDoubleClick,
             }),
         ),
     );
@@ -79,6 +82,9 @@ export function createFlowBridge(
         },
         updateNodeData(node: UaiOrchestrationNode) {
             flowRef.current?.updateNodeData(node);
+        },
+        updateEdgeData(edgeId: string, data: Record<string, unknown>) {
+            flowRef.current?.updateEdgeData(edgeId, data);
         },
         destroy() {
             root.unmount();

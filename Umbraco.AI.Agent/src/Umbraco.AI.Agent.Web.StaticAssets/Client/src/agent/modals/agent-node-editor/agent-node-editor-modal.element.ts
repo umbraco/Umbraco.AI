@@ -41,8 +41,12 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
     }
 
     #onAgentIdChange(event: UmbChangeEvent) {
-        const picker = event.target as HTMLElement & { value: string | undefined };
-        const config: UaiAgentNodeConfig = { ...this.#config, agentId: picker.value ?? null };
+        const picker = event.target as HTMLElement & { value: string | undefined; selectedName?: string };
+        const config: UaiAgentNodeConfig = {
+            ...this.#config,
+            agentId: picker.value ?? null,
+            agentName: picker.selectedName ?? null,
+        };
         this._node = { ...this._node, config };
     }
 
@@ -68,7 +72,7 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
         return html`
             <umb-body-layout headline="Agent Node">
                 <div id="main">
-                    <uui-box>
+                    <uui-box headline="General">
                         <umb-property-layout label="Label" description="Display name for this node">
                             <uui-input
                                 slot="editor"

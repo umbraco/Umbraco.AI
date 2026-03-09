@@ -40,6 +40,11 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
         return this._selectedId;
     }
 
+    /** The display name of the currently selected agent. */
+    get selectedName(): string | undefined {
+        return this._item?.name;
+    }
+
     @state()
     private _selectedId?: string;
 

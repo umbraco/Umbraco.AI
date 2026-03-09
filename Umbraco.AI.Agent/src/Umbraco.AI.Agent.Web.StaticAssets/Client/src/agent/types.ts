@@ -90,6 +90,8 @@ export interface UaiEndNodeConfig {
 export interface UaiAgentNodeConfig {
     $type: "agent";
     agentId?: string | null;
+    /** Display-only: the name of the selected agent (not persisted to backend) */
+    agentName?: string | null;
     isManager?: boolean;
 }
 
@@ -172,6 +174,8 @@ export interface UaiOrchestrationEdge {
     id: string;
     sourceNodeId: string;
     targetNodeId: string;
+    sourceHandle?: string | null;
+    targetHandle?: string | null;
     isDefault: boolean;
     priority?: number | null;
     condition?: UaiOrchestrationRouteCondition | null;

@@ -63,7 +63,7 @@ export class UaiOrchestrationToolCallNodeEditorModalElement extends UmbModalBase
 		return html`
 			<umb-body-layout headline="Tool Call Node">
 				<div id="main">
-					<uui-box>
+					<uui-box headline="General">
 						<umb-property-layout label="Label" description="Display name for this node">
 							<uui-input
 								slot="editor"

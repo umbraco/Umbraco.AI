@@ -46,7 +46,7 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
 		return html`
 			<umb-body-layout headline="Router Node">
 				<div id="main">
-					<uui-box>
+					<uui-box headline="General">
 						<umb-property-layout label="Label" description="Display name for this node">
 							<uui-input
 								slot="editor"
@@ -57,10 +57,10 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
 						</umb-property-layout>
 					</uui-box>
 
-					<uui-box headline="Routing Conditions">
+					<uui-box headline="Routing">
 						<p class="info-text">
-							Routing conditions are defined on the outgoing edges of this node.
-							Double-click an edge to configure its condition.
+							Routing conditions are configured on the outgoing edges of this node.
+							Double-click an outgoing edge in the graph to set its condition, operator, and priority.
 						</p>
 					</uui-box>
 				</div>

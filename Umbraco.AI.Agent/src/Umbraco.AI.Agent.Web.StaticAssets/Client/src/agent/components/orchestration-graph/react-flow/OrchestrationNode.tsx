@@ -25,6 +25,21 @@ const nodeStyle: React.CSSProperties = {
     cursor: "pointer",
 };
 
+/** Circular style for Start/End nodes */
+const circleNodeStyle = (color: string): React.CSSProperties => ({
+    width: 48,
+    height: 48,
+    borderRadius: "50%",
+    background: color,
+    border: `2px solid ${color}`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+    fontFamily: "var(--uui-font-family, sans-serif)",
+});
+
 const headerStyle = (color: string): React.CSSProperties => ({
     display: "flex",
     alignItems: "center",
@@ -85,9 +100,9 @@ const selectedRing = "0 0 0 2px #3b82f6";
 function getSubtitle(nodeType: string, config: UaiNodeConfig): string | null {
     switch (nodeType) {
         case "Agent": {
-            const c = config as { agentId?: string | null; isManager?: boolean };
+            const c = config as { agentId?: string | null; isManager?: boolean; agentName?: string | null };
             if (c.isManager) return "Manager";
-            return c.agentId ? "Agent selected" : "No agent selected";
+            return c.agentName || (c.agentId ? "Agent selected" : "No agent selected");
         }
         case "ToolCall": {
             const c = config as { toolId?: string | null };
@@ -106,12 +121,17 @@ function getSubtitle(nodeType: string, config: UaiNodeConfig): string | null {
     }
 }
 
+/** Checks if a node type uses handles on all four sides */
+function hasFourSideHandles(nodeType: string): boolean {
+    return nodeType === "CommunicationBus" || nodeType === "Agent";
+}
+
 function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
     const { label, nodeType, color, icon, config, onEdit, onDelete } = data as unknown as OrchestrationNodeData;
     const isStart = nodeType === "Start";
     const isEnd = nodeType === "End";
-    const isBus = nodeType === "CommunicationBus";
     const isStructural = isStart || isEnd;
+    const fourSides = hasFourSideHandles(nodeType);
 
     const subtitle = !isStructural ? getSubtitle(nodeType, config) : null;
 
@@ -125,6 +145,24 @@ function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
         onDelete?.(id);
     }, [id, onDelete]);
 
+    // Start and End nodes render as simple circles with an icon
+    if (isStructural) {
+        return (
+            <div style={{
+                ...circleNodeStyle(color),
+                boxShadow: selected ? selectedRing : circleNodeStyle(color).boxShadow,
+            }}>
+                {isStart && (
+                    <Handle type="source" position={Position.Bottom} id="bottom" style={{ ...handleStyle, bottom: -5 }} />
+                )}
+                {isEnd && (
+                    <Handle type="source" position={Position.Top} id="top" style={{ ...handleStyle, top: -5 }} />
+                )}
+                <uui-icon name={icon} style={{ fontSize: 20, color: "#fff" } as React.CSSProperties}></uui-icon>
+            </div>
+        );
+    }
+
     return (
         <div
             style={{
@@ -133,68 +171,52 @@ function OrchestrationNodeComponent({ id, data, selected }: NodeProps) {
                 boxShadow: selected ? selectedRing : nodeStyle.boxShadow,
             }}
         >
-            {/* Communication Bus: handles on all four sides, each both source + target */}
-            {isBus && (
+            {/* Four-side handles for Agent and Communication Bus nodes.
+              * Single handle per side typed as "source". Works as both source and
+              * target because the ReactFlow instance uses connectionMode="loose". */}
+            {fourSides && (
                 <>
-                    <Handle type="target" position={Position.Top} id="top-target" style={handleStyle} />
-                    <Handle type="source" position={Position.Top} id="top-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
-
-                    <Handle type="target" position={Position.Bottom} id="bottom-target" style={handleStyle} />
-                    <Handle type="source" position={Position.Bottom} id="bottom-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
-
-                    <Handle type="target" position={Position.Left} id="left-target" style={handleStyle} />
-                    <Handle type="source" position={Position.Left} id="left-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
-
-                    <Handle type="target" position={Position.Right} id="right-target" style={handleStyle} />
-                    <Handle type="source" position={Position.Right} id="right-source" style={{ ...handleStyle, opacity: 0, pointerEvents: "all" }} />
+                    <Handle type="source" position={Position.Top} id="top" style={handleStyle} />
+                    <Handle type="source" position={Position.Bottom} id="bottom" style={handleStyle} />
+                    <Handle type="source" position={Position.Left} id="left" style={handleStyle} />
+                    <Handle type="source" position={Position.Right} id="right" style={handleStyle} />
                 </>
             )}
 
-            {/* Standard nodes: top target, bottom source */}
-            {!isBus && !isStart && (
-                <Handle
-                    type="target"
-                    position={Position.Top}
-                    style={handleStyle}
-                />
+            {/* Standard nodes: single handle per position (top input, bottom output).
+              * All typed as "source" — works for both directions via connectionMode="loose". */}
+            {!fourSides && (
+                <Handle type="source" position={Position.Top} id="top" style={handleStyle} />
             )}
 
             <div style={headerStyle(color)}>
                 <uui-icon name={icon} style={{ fontSize: 14, color: "#fff" } as React.CSSProperties}></uui-icon>
                 {nodeType === "CommunicationBus" ? "Bus" : nodeType}
-                {!isStructural && (
-                    <div style={actionsStyle}>
-                        <button
-                            style={actionBtnStyle}
-                            onClick={handleEdit}
-                            title="Edit"
-                        >
-                            <uui-icon name="icon-edit" style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
-                        </button>
-                        <button
-                            style={actionBtnStyle}
-                            onClick={handleDelete}
-                            title="Delete"
-                        >
-                            <uui-icon name="icon-trash" style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
-                        </button>
-                    </div>
-                )}
+                <div style={actionsStyle}>
+                    <button
+                        style={actionBtnStyle}
+                        onClick={handleEdit}
+                        title="Edit"
+                    >
+                        <uui-icon name="icon-edit" style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
+                    </button>
+                    <button
+                        style={actionBtnStyle}
+                        onClick={handleDelete}
+                        title="Delete"
+                    >
+                        <uui-icon name="icon-trash" style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
+                    </button>
+                </div>
             </div>
 
-            {!isStructural && (
-                <div style={bodyStyle}>
-                    {label}
-                    {subtitle && <div style={subtitleStyle}>{subtitle}</div>}
-                </div>
-            )}
+            <div style={bodyStyle}>
+                {label}
+                {subtitle && <div style={subtitleStyle}>{subtitle}</div>}
+            </div>
 
-            {!isBus && !isEnd && (
-                <Handle
-                    type="source"
-                    position={Position.Bottom}
-                    style={handleStyle}
-                />
+            {!fourSides && (
+                <Handle type="source" position={Position.Bottom} id="bottom" style={handleStyle} />
             )}
         </div>
     );

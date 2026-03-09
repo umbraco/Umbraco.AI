@@ -22,6 +22,7 @@ import {
     type OnConnect,
     type NodeTypes,
     type Connection,
+    ConnectionMode,
 } from "@xyflow/react";
 import OrchestrationNodeComponent, {
     type OrchestrationNodeData,
@@ -30,6 +31,7 @@ import type {
     UaiOrchestrationGraph,
     UaiOrchestrationNode,
     UaiOrchestrationEdge,
+    UaiOrchestrationRouteCondition,
     UaiNodeConfig,
 } from "../../../types.js";
 import { createDefaultNodeConfig } from "../../../types.js";
@@ -61,12 +63,31 @@ function domainNodeToFlow(
 }
 
 /**
+ * Build an edge label based on condition, default status, and whether it's a router edge.
+ */
+function buildEdgeLabel(
+    condition: UaiOrchestrationRouteCondition | null | undefined,
+    isDefault: boolean,
+    requiresApproval: boolean,
+    isRouterEdge: boolean,
+): string | undefined {
+    if (condition?.label) {
+        return `${isDefault ? "⊘ " : "⊕ "}${condition.label}`;
+    }
+    if (isDefault) return "⊘ Default";
+    if (requiresApproval) return "⊕ Approval";
+    if (isRouterEdge) return "⊕ Set condition…";
+    return undefined;
+}
+
+/**
  * Convert domain edges to flow edges.
  * Collapses reverse-pair edges (A→B + B→A) into a single bidirectional edge
  * with arrows on both ends, to avoid visual clutter on Communication Bus connections.
  */
 function domainEdgesToFlow(
     edges: UaiOrchestrationEdge[],
+    nodes: UaiOrchestrationNode[],
 ): Edge[] {
     const result: Edge[] = [];
     const consumed = new Set<string>();
@@ -93,12 +114,19 @@ function domainEdgesToFlow(
             id: e.id,
             source: e.sourceNodeId,
             target: e.targetNodeId,
+            sourceHandle: e.sourceHandle ?? undefined,
+            targetHandle: e.targetHandle ?? undefined,
             markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
             ...(isBidirectional
                 ? { markerStart: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }
                 : {}),
             style: { strokeWidth: 2 },
-            label: e.condition?.label || (e.requiresApproval ? "Approval" : undefined),
+            label: buildEdgeLabel(
+                e.condition,
+                e.isDefault,
+                e.requiresApproval ?? false,
+                nodes.find((n) => n.id === e.sourceNodeId)?.type === "Router",
+            ),
             data: {
                 isDefault: e.isDefault,
                 priority: e.priority,
@@ -146,6 +174,8 @@ function flowNodesToGraph(
                 id: e.id || `edge-${idx}`,
                 sourceNodeId: e.source,
                 targetNodeId: e.target,
+                sourceHandle: e.sourceHandle ?? null,
+                targetHandle: e.targetHandle ?? null,
                 isDefault: data?.isDefault ?? false,
                 priority: data?.priority ?? null,
                 condition: data?.condition ?? null,
@@ -159,6 +189,9 @@ function flowNodesToGraph(
                     id: data.reverseEdgeId || `edge-rev-${edgeCounter}`,
                     sourceNodeId: e.target,
                     targetNodeId: e.source,
+                    // Swap handles: the forward's target becomes the reverse's source and vice versa
+                    sourceHandle: e.targetHandle ?? null,
+                    targetHandle: e.sourceHandle ?? null,
                     isDefault: false,
                 };
                 return [forward, reverse];
@@ -175,6 +208,7 @@ export interface OrchestrationFlowHandle {
     addNode(node: UaiOrchestrationNode): void;
     removeNode(nodeId: string): void;
     updateNodeData(node: UaiOrchestrationNode): void;
+    updateEdgeData(edgeId: string, data: Record<string, unknown>): void;
 }
 
 // ── Props ───────────────────────────────────────────────────────────────
@@ -185,6 +219,7 @@ interface OrchestrationFlowProps {
     onNodeClicked: (nodeId: string, nodeType: string) => void;
     onNodeEdit: (nodeId: string, nodeType: string) => void;
     onNodeDelete: (nodeId: string, nodeType: string) => void;
+    onEdgeDoubleClick?: (edgeId: string, sourceNodeType: string) => void;
 }
 
 // ── Component (inner, needs ReactFlowProvider ancestor) ─────────────────
@@ -197,7 +232,7 @@ const OrchestrationFlowInner = forwardRef<
     OrchestrationFlowHandle,
     OrchestrationFlowProps
 >(function OrchestrationFlowInner(
-    { initialGraph, onGraphChanged, onNodeClicked, onNodeEdit, onNodeDelete },
+    { initialGraph, onGraphChanged, onNodeClicked, onNodeEdit, onNodeDelete, onEdgeDoubleClick },
     ref,
 ) {
     const reactFlow = useReactFlow();
@@ -233,7 +268,7 @@ const OrchestrationFlowInner = forwardRef<
         [],
     );
     const initialEdges = useMemo(
-        () => domainEdgesToFlow(initialGraph.edges),
+        () => domainEdgesToFlow(initialGraph.edges, initialGraph.nodes),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
@@ -306,7 +341,10 @@ const OrchestrationFlowInner = forwardRef<
             const isBusConnection = sourceType === "CommunicationBus" || targetType === "CommunicationBus";
             const connectsToEnd = targetType === "End" || sourceType === "End";
             const connectsToStart = sourceType === "Start" || targetType === "Start";
+            // Bidirectional for bus connections (not to/from start/end)
             const bidirectional = isBusConnection && !connectsToEnd && !connectsToStart;
+
+            const isRouterEdge = sourceType === "Router";
 
             edgeCounter++;
             const newEdge: Edge = {
@@ -317,6 +355,7 @@ const OrchestrationFlowInner = forwardRef<
                     ? { markerStart: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }
                     : {}),
                 style: { strokeWidth: 2 },
+                label: buildEdgeLabel(null, false, false, isRouterEdge),
                 data: { isDefault: false, priority: null, isBidirectional: bidirectional },
             };
 
@@ -332,6 +371,16 @@ const OrchestrationFlowInner = forwardRef<
             onNodeClicked(node.id, d.nodeType);
         },
         [onNodeClicked],
+    );
+
+    const onEdgeDoubleClickHandler = useCallback(
+        (_event: React.MouseEvent, edge: Edge) => {
+            // Find the source node to determine its type
+            const sourceNode = nodesRef.current.find((n) => n.id === edge.source);
+            const sourceType = sourceNode ? (sourceNode.data as unknown as OrchestrationNodeData).nodeType : "";
+            onEdgeDoubleClick?.(edge.id, sourceType);
+        },
+        [onEdgeDoubleClick],
     );
 
     // Guard node deletion: prevent Start and last End from being deleted.
@@ -415,6 +464,33 @@ const OrchestrationFlowInner = forwardRef<
                 );
                 emitChange();
             },
+
+            updateEdgeData(edgeId: string, data: Record<string, unknown>) {
+                // Visual-only update — does NOT call emitChange().
+                // The caller (Lit element) handles graph state via #onGraphChanged.
+                // Calling emitChange here would read stale refs (React hasn't
+                // re-rendered yet) and overwrite the graph with old data.
+                setEdges((eds) =>
+                    eds.map((e) => {
+                        if (e.id !== edgeId) return e;
+                        const merged = { ...e.data, ...data };
+                        const srcNode = nodesRef.current.find((n) => n.id === e.source);
+                        const isRouter = srcNode
+                            ? (srcNode.data as unknown as OrchestrationNodeData).nodeType === "Router"
+                            : false;
+                        return {
+                            ...e,
+                            data: merged,
+                            label: buildEdgeLabel(
+                                merged.condition as UaiOrchestrationRouteCondition | null,
+                                merged.isDefault as boolean,
+                                merged.requiresApproval as boolean,
+                                isRouter,
+                            ),
+                        };
+                    }),
+                );
+            },
         }),
         [reactFlow, setNodes, setEdges, emitChange, handleNodeEdit, handleNodeDelete],
     );
@@ -437,9 +513,11 @@ const OrchestrationFlowInner = forwardRef<
                 onEdgesChange={handleEdgesChange}
                 onConnect={onConnect}
                 onNodeDoubleClick={onNodeDoubleClick}
+                onEdgeDoubleClick={onEdgeDoubleClickHandler}
                 isValidConnection={isValidConnection}
                 onBeforeDelete={onBeforeDelete}
                 nodeTypes={nodeTypes}
+                connectionMode={ConnectionMode.Loose}
                 fitView
                 fitViewOptions={{ padding: 0.5, maxZoom: 1 }}
                 deleteKeyCode="Delete"

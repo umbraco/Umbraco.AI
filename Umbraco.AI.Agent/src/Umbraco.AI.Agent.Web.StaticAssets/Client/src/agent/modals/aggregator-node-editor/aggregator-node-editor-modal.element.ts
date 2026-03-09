@@ -76,7 +76,7 @@ export class UaiOrchestrationAggregatorNodeEditorModalElement extends UmbModalBa
 		return html`
 			<umb-body-layout headline="Aggregator Node">
 				<div id="main">
-					<uui-box>
+					<uui-box headline="General">
 						<umb-property-layout label="Label" description="Display name for this node">
 							<uui-input
 								slot="editor"

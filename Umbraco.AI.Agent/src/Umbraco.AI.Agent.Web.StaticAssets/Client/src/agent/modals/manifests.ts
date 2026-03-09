@@ -49,6 +49,12 @@ const modals: Array<ManifestModal> = [
 		name: "Orchestration Pattern Template Modal",
 		js: () => import("./pattern-template/pattern-template-modal.element.js"),
 	},
+	{
+		type: "modal",
+		alias: "Uai.Modal.OrchestrationRouterEdgeConditionEditor",
+		name: "Orchestration Router Edge Condition Editor Modal",
+		js: () => import("./router-edge-condition-editor/router-edge-condition-editor-modal.element.js"),
+	},
 ];
 
 export const agentModalManifests = [...modals];

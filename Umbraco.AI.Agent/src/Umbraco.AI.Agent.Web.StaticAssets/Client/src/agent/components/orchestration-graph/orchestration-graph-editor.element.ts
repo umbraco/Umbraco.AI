@@ -26,6 +26,9 @@ import {
 import {
     UAI_ORCHESTRATION_COMMUNICATION_BUS_NODE_EDITOR_MODAL,
 } from "../../modals/communication-bus-node-editor/communication-bus-node-editor-modal.token.js";
+import {
+    UAI_ORCHESTRATION_ROUTER_EDGE_CONDITION_EDITOR_MODAL,
+} from "../../modals/router-edge-condition-editor/router-edge-condition-editor-modal.token.js";
 
 /**
  * Graph editor for orchestration workflows.
@@ -72,6 +75,7 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
                     (nodeId, nodeType) => this.#onNodeClicked(nodeId, nodeType),
                     (nodeId, nodeType) => this.#onNodeEditRequested(nodeId, nodeType),
                     (nodeId, nodeType) => this.#onNodeDeleteRequested(nodeId, nodeType),
+                    (edgeId, sourceNodeType) => this.#onEdgeDoubleClicked(edgeId, sourceNodeType),
                 );
 
                 // Track highest node counter for generating unique IDs
@@ -93,6 +97,8 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
     }
 
     #onGraphChanged(updatedGraph: UaiOrchestrationGraph) {
+        // Keep local copy current so lookups (node edit, edge edit) see latest state
+        this.graph = updatedGraph;
         this.dispatchEvent(
             new CustomEvent("graph-changed", {
                 detail: updatedGraph,
@@ -202,6 +208,51 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
             this._bridge?.updateNodeData(result.node);
             this.#updateNodeInGraph(result.node);
         }
+    }
+
+    async #onEdgeDoubleClicked(edgeId: string, sourceNodeType: string) {
+        // Only open condition editor for router edges
+        if (sourceNodeType !== "Router") return;
+        if (!this.#modalManagerContext) return;
+
+        const edge = this.graph.edges.find((e) => e.id === edgeId);
+        if (!edge) return;
+
+        const modal = this.#modalManagerContext.open(this, UAI_ORCHESTRATION_ROUTER_EDGE_CONDITION_EDITOR_MODAL, {
+            data: {
+                edgeId,
+                condition: edge.condition ?? null,
+                isDefault: edge.isDefault,
+                priority: edge.priority ?? null,
+                requiresApproval: edge.requiresApproval ?? false,
+            },
+        });
+
+        const result = await modal.onSubmit().catch(() => undefined);
+        if (!result) return;
+
+        // Update the edge in the graph
+        const updatedGraph = structuredClone(this.graph);
+        const edgeIndex = updatedGraph.edges.findIndex((e) => e.id === edgeId);
+        if (edgeIndex >= 0) {
+            updatedGraph.edges[edgeIndex] = {
+                ...updatedGraph.edges[edgeIndex],
+                condition: result.condition,
+                isDefault: result.isDefault,
+                priority: result.priority,
+                requiresApproval: result.requiresApproval,
+            };
+        }
+
+        // Update the React Flow edge visual
+        this._bridge?.updateEdgeData(edgeId, {
+            condition: result.condition,
+            isDefault: result.isDefault,
+            priority: result.priority,
+            requiresApproval: result.requiresApproval,
+        });
+
+        this.#onGraphChanged(updatedGraph);
     }
 
     #updateNodeInGraph(updatedNode: UaiOrchestrationNode) {

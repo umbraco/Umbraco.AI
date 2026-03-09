@@ -231,12 +231,15 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-select>
                 </umb-property-layout>
 
-                ${selectedWorkflow?.description
-                    ? html`<p class="workflow-description">${selectedWorkflow.description}</p>`
-                    : nothing}
+                ${!this._workflowsLoaded
+                    ? html`<uui-loader-bar></uui-loader-bar>`
+                    : this._workflows.length === 0
+                      ? html`<p class="no-workflows">No workflows are registered. Workflows are code-based extension points that must be implemented in a .NET project.</p>`
+                      : nothing}
+            </uui-box>
 
-                ${selectedWorkflow?.settingsSchema
-                    ? html`
+            ${selectedWorkflow?.settingsSchema
+                ? html`
                           <uai-model-editor
                               .schema=${selectedWorkflow.settingsSchema}
                               .model=${(config.settings as Record<string, unknown>) ?? {}}
@@ -244,14 +247,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                               @change=${this.#onWorkflowSettingsChange}
                           ></uai-model-editor>
                       `
-                    : nothing}
-
-                ${!this._workflowsLoaded
-                    ? html`<uui-loader-bar></uui-loader-bar>`
-                    : this._workflows.length === 0
-                      ? html`<p class="no-workflows">No workflows are registered. Workflows are code-based extension points that must be implemented in a .NET project.</p>`
-                      : nothing}
-            </uui-box>
+                : nothing}
         `;
     }
 

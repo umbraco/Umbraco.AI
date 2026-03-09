@@ -8,8 +8,7 @@ import type { UaiModelEditorChangeEventDetail } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem } from "../../../types.js";
 import { isStandardConfig, isOrchestratedConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
-import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { AgentsService } from "../../../../api/index.js";
+import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
 
@@ -26,10 +25,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     private _model?: UaiAgentDetailModel;
 
     @state()
-    private _workflows: UaiWorkflowItem[] = [];
-
-    @state()
-    private _workflowsLoaded = false;
+    private _selectedWorkflow?: UaiWorkflowItem;
 
     constructor() {
         super();
@@ -38,19 +34,9 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
-                    // Load workflows when we detect an orchestrated agent
-                    if (model && isOrchestratedConfig(model.config) && !this._workflowsLoaded) {
-                        this.#loadWorkflows();
-                    }
                 });
             }
         });
-    }
-
-    async #loadWorkflows() {
-        const { data } = await tryExecute(this, AgentsService.getAgentWorkflows());
-        this._workflows = (data as UaiWorkflowItem[] | undefined) ?? [];
-        this._workflowsLoaded = true;
     }
 
     #onDescriptionChange(event: Event) {
@@ -98,10 +84,17 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     // Orchestrated-agent-specific handlers
+    #onWorkflowLoaded(event: Event) {
+        event.stopPropagation();
+        const picker = event.target as UaiWorkflowPickerElement;
+        this._selectedWorkflow = picker.selectedWorkflow;
+    }
+
     #onWorkflowChange(event: UmbChangeEvent) {
         event.stopPropagation();
-        const select = event.target as HTMLSelectElement;
-        const workflowId = select.value || null;
+        const picker = event.target as UaiWorkflowPickerElement;
+        const workflowId = picker.value ?? null;
+        this._selectedWorkflow = picker.selectedWorkflow;
         if (!this._model || !isOrchestratedConfig(this._model.config)) return;
         const config: UaiOrchestratedAgentConfig = {
             ...this._model.config,
@@ -131,12 +124,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
     get #orchestratedConfig(): UaiOrchestratedAgentConfig | undefined {
         return this._model && isOrchestratedConfig(this._model.config) ? this._model.config : undefined;
-    }
-
-    get #selectedWorkflow(): UaiWorkflowItem | undefined {
-        const config = this.#orchestratedConfig;
-        if (!config?.workflowId) return undefined;
-        return this._workflows.find((w) => w.id === config.workflowId);
     }
 
     render() {
@@ -207,47 +194,36 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const config = this.#orchestratedConfig;
         if (!config) return nothing;
 
-        const selectedWorkflow = this.#selectedWorkflow;
-
         return html`
             <uui-box headline="Workflow">
                 <umb-property-layout
                     label="Workflow"
                     description="Select the workflow that defines how this orchestrated agent operates"
                 >
-                    <uui-select
+                    <uai-workflow-picker
                         slot="editor"
-                        .value=${config.workflowId ?? ""}
+                        .value=${config.workflowId ?? undefined}
                         @change=${this.#onWorkflowChange}
-                        placeholder="Select a workflow..."
-                        .options=${[
-                            { name: "Select a workflow...", value: "", selected: !config.workflowId },
-                            ...this._workflows.map((w) => ({
-                                name: w.name,
-                                value: w.id,
-                                selected: w.id === config.workflowId,
-                            })),
-                        ]}
-                    ></uui-select>
+                        @workflow-loaded=${this.#onWorkflowLoaded}
+                    ></uai-workflow-picker>
                 </umb-property-layout>
-
-                ${!this._workflowsLoaded
-                    ? html`<uui-loader-bar></uui-loader-bar>`
-                    : this._workflows.length === 0
-                      ? html`<p class="no-workflows">No workflows are registered. Workflows are code-based extension points that must be implemented in a .NET project.</p>`
-                      : nothing}
             </uui-box>
 
-            ${selectedWorkflow?.settingsSchema
-                ? html`
-                          <uai-model-editor
-                              .schema=${selectedWorkflow.settingsSchema}
-                              .model=${(config.settings as Record<string, unknown>) ?? {}}
-                              empty-message="This workflow has no configurable settings."
-                              @change=${this.#onWorkflowSettingsChange}
-                          ></uai-model-editor>
-                      `
-                : nothing}
+            ${this.#renderWorkflowSettings()}
+        `;
+    }
+
+    #renderWorkflowSettings() {
+        const config = this.#orchestratedConfig;
+        if (!config?.workflowId || !this._selectedWorkflow?.settingsSchema) return nothing;
+
+        return html`
+            <uai-model-editor
+                .schema=${this._selectedWorkflow.settingsSchema}
+                .model=${(config.settings as Record<string, unknown>) ?? {}}
+                empty-message="This workflow has no configurable settings."
+                @change=${this.#onWorkflowSettingsChange}
+            ></uai-model-editor>
         `;
     }
 
@@ -266,8 +242,11 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 margin-top: var(--uui-size-layout-1);
             }
 
-            uui-input,
-            uui-select {
+            uai-model-editor {
+                margin-top: var(--uui-size-layout-1);
+            }
+
+            uui-input {
                 width: 100%;
             }
 
@@ -283,18 +262,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-            }
-
-            .workflow-description {
-                color: var(--uui-color-text-alt);
-                font-size: var(--uui-type-small-size);
-                margin: 0 var(--uui-size-space-5) var(--uui-size-space-4);
-            }
-
-            .no-workflows {
-                color: var(--uui-color-text-alt);
-                font-style: italic;
-                padding: var(--uui-size-space-4) var(--uui-size-space-5);
             }
         `,
     ];

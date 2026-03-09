@@ -18,10 +18,15 @@ import {
     useReactFlow,
     MarkerType,
     Position,
+    BaseEdge,
+    EdgeLabelRenderer,
+    getBezierPath,
     type Node,
     type Edge,
+    type EdgeProps,
     type OnConnect,
     type NodeTypes,
+    type EdgeTypes,
     type Connection,
     ConnectionMode,
 } from "@xyflow/react";
@@ -64,24 +69,97 @@ function domainNodeToFlow(
 }
 
 /**
- * Build an edge label based on condition, default status, and whether it's a router edge.
- * Returns a React element with uui-icon for proper Umbraco icons.
+ * Edge label metadata: icon name + text for rendering via custom edge labels.
  */
-function buildEdgeLabel(
+interface EdgeLabelInfo {
+    icon: string;
+    text: string;
+}
+
+/**
+ * Build edge label info based on condition, default status, and whether it's a router edge.
+ */
+function buildEdgeLabelInfo(
     condition: UaiOrchestrationRouteCondition | null | undefined,
     isDefault: boolean,
     requiresApproval: boolean,
     isRouterEdge: boolean,
-): React.ReactNode | undefined {
-    const iconStyle: React.CSSProperties = { fontSize: 12, verticalAlign: "middle", marginRight: 4 };
+): EdgeLabelInfo | undefined {
     if (condition?.label) {
-        const icon = isDefault ? "icon-block" : "icon-split-alt";
-        return <><uui-icon name={icon} style={iconStyle}></uui-icon>{condition.label}</>;
+        return { icon: isDefault ? "icon-block" : "icon-split-alt", text: condition.label };
     }
-    if (isDefault) return <><uui-icon name="icon-block" style={iconStyle}></uui-icon>Default</>;
-    if (requiresApproval) return <><uui-icon name="icon-lock" style={iconStyle}></uui-icon>Approval</>;
-    if (isRouterEdge) return <><uui-icon name="icon-settings" style={iconStyle}></uui-icon>Set condition…</>;
+    if (isDefault) return { icon: "icon-block", text: "Default" };
+    if (requiresApproval) return { icon: "icon-lock", text: "Approval" };
+    if (isRouterEdge) return { icon: "icon-settings", text: "Set condition…" };
     return undefined;
+}
+
+// ── Custom edge with HTML label via EdgeLabelRenderer ────────────────
+
+const edgeLabelStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    fontSize: 11,
+    fontFamily: "var(--uui-font-family, sans-serif)",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    borderRadius: 4,
+    padding: "2px 8px",
+    pointerEvents: "all",
+    whiteSpace: "nowrap",
+};
+
+function OrchestrationEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style,
+    markerEnd,
+    markerStart,
+    data,
+}: EdgeProps) {
+    const [edgePath, labelX, labelY] = getBezierPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+    });
+
+    const labelInfo = data?.labelInfo as EdgeLabelInfo | undefined;
+
+    return (
+        <>
+            <BaseEdge
+                id={id}
+                path={edgePath}
+                style={style}
+                markerEnd={markerEnd}
+                markerStart={markerStart}
+            />
+            {labelInfo && (
+                <EdgeLabelRenderer>
+                    <div
+                        style={{
+                            ...edgeLabelStyle,
+                            position: "absolute",
+                            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+                        }}
+                        className="nodrag nopan"
+                    >
+                        <uui-icon name={labelInfo.icon} style={{ fontSize: 12 } as React.CSSProperties}></uui-icon>
+                        {labelInfo.text}
+                    </div>
+                </EdgeLabelRenderer>
+            )}
+        </>
+    );
 }
 
 /**
@@ -116,6 +194,7 @@ function domainEdgesToFlow(
 
         result.push({
             id: e.id,
+            type: "orchestration",
             source: e.sourceNodeId,
             target: e.targetNodeId,
             sourceHandle: e.sourceHandle ?? undefined,
@@ -125,12 +204,6 @@ function domainEdgesToFlow(
                 ? { markerStart: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }
                 : {}),
             style: { strokeWidth: 2 },
-            label: buildEdgeLabel(
-                e.condition,
-                e.isDefault,
-                e.requiresApproval ?? false,
-                nodes.find((n) => n.id === e.sourceNodeId)?.type === "Router",
-            ),
             data: {
                 isDefault: e.isDefault,
                 priority: e.priority,
@@ -138,6 +211,12 @@ function domainEdgesToFlow(
                 requiresApproval: e.requiresApproval ?? false,
                 isBidirectional,
                 reverseEdgeId: reverse?.id ?? null,
+                labelInfo: buildEdgeLabelInfo(
+                    e.condition,
+                    e.isDefault,
+                    e.requiresApproval ?? false,
+                    nodes.find((n) => n.id === e.sourceNodeId)?.type === "Router",
+                ),
             },
         });
     }
@@ -229,6 +308,7 @@ interface OrchestrationFlowProps {
 // ── Component (inner, needs ReactFlowProvider ancestor) ─────────────────
 
 const nodeTypes: NodeTypes = { orchestration: OrchestrationNodeComponent };
+const edgeTypes: EdgeTypes = { orchestration: OrchestrationEdge };
 
 let edgeCounter = 0;
 
@@ -361,13 +441,18 @@ const OrchestrationFlowInner = forwardRef<
             const newEdge: Edge = {
                 ...connection,
                 id: `edge-new-${edgeCounter}`,
+                type: "orchestration",
                 markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
                 ...(bidirectional
                     ? { markerStart: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }
                     : {}),
                 style: { strokeWidth: 2 },
-                label: buildEdgeLabel(null, false, false, isRouterEdge),
-                data: { isDefault: false, priority: null, isBidirectional: bidirectional },
+                data: {
+                    isDefault: false,
+                    priority: null,
+                    isBidirectional: bidirectional,
+                    labelInfo: buildEdgeLabelInfo(null, false, false, isRouterEdge),
+                },
             };
 
             setEdges((eds) => addEdge(newEdge, eds));
@@ -491,13 +576,15 @@ const OrchestrationFlowInner = forwardRef<
                             : false;
                         return {
                             ...e,
-                            data: merged,
-                            label: buildEdgeLabel(
-                                merged.condition as UaiOrchestrationRouteCondition | null,
-                                merged.isDefault as boolean,
-                                merged.requiresApproval as boolean,
-                                isRouter,
-                            ),
+                            data: {
+                                ...merged,
+                                labelInfo: buildEdgeLabelInfo(
+                                    merged.condition as UaiOrchestrationRouteCondition | null,
+                                    merged.isDefault as boolean,
+                                    merged.requiresApproval as boolean,
+                                    isRouter,
+                                ),
+                            },
                         };
                     }),
                 );
@@ -528,6 +615,7 @@ const OrchestrationFlowInner = forwardRef<
                 isValidConnection={isValidConnection}
                 onBeforeDelete={onBeforeDelete}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 connectionMode={ConnectionMode.Loose}
                 fitView
                 fitViewOptions={{ padding: 0.5, maxZoom: 1 }}

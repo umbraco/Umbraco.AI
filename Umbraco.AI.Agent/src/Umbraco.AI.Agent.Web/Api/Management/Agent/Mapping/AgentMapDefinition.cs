@@ -1,7 +1,5 @@
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Orchestrations;
 using Umbraco.AI.Agent.Core.Surfaces;
-using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Strings;
@@ -152,9 +150,8 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             },
             OrchestratedAgentConfigModel orchestrated => new AIOrchestratedAgentConfig
             {
-                Graph = orchestrated.Graph is not null
-                    ? MapGraphFromRequest(orchestrated.Graph)
-                    : new AIOrchestrationGraph()
+                WorkflowId = orchestrated.WorkflowId,
+                Settings = orchestrated.Settings,
             },
             null => null,
             _ => throw new ArgumentException($"Unknown config model type: {source.GetType().Name}", nameof(source))
@@ -175,7 +172,8 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             },
             AIAgentType.Orchestrated when source.Config is AIOrchestratedAgentConfig orchestrated => new OrchestratedAgentConfigModel
             {
-                Graph = MapGraphToResponse(orchestrated.Graph)
+                WorkflowId = orchestrated.WorkflowId,
+                Settings = orchestrated.Settings,
             },
             _ => null
         };
@@ -227,153 +225,6 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
                 DeniedToolIds = kvp.Value.DeniedToolIds,
                 DeniedToolScopeIds = kvp.Value.DeniedToolScopeIds
             });
-    }
-
-    #endregion
-
-    #region Graph mapping
-
-    private static AIOrchestrationGraph MapGraphFromRequest(OrchestrationGraphModel source)
-    {
-        return new AIOrchestrationGraph
-        {
-            Nodes = source.Nodes.Select(n => new AIOrchestrationNode
-            {
-                Id = n.Id,
-                Type = n.Type,
-                Label = n.Label,
-                X = n.X,
-                Y = n.Y,
-                Config = MapNodeConfigFromRequest(n.Type, n.Config)
-            }).ToList<AIOrchestrationNode>(),
-            Edges = source.Edges.Select(MapEdgeFromRequest).ToList<AIOrchestrationEdge>()
-        };
-    }
-
-    private static AIOrchestrationEdge MapEdgeFromRequest(OrchestrationEdgeModel source)
-    {
-        return new AIOrchestrationEdge
-        {
-            Id = source.Id,
-            SourceNodeId = source.SourceNodeId,
-            TargetNodeId = source.TargetNodeId,
-            SourceHandle = source.SourceHandle,
-            TargetHandle = source.TargetHandle,
-            IsDefault = source.IsDefault,
-            Priority = source.Priority,
-            RequiresApproval = source.RequiresApproval,
-            Condition = source.Condition is not null
-                ? new AIOrchestrationRouteCondition
-                {
-                    Label = source.Condition.Label,
-                    Field = source.Condition.Field,
-                    Operator = source.Condition.Operator,
-                    Value = source.Condition.Value,
-                }
-                : null,
-        };
-    }
-
-    private static IAIOrchestrationNodeConfig MapNodeConfigFromRequest(
-        AIOrchestrationNodeType nodeType,
-        NodeConfigModel source)
-    {
-        return source switch
-        {
-            AgentNodeConfigModel agent => new AIOrchestrationAgentNodeConfig
-            {
-                AgentId = agent.AgentId,
-                IsManager = agent.IsManager,
-            },
-            ToolCallNodeConfigModel toolCall => new AIOrchestrationToolCallNodeConfig
-            {
-                ToolId = toolCall.ToolId,
-            },
-            AggregatorNodeConfigModel aggregator => new AIOrchestrationAggregatorNodeConfig
-            {
-                AggregationStrategy = aggregator.AggregationStrategy,
-                ProfileId = aggregator.ProfileId,
-            },
-            CommunicationBusNodeConfigModel bus => new AIOrchestrationCommunicationBusNodeConfig
-            {
-                MaxIterations = bus.MaxIterations,
-                TerminationMessage = bus.TerminationMessage,
-            },
-            RouterNodeConfigModel => new AIOrchestrationRouterNodeConfig(),
-            StartNodeConfigModel => new AIOrchestrationStartNodeConfig(),
-            EndNodeConfigModel => new AIOrchestrationEndNodeConfig(),
-            _ => AIOrchestrationNodeConfigSerializer.CreateDefault(nodeType),
-        };
-    }
-
-    private static OrchestrationGraphModel MapGraphToResponse(AIOrchestrationGraph source)
-    {
-        return new OrchestrationGraphModel
-        {
-            Nodes = source.Nodes.Select(n => new OrchestrationNodeModel
-            {
-                Id = n.Id,
-                Type = n.Type,
-                Label = n.Label,
-                X = n.X,
-                Y = n.Y,
-                Config = MapNodeConfigToResponse(n.Config)
-            }).ToList(),
-            Edges = source.Edges.Select(MapEdgeToResponse).ToList()
-        };
-    }
-
-    private static OrchestrationEdgeModel MapEdgeToResponse(AIOrchestrationEdge source)
-    {
-        return new OrchestrationEdgeModel
-        {
-            Id = source.Id,
-            SourceNodeId = source.SourceNodeId,
-            TargetNodeId = source.TargetNodeId,
-            SourceHandle = source.SourceHandle,
-            TargetHandle = source.TargetHandle,
-            IsDefault = source.IsDefault,
-            Priority = source.Priority,
-            RequiresApproval = source.RequiresApproval,
-            Condition = source.Condition is not null
-                ? new OrchestrationRouteConditionModel
-                {
-                    Label = source.Condition.Label,
-                    Field = source.Condition.Field,
-                    Operator = source.Condition.Operator,
-                    Value = source.Condition.Value,
-                }
-                : null,
-        };
-    }
-
-    private static NodeConfigModel MapNodeConfigToResponse(IAIOrchestrationNodeConfig source)
-    {
-        return source switch
-        {
-            AIOrchestrationAgentNodeConfig agent => new AgentNodeConfigModel
-            {
-                AgentId = agent.AgentId,
-                IsManager = agent.IsManager,
-            },
-            AIOrchestrationToolCallNodeConfig toolCall => new ToolCallNodeConfigModel
-            {
-                ToolId = toolCall.ToolId,
-            },
-            AIOrchestrationAggregatorNodeConfig aggregator => new AggregatorNodeConfigModel
-            {
-                AggregationStrategy = aggregator.AggregationStrategy,
-                ProfileId = aggregator.ProfileId,
-            },
-            AIOrchestrationCommunicationBusNodeConfig bus => new CommunicationBusNodeConfigModel
-            {
-                MaxIterations = bus.MaxIterations,
-                TerminationMessage = bus.TerminationMessage,
-            },
-            AIOrchestrationRouterNodeConfig => new RouterNodeConfigModel(),
-            AIOrchestrationEndNodeConfig => new EndNodeConfigModel(),
-            _ => new StartNodeConfigModel(),
-        };
     }
 
     #endregion

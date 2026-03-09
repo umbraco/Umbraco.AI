@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
@@ -46,12 +47,17 @@ public sealed class StandardAgentConfigModel : AgentConfigModel
 }
 
 /// <summary>
-/// Configuration model for an orchestrated agent that composes multiple agents into a workflow graph.
+/// Configuration model for an orchestrated agent that uses a registered workflow.
 /// </summary>
 public sealed class OrchestratedAgentConfigModel : AgentConfigModel
 {
     /// <summary>
-    /// The workflow graph definition containing nodes and edges.
+    /// The ID of the registered workflow to use.
     /// </summary>
-    public OrchestrationGraphModel? Graph { get; set; }
+    public string? WorkflowId { get; set; }
+
+    /// <summary>
+    /// Workflow-specific settings as structured JSON.
+    /// </summary>
+    public JsonElement? Settings { get; set; }
 }

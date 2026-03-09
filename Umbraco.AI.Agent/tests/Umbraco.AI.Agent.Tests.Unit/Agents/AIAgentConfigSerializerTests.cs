@@ -1,6 +1,6 @@
+using System.Text.Json;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Orchestrations;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Agents;
@@ -38,17 +38,15 @@ public class AIAgentConfigSerializerTests
     {
         var config = new AIOrchestratedAgentConfig
         {
-            Graph = new AIOrchestrationGraph
-            {
-                Nodes = [new AIOrchestrationNode { Id = "node1", Type = AIOrchestrationNodeType.Agent, Label = "Agent 1" }],
-            },
+            WorkflowId = "sequential-pipeline",
+            Settings = JsonDocument.Parse("{\"agents\":[\"a1\",\"a2\"]}").RootElement,
         };
 
         var result = AIAgentConfigSerializer.Serialize(config);
 
         result.ShouldNotBeNull();
-        result.ShouldContain("\"nodes\"");
-        result.ShouldContain("\"node1\"");
+        result.ShouldContain("\"workflowId\":\"sequential-pipeline\"");
+        result.ShouldContain("\"settings\"");
     }
 
     #endregion
@@ -106,28 +104,29 @@ public class AIAgentConfigSerializerTests
     {
         var original = new AIOrchestratedAgentConfig
         {
-            Graph = new AIOrchestrationGraph
-            {
-                Nodes =
-                [
-                    new AIOrchestrationNode { Id = "n1", Type = AIOrchestrationNodeType.Agent, Label = "Node 1" },
-                ],
-                Edges =
-                [
-                    new AIOrchestrationEdge { Id = "e1", SourceNodeId = "n1", TargetNodeId = "n2" },
-                ],
-            },
+            WorkflowId = "round-robin",
+            Settings = JsonDocument.Parse("{\"maxRounds\":5}").RootElement,
         };
 
         var json = AIAgentConfigSerializer.Serialize(original);
         var result = AIAgentConfigSerializer.Deserialize(AIAgentType.Orchestrated, json) as AIOrchestratedAgentConfig;
 
         result.ShouldNotBeNull();
-        result.Graph.ShouldNotBeNull();
-        result.Graph.Nodes.Count.ShouldBe(1);
-        result.Graph.Nodes[0].Id.ShouldBe("n1");
-        result.Graph.Edges.Count.ShouldBe(1);
-        result.Graph.Edges[0].SourceNodeId.ShouldBe("n1");
+        result.WorkflowId.ShouldBe("round-robin");
+        result.Settings.ShouldNotBeNull();
+        result.Settings.Value.GetProperty("maxRounds").GetInt32().ShouldBe(5);
+    }
+
+    [Fact]
+    public void Deserialize_OldGraphData_IgnoresUnknownProperties()
+    {
+        // Old data with "graph" field should deserialize without errors
+        var oldJson = """{"graph":{"nodes":[],"edges":[]}}""";
+        var result = AIAgentConfigSerializer.Deserialize(AIAgentType.Orchestrated, oldJson) as AIOrchestratedAgentConfig;
+
+        result.ShouldNotBeNull();
+        result.WorkflowId.ShouldBeNull();
+        result.Settings.ShouldBeNull();
     }
 
     #endregion

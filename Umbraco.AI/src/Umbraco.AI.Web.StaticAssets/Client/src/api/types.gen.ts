@@ -1412,6 +1412,10 @@ export type DeleteProfileData = {
 
 export type DeleteProfileErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;

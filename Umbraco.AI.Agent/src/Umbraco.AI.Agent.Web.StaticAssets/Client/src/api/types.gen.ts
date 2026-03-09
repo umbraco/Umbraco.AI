@@ -76,6 +76,10 @@ export type AiAgentUserGroupPermissionsModel = {
     deniedToolScopeIds: Array<string>;
 };
 
+export type AgentConfigModel = {
+    [key: string]: never;
+};
+
 export type AgentItemResponseModel = {
     id: string;
     alias: string;
@@ -99,29 +103,11 @@ export type AgentResponseModel = {
     profileId?: string | null;
     surfaceIds: Array<string>;
     scope?: AiAgentScopeModel | null;
-    config?: AgentConfigModel | null;
+    config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
     version: number;
-};
-
-export type AgentConfigModel = StandardAgentConfigModel | OrchestratedAgentConfigModel;
-
-export type StandardAgentConfigModel = {
-    $type: 'standard';
-    contextIds?: Array<string> | null;
-    instructions?: string | null;
-    allowedToolIds?: Array<string> | null;
-    allowedToolScopeIds?: Array<string> | null;
-    userGroupPermissions?: {
-        [key: string]: AiAgentUserGroupPermissionsModel;
-    } | null;
-};
-
-export type OrchestratedAgentConfigModel = {
-    $type: 'orchestrated';
-    graph?: OrchestrationGraphModel | null;
 };
 
 export type AgentSurfaceItemResponseModel = {
@@ -130,15 +116,39 @@ export type AgentSurfaceItemResponseModel = {
     supportedScopeDimensions: Array<string>;
 };
 
+export type AgentWorkflowItemResponseModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    settingsSchema?: EditableModelSchemaModel | null;
+};
+
 export type CreateAgentRequestModel = {
     alias: string;
     name: string;
-    agentType: string;
     description?: string | null;
+    agentType: string;
     profileId?: string | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
-    config?: AgentConfigModel | null;
+    config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
+};
+
+export type EditableModelFieldModel = {
+    key: string;
+    label: string;
+    description?: string | null;
+    editorUiAlias?: string | null;
+    editorConfig?: unknown;
+    defaultValue?: unknown;
+    sortOrder: number;
+    isRequired: boolean;
+    group?: string | null;
+};
+
+export type EditableModelSchemaModel = {
+    type?: string | null;
+    fields: Array<EditableModelFieldModel>;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -147,6 +157,12 @@ export type NotificationHeaderModel = {
     message: string;
     category: string;
     type: EventMessageTypeModel;
+};
+
+export type OrchestratedAgentConfigModel = AgentConfigModel & {
+    $type: string;
+    workflowId?: string | null;
+    settings?: unknown;
 };
 
 export type PagedAgentItemResponseModel = {
@@ -163,6 +179,17 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
+export type StandardAgentConfigModel = AgentConfigModel & {
+    $type: string;
+    contextIds?: Array<string> | null;
+    instructions?: string | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
+};
+
 export type UpdateAgentRequestModel = {
     alias: string;
     name: string;
@@ -170,7 +197,7 @@ export type UpdateAgentRequestModel = {
     profileId?: string | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
-    config?: AgentConfigModel | null;
+    config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
     isActive: boolean;
 };
 
@@ -195,10 +222,10 @@ export type GetAllAgentsData = {
         skip?: number;
         take?: number;
         filter?: string;
-        agentType?: string;
         profileId?: string;
         scopeId?: string;
         isActive?: boolean;
+        agentType?: string;
     };
     url: '/umbraco/ai/management/api/v1/agents';
 };
@@ -432,50 +459,25 @@ export type GetAgentSurfacesResponses = {
 
 export type GetAgentSurfacesResponse = GetAgentSurfacesResponses[keyof GetAgentSurfacesResponses];
 
-// Orchestration types
-
-export type OrchestrationGraphNodeConfigModel = {
-    agentId?: string | null;
-    toolName?: string | null;
-    conditions?: Array<OrchestrationRouteConditionModel> | null;
-    aggregationStrategy?: OrchestrationAggregationStrategyModel | null;
-    managerInstructions?: string | null;
-    managerProfileId?: string | null;
+export type GetAgentWorkflowsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/workflows';
 };
 
-export type OrchestrationAggregationStrategyModel = 'Concat' | 'Vote' | 'Summarize' | 'Custom';
-
-export type OrchestrationRouteConditionModel = {
-    label: string;
-    field: string;
-    operator: OrchestrationRouteOperatorModel;
-    value: string;
-    targetNodeId: string;
+export type GetAgentWorkflowsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
 };
 
-export type OrchestrationRouteOperatorModel = 'Equals' | 'Contains' | 'StartsWith' | 'Matches';
-
-export type OrchestrationGraphNodeModel = {
-    id: string;
-    type: OrchestrationNodeTypeModel;
-    label: string;
-    x: number;
-    y: number;
-    config?: OrchestrationGraphNodeConfigModel | null;
+export type GetAgentWorkflowsResponses = {
+    /**
+     * OK
+     */
+    200: Array<AgentWorkflowItemResponseModel>;
 };
 
-export type OrchestrationNodeTypeModel = 'Start' | 'End' | 'Agent' | 'Function' | 'Router' | 'Aggregator' | 'Manager';
-
-export type OrchestrationGraphEdgeModel = {
-    id: string;
-    sourceNodeId: string;
-    targetNodeId: string;
-    isDefault: boolean;
-    priority?: number | null;
-};
-
-export type OrchestrationGraphModel = {
-    nodes: Array<OrchestrationGraphNodeModel>;
-    edges: Array<OrchestrationGraphEdgeModel>;
-};
-
+export type GetAgentWorkflowsResponse = GetAgentWorkflowsResponses[keyof GetAgentWorkflowsResponses];

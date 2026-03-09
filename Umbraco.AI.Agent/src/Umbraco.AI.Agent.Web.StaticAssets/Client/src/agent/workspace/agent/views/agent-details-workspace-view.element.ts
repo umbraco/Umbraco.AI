@@ -87,6 +87,15 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
+                <umb-property-layout label="Description" description="Brief description of this agent">
+                    <uui-input
+                        slot="editor"
+                        .value=${this._model.description ?? ""}
+                        @input=${this.#onDescriptionChange}
+                        placeholder="Enter description..."
+                    ></uui-input>
+                </umb-property-layout>
+
                 <umb-property-layout
                     label="AI Profile"
                     description=${this._model.agentType === "orchestrated"
@@ -98,15 +107,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.profileId || undefined}
                         @change=${this.#onProfileChange}
                     ></uai-profile-picker>
-                </umb-property-layout>
-
-                <umb-property-layout label="Description" description="Brief description of this agent">
-                    <uui-input
-                        slot="editor"
-                        .value=${this._model.description ?? ""}
-                        @input=${this.#onDescriptionChange}
-                        placeholder="Enter description..."
-                    ></uui-input>
                 </umb-property-layout>
             </uui-box>
 

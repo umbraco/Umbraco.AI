@@ -74,6 +74,10 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
 	static styles = [
 		UmbTextStyles,
 		css`
+            uui-box {
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
+            }
+
 			uui-input {
 				width: 100%;
 			}
@@ -86,7 +90,6 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
 
 			.info-text {
 				color: var(--uui-color-text-alt);
-				font-size: var(--uui-type-small-size);
 				font-style: italic;
 			}
 		`,

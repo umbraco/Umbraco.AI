@@ -37,7 +37,7 @@ export class UaiAgentWorkflowWorkspaceViewElement extends UmbLitElement {
     }
 
     async #loadEditor() {
-        await import("../../../components/orchestration-graph/orchestration-graph-editor.element.js");
+        await import("../../../components/orchestration-graph-editor/orchestration-graph-editor.element.js");
         this._editorReady = true;
     }
 

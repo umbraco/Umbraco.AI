@@ -21,6 +21,18 @@ public sealed class AIOrchestrationEdge
     public required string TargetNodeId { get; set; }
 
     /// <summary>
+    /// Optional handle ID on the source node (e.g. "top-source", "left-source").
+    /// Used to restore edge positions for nodes with multiple handles.
+    /// </summary>
+    public string? SourceHandle { get; set; }
+
+    /// <summary>
+    /// Optional handle ID on the target node (e.g. "bottom-target", "right-target").
+    /// Used to restore edge positions for nodes with multiple handles.
+    /// </summary>
+    public string? TargetHandle { get; set; }
+
+    /// <summary>
     /// Whether this is the default/fallback edge for a router node.
     /// When no condition matches, the default edge is followed.
     /// </summary>

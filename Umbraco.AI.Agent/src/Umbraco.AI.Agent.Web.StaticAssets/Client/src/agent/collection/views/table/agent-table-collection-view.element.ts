@@ -36,9 +36,9 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
 
     private _columns: UmbTableColumn[] = [
         { name: "Name", alias: "name" },
-        { name: "Type", alias: "agentType" },
         { name: "Alias", alias: "alias" },
         { name: "Description", alias: "description" },
+        { name: "Type", alias: "agentType" },
         { name: "Active", alias: "isActive" },
         { name: "Modified", alias: "dateModified" },
     ];
@@ -83,20 +83,19 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
                     >`,
                 },
                 {
-                    columnAlias: "agentType",
-                    value: html`<uui-tag
-                        color=${item.agentType === "orchestrated" ? "warning" : "default"}
-                        look="secondary"
-                        >${item.agentType === "orchestrated" ? "Orchestrated" : "Standard"}</uui-tag
-                    >`,
-                },
-                {
                     columnAlias: "alias",
                     value: html`<uui-tag color="primary" look="secondary">${item.alias}</uui-tag>`,
                 },
                 {
                     columnAlias: "description",
                     value: item.description ?? "-",
+                },
+                {
+                    columnAlias: "agentType",
+                    value: html`<uui-tag
+                        look="secondary"
+                    >${item.agentType === "orchestrated" ? "Orchestrated" : "Standard"}</uui-tag
+                    >`,
                 },
                 {
                     columnAlias: "isActive",

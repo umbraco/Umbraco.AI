@@ -118,6 +118,9 @@ export class UaiOrchestrationCommunicationBusNodeEditorModalElement extends UmbM
 	static styles = [
 		UmbTextStyles,
 		css`
+            uui-box {
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
+            }
 			uui-input {
 				width: 100%;
 			}

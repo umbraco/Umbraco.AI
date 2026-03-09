@@ -92,10 +92,11 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IEnumerable<AITool>? additionalTools,
         CancellationToken cancellationToken)
     {
-        // STEP 1: Get allowed tool IDs (permission check)
+        // STEP 1: Get allowed tool IDs (permission check - existing logic)
         var allowedToolIds = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
 
         // STEP 2: Create runtime context and run contributors
+        //         This provides context to the LLM via system messages (section, entity, user)
         AIRuntimeContext? runtimeContext = null;
         if (contextItems?.Any() == true)
         {
@@ -107,10 +108,18 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         }
 
         // STEP 3: Build tool list with ALL allowed backend tools (no context filtering)
+        //         Backend tools are NOT filtered by context - they're cross-context
+        //         The LLM uses:
+        //         - Runtime context (section, entity) from system messages
+        //         - Tool metadata (ForEntityTypes) from enriched descriptions
+        //         - User's question
+        //         to make informed decisions about which tools to use
         var tools = new List<AITool>();
         tools.AddRange(_toolCollection.ToAIFunctions(allowedToolIds, _functionFactory));
 
         // STEP 4: Filter frontend tools by runtime context
+        //         Frontend tools ARE context-bound (operate on currently open entity)
+        //         Only send tools relevant to the current entity type
         if (additionalTools is not null)
         {
             var contextFilteredFrontendTools = FilterFrontendToolsByContext(

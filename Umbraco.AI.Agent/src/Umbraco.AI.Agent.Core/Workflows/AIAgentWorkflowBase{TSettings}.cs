@@ -1,3 +1,6 @@
+using System.Text.Json;
+using Microsoft.Agents.AI.Workflows;
+using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.EditableModels;
 
 namespace Umbraco.AI.Agent.Core.Workflows;
@@ -12,7 +15,28 @@ namespace Umbraco.AI.Agent.Core.Workflows;
 /// configurable in the backoffice. The settings type will be used to generate
 /// a dynamic form via <see cref="IAIEditableModelSchemaBuilder"/>.
 /// </para>
+/// <para>
+/// The base class handles deserialization of the raw <see cref="JsonElement"/> settings
+/// into the strongly-typed <typeparamref name="TSettings"/> object, providing a typed
+/// <see cref="BuildWorkflowAsync(AIAgent, TSettings, CancellationToken)"/> for implementations to override.
+/// </para>
 /// </remarks>
+/// <example>
+/// <code>
+/// [AIAgentWorkflow("sequential-pipeline", "Sequential Pipeline")]
+/// public class SequentialPipelineWorkflow : AIAgentWorkflowBase&lt;SequentialPipelineSettings&gt;
+/// {
+///     public SequentialPipelineWorkflow(IAIEditableModelSchemaBuilder schemaBuilder)
+///         : base(schemaBuilder) { }
+///
+///     public override Task&lt;Workflow&gt; BuildWorkflowAsync(
+///         AIAgent agent, SequentialPipelineSettings settings, CancellationToken ct)
+///     {
+///         // Build your workflow using typed settings
+///     }
+/// }
+/// </code>
+/// </example>
 public abstract class AIAgentWorkflowBase<TSettings> : AIAgentWorkflowBase
     where TSettings : class, new()
 {
@@ -33,4 +57,25 @@ public abstract class AIAgentWorkflowBase<TSettings> : AIAgentWorkflowBase
     /// <inheritdoc />
     public override AIEditableModelSchema? GetSettingsSchema()
         => _schemaBuilder.BuildForType<TSettings>(Id);
+
+    /// <summary>
+    /// Deserializes settings and delegates to the typed <see cref="BuildWorkflowAsync(AIAgent, TSettings, CancellationToken)"/>.
+    /// </summary>
+    public override Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken)
+    {
+        var typedSettings = settings.HasValue
+            ? JsonSerializer.Deserialize<TSettings>(settings.Value) ?? new TSettings()
+            : new TSettings();
+
+        return BuildWorkflowAsync(agent, typedSettings, cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds a MAF workflow from the agent definition and strongly-typed settings.
+    /// </summary>
+    /// <param name="agent">The agent definition containing shared properties like ProfileId.</param>
+    /// <param name="settings">The deserialized workflow-specific settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A MAF <see cref="Workflow"/> that can be executed or converted to an AIAgent via <c>AsAIAgent</c>.</returns>
+    public abstract Task<Workflow> BuildWorkflowAsync(AIAgent agent, TSettings settings, CancellationToken cancellationToken);
 }

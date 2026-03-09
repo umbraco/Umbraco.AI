@@ -3,7 +3,8 @@ import type {
     AgentItemResponseModel,
     CreateAgentRequestModel,
     UpdateAgentRequestModel,
-    AgentConfigModel,
+    StandardAgentConfigModel,
+    OrchestratedAgentConfigModel,
 } from "../api/types.gen.js";
 import { UAI_AGENT_ENTITY_TYPE } from "./constants.js";
 import type {
@@ -15,7 +16,7 @@ import type {
     UaiOrchestratedAgentConfig,
 } from "./types.js";
 
-function mapConfigFromResponse(agentType: string, config: AgentConfigModel | null | undefined): UaiAgentConfig {
+function mapConfigFromResponse(agentType: string, config: StandardAgentConfigModel | OrchestratedAgentConfigModel | null | undefined): UaiAgentConfig {
     if (agentType === "orchestrated") {
         const orchestrated = config as { $type?: string; workflowId?: string; settings?: unknown } | null;
         return {
@@ -44,13 +45,13 @@ function mapConfigFromResponse(agentType: string, config: AgentConfigModel | nul
     } satisfies UaiStandardAgentConfig;
 }
 
-function mapConfigToRequest(config: UaiAgentConfig): AgentConfigModel {
+function mapConfigToRequest(config: UaiAgentConfig): StandardAgentConfigModel | OrchestratedAgentConfigModel {
     if (config.$type === "orchestrated") {
         return {
             $type: "orchestrated",
             workflowId: config.workflowId,
             settings: config.settings,
-        } as AgentConfigModel;
+        } as OrchestratedAgentConfigModel;
     }
 
     return {
@@ -60,7 +61,7 @@ function mapConfigToRequest(config: UaiAgentConfig): AgentConfigModel {
         allowedToolIds: config.allowedToolIds,
         allowedToolScopeIds: config.allowedToolScopeIds,
         userGroupPermissions: config.userGroupPermissions,
-    } as AgentConfigModel;
+    } as StandardAgentConfigModel;
 }
 
 export const UaiAgentTypeMapper = {

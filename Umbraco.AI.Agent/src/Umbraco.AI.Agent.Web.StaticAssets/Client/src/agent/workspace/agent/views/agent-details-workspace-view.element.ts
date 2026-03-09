@@ -4,16 +4,19 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel, UaiStandardAgentConfig } from "../../../types.js";
-import { isStandardConfig } from "../../../types.js";
+import type { UaiModelEditorChangeEventDetail } from "@umbraco-ai/core";
+import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem } from "../../../types.js";
+import { isStandardConfig, isOrchestratedConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { AgentsService } from "../../../../api/index.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
 
 /**
  * Workspace view for Agent settings.
  * Renders shared fields (profile, description) for all agent types,
- * plus type-specific fields (contexts, instructions) for standard agents.
+ * plus type-specific fields for standard and orchestrated agents.
  */
 @customElement("uai-agent-details-workspace-view")
 export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
@@ -22,6 +25,12 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _model?: UaiAgentDetailModel;
 
+    @state()
+    private _workflows: UaiWorkflowItem[] = [];
+
+    @state()
+    private _workflowsLoaded = false;
+
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
@@ -29,9 +38,19 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
+                    // Load workflows when we detect an orchestrated agent
+                    if (model && isOrchestratedConfig(model.config) && !this._workflowsLoaded) {
+                        this.#loadWorkflows();
+                    }
                 });
             }
         });
+    }
+
+    async #loadWorkflows() {
+        const { data } = await tryExecute(this, AgentsService.getAgentWorkflows());
+        this._workflows = (data as UaiWorkflowItem[] | undefined) ?? [];
+        this._workflowsLoaded = true;
     }
 
     #onDescriptionChange(event: Event) {
@@ -78,8 +97,46 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    // Orchestrated-agent-specific handlers
+    #onWorkflowChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const select = event.target as HTMLSelectElement;
+        const workflowId = select.value || null;
+        if (!this._model || !isOrchestratedConfig(this._model.config)) return;
+        const config: UaiOrchestratedAgentConfig = {
+            ...this._model.config,
+            workflowId,
+            settings: null, // Reset settings when workflow changes
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.workflowId"),
+        );
+    }
+
+    #onWorkflowSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+        e.stopPropagation();
+        if (!this._model || !isOrchestratedConfig(this._model.config)) return;
+        const config: UaiOrchestratedAgentConfig = {
+            ...this._model.config,
+            settings: e.detail.model,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.settings"),
+        );
+    }
+
     get #standardConfig(): UaiStandardAgentConfig | undefined {
         return this._model && isStandardConfig(this._model.config) ? this._model.config : undefined;
+    }
+
+    get #orchestratedConfig(): UaiOrchestratedAgentConfig | undefined {
+        return this._model && isOrchestratedConfig(this._model.config) ? this._model.config : undefined;
+    }
+
+    get #selectedWorkflow(): UaiWorkflowItem | undefined {
+        const config = this.#orchestratedConfig;
+        if (!config?.workflowId) return undefined;
+        return this._workflows.find((w) => w.id === config.workflowId);
     }
 
     render() {
@@ -111,6 +168,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             ${this.#renderStandardSection()}
+            ${this.#renderOrchestratedSection()}
         `;
     }
 
@@ -145,6 +203,58 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         `;
     }
 
+    #renderOrchestratedSection() {
+        const config = this.#orchestratedConfig;
+        if (!config) return nothing;
+
+        const selectedWorkflow = this.#selectedWorkflow;
+
+        return html`
+            <uui-box headline="Workflow">
+                <umb-property-layout
+                    label="Workflow"
+                    description="Select the workflow that defines how this orchestrated agent operates"
+                >
+                    <uui-select
+                        slot="editor"
+                        .value=${config.workflowId ?? ""}
+                        @change=${this.#onWorkflowChange}
+                        placeholder="Select a workflow..."
+                        .options=${[
+                            { name: "Select a workflow...", value: "", selected: !config.workflowId },
+                            ...this._workflows.map((w) => ({
+                                name: w.name,
+                                value: w.id,
+                                selected: w.id === config.workflowId,
+                            })),
+                        ]}
+                    ></uui-select>
+                </umb-property-layout>
+
+                ${selectedWorkflow?.description
+                    ? html`<p class="workflow-description">${selectedWorkflow.description}</p>`
+                    : nothing}
+
+                ${selectedWorkflow?.settingsSchema
+                    ? html`
+                          <uai-model-editor
+                              .schema=${selectedWorkflow.settingsSchema}
+                              .model=${(config.settings as Record<string, unknown>) ?? {}}
+                              empty-message="This workflow has no configurable settings."
+                              @change=${this.#onWorkflowSettingsChange}
+                          ></uai-model-editor>
+                      `
+                    : nothing}
+
+                ${!this._workflowsLoaded
+                    ? html`<uui-loader-bar></uui-loader-bar>`
+                    : this._workflows.length === 0
+                      ? html`<p class="no-workflows">No workflows are registered. Workflows are code-based extension points that must be implemented in a .NET project.</p>`
+                      : nothing}
+            </uui-box>
+        `;
+    }
+
     static styles = [
         UmbTextStyles,
         css`
@@ -160,7 +270,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 margin-top: var(--uui-size-layout-1);
             }
 
-            uui-input {
+            uui-input,
+            uui-select {
                 width: 100%;
             }
 
@@ -176,6 +287,18 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+            }
+
+            .workflow-description {
+                color: var(--uui-color-text-alt);
+                font-size: var(--uui-type-small-size);
+                margin: 0 var(--uui-size-space-5) var(--uui-size-space-4);
+            }
+
+            .no-workflows {
+                color: var(--uui-color-text-alt);
+                font-style: italic;
+                padding: var(--uui-size-space-4) var(--uui-size-space-5);
             }
         `,
     ];

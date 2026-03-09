@@ -134,4 +134,17 @@ export class AgentsService {
             ...options
         });
     }
+
+    public static getAgentWorkflows<ThrowOnError extends boolean = false>(options?: Options<Record<string, never>, ThrowOnError>) {
+        return (options?.client ?? client).get<unknown, unknown, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/agents/workflows',
+            ...options
+        });
+    }
 }

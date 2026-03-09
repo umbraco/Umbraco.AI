@@ -4,9 +4,9 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
-using Umbraco.AI.Agent.Core.Orchestrations;
 using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
+using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Profiles;
@@ -45,8 +45,6 @@ public static class UmbracoBuilderExtensions
 
         // Register services
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
-        builder.Services.AddSingleton<IAIOrchestrationExecutor, AIOrchestrationExecutor>();
-
         // Prevent deletion of profiles referenced by agents
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();
 
@@ -75,6 +73,10 @@ public static class UmbracoBuilderExtensions
         // Auto-discover agent surfaces via [AIAgentSurface] attribute
         builder.AIAgentSurfaces()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentSurface, AIAgentSurfaceAttribute>(cache: true));
+
+        // Auto-discover agent workflows via [AIAgentWorkflow] attribute
+        builder.AIAgentWorkflows()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentWorkflow, AIAgentWorkflowAttribute>(cache: true));
 
         return builder;
     }

@@ -55,17 +55,21 @@ public abstract class AIAgentWorkflowBase<TSettings> : AIAgentWorkflowBase
     }
 
     /// <inheritdoc />
-    public override AIEditableModelSchema? GetSettingsSchema()
+    protected override AIEditableModelSchema? GetSettingsSchema()
         => _schemaBuilder.BuildForType<TSettings>(Id);
 
     /// <summary>
     /// Deserializes settings and delegates to the typed <see cref="BuildWorkflowAsync(AIAgent, TSettings, CancellationToken)"/>.
     /// </summary>
-    public override Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken)
+    protected override Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken)
     {
-        var typedSettings = settings.HasValue
-            ? JsonSerializer.Deserialize<TSettings>(settings.Value) ?? new TSettings()
-            : new TSettings();
+        if (!settings.HasValue)
+        {
+            throw new ArgumentException($"Settings are required for workflow '{Id}' but were not provided.");
+        }
+
+        var typedSettings =
+            settings.Value.Deserialize<TSettings>(Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)!;
 
         return BuildWorkflowAsync(agent, typedSettings, cancellationToken);
     }
@@ -77,5 +81,5 @@ public abstract class AIAgentWorkflowBase<TSettings> : AIAgentWorkflowBase
     /// <param name="settings">The deserialized workflow-specific settings.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A MAF <see cref="Workflow"/> that can be executed or converted to an AIAgent via <c>AsAIAgent</c>.</returns>
-    public abstract Task<Workflow> BuildWorkflowAsync(AIAgent agent, TSettings settings, CancellationToken cancellationToken);
+    protected abstract Task<Workflow> BuildWorkflowAsync(AIAgent agent, TSettings settings, CancellationToken cancellationToken);
 }

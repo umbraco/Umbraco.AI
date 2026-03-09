@@ -58,9 +58,24 @@ public abstract class AIAgentWorkflowBase : IAIAgentWorkflow
         Description = attribute.Description;
     }
 
-    /// <inheritdoc />
-    public virtual AIEditableModelSchema? GetSettingsSchema() => null;
+    /// <summary>
+    /// Gets the settings schema for this workflow, or null if no settings are required.
+    /// </summary>
+    /// <returns>The settings schema, or null.</returns>
+    protected virtual AIEditableModelSchema? GetSettingsSchema() => null;
 
-    /// <inheritdoc />
-    public abstract Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken);
+    /// <summary>
+    /// Builds a MAF workflow from the agent definition and optional settings.
+    /// </summary>
+    /// <param name="agent">The agent definition containing shared properties like ProfileId.</param>
+    /// <param name="settings">Optional workflow-specific settings (JSON).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    protected abstract Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken);
+
+    AIEditableModelSchema? IAIAgentWorkflow.GetSettingsSchema()
+        => GetSettingsSchema();
+
+    Task<Workflow> IAIAgentWorkflow.BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken)
+        => BuildWorkflowAsync(agent, settings, cancellationToken);
 }

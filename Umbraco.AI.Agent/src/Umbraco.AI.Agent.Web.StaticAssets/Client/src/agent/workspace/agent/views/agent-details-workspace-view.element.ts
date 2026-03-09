@@ -34,6 +34,10 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
+                    // Clear stale workflow state when not orchestrated
+                    if (!model || !isOrchestratedConfig(model.config)) {
+                        this._selectedWorkflow = undefined;
+                    }
                 });
             }
         });
@@ -221,6 +225,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             <uai-model-editor
                 .schema=${this._selectedWorkflow.settingsSchema}
                 .model=${(config.settings as Record<string, unknown>) ?? {}}
+                default-group="Workflow Settings"
                 empty-message="This workflow has no configurable settings."
                 @change=${this.#onWorkflowSettingsChange}
             ></uai-model-editor>

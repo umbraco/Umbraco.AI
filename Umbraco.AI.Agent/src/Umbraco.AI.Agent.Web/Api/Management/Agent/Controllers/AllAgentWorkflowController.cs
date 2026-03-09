@@ -35,14 +35,18 @@ public class AllAgentWorkflowController : AgentControllerBase
     [ProducesResponseType(typeof(IEnumerable<AgentWorkflowItemResponseModel>), StatusCodes.Status200OK)]
     public IActionResult GetAgentWorkflows()
     {
-        var models = _workflowCollection.Select(w => new AgentWorkflowItemResponseModel
+        var models = _workflowCollection.Select(w =>
         {
-            Id = w.Id,
-            Name = w.Name,
-            Description = w.Description,
-            SettingsSchema = w.SettingsType is not null
-                ? _umbracoMapper.Map<EditableModelSchemaModel>(w.GetSettingsSchema())
-                : null,
+            var schema = w.GetSettingsSchema();
+            return new AgentWorkflowItemResponseModel
+            {
+                Id = w.Id,
+                Name = w.Name,
+                Description = w.Description,
+                SettingsSchema = schema is not null
+                    ? _umbracoMapper.Map<EditableModelSchemaModel>(schema)
+                    : null,
+            };
         });
 
         return Ok(models);

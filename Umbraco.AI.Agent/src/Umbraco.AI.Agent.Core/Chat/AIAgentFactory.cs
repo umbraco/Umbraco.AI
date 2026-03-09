@@ -64,16 +64,18 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        MsAIAgent innerAgent;
-
-        if (agent.GetOrchestratedConfig() is { } orchestratedConfig)
+        MsAIAgent innerAgent = agent.AgentType switch
         {
-            innerAgent = await CreateOrchestratedAgentAsync(agent, orchestratedConfig, cancellationToken);
-        }
-        else
-        {
-            innerAgent = await CreateStandardAgentAsync(agent, contextItems, additionalTools, cancellationToken);
-        }
+            AIAgentType.Standard => await CreateStandardAgentAsync(agent, contextItems, additionalTools, cancellationToken),
+            AIAgentType.Orchestrated => await CreateOrchestratedAgentAsync(
+                agent,
+                agent.GetOrchestratedConfig()
+                    ?? throw new InvalidOperationException(
+                        $"Agent '{agent.Name}' (ID: {agent.Id}) has type '{AIAgentType.Orchestrated}' but no orchestrated config."),
+                cancellationToken),
+            _ => throw new InvalidOperationException(
+                $"Unsupported agent type '{agent.AgentType}' for agent '{agent.Name}' (ID: {agent.Id})."),
+        };
 
         // Wrap in scoped decorator (passes scope provider, contributors, and metadata)
         return new ScopedAIAgent(

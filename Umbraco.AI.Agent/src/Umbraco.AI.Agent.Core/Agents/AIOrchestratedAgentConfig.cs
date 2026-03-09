@@ -1,14 +1,19 @@
-using Umbraco.AI.Agent.Core.Orchestrations;
+using System.Text.Json;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
-/// Configuration for an orchestrated agent that composes multiple agents into a workflow graph.
+/// Configuration for an orchestrated agent that uses a registered workflow.
 /// </summary>
 public sealed class AIOrchestratedAgentConfig : IAIAgentConfig
 {
     /// <summary>
-    /// The workflow graph definition containing nodes and edges.
+    /// The ID of the registered workflow to use.
     /// </summary>
-    public AIOrchestrationGraph Graph { get; set; } = new();
+    public string? WorkflowId { get; set; }
+
+    /// <summary>
+    /// Workflow-specific settings as structured JSON.
+    /// </summary>
+    public JsonElement? Settings { get; set; }
 }

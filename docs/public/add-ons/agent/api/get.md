@@ -5,7 +5,7 @@ description: >-
 
 # Get Agent
 
-Returns the full details of a specific agent.
+Returns the full details of a specific agent, including type-specific configuration.
 
 ## Request
 
@@ -21,7 +21,7 @@ GET /umbraco/ai/management/api/v1/agent/{idOrAlias}
 
 ## Response
 
-### Success
+### Standard Agent
 
 {% code title="200 OK" %}
 
@@ -31,14 +31,51 @@ GET /umbraco/ai/management/api/v1/agent/{idOrAlias}
     "alias": "content-assistant",
     "name": "Content Assistant",
     "description": "Helps users write and improve content",
+    "agentType": "standard",
     "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-    "contextIds": ["e401f2ff-7d65-5c12-a1f7-e812859g1962"],
-    "scopeIds": ["copilot"],
-    "instructions": "You are a helpful content assistant...",
+    "surfaceIds": ["copilot"],
+    "config": {
+        "$type": "standard",
+        "contextIds": ["e401f2ff-7d65-5c12-a1f7-e812859g1962"],
+        "instructions": "You are a helpful content assistant...",
+        "allowedToolScopeIds": ["content-read", "search"],
+        "allowedToolIds": [],
+        "userGroupPermissions": {}
+    },
     "isActive": true,
     "version": 2,
     "dateCreated": "2024-01-15T10:30:00Z",
     "dateModified": "2024-01-20T14:45:00Z"
+}
+```
+
+{% endcode %}
+
+### Orchestrated Agent
+
+{% code title="200 OK" %}
+
+```json
+{
+    "id": "7b4c2e89-1234-5678-abcd-def012345678",
+    "alias": "write-and-edit",
+    "name": "Write and Edit Pipeline",
+    "description": "Drafts content then edits it for clarity",
+    "agentType": "orchestrated",
+    "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+    "surfaceIds": ["copilot"],
+    "config": {
+        "$type": "orchestrated",
+        "workflowId": "write-and-edit",
+        "settings": {
+            "writingStyle": "professional",
+            "editingFocus": "clarity and conciseness"
+        }
+    },
+    "isActive": true,
+    "version": 1,
+    "dateCreated": "2024-01-18T09:00:00Z",
+    "dateModified": "2024-01-18T09:00:00Z"
 }
 ```
 

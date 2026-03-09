@@ -198,6 +198,7 @@ runAgent("writing-assistant", [{ role: "user", content: "Help me improve this se
 ## Next Steps
 
 - Configure [Instructions](instructions.md) for better agent behavior
+- Create [Orchestrated Agents](workflows.md) with multi-agent workflows
 - Learn about [Streaming](streaming.md) for advanced event handling
 - Install [Agent Copilot](../agent-copilot/README.md) for the chat sidebar UI
 - Add [Frontend Tools](../agent-copilot/frontend-tools.md) for interactive capabilities

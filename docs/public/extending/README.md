@@ -30,6 +30,10 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 <td>Create tools that AI agents can use to perform actions</td>
 </tr>
 <tr>
+<td><strong>Agent Workflows</strong></td>
+<td>Create multi-agent orchestration workflows for orchestrated agents</td>
+</tr>
+<tr>
 <td><strong>Notifications</strong></td>
 <td>Subscribe to entity lifecycle events for validation and automation</td>
 </tr>
@@ -56,6 +60,12 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 - You want AI agents to interact with your systems
 - You need to expose business logic to AI
 - You want to enable AI to query databases or APIs
+
+### Create Agent Workflows When
+
+- You need multi-agent orchestration (e.g., writer + editor pipelines)
+- You want to compose agents into sequential or parallel workflows
+- You need custom agent collaboration patterns
 
 ### Subscribe to Notifications When
 
@@ -100,6 +110,10 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 
 {% content-ref url="tools/README.md" %}
 [Custom Tools](tools/README.md)
+{% endcontent-ref %}
+
+{% content-ref url="../../add-ons/agent/workflows.md" %}
+[Agent Workflows](../../add-ons/agent/workflows.md)
 {% endcontent-ref %}
 
 {% content-ref url="notifications/README.md" %}

@@ -17,29 +17,13 @@ export type {
     UaiAgentConfig,
     UaiStandardAgentConfig,
     UaiOrchestratedAgentConfig,
-    UaiOrchestrationGraph,
-    UaiOrchestrationNode,
-    UaiNodeConfig,
-    UaiOrchestrationEdge,
-    UaiOrchestrationRouteCondition,
-    UaiStartNodeConfig,
-    UaiEndNodeConfig,
-    UaiAgentNodeConfig,
-    UaiToolCallNodeConfig,
-    UaiRouterNodeConfig,
-    UaiAggregatorNodeConfig,
-    UaiCommunicationBusNodeConfig,
+    UaiWorkflowItem,
 } from "./types.js";
 export {
     isStandardConfig,
     isOrchestratedConfig,
     isStandardAgent,
     isOrchestratedAgent,
-    isAgentNodeConfig,
-    isToolCallNodeConfig,
-    isAggregatorNodeConfig,
-    isCommunicationBusNodeConfig,
-    createDefaultNodeConfig,
 } from "./types.js";
 export type { UaiUserGroupPermissionsModel, UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
 

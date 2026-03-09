@@ -17,10 +17,11 @@ import type {
 
 function mapConfigFromResponse(agentType: string, config: AgentConfigModel | null | undefined): UaiAgentConfig {
     if (agentType === "orchestrated") {
-        const orchestrated = config as { $type?: string; graph?: unknown } | null;
+        const orchestrated = config as { $type?: string; workflowId?: string; settings?: unknown } | null;
         return {
             $type: "orchestrated",
-            graph: (orchestrated?.graph as UaiOrchestratedAgentConfig["graph"]) ?? { nodes: [], edges: [] },
+            workflowId: orchestrated?.workflowId ?? null,
+            settings: orchestrated?.settings ?? null,
         } satisfies UaiOrchestratedAgentConfig;
     }
 
@@ -47,7 +48,8 @@ function mapConfigToRequest(config: UaiAgentConfig): AgentConfigModel {
     if (config.$type === "orchestrated") {
         return {
             $type: "orchestrated",
-            graph: config.graph,
+            workflowId: config.workflowId,
+            settings: config.settings,
         } as AgentConfigModel;
     }
 

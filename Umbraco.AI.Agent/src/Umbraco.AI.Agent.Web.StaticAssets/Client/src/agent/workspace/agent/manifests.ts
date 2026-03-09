@@ -40,29 +40,6 @@ export const manifests: Array<UmbExtensionManifest> = [
             },
         ],
     },
-    // Workflow tab (orchestrated agents only)
-    {
-        type: "workspaceView",
-        alias: "UmbracoAIAgent.Workspace.Agent.View.Workflow",
-        name: "Agent Workflow Workspace View",
-        js: () => import("./views/agent-workflow-workspace-view.element.js"),
-        weight: 290,
-        meta: {
-            label: "Workflow",
-            pathname: "workflow",
-            icon: "icon-mindmap",
-        },
-        conditions: [
-            {
-                alias: UMB_WORKSPACE_CONDITION_ALIAS,
-                match: UAI_AGENT_WORKSPACE_ALIAS,
-            },
-            {
-                alias: UAI_AGENT_TYPE_CONDITION_ALIAS,
-                match: "orchestrated",
-            } as UaiAgentTypeConditionConfig,
-        ],
-    },
     // Availability tab (all agent types)
     {
         type: "workspaceView",

@@ -9,15 +9,11 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
-import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
 import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-import type { UaiAgentDetailModel, UaiAgentType, UaiOrchestrationGraph, UaiAgentNodeConfig } from "../../types.js";
-import { isOrchestratedConfig, isAgentNodeConfig } from "../../types.js";
-import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { AgentsService } from "../../../api/index.js";
+import type { UaiAgentDetailModel, UaiAgentType } from "../../types.js";
 import { UaiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
@@ -42,7 +38,6 @@ export class UaiAgentWorkspaceContext
     #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
     #validationContext = new UmbValidationContext(this);
-    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
     // Expose validation context publicly so editor elements can register validators
     get validation() {
@@ -57,10 +52,6 @@ export class UaiAgentWorkspaceContext
 
         this.#entityContext.setEntityType(UAI_AGENT_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
-
-        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
-            this.#notificationContext = context;
-        });
 
         // Redirect to collection when entity is deleted
         new UaiEntityDeletedRedirectController(this, {
@@ -140,11 +131,6 @@ export class UaiAgentWorkspaceContext
             );
         }
 
-        // Enrich agent node names after initial load
-        if (data) {
-            await this.#enrichAgentNames(data);
-        }
-
         return data;
     }
 
@@ -185,84 +171,6 @@ export class UaiAgentWorkspaceContext
     }
 
     /**
-     * Resolves agent names for Agent nodes in an orchestrated graph.
-     * Called after loading so the graph displays agent names immediately.
-     */
-    async #enrichAgentNames(model: UaiAgentDetailModel) {
-        if (!isOrchestratedConfig(model.config)) return;
-
-        const agentNodes = model.config.graph.nodes.filter(
-            (n) => n.type === "Agent" && isAgentNodeConfig(n.config) && n.config.agentId && !n.config.agentName,
-        );
-        if (agentNodes.length === 0) return;
-
-        const { data } = await tryExecute(
-            this,
-            AgentsService.getAllAgents({ query: { skip: 0, take: 100 } }),
-        );
-        if (!data?.items) return;
-
-        const nameMap = new Map(data.items.map((a) => [a.id?.toLowerCase(), a.name]));
-        const updatedModel = structuredClone(model);
-        if (!isOrchestratedConfig(updatedModel.config)) return;
-
-        let changed = false;
-        for (const node of updatedModel.config.graph.nodes) {
-            if (node.type === "Agent" && isAgentNodeConfig(node.config) && node.config.agentId) {
-                const name = nameMap.get(node.config.agentId.toLowerCase());
-                if (name) {
-                    (node.config as UaiAgentNodeConfig).agentName = name;
-                    changed = true;
-                }
-            }
-        }
-
-        if (changed) {
-            this.#model.setValue(updatedModel);
-        }
-    }
-
-    /**
-     * Validates an orchestration graph before save.
-     */
-    #validateGraph(graph: UaiOrchestrationGraph): string[] {
-        const errors: string[] = [];
-
-        const startNodes = graph.nodes.filter((n) => n.type === "Start");
-        const endNodes = graph.nodes.filter((n) => n.type === "End");
-
-        if (startNodes.length === 0) {
-            errors.push("The workflow must have a Start node.");
-        }
-        if (startNodes.length > 1) {
-            errors.push("The workflow must have exactly one Start node.");
-        }
-        if (endNodes.length === 0) {
-            errors.push("The workflow must have at least one End node.");
-        }
-
-        // Every non-Start node must be reachable (have at least one incoming edge)
-        const nodesWithIncoming = new Set(graph.edges.map((e) => e.targetNodeId));
-        for (const node of graph.nodes) {
-            if (node.type === "Start") continue;
-            if (!nodesWithIncoming.has(node.id)) {
-                errors.push(`Node "${node.label}" has no incoming connections.`);
-            }
-        }
-
-        // Every non-End node must have at least one outgoing edge
-        const nodesWithOutgoing = new Set(graph.edges.map((e) => e.sourceNodeId));
-        for (const node of graph.nodes) {
-            if (node.type === "End") continue;
-            if (!nodesWithOutgoing.has(node.id)) {
-                errors.push(`Node "${node.label}" has no outgoing connections.`);
-            }
-        }
-
-        return errors;
-    }
-
-    /**
      * Saves the agent (create or update).
      */
     async submit() {
@@ -276,22 +184,6 @@ export class UaiAgentWorkspaceContext
             // Validation failed - focus first invalid element
             this.#validationContext.focusFirstInvalidElement();
             return;
-        }
-
-        // Validate orchestration graph if applicable
-        if (isOrchestratedConfig(model.config)) {
-            const errors = this.#validateGraph(model.config.graph);
-            if (errors.length > 0) {
-                // Show validation errors as a notification
-                this.#notificationContext?.peek("danger", {
-                    data: {
-                        headline: "Workflow Validation Failed",
-                        message: errors.join("\n"),
-                        whitespace: "pre-line",
-                    },
-                });
-                throw new Error("Graph validation failed");
-            }
         }
 
         // Mute command store during submit

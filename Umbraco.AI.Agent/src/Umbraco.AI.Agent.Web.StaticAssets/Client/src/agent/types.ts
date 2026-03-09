@@ -38,7 +38,8 @@ export interface UaiStandardAgentConfig {
 
 export interface UaiOrchestratedAgentConfig {
     $type: "orchestrated";
-    graph: UaiOrchestrationGraph;
+    workflowId: string | null;
+    settings: unknown | null;
 }
 
 export type UaiAgentConfig = UaiStandardAgentConfig | UaiOrchestratedAgentConfig;
@@ -61,125 +62,16 @@ export function isOrchestratedAgent(model: { agentType: UaiAgentType }): boolean
     return model.agentType === "orchestrated";
 }
 
-// ── Orchestration graph types ───────────────────────────────────────────
-
-export interface UaiOrchestrationGraph {
-    nodes: UaiOrchestrationNode[];
-    edges: UaiOrchestrationEdge[];
-}
-
-export interface UaiOrchestrationNode {
-    id: string;
-    type: string;
-    label: string;
-    x: number;
-    y: number;
-    config: UaiNodeConfig;
-}
-
-// ── Per-node-type configs (polymorphic via $type) ───────────────────────
-
-export interface UaiStartNodeConfig {
-    $type: "start";
-}
-
-export interface UaiEndNodeConfig {
-    $type: "end";
-}
-
-export interface UaiAgentNodeConfig {
-    $type: "agent";
-    agentId?: string | null;
-    /** Display-only: the name of the selected agent (not persisted to backend) */
-    agentName?: string | null;
-    isManager?: boolean;
-}
-
-export interface UaiToolCallNodeConfig {
-    $type: "toolCall";
-    toolId?: string | null;
-}
-
-export interface UaiRouterNodeConfig {
-    $type: "router";
-}
-
-export interface UaiAggregatorNodeConfig {
-    $type: "aggregator";
-    aggregationStrategy?: string | null;
-    profileId?: string | null;
-}
-
-export interface UaiCommunicationBusNodeConfig {
-    $type: "communicationBus";
-    maxIterations?: number;
-    terminationMessage?: string | null;
-}
+// ── Workflow types ──────────────────────────────────────────────────────
 
 /**
- * Union of all node config types, discriminated by $type.
+ * Represents a registered workflow available for orchestrated agents.
  */
-export type UaiNodeConfig =
-    | UaiStartNodeConfig
-    | UaiEndNodeConfig
-    | UaiAgentNodeConfig
-    | UaiToolCallNodeConfig
-    | UaiRouterNodeConfig
-    | UaiAggregatorNodeConfig
-    | UaiCommunicationBusNodeConfig;
-
-// ── Node config type guards ─────────────────────────────────────────────
-
-export function isAgentNodeConfig(config: UaiNodeConfig): config is UaiAgentNodeConfig {
-    return config.$type === "agent";
-}
-
-export function isToolCallNodeConfig(config: UaiNodeConfig): config is UaiToolCallNodeConfig {
-    return config.$type === "toolCall";
-}
-
-export function isAggregatorNodeConfig(config: UaiNodeConfig): config is UaiAggregatorNodeConfig {
-    return config.$type === "aggregator";
-}
-
-export function isCommunicationBusNodeConfig(config: UaiNodeConfig): config is UaiCommunicationBusNodeConfig {
-    return config.$type === "communicationBus";
-}
-
-// ── Node config factory ─────────────────────────────────────────────────
-
-export function createDefaultNodeConfig(nodeType: string): UaiNodeConfig {
-    switch (nodeType) {
-        case "Start": return { $type: "start" };
-        case "End": return { $type: "end" };
-        case "Agent": return { $type: "agent" };
-        case "ToolCall": return { $type: "toolCall" };
-        case "Router": return { $type: "router" };
-        case "Aggregator": return { $type: "aggregator", aggregationStrategy: "Concat" };
-        case "CommunicationBus": return { $type: "communicationBus", maxIterations: 40 };
-        default: return { $type: "start" };
-    }
-}
-
-// ── Edge types ──────────────────────────────────────────────────────────
-
-export interface UaiOrchestrationRouteCondition {
-    label: string;
-    field: string;
-    operator: string;
-    value: string;
-}
-
-export interface UaiOrchestrationEdge {
+export interface UaiWorkflowItem {
     id: string;
-    sourceNodeId: string;
-    targetNodeId: string;
-    sourceHandle?: string | null;
-    targetHandle?: string | null;
-    isDefault: boolean;
-    priority?: number | null;
-    condition?: UaiOrchestrationRouteCondition | null;
-    requiresApproval?: boolean;
+    name: string;
+    description: string | null;
+    settingsSchema: unknown | null;
 }
 
 // ── Detail and item models ──────────────────────────────────────────────

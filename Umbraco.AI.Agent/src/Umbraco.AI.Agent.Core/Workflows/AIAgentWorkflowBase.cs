@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.Agents.AI.Workflows;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.EditableModels;
-using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Workflows;
 
@@ -20,7 +20,7 @@ namespace Umbraco.AI.Agent.Core.Workflows;
 /// [AIAgentWorkflow("sequential-pipeline", "Sequential Pipeline")]
 /// public class SequentialPipelineWorkflow : AIAgentWorkflowBase
 /// {
-///     public override Task&lt;MsAIAgent&gt; BuildAgentAsync(AIAgent agent, JsonElement? settings, CancellationToken ct)
+///     public override Task&lt;Workflow&gt; BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken ct)
 ///     {
 ///         // Build your workflow here
 ///     }
@@ -62,5 +62,5 @@ public abstract class AIAgentWorkflowBase : IAIAgentWorkflow
     public virtual AIEditableModelSchema? GetSettingsSchema() => null;
 
     /// <inheritdoc />
-    public abstract Task<MsAIAgent> BuildAgentAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken);
+    public abstract Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken);
 }

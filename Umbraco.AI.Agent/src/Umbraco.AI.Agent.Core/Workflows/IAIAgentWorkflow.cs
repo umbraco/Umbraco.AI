@@ -1,7 +1,7 @@
 using System.Text.Json;
+using Microsoft.Agents.AI.Workflows;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.EditableModels;
-using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Workflows;
 
@@ -11,12 +11,16 @@ namespace Umbraco.AI.Agent.Core.Workflows;
 /// <remarks>
 /// <para>
 /// Workflows define how orchestrated agents compose multiple agents into a pipeline.
-/// Each workflow is a code-based extension point that builds a MAF agent from
+/// Each workflow is a code-based extension point that builds a MAF <see cref="Workflow"/> from
 /// an agent definition and optional settings.
 /// </para>
 /// <para>
 /// Workflows are discovered via the <see cref="AIAgentWorkflowAttribute"/> and registered
 /// in the <see cref="AIAgentWorkflowCollection"/>.
+/// </para>
+/// <para>
+/// The returned <see cref="Workflow"/> can be converted to an <c>AIAgent</c> where needed
+/// using the <c>WorkflowHostingExtensions.AsAIAgent</c> extension method.
 /// </para>
 /// </remarks>
 public interface IAIAgentWorkflow
@@ -51,11 +55,11 @@ public interface IAIAgentWorkflow
     AIEditableModelSchema? GetSettingsSchema();
 
     /// <summary>
-    /// Builds a MAF agent from the workflow definition.
+    /// Builds a MAF workflow from the agent definition and optional settings.
     /// </summary>
     /// <param name="agent">The agent definition containing shared properties like ProfileId.</param>
     /// <param name="settings">Optional workflow-specific settings (JSON).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A MAF agent ready for use with RunAsync/RunStreamingAsync.</returns>
-    Task<MsAIAgent> BuildAgentAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken);
+    /// <returns>A MAF <see cref="Workflow"/> that can be executed or converted to an AIAgent via <c>AsAIAgent</c>.</returns>
+    Task<Workflow> BuildWorkflowAsync(AIAgent agent, JsonElement? settings, CancellationToken cancellationToken);
 }

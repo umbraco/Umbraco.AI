@@ -25,9 +25,6 @@
         "@ag-ui/client": "^0.0.42",
         "@umbraco-ai/core": "*",
         "@umbraco-cms/backoffice": "^17.1.0",
-        "@xyflow/react": "^12.6.0",
-        "react": "^19.1.0",
-        "react-dom": "^19.1.0",
         "rxjs": "^7.8.2"
     },
     "overrides": {
@@ -36,8 +33,6 @@
     "devDependencies": {
         "@hey-api/openapi-ts": "0.85.0",
         "@microsoft/api-extractor": "^7.55.1",
-        "@types/react": "^19.2.14",
-        "@types/react-dom": "^19.2.3",
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "node-fetch": "^3.3.2",

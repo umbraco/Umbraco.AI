@@ -269,22 +269,18 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
     render() {
         return html`
             <div class="editor-wrapper">
-                <div class="editor-toolbar">
-                    <uui-button
-                        look="primary"
-                        compact
-                        @click=${this.#onAddNodeClicked}
-                    >
-                        <uui-icon name="icon-add"></uui-icon>
-                        Add Node
-                    </uui-button>
-                    <span class="graph-stats">
-                        ${this.graph.nodes.length} nodes, ${this.graph.edges.length} edges
-                    </span>
-                </div>
                 <div id="flow-container" class="flow-container">
                     ${this._isLoading ? html`<uui-loader></uui-loader>` : ""}
                 </div>
+                <uui-button
+                    class="add-node-overlay"
+                    look="primary"
+                    compact
+                    @click=${this.#onAddNodeClicked}
+                >
+                    <uui-icon name="icon-add"></uui-icon>
+                    Add Node
+                </uui-button>
             </div>
         `;
     }
@@ -299,32 +295,23 @@ export class UaiOrchestrationGraphEditorElement extends UmbLitElement {
             }
 
             .editor-wrapper {
-                display: flex;
-                flex-direction: column;
+                position: relative;
                 width: 100%;
                 height: 100%;
                 overflow: hidden;
             }
 
-            .editor-toolbar {
-                display: flex;
-                align-items: center;
-                gap: var(--uui-size-space-3);
-                padding: var(--uui-size-space-3);
-                background: var(--uui-color-surface);
-                border-bottom: 1px solid var(--uui-color-border);
-            }
-
-            .graph-stats {
-                margin-left: auto;
-                font-size: var(--uui-type-small-size);
-                color: var(--uui-color-text-alt);
-            }
-
             .flow-container {
                 position: relative;
-                flex: 1;
                 width: 100%;
+                height: 100%;
+            }
+
+            .add-node-overlay {
+                position: absolute;
+                top: var(--uui-size-space-4);
+                left: var(--uui-size-space-4);
+                z-index: 5;
             }
 
             uui-loader {

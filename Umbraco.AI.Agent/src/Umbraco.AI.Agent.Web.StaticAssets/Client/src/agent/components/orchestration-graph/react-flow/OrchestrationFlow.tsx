@@ -1,5 +1,6 @@
 import React, {
     useCallback,
+    useEffect,
     useImperativeHandle,
     forwardRef,
     useMemo,
@@ -64,19 +65,22 @@ function domainNodeToFlow(
 
 /**
  * Build an edge label based on condition, default status, and whether it's a router edge.
+ * Returns a React element with uui-icon for proper Umbraco icons.
  */
 function buildEdgeLabel(
     condition: UaiOrchestrationRouteCondition | null | undefined,
     isDefault: boolean,
     requiresApproval: boolean,
     isRouterEdge: boolean,
-): string | undefined {
+): React.ReactNode | undefined {
+    const iconStyle: React.CSSProperties = { fontSize: 12, verticalAlign: "middle", marginRight: 4 };
     if (condition?.label) {
-        return `${isDefault ? "⊘ " : "⊕ "}${condition.label}`;
+        const icon = isDefault ? "icon-block" : "icon-split-alt";
+        return <><uui-icon name={icon} style={iconStyle}></uui-icon>{condition.label}</>;
     }
-    if (isDefault) return "⊘ Default";
-    if (requiresApproval) return "⊕ Approval";
-    if (isRouterEdge) return "⊕ Set condition…";
+    if (isDefault) return <><uui-icon name="icon-block" style={iconStyle}></uui-icon>Default</>;
+    if (requiresApproval) return <><uui-icon name="icon-lock" style={iconStyle}></uui-icon>Approval</>;
+    if (isRouterEdge) return <><uui-icon name="icon-settings" style={iconStyle}></uui-icon>Set condition…</>;
     return undefined;
 }
 
@@ -280,12 +284,19 @@ const OrchestrationFlowInner = forwardRef<
     nodesRef.current = nodes;
     edgesRef.current = edges;
 
+    // Flag-based emit: set the flag, then useEffect fires after React
+    // renders with settled state — avoids reading stale refs via microtask.
+    const needsEmitRef = useRef(false);
     const emitChange = useCallback(() => {
-        // Use a microtask so React state has settled
-        queueMicrotask(() => {
-            onGraphChanged(flowNodesToGraph(nodesRef.current, edgesRef.current));
-        });
-    }, [onGraphChanged]);
+        needsEmitRef.current = true;
+    }, []);
+
+    useEffect(() => {
+        if (needsEmitRef.current) {
+            needsEmitRef.current = false;
+            onGraphChanged(flowNodesToGraph(nodes, edges));
+        }
+    });
 
     // Wrap onNodesChange to emit graph updates
     const handleNodesChange: typeof onNodesChange = useCallback(

@@ -29,12 +29,6 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
 	#onLabelChange(event: Event) {
 		this._node = { ...this._node, label: (event.target as HTMLInputElement).value };
 	}
-
-	#onDelete() {
-		this.value = { node: this._node, deleted: true };
-		this.modalContext?.submit();
-	}
-
 	#onSubmit() {
 		this.value = { node: this._node };
 		this.modalContext?.submit();
@@ -65,12 +59,6 @@ export class UaiOrchestrationRouterNodeEditorModalElement extends UmbModalBaseEl
 					</uui-box>
 				</div>
 				<div slot="actions">
-					<uui-button
-						color="danger"
-						look="primary"
-						@click=${this.#onDelete}
-						label="Delete"
-					></uui-button>
 					<uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
 					<uui-button
 						look="primary"

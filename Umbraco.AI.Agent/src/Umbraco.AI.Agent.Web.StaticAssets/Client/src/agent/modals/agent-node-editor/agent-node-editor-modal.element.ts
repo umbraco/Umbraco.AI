@@ -56,11 +56,6 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
         this._node = { ...this._node, config };
     }
 
-    #onDelete() {
-        this.value = { node: this._node, deleted: true };
-        this.modalContext?.submit();
-    }
-
     #onSubmit() {
         this.value = { node: this._node };
         this.modalContext?.submit();
@@ -106,12 +101,6 @@ export class UaiOrchestrationAgentNodeEditorModalElement extends UmbModalBaseEle
                     </uui-box>
                 </div>
                 <div slot="actions">
-                    <uui-button
-                        color="danger"
-                        look="primary"
-                        @click=${this.#onDelete}
-                        label="Delete"
-                    ></uui-button>
                     <uui-button @click=${this._rejectModal} label="Cancel"></uui-button>
                     <uui-button
                         look="primary"

@@ -101,8 +101,8 @@ function getSubtitle(nodeType: string, config: UaiNodeConfig): string | null {
     switch (nodeType) {
         case "Agent": {
             const c = config as { agentId?: string | null; isManager?: boolean; agentName?: string | null };
-            if (c.isManager) return "Manager";
-            return c.agentName || (c.agentId ? "Agent selected" : "No agent selected");
+            const name = c.agentName || (c.agentId ? "Agent selected" : "No agent selected");
+            return c.isManager ? `${name} (Manager)` : name;
         }
         case "ToolCall": {
             const c = config as { toolId?: string | null };

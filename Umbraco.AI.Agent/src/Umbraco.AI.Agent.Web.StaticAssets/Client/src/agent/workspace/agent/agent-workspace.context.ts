@@ -9,6 +9,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
 import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
@@ -39,6 +40,7 @@ export class UaiAgentWorkspaceContext
     #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
     #validationContext = new UmbValidationContext(this);
+    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
     // Expose validation context publicly so editor elements can register validators
     get validation() {
@@ -53,6 +55,10 @@ export class UaiAgentWorkspaceContext
 
         this.#entityContext.setEntityType(UAI_AGENT_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
+
+        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+            this.#notificationContext = context;
+        });
 
         // Redirect to collection when entity is deleted
         new UaiEntityDeletedRedirectController(this, {
@@ -231,11 +237,15 @@ export class UaiAgentWorkspaceContext
         if (isOrchestratedConfig(model.config)) {
             const errors = this.#validateGraph(model.config.graph);
             if (errors.length > 0) {
-                // Add validation messages and abort
-                for (const error of errors) {
-                    this.#validationContext.messages.addMessage("server", "$", error);
-                }
-                return;
+                // Show validation errors as a notification
+                this.#notificationContext?.peek("danger", {
+                    data: {
+                        headline: "Workflow Validation Failed",
+                        message: errors.join("\n"),
+                        whitespace: "pre-line",
+                    },
+                });
+                throw new Error("Graph validation failed");
             }
         }
 

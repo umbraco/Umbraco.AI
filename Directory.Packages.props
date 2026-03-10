@@ -52,7 +52,8 @@
 
   <!-- Microsoft AI Agent packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-preview.260128.1" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-rc3" />
+    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="1.0.0-rc3" />
   </ItemGroup>
 
   <!-- Provider packages -->

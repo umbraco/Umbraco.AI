@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
@@ -46,9 +45,8 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// // Scopes are automatically disposed after each execution - no manual cleanup needed
 /// </code>
 /// </remarks>
-internal sealed class ScopedAIAgent : MsAIAgent
+internal sealed class ScopedAIAgent : DelegatingAIAgent
 {
-    private readonly MsAIAgent _innerAgent;
     private readonly UmbracoAIAgent _definition;
     private readonly IReadOnlyList<AIRequestContextItem> _contextItems;
     private readonly IReadOnlyList<AITool> _frontendTools;
@@ -74,8 +72,8 @@ internal sealed class ScopedAIAgent : MsAIAgent
         IReadOnlyDictionary<string, object?>? additionalProperties,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
+        : base(innerAgent)
     {
-        _innerAgent = innerAgent ?? throw new ArgumentNullException(nameof(innerAgent));
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _contextItems = contextItems?.ToList() ?? [];
         _frontendTools = frontendTools?.ToList() ?? [];
@@ -118,7 +116,7 @@ internal sealed class ScopedAIAgent : MsAIAgent
         var enhancedMessages = InjectSystemMessageParts(scope.Context, messages);
 
         // Execute inner agent (which calls its RunCoreAsync internally)
-        return await _innerAgent.RunAsync(enhancedMessages, session, options, cancellationToken);
+        return await InnerAgent.RunAsync(enhancedMessages, session, options, cancellationToken);
 
         // Scope automatically disposed by 'using' statement
     }
@@ -142,33 +140,12 @@ internal sealed class ScopedAIAgent : MsAIAgent
         var enhancedMessages = InjectSystemMessageParts(scope.Context, messages);
 
         // Execute inner agent (streaming)
-        await foreach (var update in _innerAgent.RunStreamingAsync(enhancedMessages, session, options, cancellationToken))
+        await foreach (var update in InnerAgent.RunStreamingAsync(enhancedMessages, session, options, cancellationToken))
         {
             yield return update;
         }
 
         // Scope automatically disposed by 'using' statement
-    }
-
-    /// <summary>
-    /// Creates a new session for this agent (delegates to inner agent).
-    /// </summary>
-    public override ValueTask<AgentSession> GetNewSessionAsync(CancellationToken cancellationToken = default)
-    {
-        // Delegate to inner agent
-        return _innerAgent.GetNewSessionAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// Deserializes a session from JSON (delegates to inner agent).
-    /// </summary>
-    public override ValueTask<AgentSession> DeserializeSessionAsync(
-        JsonElement serializedSession,
-        JsonSerializerOptions? jsonSerializerOptions = null,
-        CancellationToken cancellationToken = default)
-    {
-        // Delegate to inner agent
-        return _innerAgent.DeserializeSessionAsync(serializedSession, jsonSerializerOptions, cancellationToken);
     }
 
     /// <summary>

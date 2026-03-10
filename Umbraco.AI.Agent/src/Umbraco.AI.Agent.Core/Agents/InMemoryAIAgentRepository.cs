@@ -48,6 +48,7 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
     {
         var query = _agents.Values.AsEnumerable();
@@ -72,6 +73,11 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
         if (isActive.HasValue)
         {
             query = query.Where(p => p.IsActive == isActive.Value);
+        }
+
+        if (agentType.HasValue)
+        {
+            query = query.Where(p => p.AgentType == agentType.Value);
         }
 
         var total = query.Count();

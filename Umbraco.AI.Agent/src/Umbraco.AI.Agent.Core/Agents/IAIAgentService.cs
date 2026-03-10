@@ -50,6 +50,7 @@ public interface IAIAgentService
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        AIAgentType? agentType = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

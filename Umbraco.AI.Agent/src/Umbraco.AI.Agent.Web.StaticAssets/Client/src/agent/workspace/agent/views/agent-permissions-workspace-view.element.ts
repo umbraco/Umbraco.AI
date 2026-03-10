@@ -5,11 +5,13 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
 import type { UaiFrontendToolRepositoryApi, UaiFrontendToolData } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel } from "../../../types.js";
+import type { UaiAgentDetailModel, UaiStandardAgentConfig } from "../../../types.js";
+import { isStandardConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 /**
  * Workspace view for Agent tool permissions.
+ * Only visible for standard agents.
  * Configures which tools and tool scopes an agent can access.
  */
 @customElement("uai-agent-permissions-workspace-view")
@@ -37,7 +39,6 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
 
     async #loadFrontendTools() {
         try {
-            // Use Umbraco's built-in method to instantiate the repository API
             const repository = await createExtensionApiByAlias<UaiFrontendToolRepositoryApi>(
                 this,
                 "Uai.Repository.FrontendTool",
@@ -45,43 +46,44 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
 
             this._frontendTools = await repository.getTools();
         } catch {
-            // Repository not available (e.g., Copilot not installed)
             this._frontendTools = [];
         }
+    }
+
+    get #standardConfig(): UaiStandardAgentConfig | undefined {
+        return this._model && isStandardConfig(this._model.config) ? this._model.config : undefined;
+    }
+
+    #updateConfig(partial: Partial<UaiStandardAgentConfig>, label: string) {
+        const config = this.#standardConfig;
+        if (!config) return;
+        const updatedConfig: UaiStandardAgentConfig = { ...config, ...partial };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config: updatedConfig }, label),
+        );
     }
 
     #onAllowedToolScopeIdsChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { allowedToolScopeIds: picker.value ?? [] },
-                "allowedToolScopeIds",
-            ),
-        );
+        this.#updateConfig({ allowedToolScopeIds: picker.value ?? [] }, "config.allowedToolScopeIds");
     }
 
     #onAllowedToolIdsChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ allowedToolIds: picker.value ?? [] }, "allowedToolIds"),
-        );
+        this.#updateConfig({ allowedToolIds: picker.value ?? [] }, "config.allowedToolIds");
     }
 
     #onUserGroupPermissionsChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const component = event.target as any;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { userGroupPermissions: component.value },
-                "userGroupPermissions"
-            )
-        );
+        this.#updateConfig({ userGroupPermissions: component.value }, "config.userGroupPermissions");
     }
 
     render() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
+        const config = this.#standardConfig;
+        if (!this._model || !config) return html`<uui-loader></uui-loader>`;
 
         return html`
             <uui-box headline="Tool Permissions">
@@ -92,7 +94,7 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                     <uai-tool-scope-permissions
                         slot="editor"
                         multiple
-                        .value=${this._model.allowedToolScopeIds}
+                        .value=${config.allowedToolScopeIds}
                         .hideEmptyScopes=${true}
                         @change=${this.#onAllowedToolScopeIdsChange}
                     ></uai-tool-scope-permissions>
@@ -103,7 +105,7 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                 >
                     <uai-tool-picker
                         slot="editor"
-                        .value=${this._model.allowedToolIds}
+                        .value=${config.allowedToolIds}
                         .frontendTools=${this._frontendTools}
                         @change=${this.#onAllowedToolIdsChange}
                     ></uai-tool-picker>
@@ -114,10 +116,10 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                 >
                     <uai-user-group-tool-permissions
                         slot="editor"
-                        .value=${this._model.userGroupPermissions}
+                        .value=${config.userGroupPermissions}
                         .agentDefaults=${{
-                            allowedToolIds: this._model.allowedToolIds,
-                            allowedToolScopeIds: this._model.allowedToolScopeIds
+                            allowedToolIds: config.allowedToolIds,
+                            allowedToolScopeIds: config.allowedToolScopeIds
                         }}
                         @change=${this.#onUserGroupPermissionsChange}
                     ></uai-user-group-tool-permissions>

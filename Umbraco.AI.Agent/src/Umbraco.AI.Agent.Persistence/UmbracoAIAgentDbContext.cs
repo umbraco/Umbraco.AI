@@ -42,26 +42,19 @@ public class UmbracoAIAgentDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(1000);
 
+            entity.Property(e => e.AgentType)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            entity.Property(e => e.Config);
+
             entity.Property(e => e.ProfileId)
                 .IsRequired(false);
-
-            entity.Property(e => e.ContextIds)
-                .HasMaxLength(4000);
 
             entity.Property(e => e.SurfaceIds)
                 .HasMaxLength(2000);
 
             entity.Property(e => e.Scope);
-
-            entity.Property(e => e.AllowedToolIds)
-                .HasMaxLength(4000);
-
-            entity.Property(e => e.AllowedToolScopeIds)
-                .HasMaxLength(2000);
-
-            entity.Property(e => e.UserGroupPermissions);
-
-            entity.Property(e => e.Instructions);
 
             entity.Property(e => e.IsActive)
                 .IsRequired()
@@ -82,6 +75,8 @@ public class UmbracoAIAgentDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.ProfileId);
+
+            entity.HasIndex(e => e.AgentType);
         });
     }
 }

@@ -35,11 +35,6 @@ public class UpdateAgentRequestModel
     public Guid? ProfileId { get; init; }
 
     /// <summary>
-    /// Optional context IDs for AI context injection.
-    /// </summary>
-    public IEnumerable<Guid>? ContextIds { get; init; }
-
-    /// <summary>
     /// Optional surface IDs that categorize this agent for specific purposes.
     /// </summary>
     public IEnumerable<string>? SurfaceIds { get; init; }
@@ -51,28 +46,9 @@ public class UpdateAgentRequestModel
     public AIAgentScopeModel? Scope { get; init; }
 
     /// <summary>
-    /// Optional allowed tool IDs for this agent.
-    /// Tools must be explicitly allowed or belong to an allowed scope.
-    /// System tools are always allowed.
+    /// Type-specific configuration for this agent.
     /// </summary>
-    public IEnumerable<string>? AllowedToolIds { get; init; }
-
-    /// <summary>
-    /// Optional allowed tool scope IDs for this agent.
-    /// Tools belonging to these scopes are automatically allowed.
-    /// </summary>
-    public IEnumerable<string>? AllowedToolScopeIds { get; init; }
-
-    /// <summary>
-    /// User group-specific permission overrides.
-    /// Dictionary key is UserGroupId (Guid).
-    /// </summary>
-    public Dictionary<Guid, AIAgentUserGroupPermissionsModel>? UserGroupPermissions { get; init; }
-
-    /// <summary>
-    /// Instructions that define how the agent behaves.
-    /// </summary>
-    public string? Instructions { get; init; }
+    public AgentConfigModel? Config { get; init; }
 
     /// <summary>
     /// Whether the agent is active.

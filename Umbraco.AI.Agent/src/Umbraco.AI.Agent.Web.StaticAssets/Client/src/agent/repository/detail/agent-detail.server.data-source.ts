@@ -21,20 +21,33 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
      * Creates a scaffold for a new agent.
      */
     async createScaffold(preset?: Partial<UaiAgentDetailModel>) {
+        const agentType = preset?.agentType ?? "standard";
+
         const scaffold: UaiAgentDetailModel = {
             unique: UAI_EMPTY_GUID,
             entityType: UAI_AGENT_ENTITY_TYPE,
             alias: "",
             name: "",
             description: null,
+            agentType,
             profileId: null,
-            contextIds: [],
             surfaceIds: [],
             scope: null,
-            allowedToolIds: [],
-            allowedToolScopeIds: [],
-            userGroupPermissions: {},
-            instructions: null,
+            config:
+                agentType === "orchestrated"
+                    ? {
+                            $type: "orchestrated",
+                            workflowId: null,
+                            settings: null,
+                      }
+                    : {
+                            $type: "standard",
+                            contextIds: [],
+                            instructions: null,
+                            allowedToolIds: [],
+                            allowedToolScopeIds: [],
+                            userGroupPermissions: {},
+                      },
             isActive: true,
             dateCreated: null,
             dateModified: null,

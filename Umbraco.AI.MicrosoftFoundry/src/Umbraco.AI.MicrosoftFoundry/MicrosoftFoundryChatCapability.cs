@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 
@@ -11,7 +13,7 @@ namespace Umbraco.AI.MicrosoftFoundry;
 /// Supports all chat models available through Microsoft AI Foundry, including
 /// OpenAI (GPT-4, GPT-4o), Mistral, Llama, Cohere, Phi, and more.
 /// </remarks>
-public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) : AIChatCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
+public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider, ILogger<MicrosoftFoundryChatCapability> logger) : AIChatCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
 
@@ -33,11 +35,21 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) :
     }
 
     /// <inheritdoc />
+    [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(MicrosoftFoundryProviderSettings settings, string? modelId)
     {
         var model = modelId ?? DefaultChatModel;
-        return MicrosoftFoundryProvider.CreateChatCompletionsClient(settings, model)
-            .AsIChatClient(model);
+
+        if (settings.UseResponsesApi)
+        {
+            return MicrosoftFoundryProvider.CreateOpenAIClient(settings, logger)
+                .GetResponsesClient(model)
+                .AsIChatClient();
+        }
+
+        return MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)
+            .GetChatClient(model)
+            .AsIChatClient();
     }
 
     private static bool IsChatModel(MicrosoftFoundryModelInfo model)

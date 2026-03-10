@@ -2,7 +2,6 @@ using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Startup.Configuration;
 using Umbraco.AI.Agent.Deploy.NotificationHandlers;
 using Umbraco.AI.Deploy.Composing;
-using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -22,7 +21,7 @@ public class UmbracoAIAgentDeployComposer : IComposer
         builder.Components()
             .Append<UmbracoAIAgentDeployComponent>();
 
-        // Register notification handlers
+        // Register agent notification handlers
         builder.AddNotificationAsyncHandler<AIAgentSavedNotification, AIAgentSavedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AIAgentDeletedNotification, AIAgentDeletedDeployRefresherNotificationAsyncHandler>();
     }

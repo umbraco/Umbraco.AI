@@ -16,7 +16,7 @@ dotnet test Umbraco.AI.Agent.Deploy.slnx
 
 ## Architecture Overview
 
-Umbraco.AI.Agent.Deploy provides Umbraco Deploy integration for AI agents. It enables deployment of agents with their tool permissions, user group configurations, and scoping rules.
+Umbraco.AI.Agent.Deploy provides Umbraco Deploy integration for AI agents. It enables deployment of both standard and orchestrated agents with their type-specific configurations, scoping rules, and profile dependencies.
 
 ### Project Structure
 
@@ -30,104 +30,83 @@ Single-project structure (consistent with Deploy pattern):
 ### Key Components
 
 **Artifact** - `AIAgentArtifact`:
-- Basic properties (Alias, Name, Description, Instructions)
+- Basic properties (Alias, Name, Description)
+- `AgentType` string ("Standard" or "Orchestrated")
+- `Config` serialized as JSON string (polymorphic based on agent type)
 - Optional ProfileUdi for profile dependency
-- ContextIds array (future feature)
 - SurfaceIds array (backoffice, frontend, custom)
 - Scope as JsonElement (serialized AIAgentScope)
-- AllowedToolIds array (specific tool permissions)
-- AllowedToolScopeIds array (scope-based permissions)
-- UserGroupPermissions as JsonElement (per-group overrides)
 - IsActive flag
 
 **Service Connector** - `UmbracoAIAgentServiceConnector`:
 - Extends `UmbracoAIProfileDependentEntityServiceConnectorBase`
 - Handles agent-to-profile dependency resolution
-- Adds user group dependencies with `ArtifactDependencyMode.Exist`
-- Serializes/deserializes AIAgentScope and UserGroupPermissions
+- Serializes `IAIAgentConfig` polymorphically based on agent type
+- Deserializes config back using `AIAgentType` to determine concrete type
+- Pass 3 handles both agent creation and profile resolution
 
 **Notification Handlers**:
 - `AIAgentSavedDeployRefresherNotificationAsyncHandler` - Writes artifacts on save
 - `AIAgentDeletedDeployRefresherNotificationAsyncHandler` - Deletes artifacts on delete
 
-### Base Class Benefits
+### Config Serialization (Polymorphic)
 
-Uses `UmbracoAIProfileDependentEntityServiceConnectorBase<AIAgentArtifact, AIAgent>`:
-- Automatic Pass 2/4 pattern for profile resolution
-- `AddProfileDependency(Guid?, ArtifactDependencyCollection)` helper
-- `ResolveProfileIdAsync(GuidUdi?, CancellationToken)` helper
-- Reduces code duplication with Prompt connector
-
-### User Group Dependency Handling
-
-Agent UserGroupPermissions require validation:
+The agent configuration is serialized/deserialized based on agent type:
 
 ```csharp
-public override Task<AIAgentArtifact?> GetArtifactAsync(...)
+// Export: Serialize config to JSON
+string? configJson = null;
+if (entity.Config is not null)
 {
-    var dependencies = new ArtifactDependencyCollection();
-
-    // Add profile dependency
-    var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
-
-    // Add user group dependencies (ensure user groups exist)
-    if (entity.UserGroupPermissions?.Count > 0)
-    {
-        foreach (var userGroupId in entity.UserGroupPermissions.Keys)
-        {
-            var userGroupUdi = new GuidUdi("user-group", userGroupId);
-            dependencies.Add(new ArtifactDependency(
-                userGroupUdi,
-                false,
-                ArtifactDependencyMode.Exist));
-        }
-    }
-
-    // ... create artifact
+    configJson = JsonSerializer.Serialize(entity.Config, entity.Config.GetType(), JsonOptions);
 }
+
+// Import: Deserialize based on agent type
+IAIAgentConfig? config = agentType switch
+{
+    AIAgentType.Standard => JsonSerializer.Deserialize<AIStandardAgentConfig>(json, JsonOptions),
+    AIAgentType.Orchestrated => JsonSerializer.Deserialize<AIOrchestratedAgentConfig>(json, JsonOptions),
+    _ => null,
+};
 ```
 
-**Why `ArtifactDependencyMode.Exist`?**
-- User groups must exist in target environment
-- Deployment fails if any user group is missing
-- Provides clear error message
-- Prevents broken agent configurations
+**Standard config** (`AIStandardAgentConfig`):
+- ContextIds, Instructions, AllowedToolIds, AllowedToolScopeIds, UserGroupPermissions
+
+**Orchestrated config** (`AIOrchestratedAgentConfig`):
+- WorkflowId, Settings (JsonElement)
 
 ### Deployment Workflow
 
-**Pass 2: Create/Update Agent**
+**Pass 3: Create/Update Agent with Profile Resolution**
 ```csharp
-private async Task Pass2Async(...)
+private async Task Pass3Async(...)
 {
-    var agent = new AIAgent
-    {
-        Alias = artifact.Alias,
-        Name = artifact.Name,
-        Description = artifact.Description,
-        ProfileId = null,  // Resolved in Pass 4
-        ContextIds = artifact.ContextIds.ToList(),
-        SurfaceIds = artifact.SurfaceIds.ToList(),
-        Scope = DeserializeScope(artifact.Scope),
-        AllowedToolIds = artifact.AllowedToolIds.ToList(),
-        AllowedToolScopeIds = artifact.AllowedToolScopeIds.ToList(),
-        UserGroupPermissions = DeserializeUserGroupPermissions(artifact.UserGroupPermissions),
-        Instructions = artifact.Instructions,
-        IsActive = artifact.IsActive
-    };
-
-    await _agentService.SaveAgentAsync(agent, ct);
-}
-```
-
-**Pass 4: Resolve Profile Dependency**
-```csharp
-private async Task Pass4Async(...)
-{
-    // Use base class helper
+    // Resolve profile
     var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, ct);
 
+    // Parse agent type
+    var agentType = Enum.TryParse<AIAgentType>(artifact.AgentType, ignoreCase: true, out var parsed)
+        ? parsed
+        : AIAgentType.Standard;
+
+    // Deserialize type-specific config
+    IAIAgentConfig? config = DeserializeConfig(agentType, artifact.Config);
+
+    // Create or update agent
+    var agent = state.Entity ?? new AIAgent
+    {
+        Id = artifact.Udi.Guid,
+        Alias = artifact.Alias!,
+        Name = artifact.Name,
+        AgentType = agentType,
+    };
+
+    agent.Config = config;
     agent.ProfileId = profileId;
-    await _agentService.SaveAgentAsync(agent, ct);
+    // ... set other properties
+
+    state.Entity = await agentService.SaveAgentAsync(agent, ct);
 }
 ```
 
@@ -164,29 +143,6 @@ public class AIAgentScopeRule
 
 **Note:** AIAgentScopeRule uses `Sections` and `EntityTypes`, different from AIPromptScopeRule which uses `ContentTypeAliases`.
 
-### UserGroupPermissions Serialization
-
-```csharp
-// To artifact
-artifact.UserGroupPermissions = entity.UserGroupPermissions != null
-    ? JsonSerializer.SerializeToElement(entity.UserGroupPermissions)
-    : null;
-
-// From artifact
-var permissions = artifact.UserGroupPermissions.HasValue
-    ? JsonSerializer.Deserialize<Dictionary<Guid, AIAgentUserGroupPermissions>>(
-        artifact.UserGroupPermissions.Value)
-    : new Dictionary<Guid, AIAgentUserGroupPermissions>();
-```
-
-**AIAgentUserGroupPermissions Structure:**
-```csharp
-public class AIAgentUserGroupPermissions
-{
-    public List<string> AllowedToolIds { get; set; }
-}
-```
-
 ## Target Framework
 
 - .NET 10.0 (`net10.0`)
@@ -204,41 +160,46 @@ public class AIAgentUserGroupPermissions
 ## Testing Focus
 
 Unit tests cover:
-- Artifact creation with all properties populated
+- Artifact creation with all properties populated (both standard and orchestrated)
 - Artifact creation with minimal/optional properties (null cases)
+- AgentType serialization/deserialization
+- Polymorphic config serialization (standard vs orchestrated)
 - Profile dependency tracking (ProfileUdi added to dependencies)
-- User group dependency tracking (all user group GUIDs in dependencies)
 - Scope serialization/deserialization (Sections/EntityTypes)
-- UserGroupPermissions serialization/deserialization
-- AllowedToolIds and AllowedToolScopeIds arrays
 - SurfaceIds array
 
 ## Key Patterns
 
-### User Group Dependencies
+### Polymorphic Config Handling
 
 ```csharp
-// Validate user groups exist in target environment
-if (entity.UserGroupPermissions?.Count > 0)
+// Determine concrete type for deserialization
+private static IAIAgentConfig? DeserializeConfig(AIAgentType agentType, string? json)
 {
-    foreach (var userGroupId in entity.UserGroupPermissions.Keys)
+    if (string.IsNullOrWhiteSpace(json))
     {
-        var userGroupUdi = new GuidUdi("user-group", userGroupId);
-        dependencies.Add(new ArtifactDependency(
-            userGroupUdi,
-            false,
-            ArtifactDependencyMode.Exist));
+        return agentType switch
+        {
+            AIAgentType.Standard => new AIStandardAgentConfig(),
+            AIAgentType.Orchestrated => new AIOrchestratedAgentConfig(),
+            _ => null,
+        };
     }
+
+    return agentType switch
+    {
+        AIAgentType.Standard => JsonSerializer.Deserialize<AIStandardAgentConfig>(json, JsonOptions),
+        AIAgentType.Orchestrated => JsonSerializer.Deserialize<AIOrchestratedAgentConfig>(json, JsonOptions),
+        _ => null,
+    };
 }
 ```
 
-### Tool Permission Arrays
+### Important Deployment Considerations
 
-```csharp
-// Simple arrays, no special handling needed
-artifact.AllowedToolIds = entity.AllowedToolIds.ToList();
-artifact.AllowedToolScopeIds = entity.AllowedToolScopeIds.ToList();
-```
+- **AgentType is immutable**: Once an agent is created with a type, it cannot be changed
+- **Orchestrated agents require workflow code**: The deployment transfers the workflow ID and settings, but the workflow implementation must be registered in the target environment
+- **Standard agent config includes tool permissions**: AllowedToolIds, AllowedToolScopeIds, and UserGroupPermissions are all part of the serialized config
 
 ## Related Documentation
 

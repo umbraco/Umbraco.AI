@@ -34,11 +34,9 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
 
     /// <inheritdoc />
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(MicrosoftFoundryProviderSettings settings, string? modelId)
-    {
-        var model = modelId ?? DefaultEmbeddingModel;
-        return MicrosoftFoundryProvider.CreateEmbeddingsClient(settings, model)
-            .AsIEmbeddingGenerator(model);
-    }
+        => MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)
+            .GetEmbeddingClient(modelId ?? DefaultEmbeddingModel)
+            .AsIEmbeddingGenerator();
 
     private static bool IsEmbeddingModel(MicrosoftFoundryModelInfo model)
     {

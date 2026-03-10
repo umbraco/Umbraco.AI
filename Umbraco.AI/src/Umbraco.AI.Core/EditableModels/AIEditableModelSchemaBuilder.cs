@@ -85,8 +85,11 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
     {
         var validationAttributes = property.GetCustomAttributes<ValidationAttribute>().ToList();
 
-        // If the property is non-nullable and doesn't already have a Required attribute, add one
-        if (!property.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
+        // If the property is non-nullable and doesn't already have a Required attribute, add one.
+        // Skip value types (bool, int, etc.) since they always have a default value.
+        if (!property.IsNullable()
+            && !property.PropertyType.IsValueType
+            && !validationAttributes.OfType<RequiredAttribute>().Any())
         {
             validationAttributes.Add(new RequiredAttribute());
         }

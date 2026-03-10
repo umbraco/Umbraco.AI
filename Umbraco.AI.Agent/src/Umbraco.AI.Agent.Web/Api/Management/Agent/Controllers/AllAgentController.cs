@@ -35,6 +35,7 @@ public class AllAgentController : AgentControllerBase
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="scopeId">Optional scope ID filter. Only returns agents with this scope assigned.</param>
     /// <param name="isActive">Optional active status filter. If true, returns only active agents; if false, returns only inactive agents; if null, returns all agents.</param>
+    /// <param name="agentType">Optional agent type filter ("standard" or "orchestrated").</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged list of Agents.</returns>
     [HttpGet]
@@ -47,9 +48,18 @@ public class AllAgentController : AgentControllerBase
         Guid? profileId = null,
         string? scopeId = null,
         bool? isActive = null,
+        string? agentType = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await _AIAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, scopeId, isActive, cancellationToken);
+        AIAgentType? parsedAgentType = agentType?.ToLowerInvariant() switch
+        {
+            "standard" => AIAgentType.Standard,
+            "orchestrated" => AIAgentType.Orchestrated,
+            not null => throw new ArgumentException($"Unknown agent type: {agentType}"),
+            _ => null
+        };
+
+        var result = await _AIAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, scopeId, isActive, parsedAgentType, cancellationToken);
 
         var viewModel = new PagedViewModel<AgentItemResponseModel>
         {

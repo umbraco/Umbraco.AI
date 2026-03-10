@@ -65,6 +65,7 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        Core.Agents.AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
@@ -97,6 +98,12 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
             if (isActive.HasValue)
             {
                 query = query.Where(e => e.IsActive == isActive.Value);
+            }
+
+            if (agentType.HasValue)
+            {
+                var agentTypeInt = (int)agentType.Value;
+                query = query.Where(e => e.AgentType == agentTypeInt);
             }
 
             var total = await query.CountAsync(cancellationToken);

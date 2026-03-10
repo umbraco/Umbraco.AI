@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Umbraco.AI.Agent.Startup.Configuration;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Deploy.Infrastructure.Disk;
@@ -32,7 +31,7 @@ public class UmbracoAIAgentDeployComponent(IDiskEntityService diskEntityService)
 
     private void RegisterDiskEntityTypes()
     {
-        // Register disk entity type for deployment
+        // Register disk entity types for deployment
         diskEntityService.RegisterDiskEntityType(UmbracoAIAgentConstants.UdiEntityType.Agent);
     }
 }

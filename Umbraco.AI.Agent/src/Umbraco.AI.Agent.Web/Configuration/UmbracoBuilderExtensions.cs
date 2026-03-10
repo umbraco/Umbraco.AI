@@ -21,7 +21,7 @@ public static class UmbracoBuilderExtensions
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
-            .Add<AgentMapDefinition>(); 
+            .Add<AgentMapDefinition>();
 
         // Configure Management API
         builder.WithUmbracoAIManagementApi(Constants.ManagementApi.ApiName, options =>
@@ -35,7 +35,7 @@ public static class UmbracoBuilderExtensions
                     Description = $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user."
                 });
         });
-        
+
         return builder;
     }
 }

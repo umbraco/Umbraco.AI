@@ -33,10 +33,10 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             entity.Alias,
             entity.Name,
             entity.Description,
+            entity.AgentType,
             entity.ProfileId,
-            ContextIds = entity.ContextIds.Count > 0 ? string.Join(',', entity.ContextIds) : null,
             SurfaceIds = entity.SurfaceIds.Count > 0 ? string.Join(',', entity.SurfaceIds) : null,
-            entity.Instructions,
+            Config = AIAgentConfigSerializer.Serialize(entity.Config),
             entity.IsActive,
             entity.Version,
             entity.DateCreated,
@@ -61,20 +61,6 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            IReadOnlyList<Guid> contextIds = Array.Empty<Guid>();
-            if (root.TryGetProperty("contextIds", out var contextIdsElement) &&
-                contextIdsElement.ValueKind == JsonValueKind.String)
-            {
-                var contextIdsString = contextIdsElement.GetString();
-                if (!string.IsNullOrEmpty(contextIdsString))
-                {
-                    contextIds = contextIdsString
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        .Select(Guid.Parse)
-                        .ToList();
-                }
-            }
-
             IReadOnlyList<string> surfaceIds = Array.Empty<string>();
             if (root.TryGetProperty("surfaceIds", out var surfaceIdsElement) &&
                 surfaceIdsElement.ValueKind == JsonValueKind.String)
@@ -88,6 +74,14 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 }
             }
 
+            var agentType = root.TryGetProperty("agentType", out var atEl) && atEl.ValueKind == JsonValueKind.Number
+                ? (AIAgentType)atEl.GetInt32()
+                : AIAgentType.Standard;
+
+            string? configJson = root.TryGetProperty("config", out var configEl) && configEl.ValueKind == JsonValueKind.String
+                ? configEl.GetString()
+                : null;
+
             return new AIAgent
             {
                 Id = root.GetProperty("id").GetGuid(),
@@ -95,11 +89,10 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 Name = root.GetProperty("name").GetString()!,
                 Description = root.TryGetProperty("description", out var descEl) && descEl.ValueKind == JsonValueKind.String
                     ? descEl.GetString() : null,
+                AgentType = agentType,
                 ProfileId = root.GetProperty("profileId").GetGuid(),
-                ContextIds = contextIds,
                 SurfaceIds = surfaceIds,
-                Instructions = root.TryGetProperty("instructions", out var instrEl) && instrEl.ValueKind == JsonValueKind.String
-                    ? instrEl.GetString() : null,
+                Config = AIAgentConfigSerializer.Deserialize(agentType, configJson),
                 IsActive = root.GetProperty("isActive").GetBoolean(),
                 Version = root.GetProperty("version").GetInt32(),
                 DateCreated = root.GetProperty("dateCreated").GetDateTime(),
@@ -142,14 +135,6 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             changes.Add(new AIValueChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
         }
 
-        // Compare context IDs
-        var fromContextIds = string.Join(",", from.ContextIds);
-        var toContextIds = string.Join(",", to.ContextIds);
-        if (fromContextIds != toContextIds)
-        {
-            changes.Add(new AIValueChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
-        }
-
         // Compare scope IDs
         var fromSurfaceIds = string.Join(",", from.SurfaceIds);
         var toSurfaceIds = string.Join(",", to.SurfaceIds);
@@ -158,9 +143,12 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             changes.Add(new AIValueChange("SurfaceIds", fromSurfaceIds.Length > 0 ? fromSurfaceIds : "(none)", toSurfaceIds.Length > 0 ? toSurfaceIds : "(none)"));
         }
 
-        if (from.Instructions != to.Instructions)
+        // Compare serialized config blobs
+        var fromConfig = AIAgentConfigSerializer.Serialize(from.Config);
+        var toConfig = AIAgentConfigSerializer.Serialize(to.Config);
+        if (fromConfig != toConfig)
         {
-            changes.Add(new AIValueChange("Instructions", "(modified)", "(modified)"));
+            changes.Add(new AIValueChange("Config", "(modified)", "(modified)"));
         }
 
         if (from.IsActive != to.IsActive)

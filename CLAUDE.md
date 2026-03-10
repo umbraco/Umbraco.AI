@@ -153,23 +153,23 @@ The Azure DevOps project used for backlog management is shared across multiple U
 
 ```bash
 # Build unified solution (all products + demo)
-dotnet build Umbraco.AI.local.sln
+dotnet build Umbraco.AI.local.slnx
 
 # Build individual product
-dotnet build Umbraco.AI/Umbraco.AI.sln
-dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.sln
-dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
-dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
-dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
-dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
-dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
-dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
-dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.sln
-dotnet build Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.sln
-dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.sln
+dotnet build Umbraco.AI/Umbraco.AI.slnx
+dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.slnx
+dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.slnx
+dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.slnx
+dotnet build Umbraco.AI.Google/Umbraco.AI.Google.slnx
+dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.slnx
+dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.slnx
+dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx
+dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.slnx
+dotnet build Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.slnx
+dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.slnx
 
 # Run tests for a product
-dotnet test Umbraco.AI/Umbraco.AI.sln
+dotnet test Umbraco.AI/Umbraco.AI.slnx
 ```
 
 ### Frontend (npm)
@@ -249,7 +249,7 @@ ProductName/
 │   ├── ProductName.Tests.Unit/
 │   ├── ProductName.Tests.Integration/
 │   └── ProductName.Tests.Common/
-├── ProductName.sln                 # Individual solution
+├── ProductName.slnx                 # Individual solution
 └── CLAUDE.md                       # Product-specific guidance
 ```
 
@@ -261,7 +261,7 @@ ProviderName/
 │   └── ProviderName/               # Single project with provider, capabilities, settings
 ├── tests/
 │   └── ProviderName.Tests.Unit/
-├── ProviderName.sln
+├── ProviderName.slnx
 └── CLAUDE.md
 ```
 
@@ -287,7 +287,7 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `scripts/generate-changelog.js`         | Node.js changelog generator (main implementation)                                      |
 | `scripts/generate-release-manifest.ps1` | Interactive release manifest generator (Windows)                                       |
 | `scripts/generate-release-manifest.sh`  | Interactive release manifest generator (Linux/Mac)                                     |
-| `Umbraco.AI.local.sln`                  | Unified solution (generated)                                                           |
+| `Umbraco.AI.local.slnx`                  | Unified solution (generated)                                                           |
 | `package.json`                          | Root npm scripts for frontend builds and changelog generation                          |
 | `commitlint.config.js`                  | Commit message validation with dynamic scope loading                                   |
 | `release-manifest.json`                 | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`)             |
@@ -919,3 +919,6 @@ public interface IAIProfileRepository
 All extension methods MUST be placed in the `Umbraco.AI.Extensions` namespace (or the product-specific equivalent like `Umbraco.AI.Prompt.Extensions`) for ease of discovery via IntelliSense.
 
 # Lessons Learned
+
+- don't imort lit components by path, they should instead be exported through index.ts or export.ts files to become globally accessible
+- avoid the use of god objects

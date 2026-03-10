@@ -100,7 +100,7 @@ Umbraco.AI.Agent.Copilot/
 │           │   └── lang/             # Localization
 │           └── public/
 │               └── umbraco-package.json
-├── Umbraco.AI.Agent.Copilot.sln
+├── Umbraco.AI.Agent.Copilot.slnx
 └── Directory.Build.props
 ```
 

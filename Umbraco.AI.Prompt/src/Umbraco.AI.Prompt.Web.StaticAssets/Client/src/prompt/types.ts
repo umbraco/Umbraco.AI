@@ -4,6 +4,8 @@ import type { UaiPromptScope } from "./property-actions/types.js";
 /**
  * Detail model for workspace editing.
  */
+export type UaiPromptDisplayMode = 'PropertyAction' | 'TipTapTool';
+
 export interface UaiPromptDetailModel extends UmbEntityModel {
     unique: string;
     entityType: string;
@@ -14,6 +16,7 @@ export interface UaiPromptDetailModel extends UmbEntityModel {
     profileId: string | null;
     contextIds: string[];
     tags: string[];
+    displayMode: UaiPromptDisplayMode;
     scope: UaiPromptScope | null;
     isActive: boolean;
     includeEntityContext: boolean;

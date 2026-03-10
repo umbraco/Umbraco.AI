@@ -29,10 +29,12 @@ dotnet add package Umbraco.AI.Agent
 
 ## Features
 
-- **Agent Definitions** - Configure reusable AI agents with instructions
+- **Standard Agents** - Configure reusable AI agents with instructions and tool permissions
+- **Orchestrated Agents** - Compose multiple agents into workflow pipelines
+- **Custom Workflows** - Extensible workflow system for multi-agent orchestration
 - **AG-UI Protocol** - Stream responses using the AG-UI event protocol
 - **Profile Association** - Link agents to specific AI profiles
-- **Context Injection** - Include AI Contexts for brand voice
+- **Context Injection** - Include AI Contexts for brand voice (standard agents)
 - **Scopes** - Categorize agents for specific purposes (e.g., copilot)
 - **Version History** - Track changes with full rollback support
 - **Backoffice Management** - Full UI for managing agents
@@ -126,17 +128,18 @@ The Agent Runtime uses the AG-UI (Agent UI) protocol for streaming responses. Th
 
 ## Documentation
 
-| Section                                            | Description                           |
-| -------------------------------------------------- | ------------------------------------- |
-| [Concepts](concepts.md)                            | Agent architecture and AG-UI protocol |
-| [Getting Started](getting-started.md)              | Step-by-step setup guide              |
-| [Instructions](instructions.md)                    | Agent instruction configuration       |
-| [Scopes](scopes.md)                                | Categorizing agents with scopes       |
+| Section                                            | Description                              |
+| -------------------------------------------------- | ---------------------------------------- |
+| [Concepts](concepts.md)                            | Agent types, architecture, AG-UI protocol |
+| [Getting Started](getting-started.md)              | Step-by-step setup guide                 |
+| [Instructions](instructions.md)                    | Standard agent instruction configuration |
+| [Workflows](workflows.md)                          | Orchestrated agent workflows             |
+| [Scopes](scopes.md)                                | Categorizing agents with scopes          |
 | [Permissions](permissions.md)                      | Tool permissions and user group overrides |
-| [Streaming](streaming.md)                          | SSE streaming and event handling      |
-| [Frontend Client](frontend-client.md)              | UaiAgentClient for custom agent UIs   |
-| [API Reference](api/README.md)                     | Management API endpoints              |
-| [Service Reference](reference/ai-agent-service.md) | IAIAgentService                       |
+| [Streaming](streaming.md)                          | SSE streaming and event handling         |
+| [Frontend Client](frontend-client.md)              | UaiAgentClient for custom agent UIs      |
+| [API Reference](api/README.md)                     | Management API endpoints                 |
+| [Service Reference](reference/ai-agent-service.md) | IAIAgentService                          |
 
 For Copilot-specific features:
 

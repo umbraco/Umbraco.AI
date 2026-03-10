@@ -15,6 +15,7 @@ import type {
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
+import { prepareValueForEditor } from "./value-preparation.js";
 
 // Supported text-based property editors for initial implementation
 // const SUPPORTED_EDITOR_ALIASES = ["Umbraco.TextBox", "Umbraco.TextArea"];
@@ -282,15 +283,8 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         // Build variant ID from culture/segment (undefined = invariant)
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
-        // Handle specific type conversions if needed
-        let valueToSet: any = change.value;
-
-        try {
-            valueToSet = JSON.parse(valueToSet);
-            if (existingValue && existingValue.editorAlias === "Umbraco.MediaPicker3") {
-                valueToSet[0].key = this.#uuidv4();
-            }
-        } catch (e) {}
+        // Prepare value for the target editor type
+        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);
@@ -302,12 +296,6 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             };
         }
     }
-
-    #uuidv4 = () => {
-        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
-            (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16),
-        );
-    };
 
     /**
      * Cleanup method required by UmbApi base type.

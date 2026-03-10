@@ -1,0 +1,20 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.Tests.Common/Umbraco.AI.Tests.Common.csproj" />
+    <Project Path="tests/Umbraco.AI.Tests.Integration/Umbraco.AI.Tests.Integration.csproj" />
+    <Project Path="tests/Umbraco.AI.Tests.Unit/Umbraco.AI.Tests.Unit.csproj" />
+  </Folder>
+  <Project Path="src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
+  <Project Path="src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj" />
+  <Project Path="src/Umbraco.AI.Persistence.SqlServer/Umbraco.AI.Persistence.SqlServer.csproj" />
+  <Project Path="src/Umbraco.AI.Persistence/Umbraco.AI.Persistence.csproj" />
+  <Project Path="src/Umbraco.AI.Startup/Umbraco.AI.Startup.csproj" />
+  <Project Path="src/Umbraco.AI.Web.StaticAssets/Umbraco.AI.Web.StaticAssets.csproj" />
+  <Project Path="src/Umbraco.AI.Web/Umbraco.AI.Web.csproj" />
+  <Project Path="src/Umbraco.AI/Umbraco.AI.csproj" />
+</Solution>

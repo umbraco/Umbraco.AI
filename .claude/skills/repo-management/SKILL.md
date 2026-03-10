@@ -46,7 +46,7 @@ Generate changelogs from commit history:
 
 Common build tasks:
 
-- `dotnet build Umbraco.AI.local.sln` - Build unified solution
+- `dotnet build Umbraco.AI.local.slnx` - Build unified solution
 - `npm run build` - Build all frontends
 - `npm run watch` - Watch all frontends
 - `dotnet test` - Run tests

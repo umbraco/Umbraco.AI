@@ -54,6 +54,7 @@
     - [Concepts](add-ons/agent/concepts.md)
     - [Getting Started](add-ons/agent/getting-started.md)
     - [Instructions](add-ons/agent/instructions.md)
+    - [Workflows](add-ons/agent/workflows.md)
     - [Scopes](add-ons/agent/scopes.md)
     - [Permissions](add-ons/agent/permissions.md)
     - [Streaming](add-ons/agent/streaming.md)

@@ -29,15 +29,16 @@ public class CreateAgentRequestModel
     public string? Description { get; init; }
 
     /// <summary>
+    /// The type of agent to create ("standard" or "orchestrated").
+    /// </summary>
+    [Required]
+    public required string AgentType { get; init; }
+
+    /// <summary>
     /// The linked profile ID.
     /// When null, the default chat profile from Settings will be used.
     /// </summary>
     public Guid? ProfileId { get; init; }
-
-    /// <summary>
-    /// Optional context IDs for AI context injection.
-    /// </summary>
-    public IEnumerable<Guid>? ContextIds { get; init; }
 
     /// <summary>
     /// Optional surface IDs that categorize this agent for specific purposes.
@@ -51,26 +52,7 @@ public class CreateAgentRequestModel
     public AIAgentScopeModel? Scope { get; init; }
 
     /// <summary>
-    /// Optional allowed tool IDs for this agent.
-    /// Tools must be explicitly allowed or belong to an allowed scope.
-    /// System tools are always allowed.
+    /// Type-specific configuration for this agent.
     /// </summary>
-    public IEnumerable<string>? AllowedToolIds { get; init; }
-
-    /// <summary>
-    /// Optional allowed tool scope IDs for this agent.
-    /// Tools belonging to these scopes are automatically allowed.
-    /// </summary>
-    public IEnumerable<string>? AllowedToolScopeIds { get; init; }
-
-    /// <summary>
-    /// User group-specific permission overrides.
-    /// Dictionary key is UserGroupId (Guid).
-    /// </summary>
-    public Dictionary<Guid, AIAgentUserGroupPermissionsModel>? UserGroupPermissions { get; init; }
-
-    /// <summary>
-    /// Instructions that define how the agent behaves.
-    /// </summary>
-    public string? Instructions { get; init; }
+    public AgentConfigModel? Config { get; init; }
 }

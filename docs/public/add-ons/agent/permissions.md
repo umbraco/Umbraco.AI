@@ -5,7 +5,11 @@ description: >-
 
 # Agent Tool Permissions
 
-Agent tool permissions control which frontend tools an agent can execute. This system provides fine-grained security to ensure agents only access appropriate functionality.
+Agent tool permissions control which frontend tools a **standard agent** can execute. This system provides fine-grained security to ensure agents only access appropriate functionality.
+
+{% hint style="info" %}
+Tool permissions apply to **standard agents** only. **Orchestrated agents** manage tools within their [workflow](workflows.md) implementations.
+{% endhint %}
 
 ## Permission System Overview
 

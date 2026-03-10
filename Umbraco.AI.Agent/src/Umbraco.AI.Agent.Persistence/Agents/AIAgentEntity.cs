@@ -26,15 +26,20 @@ internal class AIAgentEntity
     public string? Description { get; set; }
 
     /// <summary>
+    /// The agent type (0 = Standard, 1 = Orchestrated).
+    /// </summary>
+    public int AgentType { get; set; }
+
+    /// <summary>
+    /// JSON-serialized type-specific configuration blob.
+    /// </summary>
+    public string? Config { get; set; }
+
+    /// <summary>
     /// Optional linked profile ID (soft FK).
     /// When null, the default chat profile from Settings will be used.
     /// </summary>
     public Guid? ProfileId { get; set; }
-
-    /// <summary>
-    /// JSON-serialized array of context IDs.
-    /// </summary>
-    public string? ContextIds { get; set; }
 
     /// <summary>
     /// JSON-serialized array of surface IDs.
@@ -47,27 +52,6 @@ internal class AIAgentEntity
     /// Null means available everywhere (backwards compatible).
     /// </summary>
     public string? Scope { get; set; }
-
-    /// <summary>
-    /// JSON-serialized array of allowed tool IDs.
-    /// </summary>
-    public string? AllowedToolIds { get; set; }
-
-    /// <summary>
-    /// JSON-serialized array of allowed tool scope IDs.
-    /// </summary>
-    public string? AllowedToolScopeIds { get; set; }
-
-    /// <summary>
-    /// JSON-serialized dictionary of user group permission overrides.
-    /// Key: UserGroupId (Guid), Value: AIAgentUserGroupPermissions
-    /// </summary>
-    public string? UserGroupPermissions { get; set; }
-
-    /// <summary>
-    /// Instructions that define how the agent behaves.
-    /// </summary>
-    public string? Instructions { get; set; }
 
     /// <summary>
     /// Whether the agent is active.

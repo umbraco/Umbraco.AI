@@ -37,10 +37,22 @@ GET /umbraco/ai/management/api/v1/agent
             "alias": "content-assistant",
             "name": "Content Assistant",
             "description": "Helps users write and improve content",
+            "agentType": "standard",
             "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-            "scopeIds": ["copilot"],
+            "surfaceIds": ["copilot"],
             "isActive": true,
             "version": 2
+        },
+        {
+            "id": "7b4c2e89-1234-5678-abcd-def012345678",
+            "alias": "write-and-edit",
+            "name": "Write and Edit Pipeline",
+            "description": "Drafts content then edits it",
+            "agentType": "orchestrated",
+            "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "surfaceIds": ["copilot"],
+            "isActive": true,
+            "version": 1
         }
     ],
     "total": 5

@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -131,6 +131,19 @@ export class AgentsService {
                 }
             ],
             url: '/umbraco/ai/management/api/v1/agents/surfaces',
+            ...options
+        });
+    }
+    
+    public static getAgentWorkflows<ThrowOnError extends boolean = false>(options?: Options<GetAgentWorkflowsData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAgentWorkflowsResponses, GetAgentWorkflowsErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/agents/workflows',
             ...options
         });
     }

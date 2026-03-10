@@ -4,6 +4,7 @@ import { promptMenuManifests } from "./menu/manifests.js";
 import { promptRepositoryManifests } from "./repository/manifests.js";
 import { promptWorkspaceManifests } from "./workspace/manifests.js";
 import { promptPropertyActionManifests } from "./property-actions/manifests.js";
+import { promptTiptapManifests } from "./tiptap/manifests.js";
 
 export const promptManifests = [
     ...promptCollectionManifests,
@@ -12,4 +13,5 @@ export const promptManifests = [
     ...promptRepositoryManifests,
     ...promptWorkspaceManifests,
     ...promptPropertyActionManifests,
+    ...promptTiptapManifests,
 ];

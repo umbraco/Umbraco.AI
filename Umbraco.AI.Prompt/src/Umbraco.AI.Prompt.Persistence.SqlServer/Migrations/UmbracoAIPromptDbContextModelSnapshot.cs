@@ -50,6 +50,11 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int>("DisplayMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<bool>("IncludeEntityContext")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")

@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Umbraco.AI.Core.Models;
-using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Tests.Common.Fakes;
 
@@ -10,7 +9,6 @@ namespace Umbraco.AI.Tests.Unit.Settings;
 public class AIEditableModelResolverTests
 {
     private readonly IConfiguration _configuration;
-    private List<IAIProvider> _providers = new();
 
     public AIEditableModelResolverTests()
     {
@@ -29,8 +27,26 @@ public class AIEditableModelResolverTests
 
     private AIEditableModelResolver CreateResolver()
     {
-        var collection = new AIProviderCollection(() => _providers);
-        return new AIEditableModelResolver(collection, _configuration);
+        return new AIEditableModelResolver(_configuration);
+    }
+
+    private static AIEditableModelSchema CreateSchema(bool requireApiKey = true)
+    {
+        var fields = new List<AIEditableModelField>();
+
+        if (requireApiKey)
+        {
+            fields.Add(new AIEditableModelField
+            {
+                PropertyName = "ApiKey",
+                Key = "api-key",
+                Label = "API Key",
+                Description = "Enter your API key",
+                ValidationRules = [new System.ComponentModel.DataAnnotations.RequiredAttribute { ErrorMessage = "API Key is required" }]
+            });
+        }
+
+        return new AIEditableModelSchema(typeof(FakeProviderSettings), fields);
     }
 
     #region ResolveModel<TModel> - Null handling
@@ -39,11 +55,10 @@ public class AIEditableModelResolverTests
     public void ResolveModel_WithNullData_ReturnsNull()
     {
         // Arrange
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", null);
+        var result = resolver.ResolveModel<FakeProviderSettings>(null);
 
         // Assert
         result.ShouldBeNull();
@@ -58,11 +73,10 @@ public class AIEditableModelResolverTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -75,11 +89,10 @@ public class AIEditableModelResolverTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$OpenAI:ApiKey" };
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert - original should still have the config reference
         settings.ApiKey.ShouldBe("$OpenAI:ApiKey");
@@ -93,11 +106,10 @@ public class AIEditableModelResolverTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$OpenAI:ApiKey" };
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -114,11 +126,10 @@ public class AIEditableModelResolverTests
         // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "direct-key", "baseUrl": "https://custom.api.com", "maxRetries": 10}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", jsonElement);
+        var result = resolver.ResolveModel<FakeProviderSettings>(jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -133,11 +144,10 @@ public class AIEditableModelResolverTests
         // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "$OpenAI:ApiKey", "baseUrl": "$OpenAI:BaseUrl"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", jsonElement);
+        var result = resolver.ResolveModel<FakeProviderSettings>(jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -153,11 +163,10 @@ public class AIEditableModelResolverTests
         // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "test-key", "maxRetries": "$TestSettings:MaxRetries"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
-        SetupProviderWithValidation("fake-provider", requireApiKey: false);
         var resolver = CreateResolver();
 
         // Act
-        var act = () => resolver.ResolveModel<FakeProviderSettings>("fake-provider", jsonElement);
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(jsonElement);
 
         // Assert - Fails because JSON string cannot be deserialized to int
         // JsonException is thrown directly from JsonSerializer.Deserialize
@@ -176,11 +185,10 @@ public class AIEditableModelResolverTests
             MaxRetries = 10,
             Enabled = true
         };
-        SetupProviderWithValidation("fake-provider", requireApiKey: false);
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert - Non-string values pass through unchanged
         result.ShouldNotBeNull();
@@ -197,11 +205,10 @@ public class AIEditableModelResolverTests
     {
         // Arrange
         var settings = new { ApiKey = "anon-key", BaseUrl = "https://anon.api.com" };
-        SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -218,11 +225,10 @@ public class AIEditableModelResolverTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$NonExistent:Key" };
-        SetupProviderWithValidation("fake-provider", requireApiKey: false);
         var resolver = CreateResolver();
 
         // Act
-        var act = () => resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -240,11 +246,11 @@ public class AIEditableModelResolverTests
     {
         // Arrange - ApiKey is required
         var settings = new FakeProviderSettings { ApiKey = null };
-        SetupProviderWithValidation("fake-provider", requireApiKey: true);
+        var schema = CreateSchema(requireApiKey: true);
         var resolver = CreateResolver();
 
         // Act
-        var act = () => resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(settings, schema);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -258,11 +264,11 @@ public class AIEditableModelResolverTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "valid-key" };
-        SetupProviderWithValidation("fake-provider", requireApiKey: true);
+        var schema = CreateSchema(requireApiKey: true);
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings, schema);
 
         // Assert
         result.ShouldNotBeNull();
@@ -271,18 +277,17 @@ public class AIEditableModelResolverTests
 
     #endregion
 
-    #region ResolveModel<TModel> - Provider not found (validation skip)
+    #region ResolveModel<TModel> - No schema (validation skip)
 
     [Fact]
-    public void ResolveModel_WithUnknownProvider_SkipsValidation()
+    public void ResolveModel_WithNoSchema_SkipsValidation()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test" };
-        // No providers registered
         var resolver = CreateResolver();
 
-        // Act - Resolves successfully because unknown providers skip validation
-        var result = resolver.ResolveModel<FakeProviderSettings>("unknown-provider", settings);
+        // Act - Resolves successfully because no schema means no validation
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -327,7 +332,7 @@ public class AIEditableModelResolverTests
         // Arrange
         var provider = new FakeAIProvider("test-provider", "Test Provider")
             .WithSettingsType<FakeProviderSettings>();
-        SetupProviderWithValidation("test-provider");
+        provider.SettingsSchema = CreateSchema(requireApiKey: false);
         var resolver = CreateResolver();
 
         // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
@@ -341,33 +346,6 @@ public class AIEditableModelResolverTests
         result.ShouldNotBeNull();
         result.ShouldBeOfType<FakeProviderSettings>();
         ((FakeProviderSettings)result!).ApiKey.ShouldBe("provider-key");
-    }
-
-    #endregion
-
-    #region Helper methods
-
-    private void SetupProviderWithValidation(string providerId, bool requireApiKey = true)
-    {
-        var provider = new FakeAIProvider(providerId, "Test Provider");
-        provider.SettingsType = typeof(FakeProviderSettings);
-
-        var fields = new List<AIEditableModelField>();
-
-        if (requireApiKey)
-        {
-            fields.Add(new AIEditableModelField
-            {
-                PropertyName = "ApiKey",
-                Key = "api-key",
-                Label = "API Key",
-                Description = "Enter your API key",
-                ValidationRules = [new System.ComponentModel.DataAnnotations.RequiredAttribute { ErrorMessage = "API Key is required" }]
-            });
-        }
-
-        provider.SettingsSchema = new AIEditableModelSchema(typeof(FakeProviderSettings), fields);
-        _providers.Add(provider);
     }
 
     #endregion

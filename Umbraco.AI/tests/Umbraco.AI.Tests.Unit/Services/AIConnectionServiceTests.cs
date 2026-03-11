@@ -1,7 +1,7 @@
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
-using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
@@ -208,7 +208,7 @@ public class AIConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(connection.Settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
@@ -241,7 +241,7 @@ public class AIConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(connection.Settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
@@ -289,7 +289,7 @@ public class AIConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(connection.Settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
@@ -301,7 +301,7 @@ public class AIConnectionServiceTests
 
         // Assert - Settings resolver should be called to validate
         _settingsResolverMock.Verify(
-            x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings),
+            x => x.ResolveModel<FakeProviderSettings>(connection.Settings, It.IsAny<AIEditableModelSchema?>()),
             Times.Once);
     }
 
@@ -388,7 +388,7 @@ public class AIConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act
@@ -423,7 +423,7 @@ public class AIConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Throws(new InvalidOperationException("Validation failed: API Key is required"));
 
         // Act
@@ -461,7 +461,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act
@@ -537,7 +537,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act
@@ -580,7 +580,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act
@@ -617,7 +617,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act
@@ -689,7 +689,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)null); // Settings resolution failed
 
         // Act
@@ -724,7 +724,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act
@@ -763,7 +763,7 @@ public class AIConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(settings, It.IsAny<AIEditableModelSchema?>()))
             .Returns((FakeProviderSettings?)settings);
 
         // Act

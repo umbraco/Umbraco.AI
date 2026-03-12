@@ -67,7 +67,7 @@ public abstract class AIContextResourceTypeBase<TData> : IAIContextResourceType
             return string.Empty;
 
         // Use the model resolver to convert from stored format to typed model
-        var data = _infrastructure.ModelResolver.ResolveModel<TData>(Id, dataObject);
+        var data = _infrastructure.ModelResolver.ResolveModel<TData>(dataObject);
         if (data is null)
             return string.Empty;
 

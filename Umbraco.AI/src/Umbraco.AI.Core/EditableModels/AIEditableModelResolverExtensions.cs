@@ -1,4 +1,4 @@
-﻿using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.Core.EditableModels;
 
@@ -6,7 +6,7 @@ public static class AIEditableModelResolverExtensions
 {
     /// <summary>
     /// Resolves settings for a provider without knowing the settings type at compile time.
-    /// Uses the provider to determine the expected settings type.
+    /// Uses the provider to determine the expected settings type and schema for validation.
     /// </summary>
     /// <param name="resolver">The resolver instance</param>
     /// <param name="provider">The provider to resolve settings for.</param>
@@ -23,12 +23,14 @@ public static class AIEditableModelResolverExtensions
         var settingsType = provider.SettingsType;
         if (settingsType is not null)
         {
+            var schema = provider.GetSettingsSchema();
+
             // Use reflection to call ResolveModel<TModel>
             var method = resolver.GetType()
                 .GetMethod(nameof(resolver.ResolveModel))!
                 .MakeGenericMethod(settingsType);
 
-            return method.Invoke(resolver, [provider.Id, settings]);
+            return method.Invoke(resolver, [settings, schema]);
         }
 
         // Provider doesn't have settings, return null

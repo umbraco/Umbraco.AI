@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
-using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.Core.EditableModels;
@@ -15,17 +14,15 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 {
     private const string ConfigPrefix = "$";
 
-    private readonly AIProviderCollection _providers;
     private readonly IConfiguration _configuration;
 
-    public AIEditableModelResolver(AIProviderCollection providers, IConfiguration configuration)
+    public AIEditableModelResolver(IConfiguration configuration)
     {
-        _providers = providers;
         _configuration = configuration;
     }
 
     /// <inheritdoc />
-    public TModel? ResolveModel<TModel>(string modelId, object? data)
+    public TModel? ResolveModel<TModel>(object? data, AIEditableModelSchema? schema = null)
         where TModel : class, new()
     {
         // If data is null, return null (or new instance if required by validation)
@@ -43,7 +40,7 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(modelId, deserialized);
+                ValidateModel(deserialized, schema);
             }
             return deserialized;
         }
@@ -55,7 +52,7 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(modelId, deserialized);
+                ValidateModel(deserialized, schema);
             }
             return deserialized;
         }
@@ -68,14 +65,14 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(modelId, deserialized);
+                ValidateModel(deserialized, schema);
             }
             return deserialized;
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException(
-                $"Failed to resolve model '{modelId}' to type {typeof(TModel).Name}",
+                $"Failed to resolve model to type {typeof(TModel).Name}",
                 ex);
         }
     }
@@ -166,16 +163,8 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
         return value;
     }
 
-    private void ValidateModel(string modelId, object model)
+    private void ValidateModel(object model, AIEditableModelSchema? schema)
     {
-        var provider = _providers.GetById(modelId);
-        if (provider is null)
-        {
-            // Not a provider model, skip provider-specific validation
-            return;
-        }
-
-        var schema = provider.GetSettingsSchema();
         if (schema is null)
         {
             return;
@@ -214,7 +203,7 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 
         if (validationErrors.Any())
         {
-            var errorMessage = $"Validation failed for model '{modelId}':\n" +
+            var errorMessage = $"Validation failed for model '{schema.Type.Name}':\n" +
                                string.Join("\n", validationErrors);
             throw new InvalidOperationException(errorMessage);
         }

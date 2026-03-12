@@ -22,9 +22,18 @@ public static class UmbracoBuilderExtensions
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIPromptPersistence(this IUmbracoBuilder builder)
     {
+        // Register migration connection config singleton so the migration handler can create a
+        // clean DbContext that bypasses MiniProfiler connection wrapping. In Development mode,
+        // Umbraco wraps SQLite connections with ProfiledDbConnection, whose ConnectionString getter
+        // returns null and causes NullReferenceException in SqliteDatabaseCreator.Exists().
+        var migrationConfig = new MigrationConnectionConfig();
+        builder.Services.AddSingleton(migrationConfig);
+
         // Register DbContext with provider-specific migrations assembly
         builder.Services.AddUmbracoDbContext<UmbracoAIPromptDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
+            migrationConfig.ConnectionString = connectionString;
+            migrationConfig.ProviderName = providerName;
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
@@ -37,7 +46,7 @@ public static class UmbracoBuilderExtensions
         return builder;
     }
 
-    private static void ConfigureDatabaseProvider(
+    internal static void ConfigureDatabaseProvider(
         DbContextOptionsBuilder options,
         string? connectionString,
         string? providerName)
@@ -65,4 +74,14 @@ public static class UmbracoBuilderExtensions
                     $"Database provider '{providerName}' is not supported by Umbraco.AI.Prompt.");
         }
     }
+}
+
+/// <summary>
+/// Holds connection details captured from Umbraco's database configuration for use when
+/// creating a clean migration DbContext that bypasses MiniProfiler connection wrapping.
+/// </summary>
+internal sealed class MigrationConnectionConfig
+{
+    public string? ConnectionString { get; set; }
+    public string? ProviderName { get; set; }
 }

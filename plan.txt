@@ -1,0 +1,545 @@
+Context
+The Umbraco.AI.Agent package currently manages individual AI agents. Users need a way to visually compose multiple agents into workflows using Microsoft Agent Framework (MAF) orchestration patterns. This feature adds a visual workflow builder within the existing Agent package, allowing users to create, edit, and execute multi-agent orchestrations directly from the Umbraco backoffice.
+Key decisions made:
+
+Orchestrations live within Umbraco.AI.Agent (not a separate product)
+All five MAF patterns supported from day one: Sequential, Concurrent, Handoff, Group Chat, Magentic
+Rete.js with @retejs/lit-plugin for the visual editor (official Lit support, framework-agnostic)
+
+
+1. Design Answers
+Q1: Should orchestrations be exposable as Agents with surface configuration?
+Yes. MAF explicitly supports "workflows as agents" — an orchestration can be used anywhere a single agent can. The implementation:
+
+AIOrchestration gets its own SurfaceIds property (same pattern as AIAgent)
+When assigned to a surface (e.g., "copilot"), the orchestration appears alongside regular agents
+At runtime, the system creates a MAF workflow and wraps it as an agent via MAF's built-in composability
+Users can chat with an orchestration the same way they chat with a single agent
+
+Q2: Do we only orchestrate agents from the agents section?
+Primarily yes, but with one addition:
+
+Agent references: Nodes reference existing AIAgent entities by ID — the primary mechanism
+Function nodes: These are registered M.E.AI AITool instances that execute without an LLM — data transformation, API calls, aggregation logic. In MAF terms these map to "Function" executors. The UI presents the same tool picker already used in the agent editor
+No inline agents: Creating full agents should happen in the agents section, not embedded in workflows. This keeps the agent as the single source of truth
+
+Q3: Is there a need for prompts within the workflow?
+Not at the orchestration level. MAF orchestrations coordinate agents — they don't have their own prompts. Each agent node uses the referenced agent's instructions (which may already use Umbraco.AI.Prompt templates). The orchestration layer deals with routing and coordination, not prompt engineering.
+Specific node types and prompts:
+
+Agent nodes: Use the referenced agent's instructions as-is (no override in v1)
+Router nodes: Use structured rule-based conditions (see section on conditions below), not prompts
+Aggregator nodes: Use a strategy selection ("concat", "vote", "summarize") — the "summarize" strategy internally uses an LLM via a profile, but this is configuration, not a user-authored prompt
+Manager nodes (Magentic): Have lightweight coordination instructions that tell the manager how to delegate — this is the one place where free-text instructions exist at the orchestration level
+
+Q4: Is an orchestration a single MAF orchestration, or can patterns be mixed?
+The graph is freeform. There is no Pattern field on the entity — the pattern is purely a UI concept for the creation experience. When creating a new orchestration, a modal offers "Blank" or one of the five pattern templates as starting points. Once the graph is populated, the pattern is implicit in the graph structure. A user could start from a Sequential template and add a concurrent branch. Each orchestration maps to exactly one MAF Workflow at execution time.
+Q5: Why Rete.js over AntV X6?
+AntV X6 is React-focused — its custom node rendering (@antv/x6-react-shape), component library (@antv/x6-react-components), and documentation all center on React. The Umbraco.AI frontend uses Lit web components. Rete.js has an official @retejs/lit-plugin with first-class Lit support — custom nodes are rendered using html tagged templates and customElements.define(). No framework bridging or React dependency needed.
+CriteriaAntV X6Rete.jsLit supportLimited (React-focused)Official @retejs/lit-pluginCustom nodesReact componentsNative Lit templatesBundle overheadReact dependency requiredFramework-agnostic coreTypeScriptYesYesWeekly downloads68k24k
+Q6: What are condition expressions?
+Router node conditions use a structured rule model, not a string expression language. Each condition is a JSON object:
+typescriptinterface RouteCondition {
+    label: string;            // Display label on the edge (e.g., "Billing query")
+    field: string;            // Output field to evaluate (e.g., "category", "sentiment")
+    operator: RouteOperator;  // "equals" | "contains" | "startsWith" | "matches"
+    value: string;            // Expected value
+}
+The UI presents this as a simple form: Field dropdown + Operator dropdown + Value input. For complex routing that can't be expressed as rules, users should use a dedicated "classifier" agent node instead.
+At execution time, conditions are evaluated against the previous node's output metadata. A default edge (no condition) acts as the fallback.
+
+2. Domain Model
+Core Entity: AIOrchestration
+csharp// Umbraco.AI.Agent.Core/Orchestrations/AIOrchestration.cs
+public sealed class AIOrchestration : IAIVersionableEntity
+{
+    public Guid Id { get; internal set; }
+    public required string Alias { get; set; }
+    public required string Name { get; set; }
+    public string? Description { get; set; }
+    public Guid? ProfileId { get; set; }                // Default profile for orchestration-level LLM calls (aggregation, manager)
+    public IReadOnlyList<string> SurfaceIds { get; set; } = [];
+    public AIAgentScope? Scope { get; set; }
+    public bool IsActive { get; set; } = true;
+
+    // The workflow graph definition
+    public AIOrchestrationGraph Graph { get; set; } = new();
+
+    // Versioning & audit
+    public int Version { get; internal set; } = 1;
+    public DateTime DateCreated { get; set; }
+    public DateTime DateModified { get; set; }
+    public Guid? CreatedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
+}
+Pattern Templates (UI-only, not persisted)
+The pattern enum exists only in the frontend as a TypeScript type for the creation modal. It is not stored on the entity:
+typescript// Frontend only — used in pattern-template-modal
+type OrchestrationPatternTemplate = "blank" | "sequential" | "concurrent" | "handoff" | "groupChat" | "magentic";
+Graph Model
+csharp// Stored as JSON column in the database
+public sealed class AIOrchestrationGraph
+{
+    public IList<AIOrchestrationNode> Nodes { get; set; } = [];
+    public IList<AIOrchestrationEdge> Edges { get; set; } = [];
+}
+
+public sealed class AIOrchestrationNode
+{
+    public required string Id { get; set; }             // Unique within graph (e.g., "node-1")
+    public required AIOrchestrationNodeType Type { get; set; }
+    public required string Label { get; set; }
+
+    // Position in visual editor (persisted for layout)
+    public double X { get; set; }
+    public double Y { get; set; }
+
+    // Type-specific configuration (polymorphic via node type)
+    public AIOrchestrationNodeConfig Config { get; set; } = new();
+}
+
+public enum AIOrchestrationNodeType
+{
+    Start,          // Entry point (exactly one per graph)
+    End,            // Exit point (one or more per graph)
+    Agent,          // References an existing AIAgent by ID
+    Function,       // M.E.AI AITool (registered tool, no LLM)
+    Router,         // Conditional routing (rule-based switch)
+    Aggregator,     // Merges concurrent results
+    Manager         // Magentic pattern: manager agent that delegates dynamically
+}
+
+public sealed class AIOrchestrationNodeConfig
+{
+    // Agent node
+    public Guid? AgentId { get; set; }
+
+    // Function node — references a registered AITool by name
+    public string? ToolName { get; set; }
+
+    // Router node — structured conditions (not expression strings)
+    public IList<AIOrchestrationRouteCondition>? Conditions { get; set; }
+
+    // Aggregator node
+    public AIOrchestrationAggregationStrategy? AggregationStrategy { get; set; }
+
+    // Manager node (Magentic pattern)
+    public string? ManagerInstructions { get; set; }
+    public Guid? ManagerProfileId { get; set; }
+}
+
+public enum AIOrchestrationAggregationStrategy
+{
+    Concat,         // Concatenate all outputs
+    Vote,           // Majority vote
+    Summarize,      // LLM-based summarization (uses orchestration's ProfileId)
+    Custom          // Custom aggregation via registered AITool
+}
+
+// Structured condition for Router nodes
+public sealed class AIOrchestrationRouteCondition
+{
+    public required string Label { get; set; }          // Display label on edge
+    public required string Field { get; set; }          // Output field to evaluate
+    public required AIOrchestrationRouteOperator Operator { get; set; }
+    public required string Value { get; set; }          // Expected value
+    public required string TargetNodeId { get; set; }   // Edge target
+}
+
+public enum AIOrchestrationRouteOperator
+{
+    Equals,
+    Contains,
+    StartsWith,
+    Matches         // Regex
+}
+
+public sealed class AIOrchestrationEdge
+{
+    public required string Id { get; set; }
+    public required string SourceNodeId { get; set; }
+    public required string TargetNodeId { get; set; }
+    public bool IsDefault { get; set; }                 // Fallback edge for routers
+    public int? Priority { get; set; }                  // Evaluation order for conditional edges
+}
+```
+
+---
+
+## 3. Backend Architecture
+
+### Service Layer
+```
+Umbraco.AI.Agent.Core/Orchestrations/
+├── AIOrchestration.cs
+├── AIOrchestrationGraph.cs
+├── AIOrchestrationNode.cs
+├── AIOrchestrationEdge.cs
+├── AIOrchestrationAggregationStrategy.cs
+├── AIOrchestrationRouteCondition.cs
+├── AIOrchestrationRouteOperator.cs
+├── IAIOrchestrationService.cs
+├── AIOrchestrationService.cs
+├── IAIOrchestrationRepository.cs
+├── IAIOrchestrationExecutor.cs
+└── AIOrchestrationExecutor.cs
+IAIOrchestrationService follows existing agent service patterns:
+
+GetOrchestrationAsync(id), GetOrchestrationByAliasAsync(alias)
+GetOrchestrationsPagedAsync(skip, take, filter?, surfaceId?, isActive?)
+SaveOrchestrationAsync(orchestration) — validates graph integrity (exactly one Start, reachability, valid agent references)
+DeleteOrchestrationAsync(id)
+StreamOrchestrationAsync(id, request) — executes via MAF streaming
+
+IAIOrchestrationExecutor — translates stored graph → MAF workflow:
+csharppublic interface IAIOrchestrationExecutor
+{
+    /// Builds a MAF workflow from the stored orchestration graph.
+    /// Uses IAIAgentFactory for Agent nodes, resolves AITools for Function nodes,
+    /// and wires edges via WorkflowBuilder.
+    Task<MsAIAgent> BuildWorkflowAgentAsync(
+        AIOrchestration orchestration,
+        CancellationToken cancellationToken = default);
+}
+Persistence
+
+Table: umbracoAIOrchestration (migration prefix: UmbracoAIAgent_)
+Graph storage: JSON column for AIOrchestrationGraph (same pattern as agent scope/tool JSON columns)
+EF Core entity: AIOrchestrationEntity added to existing UmbracoAIAgentDbContext
+
+Management API
+Base path: /umbraco/ai/management/api/v1/orchestrations/
+MethodEndpointDescriptionGET/orchestrationsList (paged, filterable by surface/active)GET/orchestrations/{idOrAlias}Get by ID or aliasPOST/orchestrationsCreatePUT/orchestrations/{idOrAlias}UpdateDELETE/orchestrations/{idOrAlias}DeleteGET/orchestrations/{idOrAlias}/runExecute with AG-UI streamingPOST/orchestrations/{idOrAlias}/validateValidate graph integrity
+Surface Integration
+Orchestrations participate in the existing surface system. When an orchestration has SurfaceIds = ["copilot"], the copilot UI includes it alongside regular agents. Extend the existing auto-selection logic in RunAgentController to include orchestrations in the candidate pool.
+
+4. Frontend Architecture
+Visual Editor: Rete.js with @retejs/lit-plugin
+UI Interaction Model (Umbraco Modals, Not Panels)
+All node configuration uses Umbraco's modal system (UMB_MODAL_MANAGER_CONTEXT + UmbModalToken), consistent with the rest of the backoffice:
+
+Adding nodes: A + button on the canvas opens a node type picker modal (reuses UAI_ITEM_PICKER_MODAL pattern). For first-time creation, a pattern template modal offers pre-built starting layouts
+Configuring nodes: Clicking any node on the canvas opens a node configuration modal (sidebar type) specific to that node type:
+
+Agent node modal: Agent picker (reuses existing agent picker pattern) + read-only preview of agent details
+Function node modal: Tool picker (reuses existing UAI_ITEM_PICKER_MODAL with tool fetcher)
+Router node modal: Condition builder form (field + operator + value rows with add/remove)
+Aggregator node modal: Strategy dropdown + optional profile picker (for "summarize" strategy)
+Manager node modal: Instructions textarea + profile picker
+
+
+No persistent side panels: The canvas is full-width. All editing happens through modals
+
+Modal Definitions
+typescript// orchestration/modals/node-type-picker/node-type-picker-modal.token.ts
+export const UAI_ORCHESTRATION_NODE_TYPE_PICKER_MODAL = new UmbModalToken<
+    UaiOrchestrationNodeTypePickerModalData,
+    UaiOrchestrationNodeTypePickerModalValue
+>("Uai.Modal.OrchestrationNodeTypePicker", {
+    modal: { type: "sidebar", size: "small" },
+});
+
+// orchestration/modals/agent-node-editor/agent-node-editor-modal.token.ts
+export const UAI_ORCHESTRATION_AGENT_NODE_EDITOR_MODAL = new UmbModalToken<
+    UaiOrchestrationAgentNodeEditorModalData,
+    UaiOrchestrationAgentNodeEditorModalValue
+>("Uai.Modal.OrchestrationAgentNodeEditor", {
+    modal: { type: "sidebar", size: "medium" },
+});
+
+// orchestration/modals/router-node-editor/router-node-editor-modal.token.ts
+export const UAI_ORCHESTRATION_ROUTER_NODE_EDITOR_MODAL = new UmbModalToken<
+    UaiOrchestrationRouterNodeEditorModalData,
+    UaiOrchestrationRouterNodeEditorModalValue
+>("Uai.Modal.OrchestrationRouterNodeEditor", {
+    modal: { type: "sidebar", size: "medium" },
+});
+
+// orchestration/modals/pattern-template/pattern-template-modal.token.ts
+export const UAI_ORCHESTRATION_PATTERN_TEMPLATE_MODAL = new UmbModalToken<
+    UaiOrchestrationPatternTemplateModalData,
+    UaiOrchestrationPatternTemplateModalValue
+>("Uai.Modal.OrchestrationPatternTemplate", {
+    modal: { type: "dialog", size: "large" },
+});
+```
+
+### Frontend File Structure
+
+Location: `Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client/`
+```
+src/orchestration/
+├── workspace/
+│   ├── orchestration-root.element.ts
+│   ├── orchestration-workspace-editor.element.ts    # Tabs: Details, Workflow, Availability, Info
+│   └── orchestration-collection.element.ts          # Table: Name, Status, Modified
+├── editor/
+│   ├── orchestration-graph-editor.element.ts        # Rete.js canvas (full-width, + button)
+│   ├── nodes/
+│   │   ├── agent-node.element.ts                    # Lit component for agent nodes on canvas
+│   │   ├── function-node.element.ts
+│   │   ├── router-node.element.ts
+│   │   ├── aggregator-node.element.ts
+│   │   ├── manager-node.element.ts
+│   │   ├── start-node.element.ts
+│   │   └── end-node.element.ts
+│   └── rete/
+│       ├── rete-editor-setup.ts                     # Rete.js + Lit plugin initialization
+│       ├── rete-node-definitions.ts                 # Node type registry for Rete
+│       └── rete-connection-rules.ts                 # Edge validation (e.g., Start can't receive edges)
+├── modals/
+│   ├── node-type-picker/
+│   │   ├── node-type-picker-modal.token.ts
+│   │   └── node-type-picker-modal.element.ts
+│   ├── agent-node-editor/
+│   │   ├── agent-node-editor-modal.token.ts
+│   │   └── agent-node-editor-modal.element.ts
+│   ├── function-node-editor/
+│   │   ├── function-node-editor-modal.token.ts
+│   │   └── function-node-editor-modal.element.ts
+│   ├── router-node-editor/
+│   │   ├── router-node-editor-modal.token.ts
+│   │   └── router-node-editor-modal.element.ts
+│   ├── aggregator-node-editor/
+│   │   ├── aggregator-node-editor-modal.token.ts
+│   │   └── aggregator-node-editor-modal.element.ts
+│   ├── manager-node-editor/
+│   │   ├── manager-node-editor-modal.token.ts
+│   │   └── manager-node-editor-modal.element.ts
+│   ├── pattern-template/
+│   │   ├── pattern-template-modal.token.ts
+│   │   └── pattern-template-modal.element.ts
+│   └── manifests.ts
+└── manifests.ts
+```
+
+### Workspace Structure
+
+- **Collection view**: Table listing all orchestrations (Name, Status, Modified)
+- **Editor view** with tabs:
+  1. **Details** — Name, alias, description, active toggle
+  2. **Workflow** — Full-width Rete.js canvas with `+` button and minimap
+  3. **Availability** — Surface picker + scope rules (reuse agent surface picker component)
+  4. **Info** — Created/modified metadata, version history
+
+### Pattern Templates (Creation Modal)
+
+When creating a new orchestration, a **dialog modal** presents options as visual cards:
+
+- **Blank**: Empty canvas with just Start + End nodes
+- **Sequential**: Start → Agent → Agent → End
+- **Concurrent**: Start → [Agent, Agent, Agent] → Aggregator → End
+- **Handoff**: Start → Agent (with handoff edges to other agents) → End
+- **Group Chat**: Start → [Agent, Agent] (circular edges) → End
+- **Magentic**: Start → Manager → [Agent, Agent] (bidirectional with Manager) → End
+
+The selected template pre-populates the graph. After creation, the template choice is not stored — the graph is the source of truth.
+
+---
+
+## 5. Deploy Support (Umbraco.AI.Agent.Deploy)
+
+Since orchestrations are part of the Agent package, deploy support is added to the existing `Umbraco.AI.Agent.Deploy` package — following the same pattern used for `AIAgent`.
+
+### Deploy Components
+
+**Artifact**: `AIOrchestrationArtifact` extends `DeployArtifactBase<GuidUdi>`
+- Serializes: Alias, Name, Description, ProfileUdi (optional), SurfaceIds, Scope (JsonElement), Graph (JsonElement), IsActive
+- Graph is serialized as a `JsonElement` — the entire node/edge structure transfers as JSON
+
+**Service Connector**: `UmbracoAIOrchestrationServiceConnector`
+- Extends `UmbracoAIProfileDependentEntityServiceConnectorBase<AIOrchestrationArtifact, AIOrchestration>` (since orchestrations have an optional ProfileId)
+- UDI entity type: `"umbraco-ai-orchestration"`
+- Process passes: `[3]` (same as agents — depends on profiles which deploy in pass 2)
+- Pass 3: Create/update orchestration with all properties
+- Pass 4: Resolve profile dependency
+
+**Dependency tracking in `GetArtifactAsync`**:
+- Profile dependency: `ArtifactDependencyMode.Match`
+- Agent references within graph nodes: Each `Agent` node's `AgentId` is added as a dependency (`ArtifactDependencyMode.Match`) to ensure referenced agents deploy first
+
+**Notification Handlers** (minimal — extend base classes):
+- `AIOrchestrationSavedDeployRefresherNotificationAsyncHandler`
+- `AIOrchestrationDeletedDeployRefresherNotificationAsyncHandler`
+
+**Constants**:
+- Add `Orchestration = "umbraco-ai-orchestration"` to `UmbracoAIAgentConstants.UdiEntityType`
+
+### New Files (Deploy)
+```
+Umbraco.AI.Agent.Deploy/src/Umbraco.AI.Agent.Deploy/
+├── Artifacts/AIOrchestrationArtifact.cs
+├── Connectors/ServiceConnectors/UmbracoAIOrchestrationServiceConnector.cs
+├── NotificationHandlers/AIOrchestrationSavedDeployRefresherNotificationAsyncHandler.cs
+└── NotificationHandlers/AIOrchestrationDeletedDeployRefresherNotificationAsyncHandler.cs
+Modified Files (Deploy)
+
+UmbracoAIAgentConstants.cs — Add orchestration UDI entity type
+UmbracoAIAgentDeployComponent.cs — Register orchestration UDI type + disk entity type
+UmbracoAIAgentDeployComposer.cs — Register orchestration notification handlers
+
+Graph Serialization for Deploy
+The graph is transferred as a single JsonElement in the artifact. Agent node references use Guid IDs internally — the service connector resolves these during import by looking up agents by their deploy UDI. This means:
+
+GetArtifactAsync: Walk graph nodes, add agent UDI dependencies for each Agent node
+ProcessAsync (Pass 3): Deserialize graph JSON, resolve agent GuidUdis back to local agent IDs, save orchestration
+
+
+6. Execution Engine
+The AIOrchestrationExecutor translates the stored graph into MAF's WorkflowBuilder:
+csharp// Pseudocode
+public async Task<MsAIAgent> BuildWorkflowAgentAsync(AIOrchestration orchestration, CancellationToken ct)
+{
+    // 1. Create MAF agents for each Agent node
+    var mafAgents = new Dictionary<string, MsAIAgent>();
+    foreach (var node in orchestration.Graph.Nodes.Where(n => n.Type == AIOrchestrationNodeType.Agent))
+    {
+        var agentDef = await _agentService.GetAgentAsync(node.Config.AgentId!.Value, ct);
+        mafAgents[node.Id] = await _agentFactory.CreateAgentAsync(agentDef, ct);
+    }
+
+    // 2. Resolve AITools for Function nodes
+    var functions = new Dictionary<string, AITool>();
+    foreach (var node in orchestration.Graph.Nodes.Where(n => n.Type == AIOrchestrationNodeType.Function))
+    {
+        functions[node.Id] = _toolRegistry.GetTool(node.Config.ToolName!);
+    }
+
+    // 3. Build workflow graph via WorkflowBuilder (edges, conditions, etc.)
+    var builder = new WorkflowBuilder(/* entry agent */);
+    foreach (var edge in orchestration.Graph.Edges)
+    {
+        // Wire direct edges, conditional edges, etc.
+    }
+
+    // 4. Return workflow — can be used as an agent via MAF composability
+    return builder.Build().AsAgent();
+}
+
+7. Files to Create/Modify
+New Files (Core)
+
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestration.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationGraph.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationNode.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationEdge.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationAggregationStrategy.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationRouteCondition.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationRouteOperator.cs
+Umbraco.AI.Agent.Core/Orchestrations/IAIOrchestrationService.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationService.cs
+Umbraco.AI.Agent.Core/Orchestrations/IAIOrchestrationRepository.cs
+Umbraco.AI.Agent.Core/Orchestrations/IAIOrchestrationExecutor.cs
+Umbraco.AI.Agent.Core/Orchestrations/AIOrchestrationExecutor.cs
+
+New Files (Persistence)
+
+Umbraco.AI.Agent.Persistence/Orchestrations/AIOrchestrationEntity.cs
+Umbraco.AI.Agent.Persistence/Orchestrations/EfCoreAIOrchestrationRepository.cs
+Umbraco.AI.Agent.Persistence/Orchestrations/AIOrchestrationEntityMapping.cs
+New EF Core migrations (SqlServer + Sqlite)
+
+New Files (Web/API)
+
+Umbraco.AI.Agent.Web/Api/Management/Orchestration/Controllers/OrchestrationController.cs
+Umbraco.AI.Agent.Web/Api/Management/Orchestration/Controllers/RunOrchestrationController.cs
+Umbraco.AI.Agent.Web/Api/Management/Orchestration/Models/ — Request/response DTOs
+Umbraco.AI.Agent.Web/Api/Management/Orchestration/Mapping/ — UmbracoMapper definitions
+
+New Files (Frontend)
+
+All files listed in the frontend file structure above
+package.json updates for rete, @retejs/lit-plugin, @retejs/minimap-plugin
+
+New Files (Deploy) — in existing Umbraco.AI.Agent.Deploy
+
+Umbraco.AI.Agent.Deploy/Artifacts/AIOrchestrationArtifact.cs
+Umbraco.AI.Agent.Deploy/Connectors/ServiceConnectors/UmbracoAIOrchestrationServiceConnector.cs
+Umbraco.AI.Agent.Deploy/NotificationHandlers/AIOrchestrationSavedDeployRefresherNotificationAsyncHandler.cs
+Umbraco.AI.Agent.Deploy/NotificationHandlers/AIOrchestrationDeletedDeployRefresherNotificationAsyncHandler.cs
+
+Modified Files
+
+Umbraco.AI.Agent.Persistence/UmbracoAIAgentDbContext.cs — Add DbSet<AIOrchestrationEntity>
+Umbraco.AI.Agent.Startup/ — Register orchestration services in DI
+Umbraco.AI.Agent.Web.StaticAssets/Client/src/manifests.ts — Register orchestration workspace + modals
+Umbraco.AI.Agent.Deploy/UmbracoAIAgentConstants.cs — Add orchestration UDI entity type
+Umbraco.AI.Agent.Deploy/Composing/UmbracoAIAgentDeployComponent.cs — Register orchestration UDI + disk entity
+Umbraco.AI.Agent.Deploy/Composing/UmbracoAIAgentDeployComposer.cs — Register orchestration notification handlers
+
+
+8. Reference Files — Copy From for Consistency
+CRITICAL: Every new file must be modeled after its equivalent in the existing Agent implementation. Always read the reference file first, then create the orchestration equivalent with consistent naming, structure, and patterns.
+Backend References (Agent → Orchestration)
+LayerReference File (Agent)New File (Orchestration)Domain entityUmbraco.AI.Agent.Core/Agents/AIAgent.csUmbraco.AI.Agent.Core/Orchestrations/AIOrchestration.csService interfaceUmbraco.AI.Agent.Core/Agents/IAIAgentService.csUmbraco.AI.Agent.Core/Orchestrations/IAIOrchestrationService.csService implUmbraco.AI.Agent.Core/Agents/AIAgentService.csUmbraco.AI.Agent.Core/Orchestrations/AIOrchestrationService.csRepository interfaceUmbraco.AI.Agent.Core/Agents/IAIAgentRepository.csUmbraco.AI.Agent.Core/Orchestrations/IAIOrchestrationRepository.csEF Core entityUmbraco.AI.Agent.Persistence/Agents/AIAgentEntity.csUmbraco.AI.Agent.Persistence/Orchestrations/AIOrchestrationEntity.csEF Core repositoryUmbraco.AI.Agent.Persistence/Agents/EfCoreAIAgentRepository.csUmbraco.AI.Agent.Persistence/Orchestrations/EfCoreAIOrchestrationRepository.csEntity mappingUmbraco.AI.Agent.Persistence/Agents/AIAgentEntityMapping.csUmbraco.AI.Agent.Persistence/Orchestrations/AIOrchestrationEntityMapping.csAPI controllerUmbraco.AI.Agent.Web/Api/Management/Agent/Controllers/AgentController.csUmbraco.AI.Agent.Web/Api/Management/Orchestration/Controllers/OrchestrationController.csRun controllerUmbraco.AI.Agent.Web/Api/Management/Agent/Controllers/RunAgentController.csUmbraco.AI.Agent.Web/Api/Management/Orchestration/Controllers/RunOrchestrationController.csAPI modelsUmbraco.AI.Agent.Web/Api/Management/Agent/Models/Umbraco.AI.Agent.Web/Api/Management/Orchestration/Models/API mappingUmbraco.AI.Agent.Web/Api/Management/Agent/Mapping/Umbraco.AI.Agent.Web/Api/Management/Orchestration/Mapping/
+Deploy References (Agent → Orchestration)
+LayerReference File (Agent)New File (Orchestration)ArtifactUmbraco.AI.Agent.Deploy/Artifacts/AIAgentArtifact.csUmbraco.AI.Agent.Deploy/Artifacts/AIOrchestrationArtifact.csService connectorUmbraco.AI.Agent.Deploy/Connectors/ServiceConnectors/UmbracoAIAgentServiceConnector.csUmbraco.AI.Agent.Deploy/Connectors/ServiceConnectors/UmbracoAIOrchestrationServiceConnector.csSaved handlerUmbraco.AI.Agent.Deploy/NotificationHandlers/AIAgentSavedDeployRefresherNotificationAsyncHandler.csUmbraco.AI.Agent.Deploy/NotificationHandlers/AIOrchestrationSavedDeployRefresherNotificationAsyncHandler.csDeleted handlerUmbraco.AI.Agent.Deploy/NotificationHandlers/AIAgentDeletedDeployRefresherNotificationAsyncHandler.csUmbraco.AI.Agent.Deploy/NotificationHandlers/AIOrchestrationDeletedDeployRefresherNotificationAsyncHandler.csConstantsUmbraco.AI.Agent.Deploy/UmbracoAIAgentConstants.csAdd to same file
+Frontend References (Agent → Orchestration)
+LayerReference File (Agent)New File (Orchestration)Workspace rootsrc/agent/workspace/agent-root.element.tssrc/orchestration/workspace/orchestration-root.element.tsWorkspace editorsrc/agent/workspace/agent-workspace-editor.element.tssrc/orchestration/workspace/orchestration-workspace-editor.element.tsCollectionsrc/agent/workspace/agent-collection.element.tssrc/orchestration/workspace/orchestration-collection.element.tsModal tokensrc/agent/modals/tool-permissions-override-editor/tool-permissions-override-editor-modal.token.tssrc/orchestration/modals/*/...modal.token.tsModal elementsrc/agent/modals/tool-permissions-override-editor/tool-permissions-override-editor-modal.element.tssrc/orchestration/modals/*/...modal.element.tsManifestssrc/agent/manifests.tssrc/orchestration/manifests.tsSurface pickersrc/agent/components/agent-surface-picker/Reuse directly (no new file)
+Naming Convention Rules
+
+C# namespaces: Umbraco.AI.Agent.Core.Orchestrations (mirrors Umbraco.AI.Agent.Core.Agents)
+C# class prefix: AIOrchestration (mirrors AIAgent)
+Service methods: GetOrchestrationAsync, SaveOrchestrationAsync (mirrors GetAgentAsync, SaveAgentAsync)
+API route: /umbraco/ai/management/api/v1/orchestrations/ (mirrors .../agents/)
+Frontend element prefix: uai-orchestration- (mirrors uai-agent-)
+Frontend element tag: <uai-orchestration-graph-editor> etc.
+Modal alias prefix: Uai.Modal.Orchestration (mirrors Uai.Modal.Agent pattern)
+UDI entity type: umbraco-ai-orchestration (mirrors umbraco-ai-agent)
+DB table: umbracoAIOrchestration (mirrors umbracoAIAgent)
+Migration prefix: UmbracoAIAgent_ (same prefix — shared Agent package)
+
+
+9. Implementation Phases
+Phase 1: Domain Model & Persistence
+
+Create all Orchestrations/ core model classes
+Create EF Core entity, entity mapping, repository
+Add DB migrations (SqlServer + Sqlite)
+Register in DI
+
+Phase 2: Service Layer & API
+
+Implement IAIOrchestrationService (CRUD + graph validation)
+Implement Management API controllers with DTOs
+Generate OpenAPI client for frontend
+
+Phase 3: Frontend — Collection & Editor Shell
+
+Install Rete.js + Lit plugin + minimap plugin
+Create orchestration workspace (collection view, editor shell with tabs)
+Implement Details and Availability tabs (reuse patterns from agent editor)
+
+Phase 4: Frontend — Visual Graph Editor & Modals
+
+Implement Rete.js canvas with + button for node addition
+Create pattern template modal (dialog, visual cards for 5 patterns)
+Create custom Lit node components for each type (canvas rendering)
+Create node editor modals (sidebar, one per node type)
+Implement node type picker modal
+Implement edge connections with validation rules
+
+Phase 5: Execution Engine & Surface Integration
+
+Implement AIOrchestrationExecutor — graph → MAF WorkflowBuilder translation
+Implement RunOrchestrationController with AG-UI streaming
+Extend surface system to include orchestrations alongside agents in copilot
+
+Phase 6: Deploy Support
+
+Create AIOrchestrationArtifact with graph JSON serialization
+Implement UmbracoAIOrchestrationServiceConnector with agent dependency tracking
+Add notification handlers for saved/deleted events
+Register in existing Agent Deploy composer/component
+
+
+10. Verification Plan
+
+Build: dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx — all projects compile
+Unit tests: dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx — graph validation, service logic, executor translation
+Frontend build: npm run build:agent — TypeScript/Vite compiles without errors
+Demo site: Start demo site, navigate to Agent section, verify orchestration collection appears
+Create orchestration: Select pattern template, verify graph editor renders pre-populated layout
+Node editing: Click nodes, verify modals open with correct configuration forms
+Execute orchestration: Run a sequential orchestration via copilot surface, verify multi-agent streaming
+Deploy: dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.slnx — deploy package compiles with orchestration support

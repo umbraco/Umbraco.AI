@@ -44,6 +44,19 @@ internal sealed class PromptContextResolver : IAIContextResolver
         }
 
         var prompt = await _promptService.GetPromptAsync(promptId.Value, cancellationToken);
+
+        // Check for context IDs override (set by execution options for test scenarios)
+        var contextIdsOverride = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.MetadataKeys.ContextIdsOverride);
+        if (contextIdsOverride is not null)
+        {
+            if (contextIdsOverride.Count == 0)
+            {
+                return AIContextResolverResult.Empty;
+            }
+
+            return await ResolveContextIdsAsync(contextIdsOverride, prompt?.Name, cancellationToken);
+        }
+
         if (prompt is null || prompt.ContextIds.Count == 0)
         {
             return AIContextResolverResult.Empty;

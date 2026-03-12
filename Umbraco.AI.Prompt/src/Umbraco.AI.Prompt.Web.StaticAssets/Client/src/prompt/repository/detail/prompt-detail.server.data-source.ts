@@ -32,6 +32,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             profileId: null,
             contextIds: [],
             tags: [],
+            displayMode: "PropertyAction",
             scope: {
                 allowRules: [
                     {

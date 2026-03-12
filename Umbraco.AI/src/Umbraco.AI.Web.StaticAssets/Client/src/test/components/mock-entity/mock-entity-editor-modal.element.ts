@@ -1,0 +1,201 @@
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import type {
+    UaiMockEntityEditorModalData,
+    UaiMockEntityEditorModalValue,
+} from "./mock-entity-editor-modal.token.js";
+import "./json-mock-entity-editor.element.js";
+
+const elementName = "uai-mock-entity-editor-modal";
+
+/**
+ * Generic modal that hosts a mock entity editor element.
+ * Uses the pre-resolved editor manifest from modal data to create and
+ * manage the editor element. When no manifest is provided, falls back
+ * to the JSON mock entity editor for manual data entry.
+ *
+ * The modal handles the outer chrome (header bar + footer actions).
+ * The editor element is responsible for its own internal layout
+ * including any sticky headers, tabs, and scrollable content.
+ */
+@customElement(elementName)
+export class UaiMockEntityEditorModalElement extends UmbModalBaseElement<
+    UaiMockEntityEditorModalData,
+    UaiMockEntityEditorModalValue
+> {
+    @state()
+    private _currentValue?: string;
+
+    @state()
+    private _loading = true;
+
+    @state()
+    private _useJsonFallback = false;
+
+    #editorElement?: HTMLElement & { entityType?: string; subType?: string; subTypeUnique?: string; value?: string };
+
+    override async firstUpdated() {
+        await this.#loadEditor();
+    }
+
+    async #loadEditor() {
+        if (!this.data?.entityType) {
+            this._loading = false;
+            this._useJsonFallback = true;
+            return;
+        }
+
+        const manifest = this.data.editorManifest;
+
+        if (!manifest) {
+            // No editor manifest provided - use JSON fallback
+            this._useJsonFallback = true;
+            this._currentValue = this.data.existingValue;
+            this._loading = false;
+            return;
+        }
+
+        try {
+            const module = await manifest.element();
+            const ElementCtor =
+                module.default ??
+                module.element ??
+                Object.values(module).find((v: unknown) => typeof v === "function");
+            if (!ElementCtor) {
+                this._useJsonFallback = true;
+                this._currentValue = this.data.existingValue;
+                this._loading = false;
+                return;
+            }
+
+            const el = new (ElementCtor as new () => HTMLElement & {
+                entityType?: string;
+                subType?: string;
+                subTypeUnique?: string;
+                value?: string;
+            })();
+
+            el.entityType = this.data.entityType;
+            el.subType = this.data.subTypeAlias;
+            el.subTypeUnique = this.data.subTypeUnique;
+            if (this.data.existingValue) {
+                el.value = this.data.existingValue;
+            }
+            this._currentValue = this.data.existingValue;
+
+            el.addEventListener("change", () => {
+                this._currentValue = el.value;
+            });
+
+            this.#editorElement = el;
+        } catch (error) {
+            console.error("Failed to load mock entity editor:", error);
+            this._useJsonFallback = true;
+            this._currentValue = this.data.existingValue;
+        }
+
+        this._loading = false;
+    }
+
+    override updated() {
+        // Manually manage the dynamic editor element in the DOM
+        const host = this.shadowRoot?.querySelector("#editor-host");
+        if (host && this.#editorElement && !host.contains(this.#editorElement)) {
+            host.replaceChildren(this.#editorElement);
+        }
+    }
+
+    #onJsonChange(e: UmbChangeEvent) {
+        const target = e.target as HTMLElement & { value?: string };
+        this._currentValue = target.value;
+    }
+
+    #onSubmit() {
+        if (!this._currentValue) return;
+        this.value = { mockEntityJson: this._currentValue };
+        this.modalContext?.submit();
+    }
+
+    #onCancel() {
+        this.modalContext?.reject();
+    }
+
+    override render() {
+        const subTypeName = this.data?.subTypeName ?? this.data?.subTypeAlias ?? "";
+
+        if (this._loading) {
+            return html`
+                <umb-body-layout headline="Mock ${subTypeName} Entity">
+                    <uui-loader></uui-loader>
+                </umb-body-layout>
+            `;
+        }
+
+        if (this._useJsonFallback) {
+            return html`
+                <umb-body-layout headline="Mock ${this.data?.entityType ?? ""} Entity" main-no-padding>
+                    <div id="json-fallback-host">
+                        <uai-json-mock-entity-editor
+                            .entityType=${this.data?.entityType ?? ""}
+                            .subType=${this.data?.subTypeAlias}
+                            .value=${this._currentValue}
+                            @change=${this.#onJsonChange}
+                        ></uai-json-mock-entity-editor>
+                    </div>
+                    <div slot="actions">
+                        <uui-button label="Cancel" @click=${this.#onCancel}>Cancel</uui-button>
+                        <uui-button
+                            look="primary"
+                            color="positive"
+                            label="Submit"
+                            ?disabled=${!this._currentValue}
+                            @click=${this.#onSubmit}
+                        >
+                            Submit
+                        </uui-button>
+                    </div>
+                </umb-body-layout>
+            `;
+        }
+
+        return html`
+            <umb-body-layout main-no-padding>
+                <div id="editor-host"></div>
+                <div slot="actions">
+                    <uui-button label="Cancel" @click=${this.#onCancel}>Cancel</uui-button>
+                    <uui-button
+                        look="primary"
+                        color="positive"
+                        label="Submit"
+                        ?disabled=${!this._currentValue}
+                        @click=${this.#onSubmit}
+                    >
+                        Submit
+                    </uui-button>
+                </div>
+            </umb-body-layout>
+        `;
+    }
+
+    static override styles = css`
+        #editor-host {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        #json-fallback-host {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+    `;
+}
+
+export default UaiMockEntityEditorModalElement;
+
+declare global {
+    interface HTMLElementTagNameMap {
+        [elementName]: UaiMockEntityEditorModalElement;
+    }
+}

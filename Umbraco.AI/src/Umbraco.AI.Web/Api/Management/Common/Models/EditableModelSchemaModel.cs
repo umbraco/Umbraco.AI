@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.AI.Web.Api.Management.Provider.Models;
+namespace Umbraco.AI.Web.Api.Management.Common.Models;
 
 /// <summary>
 /// Represents an editable model schema.

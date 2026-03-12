@@ -6,8 +6,11 @@ using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
 using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
+using Umbraco.AI.Agent.Core.Tests;
+using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -36,15 +39,14 @@ public static class UmbracoBuilderExtensions
         builder.Services.Configure<AIAgentOptions>(
             builder.Config.GetSection(AIAgentOptions.SectionName));
 
-        // Register in-memory repository as fallback (replaced by persistence layer)
+        // Register in-memory repositories as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
 
         // Register scope validator
         builder.Services.AddSingleton<AIAgentScopeValidator>();
 
-        // Register service
+        // Register services
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
-
         // Prevent deletion of profiles referenced by agents
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();
 
@@ -67,12 +69,19 @@ public static class UmbracoBuilderExtensions
         // This ensures server-side tools execute before frontend tools trigger termination
         builder.AIChatMiddleware().InsertBefore<AIFunctionInvokingChatMiddleware, AIToolReorderingChatMiddleware>();
 
-        // Register versionable entity adapter for agents
+        // Register versionable entity adapters for agents
         builder.AIVersionableEntityAdapters().Add<AIAgentVersionableEntityAdapter>();
 
         // Auto-discover agent surfaces via [AIAgentSurface] attribute
         builder.AIAgentSurfaces()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentSurface, AIAgentSurfaceAttribute>(cache: true));
+
+        // Register agent test feature for AI testing
+        builder.AITestFeatures().Add<AgentTestFeature>();
+
+        // Auto-discover agent workflows via [AIAgentWorkflow] attribute
+        builder.AIAgentWorkflows()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentWorkflow, AIAgentWorkflowAttribute>(cache: true));
 
         return builder;
     }

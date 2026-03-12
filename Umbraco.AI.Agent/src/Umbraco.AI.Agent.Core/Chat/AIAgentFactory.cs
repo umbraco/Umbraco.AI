@@ -1,12 +1,15 @@
 using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Extensions;
 using CoreConstants = Umbraco.AI.Core.Constants;
 using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -26,6 +29,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly AIToolCollection _toolCollection;
     private readonly AIToolScopeCollection _toolScopeCollection;
     private readonly IAIFunctionFactory _functionFactory;
+    private readonly AIAgentWorkflowCollection _workflowCollection;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
@@ -37,7 +41,8 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IAIChatClientFactory chatClientFactory,
         AIToolCollection toolCollection,
         AIToolScopeCollection toolScopeCollection,
-        IAIFunctionFactory functionFactory)
+        IAIFunctionFactory functionFactory,
+        AIAgentWorkflowCollection workflowCollection)
     {
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
         _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));
@@ -46,6 +51,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
         _toolScopeCollection = toolScopeCollection ?? throw new ArgumentNullException(nameof(toolScopeCollection));
         _functionFactory = functionFactory ?? throw new ArgumentNullException(nameof(functionFactory));
+        _workflowCollection = workflowCollection ?? throw new ArgumentNullException(nameof(workflowCollection));
     }
 
     /// <inheritdoc />
@@ -58,6 +64,36 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
+        MsAIAgent innerAgent = agent.AgentType switch
+        {
+            AIAgentType.Standard => await CreateStandardAgentAsync(agent, contextItems, additionalTools, cancellationToken),
+            AIAgentType.Orchestrated => await CreateOrchestratedAgentAsync(
+                agent,
+                agent.GetOrchestratedConfig()
+                    ?? throw new InvalidOperationException(
+                        $"Agent '{agent.Name}' (ID: {agent.Id}) has type '{AIAgentType.Orchestrated}' but no orchestrated config."),
+                cancellationToken),
+            _ => throw new InvalidOperationException(
+                $"Unsupported agent type '{agent.AgentType}' for agent '{agent.Name}' (ID: {agent.Id})."),
+        };
+
+        // Wrap in scoped decorator (passes scope provider, contributors, and metadata)
+        return new ScopedAIAgent(
+            innerAgent,
+            agent,
+            contextItems ?? [],
+            additionalTools,
+            additionalProperties,
+            _runtimeContextScopeProvider,
+            _contextContributors);
+    }
+
+    private async Task<MsAIAgent> CreateStandardAgentAsync(
+        UmbracoAIAgent agent,
+        IEnumerable<AIRequestContextItem>? contextItems,
+        IEnumerable<AITool>? additionalTools,
+        CancellationToken cancellationToken)
+    {
         // STEP 1: Get allowed tool IDs (permission check - existing logic)
         var allowedToolIds = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
 
@@ -96,6 +132,40 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         }
 
         // Get profile - use default Chat profile if not specified
+        var chatClient = await CreateChatClientAsync(agent, cancellationToken);
+
+        return new ChatClientAgent(
+            chatClient,
+            instructions: agent.GetStandardConfig()?.Instructions,
+            name: agent.Name,
+            description: agent.Description,
+            tools: tools);
+    }
+
+    private async Task<MsAIAgent> CreateOrchestratedAgentAsync(
+        UmbracoAIAgent agent,
+        AIOrchestratedAgentConfig config,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(config.WorkflowId))
+        {
+            throw new InvalidOperationException(
+                $"Orchestrated agent '{agent.Name}' (ID: {agent.Id}) has no workflow configured.");
+        }
+
+        var workflow = _workflowCollection.GetById(config.WorkflowId)
+            ?? throw new InvalidOperationException(
+                $"Workflow '{config.WorkflowId}' not found for agent '{agent.Name}' (ID: {agent.Id}).");
+
+        var mafWorkflow = await workflow.BuildWorkflowAsync(agent, config.Settings, cancellationToken);
+
+        return mafWorkflow.AsAIAgent(config.WorkflowId);
+    }
+
+    private async Task<IChatClient> CreateChatClientAsync(
+        UmbracoAIAgent agent,
+        CancellationToken cancellationToken)
+    {
         AIProfile profile;
         if (agent.ProfileId.HasValue)
         {
@@ -107,25 +177,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
         }
 
-        var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
-
-        // Create inner MAF agent (without runtime context metadata - that's set in ScopedAIAgent)
-        var innerAgent = new ChatClientAgent(
-            chatClient,
-            instructions: agent.Instructions,
-            name: agent.Name,
-            description: agent.Description,
-            tools: tools);
-
-        // Wrap in scoped decorator (passes scope provider, contributors, and metadata)
-        return new ScopedAIAgent(
-            innerAgent,
-            agent,
-            contextItems ?? [],
-            additionalTools,
-            additionalProperties,
-            _runtimeContextScopeProvider,
-            _contextContributors);
+        return await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
     }
 
     /// <summary>

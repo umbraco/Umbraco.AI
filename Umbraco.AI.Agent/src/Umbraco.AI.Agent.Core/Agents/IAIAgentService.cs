@@ -42,14 +42,15 @@ public interface IAIAgentService
     /// <param name="surfaceId">Optional surface ID filter.</param>
     /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Paged result containing Agents and total count.</returns>
-    Task<PagedModel<AIAgent>> GetAgentsPagedAsync(
+    /// <returns>A tuple containing the filtered/paginated agents and the total count.</returns>
+    Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
         int skip,
         int take,
         string? filter = null,
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        AIAgentType? agentType = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -161,5 +162,21 @@ public interface IAIAgentService
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams an agent execution with AG-UI events and execution options controlling overrides.
+    /// </summary>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
+    /// <param name="frontendTools">Frontend tools with metadata for permission filtering.</param>
+    /// <param name="options">Options controlling profile and context overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Async enumerable of AG-UI events.</returns>
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        Guid agentId,
+        AGUIRunRequest request,
+        IEnumerable<AIFrontendTool>? frontendTools,
+        AIAgentExecutionOptions options,
         CancellationToken cancellationToken = default);
 }

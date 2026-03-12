@@ -5,7 +5,11 @@ description: >-
 
 # Agent Instructions
 
-Instructions define how an agent behaves. Well-crafted instructions lead to better, more consistent responses.
+Instructions define how a **standard agent** behaves. Well-crafted instructions lead to better, more consistent responses.
+
+{% hint style="info" %}
+Instructions apply to **standard agents** only. **Orchestrated agents** use [workflows](workflows.md) where sub-agent instructions are defined in code.
+{% endhint %}
 
 ## Structure
 
@@ -161,5 +165,6 @@ When refining instructions:
 
 ## Related
 
-- [Concepts](concepts.md) - Agent fundamentals
+- [Concepts](concepts.md) - Agent types and fundamentals
+- [Workflows](workflows.md) - Orchestrated agent workflows
 - [AI Contexts](../../concepts/contexts.md) - Brand voice injection

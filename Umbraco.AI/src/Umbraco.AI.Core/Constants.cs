@@ -16,6 +16,7 @@ public static class Constants
     {
         DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
         WriteIndented = false,
         Converters =
         {

@@ -134,6 +134,8 @@ export default {
         advancedLabel: "Advanced",
         featuresLabel: "Features",
         dataLabel: "Data",
+        configLabel: "Configuration",
+        contextLabel: "Context",
     },
     uaiValidation: {
         required: "This field is required",
@@ -148,8 +150,30 @@ export default {
         modelRequired: "Please select a model",
         temperatureRange: "Temperature must be between 0 and 2",
         maxTokensMin: "Max tokens must be at least 1",
+        gradersRequired: "At least one grader is required",
     },
     uaiUserGroupPermissions: {
         headline: "User Group Permissions",
+    },
+    uaiTest: {
+        testConfiguration: "Test Configuration",
+        testFeatureType: "Test Feature Type",
+        selectTestFeature: "Select test feature",
+        testFeatureDescription: "The type of test to run (e.g., prompt completion, agent tool test)",
+        targetEntity: "Target Entity",
+        targetEntityDescription: "The entity to test (e.g., a specific prompt or agent)",
+        selectTargetEntity: "Select Target Entity",
+        selectTarget: "Select Target",
+        selectTestTypeFirst: "Select a test type first to choose a target entity.",
+        noEntitiesAvailable: "No entities available for this feature type",
+        noEntitiesAvailableForType: "No entities available for this feature type.",
+        ensurePackageInstalled: "Make sure the required package is installed.",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} test(s)?`,
+        bulkRunConfirm: (count: number) =>
+            `Run ${count} selected test(s)? This will execute against configured AI providers.`,
+        runCompleted: "Test run completed successfully.",
+        runFailed: "Test run failed.",
+        bulkRunDeleteConfirm: (count: number) =>
+            `Are you sure you want to delete ${count} test run(s)? This action cannot be undone.`,
     },
 } as UmbLocalizationDictionary;

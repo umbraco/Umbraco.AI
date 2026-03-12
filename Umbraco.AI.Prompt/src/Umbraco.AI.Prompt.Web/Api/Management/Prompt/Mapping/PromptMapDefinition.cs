@@ -58,6 +58,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.IsActive = true;
         target.IncludeEntityContext = source.IncludeEntityContext;
         target.OptionCount = source.OptionCount;
+        target.DisplayMode = source.DisplayMode;
         target.Scope = MapScopeModelToDomain(source.Scope);
         target.DateModified = DateTime.UtcNow;
     }
@@ -77,6 +78,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.IsActive = source.IsActive;
         target.IncludeEntityContext = source.IncludeEntityContext;
         target.OptionCount = source.OptionCount;
+        target.DisplayMode = source.DisplayMode;
         target.Scope = MapScopeModelToDomain(source.Scope);
     }
 
@@ -94,6 +96,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.IsActive = source.IsActive;
         target.IncludeEntityContext = source.IncludeEntityContext;
         target.OptionCount = source.OptionCount;
+        target.DisplayMode = source.DisplayMode;
         target.Scope = MapScopeDomainToModel(source.Scope);
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;

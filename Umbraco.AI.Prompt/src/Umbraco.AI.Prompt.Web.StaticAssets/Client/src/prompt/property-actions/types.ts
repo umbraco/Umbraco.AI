@@ -1,4 +1,5 @@
 import type { ManifestPropertyAction } from "@umbraco-cms/backoffice/property-action";
+import type { UaiPromptDisplayMode } from "../types.js";
 
 /**
  * UI mode for prompt property actions.
@@ -46,6 +47,8 @@ export interface UaiPromptRegistrationModel {
     uiMode?: UaiPromptUiMode | null;
     /** Whether the prompt is active and should be registered. */
     isActive: boolean;
+    /** Display mode: 'PropertyAction' or 'TipTapTool'. Defaults to 'PropertyAction'. */
+    displayMode?: UaiPromptDisplayMode;
 }
 
 /**
@@ -95,6 +98,8 @@ export interface UaiPromptPreviewModalData {
     entityId: string;
     entityType: string;
     propertyAlias: string;
+    /** Content type alias for scope validation. For blocks, this is the element type alias. */
+    contentTypeAlias: string;
     culture?: string;
     segment?: string;
     /** Serialized entity context for AI operations */

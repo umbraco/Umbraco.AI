@@ -76,16 +76,19 @@ data/Revision/umbraco-ai-agent__content-helper_abcd1234.uda
 ```
 
 **Contains:**
-- Agent name and alias
-- Instructions
-- Tool permissions
-- User group permissions
-- Scoping rules
+- Agent name, alias, and agent type (`Standard` or `Orchestrated`)
+- Type-specific configuration:
+  - **Standard agents**: Instructions, tool permissions, user group permissions, context IDs
+  - **Orchestrated agents**: Workflow ID and workflow-specific settings
+- Surface IDs and scoping rules
 - Profile reference (if specified)
 
 **Dependencies:**
 - If linked to a Profile, deploys the Profile first
-- Validates that referenced user groups exist in target environment
+
+{% hint style="warning" %}
+For **orchestrated agents**, the workflow implementation must be registered in the target environment. Deploy transfers the workflow ID and settings, but the workflow code itself must be deployed as part of the application.
+{% endhint %}
 
 ## Step-by-Step: Deploying a Connection
 

@@ -1,21 +1,13 @@
 using System.Text.Json;
 using Umbraco.AI.Core.EntityAdapter;
+using Umbraco.AI.Core.EntityAdapter.Adapters;
 
 namespace Umbraco.AI.Tests.Unit.Formatters;
 
-public class AIDocumentEntityFormatterTests
+public class CmsEntityFormatHelperTests
 {
-    private readonly AIDocumentEntityFormatter _formatter = new();
-
     [Fact]
-    public void EntityType_ReturnsDocument()
-    {
-        // Assert
-        _formatter.EntityType.ShouldBe("document");
-    }
-
-    [Fact]
-    public void Format_WithCmsStructure_FormatsAsProperties()
+    public void FormatCmsEntity_WithCmsStructure_FormatsAsProperties()
     {
         // Arrange
         var data = JsonDocument.Parse("""
@@ -47,7 +39,7 @@ public class AIDocumentEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = CmsEntityFormatHelper.FormatCmsEntity(entity);
 
         // Assert
         result.ShouldContain("## Current Entity Context");
@@ -61,7 +53,7 @@ public class AIDocumentEntityFormatterTests
     }
 
     [Fact]
-    public void Format_WithoutContentType_OmitsContentTypeLine()
+    public void FormatCmsEntity_WithoutContentType_OmitsContentTypeLine()
     {
         // Arrange
         var data = JsonDocument.Parse("""
@@ -86,7 +78,7 @@ public class AIDocumentEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = CmsEntityFormatHelper.FormatCmsEntity(entity);
 
         // Assert
         result.ShouldNotContain("Content type:");
@@ -94,7 +86,7 @@ public class AIDocumentEntityFormatterTests
     }
 
     [Fact]
-    public void Format_WithEmptyValueProperty_ShowsEmpty()
+    public void FormatCmsEntity_WithEmptyValueProperty_ShowsEmpty()
     {
         // Arrange
         var data = JsonDocument.Parse("""
@@ -120,14 +112,14 @@ public class AIDocumentEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = CmsEntityFormatHelper.FormatCmsEntity(entity);
 
         // Assert
         result.ShouldContain("**Title** (`title`): (empty)");
     }
 
     [Fact]
-    public void Format_WithNonCmsStructure_FallsBackToGenericFormatter()
+    public void FormatCmsEntity_WithNonCmsStructure_FallsBackToGenericFormat()
     {
         // Arrange - data that doesn't match CMS structure (no properties array)
         var data = JsonDocument.Parse("""
@@ -146,7 +138,7 @@ public class AIDocumentEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = CmsEntityFormatHelper.FormatCmsEntity(entity);
 
         // Assert - should fall back to generic JSON formatting
         result.ShouldContain("### Entity Data");
@@ -157,7 +149,7 @@ public class AIDocumentEntityFormatterTests
     }
 
     [Fact]
-    public void Format_WithInvalidPropertyStructure_SkipsInvalidProperties()
+    public void FormatCmsEntity_WithInvalidPropertyStructure_SkipsInvalidProperties()
     {
         // Arrange - properties array with invalid items
         var data = JsonDocument.Parse("""
@@ -190,19 +182,12 @@ public class AIDocumentEntityFormatterTests
         };
 
         // Act
-        var result = _formatter.Format(entity);
+        var result = CmsEntityFormatHelper.FormatCmsEntity(entity);
 
         // Assert - should only include valid property (invalid ones are skipped)
         result.ShouldContain("**Valid Property** (`valid`): OK");
         // "Invalid" appears in the test label, so we can't check for its absence
         // But "Bad" (the value) should not appear
         result.ShouldNotContain("Bad");
-    }
-
-    [Fact]
-    public void Format_ThrowsArgumentNullException_WhenEntityIsNull()
-    {
-        // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _formatter.Format(null!));
     }
 }

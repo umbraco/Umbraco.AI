@@ -18,6 +18,13 @@ public class AIPromptExecutionResult
     /// </summary>
     public UsageDetails? Usage { get; init; }
 
+    /// <summary>
+    /// The chat messages that were sent to the AI model during execution.
+    /// Includes system messages (entity context, format instructions) and the user message (processed template).
+    /// </summary>
+    public IReadOnlyList<ChatMessage>? Messages { get; init; }
+
+    /// <summary>
     /// Available result options. Always present, may be empty.
     /// - Empty array: Informational only (OptionCount = 0)
     /// - Single item: One value to insert (OptionCount = 1)

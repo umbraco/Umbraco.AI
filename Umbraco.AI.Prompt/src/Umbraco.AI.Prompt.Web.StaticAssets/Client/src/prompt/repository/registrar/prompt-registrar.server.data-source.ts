@@ -51,7 +51,7 @@ export class UaiPromptRegistrarServerDataSource {
                 }
 
                 // Destructure only the properties needed for registration
-                const { id, alias, name, description, instructions, profileId, scope, isActive } = detail;
+                const { id, alias, name, description, instructions, profileId, scope, isActive, displayMode } = detail;
                 const model: UaiPromptRegistrationModel = {
                     unique: id,
                     alias,
@@ -61,6 +61,7 @@ export class UaiPromptRegistrarServerDataSource {
                     profileId,
                     scope,
                     isActive,
+                    displayMode: displayMode ?? 'PropertyAction',
                 };
                 return model;
             }),
@@ -83,7 +84,7 @@ export class UaiPromptRegistrarServerDataSource {
         if (error || !detail) return { error };
 
         // Destructure only the properties needed for registration
-        const { id, alias, name, description, instructions, profileId, scope, isActive } = detail;
+        const { id, alias, name, description, instructions, profileId, scope, isActive, displayMode } = detail;
         return {
             data: {
                 unique: id,
@@ -94,6 +95,7 @@ export class UaiPromptRegistrarServerDataSource {
                 profileId,
                 scope,
                 isActive,
+                displayMode: displayMode ?? 'PropertyAction',
             },
         };
     }

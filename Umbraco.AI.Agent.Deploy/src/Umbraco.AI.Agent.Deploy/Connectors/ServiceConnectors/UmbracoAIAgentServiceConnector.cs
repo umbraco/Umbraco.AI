@@ -7,23 +7,26 @@ using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
 
 /// <summary>
-/// Service connector for deploying Umbraco AI Agents. Handles export and import of agents, including their dependencies on profiles. User group permissions are resolved by alias.
+/// Service connector for deploying Umbraco AI Agents. Handles export and import of agents, including their dependencies on profiles.
 /// </summary>
 [UdiDefinition(UmbracoAIAgentConstants.UdiEntityType.Agent, UdiType.GuidUdi)]
 public class UmbracoAIAgentServiceConnector(
     IAIAgentService agentService,
     IAIProfileService profileService,
-    IUserGroupService userGroupService,
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : UmbracoAIProfileDependentEntityServiceConnectorBase<AIAgentArtifact, AIAgent>(
         profileService,
         settingsAccessor)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
 
@@ -52,31 +55,23 @@ public class UmbracoAIAgentServiceConnector(
         => entity.Name;
 
     /// <inheritdoc />
-    public override async Task<AIAgentArtifact?> GetArtifactAsync(
+    public override Task<AIAgentArtifact?> GetArtifactAsync(
         GuidUdi udi,
         AIAgent? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return null;
+        if (entity == null) return Task.FromResult<AIAgentArtifact?>(null);
 
         var dependencies = new ArtifactDependencyCollection();
 
         // Use base class helper for optional profile dependency
         var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
 
-        // Convert user group permissions from GUID-keyed to alias-keyed
-        Dictionary<string, AIAgentUserGroupPermissions>? aliasKeyedPermissions = null;
-        if (entity.UserGroupPermissions.Count > 0)
+        // Serialize config to JSON
+        string? configJson = null;
+        if (entity.Config is not null)
         {
-            aliasKeyedPermissions = new Dictionary<string, AIAgentUserGroupPermissions>();
-            foreach (var (userGroupId, permissions) in entity.UserGroupPermissions)
-            {
-                var userGroup = await userGroupService.GetAsync(userGroupId);
-                if (userGroup != null)
-                {
-                    aliasKeyedPermissions[userGroup.Alias] = permissions;
-                }
-            }
+            configJson = JsonSerializer.Serialize(entity.Config, entity.Config.GetType(), JsonOptions);
         }
 
         var artifact = new AIAgentArtifact(udi, dependencies)
@@ -85,19 +80,14 @@ public class UmbracoAIAgentServiceConnector(
             Name = entity.Name,
             Description = entity.Description,
             ProfileUdi = profileUdi,
-            ContextIds = entity.ContextIds.ToList(),
+            AgentType = entity.AgentType.ToString(),
+            Config = configJson,
             SurfaceIds = entity.SurfaceIds.ToList(),
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
-            AllowedToolIds = entity.AllowedToolIds.ToList(),
-            AllowedToolScopeIds = entity.AllowedToolScopeIds.ToList(),
-            UserGroupPermissions = aliasKeyedPermissions != null && aliasKeyedPermissions.Count > 0
-                ? JsonSerializer.SerializeToElement(aliasKeyedPermissions)
-                : null,
-            Instructions = entity.Instructions,
             IsActive = entity.IsActive
         };
 
-        return artifact;
+        return Task.FromResult<AIAgentArtifact?>(artifact);
     }
 
     /// <inheritdoc />
@@ -134,25 +124,13 @@ public class UmbracoAIAgentServiceConnector(
             scope = artifact.Scope.Value.Deserialize<AIAgentScope>();
         }
 
-        // Deserialize UserGroupPermissions and resolve aliases to GUIDs
-        Dictionary<Guid, AIAgentUserGroupPermissions> userGroupPermissions = new();
-        if (artifact.UserGroupPermissions.HasValue)
-        {
-            var aliasKeyedPermissions = artifact.UserGroupPermissions.Value
-                .Deserialize<Dictionary<string, AIAgentUserGroupPermissions>>();
+        // Parse agent type
+        var agentType = Enum.TryParse<AIAgentType>(artifact.AgentType, ignoreCase: true, out var parsed)
+            ? parsed
+            : AIAgentType.Standard;
 
-            if (aliasKeyedPermissions != null)
-            {
-                foreach (var (alias, permissions) in aliasKeyedPermissions)
-                {
-                    var userGroup = await userGroupService.GetAsync(alias);
-                    if (userGroup != null)
-                    {
-                        userGroupPermissions[userGroup.Key] = permissions;
-                    }
-                }
-            }
-        }
+        // Deserialize config based on agent type
+        IAIAgentConfig? config = DeserializeConfig(agentType, artifact.Config);
 
         // Get or create agent entity
         var agent = state.Entity
@@ -160,7 +138,8 @@ public class UmbracoAIAgentServiceConnector(
             {
                 Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
-                Name = artifact.Name
+                Name = artifact.Name,
+                AgentType = agentType,
             };
 
         // Update properties from artifact
@@ -168,15 +147,31 @@ public class UmbracoAIAgentServiceConnector(
         agent.Name = artifact.Name;
         agent.Description = artifact.Description;
         agent.ProfileId = profileId;
-        agent.ContextIds = artifact.ContextIds.ToList();
+        agent.Config = config;
         agent.SurfaceIds = artifact.SurfaceIds.ToList();
         agent.Scope = scope;
-        agent.AllowedToolIds = artifact.AllowedToolIds.ToList();
-        agent.AllowedToolScopeIds = artifact.AllowedToolScopeIds.ToList();
-        agent.UserGroupPermissions = userGroupPermissions;
-        agent.Instructions = artifact.Instructions;
         agent.IsActive = artifact.IsActive;
 
         state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
+    }
+
+    private static IAIAgentConfig? DeserializeConfig(AIAgentType agentType, string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return agentType switch
+            {
+                AIAgentType.Standard => new AIStandardAgentConfig(),
+                AIAgentType.Orchestrated => new AIOrchestratedAgentConfig(),
+                _ => null,
+            };
+        }
+
+        return agentType switch
+        {
+            AIAgentType.Standard => JsonSerializer.Deserialize<AIStandardAgentConfig>(json, JsonOptions),
+            AIAgentType.Orchestrated => JsonSerializer.Deserialize<AIOrchestratedAgentConfig>(json, JsonOptions),
+            _ => null,
+        };
     }
 }

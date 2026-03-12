@@ -1,0 +1,149 @@
+using System.Diagnostics;
+using System.Text.Json;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Tests;
+using AIConstants = Umbraco.AI.Core.Constants;
+using Umbraco.AI.Prompt.Core.Prompts;
+
+namespace Umbraco.AI.Prompt.Core.Tests;
+
+/// <summary>
+/// Test feature for testing AI prompts.
+/// Executes prompts with mock entity context and captures the response.
+/// </summary>
+[AITestFeature("prompt", "Prompt Test", Category = "Built-in")]
+public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
+{
+    private readonly IAIPromptService _promptService;
+
+    /// <inheritdoc />
+    public override string Description => "Tests prompt execution with mock entity context";
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
+    /// </summary>
+    public PromptTestFeature(
+        IAIPromptService promptService,
+        AITestContextResolver contextResolver,
+        IAIEditableModelSchemaBuilder schemaBuilder)
+        : base(contextResolver, schemaBuilder)
+    {
+        _promptService = promptService;
+    }
+
+    /// <inheritdoc />
+    public override async Task<AITestTranscript> ExecuteAsync(
+        AITest test,
+        int runNumber,
+        Guid? profileIdOverride,
+        IEnumerable<Guid>? contextIdsOverride,
+        CancellationToken cancellationToken)
+    {
+        // Deserialize test feature config
+        var config = test.GetTestFeatureConfig<PromptTestFeatureConfig>();
+        if (config == null)
+        {
+            throw new InvalidOperationException("Failed to deserialize test feature config");
+        }
+
+        // Use target prompt ID directly (entity picker ensures valid ID)
+        Guid promptId = test.TestTargetId;
+
+        // Extract entity context from config
+        var entityContext = ResolveEntityContext(config);
+
+        // Mock entity → request.Context (raw AIRequestContextItem)
+        var contextItems = ResolveEntityContextItems(config);
+
+        // Build execution request
+        var request = new AIPromptExecutionRequest
+        {
+            EntityId = Guid.Empty, // No real entity
+            EntityType = entityContext?.EntityType ?? "document",
+            ContentTypeAlias = entityContext?.EntitySubType ?? string.Empty,
+            PropertyAlias = config.PropertyAlias,
+            Context = contextItems.Count > 0 ? contextItems : null
+        };
+
+        // Execute prompt and capture timing
+        var stopwatch = Stopwatch.StartNew();
+        AIPromptExecutionResult result;
+
+        try
+        {
+            var options = new AIPromptExecutionOptions
+            {
+                ValidateScope = false,
+                ProfileIdOverride = profileIdOverride,
+                ContextIdsOverride = contextIdsOverride?.ToList()
+            };
+
+            result = await _promptService.ExecutePromptAsync(promptId, request, options, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            // Return transcript with error details
+            return new AITestTranscript
+            {
+                RunId = Guid.NewGuid(), // Will be set by the runner
+                Messages = JsonSerializer.SerializeToElement(new[]
+                {
+                    new { role = "system", content = "Prompt execution failed" },
+                    new { role = "error", content = ex.Message }
+                }, AIConstants.DefaultJsonSerializerOptions),
+                FinalOutput = JsonSerializer.SerializeToElement(new
+                {
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace
+                }, AIConstants.DefaultJsonSerializerOptions),
+                Timing = JsonSerializer.SerializeToElement(new
+                {
+                    totalMs = stopwatch.ElapsedMilliseconds,
+                    status = "error"
+                }, AIConstants.DefaultJsonSerializerOptions)
+            };
+        }
+
+        stopwatch.Stop();
+
+        // Build messages array from actual chat messages sent to the AI model
+        var messages = new List<object>();
+        if (result.Messages != null)
+        {
+            foreach (var msg in result.Messages)
+            {
+                messages.Add(new { role = msg.Role.Value, content = msg.Text ?? string.Empty });
+            }
+        }
+
+        // Append the assistant response
+        messages.Add(new { role = "assistant", content = result.Content });
+
+        // Build structured transcript
+        return new AITestTranscript
+        {
+            RunId = Guid.NewGuid(), // Will be set by the runner
+            Messages = JsonSerializer.SerializeToElement(messages, AIConstants.DefaultJsonSerializerOptions),
+            ToolCalls = null, // Prompts don't typically use tool calls
+            Reasoning = null, // No explicit reasoning in simple prompts
+            Timing = JsonSerializer.SerializeToElement(new
+            {
+                totalMs = stopwatch.ElapsedMilliseconds,
+                status = "success"
+            }, AIConstants.DefaultJsonSerializerOptions),
+            FinalOutput = JsonSerializer.SerializeToElement(new
+            {
+                content = result.Content,
+                usage = result.Usage != null ? new
+                {
+                    inputTokens = result.Usage.InputTokenCount,
+                    outputTokens = result.Usage.OutputTokenCount,
+                    totalTokens = result.Usage.TotalTokenCount
+                } : null,
+                resultOptions = result.ResultOptions
+            }, AIConstants.DefaultJsonSerializerOptions)
+        };
+    }
+}

@@ -28,17 +28,15 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
             .Where(IsEmbeddingModel)
             .Select(m => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, m.Id),
-                MicrosoftFoundryModelUtilities.FormatDisplayName(m.Id)))
+                m.Id))
             .ToList();
     }
 
     /// <inheritdoc />
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(MicrosoftFoundryProviderSettings settings, string? modelId)
-    {
-        var model = modelId ?? DefaultEmbeddingModel;
-        return MicrosoftFoundryProvider.CreateEmbeddingsClient(settings, model)
-            .AsIEmbeddingGenerator(model);
-    }
+        => MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)
+            .GetEmbeddingClient(modelId ?? DefaultEmbeddingModel)
+            .AsIEmbeddingGenerator();
 
     private static bool IsEmbeddingModel(MicrosoftFoundryModelInfo model)
     {

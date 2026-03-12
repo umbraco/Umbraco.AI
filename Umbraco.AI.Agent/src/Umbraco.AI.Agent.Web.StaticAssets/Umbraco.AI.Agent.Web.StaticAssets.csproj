@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <Target Name="UpdatePackageManifestVersion" BeforeTargets="CoreCompile"
-            Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != ''">
+            Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != '' AND '$(ContinuousIntegrationBuild)' == 'true'">
         <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
         <ItemGroup>
             <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />

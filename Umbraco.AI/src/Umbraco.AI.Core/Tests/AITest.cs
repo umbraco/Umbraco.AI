@@ -1,0 +1,138 @@
+using System.Text.Json;
+using Umbraco.AI.Core.Versioning;
+
+namespace Umbraco.AI.Core.Tests;
+
+/// <summary>
+/// Defines a test for validating AI prompts, agents, or custom features for consistent outputs.
+/// Acts like "unit tests for prompts and agents" - validates that outputs meet expectations even as models evolve.
+/// </summary>
+public sealed class AITest : IAIVersionableEntity
+{
+    /// <summary>
+    /// The unique identifier of the test.
+    /// </summary>
+    public Guid Id { get; internal set; }
+
+    /// <summary>
+    /// The alias of the test (unique identifier for lookups).
+    /// </summary>
+    public required string Alias { get; set; }
+
+    /// <summary>
+    /// The name of the test.
+    /// </summary>
+    public required string Name { get; set; }
+
+    /// <summary>
+    /// Optional description explaining what this test validates.
+    /// </summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// The ID of the test feature (harness) to use for execution.
+    /// References an IAITestFeature implementation (e.g., "prompt", "agent").
+    /// </summary>
+    public required string TestFeatureId { get; init; }
+
+    /// <summary>
+    /// The ID of the target entity being tested (prompt, agent, etc.).
+    /// UI uses entity pickers to ensure valid IDs.
+    /// </summary>
+    public required Guid TestTargetId { get; set; }
+
+    /// <summary>
+    /// Optional default profile ID for test execution.
+    /// When null, falls back to the test feature's default profile resolution.
+    /// </summary>
+    public Guid? ProfileId { get; set; }
+
+    /// <summary>
+    /// Default context IDs for test execution.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = Array.Empty<Guid>();
+
+    /// <summary>
+    /// Test feature configuration data as JsonElement.
+    /// Stored as JSON in database, deserialized on demand by test features.
+    /// </summary>
+    public JsonElement? TestFeatureConfig { get; set; }
+
+    /// <summary>
+    /// Success criteria - graders that evaluate the test output.
+    /// Multiple graders can be applied to validate different aspects.
+    /// </summary>
+    public IReadOnlyList<AITestGraderConfig> Graders { get; set; } = Array.Empty<AITestGraderConfig>();
+
+    /// <summary>
+    /// Named configuration overrides for A/B testing across models or configurations.
+    /// Each variation can override profile, contexts, run count, and/or feature config.
+    /// </summary>
+    public IReadOnlyList<AITestVariation> Variations { get; set; } = Array.Empty<AITestVariation>();
+
+    /// <summary>
+    /// Number of times to run this test (1 to N).
+    /// Multiple runs help measure non-deterministic behavior and calculate pass@k/pass^k metrics.
+    /// </summary>
+    public int RunCount { get; set; } = 1;
+
+    /// <summary>
+    /// Tags for categorization and batch execution.
+    /// </summary>
+    public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Whether this test is active for execution.
+    /// Inactive tests are skipped during batch runs.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Optional baseline run ID for regression detection.
+    /// When set, run results are compared against this baseline.
+    /// </summary>
+    public Guid? BaselineRunId { get; set; }
+
+    /// <summary>
+    /// The current version of the test.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; internal set; } = 1;
+
+    /// <summary>
+    /// The date and time when the test was created.
+    /// </summary>
+    public DateTime DateCreated { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The date and time when the test was last modified.
+    /// </summary>
+    public DateTime DateModified { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The key (GUID) of the user who created this test.
+    /// </summary>
+    public Guid? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The key (GUID) of the user who last modified this test.
+    /// </summary>
+    public Guid? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Gets the test feature configuration as a strongly-typed object.
+    /// Deserializes the JsonElement to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The target configuration type.</typeparam>
+    /// <returns>The configuration as the specified type, or null if TestFeatureConfig is null.</returns>
+    public T? GetTestFeatureConfig<T>() where T : class
+    {
+        if (TestFeatureConfig == null)
+        {
+            return null;
+        }
+
+        // Deserialize with camelCase options to match frontend-stored JSON
+        return JsonSerializer.Deserialize<T>(TestFeatureConfig.Value, Constants.DefaultJsonSerializerOptions);
+    }
+}

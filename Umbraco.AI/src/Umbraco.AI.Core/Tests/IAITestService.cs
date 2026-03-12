@@ -1,0 +1,138 @@
+namespace Umbraco.AI.Core.Tests;
+
+/// <summary>
+/// Service interface for AI test management operations.
+/// </summary>
+public interface IAITestService
+{
+    /// <summary>
+    /// Gets a test by its unique identifier.
+    /// </summary>
+    /// <param name="id">The test ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The test if found, null otherwise.</returns>
+    Task<AITest?> GetTestAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a test by its alias.
+    /// </summary>
+    /// <param name="alias">The test alias.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The test if found, null otherwise.</returns>
+    Task<AITest?> GetTestByAliasAsync(string alias, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all tests.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>All tests.</returns>
+    Task<IEnumerable<AITest>> GetTestsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a paged list of tests with optional filtering.
+    /// </summary>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="filter">Optional filter string for name/alias.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Tuple containing the items and total count.</returns>
+    Task<(IEnumerable<AITest> Items, int Total)> GetTestsPagedAsync(
+        int skip,
+        int take,
+        string? filter = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Save a test (insert if new, update if exists) with validation.
+    /// If test.Id is Guid.Empty, a new Guid will be generated.
+    /// </summary>
+    /// <param name="test">The test to save.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The saved test.</returns>
+    Task<AITest> SaveTestAsync(AITest test, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a test and all its runs.
+    /// </summary>
+    /// <param name="id">The test ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if deleted, false if not found.</returns>
+    Task<bool> DeleteTestAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a test with the given ID exists.
+    /// </summary>
+    /// <param name="id">The test ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if test exists.</returns>
+    Task<bool> TestExistsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a test with the given alias exists.
+    /// </summary>
+    /// <param name="alias">The test alias.</param>
+    /// <param name="excludeId">Optional ID to exclude from the check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if alias exists.</returns>
+    Task<bool> TestAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a test to a previous version.
+    /// </summary>
+    /// <param name="testId">The test ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated test at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the test or target version is not found.</exception>
+    Task<AITest> RollbackTestAsync(
+        Guid testId,
+        int targetVersion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a test and returns per-variation execution results.
+    /// Runs the default config plus all configured variations under a single execution ID.
+    /// </summary>
+    /// <param name="testId">The test ID to execute.</param>
+    /// <param name="profileIdOverride">Optional profile ID to override the test's default profile (applies to default config only).</param>
+    /// <param name="contextIdsOverride">Optional context IDs to override (applies to default config only).</param>
+    /// <param name="batchId">Optional batch ID to group multiple test executions together.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Execution result with per-variation metrics and aggregate metrics.</returns>
+    Task<AITestExecutionResult> RunTestAsync(
+        Guid testId,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        Guid? batchId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes multiple tests in batch and returns execution results for each.
+    /// All tests in the batch share the same batch ID for grouping.
+    /// </summary>
+    /// <param name="testIds">The test IDs to execute.</param>
+    /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
+    /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of test ID to execution result.</returns>
+    Task<IDictionary<Guid, AITestExecutionResult>> RunTestBatchAsync(
+        IEnumerable<Guid> testIds,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes all tests with the specified tags and returns execution results for each.
+    /// All tests in the batch share the same batch ID for grouping.
+    /// </summary>
+    /// <param name="tags">The tags to filter tests by. Tests must have ALL specified tags.</param>
+    /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
+    /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of test ID to execution result.</returns>
+    Task<IDictionary<Guid, AITestExecutionResult>> RunTestsByTagsAsync(
+        IEnumerable<string> tags,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        CancellationToken cancellationToken = default);
+}

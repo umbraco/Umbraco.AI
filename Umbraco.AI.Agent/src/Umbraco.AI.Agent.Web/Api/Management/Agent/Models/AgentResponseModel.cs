@@ -26,15 +26,15 @@ public class AgentResponseModel
     public string? Description { get; set; }
 
     /// <summary>
+    /// The type of agent ("standard" or "orchestrated").
+    /// </summary>
+    public string AgentType { get; set; } = string.Empty;
+
+    /// <summary>
     /// The linked profile ID.
     /// When null, the default chat profile from Settings will be used.
     /// </summary>
     public Guid? ProfileId { get; set; }
-
-    /// <summary>
-    /// Context IDs for AI context injection.
-    /// </summary>
-    public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
     /// Surface IDs that categorize this agent for specific purposes.
@@ -48,28 +48,9 @@ public class AgentResponseModel
     public AIAgentScopeModel? Scope { get; set; }
 
     /// <summary>
-    /// Allowed tool IDs for this agent.
-    /// Tools must be explicitly allowed or belong to an allowed scope.
-    /// System tools are always allowed.
+    /// Type-specific configuration for this agent.
     /// </summary>
-    public IEnumerable<string> AllowedToolIds { get; set; } = [];
-
-    /// <summary>
-    /// Allowed tool scope IDs for this agent.
-    /// Tools belonging to these scopes are automatically allowed.
-    /// </summary>
-    public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
-
-    /// <summary>
-    /// User group-specific permission overrides.
-    /// Dictionary key is UserGroupId (Guid).
-    /// </summary>
-    public Dictionary<Guid, AIAgentUserGroupPermissionsModel> UserGroupPermissions { get; set; } = [];
-
-    /// <summary>
-    /// Instructions that define how the agent behaves.
-    /// </summary>
-    public string? Instructions { get; set; }
+    public AgentConfigModel? Config { get; set; }
 
     /// <summary>
     /// Whether the agent is active.

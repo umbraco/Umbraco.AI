@@ -1,17 +1,21 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel } from "../../../types.js";
+import type { UaiModelEditorChangeEventDetail } from "@umbraco-ai/core";
+import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem } from "../../../types.js";
+import { isStandardConfig, isOrchestratedConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
+import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
 
 /**
  * Workspace view for Agent settings.
- * Configures agent behavior: profile, description, contexts, and instructions.
+ * Renders shared fields (profile, description) for all agent types,
+ * plus type-specific fields for standard and orchestrated agents.
  */
 @customElement("uai-agent-details-workspace-view")
 export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
@@ -20,6 +24,9 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _model?: UaiAgentDetailModel;
 
+    @state()
+    private _selectedWorkflow?: UaiWorkflowItem;
+
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
@@ -27,6 +34,10 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
+                    // Clear stale workflow state when not orchestrated
+                    if (!model || !isOrchestratedConfig(model.config)) {
+                        this._selectedWorkflow = undefined;
+                    }
                 });
             }
         });
@@ -40,14 +51,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onInstructionsChange(event: Event) {
-        event.stopPropagation();
-        const value = (event.target as HTMLInputElement).value;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ instructions: value || null }, "instructions"),
-        );
-    }
-
     #onProfileChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string | undefined };
@@ -57,12 +60,74 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    // Standard-agent-specific handlers
+    #onInstructionsChange(event: Event) {
+        event.stopPropagation();
+        const value = (event.target as HTMLInputElement).value;
+        if (!this._model || !isStandardConfig(this._model.config)) return;
+        const config: UaiStandardAgentConfig = {
+            ...this._model.config,
+            instructions: value || null,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.instructions"),
+        );
+    }
+
     #onContextIdsChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
+        if (!this._model || !isStandardConfig(this._model.config)) return;
+        const config: UaiStandardAgentConfig = {
+            ...this._model.config,
+            contextIds: picker.value ?? [],
+        };
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextIds: picker.value ?? [] }, "contextIds"),
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.contextIds"),
         );
+    }
+
+    // Orchestrated-agent-specific handlers
+    #onWorkflowLoaded(event: Event) {
+        event.stopPropagation();
+        const picker = event.target as UaiWorkflowPickerElement;
+        this._selectedWorkflow = picker.selectedWorkflow;
+    }
+
+    #onWorkflowChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as UaiWorkflowPickerElement;
+        const workflowId = picker.value ?? null;
+        this._selectedWorkflow = picker.selectedWorkflow;
+        if (!this._model || !isOrchestratedConfig(this._model.config)) return;
+        const config: UaiOrchestratedAgentConfig = {
+            ...this._model.config,
+            workflowId,
+            settings: workflowId ? {} : null, // Initialize empty settings so defaults are persisted
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.workflowId"),
+        );
+    }
+
+    #onWorkflowSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+        e.stopPropagation();
+        if (!this._model || !isOrchestratedConfig(this._model.config)) return;
+        const config: UaiOrchestratedAgentConfig = {
+            ...this._model.config,
+            settings: e.detail.model,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.settings"),
+        );
+    }
+
+    get #standardConfig(): UaiStandardAgentConfig | undefined {
+        return this._model && isStandardConfig(this._model.config) ? this._model.config : undefined;
+    }
+
+    get #orchestratedConfig(): UaiOrchestratedAgentConfig | undefined {
+        return this._model && isOrchestratedConfig(this._model.config) ? this._model.config : undefined;
     }
 
     render() {
@@ -70,17 +135,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout
-                    label="AI Profile"
-                    description="Select a profile or leave empty to use the default Chat profile from Settings"
-                >
-                    <uai-profile-picker
-                        slot="editor"
-                        .value=${this._model.profileId || undefined}
-                        @change=${this.#onProfileChange}
-                    ></uai-profile-picker>
-                </umb-property-layout>
-
                 <umb-property-layout label="Description" description="Brief description of this agent">
                     <uui-input
                         slot="editor"
@@ -91,13 +145,38 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
                 <umb-property-layout
+                    label="AI Profile"
+                    description=${this._model.agentType === "orchestrated"
+                        ? "Select a profile for orchestration-level LLM calls, or leave empty to use the default"
+                        : "Select a profile or leave empty to use the default Chat profile from Settings"}
+                >
+                    <uai-profile-picker
+                        slot="editor"
+                        .value=${this._model.profileId || undefined}
+                        @change=${this.#onProfileChange}
+                    ></uai-profile-picker>
+                </umb-property-layout>
+            </uui-box>
+
+            ${this.#renderStandardSection()}
+            ${this.#renderOrchestratedSection()}
+        `;
+    }
+
+    #renderStandardSection() {
+        const config = this.#standardConfig;
+        if (!config) return nothing;
+
+        return html`
+            <uui-box headline="Agent Behavior">
+                <umb-property-layout
                     label="Contexts"
                     description="Predefined contexts to include when running this agent"
                 >
                     <uai-context-picker
                         slot="editor"
                         multiple
-                        .value=${this._model.contextIds}
+                        .value=${config.contextIds}
                         @change=${this.#onContextIdsChange}
                     ></uai-context-picker>
                 </umb-property-layout>
@@ -105,13 +184,51 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves" mandatory>
                     <umb-input-markdown
                         slot="editor"
-                        .value=${this._model.instructions ?? ""}
+                        .value=${config.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
                         required
-                        ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
+                        ${umbBindToValidation(this, "$.config.instructions", config.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
+        `;
+    }
+
+    #renderOrchestratedSection() {
+        const config = this.#orchestratedConfig;
+        if (!config) return nothing;
+
+        return html`
+            <uui-box headline="Workflow">
+                <umb-property-layout
+                    label="Workflow"
+                    description="Select the workflow that defines how this orchestrated agent operates"
+                >
+                    <uai-workflow-picker
+                        slot="editor"
+                        .value=${config.workflowId ?? undefined}
+                        @change=${this.#onWorkflowChange}
+                        @workflow-loaded=${this.#onWorkflowLoaded}
+                    ></uai-workflow-picker>
+                </umb-property-layout>
+            </uui-box>
+
+            ${this.#renderWorkflowSettings()}
+        `;
+    }
+
+    #renderWorkflowSettings() {
+        const config = this.#orchestratedConfig;
+        if (!config?.workflowId || !this._selectedWorkflow?.settingsSchema) return nothing;
+
+        return html`
+            <uai-model-editor
+                .schema=${this._selectedWorkflow.settingsSchema}
+                .model=${(config.settings as Record<string, unknown>) ?? {}}
+                default-group="Workflow Settings"
+                empty-message="This workflow has no configurable settings."
+                @change=${this.#onWorkflowSettingsChange}
+            ></uai-model-editor>
         `;
     }
 
@@ -127,6 +244,10 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
             uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
+            }
+
+            uai-model-editor {
                 margin-top: var(--uui-size-layout-1);
             }
 

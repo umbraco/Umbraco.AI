@@ -38,6 +38,7 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
         { name: "Name", alias: "name" },
         { name: "Alias", alias: "alias" },
         { name: "Description", alias: "description" },
+        { name: "Type", alias: "agentType" },
         { name: "Active", alias: "isActive" },
         { name: "Modified", alias: "dateModified" },
     ];
@@ -72,7 +73,7 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
     #createTableItems(items: UaiAgentItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: UAI_AGENT_ICON,
+            icon: item.agentType === "orchestrated" ? "icon-mindmap" : UAI_AGENT_ICON,
             data: [
                 {
                     columnAlias: "name",
@@ -88,6 +89,13 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "description",
                     value: item.description ?? "-",
+                },
+                {
+                    columnAlias: "agentType",
+                    value: html`<uui-tag
+                        look="secondary"
+                    >${item.agentType === "orchestrated" ? "Orchestrated" : "Standard"}</uui-tag
+                    >`,
                 },
                 {
                     columnAlias: "isActive",

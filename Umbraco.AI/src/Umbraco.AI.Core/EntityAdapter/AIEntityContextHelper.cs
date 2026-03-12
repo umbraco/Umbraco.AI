@@ -7,15 +7,15 @@ namespace Umbraco.AI.Core.EntityAdapter;
 /// </summary>
 internal sealed class AIEntityContextHelper : IAIEntityContextHelper
 {
-    private readonly AIEntityFormatterCollection _formatters;
+    private readonly AIEntityAdapterCollection _adapters;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIEntityContextHelper"/> class.
     /// </summary>
-    /// <param name="formatters">The entity formatter collection.</param>
-    public AIEntityContextHelper(AIEntityFormatterCollection formatters)
+    /// <param name="adapters">The entity adapter collection.</param>
+    public AIEntityContextHelper(AIEntityAdapterCollection adapters)
     {
-        _formatters = formatters;
+        _adapters = adapters;
     }
 
     /// <inheritdoc />
@@ -76,10 +76,10 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        // Get the appropriate formatter for this entity type
-        var formatter = _formatters.GetFormatter(entity.EntityType);
+        // Get the appropriate adapter for this entity type
+        var adapter = _adapters.GetAdapter(entity.EntityType);
 
-        return formatter.Format(entity);
+        return adapter.FormatForLlm(entity);
     }
 
     private static object? ExtractValue(JsonElement element)

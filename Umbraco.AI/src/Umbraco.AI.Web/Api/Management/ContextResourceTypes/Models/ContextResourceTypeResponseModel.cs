@@ -1,3 +1,4 @@
+using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Api.Management.Provider.Models;
 
 namespace Umbraco.AI.Web.Api.Management.ContextResourceTypes.Models;

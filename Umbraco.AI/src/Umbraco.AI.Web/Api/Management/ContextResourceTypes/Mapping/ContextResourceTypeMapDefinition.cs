@@ -1,4 +1,5 @@
 using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Api.Management.ContextResourceTypes.Models;
 using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;

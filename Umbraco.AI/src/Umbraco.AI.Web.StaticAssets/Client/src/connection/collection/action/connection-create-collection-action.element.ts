@@ -52,7 +52,7 @@ export class UaiConnectionCreateCollectionActionElement extends UmbLitElement {
                         ? html`<div class="empty">No providers available</div>`
                         : this._providers.map(
                               (provider) => html`
-                                  <uui-menu-item label=${provider.name} @click=${() => this.#onSelect(provider.id)}>
+                                  <uui-menu-item label=${provider.name} @click=${() => this.#onSelect(provider.id)} style="--uui-menu-item-flat-structure: 1;">
                                       <umb-icon slot="icon" name="icon-cloud"></umb-icon>
                                   </uui-menu-item>
                               `,

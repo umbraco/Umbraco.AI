@@ -13,8 +13,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.AI.Inference" />
-    <PackageReference Include="Microsoft.Extensions.AI.AzureAIInference" />
+    <PackageReference Include="Azure.AI.OpenAI" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
@@ -31,7 +32,7 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <Target Name="UpdatePackageManifestVersion" BeforeTargets="CoreCompile" Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != ''">
+  <Target Name="UpdatePackageManifestVersion" BeforeTargets="CoreCompile" Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != '' AND '$(ContinuousIntegrationBuild)' == 'true'">
     <Message Text="Update umbraco-package.json files with current build version $(PackageVersion)" Importance="high" />
     <ItemGroup>
       <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />

@@ -11,8 +11,6 @@ using Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.Cms.Core;
-using Umbraco.Cms.Core.Models.Membership;
-using Umbraco.Cms.Core.Services;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -21,7 +19,6 @@ public class UmbracoAIAgentServiceConnectorTests
 {
     private readonly Mock<IAIAgentService> _agentServiceMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
-    private readonly Mock<IUserGroupService> _userGroupServiceMock;
     private readonly Mock<UmbracoAIDeploySettingsAccessor> _settingsAccessorMock;
     private readonly UmbracoAIAgentServiceConnector _connector;
 
@@ -29,7 +26,6 @@ public class UmbracoAIAgentServiceConnectorTests
     {
         _agentServiceMock = new Mock<IAIAgentService>();
         _profileServiceMock = new Mock<IAIProfileService>();
-        _userGroupServiceMock = new Mock<IUserGroupService>();
         _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
 
         _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
@@ -37,7 +33,6 @@ public class UmbracoAIAgentServiceConnectorTests
         _connector = new UmbracoAIAgentServiceConnector(
             _agentServiceMock.Object,
             _profileServiceMock.Object,
-            _userGroupServiceMock.Object,
             _settingsAccessorMock.Object);
     }
 
@@ -46,28 +41,26 @@ public class UmbracoAIAgentServiceConnectorTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var userGroupId1 = Guid.NewGuid();
-        var userGroupId2 = Guid.NewGuid();
-
-        // Mock user groups with aliases
-        var userGroup1 = new Mock<IUserGroup>();
-        userGroup1.Setup(x => x.Key).Returns(userGroupId1);
-        userGroup1.Setup(x => x.Alias).Returns("editors");
-
-        var userGroup2 = new Mock<IUserGroup>();
-        userGroup2.Setup(x => x.Key).Returns(userGroupId2);
-        userGroup2.Setup(x => x.Alias).Returns("writers");
-
-        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId1)).ReturnsAsync(userGroup1.Object);
-        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId2)).ReturnsAsync(userGroup2.Object);
 
         var agent = new AIAgent
         {
             Alias = "test-agent",
             Name = "Test Agent",
             Description = "Test description",
+            AgentType = AIAgentType.Standard,
             ProfileId = profileId,
-            ContextIds = [Guid.NewGuid()],
+            Config = new AIStandardAgentConfig
+            {
+                ContextIds = [Guid.NewGuid()],
+                Instructions = "Agent instructions",
+                AllowedToolIds = ["search", "calculator"],
+                AllowedToolScopeIds = ["content", "media"],
+                UserGroupPermissions = new Dictionary<Guid, AIAgentUserGroupPermissions>
+                {
+                    { Guid.NewGuid(), new AIAgentUserGroupPermissions { AllowedToolIds = ["read", "write"] } },
+                    { Guid.NewGuid(), new AIAgentUserGroupPermissions { AllowedToolIds = ["read"] } }
+                },
+            },
             SurfaceIds = ["backoffice", "frontend"],
             Scope = new AIAgentScope
             {
@@ -79,14 +72,6 @@ public class UmbracoAIAgentServiceConnectorTests
                     }
                 ]
             },
-            AllowedToolIds = ["search", "calculator"],
-            AllowedToolScopeIds = ["content", "media"],
-            UserGroupPermissions = new Dictionary<Guid, AIAgentUserGroupPermissions>
-            {
-                { userGroupId1, new AIAgentUserGroupPermissions { AllowedToolIds = ["read", "write"] } },
-                { userGroupId2, new AIAgentUserGroupPermissions { AllowedToolIds = ["read"] } }
-            },
-            Instructions = "Agent instructions",
             IsActive = true
         };
 
@@ -100,7 +85,7 @@ public class UmbracoAIAgentServiceConnectorTests
         artifact.Alias.ShouldBe("test-agent");
         artifact.Name.ShouldBe("Test Agent");
         artifact.Description.ShouldBe("Test description");
-        artifact.Instructions.ShouldBe("Agent instructions");
+        artifact.AgentType.ShouldBe("Standard");
         artifact.IsActive.ShouldBeTrue();
 
         // Profile dependency
@@ -110,13 +95,8 @@ public class UmbracoAIAgentServiceConnectorTests
             d.Udi.EntityType == "umbraco-ai-profile" &&
             ((GuidUdi)d.Udi).Guid == profileId);
 
-        // User group permissions are stored by alias, not as dependencies
-        artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "user-group");
-
         // Arrays
         artifact.SurfaceIds.ShouldBe(new[] { "backoffice", "frontend" });
-        artifact.AllowedToolIds.ShouldBe(new[] { "search", "calculator" });
-        artifact.AllowedToolScopeIds.ShouldBe(new[] { "content", "media" });
 
         // JSON properties
         artifact.Scope.ShouldNotBeNull();
@@ -124,15 +104,11 @@ public class UmbracoAIAgentServiceConnectorTests
         scope.ShouldNotBeNull();
         scope.ShouldContainKey("AllowRules");
 
-        // User group permissions should be keyed by alias
-        artifact.UserGroupPermissions.ShouldNotBeNull();
-        var permissions = JsonSerializer.Deserialize<Dictionary<string, AIAgentUserGroupPermissions>>(artifact.UserGroupPermissions.Value);
-        permissions.ShouldNotBeNull();
-        permissions.Count.ShouldBe(2);
-        permissions.ShouldContainKey("editors");
-        permissions.ShouldContainKey("writers");
-        permissions["editors"].AllowedToolIds.ShouldBe(new[] { "read", "write" });
-        permissions["writers"].AllowedToolIds.ShouldBe(new[] { "read" });
+        // Config should be serialized as JSON
+        artifact.Config.ShouldNotBeNull();
+        var config = JsonSerializer.Deserialize<JsonElement>(artifact.Config);
+        config.TryGetProperty("instructions", out var instructions).ShouldBeTrue();
+        instructions.GetString().ShouldBe("Agent instructions");
     }
 
     [Fact]
@@ -143,14 +119,11 @@ public class UmbracoAIAgentServiceConnectorTests
         {
             Alias = "test-agent",
             Name = "Test Agent",
+            AgentType = AIAgentType.Standard,
             ProfileId = null,
-            ContextIds = [],
+            Config = null,
             SurfaceIds = [],
             Scope = null,
-            AllowedToolIds = [],
-            AllowedToolScopeIds = [],
-            UserGroupPermissions = new Dictionary<Guid, AIAgentUserGroupPermissions>(),
-            Instructions = null,
             IsActive = false
         };
 
@@ -163,44 +136,27 @@ public class UmbracoAIAgentServiceConnectorTests
         artifact.ShouldNotBeNull();
         artifact.ProfileUdi.ShouldBeNull();
         artifact.Scope.ShouldBeNull();
-        artifact.UserGroupPermissions.ShouldBeNull(); // Empty dict has no entries to resolve
-        artifact.Instructions.ShouldBeNull();
+        artifact.Config.ShouldBeNull();
+        artifact.AgentType.ShouldBe("Standard");
         artifact.IsActive.ShouldBeFalse();
 
-        // Should not have profile or user group dependencies
+        // Should not have profile dependencies
         artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "umbraco-ai-profile");
-        artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "user-group");
     }
 
     [Fact]
-    public async Task GetArtifactAsync_WithUserGroupPermissions_ResolvesToAliasKeyedPermissions()
+    public async Task GetArtifactAsync_WithOrchestratedAgent_SerializesAgentType()
     {
         // Arrange
-        var userGroupId1 = Guid.NewGuid();
-        var userGroupId2 = Guid.NewGuid();
-
-        // Mock user groups with aliases
-        var userGroup1 = new Mock<IUserGroup>();
-        userGroup1.Setup(x => x.Key).Returns(userGroupId1);
-        userGroup1.Setup(x => x.Alias).Returns("editors");
-
-        var userGroup2 = new Mock<IUserGroup>();
-        userGroup2.Setup(x => x.Key).Returns(userGroupId2);
-        userGroup2.Setup(x => x.Alias).Returns("writers");
-
-        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId1)).ReturnsAsync(userGroup1.Object);
-        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId2)).ReturnsAsync(userGroup2.Object);
-
         var agent = new AIAgent
         {
-            Alias = "test-agent",
-            Name = "Test Agent",
+            Alias = "test-orchestration",
+            Name = "Test Orchestration",
+            AgentType = AIAgentType.Orchestrated,
             ProfileId = null,
-            UserGroupPermissions = new Dictionary<Guid, AIAgentUserGroupPermissions>
-            {
-                { userGroupId1, new AIAgentUserGroupPermissions { AllowedToolIds = ["read"] } },
-                { userGroupId2, new AIAgentUserGroupPermissions { AllowedToolIds = ["write"] } }
-            }
+            Config = new AIOrchestratedAgentConfig(),
+            SurfaceIds = ["backoffice"],
+            IsActive = true
         };
 
         var udi = new GuidUdi("umbraco-ai-agent", agent.Id);
@@ -210,19 +166,8 @@ public class UmbracoAIAgentServiceConnectorTests
 
         // Assert
         artifact.ShouldNotBeNull();
-
-        // User group permissions are stored by alias, not as dependencies
-        artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "user-group");
-
-        // Verify alias-keyed permissions
-        artifact.UserGroupPermissions.ShouldNotBeNull();
-        var permissions = JsonSerializer.Deserialize<Dictionary<string, AIAgentUserGroupPermissions>>(artifact.UserGroupPermissions.Value);
-        permissions.ShouldNotBeNull();
-        permissions.Count.ShouldBe(2);
-        permissions.ShouldContainKey("editors");
-        permissions.ShouldContainKey("writers");
-        permissions["editors"].AllowedToolIds.ShouldBe(new[] { "read" });
-        permissions["writers"].AllowedToolIds.ShouldBe(new[] { "write" });
+        artifact.AgentType.ShouldBe("Orchestrated");
+        artifact.Config.ShouldNotBeNull();
     }
 
     [Fact]

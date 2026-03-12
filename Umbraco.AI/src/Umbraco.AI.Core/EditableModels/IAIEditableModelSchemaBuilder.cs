@@ -13,4 +13,12 @@ public interface IAIEditableModelSchemaBuilder
     /// <returns>The schema containing field definitions for the model.</returns>
     AIEditableModelSchema BuildForType<TModel>(string modelId)
         where TModel : class;
+
+    /// <summary>
+    /// Builds a schema for the specified model type.
+    /// </summary>
+    /// <param name="modelType"></param>
+    /// <param name="modelId"></param>
+    /// <returns></returns>
+    AIEditableModelSchema BuildForType(Type modelType, string modelId);
 }

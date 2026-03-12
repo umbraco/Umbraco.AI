@@ -76,6 +76,23 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onDisplayModeChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const select = event.target as HTMLElement & { value: string };
+        const displayMode = select.value as "PropertyAction" | "TipTapTool";
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ displayMode }, "displayMode"),
+        );
+    }
+
+    #getDisplayModeOptions(): Array<{ name: string; value: string; selected?: boolean }> {
+        const current = this._model?.displayMode ?? "PropertyAction";
+        return [
+            { name: "Property Action", value: "PropertyAction", selected: current === "PropertyAction" },
+            { name: "TipTap Tool", value: "TipTapTool", selected: current === "TipTapTool" },
+        ];
+    }
+
     #onResultTypeChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const select = event.target as HTMLElement & { value: string };
@@ -144,6 +161,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
+                <umb-property-layout label="Description" description="Brief description of this prompt">
+                    <uui-input
+                        slot="editor"
+                        .value=${this._model.description ?? ""}
+                        @input=${this.#onDescriptionChange}
+                        placeholder="Enter description..."
+                    ></uui-input>
+                </umb-property-layout>
+
                 <umb-property-layout
                     label="AI Profile"
                     description="Select a profile or leave empty to use the default Chat profile from Settings"
@@ -153,15 +179,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.profileId ?? undefined}
                         @change=${this.#onProfileChange}
                     ></uai-profile-picker>
-                </umb-property-layout>
-
-                <umb-property-layout label="Description" description="Brief description of this prompt">
-                    <uui-input
-                        slot="editor"
-                        .value=${this._model.description ?? ""}
-                        @input=${this.#onDescriptionChange}
-                        placeholder="Enter description..."
-                    ></uui-input>
                 </umb-property-layout>
 
                 <umb-property-layout
@@ -235,6 +252,25 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                           </umb-property-layout>
                       `
                     : nothing}
+
+                <umb-property-layout
+                    label="Display Mode"
+                    description="Where this prompt appears in the UI"
+                >
+                    <uui-select
+                        slot="editor"
+                        .value=${this._model.displayMode ?? "PropertyAction"}
+                        .options=${this.#getDisplayModeOptions()}
+                        @change=${this.#onDisplayModeChange}
+                        style="width: 100%;"
+                    ></uui-select>
+                    <div slot="description" style="margin-top: var(--uui-size-space-2);">
+                        <ul style="margin: 0; padding-left: var(--uui-size-space-5); list-style: disc;">
+                            <li><strong>Property Action:</strong> Appears as an action on property editors</li>
+                            <li><strong>TipTap Tool:</strong> Appears in the rich text editor toolbar. Use <code>{{selection}}</code> in instructions to reference selected text.</li>
+                        </ul>
+                    </div>
+                </umb-property-layout>
             </uui-box>
 
             ${this._model.tags.length > 0

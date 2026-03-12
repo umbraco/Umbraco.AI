@@ -218,6 +218,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Test features.
+            /// </summary>
+            public static class Test
+            {
+                /// <summary>
+                /// The route segment for Test features.
+                /// </summary>
+                public const string RouteSegment = "tests";
+
+                /// <summary>
+                /// The Swagger group name for Test features.
+                /// </summary>
+                public const string GroupName = "Tests";
+            }
+
+            /// <summary>
             /// Defines constants for Tools features.
             /// </summary>
             public static class Tools

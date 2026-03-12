@@ -1,0 +1,34 @@
+import type { ManifestModal } from "@umbraco-cms/backoffice/modal";
+
+export const testModalManifests: Array<ManifestModal> = [
+    {
+        type: "modal",
+        alias: "UmbracoAI.Modal.Test.CreateOptions",
+        name: "Test Create Options Modal",
+        element: () => import("./create-options/test-create-options-modal.element.js"),
+    },
+    {
+        type: "modal",
+        alias: "Uai.Modal.GraderConfigEditor",
+        name: "Grader Config Editor Modal",
+        element: () => import("./grader-config-editor/grader-config-editor-modal.element.js"),
+    },
+    {
+        type: "modal",
+        alias: "Uai.Modal.TestVariationConfigEditor",
+        name: "Test Variation Config Editor Modal",
+        element: () => import("./test-variation-config-editor/test-variation-config-editor-modal.element.js"),
+    },
+    {
+        type: "modal",
+        alias: "UmbracoAI.Modal.TestRun.Detail",
+        name: "Test Run Detail Modal",
+        element: () => import("./test-run-detail/test-run-detail-modal.element.js"),
+    },
+    {
+        type: "modal",
+        alias: "Uai.Modal.TestExecutionSummary",
+        name: "Test Execution Summary Modal",
+        element: () => import("./test-execution-summary/test-execution-summary-modal.element.js"),
+    },
+];

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Surfaces;
@@ -83,15 +84,16 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AIAgent>> GetAgentsPagedAsync(
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
         int skip,
         int take,
         string? filter = null,
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, cancellationToken);
+        => _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, cancellationToken);
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
@@ -133,6 +135,13 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
+
+        // Enforce type immutability
+        if (existing is not null && existing.AgentType != agent.AgentType)
+        {
+            throw new InvalidOperationException($"Agent type cannot be changed after creation. Agent '{agent.Alias}' is a {existing.AgentType} agent.");
+        }
+
         if (existing is not null)
         {
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
@@ -335,12 +344,23 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
+    public IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        Guid agentId,
+        AGUIRunRequest request,
+        IEnumerable<AIFrontendTool>? frontendTools,
+        CancellationToken cancellationToken = default)
+        => StreamAgentAsync(agentId, request, frontendTools, new AIAgentExecutionOptions(), cancellationToken);
+
+    /// <inheritdoc />
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
+        AIAgentExecutionOptions options,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         // 1. Resolve agent
         var agent = await GetAgentAsync(agentId, cancellationToken);
 
@@ -361,6 +381,12 @@ internal sealed class AIAgentService : IAIAgentService
             yield return errorEmitter.EmitError($"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE");
             yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent '{agent.Name}' is not active"));
             yield break;
+        }
+
+        // Apply profile override if specified
+        if (options.ProfileIdOverride.HasValue)
+        {
+            agent.ProfileId = options.ProfileIdOverride.Value;
         }
 
         // Publish executing notification (before execution)
@@ -411,7 +437,7 @@ internal sealed class AIAgentService : IAIAgentService
                     isPermitted = true;
                 }
                 // Check if tool has scope and scope is allowed
-                else if (frontendTool.Scope is not null && agent.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase))
+                else if (frontendTool.Scope is not null && (agent.GetStandardConfig()?.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false))
                 {
                     isPermitted = true;
                 }
@@ -436,6 +462,12 @@ internal sealed class AIAgentService : IAIAgentService
                 Constants.ContextKeys.ThreadId
             }}
         };
+
+        // Set context IDs override in additional properties for AgentContextResolver to pick up
+        if (options.ContextIdsOverride is not null)
+        {
+            additionalProperties[Constants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
+        }
 
         // 4. Create MAF agent
         //    System message injection is handled automatically by ScopedAIAgent

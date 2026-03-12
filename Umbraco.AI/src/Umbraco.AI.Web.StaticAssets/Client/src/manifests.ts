@@ -28,6 +28,7 @@ import { manifests as coreManifests } from "./core/manifests.js";
 import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
 import { settingsManifests } from "./settings/manifests.js";
 import { requestContextManifests } from "./request-context/manifests.js";
+import { testManifests } from "./test/manifests.js";
 
 // Aggregate all manifests into a single bundle
 // IMPORTANT: This should only include manifest arrays and nothing else
@@ -47,4 +48,5 @@ export const manifests: Array<UmbExtensionManifest | UmbExtensionManifestKind> =
     ...workspaceRegistryManifests,
     ...settingsManifests,
     ...requestContextManifests,
+    ...testManifests,
 ];

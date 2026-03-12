@@ -1,4 +1,5 @@
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -44,12 +45,32 @@ internal sealed class AgentContextResolver : IAIContextResolver
         }
 
         var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
-        if (agent is null || agent.ContextIds.Count == 0)
+
+
+        // Check for context IDs override (set by execution options for test scenarios)
+        var contextIdsOverride = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.ContextKeys.ContextIdsOverride);
+        if (contextIdsOverride is not null)
+        {
+            if (contextIdsOverride.Count == 0)
+            {
+                return AIContextResolverResult.Empty;
+            }
+
+            return await ResolveContextIdsAsync(contextIdsOverride, agent?.Name, cancellationToken);
+        }
+
+        if (agent is null)
         {
             return AIContextResolverResult.Empty;
         }
 
-        return await ResolveContextIdsAsync(agent.ContextIds, agent.Name, cancellationToken);
+        var contextIds = agent.GetStandardConfig()?.ContextIds;
+        if (contextIds is null || contextIds.Count == 0)
+        {
+            return AIContextResolverResult.Empty;
+        }
+
+        return await ResolveContextIdsAsync(contextIds, agent.Name, cancellationToken);
     }
 
     private async Task<AIContextResolverResult> ResolveContextIdsAsync(

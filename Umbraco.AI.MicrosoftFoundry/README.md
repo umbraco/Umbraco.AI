@@ -2,14 +2,16 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.MicrosoftFoundry.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.MicrosoftFoundry/)
 
-Microsoft AI Foundry provider plugin for Umbraco.AI, enabling integration with models hosted through Microsoft AI Foundry (Azure AI Inference).
+Microsoft AI Foundry provider plugin for Umbraco.AI, enabling integration with models hosted through Microsoft AI Foundry (Azure AI).
 
 ## Features
 
 - **Chat Completion**: Support for GPT-4o, Mistral, Llama, Cohere, Phi, and other chat models
 - **Embeddings**: Support for text-embedding-3-small, text-embedding-3-large, and other embedding models
-- **Multi-Model Access**: One endpoint and API key provides access to all deployed models
+- **Multi-Model Access**: One endpoint provides access to all deployed models
 - **API Key Authentication**: Simple authentication using Microsoft AI Foundry API keys
+- **Entra ID Authentication**: Azure AD authentication via service principal or managed identity
+- **Deployed Model Listing**: When using Entra ID, the model dropdown shows only your deployed models (not the full catalog)
 
 ## Monorepo Context
 
@@ -19,9 +21,9 @@ This package is part of the [Umbraco.AI monorepo](../README.md). For local devel
 
 1. An Azure subscription
 2. A Microsoft AI Foundry resource (Azure AI hub) with deployed models
-3. The endpoint URL and API key from your Microsoft AI Foundry resource
+3. The endpoint URL and either an API key or Entra ID credentials
 
-> **Important:** Models must be deployed in Microsoft AI Foundry before they can be used. The model dropdown in Umbraco shows models that are _available_ to deploy, not models that are currently deployed. You must deploy models in the AI Foundry portal first.
+> **Important:** Models must be deployed in Microsoft AI Foundry before they can be used. When using API key authentication, the model dropdown shows all available models in the catalog. When using Entra ID authentication, only deployed models are shown.
 
 ## Azure Account Setup
 
@@ -114,22 +116,73 @@ In the Umbraco backoffice:
 
 1. Navigate to **Settings** > **AI** > **Connections**
 2. Create a new connection and select **Microsoft AI Foundry**
-3. Enter your:
-    - **Endpoint**: Your Microsoft AI Foundry endpoint URL
-    - **API Key**: Your Microsoft AI Foundry API key
+3. Enter your endpoint and choose an authentication method:
+
+**Option A: API Key (simplest)**
+- Enter your **API Key** in the API Key Authentication section
+
+**Option B: Entra ID / Service Principal (recommended for production)**
+- Enter your **Project Name**, **Tenant ID**, **Client ID**, and **Client Secret** in the Entra ID Authentication section
+- This enables the model dropdown to show only your deployed models
+- Requires both **Cognitive Services OpenAI Contributor** and **Azure AI Developer** roles (see [Entra ID setup](#entra-id-authentication-setup))
+
+**Option C: Managed Identity / DefaultAzureCredential**
+- Enter only your **Tenant ID** (leave Client ID and Client Secret empty)
+- Uses DefaultAzureCredential, which works with managed identity, Azure CLI, Visual Studio, etc.
 
 ### 4. Create AI Profiles
 
 1. Navigate to **Settings** > **AI** > **Profiles**
 2. Create a new profile using your Microsoft AI Foundry connection
-3. In the **Model** field, enter the model name (e.g., `gpt-4o`, `mistral-large`)
+3. Select a model from the dropdown (Entra ID) or type the model name (API key)
+
+## Entra ID Authentication Setup
+
+Entra ID authentication allows the provider to list only your deployed models and provides more secure, token-based access.
+
+### Create a Service Principal
+
+1. Go to the [Azure Portal](https://portal.azure.com) > **Microsoft Entra ID** > **App registrations**
+2. Click **New registration**, enter a name, and click **Register**
+3. Note the **Application (client) ID** and **Directory (tenant) ID**
+4. Go to **Certificates & secrets** > **New client secret**
+5. Copy the secret value
+
+### Assign RBAC Roles
+
+The service principal needs two roles on your Azure AI Services resource:
+
+1. Go to your Azure AI Services resource in the Azure Portal
+2. Go to **Access control (IAM)** > **Add role assignment**
+3. Assign the following roles to your service principal:
+
+| Role | Purpose |
+|------|---------|
+| **Cognitive Services OpenAI Contributor** | Required for inference (chat completions, embeddings) and listing models via the OpenAI models API |
+| **Azure AI Developer** | Required for listing deployed models via the project-scoped deployments API (`deployments/read` data action) |
+
+> **Note:** Without **Azure AI Developer**, the provider will fall back to the models API which shows all available models instead of just your deployed ones.
+
+### Get Your Project Name
+
+The project name is required for Entra ID authentication to list only your deployed models:
+
+1. Go to [ai.azure.com](https://ai.azure.com) (Microsoft AI Foundry portal)
+2. Open your project
+3. Go to **Project settings** (bottom of left sidebar)
+4. Copy the **Project name**
 
 ## Settings
 
-| Setting  | Description                       | Required |
-| -------- | --------------------------------- | -------- |
-| Endpoint | Microsoft AI Foundry endpoint URL | Yes      |
-| ApiKey   | Microsoft AI Foundry API key      | Yes      |
+| Setting          | Group    | Description                                               | Required                         |
+| ---------------- | -------- | --------------------------------------------------------- | -------------------------------- |
+| Endpoint         | General  | Microsoft AI Foundry endpoint URL                         | Yes                              |
+| UseResponsesApi  | Advanced | Use the OpenAI Responses API instead of Chat Completions  | No (default: off)                |
+| ProjectName      | Entra ID | AI Foundry project name (for listing deployed models)     | Required to list deployed models |
+| TenantId         | Entra ID | Azure AD tenant ID                                        | Required for Entra ID            |
+| ClientId         | Entra ID | Application (client) ID of service principal              | Required for service principal   |
+| ClientSecret     | Entra ID | Client secret for service principal                       | Required for service principal   |
+| ApiKey           | API Key  | API key for authentication (deprecated)                   | Required if no Entra ID          |
 
 ## Supported Models
 
@@ -148,9 +201,41 @@ Microsoft AI Foundry provides access to multiple model providers through a singl
 - **OpenAI**: text-embedding-3-large, text-embedding-3-small, text-embedding-ada-002
 - **Cohere**: embed-v3
 
+## Responses API (Optional)
+
+By default, the provider uses the **Chat Completions API**, which is available in all Azure regions. You can opt in to the **OpenAI Responses API** by enabling the **Use Responses API** toggle in the Advanced settings group of your connection.
+
+The Responses API is the newer OpenAI API and supports additional features (such as built-in tool use and structured outputs), but it is only available in certain Azure regions. If your resource is in a region that does not support the Responses API, you will receive an error when attempting to use it — disable the toggle to fall back to Chat Completions.
+
+**How to enable:**
+
+1. Navigate to **Settings** > **AI** > **Connections**
+2. Edit your Microsoft AI Foundry connection
+3. Expand the **Advanced** section
+4. Enable the **Use Responses API** toggle
+5. Save the connection
+
+**Regions with Responses API support** (as of March 2026):
+
+- East US, East US 2
+- West US, West US 3
+- UK South
+- Sweden Central
+
+> **Note:** Region availability changes over time. Check [Azure OpenAI model availability](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models) for the latest information.
+
+**Technical details:**
+
+- Chat Completions uses `AzureOpenAIClient` with `{endpoint}/openai/deployments/{model}/chat/completions`
+- Responses API uses `OpenAIClient` with `{endpoint}/openai/v1/responses`
+- Both support API key and Entra ID authentication
+- Embeddings are unaffected — there is no Responses API equivalent for embeddings
+
 ## Configuration from appsettings.json
 
 You can store credentials in `appsettings.json` and reference them using the `$` prefix:
+
+### API Key Authentication
 
 ```json
 {
@@ -166,6 +251,28 @@ Then in your connection settings, use:
 - Endpoint: `$MicrosoftFoundry:Endpoint`
 - API Key: `$MicrosoftFoundry:ApiKey`
 
+### Entra ID Authentication
+
+```json
+{
+    "MicrosoftFoundry": {
+        "Endpoint": "https://your-resource.services.ai.azure.com/",
+        "ProjectName": "your-project-name",
+        "TenantId": "your-tenant-id",
+        "ClientId": "your-client-id",
+        "ClientSecret": "your-client-secret"
+    }
+}
+```
+
+Then in your connection settings, use:
+
+- Endpoint: `$MicrosoftFoundry:Endpoint`
+- Project Name: `$MicrosoftFoundry:ProjectName`
+- Tenant ID: `$MicrosoftFoundry:TenantId`
+- Client ID: `$MicrosoftFoundry:ClientId`
+- Client Secret: `$MicrosoftFoundry:ClientSecret`
+
 ## Troubleshooting
 
 ### Common Issues
@@ -176,17 +283,42 @@ Then in your connection settings, use:
 - Verify the model name matches exactly (case-sensitive)
 - Check that the model is deployed in your Microsoft AI Foundry resource
 
-**"Access denied" error**
+**"Access denied" or "PermissionDenied" error**
 
 - Check your API key is correct
+- For Entra ID inference: verify the service principal has the **Cognitive Services OpenAI Contributor** role
+- For Entra ID model listing: verify the service principal has the **Azure AI Developer** role
 - Verify your Microsoft AI Foundry resource allows access from your IP/network
 
 **"Unavailable model" or "Model not available" error**
 
 - **This is the most common issue** - the model is not deployed in your Microsoft AI Foundry resource
-- The dropdown shows models _available to deploy_, not deployed models
 - Go to [ai.azure.com](https://ai.azure.com), open your project, and deploy the model you want to use
 - Once deployed, the model will work through your connection
+
+**Model dropdown is empty (Entra ID)**
+
+- Ensure the **Project Name** is set correctly in the Entra ID settings
+- Ensure the service principal has both **Cognitive Services OpenAI Contributor** and **Azure AI Developer** roles
+- Check that models are deployed in your AI Foundry project
+- Check the Umbraco logs for warnings from the deployments API (look for 401/403/404 status codes)
+
+**Model dropdown shows all models instead of deployed ones**
+
+- This happens with API key authentication, which cannot access the deployments API
+- Switch to Entra ID authentication and set the **Project Name** to see only deployed models
+- Ensure the service principal has the **Azure AI Developer** role (required for `deployments/read`)
+
+**Responses API errors**
+
+- **"Resource not found" or similar**: The Responses API is not available in your Azure region. Disable the **Use Responses API** toggle to use Chat Completions instead.
+- **Authentication errors with Entra ID**: Check the Umbraco logs for `Failed to acquire Entra ID token for Responses API` — verify your Entra ID credentials and that the service principal has the **Cognitive Services OpenAI Contributor** role.
+
+## Known Limitations
+
+- **Responses API region availability**: The Responses API is only available in certain Azure regions. The Chat Completions API (default) works in all regions. See the [Responses API](#responses-api-optional) section for details.
+- **Deployments API transient auth errors**: Azure's authorization layer may return transient 401 errors when first using a token against a resource (e.g., after changing connection credentials). The provider retries automatically, but if model listing fails, refreshing the page will resolve it. Check the Umbraco logs for `Deployments API returned` warnings.
+- **Deployed model listing requires Entra ID**: The deployments API (which shows only your deployed models) requires Entra ID authentication with the **Azure AI Developer** role. API key authentication falls back to the models catalog API, which lists all available models regardless of deployment status.
 
 ## Requirements
 

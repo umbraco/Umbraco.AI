@@ -76,17 +76,19 @@ export type AiAgentUserGroupPermissionsModel = {
     deniedToolScopeIds: Array<string>;
 };
 
+export type AgentConfigModel = {
+    [key: string]: never;
+};
+
 export type AgentItemResponseModel = {
     id: string;
     alias: string;
     name: string;
     description?: string | null;
+    agentType: string;
     profileId?: string | null;
-    contextIds: Array<string>;
     surfaceIds: Array<string>;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds: Array<string>;
-    allowedToolScopeIds: Array<string>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -97,16 +99,11 @@ export type AgentResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
+    agentType: string;
     profileId?: string | null;
-    contextIds: Array<string>;
     surfaceIds: Array<string>;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds: Array<string>;
-    allowedToolScopeIds: Array<string>;
-    userGroupPermissions: {
-        [key: string]: AiAgentUserGroupPermissionsModel;
-    };
-    instructions?: string | null;
+    config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -119,20 +116,39 @@ export type AgentSurfaceItemResponseModel = {
     supportedScopeDimensions: Array<string>;
 };
 
+export type AgentWorkflowItemResponseModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    settingsSchema?: EditableModelSchemaModel | null;
+};
+
 export type CreateAgentRequestModel = {
     alias: string;
     name: string;
     description?: string | null;
+    agentType: string;
     profileId?: string | null;
-    contextIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
-    allowedToolIds?: Array<string> | null;
-    allowedToolScopeIds?: Array<string> | null;
-    userGroupPermissions?: {
-        [key: string]: AiAgentUserGroupPermissionsModel;
-    } | null;
-    instructions?: string | null;
+    config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
+};
+
+export type EditableModelFieldModel = {
+    key: string;
+    label: string;
+    description?: string | null;
+    editorUiAlias?: string | null;
+    editorConfig?: unknown;
+    defaultValue?: unknown;
+    sortOrder: number;
+    isRequired: boolean;
+    group?: string | null;
+};
+
+export type EditableModelSchemaModel = {
+    type?: string | null;
+    fields: Array<EditableModelFieldModel>;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -141,6 +157,12 @@ export type NotificationHeaderModel = {
     message: string;
     category: string;
     type: EventMessageTypeModel;
+};
+
+export type OrchestratedAgentConfigModel = AgentConfigModel & {
+    $type: string;
+    workflowId?: string | null;
+    settings?: unknown;
 };
 
 export type PagedAgentItemResponseModel = {
@@ -157,20 +179,25 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
-export type UpdateAgentRequestModel = {
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
+export type StandardAgentConfigModel = AgentConfigModel & {
+    $type: string;
     contextIds?: Array<string> | null;
-    surfaceIds?: Array<string> | null;
-    scope?: AiAgentScopeModel | null;
+    instructions?: string | null;
     allowedToolIds?: Array<string> | null;
     allowedToolScopeIds?: Array<string> | null;
     userGroupPermissions?: {
         [key: string]: AiAgentUserGroupPermissionsModel;
     } | null;
-    instructions?: string | null;
+};
+
+export type UpdateAgentRequestModel = {
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
+    config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
     isActive: boolean;
 };
 
@@ -198,6 +225,7 @@ export type GetAllAgentsData = {
         profileId?: string;
         scopeId?: string;
         isActive?: boolean;
+        agentType?: string;
     };
     url: '/umbraco/ai/management/api/v1/agents';
 };
@@ -430,3 +458,26 @@ export type GetAgentSurfacesResponses = {
 };
 
 export type GetAgentSurfacesResponse = GetAgentSurfacesResponses[keyof GetAgentSurfacesResponses];
+
+export type GetAgentWorkflowsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/workflows';
+};
+
+export type GetAgentWorkflowsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAgentWorkflowsResponses = {
+    /**
+     * OK
+     */
+    200: Array<AgentWorkflowItemResponseModel>;
+};
+
+export type GetAgentWorkflowsResponse = GetAgentWorkflowsResponses[keyof GetAgentWorkflowsResponses];

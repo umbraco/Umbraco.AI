@@ -41,13 +41,14 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<PagedModel<AIAgent>> GetPagedAsync(
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
     {
         var query = _agents.Values.AsEnumerable();
@@ -74,6 +75,11 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
             query = query.Where(p => p.IsActive == isActive.Value);
         }
 
+        if (agentType.HasValue)
+        {
+            query = query.Where(p => p.AgentType == agentType.Value);
+        }
+
         var total = query.Count();
         var items = query
             .OrderBy(p => p.Name)
@@ -81,7 +87,7 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
             .Take(take)
             .ToList();
 
-        return Task.FromResult(new PagedModel<AIAgent>(total, items));
+        return Task.FromResult((Items: (IEnumerable<AIAgent>)items, Total: total));
     }
 
     /// <inheritdoc />

@@ -13,6 +13,7 @@ using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.EntityAdapter;
+using Umbraco.AI.Core.EntityAdapter.Adapters;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.Chat.Middleware;
@@ -25,6 +26,8 @@ using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.AI.Core.RuntimeContext.Middleware;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
+using Umbraco.AI.Core.Tests;
+using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Tools.Web;
@@ -155,7 +158,8 @@ public static partial class UmbracoBuilderExtensions
         builder.AIVersionableEntityAdapters()
             .Add<AIConnectionVersionableEntityAdapter>()
             .Add<AIProfileVersionableEntityAdapter>()
-            .Add<AIContextVersionableEntityAdapter>();
+            .Add<AIContextVersionableEntityAdapter>()
+            .Add<AITestVersionableEntityAdapter>();
 
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
@@ -187,10 +191,12 @@ public static partial class UmbracoBuilderExtensions
         // Entity adapter infrastructure
         services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
 
-        // Entity formatter infrastructure - auto-discover formatters
-        builder.AIEntityFormatters()
-            .Add<AIGenericEntityFormatter>()   // Default formatter (EntityType = null)
-            .Add<AIDocumentEntityFormatter>(); // CMS document/media formatter
+        // Entity adapter infrastructure - type-specific formatting + metadata + sub-types
+        builder.AIEntityAdapters()
+            .Add<GenericEntityAdapter>()    // Default adapter (EntityType = null)
+            .Add<DocumentEntityAdapter>()   // CMS document adapter
+            .Add<MediaEntityAdapter>()      // CMS media adapter
+            .Add<MemberEntityAdapter>();    // CMS member adapter
 
         // Runtime context infrastructure
         // Single instance implements both accessor (for reading) and scope provider (for creating)
@@ -203,6 +209,7 @@ public static partial class UmbracoBuilderExtensions
             .Append<UserContextContributor>()           // Ambient: adds current user info
             .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
             .Append<SectionContextContributor>()        // Item-based: extracts section pathname for context filtering
+            .Append<SelectionContextContributor>()     // Item-based: extracts selection text as template variable
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items
 
         // Register media image resolver
@@ -227,6 +234,23 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageHourlyAggregationJob>();
         services.AddHostedService<AIUsageDailyRollupJob>();
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
+
+        // Register built-in test graders
+        builder.AITestGraders()
+            .Add<ExactMatchGrader>()
+            .Add<ContainsGrader>()
+            .Add<RegexGrader>()
+            .Add<JSONSchemaGrader>()
+            .Add<ToolCallGrader>()
+            .Add<LLMJudgeGrader>();
+            //.Add<SemanticSimilarityGrader>();
+
+        // Register test infrastructure services
+        // Note: IAITestRepository and IAITestRunRepository are registered by persistence layer
+        services.AddSingleton<AITestContextResolver>();
+        services.AddSingleton<IAITestRunner, AITestRunner>();
+        services.AddSingleton<IAITestService, AITestService>();
+        services.AddSingleton<IAITestRunService, AITestRunService>();
 
         return builder;
     }

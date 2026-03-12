@@ -13,12 +13,12 @@ import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
 import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-import type { UaiAgentDetailModel } from "../../types.js";
+import type { UaiAgentDetailModel, UaiAgentType } from "../../types.js";
 import { UaiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
 /**
- * Workspace context for editing Agent entities.
+ * Workspace context for editing Agent entities (both standard and orchestrated).
  * Handles CRUD operations and state management.
  */
 export class UaiAgentWorkspaceContext
@@ -62,10 +62,11 @@ export class UaiAgentWorkspaceContext
 
         this.routes.setRoutes([
             {
-                path: "create",
+                path: "create/:agentType",
                 component: UaiAgentWorkspaceEditorElement,
-                setup: async () => {
-                    await this.scaffold();
+                setup: async (_component, info) => {
+                    const agentType = (info.match.params.agentType as UaiAgentType) ?? "standard";
+                    await this.scaffold(agentType);
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
@@ -93,10 +94,12 @@ export class UaiAgentWorkspaceContext
 
     /**
      * Creates a scaffold for a new agent.
+     * @param agentType - The type of agent to create (from the route path parameter).
      */
-    async scaffold() {
+    async scaffold(agentType: UaiAgentType = "standard") {
         this.resetState();
-        const { data } = await this.#repository.createScaffold();
+
+        const { data } = await this.#repository.createScaffold({ agentType });
         if (data) {
             this.#unique.setValue(UAI_EMPTY_GUID);
             this.#model.setValue(data);

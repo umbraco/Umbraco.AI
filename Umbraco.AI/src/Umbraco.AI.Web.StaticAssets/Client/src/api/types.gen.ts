@@ -80,6 +80,17 @@ export type ChatResponseModel = {
     usage?: UsageModel | null;
 };
 
+export type CompareRunsRequestModel = {
+    baselineTestRunId: string;
+    comparisonTestRunId: string;
+};
+
+export type CompareVariationsRequestModel = {
+    executionId: string;
+    sourceVariationId?: string | null;
+    comparisonVariationId: string;
+};
+
 export type ConnectionItemResponseModel = {
     id: string;
     alias: string;
@@ -166,6 +177,21 @@ export type CreateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    tags: Array<string>;
+};
+
+export type CreateTestRequestModel = {
+    alias: string;
+    name: string;
+    description?: string | null;
+    testFeatureId: string;
+    testTargetId: string;
+    profileId?: string | null;
+    contextIds?: Array<string> | null;
+    testFeatureConfig?: unknown;
+    graders: Array<TestGraderModel>;
+    variations?: Array<TestVariationModel> | null;
+    runCount: number;
     tags: Array<string>;
 };
 
@@ -267,9 +293,19 @@ export type PagedContextItemResponseModel = {
     items: Array<ContextItemResponseModel>;
 };
 
+export type PagedModelTestRunResponseModel = {
+    items: Array<TestRunResponseModel>;
+    total: number;
+};
+
 export type PagedProfileItemResponseModel = {
     total: number;
     items: Array<ProfileItemResponseModel>;
+};
+
+export type PagedTestItemResponseModel = {
+    total: number;
+    items: Array<TestItemResponseModel>;
 };
 
 export type ProblemDetails = {
@@ -322,9 +358,251 @@ export type ProviderResponseModel = {
     settingsSchema?: EditableModelSchemaModel | null;
 };
 
+export type RunTestBatchRequestModel = {
+    testIds: Array<string>;
+    profileIdOverride?: string | null;
+    contextIdsOverride?: Array<string> | null;
+};
+
+export type RunTestRequestModel = {
+    profileIdOverride?: string | null;
+    contextIdsOverride?: Array<string> | null;
+};
+
+export type RunTestsByTagsRequestModel = {
+    tags: Array<string>;
+    profileIdOverride?: string | null;
+    contextIdsOverride?: Array<string> | null;
+};
+
 export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+};
+
+export type TestBatchResultsResponseModel = {
+    results: {
+        [key: string]: TestExecutionResultResponseModel;
+    };
+};
+
+export type TestEntitySubTypeResponseModel = {
+    alias: string;
+    name: string;
+    icon?: string | null;
+    description?: string | null;
+    unique?: string | null;
+};
+
+export type TestEntityTypeResponseModel = {
+    entityType: string;
+    name: string;
+    icon?: string | null;
+    hasSubTypes: boolean;
+};
+
+export type TestExecutionResultResponseModel = {
+    testId: string;
+    executionId: string;
+    batchId?: string | null;
+    defaultMetrics: TestMetricsResponseModel;
+    variationMetrics: Array<TestVariationMetricsResponseModel>;
+    aggregateMetrics: TestMetricsResponseModel;
+};
+
+export type TestFeatureInfoModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    category?: string | null;
+};
+
+export type TestFeatureResponseModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    category?: string | null;
+    testFeatureConfigSchema?: EditableModelSchemaModel | null;
+};
+
+export type TestGraderComparisonResponseModel = {
+    graderId: string;
+    graderName: string;
+    baselineResult?: TestGraderResultResponseModel | null;
+    comparisonResult?: TestGraderResultResponseModel | null;
+    changed: boolean;
+    scoreChange: number;
+};
+
+export type TestGraderInfoModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    type: string;
+};
+
+export type TestGraderModel = {
+    id: string;
+    graderTypeId: string;
+    name: string;
+    description?: string | null;
+    config?: unknown;
+    negate: boolean;
+    severity: string;
+    weight: number;
+};
+
+export type TestGraderResponseModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    type: string;
+    configSchema?: EditableModelSchemaModel | null;
+};
+
+export type TestGraderResultResponseModel = {
+    graderId: string;
+    graderName?: string | null;
+    graderTypeId?: string | null;
+    graderType?: string | null;
+    weight: number;
+    negate: boolean;
+    passed: boolean;
+    score: number;
+    actualValue?: string | null;
+    expectedValue?: string | null;
+    failureMessage?: string | null;
+    metadata?: unknown;
+    severity: string;
+};
+
+export type TestItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    testFeatureId: string;
+    tags: Array<string>;
+    runCount: number;
+    dateCreated: string;
+    dateModified: string;
+    version: number;
+};
+
+export type TestMetricsResponseModel = {
+    testId: string;
+    totalRuns: number;
+    passedRuns: number;
+    passAtK: number;
+    passToTheK: number;
+    runIds: Array<string>;
+};
+
+export type TestOutcomeResponseModel = {
+    outputType: string;
+    outputValue?: string | null;
+    finishReason?: string | null;
+    tokenUsage?: TestTokenUsageResponseModel | null;
+};
+
+export type TestResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    testFeatureId: string;
+    testTargetId: string;
+    profileId?: string | null;
+    contextIds: Array<string>;
+    testFeatureConfig?: unknown;
+    graders: Array<TestGraderModel>;
+    variations: Array<TestVariationModel>;
+    runCount: number;
+    tags: Array<string>;
+    dateCreated: string;
+    dateModified: string;
+    baselineRunId?: string | null;
+    version: number;
+};
+
+export type TestRunComparisonResponseModel = {
+    baselineRun: TestRunResponseModel;
+    comparisonRun: TestRunResponseModel;
+    isRegression: boolean;
+    isImprovement: boolean;
+    durationChangeMs: number;
+    graderComparisons: Array<TestGraderComparisonResponseModel>;
+};
+
+export type TestRunErrorResponseModel = {
+    message: string;
+    stackTrace?: string | null;
+};
+
+export type TestRunResponseModel = {
+    id: string;
+    testId: string;
+    testName?: string | null;
+    testVersion: number;
+    runNumber: number;
+    profileId?: string | null;
+    contextIds: Array<string>;
+    executedAt: string;
+    executedByUserId?: string | null;
+    status: string;
+    durationMs: number;
+    transcriptId?: string | null;
+    outcome?: TestOutcomeResponseModel | null;
+    graderResults: Array<TestGraderResultResponseModel>;
+    error?: TestRunErrorResponseModel | null;
+    batchId?: string | null;
+    isBaseline: boolean;
+    baselineRunId?: string | null;
+    executionId: string;
+    variationId?: string | null;
+    variationName?: string | null;
+};
+
+export type TestTokenUsageResponseModel = {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+};
+
+export type TestTranscriptResponseModel = {
+    id: string;
+    messages?: unknown;
+    toolCalls?: unknown;
+    reasoning?: unknown;
+    timing?: unknown;
+    finalOutput?: unknown;
+};
+
+export type TestVariationComparisonResponseModel = {
+    sourceVariationName: string;
+    sourceMetrics: TestMetricsResponseModel;
+    comparisonVariationName: string;
+    comparisonMetrics: TestMetricsResponseModel;
+    passRateDelta: number;
+    averageDurationDeltaMs: number;
+    isRegression: boolean;
+    isImprovement: boolean;
+};
+
+export type TestVariationMetricsResponseModel = {
+    variationId: string;
+    variationName: string;
+    metrics: TestMetricsResponseModel;
+};
+
+export type TestVariationModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    runCount?: number | null;
+    contextIds?: Array<string> | null;
+    testFeatureConfig?: unknown;
 };
 
 export type ToolItemResponseModel = {
@@ -368,6 +646,20 @@ export type UpdateProfileRequestModel = {
 export type UpdateSettingsRequestModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+};
+
+export type UpdateTestRequestModel = {
+    alias: string;
+    name: string;
+    description?: string | null;
+    testTargetId: string;
+    profileId?: string | null;
+    contextIds?: Array<string> | null;
+    testFeatureConfig?: unknown;
+    graders: Array<TestGraderModel>;
+    variations?: Array<TestVariationModel> | null;
+    runCount: number;
+    tags: Array<string>;
 };
 
 export type UsageBreakdownItemModel = {
@@ -1412,6 +1704,10 @@ export type DeleteProfileData = {
 
 export type DeleteProfileErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
@@ -1593,6 +1889,686 @@ export type UpdateSettingsResponses = {
 };
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
+
+export type GetAllTestFeaturesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-features';
+};
+
+export type GetAllTestFeaturesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestFeaturesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestFeatureInfoModel>;
+};
+
+export type GetAllTestFeaturesResponse = GetAllTestFeaturesResponses[keyof GetAllTestFeaturesResponses];
+
+export type GetTestFeatureByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-features/{id}';
+};
+
+export type GetTestFeatureByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestFeatureByIdError = GetTestFeatureByIdErrors[keyof GetTestFeatureByIdErrors];
+
+export type GetTestFeatureByIdResponses = {
+    /**
+     * OK
+     */
+    200: TestFeatureResponseModel;
+};
+
+export type GetTestFeatureByIdResponse = GetTestFeatureByIdResponses[keyof GetTestFeatureByIdResponses];
+
+export type GetAllTestGradersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-graders';
+};
+
+export type GetAllTestGradersErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestGradersResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestGraderInfoModel>;
+};
+
+export type GetAllTestGradersResponse = GetAllTestGradersResponses[keyof GetAllTestGradersResponses];
+
+export type GetTestGraderByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-graders/{id}';
+};
+
+export type GetTestGraderByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestGraderByIdError = GetTestGraderByIdErrors[keyof GetTestGraderByIdErrors];
+
+export type GetTestGraderByIdResponses = {
+    /**
+     * OK
+     */
+    200: TestGraderResponseModel;
+};
+
+export type GetTestGraderByIdResponse = GetTestGraderByIdResponses[keyof GetTestGraderByIdResponses];
+
+export type GetAllTestRunsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        testId?: string;
+        batchId?: string;
+        status?: string;
+        executionId?: string;
+        variationId?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/test-runs';
+};
+
+export type GetAllTestRunsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestRunsResponses = {
+    /**
+     * OK
+     */
+    200: PagedModelTestRunResponseModel;
+};
+
+export type GetAllTestRunsResponse = GetAllTestRunsResponses[keyof GetAllTestRunsResponses];
+
+export type DeleteTestRunData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/{id}';
+};
+
+export type DeleteTestRunErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type DeleteTestRunError = DeleteTestRunErrors[keyof DeleteTestRunErrors];
+
+export type DeleteTestRunResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteTestRunResponse = DeleteTestRunResponses[keyof DeleteTestRunResponses];
+
+export type GetTestRunByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/{id}';
+};
+
+export type GetTestRunByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestRunByIdError = GetTestRunByIdErrors[keyof GetTestRunByIdErrors];
+
+export type GetTestRunByIdResponses = {
+    /**
+     * OK
+     */
+    200: TestRunResponseModel;
+};
+
+export type GetTestRunByIdResponse = GetTestRunByIdResponses[keyof GetTestRunByIdResponses];
+
+export type GetTestRunTranscriptData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/{id}/transcript';
+};
+
+export type GetTestRunTranscriptErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestRunTranscriptError = GetTestRunTranscriptErrors[keyof GetTestRunTranscriptErrors];
+
+export type GetTestRunTranscriptResponses = {
+    /**
+     * OK
+     */
+    200: TestTranscriptResponseModel;
+};
+
+export type GetTestRunTranscriptResponse = GetTestRunTranscriptResponses[keyof GetTestRunTranscriptResponses];
+
+export type SetBaselineTestRunData = {
+    body?: never;
+    path: {
+        testId: string;
+        testRunId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{testRunId}';
+};
+
+export type SetBaselineTestRunErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type SetBaselineTestRunError = SetBaselineTestRunErrors[keyof SetBaselineTestRunErrors];
+
+export type SetBaselineTestRunResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type SetBaselineTestRunResponse = SetBaselineTestRunResponses[keyof SetBaselineTestRunResponses];
+
+export type CompareTestRunsData = {
+    body?: CompareRunsRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/compare';
+};
+
+export type CompareTestRunsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompareTestRunsError = CompareTestRunsErrors[keyof CompareTestRunsErrors];
+
+export type CompareTestRunsResponses = {
+    /**
+     * OK
+     */
+    200: TestRunComparisonResponseModel;
+};
+
+export type CompareTestRunsResponse = CompareTestRunsResponses[keyof CompareTestRunsResponses];
+
+export type CompareVariationsData = {
+    body?: CompareVariationsRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/compare-variations';
+};
+
+export type CompareVariationsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type CompareVariationsError = CompareVariationsErrors[keyof CompareVariationsErrors];
+
+export type CompareVariationsResponses = {
+    /**
+     * OK
+     */
+    200: TestVariationComparisonResponseModel;
+};
+
+export type CompareVariationsResponse = CompareVariationsResponses[keyof CompareVariationsResponses];
+
+export type GetExecutionResultData = {
+    body?: never;
+    path: {
+        executionId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/executions/{executionId}';
+};
+
+export type GetExecutionResultErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetExecutionResultError = GetExecutionResultErrors[keyof GetExecutionResultErrors];
+
+export type GetExecutionResultResponses = {
+    /**
+     * OK
+     */
+    200: TestExecutionResultResponseModel;
+};
+
+export type GetExecutionResultResponse = GetExecutionResultResponses[keyof GetExecutionResultResponses];
+
+export type GetLatestTestRunData = {
+    body?: never;
+    path: {
+        testId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/test-runs/latest/{testId}';
+};
+
+export type GetLatestTestRunErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetLatestTestRunError = GetLatestTestRunErrors[keyof GetLatestTestRunErrors];
+
+export type GetLatestTestRunResponses = {
+    /**
+     * OK
+     */
+    200: TestRunResponseModel;
+};
+
+export type GetLatestTestRunResponse = GetLatestTestRunResponses[keyof GetLatestTestRunResponses];
+
+export type GetAllTestsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        filter?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/tests';
+};
+
+export type GetAllTestsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestsResponses = {
+    /**
+     * OK
+     */
+    200: PagedTestItemResponseModel;
+};
+
+export type GetAllTestsResponse = GetAllTestsResponses[keyof GetAllTestsResponses];
+
+export type CreateTestData = {
+    body?: CreateTestRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests';
+};
+
+export type CreateTestErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type CreateTestError = CreateTestErrors[keyof CreateTestErrors];
+
+export type CreateTestResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type DeleteTestData = {
+    body?: never;
+    path: {
+        idOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}';
+};
+
+export type DeleteTestErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type DeleteTestError = DeleteTestErrors[keyof DeleteTestErrors];
+
+export type DeleteTestResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteTestResponse = DeleteTestResponses[keyof DeleteTestResponses];
+
+export type GetTestByIdOrAliasData = {
+    body?: never;
+    path: {
+        idOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}';
+};
+
+export type GetTestByIdOrAliasErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetTestByIdOrAliasError = GetTestByIdOrAliasErrors[keyof GetTestByIdOrAliasErrors];
+
+export type GetTestByIdOrAliasResponses = {
+    /**
+     * OK
+     */
+    200: TestResponseModel;
+};
+
+export type GetTestByIdOrAliasResponse = GetTestByIdOrAliasResponses[keyof GetTestByIdOrAliasResponses];
+
+export type UpdateTestData = {
+    body?: UpdateTestRequestModel;
+    path: {
+        idOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}';
+};
+
+export type UpdateTestErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type UpdateTestError = UpdateTestErrors[keyof UpdateTestErrors];
+
+export type UpdateTestResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type UpdateTestResponse = UpdateTestResponses[keyof UpdateTestResponses];
+
+export type RunTestData = {
+    body?: RunTestRequestModel;
+    path: {
+        idOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}/run';
+};
+
+export type RunTestErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RunTestError = RunTestErrors[keyof RunTestErrors];
+
+export type RunTestResponses = {
+    /**
+     * OK
+     */
+    200: TestExecutionResultResponseModel;
+};
+
+export type RunTestResponse = RunTestResponses[keyof RunTestResponses];
+
+export type GetAllEntityTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/entity-types';
+};
+
+export type GetAllEntityTypesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllEntityTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestEntityTypeResponseModel>;
+};
+
+export type GetAllEntityTypesResponse = GetAllEntityTypesResponses[keyof GetAllEntityTypesResponses];
+
+export type GetEntitySubTypesData = {
+    body?: never;
+    path: {
+        entityType: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/entity-types/{entityType}/sub-types';
+};
+
+export type GetEntitySubTypesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetEntitySubTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestEntitySubTypeResponseModel>;
+};
+
+export type GetEntitySubTypesResponse = GetEntitySubTypesResponses[keyof GetEntitySubTypesResponses];
+
+export type RunTestBatchData = {
+    body?: RunTestBatchRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/run-batch';
+};
+
+export type RunTestBatchErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type RunTestBatchError = RunTestBatchErrors[keyof RunTestBatchErrors];
+
+export type RunTestBatchResponses = {
+    /**
+     * OK
+     */
+    200: TestBatchResultsResponseModel;
+};
+
+export type RunTestBatchResponse = RunTestBatchResponses[keyof RunTestBatchResponses];
+
+export type RunTestsByTagsData = {
+    body?: RunTestsByTagsRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/run-by-tags';
+};
+
+export type RunTestsByTagsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type RunTestsByTagsError = RunTestsByTagsErrors[keyof RunTestsByTagsErrors];
+
+export type RunTestsByTagsResponses = {
+    /**
+     * OK
+     */
+    200: TestBatchResultsResponseModel;
+};
+
+export type RunTestsByTagsResponse = RunTestsByTagsResponses[keyof RunTestsByTagsResponses];
 
 export type GetAllToolsData = {
     body?: never;

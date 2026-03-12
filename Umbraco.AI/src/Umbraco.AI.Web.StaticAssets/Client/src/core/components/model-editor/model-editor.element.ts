@@ -90,15 +90,7 @@ export class UaiModelEditorElement extends UmbLitElement {
         if (!this.#lastEmittedModel || !incomingModel) {
             return false;
         }
-
-        const lastKeys = Object.keys(this.#lastEmittedModel);
-        const incomingKeys = Object.keys(incomingModel);
-
-        if (lastKeys.length !== incomingKeys.length) {
-            return false;
-        }
-
-        return lastKeys.every((key) => this.#lastEmittedModel![key] === incomingModel[key]);
+        return this.#isModelEqual(incomingModel, this.#lastEmittedModel);
     }
 
     override updated(changedProperties: Map<string, unknown>) {
@@ -123,6 +115,36 @@ export class UaiModelEditorElement extends UmbLitElement {
             alias: field.key,
             value: this.model?.[field.key] ?? field.defaultValue,
         }));
+
+        // Emit change if defaults were applied (populated model differs from input)
+        const populatedModel = this._propertyValues.reduce(
+            (acc, curr) => ({ ...acc, [curr.alias]: curr.value }),
+            {} as Record<string, unknown>,
+        );
+        if (!this.#isModelEqual(this.model, populatedModel)) {
+            this.#lastEmittedModel = populatedModel;
+            // Dispatch asynchronously so the parent's render cycle isn't interrupted
+            this.updateComplete.then(() => {
+                this.dispatchEvent(
+                    new CustomEvent<UaiModelEditorChangeEventDetail>("change", {
+                        detail: { model: populatedModel },
+                        bubbles: true,
+                        composed: true,
+                    }),
+                );
+            });
+        }
+    }
+
+    /**
+     * Shallow-compares two model objects for equality.
+     */
+    #isModelEqual(a: Record<string, unknown> | undefined, b: Record<string, unknown>): boolean {
+        if (!a) return false;
+        const aKeys = Object.keys(a);
+        const bKeys = Object.keys(b);
+        if (aKeys.length !== bKeys.length) return false;
+        return bKeys.every((key) => a[key] === b[key]);
     }
 
     #onChange(e: Event) {
@@ -176,7 +198,15 @@ export class UaiModelEditorElement extends UmbLitElement {
             groups.delete(generalKey);
         }
 
-        return Array.from(groups.entries());
+        // Sort fields within each group by sortOrder
+        for (const fields of groups.values()) {
+            fields.sort((a, b) => a.sortOrder - b.sortOrder);
+        }
+
+        // Sort groups by the minimum sortOrder of their fields
+        return Array.from(groups.entries()).sort(
+            ([, a], [, b]) => a[0].sortOrder - b[0].sortOrder,
+        );
     }
 
     #renderField(field: UaiEditableModelFieldModel) {

@@ -632,6 +632,218 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAISettings", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.Tests.AITestEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("BaselineRunId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContextIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("GradersJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid?>("ProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RunCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("TestFeatureConfigJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TestFeatureId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("TestTargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VariationsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("TestFeatureId");
+
+                    b.ToTable("umbracoAITest", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Tests.AITestRunEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContextIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ExecutedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ExecutedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ExecutionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("GraderResultsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OutcomeFinishReason")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("OutcomeTokenUsageJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OutcomeType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OutcomeValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RunNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TestVersion")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("TranscriptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("VariationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VariationName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("ExecutedAt");
+
+                    b.HasIndex("ExecutionId");
+
+                    b.HasIndex("TestId");
+
+                    b.HasIndex("VariationId");
+
+                    b.HasIndex("TestId", "ExecutedAt");
+
+                    b.ToTable("umbracoAITestRun", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Tests.AITestTranscriptEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FinalOutputJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MessagesJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReasoningJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TimingJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ToolCallsJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAITestTranscript", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Versioning.AIEntityVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")

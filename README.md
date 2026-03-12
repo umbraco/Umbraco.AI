@@ -61,7 +61,7 @@ The fastest way to get started is using the install-demo script, which creates a
 
 This creates:
 
-- `Umbraco.AI.local.sln` - Unified solution with all products
+- `Umbraco.AI.local.slnx` - Unified solution with all products
 - `demo/Umbraco.AI.DemoSite/` - Umbraco instance with all packages referenced
 
 After running the script, build the frontend and backend:
@@ -74,7 +74,7 @@ npm install
 npm run build
 
 # Build the unified solution
-dotnet build Umbraco.AI.local.sln
+dotnet build Umbraco.AI.local.slnx
 
 # Run the demo site (from demo/Umbraco.AI.DemoSite/)
 cd demo/Umbraco.AI.DemoSite
@@ -91,17 +91,17 @@ Each product has its own solution file and can be built independently:
 
 ```bash
 # Build individual products
-dotnet build Umbraco.AI/Umbraco.AI.sln
-dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
-dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
-dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.sln
-dotnet build Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.sln
-dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.sln
-dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.sln
-dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
-dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
-dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
-dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
+dotnet build Umbraco.AI/Umbraco.AI.slnx
+dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx
+dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.slnx
+dotnet build Umbraco.AI.Deploy/Umbraco.AI.Deploy.slnx
+dotnet build Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.slnx
+dotnet build Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.slnx
+dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.slnx
+dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.slnx
+dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.slnx
+dotnet build Umbraco.AI.Google/Umbraco.AI.Google.slnx
+dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.slnx
 ```
 
 ### Frontend Development (npm Workspaces)

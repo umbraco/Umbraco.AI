@@ -183,8 +183,12 @@ public class AIAgentServiceTests
             Id = id,
             Alias = "test-agent",
             Name = "Test Agent",
-            AllowedToolIds = enabledToolIds ?? [],
-            AllowedToolScopeIds = enabledToolScopeIds ?? [],
+            AgentType = AIAgentType.Standard,
+            Config = new AIStandardAgentConfig
+            {
+                AllowedToolIds = enabledToolIds ?? [],
+                AllowedToolScopeIds = enabledToolScopeIds ?? [],
+            },
             IsActive = true
         };
     }

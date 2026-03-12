@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Core.Models.Entities;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Prompt.Core.Prompts;
@@ -10,7 +9,6 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
 {
-    private readonly IEntityService _entityService;
     private readonly IContentTypeService _contentTypeService;
     private readonly IMediaTypeService _mediaTypeService;
     private readonly IMemberTypeService _memberTypeService;
@@ -18,14 +16,12 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
     private readonly ILogger<AIPromptScopeValidator> _logger;
 
     public AIPromptScopeValidator(
-        IEntityService entityService,
         IContentTypeService contentTypeService,
         IMediaTypeService mediaTypeService,
         IMemberTypeService memberTypeService,
         IDataTypeService dataTypeService,
         ILogger<AIPromptScopeValidator> logger)
     {
-        _entityService = entityService;
         _contentTypeService = contentTypeService;
         _mediaTypeService = mediaTypeService;
         _memberTypeService = memberTypeService;
@@ -51,7 +47,7 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
             return AIPromptScopeValidationResult.Denied("Prompt has no allow rules defined.");
         }
 
-        // Build the resolved context from the request and actual content item
+        // Build the resolved context from the request and actual content type
         var resolvedContext = await ResolveContextAsync(request, cancellationToken);
 
         // Check deny rules first (deny takes precedence)
@@ -76,8 +72,9 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
     }
 
     /// <summary>
-    /// Resolves the execution context by looking up the actual entity.
-    /// This ensures the scope rules are validated against the real content type and property configuration.
+    /// Resolves the execution context using the content type alias provided by the frontend.
+    /// The frontend resolves the content type alias from the workspace context (for documents/media)
+    /// or from the block element manager's structure (for blocks).
     /// </summary>
     private async Task<ResolvedScopeContext> ResolveContextAsync(
         AIPromptExecutionRequest request,
@@ -85,22 +82,14 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
     {
         var context = new ResolvedScopeContext
         {
-            PropertyAlias = request.PropertyAlias
+            ContentTypeAlias = request.ContentTypeAlias,
+            PropertyAlias = request.PropertyAlias,
         };
 
-        var entityInfo = ResolveEntityInfo(request.EntityId, request.EntityType);
-        if (entityInfo is null)
-        {
-            return context;
-        }
-
-        // Use the actual content type alias from the entity
-        context.ContentTypeAlias = entityInfo.Value.ContentTypeAlias;
-
-        // Resolve the property editor UI alias
+        // Resolve the property editor UI alias from the content type
         context.PropertyEditorUiAlias = await ResolvePropertyEditorUiAliasAsync(
-            entityInfo.Value.ContentTypeAlias,
-            entityInfo.Value.ObjectType,
+            request.ContentTypeAlias,
+            request.EntityType,
             request.PropertyAlias,
             cancellationToken);
 
@@ -108,52 +97,22 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
     }
 
     /// <summary>
-    /// Resolves entity information (content type alias and object type) from the entity ID and type.
-    /// Uses IEntityService with the object type to get the full content entity with ContentTypeAlias populated.
-    /// </summary>
-    private (string ContentTypeAlias, UmbracoObjectTypes ObjectType)? ResolveEntityInfo(Guid entityId, string entityType)
-    {
-        // Map the entity type string to UmbracoObjectTypes
-        var objectType = entityType.ToLowerInvariant() switch
-        {
-            "document" => UmbracoObjectTypes.Document,
-            "media" => UmbracoObjectTypes.Media,
-            "member" => UmbracoObjectTypes.Member,
-            _ => UmbracoObjectTypes.Unknown
-        };
-
-        if (objectType == UmbracoObjectTypes.Unknown)
-        {
-            return null;
-        }
-
-        // Use the overload that takes object type - this returns the proper entity type
-        // with ContentTypeAlias populated (DocumentEntitySlim, MediaEntitySlim, etc.)
-        var entity = _entityService.Get(entityId, objectType);
-        if (entity is not IContentEntitySlim contentEntity)
-        {
-            return null;
-        }
-
-        return (contentEntity.ContentTypeAlias, objectType);
-    }
-
-    /// <summary>
-    /// Resolves the property editor UI alias for a given content type, object type, and property alias.
+    /// Resolves the property editor UI alias for a given content type alias and property alias.
+    /// Uses the entity type to determine which content type service to query.
     /// The UI alias is stored on the DataType, not the PropertyType.
     /// </summary>
     private async Task<string?> ResolvePropertyEditorUiAliasAsync(
         string contentTypeAlias,
-        UmbracoObjectTypes objectType,
+        string entityType,
         string propertyAlias,
         CancellationToken cancellationToken)
     {
-        IContentTypeBase? contentType = objectType switch
+        IContentTypeBase? contentType = entityType.ToLowerInvariant() switch
         {
-            UmbracoObjectTypes.Document => _contentTypeService.Get(contentTypeAlias),
-            UmbracoObjectTypes.Media => _mediaTypeService.Get(contentTypeAlias),
-            UmbracoObjectTypes.Member => _memberTypeService.Get(contentTypeAlias),
-            _ => null
+            "document" or "block" => _contentTypeService.Get(contentTypeAlias),
+            "media" => _mediaTypeService.Get(contentTypeAlias),
+            "member" => _memberTypeService.Get(contentTypeAlias),
+            _ => _contentTypeService.Get(contentTypeAlias), // Default fallback
         };
 
         var propertyType = contentType is IContentTypeComposition compositionContentType
@@ -226,7 +185,7 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
     }
 
     /// <summary>
-    /// Internal context resolved from the request and actual content item.
+    /// Internal context resolved from the request and actual content type.
     /// </summary>
     private sealed class ResolvedScopeContext
     {

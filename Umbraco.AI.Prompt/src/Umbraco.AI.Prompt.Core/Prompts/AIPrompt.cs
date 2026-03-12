@@ -71,6 +71,11 @@ public sealed class AIPrompt : IAIVersionableEntity
     public int OptionCount { get; set; } = 1;
 
     /// <summary>
+    /// Determines where this prompt is displayed: as a property action or as a TipTap toolbar tool.
+    /// </summary>
+    public AIPromptDisplayMode DisplayMode { get; set; } = AIPromptDisplayMode.PropertyAction;
+
+    /// <summary>
     /// Scope configuration defining where this prompt can run.
     /// Controls both UI display and server-side enforcement.
     /// If null, the prompt is not allowed anywhere (denied by default).

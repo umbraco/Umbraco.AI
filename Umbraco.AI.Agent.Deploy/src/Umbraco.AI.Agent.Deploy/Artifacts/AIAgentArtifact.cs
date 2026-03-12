@@ -22,9 +22,14 @@ public class AIAgentArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depen
     public GuidUdi? ProfileUdi { get; set; }
 
     /// <summary>
-    /// Context IDs that provide additional information to the agent.
+    /// The agent type (e.g., "Standard", "Orchestrated").
     /// </summary>
-    public IEnumerable<Guid> ContextIds { get; set; } = [];
+    public string AgentType { get; set; } = "Standard";
+
+    /// <summary>
+    /// Type-specific configuration serialized as JSON.
+    /// </summary>
+    public string? Config { get; set; }
 
     /// <summary>
     /// Surface IDs where the agent is available (backoffice, frontend, custom).
@@ -35,26 +40,6 @@ public class AIAgentArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depen
     /// Scoping rules serialized as JSON (where the agent is available).
     /// </summary>
     public JsonElement? Scope { get; set; }
-
-    /// <summary>
-    /// Specific tool IDs the agent is allowed to use.
-    /// </summary>
-    public IEnumerable<string> AllowedToolIds { get; set; } = [];
-
-    /// <summary>
-    /// Tool scope IDs the agent is allowed to access (e.g., "content-read", "media-write").
-    /// </summary>
-    public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
-
-    /// <summary>
-    /// Per-user-group permission overrides serialized as JSON.
-    /// </summary>
-    public JsonElement? UserGroupPermissions { get; set; }
-
-    /// <summary>
-    /// Optional system instructions for the agent.
-    /// </summary>
-    public string? Instructions { get; set; }
 
     /// <summary>
     /// Whether the agent is active.

@@ -1,3 +1,6 @@
+export { UaiLabeledFieldElement } from "./labeled-field/labeled-field.element.js";
+export { UaiInfoCardElement } from "./info-card/info-card.element.js";
+export { UaiInfoGridElement } from "./info-grid/info-grid.element.js";
 export { UaiModelEditorElement } from "./model-editor/model-editor.element.js";
 export type { UaiModelEditorChangeEventDetail } from "./model-editor/model-editor.element.js";
 export { UaiTagsInputElement } from "./tags-input/tags-input.element.js";

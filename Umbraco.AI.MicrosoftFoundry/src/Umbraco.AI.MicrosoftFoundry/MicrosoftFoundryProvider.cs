@@ -1,30 +1,37 @@
+using System.ClientModel;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Azure;
-using Azure.AI.Inference;
-using Azure.Core;
-using Azure.Core.Pipeline;
+using Azure.AI.OpenAI;
+using Azure.Identity;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using OpenAI;
 using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
-/// AI provider for Microsoft AI Foundry (Azure AI Inference).
+/// AI provider for Microsoft AI Foundry (Azure AI).
 /// </summary>
 /// <remarks>
 /// This provider supports all models available through Microsoft AI Foundry's unified endpoint,
 /// including OpenAI models (GPT-4, GPT-4o), Mistral, Llama, Cohere, Phi, and more.
 /// One endpoint and API key provides access to all deployed models.
+/// Supports both API key and Entra ID authentication.
 /// </remarks>
 [AIProvider("microsoft-foundry", "Microsoft AI Foundry")]
 public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderSettings>
 {
     private const string CacheKeyPrefix = "MicrosoftFoundry_Models_";
     private const string ApiVersion = "2024-10-21";
+    private const string CognitiveServicesScope = "https://cognitiveservices.azure.com/.default";
+    private const string AiFoundryScope = "https://ai.azure.com/.default";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
+    private CancellationTokenSource _cacheEvictionSource = new();
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<MicrosoftFoundryProvider> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MicrosoftFoundryProvider"/> class.
@@ -32,14 +39,17 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
     /// <param name="httpClientFactory">The HTTP client factory.</param>
+    /// <param name="logger">The logger.</param>
     public MicrosoftFoundryProvider(
         IAIProviderInfrastructure infrastructure,
         IMemoryCache cache,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        ILogger<MicrosoftFoundryProvider> logger)
         : base(infrastructure)
     {
         _cache = cache;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
         WithCapability<MicrosoftFoundryChatCapability>();
         WithCapability<MicrosoftFoundryEmbeddingCapability>();
     }
@@ -63,82 +73,198 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             return cachedModels;
         }
 
-        var models = await FetchModelsFromApiAsync(settings, cancellationToken);
+        // Cache miss — evict all previous entries
+        _cacheEvictionSource.Cancel();
+        _cacheEvictionSource.Dispose();
+        _cacheEvictionSource = new CancellationTokenSource();
 
-        _cache.Set(cacheKey, models, CacheDuration);
+        IReadOnlyList<MicrosoftFoundryModelInfo> models;
+
+        // When Entra ID is configured with a project name, use the deployments API to list only deployed models.
+        // Fall back to the models API if the deployments call fails.
+        if (HasEntraIdCredentials(settings) && !string.IsNullOrWhiteSpace(settings.ProjectName))
+        {
+            models = await FetchDeploymentsFromApiAsync(settings, cancellationToken);
+
+            if (models.Count == 0)
+            {
+                _logger.LogWarning("Deployments API returned no results; falling back to models API.");
+                models = await FetchModelsFromApiAsync(settings, cancellationToken);
+            }
+        }
+        else
+        {
+            models = await FetchModelsFromApiAsync(settings, cancellationToken);
+        }
+
+        var cacheOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(CacheDuration)
+            .AddExpirationToken(new Microsoft.Extensions.Primitives.CancellationChangeToken(_cacheEvictionSource.Token));
+        _cache.Set(cacheKey, models, cacheOptions);
 
         return models;
     }
 
     /// <summary>
-    /// Creates a ChatCompletionsClient configured with the provided settings.
+    /// Creates an <see cref="AzureOpenAIClient"/> configured with the provided settings.
+    /// Uses Entra ID authentication when configured, otherwise falls back to API key.
     /// </summary>
     /// <param name="settings">The provider settings.</param>
-    /// <param name="modelId">The model/deployment name to use.</param>
-    /// <returns>A configured ChatCompletionsClient.</returns>
-    internal static ChatCompletionsClient CreateChatCompletionsClient(MicrosoftFoundryProviderSettings settings, string modelId)
+    /// <returns>A configured AzureOpenAIClient.</returns>
+    internal static AzureOpenAIClient CreateAzureOpenAIClient(MicrosoftFoundryProviderSettings settings)
     {
         ValidateSettings(settings);
 
-        var endpoint = BuildModelEndpoint(settings.Endpoint!, modelId);
-        var credential = new AzureKeyCredential(settings.ApiKey!);
+        var endpoint = new Uri(settings.Endpoint!);
 
-        // For Azure OpenAI endpoints, we need to add the api-key header via policy
-        var options = new AzureAIInferenceClientOptions();
-        options.AddPolicy(new AddApiKeyHeaderPolicy(settings.ApiKey!), HttpPipelinePosition.PerCall);
-
-        return new ChatCompletionsClient(endpoint, credential, options);
-    }
-
-    /// <summary>
-    /// Creates an EmbeddingsClient configured with the provided settings.
-    /// </summary>
-    /// <param name="settings">The provider settings.</param>
-    /// <param name="modelId">The model/deployment name to use.</param>
-    /// <returns>A configured EmbeddingsClient.</returns>
-    internal static EmbeddingsClient CreateEmbeddingsClient(MicrosoftFoundryProviderSettings settings, string modelId)
-    {
-        ValidateSettings(settings);
-
-        var endpoint = BuildModelEndpoint(settings.Endpoint!, modelId);
-        var credential = new AzureKeyCredential(settings.ApiKey!);
-
-        // For Azure OpenAI endpoints, we need to add the api-key header via policy
-        var options = new AzureAIInferenceClientOptions();
-        options.AddPolicy(new AddApiKeyHeaderPolicy(settings.ApiKey!), HttpPipelinePosition.PerCall);
-
-        return new EmbeddingsClient(endpoint, credential, options);
-    }
-
-    /// <summary>
-    /// Builds the full endpoint URL including the model/deployment path.
-    /// </summary>
-    /// <remarks>
-    /// Azure OpenAI endpoints require: https://{resource}.openai.azure.com/openai/deployments/{model}
-    /// Microsoft AI Foundry endpoints require: https://{resource}.services.ai.azure.com/models
-    /// </remarks>
-    private static Uri BuildModelEndpoint(string baseEndpoint, string modelId)
-    {
-        var endpoint = baseEndpoint.TrimEnd('/');
-
-        // Check if this is an Azure OpenAI endpoint
-        if (endpoint.Contains(".openai.azure.com", StringComparison.OrdinalIgnoreCase))
+        if (HasEntraIdCredentials(settings))
         {
-            // Azure OpenAI requires the deployment in the path
-            return new Uri($"{endpoint}/openai/deployments/{modelId}");
+            return new AzureOpenAIClient(endpoint, BuildTokenCredential(settings));
         }
 
-        // Check if this is a Microsoft AI Foundry endpoint
-        if (endpoint.Contains(".services.ai.azure.com", StringComparison.OrdinalIgnoreCase))
+        return new AzureOpenAIClient(endpoint, new ApiKeyCredential(settings.ApiKey!));
+    }
+
+    /// <summary>
+    /// Creates an <see cref="OpenAIClient"/> configured for the Responses API.
+    /// Uses the <c>{endpoint}/openai/v1/</c> base URL pattern required by AI Foundry.
+    /// </summary>
+    /// <param name="settings">The provider settings.</param>
+    /// <param name="logger">Optional logger for diagnostic output.</param>
+    /// <returns>A configured OpenAIClient.</returns>
+    internal static OpenAIClient CreateOpenAIClient(MicrosoftFoundryProviderSettings settings, ILogger? logger = null)
+    {
+        ValidateSettings(settings);
+
+        var endpoint = new Uri($"{settings.Endpoint!.TrimEnd('/')}/openai/v1/");
+
+        if (HasEntraIdCredentials(settings))
         {
-            // AI Foundry requires /models path, model name is passed in request body
-            if (!endpoint.EndsWith("/models", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return new Uri($"{endpoint}/models");
+                var token = BuildTokenCredential(settings)
+                    .GetToken(new Azure.Core.TokenRequestContext([CognitiveServicesScope]), default);
+                return new OpenAIClient(new ApiKeyCredential(token.Token), new OpenAIClientOptions { Endpoint = endpoint });
+            }
+            catch (Azure.Identity.AuthenticationFailedException ex)
+            {
+                logger?.LogError(ex, "Failed to acquire Entra ID token for Responses API (endpoint: {Endpoint}).", settings.Endpoint);
+                throw;
             }
         }
 
-        return new Uri(endpoint);
+        return new OpenAIClient(new ApiKeyCredential(settings.ApiKey!), new OpenAIClientOptions { Endpoint = endpoint });
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the settings contain any Entra ID credentials.
+    /// </summary>
+    internal static bool HasEntraIdCredentials(MicrosoftFoundryProviderSettings settings)
+        => !string.IsNullOrWhiteSpace(settings.TenantId)
+           || !string.IsNullOrWhiteSpace(settings.ClientId)
+           || !string.IsNullOrWhiteSpace(settings.ClientSecret);
+
+    /// <summary>
+    /// Returns <c>true</c> if the settings contain an API key.
+    /// </summary>
+    internal static bool HasApiKeyCredentials(MicrosoftFoundryProviderSettings settings)
+        => !string.IsNullOrWhiteSpace(settings.ApiKey);
+
+    /// <summary>
+    /// Builds a <see cref="Azure.Core.TokenCredential"/> based on the provided settings.
+    /// If all three Entra ID fields (TenantId, ClientId, ClientSecret) are set, returns a
+    /// <see cref="ClientSecretCredential"/>. Otherwise returns a <see cref="DefaultAzureCredential"/>
+    /// for managed identity or development scenarios.
+    /// </summary>
+    private static Azure.Core.TokenCredential BuildTokenCredential(MicrosoftFoundryProviderSettings settings)
+    {
+        if (!string.IsNullOrWhiteSpace(settings.TenantId)
+            && !string.IsNullOrWhiteSpace(settings.ClientId)
+            && !string.IsNullOrWhiteSpace(settings.ClientSecret))
+        {
+            return new ClientSecretCredential(settings.TenantId, settings.ClientId, settings.ClientSecret);
+        }
+
+        // Fall back to DefaultAzureCredential for managed identity / dev scenarios
+        var options = new DefaultAzureCredentialOptions();
+
+        if (!string.IsNullOrWhiteSpace(settings.TenantId))
+        {
+            options.TenantId = settings.TenantId;
+        }
+
+        return new DefaultAzureCredential(options);
+    }
+
+    private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchDeploymentsFromApiAsync(
+        MicrosoftFoundryProviderSettings settings,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tokenCredential = BuildTokenCredential(settings);
+            var tokenRequestContext = new Azure.Core.TokenRequestContext([AiFoundryScope]);
+            var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+
+            var client = _httpClientFactory.CreateClient();
+            var baseEndpoint = settings.Endpoint!.TrimEnd('/');
+            var deploymentsUrl = $"{baseEndpoint}/api/projects/{settings.ProjectName}/deployments?api-version=v1";
+
+            // Azure's authorization layer can return transient 401s when a token is first used
+            // against a resource (e.g., after credential changes). A single retry resolves this.
+            HttpResponseMessage response;
+            const int maxRetries = 1;
+
+            for (var attempt = 0; ; attempt++)
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, deploymentsUrl);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+                response = await client.SendAsync(request, cancellationToken);
+
+                if (response.IsSuccessStatusCode || attempt >= maxRetries)
+                {
+                    break;
+                }
+
+                _logger.LogDebug("Deployments API returned {StatusCode}, retrying...", (int)response.StatusCode);
+                response.Dispose();
+                await Task.Delay(500, cancellationToken);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogWarning(
+                    "Deployments API ({Url}) returned {StatusCode}: {Body}",
+                    deploymentsUrl,
+                    (int)response.StatusCode,
+                    body);
+                response.Dispose();
+                return [];
+            }
+
+            var deploymentsResponse = await response.Content
+                .ReadFromJsonAsync<MicrosoftFoundryDeploymentsResponse>(cancellationToken);
+
+            if (deploymentsResponse?.Value is null || deploymentsResponse.Value.Count == 0)
+            {
+                return [];
+            }
+
+            return deploymentsResponse.Value
+                .Select(d => new MicrosoftFoundryModelInfo
+                {
+                    // Use the deployment name as the model ID (this is what gets passed to the API)
+                    Id = d.Name,
+                })
+                .OrderBy(m => m.Id)
+                .ToList();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or Azure.Identity.AuthenticationFailedException)
+        {
+            _logger.LogWarning(ex, "Failed to fetch deployments from API.");
+            return [];
+        }
     }
 
     private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchModelsFromApiAsync(
@@ -152,7 +278,19 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
         var modelsUrl = $"{baseEndpoint}/openai/models?api-version={ApiVersion}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, modelsUrl);
-        request.Headers.Add("api-key", settings.ApiKey);
+
+        // Use bearer token for Entra ID auth, api-key header for API key auth
+        if (HasEntraIdCredentials(settings))
+        {
+            var tokenCredential = BuildTokenCredential(settings);
+            var tokenRequestContext = new Azure.Core.TokenRequestContext([CognitiveServicesScope]);
+            var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+        }
+        else
+        {
+            request.Headers.Add("api-key", settings.ApiKey);
+        }
 
         try
         {
@@ -160,13 +298,15 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 
             if (!response.IsSuccessStatusCode)
             {
-                // If models endpoint doesn't work, return empty list (user will type model name)
+                _logger.LogWarning(
+                    "Models API ({Url}) returned {StatusCode}.",
+                    modelsUrl,
+                    (int)response.StatusCode);
                 return [];
             }
 
             var modelsResponse = await response.Content
-                .ReadFromJsonAsync<MicrosoftFoundryModelsResponse>(cancellationToken)
-                ;
+                .ReadFromJsonAsync<MicrosoftFoundryModelsResponse>(cancellationToken);
 
             if (modelsResponse?.Data is null)
             {
@@ -192,33 +332,22 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             throw new InvalidOperationException("Microsoft AI Foundry endpoint is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        if (!HasApiKeyCredentials(settings) && !HasEntraIdCredentials(settings))
         {
-            throw new InvalidOperationException("Microsoft AI Foundry API key is required.");
+            throw new InvalidOperationException(
+                "Microsoft AI Foundry requires either an API key or Entra ID credentials (TenantId, ClientId, ClientSecret).");
         }
     }
 
     private static string GetCacheKey(MicrosoftFoundryProviderSettings settings)
     {
+        if (HasEntraIdCredentials(settings))
+        {
+            // Cache per tenant + client + endpoint combination for Entra ID auth
+            return $"{CacheKeyPrefix}entra:{settings.ProjectName}:{settings.TenantId}:{settings.ClientId}:{settings.Endpoint}";
+        }
+
         // Cache per API key + endpoint combination
         return $"{CacheKeyPrefix}{settings.ApiKey?.GetHashCode()}:{settings.Endpoint}";
-    }
-
-    /// <summary>
-    /// HTTP pipeline policy to add the api-key header for Azure OpenAI authentication.
-    /// </summary>
-    private sealed class AddApiKeyHeaderPolicy(string apiKey) : HttpPipelinePolicy
-    {
-        public override void Process(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
-        {
-            message.Request.Headers.SetValue("api-key", apiKey);
-            ProcessNext(message, pipeline);
-        }
-
-        public override ValueTask ProcessAsync(HttpMessage message, ReadOnlyMemory<HttpPipelinePolicy> pipeline)
-        {
-            message.Request.Headers.SetValue("api-key", apiKey);
-            return ProcessNextAsync(message, pipeline);
-        }
     }
 }

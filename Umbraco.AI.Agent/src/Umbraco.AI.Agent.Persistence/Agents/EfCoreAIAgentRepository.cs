@@ -58,13 +58,14 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public async Task<PagedModel<Core.Agents.AIAgent>> GetPagedAsync(
+    public async Task<(IEnumerable<Core.Agents.AIAgent> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
         Guid? profileId = null,
         string? surfaceId = null,
         bool? isActive = null,
+        Core.Agents.AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
@@ -99,6 +100,12 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
                 query = query.Where(e => e.IsActive == isActive.Value);
             }
 
+            if (agentType.HasValue)
+            {
+                var agentTypeInt = (int)agentType.Value;
+                query = query.Where(e => e.AgentType == agentTypeInt);
+            }
+
             var total = await query.CountAsync(cancellationToken);
             var items = await query
                 .OrderBy(e => e.Name)
@@ -111,8 +118,7 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
 
         scope.Complete();
 
-        var Agents = result.items.Select(AIAgentEntityFactory.BuildDomain).ToList();
-        return new PagedModel<Core.Agents.AIAgent>(result.total, Agents);
+        return (result.items.Select(AIAgentEntityFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />

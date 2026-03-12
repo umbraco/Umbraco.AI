@@ -62,10 +62,14 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<UaiItemPicker
             }
             this.updateValue({ selection: this._selectedItems });
         } else {
-            // Single selection - submit immediately
+            // Single selection - dispatch event
             this.updateValue({ selection: [item] });
             this.modalContext?.dispatchEvent(new UaiSelectedEvent(item.value, item));
-            this._submitModal();
+
+            // Auto-submit unless explicitly disabled
+            if (this.data?.autoSubmit !== false) {
+                this._submitModal();
+            }
         }
     }
 

@@ -60,6 +60,7 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         {
             EntityId = Guid.Empty, // No real entity
             EntityType = entityContext?.EntityType ?? "document",
+            ContentTypeAlias = entityContext?.EntitySubType ?? string.Empty,
             PropertyAlias = config.PropertyAlias,
             Context = contextItems.Count > 0 ? contextItems : null
         };

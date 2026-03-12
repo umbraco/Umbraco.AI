@@ -7,6 +7,7 @@ using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tests;
@@ -139,9 +140,9 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                 systemParts.Add(string.Join("\n\n", scope.Context.SystemMessageParts));
             }
 
-            if (!string.IsNullOrEmpty(agent?.Instructions))
+            if (!string.IsNullOrEmpty(agent?.GetStandardConfig()?.Instructions))
             {
-                systemParts.Add(agent.Instructions);
+                systemParts.Add(agent.GetStandardConfig()!.Instructions!);
             }
 
             if (systemParts.Count > 0)

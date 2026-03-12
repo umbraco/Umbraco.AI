@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
-using Umbraco.AI.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;

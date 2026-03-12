@@ -612,10 +612,55 @@ function Get-ChangedProducts {
     return $changed
 }
 
+function Resolve-ManifestProductKeys {
+    <#
+    .SYNOPSIS
+    Resolves a list of product names to product keys, validating each entry.
+    #>
+    param(
+        [object[]]$ProductNames,
+        [string]$ListName,
+        [hashtable]$Products,
+        [hashtable]$ProductsByName
+    )
+
+    $validNames = @($Products.Values | ForEach-Object { $_.DisplayName })
+    $keys = @()
+
+    foreach ($item in $ProductNames) {
+        if (-not ($item -is [string]) -or [string]::IsNullOrWhiteSpace($item)) {
+            throw "release-manifest.json '$ListName' must contain only non-empty strings"
+        }
+        if (-not ($validNames -contains $item)) {
+            throw "release-manifest.json '$ListName' contains unknown product: $item"
+        }
+        $key = $ProductsByName[$item]
+        if ($null -eq $key -or -not $Products.ContainsKey($key)) {
+            throw "release-manifest.json '$ListName' product is not a packable product: $item"
+        }
+        if ($keys -notcontains $key) {
+            $keys += $key
+        }
+    }
+
+    return $keys
+}
+
 function Get-ReleasePackageKeys {
     <#
     .SYNOPSIS
     Loads and validates release-manifest.json and returns product keys.
+
+    .DESCRIPTION
+    Supports two formats:
+    - Array format (legacy):  ["Product1", "Product2"]
+    - Object format:          { "include": ["Product1"], "exclude": ["Product2"] }
+
+    The object format adds an "exclude" list for products that have changed but are
+    explicitly excluded from the release (e.g., only chore/build changes).
+
+    Returns a hashtable with 'Include' and 'Exclude' keys, each containing an array
+    of product keys.
     #>
     param(
         [string]$RootPath,
@@ -630,40 +675,55 @@ function Get-ReleasePackageKeys {
 
     $raw = Get-Content $manifestPath -Raw
     try {
-        $list = $raw | ConvertFrom-Json
+        $manifest = $raw | ConvertFrom-Json
     }
     catch {
         throw "Failed to parse release-manifest.json: $($_.Exception.Message)"
     }
 
-    if ($null -eq $list -or $list -is [string]) {
-        throw "release-manifest.json must be a JSON array of product names"
+    if ($null -eq $manifest -or $manifest -is [string]) {
+        throw "release-manifest.json must be a JSON array or object with 'include' property"
     }
 
-    $validNames = @($Products.Values | ForEach-Object { $_.DisplayName })
-    $keys = @()
+    $includeList = $null
+    $excludeList = @()
 
-    foreach ($item in $list) {
-        if (-not ($item -is [string]) -or [string]::IsNullOrWhiteSpace($item)) {
-            throw "release-manifest.json must contain only non-empty strings"
-        }
-        if (-not ($validNames -contains $item)) {
-            throw "release-manifest.json contains unknown product: $item"
-        }
-        $key = $ProductsByName[$item]
-        if ($null -eq $key -or -not $Products.ContainsKey($key)) {
-            throw "release-manifest.json product is not a packable product: $item"
-        }
-        if ($keys -notcontains $key) {
-            $keys += $key
+    if ($manifest -is [System.Collections.IEnumerable] -and -not ($manifest.PSObject.Properties.Name -contains 'include')) {
+        # Legacy array format: ["Product1", "Product2"]
+        $includeList = @($manifest)
+    }
+    elseif ($manifest.PSObject.Properties.Name -contains 'include') {
+        # Object format: { "include": [...], "exclude": [...] }
+        $includeList = @($manifest.include)
+        if ($manifest.PSObject.Properties.Name -contains 'exclude' -and $null -ne $manifest.exclude) {
+            $excludeList = @($manifest.exclude)
         }
     }
-
-    if ($keys.Count -eq 0) {
-        throw "release-manifest.json must list at least one product"
+    else {
+        throw "release-manifest.json must be a JSON array or object with 'include' property"
     }
 
-    return $keys
+    $includeKeys = Resolve-ManifestProductKeys -ProductNames $includeList -ListName "include" -Products $Products -ProductsByName $ProductsByName
+    $excludeKeys = @()
+    if ($excludeList.Count -gt 0) {
+        $excludeKeys = Resolve-ManifestProductKeys -ProductNames $excludeList -ListName "exclude" -Products $Products -ProductsByName $ProductsByName
+    }
+
+    # Validate no overlap
+    $overlap = @($includeKeys | Where-Object { $excludeKeys -contains $_ })
+    if ($overlap.Count -gt 0) {
+        $overlapDisplay = $overlap | ForEach-Object { $Products[$_].DisplayName }
+        throw "release-manifest.json has products in both 'include' and 'exclude': $($overlapDisplay -join ', ')"
+    }
+
+    if ($includeKeys.Count -eq 0) {
+        throw "release-manifest.json must include at least one product"
+    }
+
+    return @{
+        Include = $includeKeys
+        Exclude = $excludeKeys
+    }
 }
 
 # ============================================================================
@@ -846,13 +906,20 @@ $manifestPath = Join-Path $RootPath "release-manifest.json"
 if ($SourceBranch -match '^refs/heads/release/') {
     Write-Host "Release branch detected - enforcing release-manifest.json" -ForegroundColor Cyan
 
-    $releaseKeys = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
+    $manifest = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
+    $releaseKeys = $manifest.Include
+    $excludeKeys = $manifest.Exclude
 
     $changedKeys = @($changedProducts.Keys | Where-Object { $changedProducts[$_] })
-    $missingKeys = @($changedKeys | Where-Object { $releaseKeys -notcontains $_ })
+    $missingKeys = @($changedKeys | Where-Object { $releaseKeys -notcontains $_ -and $excludeKeys -notcontains $_ })
     if ($missingKeys.Count -gt 0) {
         $missingDisplay = $missingKeys | ForEach-Object { $products[$_].DisplayName }
-        throw "release-manifest.json is missing changed products: $($missingDisplay -join ', ')"
+        throw "release-manifest.json is missing changed products (add to 'include' or 'exclude'): $($missingDisplay -join ', ')"
+    }
+
+    if ($excludeKeys.Count -gt 0) {
+        $excludeDisplay = $excludeKeys | ForEach-Object { $products[$_].DisplayName }
+        Write-Host "Explicitly excluded products: $($excludeDisplay -join ', ')" -ForegroundColor DarkYellow
     }
 
     # Override change list to match manifest (force pack list)
@@ -866,13 +933,20 @@ elseif ($SourceBranch -match '^refs/heads/hotfix/') {
     if (Test-Path $manifestPath) {
         Write-Host "Hotfix branch detected - applying release-manifest.json" -ForegroundColor Cyan
 
-        $releaseKeys = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
+        $manifest = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
+        $releaseKeys = $manifest.Include
+        $excludeKeys = $manifest.Exclude
 
         $changedKeys = @($changedProducts.Keys | Where-Object { $changedProducts[$_] })
-        $missingKeys = @($changedKeys | Where-Object { $releaseKeys -notcontains $_ })
+        $missingKeys = @($changedKeys | Where-Object { $releaseKeys -notcontains $_ -and $excludeKeys -notcontains $_ })
         if ($missingKeys.Count -gt 0) {
             $missingDisplay = $missingKeys | ForEach-Object { $products[$_].DisplayName }
-            throw "release-manifest.json is missing changed products: $($missingDisplay -join ', ')"
+            throw "release-manifest.json is missing changed products (add to 'include' or 'exclude'): $($missingDisplay -join ', ')"
+        }
+
+        if ($excludeKeys.Count -gt 0) {
+            $excludeDisplay = $excludeKeys | ForEach-Object { $products[$_].DisplayName }
+            Write-Host "Explicitly excluded products: $($excludeDisplay -join ', ')" -ForegroundColor DarkYellow
         }
 
         # Override change list to match manifest (force pack list)

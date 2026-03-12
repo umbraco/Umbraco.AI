@@ -103,16 +103,23 @@ if (-not (Test-Path $ManifestPath)) {
     exit 1
 }
 
-# Load manifest
-$manifest = Get-Content $ManifestPath -Raw | ConvertFrom-Json
-Write-ColorOutput "Found release manifest with $($manifest.Count) product(s):" $Green
-$manifest | ForEach-Object { Write-ColorOutput "  - $_" $Green }
+# Load manifest (supports both array and object format)
+$raw = Get-Content $ManifestPath -Raw | ConvertFrom-Json
+if ($raw.PSObject.Properties.Name -contains 'include') {
+    # Object format: { "include": [...], "exclude": [...] }
+    $products = @($raw.include)
+} else {
+    # Legacy array format: ["Product1", "Product2"]
+    $products = @($raw)
+}
+Write-ColorOutput "Found release manifest with $($products.Count) product(s):" $Green
+$products | ForEach-Object { Write-ColorOutput "  - $_" $Green }
 Write-Host ""
 
 $hasErrors = $false
 $warnings = @()
 
-foreach ($product in $manifest) {
+foreach ($product in $products) {
     Write-ColorOutput "Validating $product..." $Blue
 
     $productDir = $product

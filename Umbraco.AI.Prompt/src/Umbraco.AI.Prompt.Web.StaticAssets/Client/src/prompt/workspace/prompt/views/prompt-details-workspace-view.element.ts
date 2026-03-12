@@ -161,6 +161,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
+                <umb-property-layout label="Description" description="Brief description of this prompt">
+                    <uui-input
+                        slot="editor"
+                        .value=${this._model.description ?? ""}
+                        @input=${this.#onDescriptionChange}
+                        placeholder="Enter description..."
+                    ></uui-input>
+                </umb-property-layout>
+
                 <umb-property-layout
                     label="AI Profile"
                     description="Select a profile or leave empty to use the default Chat profile from Settings"
@@ -170,15 +179,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.profileId ?? undefined}
                         @change=${this.#onProfileChange}
                     ></uai-profile-picker>
-                </umb-property-layout>
-
-                <umb-property-layout label="Description" description="Brief description of this prompt">
-                    <uui-input
-                        slot="editor"
-                        .value=${this._model.description ?? ""}
-                        @input=${this.#onDescriptionChange}
-                        placeholder="Enter description..."
-                    ></uui-input>
                 </umb-property-layout>
 
                 <umb-property-layout

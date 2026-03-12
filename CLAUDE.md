@@ -425,11 +425,22 @@ When bumping Umbraco.AI (Core) to a new major version, the skill:
 
 ### Release Manifest
 
-On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
+On `release/*` branches, CI **requires** a `release-manifest.json` at repo root.
+
+**Supported formats:**
 
 ```json
+// Array format (legacy) - all changed products must be listed
 ["Umbraco.AI", "Umbraco.AI.OpenAI"]
+
+// Object format - explicitly include products to release and exclude products to skip
+{
+  "include": ["Umbraco.AI", "Umbraco.AI.Agent"],
+  "exclude": ["Umbraco.AI.Google", "Umbraco.AI.OpenAI"]
+}
 ```
+
+The `exclude` list is for products that have changed (e.g., build/chore-only changes) but should **not** be released. CI validates that every changed product appears in either `include` or `exclude` — unaccounted products cause a build failure.
 
 **Generating the manifest:**
 
@@ -453,7 +464,7 @@ The manifest generation process:
 2. Presents an interactive multiselect interface
 3. Generates `release-manifest.json` at the repository root
 
-The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
+The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from both `include` and `exclude`. This ensures intentional releases and prevents accidental package publishing.
 
 On `hotfix/*` branches, the manifest is **optional**:
 

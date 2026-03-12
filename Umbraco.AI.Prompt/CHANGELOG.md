@@ -5,6 +5,32 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.3.1...Umbraco.AI.Prompt@1.4.0) (2026-03-12)
+
+### feat
+
+* **prompt:** Add Block List/Grid editor support for prompts (#87) ([58c2e71](https://github.com/umbraco/Umbraco.AI/commit/58c2e71e258dd1eeb8ca16932956db357ad27736)), closes [#87](https://github.com/umbraco/Umbraco.AI/issues/87) [#38](https://github.com/umbraco/Umbraco.AI/issues/38)
+* **frontend,prompt:** Add entity picker and entity property picker editors ([1a78156](https://github.com/umbraco/Umbraco.AI/commit/1a78156823a4292243994aaf8904d234876c80ff))
+* **prompt,agent:** Add execution options for test framework ([340fa18](https://github.com/umbraco/Umbraco.AI/commit/340fa1848a4709daaef7cba6fba52a7f4ea05bcf))
+* **prompt:** Add Prompt test feature for AI Testing ([bd98839](https://github.com/umbraco/Umbraco.AI/commit/bd988396d04c92902268c761e2665aa42abdc076))
+* **prompt:** Add test feature entity repository ([a122a8d](https://github.com/umbraco/Umbraco.AI/commit/a122a8debafd5639008bacfe86e497158b41629b))
+* TipTap AI prompt integration with selection support (#86) ([e0c3f24](https://github.com/umbraco/Umbraco.AI/commit/e0c3f24f9f9d95497a3d71c61ecc7f8b59e08453)), closes [#86](https://github.com/umbraco/Umbraco.AI/issues/86)
+
+### fix
+
+* **core,prompt,agent:** Fix test feature config deserialization and transcript accuracy ([a0205c4](https://github.com/umbraco/Umbraco.AI/commit/a0205c4e9e0631e3857f6168e4318514fc947228))
+* **core,prompt,agent:** Fix test feature repository matching ([6481cbf](https://github.com/umbraco/Umbraco.AI/commit/6481cbf6ca689465aaf58b924403932ede9d3258))
+* **prompt,agent:** Fix build errors from Core API changes ([344b5c3](https://github.com/umbraco/Umbraco.AI/commit/344b5c341cbc3247c8c7b28ddcba23f970edcb7b))
+
+### refactor
+
+* **agent,prompt:** Simplify test target resolution to use TestTargetId directly ([b008c16](https://github.com/umbraco/Umbraco.AI/commit/b008c16ca48e3c3a2294c17b3accba6ef08fb9db))
+* **core,agent,prompt:** Standardize pagination to use tuples ([a9eb52c](https://github.com/umbraco/Umbraco.AI/commit/a9eb52ca613a4ef0ecc6dd3cbede50f3ac53706d))
+* **core,agent,prompt:** Use JsonElement for test case data ([dd5c2f0](https://github.com/umbraco/Umbraco.AI/commit/dd5c2f02be1c024bc1ad804c348edf080c47dcac))
+* **core,prompt,agent:** Remove AITestCase wrapper class ([b0bbd33](https://github.com/umbraco/Umbraco.AI/commit/b0bbd33350d1aa24aac17d25c507beed292ec915))
+* **core,prompt,agent:** Use strong types and consistent JSON serializer options ([e26d786](https://github.com/umbraco/Umbraco.AI/commit/e26d786a023862bdfca899bf7bc31374c2b1f63c))
+* **prompt:** Change order of prompt feature config fields ([f8f8037](https://github.com/umbraco/Umbraco.AI/commit/f8f803771b5bdf58de9f1c6c6e72de5c455f015d))
+
 ## [1.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.3.0...Umbraco.AI.Prompt@1.3.1) (2026-03-04)
 
 ## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.2.0...Umbraco.AI.Prompt@1.3.0) (2026-03-02)

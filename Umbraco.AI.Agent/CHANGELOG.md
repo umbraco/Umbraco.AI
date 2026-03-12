@@ -5,6 +5,33 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.3.1...Umbraco.AI.Agent@1.4.0) (2026-03-12)
+
+### feat
+
+* **agent:** Add Agent test feature for AI Testing ([e8482a5](https://github.com/umbraco/Umbraco.AI/commit/e8482a56b761c99b3302bf5fba3658074712e9b6))
+* **agent:** Add Orchestrated Agents using MAF (#88) ([5f57d90](https://github.com/umbraco/Umbraco.AI/commit/5f57d9020c4c115712cc4cc62adb92145b1291e0)), closes [#88](https://github.com/umbraco/Umbraco.AI/issues/88)
+* **agent:** Add test feature entity repository ([ec6bcb5](https://github.com/umbraco/Umbraco.AI/commit/ec6bcb5b9d5f8792f3f92e8df80d50a87258e89f))
+* **agent:** Hide orchestrated agent option when no workflows are registered ([7a9799e](https://github.com/umbraco/Umbraco.AI/commit/7a9799e0bd7bf46f5e6ac716813a487cc8a09128))
+* **prompt,agent:** Add execution options for test framework ([340fa18](https://github.com/umbraco/Umbraco.AI/commit/340fa1848a4709daaef7cba6fba52a7f4ea05bcf))
+
+### fix
+
+* **agent:** Fix agent test transcript missing messages ([886cb69](https://github.com/umbraco/Umbraco.AI/commit/886cb695215adc277baf33d96eb925a77ede7075))
+* **agent:** Update AgentTestFeature to use correct AGUI event properties ([815297e](https://github.com/umbraco/Umbraco.AI/commit/815297e874843285bf28db7f7537ce05de6a35bb))
+* **core,agent:** Resolve build errors after dev merge ([75ff4c1](https://github.com/umbraco/Umbraco.AI/commit/75ff4c1e33b0e9cc844aa643613adc975c27b6ae))
+* **core,prompt,agent:** Fix test feature config deserialization and transcript accuracy ([a0205c4](https://github.com/umbraco/Umbraco.AI/commit/a0205c4e9e0631e3857f6168e4318514fc947228))
+* **core,prompt,agent:** Fix test feature repository matching ([6481cbf](https://github.com/umbraco/Umbraco.AI/commit/6481cbf6ca689465aaf58b924403932ede9d3258))
+* **prompt,agent:** Fix build errors from Core API changes ([344b5c3](https://github.com/umbraco/Umbraco.AI/commit/344b5c341cbc3247c8c7b28ddcba23f970edcb7b))
+
+### refactor
+
+* **agent,prompt:** Simplify test target resolution to use TestTargetId directly ([b008c16](https://github.com/umbraco/Umbraco.AI/commit/b008c16ca48e3c3a2294c17b3accba6ef08fb9db))
+* **core,agent,prompt:** Standardize pagination to use tuples ([a9eb52c](https://github.com/umbraco/Umbraco.AI/commit/a9eb52ca613a4ef0ecc6dd3cbede50f3ac53706d))
+* **core,agent,prompt:** Use JsonElement for test case data ([dd5c2f0](https://github.com/umbraco/Umbraco.AI/commit/dd5c2f02be1c024bc1ad804c348edf080c47dcac))
+* **core,prompt,agent:** Remove AITestCase wrapper class ([b0bbd33](https://github.com/umbraco/Umbraco.AI/commit/b0bbd33350d1aa24aac17d25c507beed292ec915))
+* **core,prompt,agent:** Use strong types and consistent JSON serializer options ([e26d786](https://github.com/umbraco/Umbraco.AI/commit/e26d786a023862bdfca899bf7bc31374c2b1f63c))
+
 ## [1.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.3.0...Umbraco.AI.Agent@1.3.1) (2026-03-04)
 
 ## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.2.0...Umbraco.AI.Agent@1.3.0) (2026-03-02)

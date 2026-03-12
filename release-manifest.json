@@ -1,0 +1,7 @@
+[
+  "Umbraco.AI",
+  "Umbraco.AI.Agent",
+  "Umbraco.AI.Agent.Deploy",
+  "Umbraco.AI.MicrosoftFoundry",
+  "Umbraco.AI.Prompt"
+]

@@ -42,7 +42,7 @@ public static class UmbracoBuilderExtensions
         // Register DbContext using Umbraco's database provider detection with migrations assembly config
         builder.Services.AddUmbracoDbContext<UmbracoAIDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            ConfigureDatabaseProvider(options, connectionString, providerName);
+            UmbracoAIDbContext.ConfigureProvider(options, connectionString, providerName);
         });
 
         // Connection factory for entity/domain mapping with encryption support
@@ -74,34 +74,4 @@ public static class UmbracoBuilderExtensions
         return builder;
     }
 
-    private static void ConfigureDatabaseProvider(
-        DbContextOptionsBuilder options,
-        string? connectionString,
-        string? providerName)
-    {
-        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
-        {
-            return;
-        }
-
-        // Configure provider with migrations assembly based on provider type
-        switch (providerName)
-        {
-            case Constants.ProviderNames.SQLServer:
-                options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Persistence.SqlServer"));
-                break;
-
-            case Constants.ProviderNames.SQLLite:
-            case "Microsoft.Data.SQLite":
-                options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Persistence.Sqlite"));
-                break;
-
-            default:
-                throw new InvalidOperationException(
-                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Persistence. " +
-                    $"Supported providers: SQL Server, SQLite.");
-        }
-    }
 }

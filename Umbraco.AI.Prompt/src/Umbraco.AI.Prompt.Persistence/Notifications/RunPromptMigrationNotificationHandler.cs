@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.AI.Prompt.Persistence.Configuration;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
@@ -38,7 +37,7 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
             // inner connection is disposed. Creating the context directly avoids the pooled factory.
             // See: https://github.com/umbraco/Umbraco-CMS/issues/22124
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIPromptDbContext>();
-            UmbracoBuilderExtensions.ConfigureDatabaseProvider(
+            UmbracoAIPromptDbContext.ConfigureProvider(
                 optionsBuilder,
                 _connectionStrings.Value.ConnectionString,
                 _connectionStrings.Value.ProviderName);

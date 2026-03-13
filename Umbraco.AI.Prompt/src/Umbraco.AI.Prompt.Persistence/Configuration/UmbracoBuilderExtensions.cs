@@ -1,9 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Persistence.Notifications;
 using Umbraco.AI.Prompt.Persistence.Prompts;
-using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
@@ -25,7 +23,7 @@ public static class UmbracoBuilderExtensions
         // Register DbContext with provider-specific migrations assembly
         builder.Services.AddUmbracoDbContext<UmbracoAIPromptDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            ConfigureDatabaseProvider(options, connectionString, providerName);
+            UmbracoAIPromptDbContext.ConfigureProvider(options, connectionString, providerName);
         });
 
         // Replace in-memory repository with EF Core implementation
@@ -37,35 +35,4 @@ public static class UmbracoBuilderExtensions
         return builder;
     }
 
-    /// <summary>
-    /// Configures the EF Core database provider with the correct migrations assembly.
-    /// </summary>
-    internal static void ConfigureDatabaseProvider(
-        DbContextOptionsBuilder options,
-        string? connectionString,
-        string? providerName)
-    {
-        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
-        {
-            return;
-        }
-
-        switch (providerName)
-        {
-            case Constants.ProviderNames.SQLServer:
-                options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.SqlServer"));
-                break;
-
-            case Constants.ProviderNames.SQLLite:
-            case "Microsoft.Data.SQLite":
-                options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.Sqlite"));
-                break;
-
-            default:
-                throw new InvalidOperationException(
-                    $"Database provider '{providerName}' is not supported by Umbraco.AI.Prompt.");
-        }
-    }
 }

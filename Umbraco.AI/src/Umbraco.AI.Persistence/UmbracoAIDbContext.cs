@@ -8,6 +8,7 @@ using Umbraco.AI.Persistence.Analytics.Usage;
 using Umbraco.AI.Persistence.Settings;
 using Umbraco.AI.Persistence.Versioning;
 using Umbraco.AI.Persistence.Tests;
+using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Persistence;
 
@@ -87,6 +88,39 @@ public class UmbracoAIDbContext : DbContext
     public UmbracoAIDbContext(DbContextOptions<UmbracoAIDbContext> options)
         : base(options)
     {
+    }
+
+    /// <summary>
+    /// Configures the EF Core database provider with the correct migrations assembly.
+    /// </summary>
+    internal static void ConfigureProvider(
+        DbContextOptionsBuilder options,
+        string? connectionString,
+        string? providerName)
+    {
+        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
+        {
+            return;
+        }
+
+        switch (providerName)
+        {
+            case Constants.ProviderNames.SQLServer:
+                options.UseSqlServer(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.SqlServer"));
+                break;
+
+            case Constants.ProviderNames.SQLLite:
+            case "Microsoft.Data.SQLite":
+                options.UseSqlite(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.Sqlite"));
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Persistence. " +
+                    $"Supported providers: SQL Server, SQLite.");
+        }
     }
 
     /// <inheritdoc />

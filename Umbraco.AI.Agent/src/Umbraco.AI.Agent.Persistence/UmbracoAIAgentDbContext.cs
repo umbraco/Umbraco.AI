@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Agent.Persistence.Agents;
+using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Agent.Persistence;
 
@@ -19,6 +20,38 @@ public class UmbracoAIAgentDbContext : DbContext
     public UmbracoAIAgentDbContext(DbContextOptions<UmbracoAIAgentDbContext> options)
         : base(options)
     {
+    }
+
+    /// <summary>
+    /// Configures the EF Core database provider with the correct migrations assembly.
+    /// </summary>
+    internal static void ConfigureProvider(
+        DbContextOptionsBuilder options,
+        string? connectionString,
+        string? providerName)
+    {
+        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
+        {
+            return;
+        }
+
+        switch (providerName)
+        {
+            case Constants.ProviderNames.SQLServer:
+                options.UseSqlServer(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Agent.Persistence.SqlServer"));
+                break;
+
+            case Constants.ProviderNames.SQLLite:
+            case "Microsoft.Data.SQLite":
+                options.UseSqlite(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Agent.Persistence.Sqlite"));
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Database provider '{providerName}' is not supported by Umbraco.AI.Agent.");
+        }
     }
 
     /// <inheritdoc />

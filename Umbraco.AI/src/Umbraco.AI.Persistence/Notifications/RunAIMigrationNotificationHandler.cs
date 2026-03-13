@@ -4,8 +4,6 @@ using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
-using AIBuilderExtensions = Umbraco.AI.Extensions.UmbracoBuilderExtensions;
-
 namespace Umbraco.AI.Persistence.Notifications;
 
 /// <summary>
@@ -34,7 +32,7 @@ public class RunAIMigrationNotificationHandler
         // inner connection is disposed. Creating the context directly avoids the pooled factory.
         // See: https://github.com/umbraco/Umbraco-CMS/issues/22124
         var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIDbContext>();
-        AIBuilderExtensions.ConfigureDatabaseProvider(
+        UmbracoAIDbContext.ConfigureProvider(
             optionsBuilder,
             _connectionStrings.Value.ConnectionString,
             _connectionStrings.Value.ProviderName);

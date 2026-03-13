@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Umbraco.AI.Prompt.Persistence.Configuration;
+using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
@@ -11,19 +14,14 @@ namespace Umbraco.AI.Prompt.Persistence.Notifications;
 /// </summary>
 internal sealed class RunPromptMigrationNotificationHandler : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    // Injected to ensure the AddUmbracoDbContext options callback has been triggered,
-    // which populates _migrationConfig with the connection string and provider name.
-    private readonly IDbContextFactory<UmbracoAIPromptDbContext> _dbContextFactory;
-    private readonly MigrationConnectionConfig _migrationConfig;
+    private readonly IOptions<ConnectionStrings> _connectionStrings;
     private readonly ILogger<RunPromptMigrationNotificationHandler> _logger;
 
     public RunPromptMigrationNotificationHandler(
-        IDbContextFactory<UmbracoAIPromptDbContext> dbContextFactory,
-        MigrationConnectionConfig migrationConfig,
+        IOptions<ConnectionStrings> connectionStrings,
         ILogger<RunPromptMigrationNotificationHandler> logger)
     {
-        _dbContextFactory = dbContextFactory;
-        _migrationConfig = migrationConfig;
+        _connectionStrings = connectionStrings;
         _logger = logger;
     }
 
@@ -34,16 +32,17 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
         {
             _logger.LogInformation("Running Umbraco.AI.Prompt database migrations...");
 
-            // Create a clean DbContext using direct options rather than the DI factory.
-            // In Development mode, Umbraco wraps SQLite connections with MiniProfiler's
-            // ProfiledDbConnection, whose ConnectionString getter returns null and causes
-            // NullReferenceException in EF Core's SqliteDatabaseCreator.Exists().
-            // Creating the context directly bypasses the MiniProfiler connection wrapping.
+            // Create a standalone DbContext rather than using IDbContextFactory. Umbraco's EFCoreScope
+            // infrastructure shares NPoco connections (wrapped with MiniProfiler's ProfiledDbConnection)
+            // onto pooled EF Core contexts via SetDbConnection(). These tainted contexts cause
+            // NullReferenceException in SqliteDatabaseCreator.Exists() when the ProfiledDbConnection's
+            // inner connection is disposed. Creating the context directly avoids the pooled factory.
+            // See: https://github.com/umbraco/Umbraco-CMS/issues/22124
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIPromptDbContext>();
             UmbracoBuilderExtensions.ConfigureDatabaseProvider(
                 optionsBuilder,
-                _migrationConfig.ConnectionString,
-                _migrationConfig.ProviderName);
+                ResolveConnectionString(),
+                _connectionStrings.Value.ProviderName);
 
             await using UmbracoAIPromptDbContext dbContext = new UmbracoAIPromptDbContext(optionsBuilder.Options);
 
@@ -60,5 +59,21 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
             _logger.LogError(ex, "Failed to run Umbraco.AI.Prompt database migrations.");
             throw;
         }
+    }
+
+    private string? ResolveConnectionString()
+    {
+        var connectionString = _connectionStrings.Value.ConnectionString;
+
+        string? dataDirectory = AppDomain.CurrentDomain
+            .GetData(Constants.System.DataDirectoryName)?.ToString();
+
+        if (!string.IsNullOrEmpty(dataDirectory))
+        {
+            connectionString = connectionString?.Replace(
+                Constants.System.DataDirectoryPlaceholder, dataDirectory);
+        }
+
+        return connectionString;
     }
 }

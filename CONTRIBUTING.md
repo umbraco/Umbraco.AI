@@ -515,13 +515,38 @@ dotnet run
 # Verify all features work correctly with production packages
 ```
 
-#### 9. Merge to Main
+#### 9. Merge to Main and Bump Dev Versions
+
+Use the `/post-release-cleanup` skill to automate this entire step:
 
 ```bash
-# Create PR: release/2026.01 → main
-# After approval and merge, the post-merge hook automatically removes release-manifest.json
+/post-release-cleanup
+```
+
+This will:
+1. Detect released products from git tags on the release branch
+2. Merge the release branch into `main` (no-ff)
+3. Merge `main` into `dev` (no-ff)
+4. Bump `version.json` on `dev` for each released product (patch increment, e.g., `1.5.0` → `1.5.1`)
+5. Optionally delete the release/hotfix branch (local + remote)
+
+The version bump on `dev` ensures nightly builds produce versions **higher** than the released version.
+
+**Manual alternative:**
+
+```bash
+# Merge to main
 git checkout main
 git pull origin main
+git merge release/2026.01 --no-ff
+git push origin main
+
+# Merge main to dev and bump versions
+git checkout dev
+git pull origin dev
+git merge main --no-ff
+# Bump version.json for each released product (patch increment)
+git push origin dev
 
 # Clean up release branch
 git branch -d release/2026.01

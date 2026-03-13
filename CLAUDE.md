@@ -392,13 +392,41 @@ The repository includes Claude Code skills to automate and orchestrate the relea
 # - Generates CHANGELOG.md
 ```
 
+### `/post-release-cleanup` - Post-Release Merge & Bump
+
+**Use when:** After a release has been deployed and tagged by the release pipeline
+
+**What it does:**
+1. **Detects released products** by finding version tags on the release branch not yet on main
+2. **Merges release branch → main** (no-ff merge, push)
+3. **Merges main → dev** (no-ff merge, push)
+4. **Bumps `version.json`** on dev for each released product (patch increment)
+5. **Optionally deletes** the release/hotfix branch (local + remote)
+
+The version bump ensures nightly builds on dev produce versions **higher** than the released version (e.g., `1.5.0` → `1.5.1` so nightlies become `1.5.1--preview.*`).
+
+**Example:**
+```bash
+/post-release-cleanup
+
+# Output:
+# Found released products on this branch:
+# - Umbraco.AI @ 1.5.0
+# - Umbraco.AI.OpenAI @ 1.2.0
+#
+# → Merges release/2026.02.1 → main
+# → Merges main → dev
+# → Bumps Umbraco.AI to 1.5.1, Umbraco.AI.OpenAI to 1.2.1 on dev
+# → Asks to delete release/2026.02.1
+```
+
 ### `/repo-management` - Unified Interface
 
 **Use when:** Unsure which operation to perform
 
 **What it does:**
 - Presents interactive menu of all repository management operations
-- Delegates to specialized skills (`/release-management`, `/changelog-management`, etc.)
+- Delegates to specialized skills (`/release-management`, `/changelog-management`, `/post-release-cleanup`, etc.)
 - Includes build, setup, and frontend watch operations
 
 ### Version Bump Decision Logic

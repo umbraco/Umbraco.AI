@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Agent.Persistence.Configuration;
-using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
@@ -41,7 +40,7 @@ internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncH
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIAgentDbContext>();
             UmbracoBuilderExtensions.ConfigureDatabaseProvider(
                 optionsBuilder,
-                ResolveConnectionString(),
+                _connectionStrings.Value.ConnectionString,
                 _connectionStrings.Value.ProviderName);
 
             await using UmbracoAIAgentDbContext dbContext = new UmbracoAIAgentDbContext(optionsBuilder.Options);
@@ -59,21 +58,5 @@ internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncH
             _logger.LogError(ex, "Failed to run Umbraco.AI.Agent database migrations.");
             throw;
         }
-    }
-
-    private string? ResolveConnectionString()
-    {
-        var connectionString = _connectionStrings.Value.ConnectionString;
-
-        string? dataDirectory = AppDomain.CurrentDomain
-            .GetData(Constants.System.DataDirectoryName)?.ToString();
-
-        if (!string.IsNullOrEmpty(dataDirectory))
-        {
-            connectionString = connectionString?.Replace(
-                Constants.System.DataDirectoryPlaceholder, dataDirectory);
-        }
-
-        return connectionString;
     }
 }

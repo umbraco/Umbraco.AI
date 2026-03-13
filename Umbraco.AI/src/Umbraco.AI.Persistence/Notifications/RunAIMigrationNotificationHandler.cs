@@ -1,12 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Umbraco.AI.Extensions;
-
-using AIBuilderExtensions = Umbraco.AI.Extensions.UmbracoBuilderExtensions;
-using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
+
+using AIBuilderExtensions = Umbraco.AI.Extensions.UmbracoBuilderExtensions;
 
 namespace Umbraco.AI.Persistence.Notifications;
 
@@ -38,7 +36,7 @@ public class RunAIMigrationNotificationHandler
         var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIDbContext>();
         AIBuilderExtensions.ConfigureDatabaseProvider(
             optionsBuilder,
-            ResolveConnectionString(),
+            _connectionStrings.Value.ConnectionString,
             _connectionStrings.Value.ProviderName);
 
         await using UmbracoAIDbContext dbContext = new UmbracoAIDbContext(optionsBuilder.Options);
@@ -48,22 +46,5 @@ public class RunAIMigrationNotificationHandler
         {
             await dbContext.Database.MigrateAsync(cancellationToken);
         }
-    }
-
-    private string? ResolveConnectionString()
-    {
-        var connectionString = _connectionStrings.Value.ConnectionString;
-
-        // Replace |DataDirectory| placeholder, matching the CMS's own resolution logic.
-        string? dataDirectory = AppDomain.CurrentDomain
-            .GetData(Constants.System.DataDirectoryName)?.ToString();
-
-        if (!string.IsNullOrEmpty(dataDirectory))
-        {
-            connectionString = connectionString?.Replace(
-                Constants.System.DataDirectoryPlaceholder, dataDirectory);
-        }
-
-        return connectionString;
     }
 }

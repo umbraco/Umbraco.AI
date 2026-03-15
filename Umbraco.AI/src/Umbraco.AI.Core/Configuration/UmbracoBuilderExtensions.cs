@@ -262,7 +262,8 @@ public static partial class UmbracoBuilderExtensions
             .Add<RegexGrader>()
             .Add<JSONSchemaGrader>()
             .Add<ToolCallGrader>()
-            .Add<LLMJudgeGrader>();
+            .Add<LLMJudgeGrader>()
+            .Add<GuardrailGrader>();
             //.Add<SemanticSimilarityGrader>();
 
         // Register test infrastructure services

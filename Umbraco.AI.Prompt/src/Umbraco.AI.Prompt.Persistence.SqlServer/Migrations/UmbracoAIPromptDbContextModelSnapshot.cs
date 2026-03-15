@@ -55,6 +55,10 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<string>("GuardrailIds")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
                     b.Property<bool>("IncludeEntityContext")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")

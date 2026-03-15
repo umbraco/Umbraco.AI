@@ -41,6 +41,11 @@ internal class AIPromptEntity
     public string? ContextIds { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of guardrail IDs.
+    /// </summary>
+    public string? GuardrailIds { get; set; }
+
+    /// <summary>
     /// Tags array serialized as a comma-separated string.
     /// </summary>
     public string? Tags { get; set; }

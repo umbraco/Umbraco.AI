@@ -29,5 +29,10 @@ public static class UmbracoAIConstants
         /// UDI entity type for AI settings.
         /// </summary>
         public const string Settings = "umbraco-ai-settings";
+
+        /// <summary>
+        /// UDI entity type for AI guardrails.
+        /// </summary>
+        public const string Guardrail = "umbraco-ai-guardrail";
     }
 }

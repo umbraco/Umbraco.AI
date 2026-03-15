@@ -1,3 +1,5 @@
+using Umbraco.Cms.Core.Events;
+
 namespace Umbraco.AI.Core.Guardrails;
 
 /// <summary>
@@ -6,10 +8,12 @@ namespace Umbraco.AI.Core.Guardrails;
 internal sealed class AIGuardrailService : IAIGuardrailService
 {
     private readonly IAIGuardrailRepository _repository;
+    private readonly IEventAggregator _eventAggregator;
 
-    public AIGuardrailService(IAIGuardrailRepository repository)
+    public AIGuardrailService(IAIGuardrailRepository repository, IEventAggregator eventAggregator)
     {
         _repository = repository;
+        _eventAggregator = eventAggregator;
     }
 
     /// <inheritdoc />
@@ -49,6 +53,11 @@ internal sealed class AIGuardrailService : IAIGuardrailService
         guardrail.Version = 1;
 
         await _repository.AddAsync(guardrail, cancellationToken);
+
+        // Publish saved notification
+        var messages = new EventMessages();
+        await _eventAggregator.PublishAsync(new AIGuardrailSavedNotification(guardrail, messages), cancellationToken);
+
         return guardrail;
     }
 
@@ -68,12 +77,35 @@ internal sealed class AIGuardrailService : IAIGuardrailService
         guardrail.Version++;
 
         await _repository.UpdateAsync(guardrail, cancellationToken);
+
+        // Publish saved notification
+        var messages = new EventMessages();
+        await _eventAggregator.PublishAsync(new AIGuardrailSavedNotification(guardrail, messages), cancellationToken);
+
         return guardrail;
     }
 
     /// <inheritdoc />
     public async Task DeleteGuardrailAsync(Guid id, CancellationToken cancellationToken = default)
-        => await _repository.DeleteAsync(id, cancellationToken);
+    {
+        await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification
+        var messages = new EventMessages();
+        await _eventAggregator.PublishAsync(new AIGuardrailDeletedNotification(id, messages), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AIGuardrail> SaveGuardrailAsync(AIGuardrail guardrail, CancellationToken cancellationToken = default)
+    {
+        var existing = await _repository.GetByIdAsync(guardrail.Id, cancellationToken);
+        if (existing is not null)
+        {
+            return await UpdateGuardrailAsync(guardrail, cancellationToken);
+        }
+
+        return await CreateGuardrailAsync(guardrail, cancellationToken);
+    }
 
     /// <inheritdoc />
     public async Task<bool> GuardrailAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)

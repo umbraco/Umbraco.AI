@@ -3,6 +3,7 @@ using System.Text.Json;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Agent.Deploy.Artifacts;
+using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
@@ -66,6 +67,16 @@ public class UmbracoAIAgentServiceConnector(
 
         // Use base class helper for optional profile dependency
         var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
+
+        // Add guardrail dependencies from standard agent config
+        if (entity.Config is AIStandardAgentConfig standardConfig)
+        {
+            foreach (var guardrailId in standardConfig.GuardrailIds)
+            {
+                var guardrailUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Guardrail, guardrailId);
+                dependencies.Add(new UmbracoAIArtifactDependency(guardrailUdi, ArtifactDependencyMode.Match));
+            }
+        }
 
         // Serialize config to JSON
         string? configJson = null;

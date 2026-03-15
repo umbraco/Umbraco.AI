@@ -41,6 +41,11 @@ public interface IAIGuardrailService
     Task DeleteGuardrailAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates or updates a guardrail (upsert). Used by deploy connectors.
+    /// </summary>
+    Task<AIGuardrail> SaveGuardrailAsync(AIGuardrail guardrail, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if a guardrail alias exists, optionally excluding a specific ID.
     /// </summary>
     Task<bool> GuardrailAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);

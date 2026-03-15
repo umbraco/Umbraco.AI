@@ -32,6 +32,11 @@ public class AIPromptArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depe
     public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
+    /// Guardrail IDs assigned to this prompt for input/output safety enforcement.
+    /// </summary>
+    public IEnumerable<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Tags for categorizing the prompt.
     /// </summary>
     public IEnumerable<string> Tags { get; set; } = [];

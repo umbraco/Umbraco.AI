@@ -10,7 +10,7 @@ import type { UaiGuardrailDetailModel } from "../../types.js";
 import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
 import { UAI_GUARDRAIL_ROOT_WORKSPACE_PATH } from "../guardrail-root/paths.js";
 import { UAI_EMPTY_GUID } from "../../../core/index.js";
-import { GuardrailsApiService } from "../../api.js";
+import { GuardrailsService } from "../../../api/sdk.gen.js";
 
 @customElement("uai-guardrail-workspace-editor")
 export class UaiGuardrailWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
@@ -83,7 +83,7 @@ export class UaiGuardrailWorkspaceEditorElement extends UmbFormControlMixin(UmbL
         try {
             const { data } = await tryExecute(
                 this,
-                GuardrailsApiService.guardrailAliasExists({
+                GuardrailsService.guardrailAliasExists({
                     path: { alias },
                     query: {
                         excludeId: this._model?.unique !== UAI_EMPTY_GUID ? this._model?.unique : undefined,

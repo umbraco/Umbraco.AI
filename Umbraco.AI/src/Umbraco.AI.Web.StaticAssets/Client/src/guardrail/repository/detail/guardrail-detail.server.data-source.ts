@@ -1,7 +1,7 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { GuardrailsApiService } from "../../api.js";
+import { GuardrailsService } from "../../../api/sdk.gen.js";
 import { UaiGuardrailTypeMapper } from "../../type-mapper.js";
 import type { UaiGuardrailDetailModel } from "../../types.js";
 import { UAI_GUARDRAIL_ENTITY_TYPE } from "../../constants.js";
@@ -42,7 +42,7 @@ export class UaiGuardrailDetailServerDataSource implements UmbDetailDataSource<U
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            GuardrailsApiService.getGuardrailById({ path: { id: unique } }),
+            GuardrailsService.getGuardrailByIdOrAlias({ path: { guardrailIdOrAlias: unique } }),
         );
 
         if (error || !data) {
@@ -60,7 +60,7 @@ export class UaiGuardrailDetailServerDataSource implements UmbDetailDataSource<U
 
         const { response, error } = await tryExecute(
             this.#host,
-            GuardrailsApiService.createGuardrail({ body: requestBody }),
+            GuardrailsService.createGuardrail({ body: requestBody }),
         );
 
         if (error) {
@@ -87,8 +87,8 @@ export class UaiGuardrailDetailServerDataSource implements UmbDetailDataSource<U
 
         const { error } = await tryExecute(
             this.#host,
-            GuardrailsApiService.updateGuardrail({
-                path: { id: model.unique },
+            GuardrailsService.updateGuardrail({
+                path: { guardrailIdOrAlias: model.unique },
                 body: requestBody,
             }),
         );
@@ -107,7 +107,7 @@ export class UaiGuardrailDetailServerDataSource implements UmbDetailDataSource<U
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            GuardrailsApiService.deleteGuardrail({ path: { id: unique } }),
+            GuardrailsService.deleteGuardrail({ path: { id: unique } }),
         );
 
         if (error) {

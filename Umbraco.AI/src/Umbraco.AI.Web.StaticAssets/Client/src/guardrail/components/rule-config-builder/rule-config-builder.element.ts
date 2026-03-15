@@ -10,7 +10,7 @@ import { UAI_GUARDRAIL_RULE_CONFIG_EDITOR_MODAL } from "../../modals/rule-config
 import type { UaiGuardrailRuleConfig, UaiGuardrailRuleModel } from "../../types.js";
 import { getRuleSummary } from "../../types.js";
 import { UaiGuardrailEvaluatorItemRepository } from "../../repository/evaluator/guardrail-evaluator-item.repository.js";
-import type { GuardrailEvaluatorInfoApiModel } from "../../api.js";
+import type { GuardrailEvaluatorInfoModel } from "../../../api/types.gen.js";
 
 @customElement("uai-guardrail-rule-config-builder")
 export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
@@ -27,7 +27,7 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
     }
 
     @state()
-    private _evaluators: GuardrailEvaluatorInfoApiModel[] = [];
+    private _evaluators: GuardrailEvaluatorInfoModel[] = [];
 
     override async connectedCallback() {
         super.connectedCallback();

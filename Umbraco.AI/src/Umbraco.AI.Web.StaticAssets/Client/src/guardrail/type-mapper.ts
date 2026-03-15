@@ -1,15 +1,15 @@
 import type {
-    GuardrailResponseApiModel,
-    GuardrailItemResponseApiModel,
-    GuardrailRuleApiModel,
-    CreateGuardrailRequestApiModel,
-    UpdateGuardrailRequestApiModel,
-} from "./api.js";
+    GuardrailResponseModel,
+    GuardrailItemResponseModel,
+    GuardrailRuleModel,
+    CreateGuardrailRequestModel,
+    UpdateGuardrailRequestModel,
+} from "../api";
 import { UAI_GUARDRAIL_ENTITY_TYPE } from "./constants.js";
 import type { UaiGuardrailDetailModel, UaiGuardrailItemModel, UaiGuardrailRuleModel } from "./types.js";
 
 export const UaiGuardrailTypeMapper = {
-    toDetailModel(response: GuardrailResponseApiModel): UaiGuardrailDetailModel {
+    toDetailModel(response: GuardrailResponseModel): UaiGuardrailDetailModel {
         return {
             unique: response.id,
             entityType: UAI_GUARDRAIL_ENTITY_TYPE,
@@ -22,7 +22,7 @@ export const UaiGuardrailTypeMapper = {
         };
     },
 
-    toItemModel(response: GuardrailItemResponseApiModel): UaiGuardrailItemModel {
+    toItemModel(response: GuardrailItemResponseModel): UaiGuardrailItemModel {
         return {
             unique: response.id,
             entityType: UAI_GUARDRAIL_ENTITY_TYPE,
@@ -34,7 +34,7 @@ export const UaiGuardrailTypeMapper = {
         };
     },
 
-    toRuleModel(rule: GuardrailRuleApiModel): UaiGuardrailRuleModel {
+    toRuleModel(rule: GuardrailRuleModel): UaiGuardrailRuleModel {
         return {
             id: rule.id,
             evaluatorId: rule.evaluatorId,
@@ -46,7 +46,7 @@ export const UaiGuardrailTypeMapper = {
         };
     },
 
-    toCreateRequest(model: UaiGuardrailDetailModel): CreateGuardrailRequestApiModel {
+    toCreateRequest(model: UaiGuardrailDetailModel): CreateGuardrailRequestModel {
         return {
             alias: model.alias,
             name: model.name,
@@ -54,7 +54,7 @@ export const UaiGuardrailTypeMapper = {
         };
     },
 
-    toUpdateRequest(model: UaiGuardrailDetailModel): UpdateGuardrailRequestApiModel {
+    toUpdateRequest(model: UaiGuardrailDetailModel): UpdateGuardrailRequestModel {
         return {
             alias: model.alias,
             name: model.name,
@@ -62,7 +62,7 @@ export const UaiGuardrailTypeMapper = {
         };
     },
 
-    toRuleRequest(rule: UaiGuardrailRuleModel): GuardrailRuleApiModel {
+    toRuleRequest(rule: UaiGuardrailRuleModel): GuardrailRuleModel {
         return {
             id: rule.id,
             evaluatorId: rule.evaluatorId,

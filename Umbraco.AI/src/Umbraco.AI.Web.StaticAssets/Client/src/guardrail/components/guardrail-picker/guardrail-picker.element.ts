@@ -4,7 +4,7 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { GuardrailsApiService } from "../../api.js";
+import { GuardrailsService } from "../../../api/sdk.gen.js";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { UaiGuardrailTypeMapper } from "../../type-mapper.js";
@@ -98,7 +98,7 @@ export class UaiGuardrailPickerElement extends UmbFormControlMixin<
         // Fetch all guardrails and filter to selected ones
         const { data, error } = await tryExecute(
             this,
-            GuardrailsApiService.getAllGuardrails({ query: { take: 1000 } }),
+            GuardrailsService.getAllGuardrails({ query: { take: 1000 } }),
         );
 
         if (!error && data) {
@@ -138,7 +138,7 @@ export class UaiGuardrailPickerElement extends UmbFormControlMixin<
     async #fetchAvailableGuardrails(): Promise<UaiPickableItemModel[]> {
         const { data } = await tryExecute(
             this,
-            GuardrailsApiService.getAllGuardrails({ query: { take: 1000 } }),
+            GuardrailsService.getAllGuardrails({ query: { take: 1000 } }),
         );
 
         if (!data) return [];

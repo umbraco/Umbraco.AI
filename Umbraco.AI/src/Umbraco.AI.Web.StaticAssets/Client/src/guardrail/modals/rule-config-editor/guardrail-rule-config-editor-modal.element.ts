@@ -8,7 +8,7 @@ import type { UaiGuardrailRuleConfig } from "../../types.js";
 import { createEmptyRuleConfig } from "../../types.js";
 import { UaiGuardrailEvaluatorItemRepository } from "../../repository/evaluator/guardrail-evaluator-item.repository.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../core/components/exports.js";
-import type { GuardrailEvaluatorInfoApiModel } from "../../api.js";
+import type { GuardrailEvaluatorInfoModel } from "../../../api/types.gen.js";
 
 @customElement("uai-guardrail-rule-config-editor-modal")
 export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElement<
@@ -19,7 +19,7 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
     private _rule: UaiGuardrailRuleConfig = createEmptyRuleConfig();
 
     @state()
-    private _evaluator: GuardrailEvaluatorInfoApiModel | null = null;
+    private _evaluator: GuardrailEvaluatorInfoModel | null = null;
 
     @state()
     private _loading = true;

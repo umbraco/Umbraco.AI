@@ -1,7 +1,7 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbCollectionDataSource, UmbCollectionFilterModel } from "@umbraco-cms/backoffice/collection";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { GuardrailsApiService } from "../../api.js";
+import { GuardrailsService } from "../../../api/sdk.gen.js";
 import { UaiGuardrailTypeMapper } from "../../type-mapper.js";
 import type { UaiGuardrailItemModel } from "../../types.js";
 
@@ -21,7 +21,7 @@ export class UaiGuardrailCollectionServerDataSource implements UmbCollectionData
     async getCollection(filter: UmbCollectionFilterModel) {
         const { data, error } = await tryExecute(
             this.#host,
-            GuardrailsApiService.getAllGuardrails({
+            GuardrailsService.getAllGuardrails({
                 query: {
                     filter: filter.filter,
                     skip: filter.skip ?? 0,

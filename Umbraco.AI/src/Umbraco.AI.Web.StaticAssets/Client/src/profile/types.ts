@@ -24,6 +24,7 @@ export interface UaiChatProfileSettings extends UaiProfileSettings {
     maxTokens: number | null;
     systemPromptTemplate: string | null;
     contextIds: string[];
+    guardrailIds: string[];
 }
 
 /**

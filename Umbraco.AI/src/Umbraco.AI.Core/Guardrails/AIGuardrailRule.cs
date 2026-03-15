@@ -45,9 +45,4 @@ public sealed class AIGuardrailRule
     /// Controls evaluation order within the guardrail.
     /// </summary>
     public int SortOrder { get; set; }
-
-    /// <summary>
-    /// Whether this rule is enabled.
-    /// </summary>
-    public bool Enabled { get; set; } = true;
 }

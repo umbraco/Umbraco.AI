@@ -49,7 +49,7 @@ internal sealed class ProfileGuardrailResolver : IAIGuardrailResolver
         foreach (var guardrail in guardrails)
         {
             resolvedIds.Add(guardrail.Id);
-            foreach (var rule in guardrail.Rules.Where(r => r.Enabled).OrderBy(r => r.SortOrder))
+            foreach (var rule in guardrail.Rules.OrderBy(r => r.SortOrder))
             {
                 allRules.Add(rule);
             }

@@ -79,7 +79,6 @@ public class GuardrailMapDefinition : IMapDefinition
             : AIGuardrailAction.Block;
         target.Config = source.Config;
         target.SortOrder = source.SortOrder;
-        target.Enabled = source.Enabled;
     }
 
     // Umbraco.Code.MapAll
@@ -115,7 +114,6 @@ public class GuardrailMapDefinition : IMapDefinition
         target.Action = source.Action.ToString();
         target.Config = source.Config;
         target.SortOrder = source.SortOrder;
-        target.Enabled = source.Enabled;
     }
 
     // Umbraco.Code.MapAll

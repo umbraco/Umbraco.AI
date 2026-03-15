@@ -11,6 +11,12 @@ public sealed class AIStandardAgentConfig : IAIAgentConfig
     public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
+    /// Guardrail IDs assigned to this agent for safety and compliance checks.
+    /// These guardrails are applied in addition to any profile-level guardrails during agent execution.
+    /// </summary>
+    public IReadOnlyList<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

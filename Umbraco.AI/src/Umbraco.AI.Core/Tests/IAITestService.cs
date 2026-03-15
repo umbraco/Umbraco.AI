@@ -96,6 +96,7 @@ public interface IAITestService
     /// <param name="testId">The test ID to execute.</param>
     /// <param name="profileIdOverride">Optional profile ID to override the test's default profile (applies to default config only).</param>
     /// <param name="contextIdsOverride">Optional context IDs to override (applies to default config only).</param>
+    /// <param name="guardrailIdsOverride">Optional guardrail IDs to override for testing guardrail behavior.</param>
     /// <param name="batchId">Optional batch ID to group multiple test executions together.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Execution result with per-variation metrics and aggregate metrics.</returns>
@@ -103,6 +104,7 @@ public interface IAITestService
         Guid testId,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         Guid? batchId = null,
         CancellationToken cancellationToken = default);
 
@@ -113,12 +115,14 @@ public interface IAITestService
     /// <param name="testIds">The test IDs to execute.</param>
     /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
     /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
+    /// <param name="guardrailIdsOverride">Optional guardrail IDs to override for testing guardrail behavior.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of test ID to execution result.</returns>
     Task<IDictionary<Guid, AITestExecutionResult>> RunTestBatchAsync(
         IEnumerable<Guid> testIds,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -128,11 +132,13 @@ public interface IAITestService
     /// <param name="tags">The tags to filter tests by. Tests must have ALL specified tags.</param>
     /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
     /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
+    /// <param name="guardrailIdsOverride">Optional guardrail IDs to override for testing guardrail behavior.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary of test ID to execution result.</returns>
     Task<IDictionary<Guid, AITestExecutionResult>> RunTestsByTagsAsync(
         IEnumerable<string> tags,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         CancellationToken cancellationToken = default);
 }

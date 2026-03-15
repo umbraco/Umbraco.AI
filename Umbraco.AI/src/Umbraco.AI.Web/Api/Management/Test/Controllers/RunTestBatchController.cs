@@ -54,6 +54,7 @@ public class RunTestBatchController : TestControllerBase
             requestModel.TestIds,
             requestModel.ProfileIdOverride,
             requestModel.ContextIdsOverride,
+            requestModel.GuardrailIdsOverride,
             cancellationToken);
 
         var responseModel = new TestBatchResultsResponseModel

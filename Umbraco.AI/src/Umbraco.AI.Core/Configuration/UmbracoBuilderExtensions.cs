@@ -205,6 +205,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Guardrail resolution - pluggable resolver system
         builder.AIGuardrailResolvers()
+            .Append<GuardrailIdsOverrideResolver>()
             .Append<ProfileGuardrailResolver>();
         services.AddSingleton<IAIGuardrailResolutionService, AIGuardrailResolutionService>();
 

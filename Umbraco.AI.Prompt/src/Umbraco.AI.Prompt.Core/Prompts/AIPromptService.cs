@@ -248,6 +248,12 @@ internal sealed class AIPromptService : IAIPromptService
             runtimeContext.SetValue(Constants.MetadataKeys.ContextIdsOverride, options.ContextIdsOverride);
         }
 
+        // Set guardrail IDs override in runtime context for guardrail resolvers to pick up
+        if (options.GuardrailIdsOverride is not null)
+        {
+            runtimeContext.SetValue(CoreConstants.ContextKeys.GuardrailIdsOverride, options.GuardrailIdsOverride);
+        }
+
         // 4. Build template context from basic request info + processor results
         var templateContext = BuildExecutionContext(request);
         foreach (var (key, value) in runtimeContext.Variables)

@@ -143,6 +143,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             StandardAgentConfigModel standard => new AIStandardAgentConfig
             {
                 ContextIds = standard.ContextIds?.ToList() ?? [],
+                GuardrailIds = standard.GuardrailIds?.ToList() ?? [],
                 Instructions = standard.Instructions,
                 AllowedToolIds = standard.AllowedToolIds?.ToList() ?? [],
                 AllowedToolScopeIds = standard.AllowedToolScopeIds?.ToList() ?? [],
@@ -165,6 +166,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             AIAgentType.Standard when source.Config is AIStandardAgentConfig standard => new StandardAgentConfigModel
             {
                 ContextIds = standard.ContextIds.ToList(),
+                GuardrailIds = standard.GuardrailIds.ToList(),
                 Instructions = standard.Instructions,
                 AllowedToolIds = standard.AllowedToolIds.ToList(),
                 AllowedToolScopeIds = standard.AllowedToolScopeIds.ToList(),

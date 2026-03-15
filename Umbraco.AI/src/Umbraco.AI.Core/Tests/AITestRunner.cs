@@ -30,6 +30,7 @@ internal sealed class AITestRunner : IAITestRunner
         AITest test,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         Guid? batchId = null,
         CancellationToken cancellationToken = default)
     {
@@ -53,6 +54,7 @@ internal sealed class AITestRunner : IAITestRunner
             test.RunCount,
             effectiveProfile,
             effectiveContextIds,
+            guardrailIdsOverride,
             effectiveBatchId,
             executionId,
             variationId: null,
@@ -80,6 +82,7 @@ internal sealed class AITestRunner : IAITestRunner
                 varRunCount,
                 varProfile,
                 varContextIds.ToList(),
+                guardrailIdsOverride,
                 effectiveBatchId,
                 executionId,
                 variation.Id,
@@ -151,6 +154,7 @@ internal sealed class AITestRunner : IAITestRunner
         int runCount,
         Guid? profileId,
         IReadOnlyList<Guid> contextIds,
+        IEnumerable<Guid>? guardrailIdsOverride,
         Guid batchId,
         Guid executionId,
         Guid? variationId,
@@ -172,6 +176,7 @@ internal sealed class AITestRunner : IAITestRunner
                 runNumber,
                 profileId,
                 contextIds,
+                guardrailIdsOverride,
                 batchId,
                 executionId,
                 variationId,
@@ -222,6 +227,7 @@ internal sealed class AITestRunner : IAITestRunner
         int runNumber,
         Guid? profileId,
         IReadOnlyList<Guid> contextIds,
+        IEnumerable<Guid>? guardrailIdsOverride,
         Guid batchId,
         Guid executionId,
         Guid? variationId,
@@ -255,6 +261,7 @@ internal sealed class AITestRunner : IAITestRunner
                 runNumber,
                 testRun.ProfileId,
                 testRun.ContextIds,
+                guardrailIdsOverride,
                 cancellationToken);
 
             // Link transcript to run and persist it

@@ -95,6 +95,7 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
         int runNumber,
         Guid? profileIdOverride,
         IEnumerable<Guid>? contextIdsOverride,
+        IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken);
 
     /// <summary>

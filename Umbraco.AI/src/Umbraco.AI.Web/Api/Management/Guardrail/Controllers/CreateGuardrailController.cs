@@ -47,19 +47,19 @@ public class CreateGuardrailController : GuardrailControllerBase
         CancellationToken cancellationToken = default)
     {
         // Check for duplicate alias
-        var aliasExists = await _guardrailService.GuardrailAliasExistsAsync(requestModel.Alias, cancellationToken: cancellationToken);
-        if (aliasExists)
+        var existingByAlias = await _guardrailService.GetGuardrailByAliasAsync(requestModel.Alias, cancellationToken);
+        if (existingByAlias is not null)
         {
             return GuardrailOperationStatusResult(GuardrailOperationStatus.DuplicateAlias);
         }
 
         AIGuardrail guardrail = _umbracoMapper.Map<AIGuardrail>(requestModel)!;
-        var created = await _guardrailService.CreateGuardrailAsync(guardrail, cancellationToken);
+        var created = await _guardrailService.SaveGuardrailAsync(guardrail, cancellationToken);
 
         return CreatedAtAction(
-            nameof(ByIdGuardrailController.GetGuardrailById),
-            nameof(ByIdGuardrailController).Replace("Controller", string.Empty),
-            new { id = created.Id },
+            nameof(ByIdOrAliasGuardrailController.GetGuardrailByIdOrAlias),
+            nameof(ByIdOrAliasGuardrailController).Replace("Controller", string.Empty),
+            new { guardrailIdOrAlias = created.Id },
             created.Id.ToString());
     }
 }

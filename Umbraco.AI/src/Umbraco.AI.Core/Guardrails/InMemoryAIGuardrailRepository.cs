@@ -31,6 +31,27 @@ internal sealed class InMemoryAIGuardrailRepository : IAIGuardrailRepository
     }
 
     /// <inheritdoc />
+    public Task<(IEnumerable<AIGuardrail> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        IEnumerable<AIGuardrail> query = _guardrails.Values;
+
+        if (!string.IsNullOrEmpty(filter))
+        {
+            query = query.Where(g =>
+                g.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                g.Alias.Contains(filter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var all = query.OrderBy(g => g.Name).ToList();
+        var items = all.Skip(skip).Take(take).ToList();
+        return Task.FromResult<(IEnumerable<AIGuardrail>, int)>((items, all.Count));
+    }
+
+    /// <inheritdoc />
     public Task<IEnumerable<AIGuardrail>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
     {
         var idSet = ids.ToHashSet();
@@ -39,31 +60,30 @@ internal sealed class InMemoryAIGuardrailRepository : IAIGuardrailRepository
     }
 
     /// <inheritdoc />
-    public Task AddAsync(AIGuardrail guardrail, CancellationToken cancellationToken = default)
+    public Task<AIGuardrail> SaveAsync(AIGuardrail guardrail, Guid? userId = null, CancellationToken cancellationToken = default)
     {
+        var existing = _guardrails.GetValueOrDefault(guardrail.Id);
+        if (existing is null)
+        {
+            guardrail.Version = 1;
+            guardrail.CreatedByUserId = userId;
+            guardrail.ModifiedByUserId = userId;
+        }
+        else
+        {
+            guardrail.Version = existing.Version + 1;
+            guardrail.ModifiedByUserId = userId;
+        }
+
+        guardrail.DateModified = DateTime.UtcNow;
         _guardrails[guardrail.Id] = guardrail;
-        return Task.CompletedTask;
+        return Task.FromResult(guardrail);
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(AIGuardrail guardrail, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _guardrails[guardrail.Id] = guardrail;
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        _guardrails.TryRemove(id, out _);
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
-    {
-        var exists = _guardrails.Values.Any(g =>
-            g.Alias.InvariantEquals(alias) && (!excludeId.HasValue || g.Id != excludeId.Value));
-        return Task.FromResult(exists);
+        var removed = _guardrails.TryRemove(id, out _);
+        return Task.FromResult(removed);
     }
 }

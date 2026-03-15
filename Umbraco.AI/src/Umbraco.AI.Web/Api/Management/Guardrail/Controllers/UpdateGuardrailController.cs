@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 using Umbraco.AI.Web.Api.Management.Guardrail.Models;
 using Umbraco.AI.Web.Authorization;
@@ -35,21 +37,21 @@ public class UpdateGuardrailController : GuardrailControllerBase
     /// <summary>
     /// Update an existing guardrail.
     /// </summary>
-    /// <param name="id">The unique identifier of the guardrail to update.</param>
+    /// <param name="guardrailIdOrAlias">The unique identifier (GUID) or alias of the guardrail to update.</param>
     /// <param name="requestModel">The updated guardrail data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content on success.</returns>
-    [HttpPut("{id:guid}")]
+    [HttpPut($"{{{nameof(guardrailIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateGuardrail(
-        Guid id,
+        [FromRoute] IdOrAlias guardrailIdOrAlias,
         UpdateGuardrailRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var existing = await _guardrailService.GetGuardrailAsync(id, cancellationToken);
+        var existing = await _guardrailService.GetGuardrailAsync(guardrailIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return GuardrailNotFound();
@@ -58,7 +60,7 @@ public class UpdateGuardrailController : GuardrailControllerBase
         // Check for duplicate alias if alias is being changed
         if (existing.Alias != requestModel.Alias)
         {
-            var aliasExists = await _guardrailService.GuardrailAliasExistsAsync(requestModel.Alias, id, cancellationToken);
+            var aliasExists = await _guardrailService.GuardrailAliasExistsAsync(requestModel.Alias, existing.Id, cancellationToken);
             if (aliasExists)
             {
                 return GuardrailOperationStatusResult(GuardrailOperationStatus.DuplicateAlias);
@@ -66,7 +68,7 @@ public class UpdateGuardrailController : GuardrailControllerBase
         }
 
         AIGuardrail guardrail = _umbracoMapper.Map(requestModel, existing);
-        await _guardrailService.UpdateGuardrailAsync(guardrail, cancellationToken);
+        await _guardrailService.SaveGuardrailAsync(guardrail, cancellationToken);
         return Ok();
     }
 }

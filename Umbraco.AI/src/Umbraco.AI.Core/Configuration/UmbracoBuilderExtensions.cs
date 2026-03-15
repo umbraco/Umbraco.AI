@@ -164,6 +164,7 @@ public static partial class UmbracoBuilderExtensions
             .Add<AIConnectionVersionableEntityAdapter>()
             .Add<AIProfileVersionableEntityAdapter>()
             .Add<AIContextVersionableEntityAdapter>()
+            .Add<AIGuardrailVersionableEntityAdapter>()
             .Add<AITestVersionableEntityAdapter>();
 
         // Client factories

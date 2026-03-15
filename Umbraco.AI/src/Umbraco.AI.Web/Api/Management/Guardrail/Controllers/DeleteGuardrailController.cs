@@ -39,13 +39,12 @@ public class DeleteGuardrailController : GuardrailControllerBase
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var existing = await _guardrailService.GetGuardrailAsync(id, cancellationToken);
-        if (existing is null)
+        var deleted = await _guardrailService.DeleteGuardrailAsync(id, cancellationToken);
+        if (!deleted)
         {
             return GuardrailNotFound();
         }
 
-        await _guardrailService.DeleteGuardrailAsync(id, cancellationToken);
         return Ok();
     }
 }

@@ -36,7 +36,7 @@ public class UmbracoAIGuardrailServiceConnector(
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIGuardrail> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var guardrails = await guardrailService.GetAllGuardrailsAsync(cancellationToken);
+        var guardrails = await guardrailService.GetGuardrailsAsync(cancellationToken);
         foreach (var guardrail in guardrails)
         {
             yield return guardrail;

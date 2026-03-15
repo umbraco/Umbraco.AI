@@ -1,9 +1,10 @@
 namespace Umbraco.AI.Core.Guardrails;
 
 /// <summary>
-/// Repository interface for AI guardrail persistence.
+/// Defines a repository for managing AI guardrails.
+/// Internal implementation detail - use <see cref="IAIGuardrailService"/> for external access.
 /// </summary>
-public interface IAIGuardrailRepository
+internal interface IAIGuardrailRepository
 {
     /// <summary>
     /// Gets a guardrail by its unique identifier.
@@ -21,27 +22,26 @@ public interface IAIGuardrailRepository
     Task<IEnumerable<AIGuardrail>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets guardrails with pagination and optional filtering.
+    /// </summary>
+    Task<(IEnumerable<AIGuardrail> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets multiple guardrails by their IDs.
     /// </summary>
     Task<IEnumerable<AIGuardrail>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Adds a new guardrail.
+    /// Saves (creates or updates) a guardrail.
     /// </summary>
-    Task AddAsync(AIGuardrail guardrail, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing guardrail.
-    /// </summary>
-    Task UpdateAsync(AIGuardrail guardrail, CancellationToken cancellationToken = default);
+    Task<AIGuardrail> SaveAsync(AIGuardrail guardrail, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a guardrail by its ID.
     /// </summary>
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Checks if a guardrail alias exists, optionally excluding a specific ID.
-    /// </summary>
-    Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

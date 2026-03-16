@@ -89,6 +89,12 @@ public class AIGuardrailRuleBuilder
         return this;
     }
 
+    public AIGuardrailRuleBuilder AsRedact()
+    {
+        _action = AIGuardrailAction.Redact;
+        return this;
+    }
+
     public AIGuardrailRule Build()
     {
         return new AIGuardrailRule

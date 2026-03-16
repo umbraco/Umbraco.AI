@@ -131,6 +131,11 @@ internal class AIAuditLogEntity
     public Guid? ParentAuditLogId { get; set; }
 
     /// <summary>
+    /// Gets or sets the OpenTelemetry trace ID for distributed trace correlation.
+    /// </summary>
+    public string? TraceId { get; set; }
+
+    /// <summary>
     /// Gets or sets extensible metadata stored as JSON.
     /// </summary>
     public string? Metadata { get; set; }

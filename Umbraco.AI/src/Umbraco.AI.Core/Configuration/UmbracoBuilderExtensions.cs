@@ -82,7 +82,8 @@ public static partial class UmbracoBuilderExtensions
         // Use AIChatMiddleware() and AIEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
         builder.AIChatMiddleware()
-            .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (innermost - before function invoking)
+            .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
+            .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
             .Append<AIGuardrailChatMiddleware>()         // Guardrail evaluation (pre/post-generate)
             .Append<AITrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
@@ -91,6 +92,7 @@ public static partial class UmbracoBuilderExtensions
             .Append<AIContextInjectingChatMiddleware>(); // Context injection (outermost)
 
         builder.AIEmbeddingMiddleware()
+            .Append<AIOpenTelemetryEmbeddingMiddleware>()   // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
             .Append<AITrackingEmbeddingMiddleware>()        // Tracks usage details
             .Append<AIUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
             .Append<AIAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)

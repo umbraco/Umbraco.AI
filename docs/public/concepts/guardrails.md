@@ -44,10 +44,10 @@ Rules specify when they run in the AI pipeline:
 
 Rules specify what happens when content is flagged:
 
-| Action   | Description                                                          |
-| -------- | -------------------------------------------------------------------- |
-| `Block`  | Stop processing and throw `AIGuardrailBlockedException`              |
-| `Warn`   | Allow the content through but attach warning metadata to the result  |
+| Action   | Description                                                                       |
+| -------- | --------------------------------------------------------------------------------- |
+| `Block`  | Stop processing and throw `AIGuardrailBlockedException`                           |
+| `Warn`   | Allow the content through unchanged and log a warning                             |
 | `Redact` | Replace flagged content with `[REDACTED]` before it reaches the AI model or caller |
 
 ## Why Use Guardrails
@@ -227,7 +227,7 @@ When an AI operation executes with guardrails:
 6. **Post-generate** rules evaluate the response
 7. If any post-generate rule with `Block` action flags content, an `AIGuardrailBlockedException` is thrown
 8. If any post-generate rule with `Redact` action flags content, matched text is replaced with `[REDACTED]` in the response
-9. Rules with `Warn` action attach metadata but allow content through
+9. Rules with `Warn` action allow content through unchanged (a warning is logged)
 
 Action precedence when multiple rules flag the same content: **Block > Redact > Warn**.
 

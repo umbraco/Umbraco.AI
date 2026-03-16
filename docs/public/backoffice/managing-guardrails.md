@@ -58,7 +58,7 @@ Use Pre-Generate rules to prevent sensitive data (like PII) from being sent to A
 | Action     | Description                                                                      |
 | ---------- | -------------------------------------------------------------------------------- |
 | **Block**  | Stops processing and returns an error to the caller                              |
-| **Warn**   | Allows the content through but attaches warning metadata                         |
+| **Warn**   | Allows the content through unchanged and logs a warning                          |
 | **Redact** | Replaces flagged content with `[REDACTED]` before it reaches the AI model or caller |
 
 {% hint style="info" %}

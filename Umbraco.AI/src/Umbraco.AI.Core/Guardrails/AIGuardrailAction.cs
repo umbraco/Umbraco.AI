@@ -11,7 +11,7 @@ public enum AIGuardrailAction
     Block = 0,
 
     /// <summary>
-    /// Allow the content through but attach warning metadata to the response.
+    /// Allow the content through unchanged and log a warning.
     /// </summary>
     Warn = 1,
 

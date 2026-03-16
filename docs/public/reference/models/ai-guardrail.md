@@ -160,7 +160,7 @@ public enum AIGuardrailPhase
 public enum AIGuardrailAction
 {
     Block = 0,   // Block content and throw AIGuardrailBlockedException
-    Warn = 1,    // Allow content but attach warning metadata
+    Warn = 1,    // Allow content through unchanged, log a warning
     Redact = 2   // Replace flagged content with [REDACTED]
 }
 ```

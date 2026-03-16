@@ -72,7 +72,7 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<AIGuardrailRedactableMatch>> FindRedactableMatchesAsync(
+    public Task<IReadOnlyList<AIGuardrailRedactionCandidate>> FindRedactionCandidatesAsync(
         string content,
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
@@ -81,14 +81,14 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
 
         if (string.IsNullOrEmpty(evalConfig.SearchPattern))
         {
-            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>([]);
         }
 
         var comparison = evalConfig.IgnoreCase
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
 
-        var matches = new List<AIGuardrailRedactableMatch>();
+        var matches = new List<AIGuardrailRedactionCandidate>();
         var startIndex = 0;
 
         while (startIndex < content.Length)
@@ -99,10 +99,10 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
                 break;
             }
 
-            matches.Add(new AIGuardrailRedactableMatch(index, evalConfig.SearchPattern.Length, content.Substring(index, evalConfig.SearchPattern.Length)));
+            matches.Add(new AIGuardrailRedactionCandidate(index, evalConfig.SearchPattern.Length, content.Substring(index, evalConfig.SearchPattern.Length)));
             startIndex = index + evalConfig.SearchPattern.Length;
         }
 
-        return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>(matches);
+        return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>(matches);
     }
 }

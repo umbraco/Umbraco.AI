@@ -12,7 +12,7 @@ public interface IAIRedactableGuardrailEvaluator
     /// <param name="config">The evaluator-specific configuration.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of redactable matches with their positions.</returns>
-    Task<IReadOnlyList<AIGuardrailRedactableMatch>> FindRedactableMatchesAsync(
+    Task<IReadOnlyList<AIGuardrailRedactionCandidate>> FindRedactionCandidatesAsync(
         string content,
         AIGuardrailConfig config,
         CancellationToken cancellationToken);

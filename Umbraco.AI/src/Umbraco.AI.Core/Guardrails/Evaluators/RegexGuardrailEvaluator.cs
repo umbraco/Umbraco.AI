@@ -132,7 +132,7 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<AIGuardrailRedactableMatch>> FindRedactableMatchesAsync(
+    public Task<IReadOnlyList<AIGuardrailRedactionCandidate>> FindRedactionCandidatesAsync(
         string content,
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
@@ -141,7 +141,7 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
 
         if (string.IsNullOrEmpty(evalConfig.Pattern))
         {
-            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>([]);
         }
 
         var options = RegexOptions.None;
@@ -161,18 +161,18 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
             var matches = regex.Matches(content);
 
             var results = matches
-                .Select(m => new AIGuardrailRedactableMatch(m.Index, m.Length, m.Value))
+                .Select(m => new AIGuardrailRedactionCandidate(m.Index, m.Length, m.Value))
                 .ToList();
 
-            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>(results);
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>(results);
         }
         catch (RegexMatchTimeoutException)
         {
-            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>([]);
         }
         catch (RegexParseException)
         {
-            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>([]);
         }
     }
 }

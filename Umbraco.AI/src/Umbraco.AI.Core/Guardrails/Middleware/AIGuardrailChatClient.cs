@@ -64,7 +64,7 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
 
             if (preResult.Action == AIGuardrailAction.Redact)
             {
-                var matches = await CollectRedactableMatchesAsync(inputContent, preResult, cancellationToken);
+                var matches = await CollectRedactionCandidateesAsync(inputContent, preResult, cancellationToken);
                 if (matches.Count > 0)
                 {
                     var redactedContent = ApplyRedactions(inputContent, matches);
@@ -90,7 +90,7 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
 
             if (postResult.Action == AIGuardrailAction.Redact)
             {
-                var matches = await CollectRedactableMatchesAsync(responseContent, postResult, cancellationToken);
+                var matches = await CollectRedactionCandidateesAsync(responseContent, postResult, cancellationToken);
                 if (matches.Count > 0)
                 {
                     var redactedContent = ApplyRedactions(responseContent, matches);
@@ -144,7 +144,7 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
 
             if (preResult.Action == AIGuardrailAction.Redact)
             {
-                var matches = await CollectRedactableMatchesAsync(inputContent, preResult, cancellationToken);
+                var matches = await CollectRedactionCandidateesAsync(inputContent, preResult, cancellationToken);
                 if (matches.Count > 0)
                 {
                     var redactedContent = ApplyRedactions(inputContent, matches);
@@ -283,12 +283,12 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
         };
     }
 
-    private async Task<IReadOnlyList<AIGuardrailRedactableMatch>> CollectRedactableMatchesAsync(
+    private async Task<IReadOnlyList<AIGuardrailRedactionCandidate>> CollectRedactionCandidateesAsync(
         string content,
         AIGuardrailEvaluationResult evaluationResult,
         CancellationToken cancellationToken)
     {
-        var allMatches = new List<AIGuardrailRedactableMatch>();
+        var allMatches = new List<AIGuardrailRedactionCandidate>();
 
         foreach (var ruleResult in evaluationResult.RuleResults)
         {
@@ -305,15 +305,15 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             }
 
             var config = new AIGuardrailConfig { Config = ruleResult.Rule.Config };
-            var matches = await redactable.FindRedactableMatchesAsync(content, config, cancellationToken);
+            var candidates = await redactable.FindRedactionCandidatesAsync(content, config, cancellationToken);
 
-            allMatches.AddRange(matches);
+            allMatches.AddRange(candidates);
         }
 
         return allMatches;
     }
 
-    private static string ApplyRedactions(string content, IReadOnlyList<AIGuardrailRedactableMatch> matches)
+    private static string ApplyRedactions(string content, IReadOnlyList<AIGuardrailRedactionCandidate> matches)
     {
         if (matches.Count == 0)
         {

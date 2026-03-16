@@ -298,7 +298,7 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             }
 
             var evaluator = _evaluators.GetById(ruleResult.Rule.EvaluatorId);
-            if (evaluator is not IAIRedactableGuardrail redactable)
+            if (evaluator is not IAIRedactableGuardrailEvaluator redactable)
             {
                 // Evaluator doesn't support redaction — degrades to Warn
                 continue;

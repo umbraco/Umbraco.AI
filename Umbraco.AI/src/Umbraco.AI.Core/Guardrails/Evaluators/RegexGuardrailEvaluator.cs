@@ -45,7 +45,7 @@ public class RegexGuardrailEvaluatorConfig
 /// Guardrail evaluator that flags content matching a regular expression pattern.
 /// </summary>
 [AIGuardrailEvaluator("regex", "Regex Match", Type = AIGuardrailEvaluatorType.CodeBased)]
-public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEvaluatorConfig>, IAIRedactableGuardrail
+public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEvaluatorConfig>, IAIRedactableGuardrailEvaluator
 {
     /// <inheritdoc />
     public override string Description => "Flags content that matches a regular expression pattern";

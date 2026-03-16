@@ -3,7 +3,7 @@ namespace Umbraco.AI.Core.Guardrails.Evaluators;
 /// <summary>
 /// Implemented by guardrail evaluators that can identify specific text spans for redaction.
 /// </summary>
-public interface IAIRedactableGuardrail
+public interface IAIRedactableGuardrailEvaluator
 {
     /// <summary>
     /// Finds all redactable matches in the content.

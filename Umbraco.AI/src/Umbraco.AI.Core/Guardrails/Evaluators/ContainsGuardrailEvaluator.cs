@@ -34,7 +34,7 @@ public class ContainsGuardrailEvaluatorConfig
 /// Guardrail evaluator that flags content containing a specific substring.
 /// </summary>
 [AIGuardrailEvaluator("contains", "Contains", Type = AIGuardrailEvaluatorType.CodeBased)]
-public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuardrailEvaluatorConfig>, IAIRedactableGuardrail
+public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuardrailEvaluatorConfig>, IAIRedactableGuardrailEvaluator
 {
     /// <inheritdoc />
     public override string Description => "Flags content that contains a specific substring";

@@ -57,6 +57,11 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
             this._evaluator = data.find((e) => e.id === this.data?.evaluatorId) || null;
         }
 
+        // Reset Redact action if evaluator doesn't support it
+        if (this._rule.action === "Redact" && !this._evaluator?.supportsRedaction) {
+            this._rule = { ...this._rule, action: "Block" };
+        }
+
         this._loading = false;
     }
 
@@ -77,8 +82,33 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
         const select = e.target as HTMLSelectElement;
         this._rule = {
             ...this._rule,
-            action: select.value as "Block" | "Warn",
+            action: select.value as "Block" | "Warn" | "Redact",
         };
+    }
+
+    get #actionOptions() {
+        const options: Array<{ value: string; name: string; selected: boolean }> = [
+            {
+                value: "Block",
+                name: "Block",
+                selected: this._rule.action === "Block",
+            },
+            {
+                value: "Warn",
+                name: "Warn",
+                selected: this._rule.action === "Warn",
+            },
+        ];
+
+        if (this._evaluator?.supportsRedaction) {
+            options.push({
+                value: "Redact",
+                name: "Redact",
+                selected: this._rule.action === "Redact",
+            });
+        }
+
+        return options;
     }
 
     #onConfigChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
@@ -163,18 +193,7 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                                 <uui-select
                                     id="action"
                                     .value=${this._rule.action}
-                                    .options=${[
-                                        {
-                                            value: "Block",
-                                            name: "Block",
-                                            selected: this._rule.action === "Block",
-                                        },
-                                        {
-                                            value: "Warn",
-                                            name: "Warn",
-                                            selected: this._rule.action === "Warn",
-                                        },
-                                    ]}
+                                    .options=${this.#actionOptions}
                                     @change=${this.#onActionChange}
                                 >
                                 </uui-select>

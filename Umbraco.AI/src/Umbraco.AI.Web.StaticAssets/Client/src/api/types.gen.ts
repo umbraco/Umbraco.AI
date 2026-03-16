@@ -266,6 +266,7 @@ export type GuardrailEvaluatorInfoModel = {
     name: string;
     description?: string | null;
     type: string;
+    supportsRedaction: boolean;
     configSchema?: EditableModelSchemaModel | null;
 };
 

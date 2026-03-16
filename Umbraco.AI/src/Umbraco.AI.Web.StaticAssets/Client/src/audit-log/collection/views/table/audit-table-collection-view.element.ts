@@ -169,6 +169,8 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                 return "positive";
             case "Failed":
                 return "danger";
+            case "Blocked":
+                return "danger";
             case "Running":
                 return "default";
             case "Cancelled":

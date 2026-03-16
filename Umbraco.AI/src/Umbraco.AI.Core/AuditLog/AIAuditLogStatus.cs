@@ -28,5 +28,10 @@ public enum AIAuditLogStatus
     /// <summary>
     /// The AI operation completed with partial success.
     /// </summary>
-    PartialSuccess = 4
+    PartialSuccess = 4,
+
+    /// <summary>
+    /// The AI operation was blocked by a guardrail policy.
+    /// </summary>
+    Blocked = 5
 }

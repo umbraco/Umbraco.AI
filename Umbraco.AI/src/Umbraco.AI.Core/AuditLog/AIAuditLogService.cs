@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.TaskQueue;
 
 namespace Umbraco.AI.Core.AuditLog;
@@ -108,9 +109,19 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     {
 
         audit.EndTime = DateTime.UtcNow;
-        audit.Status = AIAuditLogStatus.Failed;
+
+        if (exception is AIGuardrailBlockedException)
+        {
+            audit.Status = AIAuditLogStatus.Blocked;
+            audit.ErrorCategory = AIAuditLogErrorCategory.GuardrailBlocked;
+        }
+        else
+        {
+            audit.Status = AIAuditLogStatus.Failed;
+            audit.ErrorCategory = CategorizeError(exception);
+        }
+
         audit.ErrorMessage = exception.Message;
-        audit.ErrorCategory = CategorizeError(exception);
 
         await _auditLogRepository.SaveAsync(audit, ct);
 
@@ -222,9 +233,19 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     {
         // Do all the business logic NOW, before queuing
         audit.EndTime = DateTime.UtcNow;
-        audit.Status = AIAuditLogStatus.Failed;
+
+        if (exception is AIGuardrailBlockedException)
+        {
+            audit.Status = AIAuditLogStatus.Blocked;
+            audit.ErrorCategory = AIAuditLogErrorCategory.GuardrailBlocked;
+        }
+        else
+        {
+            audit.Status = AIAuditLogStatus.Failed;
+            audit.ErrorCategory = CategorizeError(exception);
+        }
+
         audit.ErrorMessage = exception.Message;
-        audit.ErrorCategory = CategorizeError(exception);
 
         // Log immediately based on options
         if (_options.CurrentValue.PersistFailureDetails)

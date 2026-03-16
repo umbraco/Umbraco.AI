@@ -40,6 +40,8 @@ export class UaiAuditLogDetailsModalElement extends UmbModalBaseElement<
                 return "positive";
             case "Failed":
                 return "danger";
+            case "Blocked":
+                return "danger";
             case "Running":
                 return "default";
             case "Cancelled":
@@ -193,7 +195,7 @@ export class UaiAuditLogDetailsModalElement extends UmbModalBaseElement<
                                   ${this._auditLog?.errorMessage
                                       ? html`
                                             <tr>
-                                                <th>Error Message</th>
+                                                <th>${this._auditLog?.status === "Blocked" ? "Blocked Reason" : "Error Message"}</th>
                                                 <td>
                                                     <div>${this._auditLog?.errorMessage}</div>
                                                 </td>

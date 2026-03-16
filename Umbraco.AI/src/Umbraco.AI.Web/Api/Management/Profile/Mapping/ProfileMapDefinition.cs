@@ -106,7 +106,8 @@ public class ProfileMapDefinition : IMapDefinition
                 Temperature = chat.Temperature,
                 MaxTokens = chat.MaxTokens,
                 SystemPromptTemplate = chat.SystemPromptTemplate,
-                ContextIds = chat.ContextIds
+                ContextIds = chat.ContextIds,
+                GuardrailIds = chat.GuardrailIds
             },
             AIEmbeddingProfileSettings => new EmbeddingProfileSettingsModel(),
             _ => null
@@ -122,7 +123,8 @@ public class ProfileMapDefinition : IMapDefinition
                 Temperature = chat.Temperature,
                 MaxTokens = chat.MaxTokens,
                 SystemPromptTemplate = chat.SystemPromptTemplate,
-                ContextIds = chat.ContextIds
+                ContextIds = chat.ContextIds,
+                GuardrailIds = chat.GuardrailIds
             },
             AICapability.Chat => new AIChatProfileSettings(),
             AICapability.Embedding => new AIEmbeddingProfileSettings(),

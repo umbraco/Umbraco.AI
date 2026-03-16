@@ -36,7 +36,7 @@ Use the filter options to narrow results:
 | Filter     | Description              |
 | ---------- | ------------------------ |
 | Date Range | From and To dates        |
-| Status     | Success, Failed, Running |
+| Status     | Success, Failed, Blocked, Running |
 | Capability | Chat, Embedding          |
 | Profile    | Specific profile         |
 | Provider   | Specific provider        |
@@ -88,6 +88,7 @@ Content snapshots are controlled by the `PersistPrompts` and `PersistResponses` 
 | **Succeeded**      | Operation completed successfully  |
 | **Failed**         | Operation encountered an error    |
 | **Running**        | Operation is in progress          |
+| **Blocked**        | Blocked by a guardrail rule       |
 | **Cancelled**      | Operation was cancelled           |
 | **PartialSuccess** | Some parts succeeded, some failed |
 
@@ -103,6 +104,7 @@ When operations fail, the error category helps diagnose the issue:
 | InvalidRequest | Bad request format     | Invalid parameters or content   |
 | ModelError     | Model processing error | Content policy violation        |
 | NetworkError   | Connection issues      | Network connectivity            |
+| GuardrailBlocked | Guardrail blocked    | Content flagged by a guardrail rule |
 
 ## Deleting Logs
 

@@ -46,6 +46,11 @@ public class CreatePromptRequestModel
     public IEnumerable<Guid>? ContextIds { get; init; }
 
     /// <summary>
+    /// Optional guardrail IDs for safety and compliance checks.
+    /// </summary>
+    public IEnumerable<Guid>? GuardrailIds { get; init; }
+
+    /// <summary>
     /// Optional tags for categorization.
     /// </summary>
     public IEnumerable<string>? Tags { get; init; }

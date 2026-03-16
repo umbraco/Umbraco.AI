@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Persistence.Connections;
 using Umbraco.AI.Persistence.Context;
+using Umbraco.AI.Persistence.Guardrails;
 using Umbraco.AI.Persistence.AuditLog;
 using Umbraco.AI.Persistence.Profiles;
 using Umbraco.AI.Persistence.Analytics;
@@ -36,6 +37,16 @@ public class UmbracoAIDbContext : DbContext
     /// AI context resources.
     /// </summary>
     internal DbSet<AIContextResourceEntity> ContextResources { get; set; } = null!;
+
+    /// <summary>
+    /// AI guardrails.
+    /// </summary>
+    internal DbSet<AIGuardrailEntity> Guardrails { get; set; } = null!;
+
+    /// <summary>
+    /// AI guardrail rules.
+    /// </summary>
+    internal DbSet<AIGuardrailRuleEntity> GuardrailRules { get; set; } = null!;
 
     /// <summary>
     /// AI audit-log records.
@@ -285,6 +296,69 @@ public class UmbracoAIDbContext : DbContext
 
             entity.HasIndex(e => e.ContextId);
             entity.HasIndex(e => e.ResourceTypeId);
+        });
+
+        modelBuilder.Entity<AIGuardrailEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIGuardrail");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Alias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.HasIndex(e => e.Alias)
+                .IsUnique();
+
+            entity.HasMany(e => e.Rules)
+                .WithOne(r => r.Guardrail)
+                .HasForeignKey(r => r.GuardrailId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AIGuardrailRuleEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIGuardrailRule");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.GuardrailId)
+                .IsRequired();
+
+            entity.Property(e => e.EvaluatorId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Phase)
+                .IsRequired();
+
+            entity.Property(e => e.Action)
+                .IsRequired();
+
+            entity.Property(e => e.Config);
+
+            entity.Property(e => e.SortOrder)
+                .IsRequired();
+
+            entity.HasIndex(e => e.GuardrailId);
+            entity.HasIndex(e => e.EvaluatorId);
         });
 
         modelBuilder.Entity<AIAuditLogEntity>(entity =>

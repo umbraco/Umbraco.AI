@@ -16,4 +16,10 @@ public class AIAgentExecutionOptions
     /// Used for context comparison testing.
     /// </summary>
     public IReadOnlyList<Guid>? ContextIdsOverride { get; init; }
+
+    /// <summary>
+    /// Optional guardrail IDs to override for testing guardrail behavior.
+    /// When set, this value is stored in the runtime context for guardrail resolvers to pick up.
+    /// </summary>
+    public IReadOnlyList<Guid>? GuardrailIdsOverride { get; init; }
 }

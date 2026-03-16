@@ -16,4 +16,10 @@ public class RunTestRequestModel
     /// Allows cross-context comparison.
     /// </summary>
     public IEnumerable<Guid>? ContextIdsOverride { get; set; }
+
+    /// <summary>
+    /// Optional guardrail IDs to override for this test run.
+    /// Allows testing specific guardrail configurations.
+    /// </summary>
+    public IEnumerable<Guid>? GuardrailIdsOverride { get; set; }
 }

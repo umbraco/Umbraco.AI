@@ -55,6 +55,7 @@ public class RunTestsByTagsController : TestControllerBase
             requestModel.Tags,
             requestModel.ProfileIdOverride,
             requestModel.ContextIdsOverride,
+            requestModel.GuardrailIdsOverride,
             cancellationToken);
 
         var responseModel = new TestBatchResultsResponseModel

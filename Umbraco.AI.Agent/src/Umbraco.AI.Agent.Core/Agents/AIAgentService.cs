@@ -469,6 +469,12 @@ internal sealed class AIAgentService : IAIAgentService
             additionalProperties[Constants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
         }
 
+        // Set guardrail IDs override in additional properties for guardrail resolvers to pick up
+        if (options.GuardrailIdsOverride is not null)
+        {
+            additionalProperties[AI.Core.Constants.ContextKeys.GuardrailIdsOverride] = options.GuardrailIdsOverride;
+        }
+
         // 4. Create MAF agent
         //    System message injection is handled automatically by ScopedAIAgent
         var agentInst = await _agentFactory.CreateAgentAsync(

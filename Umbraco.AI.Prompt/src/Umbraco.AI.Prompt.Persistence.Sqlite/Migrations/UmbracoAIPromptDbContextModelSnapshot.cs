@@ -50,6 +50,10 @@ namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
+                    b.Property<string>("GuardrailIds")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IncludeEntityContext")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")

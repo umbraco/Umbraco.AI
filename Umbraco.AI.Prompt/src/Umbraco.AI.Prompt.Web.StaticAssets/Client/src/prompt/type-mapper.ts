@@ -64,6 +64,7 @@ export const UaiPromptTypeMapper = {
             isActive: response.isActive,
             includeEntityContext: response.includeEntityContext,
             optionCount: response.optionCount ?? 1,
+            guardrailIds: response.guardrailIds ?? [],
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
             version: response.version,
@@ -95,6 +96,7 @@ export const UaiPromptTypeMapper = {
             scope: mapScopeToApi(model.scope),
             includeEntityContext: model.includeEntityContext,
             optionCount: model.optionCount,
+            guardrailIds: model.guardrailIds,
         };
     },
 
@@ -112,6 +114,7 @@ export const UaiPromptTypeMapper = {
             isActive: model.isActive,
             includeEntityContext: model.includeEntityContext,
             optionCount: model.optionCount,
+            guardrailIds: model.guardrailIds,
         };
     },
 };

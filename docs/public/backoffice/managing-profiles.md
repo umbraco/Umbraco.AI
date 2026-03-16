@@ -71,6 +71,19 @@ Embedding profiles currently use model defaults. Select the appropriate embeddin
 | text-embedding-3-small | 1536       | Cost-effective, general purpose |
 | text-embedding-3-large | 3072       | Higher accuracy, more storage   |
 
+## Governance
+
+Chat profiles have a **Governance** tab where you can assign [guardrails](managing-guardrails.md) to enforce safety, compliance, and quality rules on all AI operations using that profile.
+
+1. Open a chat profile
+2. Go to the **Governance** tab
+3. Click **Add Guardrail** to select guardrails
+4. Save the profile
+
+{% hint style="info" %}
+The Governance tab is only available for **Chat** profiles. Embedding profiles do not support guardrails.
+{% endhint %}
+
 ## Setting Default Profiles
 
 To use a profile as the default when no profile is specified in code:

@@ -43,6 +43,11 @@ public class PromptResponseModel
     public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
+    /// Guardrail IDs for safety and compliance checks.
+    /// </summary>
+    public IEnumerable<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Tags for categorization.
     /// </summary>
     public IEnumerable<string> Tags { get; set; } = [];

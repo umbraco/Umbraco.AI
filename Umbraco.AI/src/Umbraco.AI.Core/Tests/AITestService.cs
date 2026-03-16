@@ -287,6 +287,7 @@ internal sealed class AITestService : IAITestService
         Guid testId,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         Guid? batchId = null,
         CancellationToken cancellationToken = default)
     {
@@ -295,7 +296,7 @@ internal sealed class AITestService : IAITestService
             ?? throw new InvalidOperationException($"Test {testId} not found");
 
         // Delegate to test runner
-        return await _testRunner.ExecuteTestAsync(test, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
+        return await _testRunner.ExecuteTestAsync(test, profileIdOverride, contextIdsOverride, guardrailIdsOverride, batchId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -303,6 +304,7 @@ internal sealed class AITestService : IAITestService
         IEnumerable<Guid> testIds,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         CancellationToken cancellationToken = default)
     {
         var testIdsList = testIds.ToList();
@@ -320,7 +322,7 @@ internal sealed class AITestService : IAITestService
         {
             try
             {
-                var result = await RunTestAsync(testId, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
+                var result = await RunTestAsync(testId, profileIdOverride, contextIdsOverride, guardrailIdsOverride, batchId, cancellationToken);
                 results[testId] = result;
             }
             catch (InvalidOperationException)
@@ -338,6 +340,7 @@ internal sealed class AITestService : IAITestService
         IEnumerable<string> tags,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         CancellationToken cancellationToken = default)
     {
         var tagsList = tags.ToList();
@@ -355,6 +358,6 @@ internal sealed class AITestService : IAITestService
 
         // Execute the matching tests as a batch
         var testIds = matchingTests.Select(t => t.Id);
-        return await RunTestBatchAsync(testIds, profileIdOverride, contextIdsOverride, cancellationToken);
+        return await RunTestBatchAsync(testIds, profileIdOverride, contextIdsOverride, guardrailIdsOverride, cancellationToken);
     }
 }

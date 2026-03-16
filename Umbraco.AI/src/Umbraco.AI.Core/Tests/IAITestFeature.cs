@@ -83,6 +83,7 @@ public interface IAITestFeature : IDiscoverable
     /// <param name="runNumber">The run number (1 to N).</param>
     /// <param name="profileIdOverride">Optional profile override for cross-model comparison.</param>
     /// <param name="contextIdsOverride">Optional context override for cross-context comparison.</param>
+    /// <param name="guardrailIdsOverride">Optional guardrail IDs override for testing guardrail behavior.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The transcript of the execution.</returns>
     Task<AITestTranscript> ExecuteAsync(
@@ -90,5 +91,6 @@ public interface IAITestFeature : IDiscoverable
         int runNumber,
         Guid? profileIdOverride,
         IEnumerable<Guid>? contextIdsOverride,
+        IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken);
 }

@@ -70,6 +70,16 @@ public class UmbracoAIProfileServiceConnector(
         var connectionUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Connection, entity.ConnectionId);
         dependencies.Add(new UmbracoAIArtifactDependency(connectionUdi, ArtifactDependencyMode.Match));
 
+        // Add guardrail dependencies from chat profile settings
+        if (entity.Settings is AIChatProfileSettings chatSettings)
+        {
+            foreach (var guardrailId in chatSettings.GuardrailIds)
+            {
+                var guardrailUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Guardrail, guardrailId);
+                dependencies.Add(new UmbracoAIArtifactDependency(guardrailUdi, ArtifactDependencyMode.Match));
+            }
+        }
+
         var artifact = new AIProfileArtifact(udi, dependencies)
         {
             Alias = entity.Alias,

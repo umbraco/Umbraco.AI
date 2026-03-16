@@ -14,6 +14,7 @@ public interface IAITestRunner
     /// <param name="test">The test to execute.</param>
     /// <param name="profileIdOverride">Optional profile ID to override the test's default profile (applies to default config only).</param>
     /// <param name="contextIdsOverride">Optional context IDs to override (applies to default config only).</param>
+    /// <param name="guardrailIdsOverride">Optional guardrail IDs to override for testing guardrail behavior.</param>
     /// <param name="batchId">Optional batch ID to group multiple test executions together.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Execution result with per-variation metrics and aggregate metrics.</returns>
@@ -21,6 +22,7 @@ public interface IAITestRunner
         AITest test,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        IEnumerable<Guid>? guardrailIdsOverride = null,
         Guid? batchId = null,
         CancellationToken cancellationToken = default);
 }

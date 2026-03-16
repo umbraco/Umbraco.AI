@@ -234,6 +234,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Guardrail features.
+            /// </summary>
+            public static class Guardrail
+            {
+                /// <summary>
+                /// The route segment for Guardrail features.
+                /// </summary>
+                public const string RouteSegment = "guardrails";
+
+                /// <summary>
+                /// The Swagger group name for Guardrail features.
+                /// </summary>
+                public const string GroupName = "Guardrails";
+            }
+
+            /// <summary>
             /// Defines constants for Tools features.
             /// </summary>
             public static class Tools

@@ -42,6 +42,11 @@ internal class AIAgentEntity
     public Guid? ProfileId { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of guardrail IDs.
+    /// </summary>
+    public string? GuardrailIds { get; set; }
+
+    /// <summary>
     /// JSON-serialized array of surface IDs.
     /// </summary>
     public string? SurfaceIds { get; set; }

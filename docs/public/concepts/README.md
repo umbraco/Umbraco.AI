@@ -48,6 +48,10 @@ Each level adds configuration that flows down to the actual AI request.
 <td><strong>Middleware</strong></td>
 <td>Extensible pipeline for logging, caching, and custom behavior</td>
 </tr>
+<tr>
+<td><strong>Guardrails</strong></td>
+<td>Rules that evaluate AI inputs and responses for safety and compliance</td>
+</tr>
 </tbody>
 </table>
 
@@ -82,4 +86,8 @@ The service layer in Umbraco.AI is intentionally thin - it adds Umbraco-specific
 
 {% content-ref url="middleware.md" %}
 [Middleware](middleware.md)
+{% endcontent-ref %}
+
+{% content-ref url="guardrails.md" %}
+[Guardrails](guardrails.md)
 {% endcontent-ref %}

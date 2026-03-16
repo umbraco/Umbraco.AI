@@ -46,6 +46,12 @@ public sealed class AIPrompt : IAIVersionableEntity
     public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
+    /// Guardrail IDs assigned to this prompt for safety and compliance checks.
+    /// These guardrails are applied in addition to any profile-level guardrails during prompt execution.
+    /// </summary>
+    public IReadOnlyList<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Tags for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = [];

@@ -69,6 +69,7 @@ public class RunTestController : TestControllerBase
             existing.Id,
             requestModel?.ProfileIdOverride,
             requestModel?.ContextIdsOverride,
+            requestModel?.GuardrailIdsOverride,
             batchId: null,
             cancellationToken);
 

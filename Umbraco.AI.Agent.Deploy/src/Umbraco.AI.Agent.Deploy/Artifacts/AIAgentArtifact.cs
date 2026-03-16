@@ -32,6 +32,11 @@ public class AIAgentArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depen
     public string? Config { get; set; }
 
     /// <summary>
+    /// Guardrail IDs for safety and compliance checks (available for all agent types).
+    /// </summary>
+    public IEnumerable<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Surface IDs where the agent is available (backoffice, frontend, custom).
     /// </summary>
     public IEnumerable<string> SurfaceIds { get; set; } = [];

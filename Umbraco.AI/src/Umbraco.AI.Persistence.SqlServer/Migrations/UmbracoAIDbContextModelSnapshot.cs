@@ -535,6 +535,87 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAIContextResource", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAIGuardrail", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailRuleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Action")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Config")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EvaluatorId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("GuardrailId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("Phase")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EvaluatorId");
+
+                    b.HasIndex("GuardrailId");
+
+                    b.ToTable("umbracoAIGuardrailRule", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Profiles.AIProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -902,6 +983,17 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Navigation("Context");
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailRuleEntity", b =>
+                {
+                    b.HasOne("Umbraco.AI.Persistence.Guardrails.AIGuardrailEntity", "Guardrail")
+                        .WithMany("Rules")
+                        .HasForeignKey("GuardrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guardrail");
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Profiles.AIProfileEntity", b =>
                 {
                     b.HasOne("Umbraco.AI.Persistence.Connections.AIConnectionEntity", null)
@@ -914,6 +1006,11 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
             modelBuilder.Entity("Umbraco.AI.Persistence.Context.AIContextEntity", b =>
                 {
                     b.Navigation("Resources");
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailEntity", b =>
+                {
+                    b.Navigation("Rules");
                 });
 #pragma warning restore 612, 618
         }

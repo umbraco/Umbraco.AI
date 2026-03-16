@@ -37,6 +37,7 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         int runNumber,
         Guid? profileIdOverride,
         IEnumerable<Guid>? contextIdsOverride,
+        IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken)
     {
         // Deserialize test feature config
@@ -75,7 +76,8 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
             {
                 ValidateScope = false,
                 ProfileIdOverride = profileIdOverride,
-                ContextIdsOverride = contextIdsOverride?.ToList()
+                ContextIdsOverride = contextIdsOverride?.ToList(),
+                GuardrailIdsOverride = guardrailIdsOverride?.ToList()
             };
 
             result = await _promptService.ExecutePromptAsync(promptId, request, options, cancellationToken);

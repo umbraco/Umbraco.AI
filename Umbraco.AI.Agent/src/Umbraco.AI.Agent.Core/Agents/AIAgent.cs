@@ -67,6 +67,13 @@ public sealed class AIAgent : IAIVersionableEntity
     public Guid? ProfileId { get; set; }
 
     /// <summary>
+    /// Guardrail IDs assigned to this agent for safety and compliance checks.
+    /// These guardrails are applied in addition to any profile-level guardrails during agent execution.
+    /// For orchestrated agents, guardrails validate the initial input and final output.
+    /// </summary>
+    public IReadOnlyList<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
     /// <remarks>

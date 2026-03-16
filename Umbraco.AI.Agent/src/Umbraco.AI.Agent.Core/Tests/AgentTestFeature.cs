@@ -75,6 +75,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         int runNumber,
         Guid? profileIdOverride,
         IEnumerable<Guid>? contextIdsOverride,
+        IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken)
     {
         // Get strongly-typed config
@@ -159,7 +160,8 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
             var options = new AIAgentExecutionOptions
             {
                 ProfileIdOverride = profileIdOverride,
-                ContextIdsOverride = contextIdsOverride?.ToList()
+                ContextIdsOverride = contextIdsOverride?.ToList(),
+                GuardrailIdsOverride = guardrailIdsOverride?.ToList()
             };
 
             await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, null, options, cancellationToken))

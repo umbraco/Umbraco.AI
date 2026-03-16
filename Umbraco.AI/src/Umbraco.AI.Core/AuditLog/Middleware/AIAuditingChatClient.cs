@@ -106,13 +106,15 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             throw;
         }
 
-        // Stream updates - audit-log completion handled after streaming completes
-        await foreach (var update in stream.WithCancellation(cancellationToken))
+        // Stream updates - wrap in error-capturing enumerator to handle
+        // exceptions thrown during iteration (e.g., guardrail blocks)
+        await foreach (var update in WrapStreamWithErrorCapture(
+            stream, auditLog, auditScope, cancellationToken))
         {
             yield return update;
         }
 
-        // Mark audit-log as completed
+        // Mark audit-log as completed (only reached if no exception during streaming)
         if (auditLog is not null)
         {
             var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
@@ -128,6 +130,47 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         }
 
         auditScope?.Dispose();
+    }
+
+    /// <summary>
+    /// Wraps an async stream to capture exceptions during iteration
+    /// and record them as audit log failures. This is needed because C# does not
+    /// allow yield return inside try-catch blocks.
+    /// </summary>
+    private async IAsyncEnumerable<ChatResponseUpdate> WrapStreamWithErrorCapture(
+        IAsyncEnumerable<ChatResponseUpdate> stream,
+        AIAuditLog? auditLog,
+        AIAuditScope? auditScope,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var enumerator = stream.GetAsyncEnumerator(cancellationToken);
+
+        while (true)
+        {
+            ChatResponseUpdate current;
+            try
+            {
+                if (!await enumerator.MoveNextAsync())
+                {
+                    yield break;
+                }
+
+                current = enumerator.Current;
+            }
+            catch (Exception ex)
+            {
+                if (auditLog is not null)
+                {
+                    await _auditLogService.QueueRecordAuditLogFailureAsync(
+                        auditLog, ex, cancellationToken);
+                }
+
+                auditScope?.Dispose();
+                throw;
+            }
+
+            yield return current;
+        }
     }
 
     /// <summary>

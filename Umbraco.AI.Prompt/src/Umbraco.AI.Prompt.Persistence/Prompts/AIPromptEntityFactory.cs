@@ -21,6 +21,7 @@ internal static class AIPromptEntityFactory
         var tags = DeserializeTags(entity.Tags);
         var scope = DeserializeScope(entity.Scope);
         var contextIds = DeserializeContextIds(entity.ContextIds);
+        var guardrailIds = DeserializeGuardrailIds(entity.GuardrailIds);
 
         return new Core.Prompts.AIPrompt
         {
@@ -31,6 +32,7 @@ internal static class AIPromptEntityFactory
             Instructions = entity.Instructions,
             ProfileId = entity.ProfileId,
             ContextIds = contextIds,
+            GuardrailIds = guardrailIds,
             Tags = tags,
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
@@ -59,6 +61,7 @@ internal static class AIPromptEntityFactory
             Instructions = aiPrompt.Instructions,
             ProfileId = aiPrompt.ProfileId,
             ContextIds = SerializeContextIds(aiPrompt.ContextIds),
+            GuardrailIds = SerializeGuardrailIds(aiPrompt.GuardrailIds),
             Tags = SerializeTags(aiPrompt.Tags),
             IsActive = aiPrompt.IsActive,
             IncludeEntityContext = aiPrompt.IncludeEntityContext,
@@ -84,6 +87,7 @@ internal static class AIPromptEntityFactory
         entity.Instructions = aiPrompt.Instructions;
         entity.ProfileId = aiPrompt.ProfileId;
         entity.ContextIds = SerializeContextIds(aiPrompt.ContextIds);
+        entity.GuardrailIds = SerializeGuardrailIds(aiPrompt.GuardrailIds);
         entity.Tags = SerializeTags(aiPrompt.Tags);
         entity.IsActive = aiPrompt.IsActive;
         entity.IncludeEntityContext = aiPrompt.IncludeEntityContext;
@@ -145,6 +149,28 @@ internal static class AIPromptEntityFactory
     }
 
     private static IReadOnlyList<Guid> DeserializeContextIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<Guid>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static string? SerializeGuardrailIds(IReadOnlyList<Guid> guardrailIds)
+    {
+        return guardrailIds.Count == 0 ? null : JsonSerializer.Serialize(guardrailIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<Guid> DeserializeGuardrailIds(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {

@@ -12,3 +12,4 @@ export * from "./audit-log/index.js";
 export * from "./analytics/index.js";
 export * from "./workspace-registry/index.js";
 export * from "./test/index.js";
+export * from "./guardrail/index.js";

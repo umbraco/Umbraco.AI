@@ -3,6 +3,7 @@ using System.Text.Json;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Agent.Deploy.Artifacts;
+using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
@@ -67,6 +68,13 @@ public class UmbracoAIAgentServiceConnector(
         // Use base class helper for optional profile dependency
         var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
 
+        // Add guardrail dependencies (available for all agent types)
+        foreach (var guardrailId in entity.GuardrailIds)
+        {
+            var guardrailUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Guardrail, guardrailId);
+            dependencies.Add(new UmbracoAIArtifactDependency(guardrailUdi, ArtifactDependencyMode.Match));
+        }
+
         // Serialize config to JSON
         string? configJson = null;
         if (entity.Config is not null)
@@ -82,6 +90,7 @@ public class UmbracoAIAgentServiceConnector(
             ProfileUdi = profileUdi,
             AgentType = entity.AgentType.ToString(),
             Config = configJson,
+            GuardrailIds = entity.GuardrailIds.ToList(),
             SurfaceIds = entity.SurfaceIds.ToList(),
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
             IsActive = entity.IsActive
@@ -147,6 +156,7 @@ public class UmbracoAIAgentServiceConnector(
         agent.Name = artifact.Name;
         agent.Description = artifact.Description;
         agent.ProfileId = profileId;
+        agent.GuardrailIds = artifact.GuardrailIds.ToList();
         agent.Config = config;
         agent.SurfaceIds = artifact.SurfaceIds.ToList();
         agent.Scope = scope;

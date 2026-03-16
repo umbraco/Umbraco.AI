@@ -88,6 +88,7 @@ export const UaiProfileTypeMapper = {
                 maxTokens: (settings.maxTokens as number) ?? null,
                 systemPromptTemplate: (settings.systemPromptTemplate as string) ?? null,
                 contextIds: (settings.contextIds as string[] | undefined) ?? [],
+                guardrailIds: (settings.guardrailIds as string[] | undefined) ?? [],
             } as UaiChatProfileSettings;
         }
 
@@ -107,13 +108,15 @@ export const UaiProfileTypeMapper = {
         if (!settings) return null;
 
         if (isChatSettings(settings)) {
+            // Note: Uses 'unknown' cast because guardrailIds is not in the generated ChatProfileSettingsModel yet
             return {
                 $type: "chat",
                 temperature: settings.temperature,
                 maxTokens: settings.maxTokens,
                 systemPromptTemplate: settings.systemPromptTemplate,
                 contextIds: settings.contextIds,
-            } as ChatProfileSettingsModel;
+                guardrailIds: settings.guardrailIds,
+            } as unknown as ChatProfileSettingsModel;
         }
 
         // Embedding settings

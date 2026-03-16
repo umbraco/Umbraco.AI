@@ -5,6 +5,10 @@ using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Analytics.Usage.Middleware;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Guardrails.Evaluators;
+using Umbraco.AI.Core.Guardrails.Middleware;
+using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.Middleware;
@@ -81,6 +85,7 @@ public static partial class UmbracoBuilderExtensions
             .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
             .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
+            .Append<AIGuardrailChatMiddleware>()         // Guardrail evaluation (pre/post-generate)
             .Append<AITrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
             .Append<AIUsageRecordingChatMiddleware>()    // Records usage to database for analytics
             .Append<AIAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
@@ -161,6 +166,7 @@ public static partial class UmbracoBuilderExtensions
             .Add<AIConnectionVersionableEntityAdapter>()
             .Add<AIProfileVersionableEntityAdapter>()
             .Add<AIContextVersionableEntityAdapter>()
+            .Add<AIGuardrailVersionableEntityAdapter>()
             .Add<AITestVersionableEntityAdapter>();
 
         // Client factories
@@ -189,6 +195,22 @@ public static partial class UmbracoBuilderExtensions
             .Append<ProfileContextResolver>()
             .Append<ContentContextResolver>();
         services.AddSingleton<IAIContextResolutionService, AIContextResolutionService>();
+
+        // Guardrail system
+        services.AddSingleton<IAIGuardrailRepository, InMemoryAIGuardrailRepository>();
+        services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
+
+        // Guardrail evaluator infrastructure - auto-discover via [AIGuardrailEvaluator] attribute
+        builder.AIGuardrailEvaluators()
+            .Add<ContainsGuardrailEvaluator>()
+            .Add<RegexGuardrailEvaluator>()
+            .Add<LLMGuardrailEvaluator>();
+
+        // Guardrail resolution - pluggable resolver system
+        builder.AIGuardrailResolvers()
+            .Append<GuardrailIdsOverrideResolver>()
+            .Append<ProfileGuardrailResolver>();
+        services.AddSingleton<IAIGuardrailResolutionService, AIGuardrailResolutionService>();
 
         // Entity adapter infrastructure
         services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
@@ -244,7 +266,8 @@ public static partial class UmbracoBuilderExtensions
             .Add<RegexGrader>()
             .Add<JSONSchemaGrader>()
             .Add<ToolCallGrader>()
-            .Add<LLMJudgeGrader>();
+            .Add<LLMJudgeGrader>()
+            .Add<GuardrailGrader>();
             //.Add<SemanticSimilarityGrader>();
 
         // Register test infrastructure services

@@ -1,4 +1,4 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
@@ -10,12 +10,11 @@ import { isStandardConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 /**
- * Workspace view for Agent tool permissions.
- * Only visible for standard agents.
- * Configures which tools and tool scopes an agent can access.
+ * Workspace view for Agent governance settings.
+ * Displays guardrails for all agent types, plus tool permissions for standard agents.
  */
-@customElement("uai-agent-permissions-workspace-view")
-export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
+@customElement("uai-agent-governance-workspace-view")
+export class UaiAgentGovernanceWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
@@ -54,6 +53,14 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
         return this._model && isStandardConfig(this._model.config) ? this._model.config : undefined;
     }
 
+    #onGuardrailIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ guardrailIds: picker.value ?? [] }, "guardrailIds"),
+        );
+    }
+
     #updateConfig(partial: Partial<UaiStandardAgentConfig>, label: string) {
         const config = this.#standardConfig;
         if (!config) return;
@@ -81,9 +88,9 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
         this.#updateConfig({ userGroupPermissions: component.value }, "config.userGroupPermissions");
     }
 
-    render() {
+    #renderToolPermissions() {
         const config = this.#standardConfig;
-        if (!this._model || !config) return html`<uui-loader></uui-loader>`;
+        if (!config) return nothing;
 
         return html`
             <uui-box headline="Tool Permissions">
@@ -124,7 +131,25 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                         @change=${this.#onUserGroupPermissionsChange}
                     ></uai-user-group-tool-permissions>
                 </umb-property-layout>
+            </uui-box>
+        `;
+    }
 
+    render() {
+        if (!this._model) return html`<uui-loader></uui-loader>`;
+
+        return html`
+            ${this.#renderToolPermissions()}
+
+            <uui-box headline="Guardrails">
+                <umb-property-layout label="Guardrails" description="Guardrails to evaluate inputs and responses">
+                    <uai-guardrail-picker
+                        slot="editor"
+                        multiple
+                        .value=${this._model.guardrailIds}
+                        @change=${this.#onGuardrailIdsChange}
+                    ></uai-guardrail-picker>
+                </umb-property-layout>
             </uui-box>
         `;
     }
@@ -140,6 +165,9 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
+            uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
+            }
 
             uui-loader {
                 display: block;
@@ -153,10 +181,10 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
     ];
 }
 
-export default UaiAgentPermissionsWorkspaceViewElement;
+export default UaiAgentGovernanceWorkspaceViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-agent-permissions-workspace-view": UaiAgentPermissionsWorkspaceViewElement;
+        "uai-agent-governance-workspace-view": UaiAgentGovernanceWorkspaceViewElement;
     }
 }

@@ -37,6 +37,11 @@ public class AgentResponseModel
     public Guid? ProfileId { get; set; }
 
     /// <summary>
+    /// Guardrail IDs for safety and compliance checks.
+    /// </summary>
+    public IEnumerable<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
     /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
     public IEnumerable<string> SurfaceIds { get; set; } = [];

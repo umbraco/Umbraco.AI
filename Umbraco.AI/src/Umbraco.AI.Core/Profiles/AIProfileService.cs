@@ -104,6 +104,34 @@ internal sealed class AIProfileService : IAIProfileService
         return profileByAlias;
     }
 
+    public async Task<AIProfile> GetClassifierProfileAsync(
+        CancellationToken cancellationToken = default)
+    {
+        // 1. Try database settings first (ClassifierChatProfileId)
+        var settings = await _settingsService.GetSettingsAsync(cancellationToken);
+        if (settings.ClassifierChatProfileId.HasValue)
+        {
+            var profile = await _repository.GetByIdAsync(settings.ClassifierChatProfileId.Value, cancellationToken);
+            if (profile is not null)
+            {
+                return profile;
+            }
+        }
+
+        // 2. Fall back to config-based alias (ClassifierChatProfileAlias)
+        if (_options.ClassifierChatProfileAlias is not null)
+        {
+            var profileByAlias = await _repository.GetByAliasAsync(_options.ClassifierChatProfileAlias, cancellationToken);
+            if (profileByAlias is not null)
+            {
+                return profileByAlias;
+            }
+        }
+
+        // 3. Fall back to the default chat profile
+        return await GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
+    }
+
     public async Task<AIProfile> SaveProfileAsync(
         AIProfile profile,
         CancellationToken cancellationToken = default)

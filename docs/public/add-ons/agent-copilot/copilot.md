@@ -119,6 +119,20 @@ Your capabilities:
 Always be helpful and concise.
 ```
 
+## Auto Mode and Agent Routing
+
+When multiple agents are available on a surface, the Copilot uses "Auto" mode to automatically select the best agent for each user message. This works by sending the user's prompt to a classifier model that picks the most appropriate agent based on each agent's name and description.
+
+### Classifier Profile
+
+By default, the classifier uses the default chat profile, which may be a powerful (and expensive) model. Since classification only returns a single GUID, you can configure a cheaper or faster model specifically for this task:
+
+1. Navigate to the **AI** section > **Settings**
+2. Set the **Classifier Chat Profile** to a lightweight model (e.g., GPT-4o Mini, Claude Haiku)
+3. Save
+
+See [Settings](../../concepts/settings.md#classifier-chat-profile) for more details on the fallback chain.
+
 ## Using the Copilot
 
 ### Getting Suggestions

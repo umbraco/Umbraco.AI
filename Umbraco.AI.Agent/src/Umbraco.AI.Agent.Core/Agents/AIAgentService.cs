@@ -252,8 +252,8 @@ internal sealed class AIAgentService : IAIAgentService
         // 6. Multiple agents - use LLM to classify
         var classificationPrompt = BuildClassificationPrompt(availableAgents, userPrompt);
 
-        // Get the default chat profile
-        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
+        // Get the classifier profile (falls back to default chat profile)
+        var profile = await _profileService.GetClassifierProfileAsync(cancellationToken);
         if (profile is null)
         {
             // No default profile available, fall back to first agent

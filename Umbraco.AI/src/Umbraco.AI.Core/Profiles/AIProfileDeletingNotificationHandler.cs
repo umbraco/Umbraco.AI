@@ -24,11 +24,12 @@ internal sealed class AIProfileDeletingNotificationHandler
         var settings = await _settingsService.GetSettingsAsync(cancellationToken);
 
         if (settings.DefaultChatProfileId == notification.EntityId ||
-            settings.DefaultEmbeddingProfileId == notification.EntityId)
+            settings.DefaultEmbeddingProfileId == notification.EntityId ||
+            settings.ClassifierChatProfileId == notification.EntityId)
         {
             notification.Messages.Add(new EventMessage(
                 "Profile in use",
-                "Profile is configured as a default chat or embedding profile in settings.",
+                "Profile is configured as a default chat, embedding, or classifier profile in settings.",
                 EventMessageType.Error));
             notification.Cancel = true;
         }

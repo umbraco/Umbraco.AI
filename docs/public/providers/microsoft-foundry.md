@@ -36,12 +36,45 @@ dotnet add package Umbraco.AI.MicrosoftFoundry
 
 ## Connection Settings
 
+The provider supports two authentication methods: **Entra ID** (recommended) and **API Key** (legacy).
+
+### Entra ID Authentication (Recommended)
+
+| Setting        | Required | Description                                              |
+| -------------- | -------- | -------------------------------------------------------- |
+| Endpoint       | Yes      | Your AI Foundry endpoint URL                             |
+| Project Name   | No       | AI Foundry project name (enables deployed model listing) |
+| Tenant ID      | No       | Azure AD tenant ID                                       |
+| Client ID      | No       | Service principal application (client) ID                |
+| Client Secret  | No       | Service principal secret                                 |
+
+Entra ID supports two modes:
+
+- **Service Principal** - Provide Tenant ID, Client ID, and Client Secret for explicit credentials
+- **Managed Identity** - Provide only Tenant ID (or leave all Entra ID fields empty) to use `DefaultAzureCredential`, which supports managed identities, Azure CLI, and other automatic credential sources
+
+{% hint style="info" %}
+When using Entra ID with a Project Name, the model picker shows only models deployed in your project rather than the full catalog.
+{% endhint %}
+
+### API Key Authentication (Legacy)
+
 | Setting  | Required | Description                  |
 | -------- | -------- | ---------------------------- |
 | Endpoint | Yes      | Your AI Foundry endpoint URL |
 | API Key  | Yes      | Your AI Foundry API key      |
 
 ### Getting Your Credentials
+
+#### For Entra ID
+
+1. Sign in to [Azure AI Studio](https://ai.azure.com)
+2. Open your AI project
+3. Copy the **Project Name** and **Endpoint** from the project overview
+4. Create a service principal in **Microsoft Entra ID** > **App registrations**
+5. Grant the **Azure AI Developer** role to the service principal on your AI Hub resource
+
+#### For API Key
 
 1. Sign in to [Azure AI Studio](https://ai.azure.com)
 2. Open your AI project
@@ -50,7 +83,7 @@ dotnet add package Umbraco.AI.MicrosoftFoundry
 5. Copy the **Target URI** (endpoint) and **Key**
 
 {% hint style="warning" %}
-Keep your API key secure. Never commit it to source control or expose it in client-side code.
+Keep credentials secure. Never commit API keys or client secrets to source control.
 {% endhint %}
 
 ## Available Models
@@ -88,7 +121,7 @@ Available models depend on your Azure subscription, region, and deployed models 
 4. Enter your endpoint URL and API key
 5. Save the connection
 
-### Via Code
+### Via Code (Entra ID)
 
 {% code title="Example.cs" %}
 
@@ -97,6 +130,31 @@ var connection = new AIConnection
 {
     Alias = "ai-foundry-production",
     Name = "AI Foundry Production",
+    ProviderId = "microsoft-foundry",
+    Settings = new MicrosoftFoundryProviderSettings
+    {
+        Endpoint = "https://your-project.region.inference.ml.azure.com",
+        ProjectName = "my-ai-project",
+        TenantId = "your-tenant-id",
+        ClientId = "your-client-id",
+        ClientSecret = "your-client-secret"
+    }
+};
+
+await _connectionService.SaveConnectionAsync(connection);
+```
+
+{% endcode %}
+
+### Via Code (API Key)
+
+{% code title="Example.cs" %}
+
+```csharp
+var connection = new AIConnection
+{
+    Alias = "ai-foundry-legacy",
+    Name = "AI Foundry (API Key)",
     ProviderId = "microsoft-foundry",
     Settings = new MicrosoftFoundryProviderSettings
     {
@@ -156,6 +214,18 @@ await _profileService.SaveProfileAsync(profile);
 
 {% endcode %}
 
+## Advanced Settings
+
+### Responses API
+
+The provider supports an opt-in **Responses API** mode, available in select Azure regions (East US, East US 2, West US, West US 3, UK South, Sweden Central).
+
+To enable, set `UseResponsesApi = true` in the connection settings. This uses the newer OpenAI Responses API instead of the default Chat Completions API.
+
+{% hint style="info" %}
+The Responses API is experimental and only applies to chat capabilities. Embedding requests always use the standard API.
+{% endhint %}
+
 ## Enterprise Features
 
 ### Data Residency
@@ -189,7 +259,7 @@ var connection = new AIConnection
 
 AI Foundry integrates with Azure services:
 
-- **Azure Active Directory** - Managed identity authentication
+- **Microsoft Entra ID** - Service principal and managed identity authentication
 - **Azure Key Vault** - Secure key storage
 - **Azure Monitor** - Logging and diagnostics
 - **Azure Policy** - Governance controls
@@ -239,11 +309,17 @@ Check [Azure AI pricing](https://azure.microsoft.com/pricing/details/machine-lea
 Error: 401 Unauthorized
 ```
 
-Verify:
+For API Key:
 
-- API key is correct
-- Key hasn't expired or been rotated
-- Endpoint URL matches your deployment
+- Verify the API key is correct
+- Check the key has not expired or been rotated
+- Ensure the endpoint URL matches your deployment
+
+For Entra ID:
+
+- Verify Tenant ID, Client ID, and Client Secret are correct
+- Ensure the service principal has the **Azure AI Developer** role on the AI Hub resource
+- Check that the service principal has not expired
 
 ### Model Not Found
 

@@ -142,7 +142,7 @@ public async Task<AIGuardrail> CreateGuardrail()
         ]
     };
 
-    return await _guardrailService.CreateGuardrailAsync(guardrail);
+    return await _guardrailService.SaveGuardrailAsync(guardrail);
 }
 ```
 
@@ -249,7 +249,7 @@ public class GuardrailManagement
 
     public async Task<IEnumerable<AIGuardrail>> GetAllGuardrails()
     {
-        return await _guardrailService.GetAllGuardrailsAsync();
+        return await _guardrailService.GetGuardrailsAsync();
     }
 
     public async Task DeleteGuardrail(Guid id)

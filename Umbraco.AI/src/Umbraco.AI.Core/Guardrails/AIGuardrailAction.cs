@@ -13,5 +13,10 @@ public enum AIGuardrailAction
     /// <summary>
     /// Allow the content through but attach warning metadata to the response.
     /// </summary>
-    Warn = 1
+    Warn = 1,
+
+    /// <summary>
+    /// Replace flagged content with a redaction placeholder before it reaches the AI model or caller.
+    /// </summary>
+    Redact = 2
 }

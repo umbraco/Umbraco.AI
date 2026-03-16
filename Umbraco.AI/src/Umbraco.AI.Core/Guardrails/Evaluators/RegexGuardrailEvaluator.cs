@@ -45,7 +45,7 @@ public class RegexGuardrailEvaluatorConfig
 /// Guardrail evaluator that flags content matching a regular expression pattern.
 /// </summary>
 [AIGuardrailEvaluator("regex", "Regex Match", Type = AIGuardrailEvaluatorType.CodeBased)]
-public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEvaluatorConfig>
+public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEvaluatorConfig>, IAIGuardrailRedactable
 {
     /// <inheritdoc />
     public override string Description => "Flags content that matches a regular expression pattern";
@@ -129,5 +129,50 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
             Reason = reason,
             Metadata = metadata
         });
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AIGuardrailRedactableMatch>> FindRedactableMatchesAsync(
+        string content,
+        AIGuardrailConfig config,
+        CancellationToken cancellationToken)
+    {
+        var evalConfig = config.Deserialize<RegexGuardrailEvaluatorConfig>() ?? new RegexGuardrailEvaluatorConfig();
+
+        if (string.IsNullOrEmpty(evalConfig.Pattern))
+        {
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+        }
+
+        var options = RegexOptions.None;
+        if (evalConfig.IgnoreCase)
+        {
+            options |= RegexOptions.IgnoreCase;
+        }
+
+        if (evalConfig.Multiline)
+        {
+            options |= RegexOptions.Multiline;
+        }
+
+        try
+        {
+            var regex = new Regex(evalConfig.Pattern, options, TimeSpan.FromSeconds(5));
+            var matches = regex.Matches(content);
+
+            var results = matches
+                .Select(m => new AIGuardrailRedactableMatch(m.Index, m.Length, m.Value))
+                .ToList();
+
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>(results);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+        }
+        catch (RegexParseException)
+        {
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactableMatch>>([]);
+        }
     }
 }

@@ -184,6 +184,28 @@ await foreach (var evt in _agentService.StreamAgentAsync(
 
 {% endcode %}
 
+### SelectAgentForPromptAsync
+
+Selects the best agent for a user prompt from a given surface. When multiple agents are available, uses an LLM classifier to determine the best match.
+
+| Parameter           | Type                       | Description                              |
+| ------------------- | -------------------------- | ---------------------------------------- |
+| `userPrompt`        | `string`                   | The user's message                       |
+| `surfaceId`         | `string`                   | The surface to search for agents         |
+| `context`           | `AgentAvailabilityContext`  | Context for agent availability filtering |
+| `cancellationToken` | `CancellationToken`        | Cancellation token                       |
+
+**Returns**: The selected agent, or `null` if no agents are available.
+
+**Behavior**:
+
+- Returns `null` if no active agents are available on the surface
+- Returns the single agent directly if only one is available (no LLM call)
+- Uses the **classifier chat profile** (falls back to default chat profile) when multiple agents need classification
+- Falls back to the first available agent if classification fails
+
+See [Settings](../../../concepts/settings.md#classifier-chat-profile) for configuring the classifier profile.
+
 ## Related Models
 
 ### AIAgentRunRequest

@@ -19,4 +19,9 @@ public class AISettingsArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? de
     /// The UDI of the default embedding profile (optional).
     /// </summary>
     public GuidUdi? DefaultEmbeddingProfileUdi { get; set; }
+
+    /// <summary>
+    /// The UDI of the classifier chat profile (optional).
+    /// </summary>
+    public GuidUdi? ClassifierChatProfileUdi { get; set; }
 }

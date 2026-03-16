@@ -27,6 +27,13 @@ public sealed class AISettings : IAIAuditableEntity
     [AISetting]
     public Guid? DefaultEmbeddingProfileId { get; set; }
 
+    /// <summary>
+    /// The ID of the profile to use for internal classification tasks (e.g., agent routing).
+    /// Falls back to the default chat profile if not set.
+    /// </summary>
+    [AISetting]
+    public Guid? ClassifierChatProfileId { get; set; }
+
     /// <inheritdoc />
     public DateTime DateCreated { get; internal set; }
 

@@ -65,6 +65,15 @@ public interface IAIProfileService
     Task<AIProfile> GetDefaultProfileAsync(AICapability capability, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the profile to use for internal classification tasks (e.g., agent routing).
+    /// Falls back to the classifier chat profile alias from configuration, then to the default chat profile.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The classifier profile.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when no classifier or default chat profile is configured or found.</exception>
+    Task<AIProfile> GetClassifierProfileAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Saves (creates or updates) a profile.
     /// </summary>
     /// <param name="profile">The profile to save.</param>

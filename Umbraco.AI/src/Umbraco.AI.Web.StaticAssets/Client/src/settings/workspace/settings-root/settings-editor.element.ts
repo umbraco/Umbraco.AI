@@ -77,6 +77,20 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>
+                <umb-property-layout
+                    label="Classifier Chat Profile"
+                    description="An optional profile for internal classification tasks such as agent routing. Uses a cheaper model to reduce costs. Falls back to the default chat profile if not set."
+                >
+                    <div slot="editor">
+                        <uai-profile-picker
+                            name="classifierChatProfileId"
+                            capability="Chat"
+                            .value=${this._model?.classifierChatProfileId ?? undefined}
+                            @change=${this.#onPropertyChange}
+                        >
+                        </uai-profile-picker>
+                    </div>
+                </umb-property-layout>
             </uui-box>
         `;
     }

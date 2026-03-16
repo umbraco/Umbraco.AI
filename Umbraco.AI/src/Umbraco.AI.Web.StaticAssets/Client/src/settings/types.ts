@@ -4,4 +4,5 @@
 export interface UaiSettingsModel {
     defaultChatProfileId: string | null;
     defaultEmbeddingProfileId: string | null;
+    classifierChatProfileId: string | null;
 }

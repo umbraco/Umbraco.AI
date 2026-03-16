@@ -14,6 +14,7 @@ AI Settings provide a central place to configure system-wide defaults for Umbrac
 | `Id`                        | Fixed identifier (always the same GUID)                                |
 | `DefaultChatProfileId`      | The profile used when no profile is specified for chat operations      |
 | `DefaultEmbeddingProfileId` | The profile used when no profile is specified for embedding operations |
+| `ClassifierChatProfileId`   | Optional profile for internal classification tasks (e.g., agent routing). Falls back to default chat profile |
 
 {% hint style="info" %}
 Settings are a singleton entity - there is only one settings record for the entire application.
@@ -89,6 +90,20 @@ var response = await _chatService.GetChatResponseAsync(profileId, messages);
 
 {% endcode %}
 
+## Classifier Chat Profile
+
+The classifier chat profile is an optional setting that allows you to designate a cheaper or faster model for internal classification tasks. Currently, this is used by the Copilot's "Auto" agent mode to classify user prompts and route them to the best available agent.
+
+### Fallback Chain
+
+When the classifier profile is requested:
+
+1. **Database settings** — `ClassifierChatProfileId` (configured in backoffice)
+2. **Configuration file** — `ClassifierChatProfileAlias` in `appsettings.json`
+3. **Default chat profile** — Falls back to the standard default chat profile
+
+This means you only need to configure it if you want to use a different (typically cheaper) model for classification. If not set, the default chat profile is used automatically.
+
 ## Configuration File Fallback
 
 For advanced scenarios like CI/CD pipelines or infrastructure-as-code, you can configure defaults via `appsettings.json`:
@@ -100,7 +115,8 @@ For advanced scenarios like CI/CD pipelines or infrastructure-as-code, you can c
     "Umbraco": {
         "AI": {
             "DefaultChatProfileAlias": "content-writer",
-            "DefaultEmbeddingProfileAlias": "embeddings"
+            "DefaultEmbeddingProfileAlias": "embeddings",
+            "ClassifierChatProfileAlias": "fast-classifier"
         }
     }
 }

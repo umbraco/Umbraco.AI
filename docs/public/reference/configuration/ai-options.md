@@ -26,6 +26,7 @@ public class AIOptions
 {
     public string? DefaultChatProfileAlias { get; set; }
     public string? DefaultEmbeddingProfileAlias { get; set; }
+    public string? ClassifierChatProfileAlias { get; set; }
 }
 ```
 
@@ -37,6 +38,7 @@ public class AIOptions
 | ------------------------------ | --------- | -------------------------------------------------- |
 | `DefaultChatProfileAlias`      | `string?` | Fallback default profile alias for chat operations |
 | `DefaultEmbeddingProfileAlias` | `string?` | Fallback default profile alias for embeddings      |
+| `ClassifierChatProfileAlias`   | `string?` | Fallback profile alias for classification tasks    |
 
 ## Configuration
 
@@ -47,7 +49,8 @@ public class AIOptions
     "Umbraco": {
         "AI": {
             "DefaultChatProfileAlias": "content-assistant",
-            "DefaultEmbeddingProfileAlias": "document-embeddings"
+            "DefaultEmbeddingProfileAlias": "document-embeddings",
+            "ClassifierChatProfileAlias": "fast-classifier"
         }
     }
 }
@@ -127,6 +130,7 @@ Override configuration via environment variables:
 ```bash
 export Umbraco__AI__DefaultChatProfileAlias=production-chat
 export Umbraco__AI__DefaultEmbeddingProfileAlias=production-embedding
+export Umbraco__AI__ClassifierChatProfileAlias=fast-classifier
 ```
 
 Note the double underscores (`__`) as section separators.

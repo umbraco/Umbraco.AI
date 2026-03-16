@@ -430,6 +430,7 @@ export type RunTestsByTagsRequestModel = {
 export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+    classifierChatProfileId?: string | null;
 };
 
 export type TestBatchResultsResponseModel = {
@@ -704,6 +705,7 @@ export type UpdateProfileRequestModel = {
 export type UpdateSettingsRequestModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+    classifierChatProfileId?: string | null;
 };
 
 export type UpdateTestRequestModel = {

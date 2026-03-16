@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -17,17 +18,20 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIGuardrailResolutionService _resolutionService;
     private readonly AIGuardrailEvaluatorCollection _evaluators;
+    private readonly ILogger _logger;
 
     public AIGuardrailChatClient(
         IChatClient innerClient,
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIGuardrailResolutionService resolutionService,
-        AIGuardrailEvaluatorCollection evaluators)
+        AIGuardrailEvaluatorCollection evaluators,
+        ILogger logger)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _resolutionService = resolutionService;
         _evaluators = evaluators;
+        _logger = logger;
     }
 
     public override async Task<ChatResponse> GetResponseAsync(
@@ -254,6 +258,14 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
 
             if (result.Flagged)
             {
+                _logger.LogWarning(
+                    "Guardrail rule '{RuleName}' (evaluator: {EvaluatorId}) flagged content during {Phase} with action {Action}. Reason: {Reason}",
+                    rule.Name,
+                    rule.EvaluatorId,
+                    phase,
+                    rule.Action,
+                    result.Reason ?? "No reason provided");
+
                 if (rule.Action == AIGuardrailAction.Block)
                 {
                     hasBlockAction = true;

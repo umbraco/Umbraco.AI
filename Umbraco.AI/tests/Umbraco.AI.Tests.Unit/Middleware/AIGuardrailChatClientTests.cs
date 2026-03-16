@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Evaluators;
@@ -58,7 +59,8 @@ public class AIGuardrailChatClientTests
             fakeClient,
             _runtimeContextAccessorMock.Object,
             _resolutionServiceMock.Object,
-            evaluatorCollection);
+            evaluatorCollection,
+            NullLogger.Instance);
 
         var messages = new List<ChatMessage>
         {
@@ -106,7 +108,8 @@ public class AIGuardrailChatClientTests
             fakeClient,
             _runtimeContextAccessorMock.Object,
             _resolutionServiceMock.Object,
-            evaluatorCollection);
+            evaluatorCollection,
+            NullLogger.Instance);
 
         var messages = new List<ChatMessage>
         {
@@ -161,7 +164,8 @@ public class AIGuardrailChatClientTests
             fakeClient,
             _runtimeContextAccessorMock.Object,
             _resolutionServiceMock.Object,
-            evaluatorCollection);
+            evaluatorCollection,
+            NullLogger.Instance);
 
         var messages = new List<ChatMessage>
         {
@@ -214,7 +218,8 @@ public class AIGuardrailChatClientTests
             fakeClient,
             _runtimeContextAccessorMock.Object,
             _resolutionServiceMock.Object,
-            evaluatorCollection);
+            evaluatorCollection,
+            NullLogger.Instance);
 
         var messages = new List<ChatMessage>
         {
@@ -262,7 +267,8 @@ public class AIGuardrailChatClientTests
             fakeClient,
             _runtimeContextAccessorMock.Object,
             _resolutionServiceMock.Object,
-            evaluatorCollection);
+            evaluatorCollection,
+            NullLogger.Instance);
 
         var messages = new List<ChatMessage>
         {

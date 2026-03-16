@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -17,17 +18,20 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIGuardrailResolutionService _resolutionService;
     private readonly AIGuardrailEvaluatorCollection _evaluators;
+    private readonly ILogger _logger;
 
     public AIGuardrailChatClient(
         IChatClient innerClient,
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIGuardrailResolutionService resolutionService,
-        AIGuardrailEvaluatorCollection evaluators)
+        AIGuardrailEvaluatorCollection evaluators,
+        ILogger logger)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _resolutionService = resolutionService;
         _evaluators = evaluators;
+        _logger = logger;
     }
 
     public override async Task<ChatResponse> GetResponseAsync(
@@ -61,6 +65,16 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             {
                 throw new AIGuardrailBlockedException(preResult);
             }
+
+            if (preResult.Action == AIGuardrailAction.Redact)
+            {
+                var matches = await CollectRedactionCandidateesAsync(inputContent, preResult, cancellationToken);
+                if (matches.Count > 0)
+                {
+                    var redactedContent = ApplyRedactions(inputContent, matches);
+                    ApplyRedactedContentToUserMessage(messagesList, redactedContent);
+                }
+            }
         }
 
         // Execute the actual AI call
@@ -76,6 +90,16 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             if (postResult.Action == AIGuardrailAction.Block)
             {
                 throw new AIGuardrailBlockedException(postResult);
+            }
+
+            if (postResult.Action == AIGuardrailAction.Redact)
+            {
+                var matches = await CollectRedactionCandidateesAsync(responseContent, postResult, cancellationToken);
+                if (matches.Count > 0)
+                {
+                    var redactedContent = ApplyRedactions(responseContent, matches);
+                    ApplyRedactedContentToResponse(response, redactedContent);
+                }
             }
         }
 
@@ -121,9 +145,21 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             {
                 throw new AIGuardrailBlockedException(preResult);
             }
+
+            if (preResult.Action == AIGuardrailAction.Redact)
+            {
+                var matches = await CollectRedactionCandidateesAsync(inputContent, preResult, cancellationToken);
+                if (matches.Count > 0)
+                {
+                    var redactedContent = ApplyRedactions(inputContent, matches);
+                    ApplyRedactedContentToUserMessage(messagesList, redactedContent);
+                }
+            }
         }
 
         // Phase 2: Stream with code-based post-generate evaluation
+        // Note: Post-generate Redact rules degrade to Warn during streaming
+        // because already-yielded chunks cannot be retroactively redacted.
         var codeBasedPostRules = resolved.PostGenerateRules
             .Where(r => _evaluators.GetById(r.EvaluatorId)?.Type == AIGuardrailEvaluatorType.CodeBased)
             .ToList();
@@ -201,6 +237,7 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
         var ruleResults = new List<AIGuardrailRuleResult>();
         var overallAction = AIGuardrailAction.Warn; // Default to most permissive
         var hasBlockAction = false;
+        var hasRedactAction = false;
 
         foreach (var rule in rules)
         {
@@ -219,15 +256,35 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
                 EvaluatorResult = result
             });
 
-            if (result.Flagged && rule.Action == AIGuardrailAction.Block)
+            if (result.Flagged)
             {
-                hasBlockAction = true;
+                _logger.LogWarning(
+                    "Guardrail rule '{RuleName}' (evaluator: {EvaluatorId}) flagged content during {Phase} with action {Action}. Reason: {Reason}",
+                    rule.Name,
+                    rule.EvaluatorId,
+                    phase,
+                    rule.Action,
+                    result.Reason ?? "No reason provided");
+
+                if (rule.Action == AIGuardrailAction.Block)
+                {
+                    hasBlockAction = true;
+                }
+                else if (rule.Action == AIGuardrailAction.Redact)
+                {
+                    hasRedactAction = true;
+                }
             }
         }
 
+        // Precedence: Block > Redact > Warn
         if (hasBlockAction)
         {
             overallAction = AIGuardrailAction.Block;
+        }
+        else if (hasRedactAction)
+        {
+            overallAction = AIGuardrailAction.Redact;
         }
 
         return new AIGuardrailEvaluationResult
@@ -236,6 +293,116 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             Phase = phase,
             RuleResults = ruleResults
         };
+    }
+
+    private async Task<IReadOnlyList<AIGuardrailRedactionCandidate>> CollectRedactionCandidateesAsync(
+        string content,
+        AIGuardrailEvaluationResult evaluationResult,
+        CancellationToken cancellationToken)
+    {
+        var allMatches = new List<AIGuardrailRedactionCandidate>();
+
+        foreach (var ruleResult in evaluationResult.RuleResults)
+        {
+            if (!ruleResult.EvaluatorResult.Flagged || ruleResult.Rule.Action != AIGuardrailAction.Redact)
+            {
+                continue;
+            }
+
+            var evaluator = _evaluators.GetById(ruleResult.Rule.EvaluatorId);
+            if (evaluator is not IAIRedactableGuardrailEvaluator redactable)
+            {
+                // Evaluator doesn't support redaction — degrades to Warn
+                continue;
+            }
+
+            var config = new AIGuardrailConfig { Config = ruleResult.Rule.Config };
+            var candidates = await redactable.FindRedactionCandidatesAsync(content, config, cancellationToken);
+
+            allMatches.AddRange(candidates);
+        }
+
+        return allMatches;
+    }
+
+    private static string ApplyRedactions(string content, IReadOnlyList<AIGuardrailRedactionCandidate> matches)
+    {
+        if (matches.Count == 0)
+        {
+            return content;
+        }
+
+        // Merge overlapping ranges
+        var sorted = matches.OrderBy(m => m.Index).ThenByDescending(m => m.Length).ToList();
+        var merged = new List<(int Index, int Length)>();
+
+        var currentStart = sorted[0].Index;
+        var currentEnd = sorted[0].Index + sorted[0].Length;
+
+        for (var i = 1; i < sorted.Count; i++)
+        {
+            var matchStart = sorted[i].Index;
+            var matchEnd = sorted[i].Index + sorted[i].Length;
+
+            if (matchStart <= currentEnd)
+            {
+                // Overlapping or adjacent — extend
+                currentEnd = Math.Max(currentEnd, matchEnd);
+            }
+            else
+            {
+                merged.Add((currentStart, currentEnd - currentStart));
+                currentStart = matchStart;
+                currentEnd = matchEnd;
+            }
+        }
+
+        merged.Add((currentStart, currentEnd - currentStart));
+
+        // Apply from end to avoid offset shifting
+        var sb = new StringBuilder(content);
+        for (var i = merged.Count - 1; i >= 0; i--)
+        {
+            var (index, length) = merged[i];
+            sb.Remove(index, length);
+            sb.Insert(index, "[REDACTED]");
+        }
+
+        return sb.ToString();
+    }
+
+    private static void ApplyRedactedContentToUserMessage(List<ChatMessage> messages, string redactedContent)
+    {
+        var lastUserMessage = messages.LastOrDefault(m => m.Role == ChatRole.User);
+        if (lastUserMessage is null)
+        {
+            return;
+        }
+
+        // Replace TextContent items with redacted content
+        for (var i = 0; i < lastUserMessage.Contents.Count; i++)
+        {
+            if (lastUserMessage.Contents[i] is TextContent)
+            {
+                lastUserMessage.Contents[i] = new TextContent(redactedContent);
+                return;
+            }
+        }
+    }
+
+    private static void ApplyRedactedContentToResponse(ChatResponse response, string redactedContent)
+    {
+        foreach (var message in response.Messages)
+        {
+            for (var i = 0; i < message.Contents.Count; i++)
+            {
+                if (message.Contents[i] is TextContent)
+                {
+                    message.Contents[i] = new TextContent(redactedContent);
+                    return;
+                }
+            }
+        }
     }
 
     private static string ExtractUserContent(IReadOnlyList<ChatMessage> messages)

@@ -196,6 +196,7 @@ export default {
         phasePostGenerate: "Post-Generate",
         actionBlock: "Block",
         actionWarn: "Warn",
+        actionRedact: "Redact",
         evaluatorConfig: "Configuration",
     },
 } as UmbLocalizationDictionary;

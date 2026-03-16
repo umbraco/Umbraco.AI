@@ -5,7 +5,7 @@ description: >-
 
 # Managing Guardrails
 
-AI Guardrails allow you to define safety, compliance, and quality rules that evaluate AI inputs and responses at runtime. Rules can block or warn when content is flagged.
+AI Guardrails allow you to define safety, compliance, and quality rules that evaluate AI inputs and responses at runtime. Rules can block, warn, or redact when content is flagged.
 
 ## Accessing Guardrails
 
@@ -37,7 +37,7 @@ Guardrails contain one or more rules. Each rule references a registered evaluato
 | Evaluator   | The evaluator to use (e.g., PII, Toxicity, LLM Judge) |
 | Name        | Display name for the rule                             |
 | Phase       | When to evaluate: Pre-Generate or Post-Generate       |
-| Action      | What to do when flagged: Block or Warn                |
+| Action      | What to do when flagged: Block, Warn, or Redact       |
 | Config      | Evaluator-specific settings (optional)                |
 
 3. Click **Add**
@@ -55,10 +55,15 @@ Use Pre-Generate rules to prevent sensitive data (like PII) from being sent to A
 
 ### Actions
 
-| Action    | Description                                                    |
-| --------- | -------------------------------------------------------------- |
-| **Block** | Stops processing and returns an error to the caller            |
-| **Warn**  | Allows the content through but attaches warning metadata       |
+| Action     | Description                                                                      |
+| ---------- | -------------------------------------------------------------------------------- |
+| **Block**  | Stops processing and returns an error to the caller                              |
+| **Warn**   | Allows the content through unchanged and logs a warning                          |
+| **Redact** | Replaces flagged content with `[REDACTED]` before it reaches the AI model or caller |
+
+{% hint style="info" %}
+The Redact option is only shown for evaluators that support it. Code-based evaluators (PII, Toxicity) support redaction. Model-based evaluators (LLM Judge) do not, because they cannot identify specific text positions.
+{% endhint %}
 
 ### Available Evaluators
 
@@ -125,6 +130,26 @@ A typical content safety guardrail might include:
 4. **Quality check** (Post-Generate, Warn)
     - Evaluator: LLM Judge
     - Evaluates response quality against brand guidelines
+
+## Example: PII Redaction Guardrail
+
+A guardrail that strips sensitive data instead of blocking:
+
+**Name**: PII Redaction Policy
+
+**Rules**:
+
+1. **Redact PII in inputs** (Pre-Generate, Redact)
+    - Evaluator: PII
+    - Replaces personal information with `[REDACTED]` before sending to the AI provider
+
+2. **Redact PII in responses** (Post-Generate, Redact)
+    - Evaluator: PII
+    - Replaces any personal information in AI responses before returning to the user
+
+{% hint style="warning" %}
+Post-generate Redact rules do not work during streaming responses. When streaming, post-generate Redact rules degrade to Warn because chunks have already been sent to the caller and cannot be retroactively modified. Pre-generate Redact rules work normally in both streaming and non-streaming scenarios.
+{% endhint %}
 
 ## Assigning Guardrails
 

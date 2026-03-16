@@ -123,6 +123,7 @@ public class GuardrailMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.Type = source.Type.ToString();
+        target.SupportsRedaction = source is IAIRedactableGuardrailEvaluator;
         target.ConfigSchema = source.ConfigType is not null
             ? context.Map<EditableModelSchemaModel>(source.GetConfigSchema())
             : null;

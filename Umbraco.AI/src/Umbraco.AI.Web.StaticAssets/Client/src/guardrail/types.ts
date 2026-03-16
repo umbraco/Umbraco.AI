@@ -8,7 +8,7 @@ export interface UaiGuardrailRuleModel {
     evaluatorId: string;
     name: string;
     phase: "PreGenerate" | "PostGenerate";
-    action: "Block" | "Warn";
+    action: "Block" | "Warn" | "Redact";
     config: Record<string, unknown> | null;
     sortOrder: number;
 }
@@ -48,7 +48,7 @@ export interface UaiGuardrailRuleConfig {
     evaluatorId: string;
     name: string;
     phase: "PreGenerate" | "PostGenerate";
-    action: "Block" | "Warn";
+    action: "Block" | "Warn" | "Redact";
     config: Record<string, unknown> | null;
     sortOrder: number;
 }

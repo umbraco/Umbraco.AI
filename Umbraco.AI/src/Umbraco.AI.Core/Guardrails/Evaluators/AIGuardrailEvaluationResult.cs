@@ -7,7 +7,7 @@ public sealed class AIGuardrailEvaluationResult
 {
     /// <summary>
     /// The overall action determined by the evaluation.
-    /// If any rule with <see cref="AIGuardrailAction.Block"/> flags content, the overall action is Block.
+    /// Precedence: Block &gt; Redact &gt; Warn.
     /// </summary>
     public required AIGuardrailAction Action { get; init; }
 

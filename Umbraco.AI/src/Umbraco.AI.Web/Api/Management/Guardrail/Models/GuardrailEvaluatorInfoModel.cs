@@ -32,6 +32,11 @@ public class GuardrailEvaluatorInfoModel
     public string Type { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether this evaluator supports the Redact action (implements IAIRedactableGuardrailEvaluator).
+    /// </summary>
+    public bool SupportsRedaction { get; set; }
+
+    /// <summary>
     /// The schema for the evaluator configuration.
     /// Null if the evaluator does not require configuration.
     /// </summary>

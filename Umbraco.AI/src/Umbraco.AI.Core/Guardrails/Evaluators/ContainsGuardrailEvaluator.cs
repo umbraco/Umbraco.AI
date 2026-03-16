@@ -34,7 +34,7 @@ public class ContainsGuardrailEvaluatorConfig
 /// Guardrail evaluator that flags content containing a specific substring.
 /// </summary>
 [AIGuardrailEvaluator("contains", "Contains", Type = AIGuardrailEvaluatorType.CodeBased)]
-public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuardrailEvaluatorConfig>
+public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuardrailEvaluatorConfig>, IAIRedactableGuardrailEvaluator
 {
     /// <inheritdoc />
     public override string Description => "Flags content that contains a specific substring";
@@ -69,5 +69,40 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
                 ? JsonSerializer.SerializeToElement(new { searchPattern = evalConfig.SearchPattern }, Constants.DefaultJsonSerializerOptions)
                 : null
         });
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AIGuardrailRedactionCandidate>> FindRedactionCandidatesAsync(
+        string content,
+        AIGuardrailConfig config,
+        CancellationToken cancellationToken)
+    {
+        var evalConfig = config.Deserialize<ContainsGuardrailEvaluatorConfig>() ?? new ContainsGuardrailEvaluatorConfig();
+
+        if (string.IsNullOrEmpty(evalConfig.SearchPattern))
+        {
+            return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>([]);
+        }
+
+        var comparison = evalConfig.IgnoreCase
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        var matches = new List<AIGuardrailRedactionCandidate>();
+        var startIndex = 0;
+
+        while (startIndex < content.Length)
+        {
+            var index = content.IndexOf(evalConfig.SearchPattern, startIndex, comparison);
+            if (index < 0)
+            {
+                break;
+            }
+
+            matches.Add(new AIGuardrailRedactionCandidate(index, evalConfig.SearchPattern.Length, content.Substring(index, evalConfig.SearchPattern.Length)));
+            startIndex = index + evalConfig.SearchPattern.Length;
+        }
+
+        return Task.FromResult<IReadOnlyList<AIGuardrailRedactionCandidate>>(matches);
     }
 }

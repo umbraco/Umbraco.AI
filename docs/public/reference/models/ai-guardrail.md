@@ -132,7 +132,7 @@ public sealed class AIGuardrailRule
 | `EvaluatorId` | `string`            | Registered evaluator ID (required, immutable)          |
 | `Name`        | `string`            | Display name (required)                                |
 | `Phase`       | `AIGuardrailPhase`  | When to evaluate (default: PostGenerate)               |
-| `Action`      | `AIGuardrailAction` | What to do when flagged (default: Block)               |
+| `Action`      | `AIGuardrailAction` | What to do when flagged: Block, Warn, or Redact (default: Block) |
 | `Config`      | `JsonElement?`      | Evaluator-specific configuration                       |
 | `SortOrder`   | `int`               | Controls evaluation order within the guardrail         |
 
@@ -159,8 +159,9 @@ public enum AIGuardrailPhase
 ```csharp
 public enum AIGuardrailAction
 {
-    Block = 0,  // Block content and throw AIGuardrailBlockedException
-    Warn = 1    // Allow content but attach warning metadata
+    Block = 0,   // Block content and throw AIGuardrailBlockedException
+    Warn = 1,    // Allow content through unchanged, log a warning
+    Redact = 2   // Replace flagged content with [REDACTED]
 }
 ```
 

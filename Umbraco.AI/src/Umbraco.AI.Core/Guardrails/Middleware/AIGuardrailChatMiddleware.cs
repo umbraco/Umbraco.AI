@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Guardrails.Resolvers;
@@ -22,15 +23,18 @@ public sealed class AIGuardrailChatMiddleware : IAIChatMiddleware
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIGuardrailResolutionService _resolutionService;
     private readonly AIGuardrailEvaluatorCollection _evaluators;
+    private readonly ILogger<AIGuardrailChatMiddleware> _logger;
 
     public AIGuardrailChatMiddleware(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIGuardrailResolutionService resolutionService,
-        AIGuardrailEvaluatorCollection evaluators)
+        AIGuardrailEvaluatorCollection evaluators,
+        ILogger<AIGuardrailChatMiddleware> logger)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _resolutionService = resolutionService;
         _evaluators = evaluators;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -40,6 +44,7 @@ public sealed class AIGuardrailChatMiddleware : IAIChatMiddleware
             client,
             _runtimeContextAccessor,
             _resolutionService,
-            _evaluators);
+            _evaluators,
+            _logger);
     }
 }

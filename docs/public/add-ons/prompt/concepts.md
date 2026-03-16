@@ -25,6 +25,7 @@ A prompt is a reusable template that defines instructions for an AI operation. P
 | `ProfileId`            | Associated AI profile (optional)      |
 | `ContextIds`           | AI Contexts to inject                 |
 | `Tags`                 | Organization tags                     |
+| `GuardrailIds`         | Guardrails applied during execution   |
 | `IsActive`             | Whether the prompt is available       |
 | `IncludeEntityContext` | Include entity info in system message |
 | `Scope`                | Content type rules                    |
@@ -37,8 +38,10 @@ When you execute a prompt:
 2. **Variables are resolved** - Placeholders are replaced with values
 3. **Contexts are injected** - Associated contexts add to the system message
 4. **Profile is applied** - The linked profile provides model/settings
-5. **Request is sent** - The AI operation executes
-6. **Response is logged** - Audit log captures the operation
+5. **Guardrails evaluated** - Pre-generate guardrails check the input
+6. **Request is sent** - The AI operation executes
+7. **Guardrails evaluated** - Post-generate guardrails check the response
+8. **Response is logged** - Audit log captures the operation
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -133,3 +136,4 @@ Every change to a prompt creates a new version:
 
 - [Template Syntax](template-syntax.md) - Variable interpolation details
 - [Scoping](scoping.md) - Content type rules
+- [Guardrails](../../concepts/guardrails.md) - Safety and compliance rules

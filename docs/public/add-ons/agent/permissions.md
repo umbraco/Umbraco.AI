@@ -11,6 +11,8 @@ Agent tool permissions control which frontend tools a **standard agent** can exe
 Tool permissions apply to **standard agents** only. **Orchestrated agents** manage tools within their [workflow](workflows.md) implementations.
 {% endhint %}
 
+Tool permissions are configured in the **Governance** tab of the agent workspace, alongside [guardrails](../../concepts/guardrails.md).
+
 ## Permission System Overview
 
 The permission system operates at three levels:
@@ -51,8 +53,8 @@ Umbraco.AI provides built-in scopes for common tool categories:
 
 1. Navigate to the **AI** section > **Agents**
 2. Open an agent or create a new one
-3. Go to the **Permissions** tab
-4. Under **Tool Scope Permissions**, select the scopes to allow
+3. Go to the **Governance** tab
+4. Under **Tool Permissions** > **Allowed Tool Scopes**, select the scopes to allow
 5. Save the agent
 
 #### Via API
@@ -104,8 +106,8 @@ Use explicit tool permissions when you need to:
 
 1. Navigate to the **AI** section > **Agents**
 2. Open an agent or create a new one
-3. Go to the **Permissions** tab
-4. Under **Explicit Tool Permissions**, click **Add Tool**
+3. Go to the **Governance** tab
+4. Under **Tool Permissions** > **Allowed Tools**, click **Add Tool**
 5. Select tools from the picker
 6. Save the agent
 
@@ -194,8 +196,8 @@ User group overrides **replace** the agent's base permissions entirely. They do 
 
 1. Navigate to the **AI** section > **Agents**
 2. Open an agent
-3. Go to the **Permissions** tab
-4. Under **User Group Permission Overrides**, click **Add Override**
+3. Go to the **Governance** tab
+4. Under **Tool Permissions** > **User Group Permissions**, click **Add Override**
 5. Select a user group
 6. Configure the tool scopes and explicit tools for this group
 7. Save the agent

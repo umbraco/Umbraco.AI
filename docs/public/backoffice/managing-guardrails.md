@@ -128,20 +128,49 @@ A typical content safety guardrail might include:
 
 ## Assigning Guardrails
 
-Guardrails are assigned to:
+Guardrails are assigned via the **Governance** tab on profiles, prompts, and agents:
 
-- **Profiles** - In the profile settings, add guardrail IDs to apply them to all requests using that profile
-- **Prompts** - When editing a prompt, associate guardrails in the guardrails section (requires Prompt add-on)
-- **Agents** - When configuring an agent, associate guardrails in the agent settings (requires Agent add-on)
+- **Profiles** - Open a chat profile and go to the **Governance** tab to assign guardrails
+- **Prompts** - Open a prompt and go to the **Governance** tab to assign guardrails (requires Prompt add-on)
+- **Agents** - Open an agent and go to the **Governance** tab to assign guardrails (requires Agent add-on)
+
+When multiple sources assign guardrails (e.g., both a profile and an agent), all guardrails are combined and deduplicated at runtime.
 
 ### Assigning to a Profile
 
 When editing a chat profile:
 
-1. Expand the **Settings** section
-2. Click **Add Guardrail**
+1. Go to the **Governance** tab
+2. Click **Add Guardrail** in the Guardrails section
 3. Select the guardrail(s) to apply
 4. Save the profile
+
+{% hint style="info" %}
+Guardrails are only available for **Chat** profiles. Embedding profiles do not support guardrails.
+{% endhint %}
+
+### Assigning to a Prompt
+
+When editing a prompt (requires Prompt add-on):
+
+1. Go to the **Governance** tab
+2. Click **Add Guardrail** in the Guardrails section
+3. Select the guardrail(s) to apply
+4. Save the prompt
+
+### Assigning to an Agent
+
+When editing an agent (requires Agent add-on):
+
+1. Go to the **Governance** tab
+2. Scroll to the **Guardrails** section (below Tool Permissions for standard agents)
+3. Click **Add Guardrail**
+4. Select the guardrail(s) to apply
+5. Save the agent
+
+{% hint style="info" %}
+The agent Governance tab also contains [Tool Permissions](../add-ons/agent/permissions.md) for standard agents.
+{% endhint %}
 
 ## Version History
 

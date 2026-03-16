@@ -26,6 +26,7 @@ A **standard agent** is a single AI agent with instructions, context injection, 
 Standard agents have:
 - Custom instructions (system prompt)
 - AI Context injection for brand voice
+- Guardrails for safety and compliance
 - Fine-grained tool permissions (scope-based and explicit)
 - User group permission overrides
 
@@ -56,6 +57,7 @@ These properties are shared by all agent types:
 | `ProfileId`   | Associated AI profile (or uses default)     |
 | `SurfaceIds`  | Surface IDs for categorization (e.g., "copilot") |
 | `Scope`       | Optional scoping rules (sections, entity types) |
+| `GuardrailIds`| Guardrails applied during agent execution   |
 | `IsActive`    | Whether the agent is available              |
 
 ### Standard Agent Configuration
@@ -227,6 +229,8 @@ Every change to an agent creates a new version:
 
 - [Instructions](instructions.md) - Configuring standard agent behavior
 - [Workflows](workflows.md) - Creating orchestrated agent workflows
+- [Permissions](permissions.md) - Tool permissions and user group overrides
 - [Streaming](streaming.md) - SSE event handling
 - [Scopes](scopes.md) - Categorizing agents
 - [Frontend Tools](frontend-tools.md) - Defining tools
+- [Guardrails](../../concepts/guardrails.md) - Safety and compliance rules

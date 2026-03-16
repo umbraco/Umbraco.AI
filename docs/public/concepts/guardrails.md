@@ -221,7 +221,7 @@ Guardrails are resolved automatically based on where they are assigned:
 
 1. **Profile guardrails** - From `AIChatProfileSettings.GuardrailIds`
 2. **Prompt guardrails** - From `AIPrompt.GuardrailIds` (Prompt add-on)
-3. **Agent guardrails** - From `AIStandardAgentConfig.GuardrailIds` (Agent add-on)
+3. **Agent guardrails** - From `AIAgent.GuardrailIds` (Agent add-on)
 
 The resolution system aggregates guardrails from all sources and deduplicates by guardrail ID.
 
@@ -274,6 +274,8 @@ See [Version History](versioning.md) for more information.
 ## Related
 
 - [Profiles](profiles.md) - Assign guardrails to chat profiles
+- [Prompts](../add-ons/prompt/concepts.md) - Assign guardrails to prompts
+- [Agents](../add-ons/agent/concepts.md) - Assign guardrails to agents
 - [Middleware](middleware.md) - How guardrails integrate into the pipeline
 - [Version History](versioning.md) - Track guardrail changes over time
 - [Managing Guardrails](../backoffice/managing-guardrails.md) - Backoffice guide

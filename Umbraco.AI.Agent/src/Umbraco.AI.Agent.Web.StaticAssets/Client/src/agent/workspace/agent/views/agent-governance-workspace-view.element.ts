@@ -139,6 +139,8 @@ export class UaiAgentGovernanceWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
+            ${this.#renderToolPermissions()}
+
             <uui-box headline="Guardrails">
                 <umb-property-layout label="Guardrails" description="Guardrails to evaluate inputs and responses">
                     <uai-guardrail-picker
@@ -149,8 +151,6 @@ export class UaiAgentGovernanceWorkspaceViewElement extends UmbLitElement {
                     ></uai-guardrail-picker>
                 </umb-property-layout>
             </uui-box>
-
-            ${this.#renderToolPermissions()}
         `;
     }
 

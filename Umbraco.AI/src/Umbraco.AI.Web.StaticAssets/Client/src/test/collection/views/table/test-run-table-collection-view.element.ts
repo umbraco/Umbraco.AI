@@ -377,6 +377,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     static styles = [
         UmbTextStyles,
         css`
+            uui-tag {
+                white-space: nowrap;
+            }
+
             .metrics-panel {
                 display: flex;
                 flex-direction: column;

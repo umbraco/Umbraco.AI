@@ -114,6 +114,10 @@ export class UaiProfileInfoWorkspaceViewElement extends UmbLitElement {
                 padding-bottom: 0;
             }
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             uui-loader {
                 display: block;
                 margin: auto;

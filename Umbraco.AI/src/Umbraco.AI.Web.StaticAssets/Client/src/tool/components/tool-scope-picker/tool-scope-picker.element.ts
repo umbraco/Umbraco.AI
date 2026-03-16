@@ -304,6 +304,10 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                 gap: var(--uui-size-space-1);
             }
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             uui-ref-node {
                 padding: var(--uui-size-space-3);
             }

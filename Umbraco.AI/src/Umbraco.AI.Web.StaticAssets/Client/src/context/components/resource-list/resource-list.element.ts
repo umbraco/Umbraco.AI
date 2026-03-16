@@ -203,6 +203,10 @@ export class UaiResourceListElement extends UmbLitElement {
                 height: 100%;
             }
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             uui-card-block-type {
                 cursor: pointer;
                 min-width: auto;

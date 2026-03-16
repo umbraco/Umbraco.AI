@@ -288,6 +288,10 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 display: block;
             }
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             .loading {
                 display: flex;
                 justify-content: center;

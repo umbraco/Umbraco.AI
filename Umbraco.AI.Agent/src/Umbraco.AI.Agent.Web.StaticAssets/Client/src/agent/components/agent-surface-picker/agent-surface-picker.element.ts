@@ -276,6 +276,7 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
 
             uui-tag {
                 margin-left: var(--uui-size-space-2);
+                white-space: nowrap;
             }
         `,
     ];

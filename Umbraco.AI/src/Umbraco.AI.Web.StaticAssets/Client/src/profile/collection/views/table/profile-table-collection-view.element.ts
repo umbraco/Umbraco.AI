@@ -1,4 +1,4 @@
-import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { html, css, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type {
@@ -132,7 +132,7 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
         ></umb-table>`;
     }
 
-    static styles = [UmbTextStyles];
+    static styles = [UmbTextStyles, css`uui-tag { white-space: nowrap; }`];
 }
 
 export default UaiProfileTableCollectionViewElement;

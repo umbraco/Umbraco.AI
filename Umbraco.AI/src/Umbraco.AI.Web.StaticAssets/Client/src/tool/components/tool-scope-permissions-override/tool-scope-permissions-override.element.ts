@@ -383,6 +383,10 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 				display: block;
 			}
 
+			uui-tag {
+				white-space: nowrap;
+			}
+
 			.scope-list {
 				display: flex;
 				flex-direction: column;

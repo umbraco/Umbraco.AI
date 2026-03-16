@@ -251,6 +251,10 @@ export class UaiAuditLogDetailsModalElement extends UmbModalBaseElement<
     static override styles = [
         UmbTextStyles,
         css`
+            uui-tag {
+                white-space: nowrap;
+            }
+
             uui-loader {
                 display: block;
                 margin: var(--uui-size-space-4) auto;

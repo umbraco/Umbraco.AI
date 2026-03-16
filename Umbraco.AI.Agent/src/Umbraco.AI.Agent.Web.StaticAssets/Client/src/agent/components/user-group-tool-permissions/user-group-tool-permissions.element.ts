@@ -219,6 +219,10 @@ export class UaiUserGroupToolPermissionsElement extends UmbLitElement {
 			:host {
 				display: block;
 			}
+
+			uui-tag {
+				white-space: nowrap;
+			}
 		`,
 	];
 }

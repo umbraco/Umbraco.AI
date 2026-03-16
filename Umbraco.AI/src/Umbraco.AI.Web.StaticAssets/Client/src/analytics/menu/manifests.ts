@@ -1,19 +1,19 @@
 import type { ManifestMenuItem } from "@umbraco-cms/backoffice/menu";
 import { UAI_ANALYTICS_ROOT_ENTITY_TYPE } from "../entity.js";
 import { UAI_ANALYTICS_MENU_ITEM_ALIAS } from "../constants.js";
-import { UAI_CORE_MENU_ALIAS } from "../../section/constants.ts";
+import { UAI_MONITORING_MENU_ALIAS } from "../../section/constants.ts";
 
 export const analyticsMenuManifests: ManifestMenuItem[] = [
     {
         type: "menuItem",
         alias: UAI_ANALYTICS_MENU_ITEM_ALIAS,
         name: "AI Analytics Menu Item",
-        weight: -90,
+        weight: 200,
         meta: {
             label: "Analytics",
             icon: "icon-chart",
             entityType: UAI_ANALYTICS_ROOT_ENTITY_TYPE,
-            menus: [UAI_CORE_MENU_ALIAS],
+            menus: [UAI_MONITORING_MENU_ALIAS],
         },
     },
 ];

@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@1.0.0-beta1...Umbraco.AI.Deploy@1.0.0-beta2) (2026-03-16)
+
+### feat
+
+* **core,deploy:** Add guardrail Deploy support across all Deploy projects ([0527502](https://github.com/umbraco/Umbraco.AI/commit/052750206e2cecf613c686688c6d879edfd4fcf3))
+* **core,deploy:** Add guardrail persistence, notifications, versioning, and tests ([c08f9ff](https://github.com/umbraco/Umbraco.AI/commit/c08f9ffd6eb6b5ec77e7e09d214d4cef40857326))
+
 ## [1.0.0-beta1](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Deploy@1.0.0-beta1) (2026-03-02)
 
 ### build

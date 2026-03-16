@@ -5,6 +5,30 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.4.0...Umbraco.AI.Agent@1.5.0) (2026-03-16)
+
+### feat
+
+* **core,agent,agent-deploy:** Generalize guardrail evaluators and promote GuardrailIds to agent level ([8371869](https://github.com/umbraco/Umbraco.AI/commit/8371869be6d3d84d8f2451f111d7086dc07e4aa9))
+* **core,agent:** Add classifier chat profile setting for agent routing ([c416145](https://github.com/umbraco/Umbraco.AI/commit/c41614519de91374fcb84a26f1dea269825c17e4))
+* **core,prompt,agent:** Add Governance tab to profile, prompt, and agent workspaces ([9983fdd](https://github.com/umbraco/Umbraco.AI/commit/9983fddf3f06b796230f263774ad25660d71307a))
+* **core,prompt,agent:** Add guardrail integrations for Prompt, Agent, and Tests ([b3a9b04](https://github.com/umbraco/Umbraco.AI/commit/b3a9b045d5d2e33d2da3de5bc2bf4843911d15c1))
+* **core,prompt,agent:** Show guardrail name in evaluation results and support delete by alias ([ff4cf0b](https://github.com/umbraco/Umbraco.AI/commit/ff4cf0bcab19e2ebd949080023b3e741dbd9c0c3))
+
+### fix
+
+* **agent:** Handle missing classifier profile with try-catch instead of dead null check ([836f77c](https://github.com/umbraco/Umbraco.AI/commit/836f77c918c83e65f2e85a9a09600eec12044972))
+* **core,agent,prompt:** Fix SQLite migration NullReferenceException in Development mode ([44306b9](https://github.com/umbraco/Umbraco.AI/commit/44306b9abc7bbe1846c7b3e5a88d2487f2b9c549))
+* **core,prompt,agent,copilot:** Add white-space nowrap to all uui-tag elements ([e4e9c04](https://github.com/umbraco/Umbraco.AI/commit/e4e9c04e3cbe7eb1c8782c20915032081d421f55))
+* **core,prompt,agent:** Fix UI labels, noResults localization key, and regenerate API clients ([dde99b2](https://github.com/umbraco/Umbraco.AI/commit/dde99b2770c675afc8b7979a3b737f06558bdaee))
+
+### refactor
+
+* **agent:** Reorder agent governance tab to show tool permissions before guardrails ([21c933c](https://github.com/umbraco/Umbraco.AI/commit/21c933c15ba58fc8847d91e08c45b56219604008))
+* **core,agent,prompt:** Move ConfigureDatabaseProvider to DbContext classes ([6f086dd](https://github.com/umbraco/Umbraco.AI/commit/6f086dd17b4aedb9be0f7594e0fe40aa50ca03d8))
+* **core,agent,prompt:** Remove redundant DataDirectory resolution from migration handlers ([b089bf1](https://github.com/umbraco/Umbraco.AI/commit/b089bf1b7e8da0eeaf9b2904c9cf2ca656342324))
+* **core,agent,prompt:** Simplify migration handler fix and correct root cause diagnosis ([c2dc3ec](https://github.com/umbraco/Umbraco.AI/commit/c2dc3ec43f99911a61e9e3737427e5ad6ffc62b7))
+
 ## [1.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.3.1...Umbraco.AI.Agent@1.4.0) (2026-03-12)
 
 ### feat

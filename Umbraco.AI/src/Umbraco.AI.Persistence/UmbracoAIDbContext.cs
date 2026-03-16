@@ -353,6 +353,9 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.ParentAuditLogId);
 
+            entity.Property(e => e.TraceId)
+                .HasMaxLength(32);
+
             entity.Property(e => e.Metadata);
 
             // Indexes for query performance
@@ -365,6 +368,7 @@ public class UmbracoAIDbContext : DbContext
             entity.HasIndex(e => e.FeatureId);
             entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
             entity.HasIndex(e => e.ParentAuditLogId);
+            entity.HasIndex(e => e.TraceId);
         });
 
         modelBuilder.Entity<AIUsageRecordEntity>(entity =>

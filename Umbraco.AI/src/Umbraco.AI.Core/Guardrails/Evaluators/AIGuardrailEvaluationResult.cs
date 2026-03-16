@@ -37,11 +37,12 @@ public sealed class AIGuardrailEvaluationResult
             return null;
         }
 
-        var reasons = flaggedResults
-            .Where(r => !string.IsNullOrWhiteSpace(r.EvaluatorResult.Reason))
-            .Select(r => r.EvaluatorResult.Reason);
+        var names = flaggedResults
+            .Select(r => string.IsNullOrWhiteSpace(r.Rule.GuardrailName)
+                ? r.Rule.Name
+                : $"{r.Rule.GuardrailName} > {r.Rule.Name}");
 
-        return string.Join("; ", reasons);
+        return string.Join("; ", names);
     }
 }
 

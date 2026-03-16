@@ -42,6 +42,12 @@ public sealed class AIGuardrailRule
     public JsonElement? Config { get; set; }
 
     /// <summary>
+    /// The name of the parent guardrail this rule belongs to.
+    /// Set during resolution to provide context in evaluation results.
+    /// </summary>
+    public string? GuardrailName { get; set; }
+
+    /// <summary>
     /// Controls evaluation order within the guardrail.
     /// </summary>
     public int SortOrder { get; set; }

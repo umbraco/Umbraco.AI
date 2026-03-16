@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Guardrail.Controllers;
@@ -28,18 +30,24 @@ public class DeleteGuardrailController : GuardrailControllerBase
     /// <summary>
     /// Delete a guardrail.
     /// </summary>
-    /// <param name="id">The unique identifier of the guardrail to delete.</param>
+    /// <param name="guardrailIdOrAlias">The unique identifier (GUID) or alias of the guardrail to delete.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content on success.</returns>
-    [HttpDelete("{id:guid}")]
+    [HttpDelete($"{{{nameof(guardrailIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteGuardrail(
-        Guid id,
+        [FromRoute] IdOrAlias guardrailIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var deleted = await _guardrailService.DeleteGuardrailAsync(id, cancellationToken);
+        var guardrailId = await _guardrailService.TryGetGuardrailIdAsync(guardrailIdOrAlias, cancellationToken);
+        if (guardrailId is null)
+        {
+            return GuardrailNotFound();
+        }
+
+        var deleted = await _guardrailService.DeleteGuardrailAsync(guardrailId.Value, cancellationToken);
         if (!deleted)
         {
             return GuardrailNotFound();

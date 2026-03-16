@@ -53,6 +53,7 @@ internal sealed class PromptGuardrailResolver : IAIGuardrailResolver
             resolvedIds.Add(guardrail.Id);
             foreach (var rule in guardrail.Rules.OrderBy(r => r.SortOrder))
             {
+                rule.GuardrailName = guardrail.Name;
                 allRules.Add(rule);
             }
         }

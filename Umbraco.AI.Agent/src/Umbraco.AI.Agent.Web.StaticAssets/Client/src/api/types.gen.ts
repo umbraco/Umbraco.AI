@@ -101,6 +101,7 @@ export type AgentResponseModel = {
     description?: string | null;
     agentType: string;
     profileId?: string | null;
+    guardrailIds: Array<string>;
     surfaceIds: Array<string>;
     scope?: AiAgentScopeModel | null;
     config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
@@ -129,6 +130,7 @@ export type CreateAgentRequestModel = {
     description?: string | null;
     agentType: string;
     profileId?: string | null;
+    guardrailIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
     config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
@@ -195,6 +197,7 @@ export type UpdateAgentRequestModel = {
     name: string;
     description?: string | null;
     profileId?: string | null;
+    guardrailIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
     config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;

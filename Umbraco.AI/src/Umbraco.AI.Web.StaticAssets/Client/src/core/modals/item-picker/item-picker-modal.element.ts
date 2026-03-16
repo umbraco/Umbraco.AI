@@ -152,7 +152,7 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<UaiItemPicker
                                         >
                                             ${unsafeHTML(
                                                 this.localize.string(
-                                                    this.data!.noResultsMessage ?? "#uaiMessage_noResults",
+                                                    this.data!.noResultsMessage ?? "#uaiGeneral_noResults",
                                                 ),
                                             )}
                                         </p>`,

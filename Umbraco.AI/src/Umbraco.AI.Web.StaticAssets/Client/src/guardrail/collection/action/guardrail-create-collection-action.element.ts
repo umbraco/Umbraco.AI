@@ -14,7 +14,7 @@ export class UaiGuardrailCreateCollectionActionElement extends UmbLitElement {
     }
 
     override render() {
-        return html` <uui-button look="outline" @click=${this.#onCreate}> Create Guardrail </uui-button> `;
+        return html` <uui-button look="outline" @click=${this.#onCreate}> Create </uui-button> `;
     }
 }
 

@@ -13,6 +13,7 @@ export type CreatePromptRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
+    guardrailIds?: Array<string> | null;
     tags?: Array<string> | null;
     displayMode: AiPromptDisplayModeModel;
     scope?: ScopeModel | null;
@@ -46,6 +47,7 @@ export type PromptExecutionRequestModel = {
     entityId: string;
     entityType: string;
     propertyAlias: string;
+    contentTypeAlias: string;
     culture?: string | null;
     segment?: string | null;
     context?: Array<RequestContextItemModel> | null;
@@ -76,6 +78,7 @@ export type PromptResponseModel = {
     instructions: string;
     profileId?: string | null;
     contextIds: Array<string>;
+    guardrailIds: Array<string>;
     tags: Array<string>;
     isActive: boolean;
     displayMode: AiPromptDisplayModeModel;
@@ -117,6 +120,7 @@ export type UpdatePromptRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
+    guardrailIds?: Array<string> | null;
     tags?: Array<string> | null;
     isActive: boolean;
     displayMode: AiPromptDisplayModeModel;

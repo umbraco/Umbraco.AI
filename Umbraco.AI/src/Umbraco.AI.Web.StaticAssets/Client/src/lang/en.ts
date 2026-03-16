@@ -10,6 +10,7 @@ export default {
         allow: "Allow",
         deny: "Deny",
         toolCount: (count: number) => count === 1 ? "1 tool" : `${count} tools`,
+        noResults: "No results found",
     },
     uaiLabels: {
         name: "Name",

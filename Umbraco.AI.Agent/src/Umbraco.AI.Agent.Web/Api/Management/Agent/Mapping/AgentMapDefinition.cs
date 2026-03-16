@@ -54,6 +54,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
         target.Config = MapConfigFromRequest(source.Config);
@@ -67,6 +68,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
         target.Config = MapConfigFromRequest(source.Config);
@@ -82,6 +84,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.AgentType = FormatAgentType(source.AgentType);
         target.ProfileId = source.ProfileId;
+        target.GuardrailIds = source.GuardrailIds;
         target.SurfaceIds = source.SurfaceIds;
         target.Scope = MapScopeToResponse(source.Scope);
         target.Config = MapConfigToResponse(source);
@@ -143,7 +146,6 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             StandardAgentConfigModel standard => new AIStandardAgentConfig
             {
                 ContextIds = standard.ContextIds?.ToList() ?? [],
-                GuardrailIds = standard.GuardrailIds?.ToList() ?? [],
                 Instructions = standard.Instructions,
                 AllowedToolIds = standard.AllowedToolIds?.ToList() ?? [],
                 AllowedToolScopeIds = standard.AllowedToolScopeIds?.ToList() ?? [],
@@ -166,7 +168,6 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             AIAgentType.Standard when source.Config is AIStandardAgentConfig standard => new StandardAgentConfigModel
             {
                 ContextIds = standard.ContextIds.ToList(),
-                GuardrailIds = standard.GuardrailIds.ToList(),
                 Instructions = standard.Instructions,
                 AllowedToolIds = standard.AllowedToolIds.ToList(),
                 AllowedToolScopeIds = standard.AllowedToolScopeIds.ToList(),

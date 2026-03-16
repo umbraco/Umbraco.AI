@@ -200,8 +200,8 @@ public static partial class UmbracoBuilderExtensions
 
         // Guardrail evaluator infrastructure - auto-discover via [AIGuardrailEvaluator] attribute
         builder.AIGuardrailEvaluators()
-            .Add<PIIGuardrailEvaluator>()
-            .Add<ToxicityGuardrailEvaluator>()
+            .Add<ContainsGuardrailEvaluator>()
+            .Add<RegexGuardrailEvaluator>()
             .Add<LLMGuardrailEvaluator>();
 
         // Guardrail resolution - pluggable resolver system

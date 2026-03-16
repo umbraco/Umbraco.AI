@@ -22,11 +22,6 @@ public sealed class StandardAgentConfigModel : AgentConfigModel
     public List<Guid>? ContextIds { get; set; }
 
     /// <summary>
-    /// Optional guardrail IDs for safety and compliance checks.
-    /// </summary>
-    public List<Guid>? GuardrailIds { get; set; }
-
-    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

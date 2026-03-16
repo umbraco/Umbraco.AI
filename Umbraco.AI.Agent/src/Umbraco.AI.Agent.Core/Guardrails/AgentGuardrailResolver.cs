@@ -10,7 +10,8 @@ namespace Umbraco.AI.Agent.Core.Guardrails;
 /// </summary>
 /// <remarks>
 /// This resolver reads the agent ID from <see cref="Constants.ContextKeys.AgentId"/> in the runtime context,
-/// then resolves any guardrail IDs configured on the agent's standard config.
+/// then resolves any guardrail IDs configured on the agent. Guardrails are available for all agent types
+/// (standard and orchestrated).
 /// </remarks>
 internal sealed class AgentGuardrailResolver : IAIGuardrailResolver
 {
@@ -38,12 +39,12 @@ internal sealed class AgentGuardrailResolver : IAIGuardrailResolver
         }
 
         var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
-        if (agent?.Config is not AIStandardAgentConfig standardConfig || standardConfig.GuardrailIds.Count == 0)
+        if (agent is null || agent.GuardrailIds.Count == 0)
         {
             return AIGuardrailResolverResult.Empty;
         }
 
-        var guardrails = await _guardrailService.GetGuardrailsByIdsAsync(standardConfig.GuardrailIds, cancellationToken);
+        var guardrails = await _guardrailService.GetGuardrailsByIdsAsync(agent.GuardrailIds, cancellationToken);
 
         var allRules = new List<AIGuardrailRule>();
         var resolvedIds = new List<Guid>();

@@ -90,6 +90,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     surfaceIds: string[];
     scope: UaiAgentScope | null;
     config: UaiAgentConfig;
+    guardrailIds: string[];
     isActive: boolean;
     dateCreated: string | null;
     dateModified: string | null;
@@ -109,6 +110,7 @@ export interface UaiAgentItemModel extends UmbEntityModel {
     profileId: string | null;
     surfaceIds: string[];
     scope: UaiAgentScope | null;
+    guardrailIds: string[];
     isActive: boolean;
     dateCreated: string | null;
     dateModified: string | null;

@@ -46,6 +46,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             isActive: true,
             includeEntityContext: true,
             optionCount: 1,
+            guardrailIds: [],
             dateCreated: null,
             dateModified: null,
             version: 0,

@@ -145,12 +145,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         this.#updateChatSettings({ contextIds: picker.value });
     }
 
-    #onGuardrailIdsChange(event: UmbChangeEvent) {
-        event.stopPropagation();
-        const picker = event.target as HTMLElement & { value: string[] | undefined };
-        this.#updateChatSettings({ guardrailIds: picker.value });
-    }
-
     /**
      * Updates chat-specific settings while preserving other settings values.
      */
@@ -248,14 +242,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-context-picker>
                 </umb-property-layout>
 
-                <umb-property-layout label="Guardrails" description="Guardrails to evaluate inputs and responses">
-                    <uai-guardrail-picker
-                        slot="editor"
-                        multiple
-                        .value=${chatSettings?.guardrailIds}
-                        @change=${this.#onGuardrailIdsChange}
-                    ></uai-guardrail-picker>
-                </umb-property-layout>
             </uui-box>
         `;
     }

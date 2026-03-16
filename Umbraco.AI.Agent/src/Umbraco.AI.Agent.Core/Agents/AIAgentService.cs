@@ -253,10 +253,14 @@ internal sealed class AIAgentService : IAIAgentService
         var classificationPrompt = BuildClassificationPrompt(availableAgents, userPrompt);
 
         // Get the classifier profile (falls back to default chat profile)
-        var profile = await _profileService.GetClassifierProfileAsync(cancellationToken);
-        if (profile is null)
+        AIProfile profile;
+        try
         {
-            // No default profile available, fall back to first agent
+            profile = await _profileService.GetClassifierProfileAsync(cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            // No classifier or default chat profile configured, fall back to first agent
             return availableAgents[0];
         }
 

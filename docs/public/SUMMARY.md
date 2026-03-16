@@ -21,6 +21,7 @@
     - [Guardrails](concepts/guardrails.md)
     - [Capabilities](concepts/capabilities.md)
     - [Middleware](concepts/middleware.md)
+    - [Observability](concepts/observability.md)
     - [Settings](concepts/settings.md)
     - [Version History](concepts/versioning.md)
 
@@ -117,6 +118,7 @@
     - [Middleware Ordering](extending/middleware/middleware-ordering.md)
 - [Custom Tools](extending/tools/README.md)
     - [Creating a Tool](extending/tools/creating-a-tool.md)
+- [Custom Guardrail Evaluators](extending/guardrails/README.md)
 
 ## Management API
 

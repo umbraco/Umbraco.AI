@@ -19,7 +19,7 @@ public sealed class AIAgentExecutingNotification : CancelableNotification
     /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIAgentExecutingNotification(
         AIAgent agent,
-        AGUIRunRequest request,
+        AGUIRunRequest? request,
         IEnumerable<AIFrontendTool>? frontendTools,
         EventMessages messages)
         : base(messages)
@@ -35,9 +35,9 @@ public sealed class AIAgentExecutingNotification : CancelableNotification
     public AIAgent Agent { get; }
 
     /// <summary>
-    /// Gets the execution run request.
+    /// Gets the execution run request, or null for embedded agent executions.
     /// </summary>
-    public AGUIRunRequest Request { get; }
+    public AGUIRunRequest? Request { get; }
 
     /// <summary>
     /// Gets the frontend tools provided for this execution.

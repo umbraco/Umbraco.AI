@@ -21,7 +21,7 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     /// <param name="messages">Event messages from the execution operation.</param>
     public AIAgentExecutedNotification(
         AIAgent agent,
-        AGUIRunRequest request,
+        AGUIRunRequest? request,
         IEnumerable<AIFrontendTool>? frontendTools,
         TimeSpan duration,
         bool isSuccess,
@@ -36,14 +36,14 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     }
 
     /// <summary>
-    /// Gets the agent that was executed.
+    /// Gets the agent that was executed, or null for embedded agent executions.
     /// </summary>
     public AIAgent Agent { get; }
 
     /// <summary>
-    /// Gets the execution run request.
+    /// Gets the execution run request, or null for embedded agent executions.
     /// </summary>
-    public AGUIRunRequest Request { get; }
+    public AGUIRunRequest? Request { get; }
 
     /// <summary>
     /// Gets the frontend tools provided for this execution.

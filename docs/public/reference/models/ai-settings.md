@@ -31,6 +31,9 @@ public class AISettings : IAIAuditableEntity
     [AISetting]
     public Guid? DefaultEmbeddingProfileId { get; set; }
 
+    [AISetting]
+    public Guid? ClassifierChatProfileId { get; set; }
+
     // Audit properties
     public DateTime DateCreated { get; init; } = DateTime.UtcNow;
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
@@ -48,6 +51,7 @@ public class AISettings : IAIAuditableEntity
 | `Id`                        | `Guid`     | Fixed identifier (always the same value) |
 | `DefaultChatProfileId`      | `Guid?`    | Default profile for chat operations      |
 | `DefaultEmbeddingProfileId` | `Guid?`    | Default profile for embedding operations |
+| `ClassifierChatProfileId`   | `Guid?`    | Optional profile for classification tasks (falls back to default chat) |
 | `DateCreated`               | `DateTime` | When settings were first created         |
 | `DateModified`              | `DateTime` | When settings were last modified         |
 | `CreatedByUserId`           | `Guid?`    | User who created                         |

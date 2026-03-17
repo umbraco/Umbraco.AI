@@ -28,6 +28,7 @@ public class UmbracoAIDeployComponent(IDiskEntityService diskEntityService) : IA
     {
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Context, UdiType.GuidUdi);
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi);
+        UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Guardrail, UdiType.GuidUdi);
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Profile, UdiType.GuidUdi);
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Settings, UdiType.GuidUdi);
     }
@@ -37,6 +38,7 @@ public class UmbracoAIDeployComponent(IDiskEntityService diskEntityService) : IA
         // Register disk entity types for deployment
         diskEntityService.RegisterDiskEntityType(UmbracoAIConstants.UdiEntityType.Context);
         diskEntityService.RegisterDiskEntityType(UmbracoAIConstants.UdiEntityType.Connection);
+        diskEntityService.RegisterDiskEntityType(UmbracoAIConstants.UdiEntityType.Guardrail);
         diskEntityService.RegisterDiskEntityType(UmbracoAIConstants.UdiEntityType.Profile);
         diskEntityService.RegisterDiskEntityType(UmbracoAIConstants.UdiEntityType.Settings);
     }

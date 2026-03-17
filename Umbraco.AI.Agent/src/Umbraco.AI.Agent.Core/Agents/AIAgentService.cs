@@ -252,11 +252,15 @@ internal sealed class AIAgentService : IAIAgentService
         // 6. Multiple agents - use LLM to classify
         var classificationPrompt = BuildClassificationPrompt(availableAgents, userPrompt);
 
-        // Get the default chat profile
-        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        if (profile is null)
+        // Get the classifier profile (falls back to default chat profile)
+        AIProfile profile;
+        try
         {
-            // No default profile available, fall back to first agent
+            profile = await _profileService.GetClassifierProfileAsync(cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            // No classifier or default chat profile configured, fall back to first agent
             return availableAgents[0];
         }
 
@@ -467,6 +471,12 @@ internal sealed class AIAgentService : IAIAgentService
         if (options.ContextIdsOverride is not null)
         {
             additionalProperties[Constants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
+        }
+
+        // Set guardrail IDs override in additional properties for guardrail resolvers to pick up
+        if (options.GuardrailIdsOverride is not null)
+        {
+            additionalProperties[AI.Core.Constants.ContextKeys.GuardrailIdsOverride] = options.GuardrailIdsOverride;
         }
 
         // 4. Create MAF agent

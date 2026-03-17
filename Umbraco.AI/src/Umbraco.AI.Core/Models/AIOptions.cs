@@ -15,6 +15,11 @@ public class AIOptions
     /// </summary>
     public string? DefaultEmbeddingProfileAlias { get; set; }
 
+    /// <summary>
+    /// The classifier chat profile alias to use for internal classification tasks when none is specified.
+    /// </summary>
+    public string? ClassifierChatProfileAlias { get; set; }
+
     // TODO: public string? DefaultImageProviderAlias { get; set; }
     // TODO: public string? DefaultModerationProviderAlias { get; set; }
     // TODO: public string? DefaultToolProviderAlias { get; set; }

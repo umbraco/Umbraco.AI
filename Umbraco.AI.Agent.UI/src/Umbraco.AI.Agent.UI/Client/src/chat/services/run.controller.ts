@@ -52,6 +52,9 @@ export class UaiRunController extends UmbControllerBase {
     /** ID of the assistant message currently being streamed */
     #currentAssistantMessageId: string | null = null;
 
+    /** Tracks whether a RUN_ERROR was already handled for the current run */
+    #errorHandled = false;
+
     #messages = new BehaviorSubject<UaiChatMessage[]>([]);
     readonly messages$ = this.#messages.asObservable();
 
@@ -119,6 +122,7 @@ export class UaiRunController extends UmbControllerBase {
         if (!this.#client || !content.trim()) return;
 
         this.#pendingContext = context ?? [];
+        this.#errorHandled = false;
 
         const userMessage: UaiChatMessage = {
             id: crypto.randomUUID(),
@@ -176,6 +180,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#streamingContent.next("");
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
+        this.#errorHandled = false;
 
         this.#agentState.next({ status: "thinking" });
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
@@ -279,7 +284,8 @@ export class UaiRunController extends UmbControllerBase {
                 },
                 onError: (error) => {
                     console.error("Run error:", error);
-                    this.#agentState.next(undefined);
+                    this.#errorHandled = true;
+                    this.#handleError(error.message);
                 },
             },
         );
@@ -343,7 +349,9 @@ export class UaiRunController extends UmbControllerBase {
         this.#currentToolCalls = [];
 
         if (event.outcome === "error") {
-            this.#handleError(event.error);
+            if (!this.#errorHandled) {
+                this.#handleError(event.error);
+            }
             return;
         }
 

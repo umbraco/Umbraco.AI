@@ -305,6 +305,10 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 width: 100%;
             }
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             .tags-container {
                 display: flex;
                 flex-wrap: wrap;

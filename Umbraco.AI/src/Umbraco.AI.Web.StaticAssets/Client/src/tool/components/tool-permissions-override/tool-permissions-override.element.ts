@@ -343,6 +343,10 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				display: block;
 			}
 
+			uui-tag {
+				white-space: nowrap;
+			}
+
 			.tool-list {
 				display: flex;
 				flex-direction: column;

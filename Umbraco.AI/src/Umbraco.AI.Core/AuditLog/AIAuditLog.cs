@@ -142,6 +142,13 @@ public sealed class AIAuditLog
     public Guid? ParentAuditLogId { get; internal set; }
 
     /// <summary>
+    /// Gets or sets the OpenTelemetry trace ID that correlates this audit-log entry
+    /// with the distributed trace. Captured from <c>Activity.Current</c> when the
+    /// OpenTelemetry middleware is active; <c>null</c> when no tracing is configured.
+    /// </summary>
+    public string? TraceId { get; set; }
+
+    /// <summary>
     /// Gets extensible metadata for feature-specific context (e.g., AgentRunId, ThreadId, ConversationId).
     /// Stored as a JSON dictionary in the database.
     /// </summary>

@@ -34,6 +34,10 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 <td>Create multi-agent orchestration workflows for orchestrated agents</td>
 </tr>
 <tr>
+<td><strong>Custom Guardrail Evaluators</strong></td>
+<td>Create evaluators for domain-specific safety and compliance rules</td>
+</tr>
+<tr>
 <td><strong>Notifications</strong></td>
 <td>Subscribe to entity lifecycle events for validation and automation</td>
 </tr>

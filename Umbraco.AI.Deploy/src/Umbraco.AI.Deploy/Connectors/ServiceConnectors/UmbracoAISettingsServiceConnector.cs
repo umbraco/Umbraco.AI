@@ -88,10 +88,18 @@ public class UmbracoAISettingsServiceConnector(
             dependencies.Add(new UmbracoAIArtifactDependency(embeddingProfileUdi, ArtifactDependencyMode.Match));
         }
 
+        GuidUdi? classifierChatProfileUdi = null;
+        if (entity.ClassifierChatProfileId.HasValue)
+        {
+            classifierChatProfileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, entity.ClassifierChatProfileId.Value);
+            dependencies.Add(new UmbracoAIArtifactDependency(classifierChatProfileUdi, ArtifactDependencyMode.Match));
+        }
+
         var artifact = new AISettingsArtifact(udi, dependencies)
         {
             DefaultChatProfileUdi = chatProfileUdi,
-            DefaultEmbeddingProfileUdi = embeddingProfileUdi
+            DefaultEmbeddingProfileUdi = embeddingProfileUdi,
+            ClassifierChatProfileUdi = classifierChatProfileUdi
         };
 
         return artifact;
@@ -143,6 +151,18 @@ public class UmbracoAISettingsServiceConnector(
         else
         {
             settings.DefaultEmbeddingProfileId = null;
+        }
+
+        // Resolve optional classifier chat profile dependency
+        if (state.Artifact.ClassifierChatProfileUdi != null)
+        {
+            state.Artifact.ClassifierChatProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
+            var classifierProfile = await profileService.GetProfileAsync(state.Artifact.ClassifierChatProfileUdi.Guid, ct);
+            settings.ClassifierChatProfileId = classifierProfile?.Id;
+        }
+        else
+        {
+            settings.ClassifierChatProfileId = null;
         }
 
         await settingsService.SaveSettingsAsync(settings, ct);

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Prompt.Persistence.Prompts;
+using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Prompt.Persistence;
 
@@ -19,6 +20,38 @@ public class UmbracoAIPromptDbContext : DbContext
     public UmbracoAIPromptDbContext(DbContextOptions<UmbracoAIPromptDbContext> options)
         : base(options)
     {
+    }
+
+    /// <summary>
+    /// Configures the EF Core database provider with the correct migrations assembly.
+    /// </summary>
+    internal static void ConfigureProvider(
+        DbContextOptionsBuilder options,
+        string? connectionString,
+        string? providerName)
+    {
+        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
+        {
+            return;
+        }
+
+        switch (providerName)
+        {
+            case Constants.ProviderNames.SQLServer:
+                options.UseSqlServer(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.SqlServer"));
+                break;
+
+            case Constants.ProviderNames.SQLLite:
+            case "Microsoft.Data.SQLite":
+                options.UseSqlite(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.Sqlite"));
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Database provider '{providerName}' is not supported by Umbraco.AI.Prompt.");
+        }
     }
 
     /// <inheritdoc />
@@ -48,6 +81,9 @@ public class UmbracoAIPromptDbContext : DbContext
             entity.Property(e => e.ProfileId);
 
             entity.Property(e => e.ContextIds)
+                .HasMaxLength(4000);
+
+            entity.Property(e => e.GuardrailIds)
                 .HasMaxLength(4000);
 
             entity.Property(e => e.Tags)

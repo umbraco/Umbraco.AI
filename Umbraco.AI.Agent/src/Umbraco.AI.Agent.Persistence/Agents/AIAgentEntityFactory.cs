@@ -29,6 +29,7 @@ internal static class AIAgentEntityFactory
             AgentType = agentType,
             Config = AIAgentConfigSerializer.Deserialize(agentType, entity.Config),
             ProfileId = entity.ProfileId,
+            GuardrailIds = DeserializeGuardrailIds(entity.GuardrailIds),
             SurfaceIds = DeserializeSurfaceIds(entity.SurfaceIds),
             Scope = DeserializeScope(entity.Scope),
             IsActive = entity.IsActive,
@@ -54,6 +55,7 @@ internal static class AIAgentEntityFactory
             AgentType = (int)aiAgent.AgentType,
             Config = AIAgentConfigSerializer.Serialize(aiAgent.Config),
             ProfileId = aiAgent.ProfileId,
+            GuardrailIds = SerializeGuardrailIds(aiAgent.GuardrailIds),
             SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds),
             Scope = SerializeScope(aiAgent.Scope),
             IsActive = aiAgent.IsActive,
@@ -76,6 +78,7 @@ internal static class AIAgentEntityFactory
         // AgentType is intentionally not updated (immutable after creation)
         entity.Config = AIAgentConfigSerializer.Serialize(aiAgent.Config);
         entity.ProfileId = aiAgent.ProfileId;
+        entity.GuardrailIds = SerializeGuardrailIds(aiAgent.GuardrailIds);
         entity.SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds);
         entity.Scope = SerializeScope(aiAgent.Scope);
         entity.IsActive = aiAgent.IsActive;
@@ -83,6 +86,33 @@ internal static class AIAgentEntityFactory
         entity.ModifiedByUserId = aiAgent.ModifiedByUserId;
         entity.Version = aiAgent.Version;
         // DateCreated and CreatedByUserId are intentionally not updated
+    }
+
+    private static string? SerializeGuardrailIds(IReadOnlyList<Guid> guardrailIds)
+    {
+        if (guardrailIds.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(guardrailIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<Guid> DeserializeGuardrailIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<Guid>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private static string? SerializeSurfaceIds(IReadOnlyList<string> surfaceIds)

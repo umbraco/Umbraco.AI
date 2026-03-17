@@ -24,4 +24,10 @@ public class RunTestBatchRequestModel
     /// Allows cross-context comparison.
     /// </summary>
     public IEnumerable<Guid>? ContextIdsOverride { get; set; }
+
+    /// <summary>
+    /// Optional guardrail IDs to override for all tests in the batch.
+    /// Allows testing specific guardrail configurations.
+    /// </summary>
+    public IEnumerable<Guid>? GuardrailIdsOverride { get; set; }
 }

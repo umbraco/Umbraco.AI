@@ -1,6 +1,6 @@
 import type { UaiEntityContainerMenuItemManifest } from "../../core/menu/types.js";
 import { UAI_CONNECTION_ROOT_ENTITY_TYPE, UAI_CONNECTION_ENTITY_TYPE, UAI_CONNECTION_ICON } from "../constants.js";
-import { UAI_CORE_MENU_ALIAS } from "../../section/constants.ts";
+import { UAI_CONFIGURATION_MENU_ALIAS } from "../../section/constants.ts";
 
 export const connectionMenuManifests: Array<UaiEntityContainerMenuItemManifest> = [
     {
@@ -14,7 +14,7 @@ export const connectionMenuManifests: Array<UaiEntityContainerMenuItemManifest> 
             icon: UAI_CONNECTION_ICON,
             entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,
             childEntityTypes: [UAI_CONNECTION_ENTITY_TYPE],
-            menus: [UAI_CORE_MENU_ALIAS],
+            menus: [UAI_CONFIGURATION_MENU_ALIAS],
         },
     },
 ];

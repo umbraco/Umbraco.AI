@@ -96,6 +96,10 @@ export class UaiTestRunDetailModalElement extends UmbModalBaseElement<
     }
 
     static styles = css`
+        uui-tag {
+            white-space: nowrap;
+        }
+
         uui-tab-group {
             --uui-tab-divider: var(--uui-color-border);
             border-bottom: 1px solid var(--uui-color-border);

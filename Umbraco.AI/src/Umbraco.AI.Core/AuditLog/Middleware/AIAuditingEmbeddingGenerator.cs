@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.AI;
+using System.Diagnostics;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
@@ -58,27 +59,34 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
             auditLog = _auditLogFactory.Create(
                 auditLogContext,
                 metadata,
-                parentId: AIAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
+                parentId: AIAuditScope.Current?.AuditLogId);
 
-            // Create scope synchronously (for nested operation tracking)
             auditScope = AIAuditScope.Begin(auditLog.Id);
 
-            // Queue persistence in background (fire-and-forget)
+            // Capture TraceId from ambient Activity (created by OpenTelemetry middleware)
+            auditLog.TraceId = Activity.Current?.TraceId.ToString();
+
             await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
         }
+
+        // Enrich the ambient Activity with Umbraco-specific tags (independent of audit logging)
+        AIActivityEnricher.EnrichCurrentActivity(auditLog, _runtimeContextAccessor);
+
+        var auditPrompt = auditLog is not null
+            ? new AIAuditPrompt { Data = values.ToList(), Capability = AICapability.Embedding }
+            : null;
 
         try
         {
             var result = await base.GenerateAsync(values, options, cancellationToken);
 
-            // Complete audit-log (if exists)
             if (auditLog is not null)
             {
                 var trackingGenerator = InnerGenerator as AITrackingEmbeddingGenerator<string, Embedding<float>>;
 
-                // Queue completion in background (fire-and-forget)
                 await _auditLogService.QueueCompleteAuditLogAsync(
                     auditLog,
+                    auditPrompt,
                     new AIAuditResponse
                     {
                         Usage = trackingGenerator?.LastUsageDetails,
@@ -91,21 +99,16 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
         }
         catch (Exception ex)
         {
-            // Record audit-log failure (if exists)
             if (auditLog is not null)
             {
-                // Queue failure in background (fire-and-forget)
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog,
-                    ex,
-                    cancellationToken);
+                    auditLog, auditPrompt, ex, cancellationToken);
             }
 
             throw;
         }
         finally
         {
-            // Dispose scope to restore previous audit context
             auditScope?.Dispose();
         }
     }

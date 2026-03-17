@@ -354,6 +354,10 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<int?>("TotalTokens")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("UserId")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -373,6 +377,8 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.HasIndex("StartTime");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("TraceId");
 
                     b.HasIndex("UserId");
 
@@ -520,6 +526,87 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.HasIndex("ResourceTypeId");
 
                     b.ToTable("umbracoAIContextResource", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAIGuardrail", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailRuleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Action")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Config")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EvaluatorId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("GuardrailId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Phase")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EvaluatorId");
+
+                    b.HasIndex("GuardrailId");
+
+                    b.ToTable("umbracoAIGuardrailRule", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.AI.Persistence.Profiles.AIProfileEntity", b =>
@@ -889,6 +976,17 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Navigation("Context");
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailRuleEntity", b =>
+                {
+                    b.HasOne("Umbraco.AI.Persistence.Guardrails.AIGuardrailEntity", "Guardrail")
+                        .WithMany("Rules")
+                        .HasForeignKey("GuardrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guardrail");
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Profiles.AIProfileEntity", b =>
                 {
                     b.HasOne("Umbraco.AI.Persistence.Connections.AIConnectionEntity", null)
@@ -901,6 +999,11 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Umbraco.AI.Persistence.Context.AIContextEntity", b =>
                 {
                     b.Navigation("Resources");
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Persistence.Guardrails.AIGuardrailEntity", b =>
+                {
+                    b.Navigation("Rules");
                 });
 #pragma warning restore 612, 618
         }

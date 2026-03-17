@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Deploy.Configuration;
@@ -36,6 +37,8 @@ public class UmbracoAIDeployComposer : IComposer
         builder.AddNotificationAsyncHandler<AIConnectionDeletedNotification, AIConnectionDeletedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AIProfileSavedNotification, AIProfileSavedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AIProfileDeletedNotification, AIProfileDeletedDeployRefresherNotificationAsyncHandler>();
+        builder.AddNotificationAsyncHandler<AIGuardrailSavedNotification, AIGuardrailSavedDeployRefresherNotificationAsyncHandler>();
+        builder.AddNotificationAsyncHandler<AIGuardrailDeletedNotification, AIGuardrailDeletedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AISettingsSavedNotification, AISettingsSavedDeployRefresherNotificationAsyncHandler>();
         // Note: Settings is a singleton and cannot be deleted
     }

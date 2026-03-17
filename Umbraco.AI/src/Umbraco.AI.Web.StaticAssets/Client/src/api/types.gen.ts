@@ -68,6 +68,7 @@ export type ChatProfileSettingsModel = ProfileSettingsModel & {
     maxTokens?: number | null;
     systemPromptTemplate?: string | null;
     contextIds: Array<string>;
+    guardrailIds: Array<string>;
 };
 
 export type ChatRequestModel = {
@@ -170,6 +171,12 @@ export type CreateContextRequestModel = {
     resources: Array<ContextResourceModel>;
 };
 
+export type CreateGuardrailRequestModel = {
+    alias: string;
+    name: string;
+    rules: Array<GuardrailRuleModel>;
+};
+
 export type CreateProfileRequestModel = {
     alias: string;
     name: string;
@@ -254,6 +261,44 @@ export type GenerateEmbeddingRequestModel = {
     values: Array<string>;
 };
 
+export type GuardrailEvaluatorInfoModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    type: string;
+    supportsRedaction: boolean;
+    configSchema?: EditableModelSchemaModel | null;
+};
+
+export type GuardrailItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    ruleCount: number;
+    dateCreated: string;
+    dateModified: string;
+};
+
+export type GuardrailResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    dateCreated: string;
+    dateModified: string;
+    rules: Array<GuardrailRuleModel>;
+    version: number;
+};
+
+export type GuardrailRuleModel = {
+    id: string;
+    evaluatorId: string;
+    name: string;
+    phase: string;
+    action: string;
+    config?: unknown;
+    sortOrder: number;
+};
+
 export type KeyValuePair2 = {
     key?: string | null;
     value?: string | null;
@@ -291,6 +336,11 @@ export type PagedConnectionItemResponseModel = {
 export type PagedContextItemResponseModel = {
     total: number;
     items: Array<ContextItemResponseModel>;
+};
+
+export type PagedGuardrailItemResponseModel = {
+    total: number;
+    items: Array<GuardrailItemResponseModel>;
 };
 
 export type PagedModelTestRunResponseModel = {
@@ -362,22 +412,26 @@ export type RunTestBatchRequestModel = {
     testIds: Array<string>;
     profileIdOverride?: string | null;
     contextIdsOverride?: Array<string> | null;
+    guardrailIdsOverride?: Array<string> | null;
 };
 
 export type RunTestRequestModel = {
     profileIdOverride?: string | null;
     contextIdsOverride?: Array<string> | null;
+    guardrailIdsOverride?: Array<string> | null;
 };
 
 export type RunTestsByTagsRequestModel = {
     tags: Array<string>;
     profileIdOverride?: string | null;
     contextIdsOverride?: Array<string> | null;
+    guardrailIdsOverride?: Array<string> | null;
 };
 
 export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+    classifierChatProfileId?: string | null;
 };
 
 export type TestBatchResultsResponseModel = {
@@ -634,6 +688,12 @@ export type UpdateContextRequestModel = {
     resources: Array<ContextResourceModel>;
 };
 
+export type UpdateGuardrailRequestModel = {
+    alias: string;
+    name: string;
+    rules: Array<GuardrailRuleModel>;
+};
+
 export type UpdateProfileRequestModel = {
     alias: string;
     name: string;
@@ -646,6 +706,7 @@ export type UpdateProfileRequestModel = {
 export type UpdateSettingsRequestModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
+    classifierChatProfileId?: string | null;
 };
 
 export type UpdateTestRequestModel = {
@@ -1606,6 +1667,203 @@ export type GenerateEmbeddingsResponses = {
 };
 
 export type GenerateEmbeddingsResponse = GenerateEmbeddingsResponses[keyof GenerateEmbeddingsResponses];
+
+export type GetAllGuardrailEvaluatorsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/guardrail-evaluators';
+};
+
+export type GetAllGuardrailEvaluatorsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllGuardrailEvaluatorsResponses = {
+    /**
+     * OK
+     */
+    200: Array<GuardrailEvaluatorInfoModel>;
+};
+
+export type GetAllGuardrailEvaluatorsResponse = GetAllGuardrailEvaluatorsResponses[keyof GetAllGuardrailEvaluatorsResponses];
+
+export type GetAllGuardrailsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        filter?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/guardrails';
+};
+
+export type GetAllGuardrailsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllGuardrailsResponses = {
+    /**
+     * OK
+     */
+    200: PagedGuardrailItemResponseModel;
+};
+
+export type GetAllGuardrailsResponse = GetAllGuardrailsResponses[keyof GetAllGuardrailsResponses];
+
+export type CreateGuardrailData = {
+    body?: CreateGuardrailRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/guardrails';
+};
+
+export type CreateGuardrailErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type CreateGuardrailError = CreateGuardrailErrors[keyof CreateGuardrailErrors];
+
+export type CreateGuardrailResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type GuardrailAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/guardrails/{alias}/exists';
+};
+
+export type GuardrailAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GuardrailAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type GuardrailAliasExistsResponse = GuardrailAliasExistsResponses[keyof GuardrailAliasExistsResponses];
+
+export type DeleteGuardrailData = {
+    body?: never;
+    path: {
+        guardrailIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}';
+};
+
+export type DeleteGuardrailErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type DeleteGuardrailError = DeleteGuardrailErrors[keyof DeleteGuardrailErrors];
+
+export type DeleteGuardrailResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetGuardrailByIdOrAliasData = {
+    body?: never;
+    path: {
+        guardrailIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}';
+};
+
+export type GetGuardrailByIdOrAliasErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetGuardrailByIdOrAliasError = GetGuardrailByIdOrAliasErrors[keyof GetGuardrailByIdOrAliasErrors];
+
+export type GetGuardrailByIdOrAliasResponses = {
+    /**
+     * OK
+     */
+    200: GuardrailResponseModel;
+};
+
+export type GetGuardrailByIdOrAliasResponse = GetGuardrailByIdOrAliasResponses[keyof GetGuardrailByIdOrAliasResponses];
+
+export type UpdateGuardrailData = {
+    body?: UpdateGuardrailRequestModel;
+    path: {
+        guardrailIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}';
+};
+
+export type UpdateGuardrailErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type UpdateGuardrailError = UpdateGuardrailErrors[keyof UpdateGuardrailErrors];
+
+export type UpdateGuardrailResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type GetAllProfilesData = {
     body?: never;

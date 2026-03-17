@@ -253,6 +253,7 @@ public sealed class AGUIEventEmitter
             RunId = _runId,
             Outcome = outcome,
             Interrupt = interrupt,
+            Error = error?.Message,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
     }

@@ -46,6 +46,11 @@ public enum AIAuditLogErrorCategory
     ToolExecution = 7,
 
     /// <summary>
+    /// The operation was blocked by a guardrail policy.
+    /// </summary>
+    GuardrailBlocked = 8,
+
+    /// <summary>
     /// Unknown or uncategorized error.
     /// </summary>
     Unknown = 99

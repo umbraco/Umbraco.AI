@@ -21,10 +21,12 @@ public interface IAIAuditLogService
     /// Completes an audit-log record with the final result.
     /// </summary>
     /// <param name="audit">The audit-log record to complete.</param>
+    /// <param name="prompt">The prompt data for deferred snapshot capture.</param>
     /// <param name="response">The response object from the AI operation.</param>
     /// <param name="ct">Cancellation token.</param>
     Task CompleteAuditLogAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         AIAuditResponse? response,
         CancellationToken ct = default);
 
@@ -32,10 +34,12 @@ public interface IAIAuditLogService
     /// Records an audit-log failure.
     /// </summary>
     /// <param name="audit">The audit-log record that failed.</param>
+    /// <param name="prompt">The prompt data for deferred snapshot capture.</param>
     /// <param name="exception">The exception that caused the failure.</param>
     /// <param name="ct">Cancellation token.</param>
     Task RecordAuditLogFailureAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         Exception exception,
         CancellationToken ct = default);
 
@@ -55,11 +59,13 @@ public interface IAIAuditLogService
     /// This is a fire-and-forget operation that uses the background task queue.
     /// </summary>
     /// <param name="audit">The audit-log record to complete.</param>
+    /// <param name="prompt">The prompt data for deferred snapshot capture.</param>
     /// <param name="response">The response object from the AI operation.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
     ValueTask QueueCompleteAuditLogAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         AIAuditResponse? response,
         CancellationToken ct = default);
 
@@ -68,11 +74,13 @@ public interface IAIAuditLogService
     /// This is a fire-and-forget operation that uses the background task queue.
     /// </summary>
     /// <param name="audit">The audit-log record that failed.</param>
+    /// <param name="prompt">The prompt data for deferred snapshot capture.</param>
     /// <param name="exception">The exception that caused the failure.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
     ValueTask QueueRecordAuditLogFailureAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         Exception exception,
         CancellationToken ct = default);
 

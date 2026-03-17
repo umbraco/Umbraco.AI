@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Persistence.Connections;
 using Umbraco.AI.Persistence.Context;
+using Umbraco.AI.Persistence.Guardrails;
 using Umbraco.AI.Persistence.AuditLog;
 using Umbraco.AI.Persistence.Profiles;
 using Umbraco.AI.Persistence.Analytics;
@@ -8,6 +9,7 @@ using Umbraco.AI.Persistence.Analytics.Usage;
 using Umbraco.AI.Persistence.Settings;
 using Umbraco.AI.Persistence.Versioning;
 using Umbraco.AI.Persistence.Tests;
+using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Persistence;
 
@@ -35,6 +37,16 @@ public class UmbracoAIDbContext : DbContext
     /// AI context resources.
     /// </summary>
     internal DbSet<AIContextResourceEntity> ContextResources { get; set; } = null!;
+
+    /// <summary>
+    /// AI guardrails.
+    /// </summary>
+    internal DbSet<AIGuardrailEntity> Guardrails { get; set; } = null!;
+
+    /// <summary>
+    /// AI guardrail rules.
+    /// </summary>
+    internal DbSet<AIGuardrailRuleEntity> GuardrailRules { get; set; } = null!;
 
     /// <summary>
     /// AI audit-log records.
@@ -87,6 +99,39 @@ public class UmbracoAIDbContext : DbContext
     public UmbracoAIDbContext(DbContextOptions<UmbracoAIDbContext> options)
         : base(options)
     {
+    }
+
+    /// <summary>
+    /// Configures the EF Core database provider with the correct migrations assembly.
+    /// </summary>
+    internal static void ConfigureProvider(
+        DbContextOptionsBuilder options,
+        string? connectionString,
+        string? providerName)
+    {
+        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
+        {
+            return;
+        }
+
+        switch (providerName)
+        {
+            case Constants.ProviderNames.SQLServer:
+                options.UseSqlServer(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.SqlServer"));
+                break;
+
+            case Constants.ProviderNames.SQLLite:
+            case "Microsoft.Data.SQLite":
+                options.UseSqlite(connectionString, x =>
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.Sqlite"));
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Persistence. " +
+                    $"Supported providers: SQL Server, SQLite.");
+        }
     }
 
     /// <inheritdoc />
@@ -253,6 +298,69 @@ public class UmbracoAIDbContext : DbContext
             entity.HasIndex(e => e.ResourceTypeId);
         });
 
+        modelBuilder.Entity<AIGuardrailEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIGuardrail");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Alias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.HasIndex(e => e.Alias)
+                .IsUnique();
+
+            entity.HasMany(e => e.Rules)
+                .WithOne(r => r.Guardrail)
+                .HasForeignKey(r => r.GuardrailId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AIGuardrailRuleEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIGuardrailRule");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.GuardrailId)
+                .IsRequired();
+
+            entity.Property(e => e.EvaluatorId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Phase)
+                .IsRequired();
+
+            entity.Property(e => e.Action)
+                .IsRequired();
+
+            entity.Property(e => e.Config);
+
+            entity.Property(e => e.SortOrder)
+                .IsRequired();
+
+            entity.HasIndex(e => e.GuardrailId);
+            entity.HasIndex(e => e.EvaluatorId);
+        });
+
         modelBuilder.Entity<AIAuditLogEntity>(entity =>
         {
             entity.ToTable("umbracoAIAuditLog");
@@ -319,6 +427,9 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.ParentAuditLogId);
 
+            entity.Property(e => e.TraceId)
+                .HasMaxLength(32);
+
             entity.Property(e => e.Metadata);
 
             // Indexes for query performance
@@ -331,6 +442,7 @@ public class UmbracoAIDbContext : DbContext
             entity.HasIndex(e => e.FeatureId);
             entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
             entity.HasIndex(e => e.ParentAuditLogId);
+            entity.HasIndex(e => e.TraceId);
         });
 
         modelBuilder.Entity<AIUsageRecordEntity>(entity =>

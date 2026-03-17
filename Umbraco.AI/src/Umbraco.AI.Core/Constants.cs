@@ -134,5 +134,19 @@ public static class Constants
         /// Set when creating a new entity under a parent.
         /// </summary>
         public const string ParentEntityId = "Umbraco.AI.ParentEntityId";
+
+        /// <summary>
+        /// Key indicating that the current execution is a guardrail evaluation call.
+        /// Used to prevent infinite recursion when the LLM guardrail evaluator calls the chat service.
+        /// </summary>
+        public const string IsGuardrailEvaluation = "Umbraco.AI.IsGuardrailEvaluation";
+
+        /// <summary>
+        /// Key for guardrail IDs override in runtime context.
+        /// When set, the guardrail resolution system uses these IDs instead of (or in addition to)
+        /// the guardrails configured on the profile, prompt, or agent.
+        /// Used by the test execution system to override guardrails for testing scenarios.
+        /// </summary>
+        public const string GuardrailIdsOverride = "Umbraco.AI.GuardrailIdsOverride";
     }
 }

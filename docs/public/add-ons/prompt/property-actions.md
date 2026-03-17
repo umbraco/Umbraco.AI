@@ -34,38 +34,21 @@ When you create an active prompt:
 
 Property actions appear on text-based editors:
 
-| Editor           | Support                                |
-| ---------------- | -------------------------------------- |
-| Textstring       | Yes                                    |
-| Textarea         | Yes                                    |
-| Rich Text Editor | Yes                                    |
-| Markdown         | Yes                                    |
-| Block Editors    | Yes (on text properties within blocks) |
+| Editor           | Support                                         |
+| ---------------- | ----------------------------------------------- |
+| Textstring       | Yes                                             |
+| Textarea         | Yes                                             |
+| Rich Text Editor | Yes (with TipTap toolbar integration)           |
+| Markdown         | Yes                                             |
+| Block List/Grid  | Yes (on text properties within blocks)          |
 
 ## Scoping Property Actions
 
-Control which content types can use a prompt through scoping rules:
+Control where a prompt appears using allow and deny rules. Each rule can match on content type aliases, property aliases, and property editor UI aliases. Rules use AND logic between properties and OR logic within each property array.
 
-### Allow All (Default)
+### Allow on Specific Content Types
 
-The prompt appears on all compatible property editors:
-
-```csharp
-var prompt = new AIPrompt
-{
-    Alias = "improve-seo",
-    Name = "Improve SEO",
-    Instructions = "Improve this text for SEO...",
-    Scope = new AIPromptScope
-    {
-        Mode = AIPromptScopeMode.AllowAll
-    }
-};
-```
-
-### Allow List
-
-Only show on specific content types:
+{% code title="ScopedPrompt.cs" %}
 
 ```csharp
 var prompt = new AIPrompt
@@ -75,15 +58,49 @@ var prompt = new AIPrompt
     Instructions = "...",
     Scope = new AIPromptScope
     {
-        Mode = AIPromptScopeMode.AllowList,
-        ContentTypes = ["blogPost", "article"]
+        AllowRules =
+        [
+            new AIPromptScopeRule
+            {
+                ContentTypeAliases = ["blogPost", "article"]
+            }
+        ]
     }
 };
 ```
 
-### Deny List
+{% endcode %}
 
-Show on all content types except specified ones:
+### Allow on Specific Property Editors
+
+{% code title="EditorScope.cs" %}
+
+```csharp
+var prompt = new AIPrompt
+{
+    Alias = "text-improver",
+    Name = "Improve Text",
+    Instructions = "...",
+    Scope = new AIPromptScope
+    {
+        AllowRules =
+        [
+            new AIPromptScopeRule
+            {
+                PropertyEditorUiAliases = ["Umb.PropertyEditorUi.TextArea", "Umb.PropertyEditorUi.TextBox"]
+            }
+        ]
+    }
+};
+```
+
+{% endcode %}
+
+### Deny Specific Content Types
+
+Deny rules take precedence over allow rules:
+
+{% code title="DenyScope.cs" %}
 
 ```csharp
 var prompt = new AIPrompt
@@ -93,32 +110,66 @@ var prompt = new AIPrompt
     Instructions = "...",
     Scope = new AIPromptScope
     {
-        Mode = AIPromptScopeMode.DenyList,
-        ContentTypes = ["settings", "folder"]
+        AllowRules =
+        [
+            new AIPromptScopeRule() // Empty rule matches everything
+        ],
+        DenyRules =
+        [
+            new AIPromptScopeRule
+            {
+                ContentTypeAliases = ["settings", "folder"]
+            }
+        ]
     }
 };
 ```
 
+{% endcode %}
+
+{% hint style="info" %}
+A prompt with no scope or empty allow rules is not displayed anywhere. Add at least one allow rule for the prompt to appear.
+{% endhint %}
+
+## Rich Text Editor Integration
+
+Prompts with the `TipTapTool` display mode appear as a toolbar button in the rich text editor (TipTap). This integration supports text selection:
+
+- **With selection** - The selected text is captured and passed as context to the prompt. The AI response replaces the selected text.
+- **Without selection** - The full editor content is used as context. The response is appended at the end of the document.
+
+The toolbar button opens a dropdown showing all prompts configured with the `TipTapTool` display mode that match the current scope.
+
+{% hint style="info" %}
+The TipTap integration also works within Block List and Block Grid editors. When a rich text property exists inside a block, the toolbar button is available and the block's entity context is passed to the prompt.
+{% endhint %}
+
+## Block Editor Support
+
+Prompts work inside Block List and Block Grid editors. When a prompt executes within a block:
+
+- The block's content type, properties, and values are extracted as entity context
+- Scope validation runs against the block's content type (not the parent document)
+- Results can be applied to properties within the block
+
+This means you can scope a prompt to a specific block element type and it will appear only when editing blocks of that type.
+
 ## Display Modes
 
-Property actions can display results in two modes:
+Prompts have a display mode that determines how they are presented to editors:
 
-### Modal (Default)
+| Mode               | Value | Description                                         |
+| ------------------ | ----- | --------------------------------------------------- |
+| **Property Action**| `0`   | Appears as an action button on compatible property editors |
+| **TipTap Tool**    | `1`   | Appears as a toolbar button in the rich text editor  |
 
-Opens a centered dialog with the prompt result:
+### Property Action (Default)
 
-- Preview the generated content
-- Copy to clipboard
-- Insert into the property
-- Regenerate if needed
+The prompt appears as an action on text-based property editors. When executed, results are shown in a dialog where editors can preview, copy, or insert the generated content.
 
-### Panel
+### TipTap Tool
 
-Opens a slide-in sidebar panel:
-
-- Useful for longer interactions
-- Maintains visibility of the content being edited
-- Supports iterative refinement
+The prompt appears as a toolbar button in the rich text editor. This mode supports text selection for targeted content transformation. See [Rich Text Editor Integration](#rich-text-editor-integration) above.
 
 ## Context Extraction
 

@@ -177,6 +177,10 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             display: block;
         }
 
+        uui-tag {
+            white-space: nowrap;
+        }
+
         .loading,
         .empty {
             text-align: center;

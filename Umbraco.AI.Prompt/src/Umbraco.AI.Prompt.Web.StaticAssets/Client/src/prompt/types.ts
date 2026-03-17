@@ -21,6 +21,7 @@ export interface UaiPromptDetailModel extends UmbEntityModel {
     isActive: boolean;
     includeEntityContext: boolean;
     optionCount: number;
+    guardrailIds: string[];
     dateCreated: string | null;
     dateModified: string | null;
     version: number;

@@ -329,6 +329,10 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 				display: block;
 			}
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             .tags {
                 display: flex;
                 gap: var(--uui-size-space-1);

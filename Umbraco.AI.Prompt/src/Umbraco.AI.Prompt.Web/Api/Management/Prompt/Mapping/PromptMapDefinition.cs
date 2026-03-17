@@ -54,6 +54,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
+        target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = true;
         target.IncludeEntityContext = source.IncludeEntityContext;
@@ -74,6 +75,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
+        target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = source.IsActive;
         target.IncludeEntityContext = source.IncludeEntityContext;
@@ -92,6 +94,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Instructions = source.Instructions;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
+        target.GuardrailIds = source.GuardrailIds;
         target.Tags = source.Tags;
         target.IsActive = source.IsActive;
         target.IncludeEntityContext = source.IncludeEntityContext;

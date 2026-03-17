@@ -57,6 +57,7 @@ internal static class AIAuditLogFactory
             PromptSnapshot = entity.PromptSnapshot,
             ResponseSnapshot = entity.ResponseSnapshot,
             ParentAuditLogId = entity.ParentAuditLogId, // New: Parent audit-log tracking
+            TraceId = entity.TraceId,
             Metadata = metadata // New: Extensible metadata
         };
     }
@@ -102,6 +103,7 @@ internal static class AIAuditLogFactory
             PromptSnapshot = audit.PromptSnapshot,
             ResponseSnapshot = audit.ResponseSnapshot,
             ParentAuditLogId = audit.ParentAuditLogId, // New: Parent audit-log tracking
+            TraceId = audit.TraceId,
             Metadata = metadataJson // New: Extensible metadata
         };
     }
@@ -144,6 +146,7 @@ internal static class AIAuditLogFactory
         entity.PromptSnapshot = audit.PromptSnapshot;
         entity.ResponseSnapshot = audit.ResponseSnapshot;
         entity.ParentAuditLogId = audit.ParentAuditLogId; // New: Parent audit-log tracking
+        entity.TraceId = audit.TraceId;
         entity.Metadata = metadataJson; // New: Extensible metadata
     }
 }

@@ -3,7 +3,7 @@ import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
 /**
  * AuditLog status enum matching backend AIAuditLogStatus
  */
-export type UaiAuditLogStatus = "Running" | "Succeeded" | "Failed" | "Cancelled" | "PartialSuccess";
+export type UaiAuditLogStatus = "Running" | "Succeeded" | "Failed" | "Cancelled" | "PartialSuccess" | "Blocked";
 
 /**
  * Lightweight model for trace items in collection views.

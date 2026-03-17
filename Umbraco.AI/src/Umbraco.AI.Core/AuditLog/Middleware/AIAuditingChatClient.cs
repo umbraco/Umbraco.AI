@@ -1,6 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
@@ -34,40 +34,16 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        // Start audit-log recording if enabled
-        AIAuditScope? auditScope = null;
-        AIAuditLog? auditLog = null;
+        var messages = chatMessages.ToList();
+        var (auditScope, auditLog) = await StartAuditLogAsync(
+            messages, cancellationToken);
 
-        if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
-        {
-            // Extract audit context from options and messages
-            var auditLogContext = AIAuditContext.ExtractFromRuntimeContext(
-                AICapability.Chat,
-                _runtimeContextAccessor.Context,
-                chatMessages.ToList());
+        // Enrich the ambient Activity with Umbraco-specific tags (independent of audit logging)
+        AIActivityEnricher.EnrichCurrentActivity(auditLog, _runtimeContextAccessor);
 
-            // Extract metadata from RuntimeContext if present
-            Dictionary<string, string>? metadata = null;
-            var context = _runtimeContextAccessor.Context;
-            if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
-            {
-                metadata = logKeys.ToDictionary(
-                    key => key,
-                    key => context.GetValue<object?>(key)?.ToString() ?? string.Empty);
-            }
-
-            // Create audit-log entry using factory
-            auditLog = _auditLogFactory.Create(
-                auditLogContext,
-                metadata,
-                parentId: AIAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
-
-            // Create scope synchronously (for nested operation tracking)
-            auditScope = AIAuditScope.Begin(auditLog.Id);
-
-            // Queue persistence in background (fire-and-forget)
-            await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
-        }
+        var auditPrompt = auditLog is not null
+            ? new AIAuditPrompt { Data = messages, Capability = AICapability.Chat }
+            : null;
 
         try
         {
@@ -76,15 +52,13 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             // Complete audit-log (if exists)
             if (auditLog is not null)
             {
-                var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
-
-                // Queue completion in background (fire-and-forget)
                 await _auditLogService.QueueCompleteAuditLogAsync(
                     auditLog,
+                    auditPrompt,
                     new AIAuditResponse
                     {
-                        Data = trackingChatClient?.LastResponseMessages,
-                        Usage = trackingChatClient?.LastUsageDetails,
+                        Data = response.Messages,
+                        Usage = response.Usage,
                     },
                     cancellationToken);
             }
@@ -93,21 +67,16 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         }
         catch (Exception ex)
         {
-            // Record audit-log failure (if exists)
             if (auditLog is not null)
             {
-                // Queue failure in background (fire-and-forget)
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog,
-                    ex,
-                    cancellationToken);
+                    auditLog, auditPrompt, ex, cancellationToken);
             }
 
             throw;
         }
         finally
         {
-            // Dispose scope to restore previous audit context
             auditScope?.Dispose();
         }
     }
@@ -117,40 +86,16 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Start audit-log recording if enabled
-        AIAuditScope? auditScope = null;
-        AIAuditLog? auditLog = null;
+        var messages = chatMessages.ToList();
+        var (auditScope, auditLog) = await StartAuditLogAsync(
+            messages, cancellationToken);
 
-        if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
-        {
-            // Extract audit context from options and messages
-            var auditLogContext = AIAuditContext.ExtractFromRuntimeContext(
-                AICapability.Chat,
-                _runtimeContextAccessor.Context,
-                chatMessages.ToList());
+        // Enrich the ambient Activity with Umbraco-specific tags (independent of audit logging)
+        AIActivityEnricher.EnrichCurrentActivity(auditLog, _runtimeContextAccessor);
 
-            // Extract metadata from RuntimeContext if present
-            Dictionary<string, string>? metadata = null;
-            var context = _runtimeContextAccessor.Context;
-            if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
-            {
-                metadata = logKeys.ToDictionary(
-                    key => key,
-                    key => context.GetValue<object?>(key)?.ToString() ?? string.Empty);
-            }
-
-            // Create audit-log entry using factory
-            auditLog = _auditLogFactory.Create(
-                auditLogContext,
-                metadata,
-                parentId: AIAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
-
-            // Create scope synchronously (for nested operation tracking)
-            auditScope = AIAuditScope.Begin(auditLog.Id);
-
-            // Queue persistence in background (fire-and-forget)
-            await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
-        }
+        var auditPrompt = auditLog is not null
+            ? new AIAuditPrompt { Data = messages, Capability = AICapability.Chat }
+            : null;
 
         IAsyncEnumerable<ChatResponseUpdate> stream;
 
@@ -160,34 +105,32 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         }
         catch (Exception ex)
         {
-            // Record audit-log failure (if exists)
             if (auditLog is not null)
             {
-                // Queue failure in background (fire-and-forget)
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog,
-                    ex,
-                    cancellationToken);
+                    auditLog, auditPrompt, ex, cancellationToken);
             }
 
             auditScope?.Dispose();
             throw;
         }
 
-        // Stream updates - audit-log completion handled after streaming completes
-        await foreach (var update in stream.WithCancellation(cancellationToken))
+        // Stream updates - wrap in error-capturing enumerator to handle
+        // exceptions thrown during iteration (e.g., guardrail blocks)
+        await foreach (var update in WrapStreamWithErrorCapture(
+            stream, auditLog, auditPrompt, auditScope, cancellationToken))
         {
             yield return update;
         }
 
-        // Mark audit-log as completed (no response capture for streaming)
+        // Mark audit-log as completed (only reached if no exception during streaming)
         if (auditLog is not null)
         {
             var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
 
-            // Queue completion in background (fire-and-forget)
             await _auditLogService.QueueCompleteAuditLogAsync(
                 auditLog,
+                auditPrompt,
                 new AIAuditResponse
                 {
                     Data = trackingChatClient?.LastResponseMessages,
@@ -196,7 +139,90 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
                 cancellationToken);
         }
 
-        // Dispose scope to restore previous audit context
         auditScope?.Dispose();
+    }
+
+    /// <summary>
+    /// Wraps an async stream to capture exceptions during iteration
+    /// and record them as audit log failures. This is needed because C# does not
+    /// allow yield return inside try-catch blocks.
+    /// </summary>
+    private async IAsyncEnumerable<ChatResponseUpdate> WrapStreamWithErrorCapture(
+        IAsyncEnumerable<ChatResponseUpdate> stream,
+        AIAuditLog? auditLog,
+        AIAuditPrompt? auditPrompt,
+        AIAuditScope? auditScope,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var enumerator = stream.GetAsyncEnumerator(cancellationToken);
+
+        while (true)
+        {
+            ChatResponseUpdate current;
+            try
+            {
+                if (!await enumerator.MoveNextAsync())
+                {
+                    yield break;
+                }
+
+                current = enumerator.Current;
+            }
+            catch (Exception ex)
+            {
+                if (auditLog is not null)
+                {
+                    await _auditLogService.QueueRecordAuditLogFailureAsync(
+                        auditLog, auditPrompt, ex, cancellationToken);
+                }
+
+                auditScope?.Dispose();
+                throw;
+            }
+
+            yield return current;
+        }
+    }
+
+    /// <summary>
+    /// Creates audit log and scope if audit logging is enabled and runtime context is available.
+    /// </summary>
+    private async Task<(AIAuditScope? Scope, AIAuditLog? AuditLog)> StartAuditLogAsync(
+        List<ChatMessage> chatMessages,
+        CancellationToken cancellationToken)
+    {
+        if (!_auditLogOptions.CurrentValue.Enabled || _runtimeContextAccessor.Context is null)
+        {
+            return (null, null);
+        }
+
+        var auditLogContext = AIAuditContext.ExtractFromRuntimeContext(
+            AICapability.Chat,
+            _runtimeContextAccessor.Context,
+            chatMessages);
+
+        // Extract metadata from RuntimeContext if present
+        Dictionary<string, string>? metadata = null;
+        var context = _runtimeContextAccessor.Context;
+        if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
+        {
+            metadata = logKeys.ToDictionary(
+                key => key,
+                key => context.GetValue<object?>(key)?.ToString() ?? string.Empty);
+        }
+
+        var auditLog = _auditLogFactory.Create(
+            auditLogContext,
+            metadata,
+            parentId: AIAuditScope.Current?.AuditLogId);
+
+        var auditScope = AIAuditScope.Begin(auditLog.Id);
+
+        // Capture TraceId from ambient Activity (created by OpenTelemetry middleware)
+        auditLog.TraceId = Activity.Current?.TraceId.ToString();
+
+        await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
+
+        return (auditScope, auditLog);
     }
 }

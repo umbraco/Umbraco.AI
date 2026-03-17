@@ -25,4 +25,10 @@ public sealed class AIChatProfileSettings : IAIProfileSettings
     /// These contexts provide brand voice, guidelines, and reference materials for AI operations.
     /// </summary>
     public IReadOnlyList<Guid> ContextIds { get; init; } = [];
+
+    /// <summary>
+    /// Guardrail IDs assigned to this profile for input/output safety enforcement.
+    /// These guardrails are evaluated before and/or after AI operations.
+    /// </summary>
+    public IReadOnlyList<Guid> GuardrailIds { get; init; } = [];
 }

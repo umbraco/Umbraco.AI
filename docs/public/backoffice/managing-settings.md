@@ -40,6 +40,20 @@ When set, this profile is used by:
 
 - `IAIEmbeddingService.GenerateEmbeddingsAsync()` without a profile ID
 
+### Classifier Chat Profile
+
+An optional profile for internal classification tasks such as agent routing. This allows you to use a cheaper or faster model for simple classification decisions, reducing costs.
+
+| Field                      | Description                            |
+| -------------------------- | -------------------------------------- |
+| Classifier Chat Profile    | Select from available chat profiles    |
+
+When set, this profile is used by:
+
+- Agent routing in the Copilot's "Auto" mode (selecting the best agent for a user prompt)
+
+If not set, the default chat profile is used instead.
+
 ## Configuring Settings
 
 1. Navigate to the **AI** section > **Settings**

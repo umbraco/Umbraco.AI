@@ -1,7 +1,7 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
-import { UAI_AGENT_TYPE_CONDITION_ALIAS, type UaiAgentTypeConditionConfig } from "./agent-type.condition.js";
+import { UAI_AGENT_TYPE_CONDITION_ALIAS } from "./agent-type.condition.js";
 
 export const manifests: Array<UmbExtensionManifest> = [
     // Workspace condition: matches agent type from workspace context
@@ -59,27 +59,23 @@ export const manifests: Array<UmbExtensionManifest> = [
             },
         ],
     },
-    // Permissions tab (standard agents only)
+    // Governance tab (all agent types)
     {
         type: "workspaceView",
-        alias: "UmbracoAIAgent.Workspace.Agent.View.Permissions",
-        name: "Agent Permissions Workspace View",
-        js: () => import("./views/agent-permissions-workspace-view.element.js"),
+        alias: "UmbracoAIAgent.Workspace.Agent.View.Governance",
+        name: "Agent Governance Workspace View",
+        js: () => import("./views/agent-governance-workspace-view.element.js"),
         weight: 200,
         meta: {
-            label: "Permissions",
-            pathname: "permissions",
-            icon: "icon-lock",
+            label: "Governance",
+            pathname: "governance",
+            icon: "icon-shield",
         },
         conditions: [
             {
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
                 match: UAI_AGENT_WORKSPACE_ALIAS,
             },
-            {
-                alias: UAI_AGENT_TYPE_CONDITION_ALIAS,
-                match: "standard",
-            } as UaiAgentTypeConditionConfig,
         ],
     },
     // Info tab (all agent types)

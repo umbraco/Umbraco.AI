@@ -325,6 +325,10 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                 display: block;
             }
 
+            uui-tag {
+                white-space: nowrap;
+            }
+
             .container {
                 display: flex;
                 flex-direction: column;

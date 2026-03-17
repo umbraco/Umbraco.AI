@@ -210,6 +210,10 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
             display: block;
         }
 
+        uui-tag {
+            white-space: nowrap;
+        }
+
         .loading,
         .empty,
         .error {

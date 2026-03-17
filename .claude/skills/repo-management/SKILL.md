@@ -34,7 +34,16 @@ Complete release preparation orchestration:
 - Generates CHANGELOG.md files
 - Creates release branch with all changes committed
 
-### 3. Changelog Generation (`/changelog-management`)
+### 3. Post-Release Cleanup (`/post-release-cleanup`)
+
+Merge release/hotfix branch back after deployment:
+
+- Detects released products from git tags
+- Merges release branch → main → dev
+- Bumps version.json on dev (patch increment)
+- Optionally deletes the release/hotfix branch
+
+### 4. Changelog Generation (`/changelog-management`)
 
 Generate changelogs from commit history:
 
@@ -42,7 +51,7 @@ Generate changelogs from commit history:
 - Generate for specific version or unreleased
 - Validates against conventional commits
 
-### 4. Build Operations
+### 5. Build Operations
 
 Common build tasks:
 
@@ -56,6 +65,7 @@ Common build tasks:
 1. **Present menu** - Use AskUserQuestion to show available operations:
     - "Setup repository"
     - "Prepare release (full orchestration)"
+    - "Post-release cleanup (merge & bump)"
     - "Generate changelog only"
     - "Build solution"
     - "Watch frontends"
@@ -63,6 +73,7 @@ Common build tasks:
 2. **Delegate to appropriate skill** or execute directly:
     - Setup → Invoke `/repo-setup` skill
     - Release → Invoke `/release-management` skill
+    - Post-release cleanup → Invoke `/post-release-cleanup` skill
     - Changelog → Invoke `/changelog-management` skill
     - Build → Execute command directly
 
@@ -74,6 +85,7 @@ Common build tasks:
 | ---------------- | ---------------------------------------------------- |
 | Setup            | First time cloning repo, new dev onboarding          |
 | Release Manager  | Preparing a complete release (end-to-end automation) |
+| Post-Release     | After deployment: merge back, bump versions          |
 | Changelog        | Updating individual product changelog only           |
 | Build            | After pulling changes, switching branches            |
 | Watch            | Active frontend development                          |
@@ -98,6 +110,18 @@ You present menu:
 - Generate changelog only
 - Build solution
 - Watch frontends
+
+User selects: "Post-release cleanup"
+
+You invoke: /post-release-cleanup
+
+The post-release-cleanup skill will:
+- Detect released products from git tags
+- Merge release branch → main → dev
+- Bump version.json on dev
+- Optionally delete the release branch
+
+---
 
 User selects: "Prepare release"
 

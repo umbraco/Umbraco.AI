@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Prompt.Core.Context;
+using Umbraco.AI.Prompt.Core.Guardrails;
 using Umbraco.AI.Prompt.Core.Media;
 using Umbraco.AI.Prompt.Core.Models;
 using Umbraco.AI.Prompt.Core.Prompts;
@@ -54,6 +55,9 @@ public static class UmbracoBuilderExtensions
 
         // Register prompt context resolver
         builder.AIContextResolvers().Append<PromptContextResolver>();
+
+        // Register prompt guardrail resolver (runs after profile resolver)
+        builder.AIGuardrailResolvers().Append<PromptGuardrailResolver>();
 
         // Register versionable entity adapter for prompts
         builder.AIVersionableEntityAdapters().Add<AIPromptVersionableEntityAdapter>();

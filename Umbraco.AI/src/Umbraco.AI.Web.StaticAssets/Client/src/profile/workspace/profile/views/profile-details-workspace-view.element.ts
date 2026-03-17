@@ -158,6 +158,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 maxTokens: updates.maxTokens ?? null,
                 systemPromptTemplate: updates.systemPromptTemplate ?? null,
                 contextIds: updates.contextIds ?? [],
+                guardrailIds: updates.guardrailIds ?? [],
             };
 
         this.#workspaceContext?.handleCommand(
@@ -240,6 +241,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         @change=${this.#onContextIdsChange}
                     ></uai-context-picker>
                 </umb-property-layout>
+
             </uui-box>
         `;
     }
@@ -359,6 +361,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
             uui-textarea {
                 width: 100%;
+            }
+
+            uui-tag {
+                white-space: nowrap;
             }
 
             .tags-container {

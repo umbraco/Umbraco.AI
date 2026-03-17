@@ -78,6 +78,7 @@ export const UaiAgentTypeMapper = {
             surfaceIds: response.surfaceIds ?? [],
             scope: (response as any).scope ?? null,
             config: mapConfigFromResponse(agentType, response.config),
+            guardrailIds: response.guardrailIds ?? [],
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -96,6 +97,7 @@ export const UaiAgentTypeMapper = {
             profileId: response.profileId ?? null,
             surfaceIds: response.surfaceIds ?? [],
             scope: (response as any).scope ?? null,
+            guardrailIds: (response as any).guardrailIds ?? [],
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -112,6 +114,7 @@ export const UaiAgentTypeMapper = {
             surfaceIds: model.surfaceIds,
             scope: model.scope,
             config: mapConfigToRequest(model.config),
+            guardrailIds: model.guardrailIds,
         };
     },
 
@@ -124,6 +127,7 @@ export const UaiAgentTypeMapper = {
             surfaceIds: model.surfaceIds,
             scope: model.scope,
             config: mapConfigToRequest(model.config),
+            guardrailIds: model.guardrailIds,
             isActive: model.isActive,
         };
     },

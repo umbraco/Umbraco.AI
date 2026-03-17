@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.AI.Prompt.Deploy.Artifacts;
@@ -62,6 +63,13 @@ public class UmbracoAIPromptServiceConnector(
         // Use base class helper for optional profile dependency
         var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
 
+        // Add guardrail dependencies
+        foreach (var guardrailId in entity.GuardrailIds)
+        {
+            var guardrailUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Guardrail, guardrailId);
+            dependencies.Add(new UmbracoAIArtifactDependency(guardrailUdi, ArtifactDependencyMode.Match));
+        }
+
         var artifact = new AIPromptArtifact(udi, dependencies)
         {
             Alias = entity.Alias,
@@ -70,6 +78,7 @@ public class UmbracoAIPromptServiceConnector(
             Instructions = entity.Instructions,
             ProfileUdi = profileUdi,
             ContextIds = entity.ContextIds.ToList(),
+            GuardrailIds = entity.GuardrailIds.ToList(),
             Tags = entity.Tags.ToList(),
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
@@ -131,6 +140,7 @@ public class UmbracoAIPromptServiceConnector(
         prompt.ProfileId = profileId;
         prompt.Instructions = artifact.Instructions;
         prompt.ContextIds = artifact.ContextIds.ToList();
+        prompt.GuardrailIds = artifact.GuardrailIds.ToList();
         prompt.Tags = artifact.Tags.ToList();
         prompt.IsActive = artifact.IsActive;
         prompt.IncludeEntityContext = artifact.IncludeEntityContext;

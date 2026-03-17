@@ -34,6 +34,11 @@ public class ChatProfileSettingsModel : ProfileSettingsModel
     /// Context IDs assigned to this profile for AI context injection.
     /// </summary>
     public IReadOnlyList<Guid> ContextIds { get; init; } = [];
+
+    /// <summary>
+    /// Guardrail IDs assigned to this profile for input/output safety enforcement.
+    /// </summary>
+    public IReadOnlyList<Guid> GuardrailIds { get; init; } = [];
 }
 
 /// <summary>

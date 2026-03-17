@@ -35,6 +35,11 @@ public class UpdateAgentRequestModel
     public Guid? ProfileId { get; init; }
 
     /// <summary>
+    /// Optional guardrail IDs for safety and compliance checks.
+    /// </summary>
+    public IEnumerable<Guid>? GuardrailIds { get; init; }
+
+    /// <summary>
     /// Optional surface IDs that categorize this agent for specific purposes.
     /// </summary>
     public IEnumerable<string>? SurfaceIds { get; init; }

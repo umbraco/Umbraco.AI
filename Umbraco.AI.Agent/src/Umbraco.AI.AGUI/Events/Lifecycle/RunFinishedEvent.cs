@@ -34,6 +34,13 @@ public sealed record RunFinishedEvent : BaseAGUIEvent
     public AGUIInterruptInfo? Interrupt { get; init; }
 
     /// <summary>
+    /// Gets or sets the error message when outcome is Error.
+    /// </summary>
+    [JsonPropertyName("error")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Error { get; init; }
+
+    /// <summary>
     /// Gets or sets the optional result data.
     /// </summary>
     [JsonPropertyName("result")]

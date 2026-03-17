@@ -503,6 +503,7 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, "") 
             uui-tag {
                 position: relative;
                 max-width: 200px;
+                white-space: nowrap;
             }
 
             uui-tag uui-icon {

@@ -1,4 +1,4 @@
-import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { html, css, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type {
     UmbTableColumn,
@@ -169,6 +169,8 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                 return "positive";
             case "Failed":
                 return "danger";
+            case "Blocked":
+                return "danger";
             case "Running":
                 return "default";
             case "Cancelled":
@@ -207,7 +209,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
         ></umb-table>`;
     }
 
-    static styles = [UmbTextStyles];
+    static styles = [UmbTextStyles, css`uui-tag { white-space: nowrap; }`];
 }
 
 export default UaiAuditLogTableCollectionViewElement;

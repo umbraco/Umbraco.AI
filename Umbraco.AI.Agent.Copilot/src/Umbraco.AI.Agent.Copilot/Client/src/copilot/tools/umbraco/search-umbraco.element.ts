@@ -235,6 +235,10 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
             gap: var(--uui-size-space-2);
         }
 
+        uui-tag {
+            white-space: nowrap;
+        }
+
         uui-card-media {
             width: 100%;
             height: 200px;

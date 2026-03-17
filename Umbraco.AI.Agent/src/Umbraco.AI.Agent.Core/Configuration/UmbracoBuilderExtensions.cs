@@ -3,6 +3,7 @@ using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
+using Umbraco.AI.Agent.Core.Guardrails;
 using Umbraco.AI.Agent.Core.Models;
 using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
@@ -61,6 +62,9 @@ public static class UmbracoBuilderExtensions
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();
+
+        // Register agent guardrail resolver (runs after profile resolver)
+        builder.AIGuardrailResolvers().Append<AgentGuardrailResolver>();
 
         // Register surface context contributor
         builder.AIRuntimeContextContributors().Append<SurfaceContextContributor>();

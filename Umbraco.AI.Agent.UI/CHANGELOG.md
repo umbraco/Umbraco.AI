@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha3...Umbraco.AI.Agent.UI@1.0.0-alpha4) (2026-03-16)
+
+### fix
+
+* **agent-ui:** Prevent duplicate error messages in chat run controller ([b1d6c20](https://github.com/umbraco/Umbraco.AI/commit/b1d6c20f8b2de2813b99bfaf1e09f46f3634415b))
+
 ## [1.0.0-alpha3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha2...Umbraco.AI.Agent.UI@1.0.0-alpha3) (2026-03-04)
 
 ## [1.0.0-alpha2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha1...Umbraco.AI.Agent.UI@1.0.0-alpha2) (2026-02-17)

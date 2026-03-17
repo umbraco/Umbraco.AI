@@ -66,7 +66,7 @@ internal sealed class ScopedInlineChatClient : DelegatingChatClient
                 _contributors.Populate(createdScope.Context);
             }
 
-            PopulateScopeContext(_contextAccessor.Context!, scopeExisted);
+            _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
             return await base.GetResponseAsync(messages, options, cancellationToken);
         }
         finally
@@ -92,7 +92,7 @@ internal sealed class ScopedInlineChatClient : DelegatingChatClient
                 _contributors.Populate(createdScope.Context);
             }
 
-            PopulateScopeContext(_contextAccessor.Context!, scopeExisted);
+            _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
 
             await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
             {
@@ -105,37 +105,4 @@ internal sealed class ScopedInlineChatClient : DelegatingChatClient
         }
     }
 
-    /// <summary>
-    /// Populates the runtime context with inline-chat metadata.
-    /// </summary>
-    private void PopulateScopeContext(AIRuntimeContext context, bool scopeExisted)
-    {
-        // Only set feature metadata when we created the scope ourselves.
-        // When a parent scope exists, it already has its own feature identity.
-        if (!scopeExisted)
-        {
-            context.SetValue(Constants.ContextKeys.FeatureType, "inline-chat");
-            context.SetValue(Constants.ContextKeys.FeatureId, _builder.Id);
-            context.SetValue(Constants.ContextKeys.FeatureAlias, _builder.Alias);
-        }
-
-        // These are always set — they don't conflict with parent scope metadata
-        if (_builder.GuardrailIds.Count > 0)
-        {
-            context.SetValue(Constants.ContextKeys.GuardrailIdsOverride, _builder.GuardrailIds);
-        }
-
-        if (_builder.ChatOptions is not null)
-        {
-            context.SetValue(Constants.ContextKeys.ChatOptionsOverride, _builder.ChatOptions);
-        }
-
-        if (_builder.AdditionalProperties is not null)
-        {
-            foreach (var property in _builder.AdditionalProperties)
-            {
-                context.SetValue(property.Key, property.Value);
-            }
-        }
-    }
 }

@@ -136,14 +136,14 @@ internal sealed class AIChatService : IAIChatService
                     _contributors.Populate(createdScope.Context);
                 }
 
-                PopulateInlineChatContext(_contextAccessor.Context!, builder, scopeExisted);
+                builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
 
                 // Resolve profile
                 var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
 
                 // Create client and merge options
                 var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-                var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+                var mergedOptions = MergeOptions(profile, callerOptions: null);
 
                 var response = await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
                 isSuccess = true;
@@ -202,14 +202,14 @@ internal sealed class AIChatService : IAIChatService
                     _contributors.Populate(createdScope.Context);
                 }
 
-                PopulateInlineChatContext(_contextAccessor.Context!, builder, scopeExisted);
+                builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
 
                 // Resolve profile
                 var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
 
                 // Create client and merge options
                 var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-                var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+                var mergedOptions = MergeOptions(profile, callerOptions: null);
 
                 await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
                 {
@@ -273,40 +273,7 @@ internal sealed class AIChatService : IAIChatService
         return profile;
     }
 
-    private static void PopulateInlineChatContext(AIRuntimeContext context, AIInlineChatBuilder builder, bool scopeExisted)
-    {
-        // Only set feature metadata when we created the scope ourselves.
-        // When a parent scope exists (e.g., prompt service), it already has its own feature
-        // identity — we should not overwrite it. This allows add-on packages to call the
-        // inline chat API without losing their feature identity in telemetry/audit.
-        if (!scopeExisted)
-        {
-            context.SetValue(Constants.ContextKeys.FeatureType, "inline-chat");
-            context.SetValue(Constants.ContextKeys.FeatureId, builder.Id);
-            context.SetValue(Constants.ContextKeys.FeatureAlias, builder.Alias);
-        }
 
-        // Set guardrail IDs override if specified
-        if (builder.GuardrailIds.Count > 0)
-        {
-            context.SetValue(Constants.ContextKeys.GuardrailIdsOverride, builder.GuardrailIds);
-        }
-
-        // Set ChatOptions override if specified
-        if (builder.ChatOptions is not null)
-        {
-            context.SetValue(Constants.ContextKeys.ChatOptionsOverride, builder.ChatOptions);
-        }
-
-        // Set additional properties
-        if (builder.AdditionalProperties is not null)
-        {
-            foreach (var property in builder.AdditionalProperties)
-            {
-                context.SetValue(property.Key, property.Value);
-            }
-        }
-    }
 
     private static ChatOptions MergeOptions(AIProfile profile, ChatOptions? callerOptions)
     {

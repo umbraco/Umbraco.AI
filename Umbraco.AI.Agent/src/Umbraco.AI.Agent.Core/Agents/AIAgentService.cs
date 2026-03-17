@@ -678,7 +678,7 @@ internal sealed class AIAgentService : IAIAgentService
     {
         var properties = new Dictionary<string, object?>
         {
-            { CoreConstants.ContextKeys.FeatureType, "inline-agent" },
+            { CoreConstants.ContextKeys.FeatureType, CoreConstants.FeatureTypes.InlineAgent },
         };
 
         // Add ChatOptions override if set

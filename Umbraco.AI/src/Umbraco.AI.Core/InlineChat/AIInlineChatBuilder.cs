@@ -150,9 +150,10 @@ public sealed class AIInlineChatBuilder
     internal string? Description => _description;
 
     /// <summary>
-    /// Gets the deterministic ID derived from the alias.
+    /// Gets the deterministic ID derived from the alias. Cached after first access.
     /// </summary>
-    internal Guid Id => DeterministicGuid.Create(InlineChatNamespace, _alias ?? string.Empty);
+    internal Guid Id => _id ??= DeterministicGuid.Create(InlineChatNamespace, _alias ?? string.Empty);
+    private Guid? _id;
 
     /// <summary>
     /// Gets the profile ID configured on this builder.
@@ -188,6 +189,42 @@ public sealed class AIInlineChatBuilder
         if (string.IsNullOrWhiteSpace(_alias))
         {
             throw new InvalidOperationException("Inline chat alias is required. Call WithAlias() before executing.");
+        }
+    }
+
+    /// <summary>
+    /// Populates the runtime context with inline-chat metadata from this builder.
+    /// </summary>
+    /// <param name="context">The runtime context to populate.</param>
+    /// <param name="setFeatureMetadata">
+    /// Whether to set feature identity (FeatureType/FeatureId/FeatureAlias).
+    /// Pass <c>false</c> when a parent scope already set its own feature identity.
+    /// </param>
+    internal void PopulateContext(AIRuntimeContext context, bool setFeatureMetadata)
+    {
+        if (setFeatureMetadata)
+        {
+            context.SetValue(Constants.ContextKeys.FeatureType, Constants.FeatureTypes.InlineChat);
+            context.SetValue(Constants.ContextKeys.FeatureId, Id);
+            context.SetValue(Constants.ContextKeys.FeatureAlias, Alias);
+        }
+
+        if (_guardrailIds.Count > 0)
+        {
+            context.SetValue(Constants.ContextKeys.GuardrailIdsOverride, _guardrailIds);
+        }
+
+        if (_chatOptions is not null)
+        {
+            context.SetValue(Constants.ContextKeys.ChatOptionsOverride, _chatOptions);
+        }
+
+        if (_additionalProperties is not null)
+        {
+            foreach (var property in _additionalProperties)
+            {
+                context.SetValue(property.Key, property.Value);
+            }
         }
     }
 }

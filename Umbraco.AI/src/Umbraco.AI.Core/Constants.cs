@@ -54,6 +54,22 @@ public static class Constants
     }
 
     /// <summary>
+    /// Well-known feature type values used in runtime context for telemetry, audit, and analytics.
+    /// </summary>
+    public static class FeatureTypes
+    {
+        /// <summary>
+        /// Feature type for inline chat executions via <see cref="Chat.IAIChatService.GetInlineChatResponseAsync"/>.
+        /// </summary>
+        public const string InlineChat = "inline-chat";
+
+        /// <summary>
+        /// Feature type for inline agent executions.
+        /// </summary>
+        public const string InlineAgent = "inline-agent";
+    }
+
+    /// <summary>
     /// Keys for metadata in metadata collections.
     /// </summary>
     public static class ContextKeys

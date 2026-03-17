@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -65,13 +64,16 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     /// <inheritdoc />
     public async Task CompleteAuditLogAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         AIAuditResponse? response,
         CancellationToken ct = default)
     {
 
         audit.EndTime = DateTime.UtcNow;
         audit.Status = AIAuditLogStatus.Succeeded;
-        
+
+        CapturePromptSnapshot(audit, prompt);
+
         if (response?.Usage is not null)
         {
             audit.InputTokens = response.Usage.InputTokenCount.HasValue
@@ -84,13 +86,13 @@ internal sealed class AIAuditLogService : IAIAuditLogService
                 ? (int?)response.Usage.TotalTokenCount.Value
                 : null;
         }
-        
+
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
             var formattedResponse = FormatResponseSnapshot(response.Data);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
-                audit.ResponseSnapshot = ApplyRedaction(formattedResponse);
+                audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
             }
         }
 
@@ -104,11 +106,14 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     /// <inheritdoc />
     public async Task RecordAuditLogFailureAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         Exception exception,
         CancellationToken ct = default)
     {
 
         audit.EndTime = DateTime.UtcNow;
+
+        CapturePromptSnapshot(audit, prompt);
 
         if (exception is AIGuardrailBlockedException)
         {
@@ -180,12 +185,15 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     /// <inheritdoc />
     public async ValueTask QueueCompleteAuditLogAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         AIAuditResponse? response,
         CancellationToken ct = default)
     {
         // Do all the business logic NOW, before queuing
         audit.EndTime = DateTime.UtcNow;
         audit.Status = AIAuditLogStatus.Succeeded;
+
+        CapturePromptSnapshot(audit, prompt);
 
         if (response?.Usage is not null)
         {
@@ -205,7 +213,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
             var formattedResponse = FormatResponseSnapshot(response.Data);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
-                audit.ResponseSnapshot = ApplyRedaction(formattedResponse);
+                audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
             }
         }
 
@@ -228,11 +236,14 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     /// <inheritdoc />
     public async ValueTask QueueRecordAuditLogFailureAsync(
         AIAuditLog audit,
+        AIAuditPrompt? prompt,
         Exception exception,
         CancellationToken ct = default)
     {
         // Do all the business logic NOW, before queuing
         audit.EndTime = DateTime.UtcNow;
+
+        CapturePromptSnapshot(audit, prompt);
 
         if (exception is AIGuardrailBlockedException)
         {
@@ -387,23 +398,21 @@ internal sealed class AIAuditLogService : IAIAuditLogService
         };
     }
 
-    private string? ApplyRedaction(string? input)
+    private void CapturePromptSnapshot(AIAuditLog audit, AIAuditPrompt? prompt)
     {
-        if (string.IsNullOrEmpty(input) || _options.CurrentValue.RedactionPatterns.Count == 0)
-            return input;
+        if (!_options.CurrentValue.PersistPrompts || prompt?.Data is null)
+            return;
 
-        var result = input;
-        foreach (var pattern in _options.CurrentValue.RedactionPatterns)
+        var formatted = AIAuditLogFactory.FormatPromptSnapshot(prompt.Data, prompt.Capability);
+        if (!string.IsNullOrEmpty(formatted))
         {
-            try
-            {
-                result = Regex.Replace(result, pattern, "[REDACTED]", RegexOptions.IgnoreCase);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to apply redaction pattern: {Pattern}", pattern);
-            }
+            audit.PromptSnapshot = ApplyRedactions(formatted);
+
+            _logger.LogDebug("Captured prompt snapshot for audit-log {AuditLogId}: {Length} characters",
+                audit.Id, audit.PromptSnapshot?.Length ?? 0);
         }
-        return result;
     }
+
+    private string? ApplyRedactions(string? input)
+        => AIAuditLogRedactor.ApplyRedactions(input, _options.CurrentValue.RedactionPatterns, _logger);
 }

@@ -503,6 +503,19 @@ export class GuardrailsService {
         });
     }
     
+    public static deleteGuardrail<ThrowOnError extends boolean = false>(options: Options<DeleteGuardrailData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteGuardrailResponses, DeleteGuardrailErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}',
+            ...options
+        });
+    }
+    
     public static getGuardrailByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetGuardrailByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetGuardrailByIdOrAliasResponses, GetGuardrailByIdOrAliasErrors, ThrowOnError>({
             security: [
@@ -530,19 +543,6 @@ export class GuardrailsService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
-        });
-    }
-    
-    public static deleteGuardrail<ThrowOnError extends boolean = false>(options: Options<DeleteGuardrailData, ThrowOnError>) {
-        return (options.client ?? client).delete<DeleteGuardrailResponses, DeleteGuardrailErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/guardrails/{id}',
-            ...options
         });
     }
 }

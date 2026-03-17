@@ -39,6 +39,7 @@ public sealed class AIInlineChatBuilder
     private IEnumerable<AIRequestContextItem>? _contextItems;
     private IReadOnlyList<Guid> _guardrailIds = [];
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
+    private bool _isPassThrough;
 
     /// <summary>
     /// Sets the alias for the inline chat. Required for auditing and telemetry.
@@ -135,6 +136,27 @@ public sealed class AIInlineChatBuilder
     }
 
     /// <summary>
+    /// Marks this inline chat as a pass-through execution within a parent feature.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When enabled, the inline chat skips feature metadata (FeatureType/FeatureId/FeatureAlias),
+    /// notifications, and duration tracking — the parent feature (e.g., prompt, agent) is
+    /// responsible for its own observability.
+    /// </para>
+    /// <para>
+    /// Use this when calling the inline chat API from within a feature that already manages
+    /// its own runtime context scope and notifications.
+    /// </para>
+    /// </remarks>
+    /// <returns>The builder for chaining.</returns>
+    public AIInlineChatBuilder AsPassThrough()
+    {
+        _isPassThrough = true;
+        return this;
+    }
+
+    /// <summary>
     /// Gets the alias configured on this builder.
     /// </summary>
     internal string? Alias => _alias;
@@ -179,6 +201,11 @@ public sealed class AIInlineChatBuilder
     /// Gets the additional properties configured on this builder.
     /// </summary>
     internal IReadOnlyDictionary<string, object?>? AdditionalProperties => _additionalProperties;
+
+    /// <summary>
+    /// Gets whether this execution is a pass-through within a parent feature.
+    /// </summary>
+    internal bool IsPassThrough => _isPassThrough;
 
     /// <summary>
     /// Validates the builder configuration.

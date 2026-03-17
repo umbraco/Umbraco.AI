@@ -325,7 +325,9 @@ internal sealed class AIPromptService : IAIPromptService
         var profileId = options.ProfileIdOverride ?? prompt.ProfileId;
         var response = await _chatService.GetInlineChatResponseAsync(chat =>
         {
-            chat.WithAlias($"prompt-{prompt.Alias}").WithChatOptions(chatOptions);
+            chat.WithAlias($"prompt-{prompt.Alias}")
+                .WithChatOptions(chatOptions)
+                .AsPassThrough();
             if (profileId.HasValue)
             {
                 chat.WithProfile(profileId.Value);
@@ -479,7 +481,9 @@ internal sealed class AIPromptService : IAIPromptService
             // Retry execution
             var retryResponse = await _chatService.GetInlineChatResponseAsync(chat =>
             {
-                chat.WithAlias($"prompt-{prompt.Alias}-retry").WithChatOptions(chatOptions);
+                chat.WithAlias($"prompt-{prompt.Alias}-retry")
+                    .WithChatOptions(chatOptions)
+                    .AsPassThrough();
                 if (prompt.ProfileId.HasValue)
                 {
                     chat.WithProfile(prompt.ProfileId.Value);

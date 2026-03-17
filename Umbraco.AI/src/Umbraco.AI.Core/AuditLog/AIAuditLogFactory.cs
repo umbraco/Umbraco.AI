@@ -209,5 +209,5 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
     }
 
     private string? ApplyRedaction(string? input)
-        => AIAuditLogRedactor.ApplyRedaction(input, _options.CurrentValue.RedactionPatterns, _logger);
+        => AIAuditLogRedactor.ApplyRedactions(input, _options.CurrentValue.RedactionPatterns, _logger);
 }

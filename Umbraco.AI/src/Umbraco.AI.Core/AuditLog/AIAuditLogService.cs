@@ -92,7 +92,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
             var formattedResponse = FormatResponseSnapshot(response.Data);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
-                audit.ResponseSnapshot = ApplyRedaction(formattedResponse);
+                audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
             }
         }
 
@@ -213,7 +213,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
             var formattedResponse = FormatResponseSnapshot(response.Data);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
-                audit.ResponseSnapshot = ApplyRedaction(formattedResponse);
+                audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
             }
         }
 
@@ -406,13 +406,13 @@ internal sealed class AIAuditLogService : IAIAuditLogService
         var formatted = AIAuditLogFactory.FormatPromptSnapshot(prompt.Data, prompt.Capability);
         if (!string.IsNullOrEmpty(formatted))
         {
-            audit.PromptSnapshot = ApplyRedaction(formatted);
+            audit.PromptSnapshot = ApplyRedactions(formatted);
 
             _logger.LogDebug("Captured prompt snapshot for audit-log {AuditLogId}: {Length} characters",
                 audit.Id, audit.PromptSnapshot?.Length ?? 0);
         }
     }
 
-    private string? ApplyRedaction(string? input)
-        => AIAuditLogRedactor.ApplyRedaction(input, _options.CurrentValue.RedactionPatterns, _logger);
+    private string? ApplyRedactions(string? input)
+        => AIAuditLogRedactor.ApplyRedactions(input, _options.CurrentValue.RedactionPatterns, _logger);
 }

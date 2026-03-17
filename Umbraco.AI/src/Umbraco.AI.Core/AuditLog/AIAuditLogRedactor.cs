@@ -15,7 +15,7 @@ internal static class AIAuditLogRedactor
     /// <param name="patterns">The regex patterns to match for redaction.</param>
     /// <param name="logger">Logger for reporting pattern failures.</param>
     /// <returns>The redacted string, or the original if no patterns match.</returns>
-    public static string? ApplyRedaction(string? input, IReadOnlyList<string> patterns, ILogger logger)
+    public static string? ApplyRedactions(string? input, IReadOnlyList<string> patterns, ILogger logger)
     {
         if (string.IsNullOrEmpty(input) || patterns.Count == 0)
             return input;

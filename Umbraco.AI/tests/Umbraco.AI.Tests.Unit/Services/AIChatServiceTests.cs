@@ -19,6 +19,7 @@ public class AIChatServiceTests
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
     private readonly Mock<IEventAggregator> _eventAggregatorMock;
+    private readonly Mock<IAIRuntimeContextAccessor> _contextAccessorMock;
     private readonly Mock<IAIRuntimeContextScopeProvider> _scopeProviderMock;
     private readonly AIChatService _service;
 
@@ -36,15 +37,29 @@ public class AIChatServiceTests
             .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        var runtimeContext = new AIRuntimeContext([]);
+        _contextAccessorMock = new Mock<IAIRuntimeContextAccessor>();
+        // No existing scope by default — inline chat creates its own
+        _contextAccessorMock.Setup(x => x.Context).Returns((AIRuntimeContext?)null);
+
         _scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
         var mockScope = new Mock<IAIRuntimeContextScope>();
-        mockScope.Setup(s => s.Context).Returns(new AIRuntimeContext([]));
+        mockScope.Setup(s => s.Context).Returns(runtimeContext);
         _scopeProviderMock
             .Setup(x => x.CreateScope(It.IsAny<IEnumerable<AIRequestContextItem>>()))
-            .Returns(mockScope.Object);
+            .Returns(() =>
+            {
+                // After creating scope, the accessor should return the context
+                _contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
+                return mockScope.Object;
+            });
         _scopeProviderMock
             .Setup(x => x.CreateScope())
-            .Returns(mockScope.Object);
+            .Returns(() =>
+            {
+                _contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
+                return mockScope.Object;
+            });
 
         var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
 
@@ -53,6 +68,7 @@ public class AIChatServiceTests
             _profileServiceMock.Object,
             _optionsMock.Object,
             _eventAggregatorMock.Object,
+            _contextAccessorMock.Object,
             _scopeProviderMock.Object,
             contributorCollection);
     }

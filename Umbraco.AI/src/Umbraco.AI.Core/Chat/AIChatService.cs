@@ -16,6 +16,7 @@ internal sealed class AIChatService : IAIChatService
     private readonly IAIProfileService _profileService;
     private readonly AIOptions _options;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
 
@@ -24,6 +25,7 @@ internal sealed class AIChatService : IAIChatService
         IAIProfileService profileService,
         IOptionsMonitor<AIOptions> options,
         IEventAggregator eventAggregator,
+        IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
     {
@@ -31,6 +33,7 @@ internal sealed class AIChatService : IAIChatService
         _profileService = profileService;
         _options = options.CurrentValue;
         _eventAggregator = eventAggregator;
+        _contextAccessor = contextAccessor;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
     }
@@ -120,21 +123,36 @@ internal sealed class AIChatService : IAIChatService
 
         try
         {
-            // Create scope with builder's context items
-            using var scope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-            _contributors.Populate(scope.Context);
-            PopulateInlineChatContext(scope.Context, builder);
+            // Reuse existing scope if one exists (e.g., prompt service already created one),
+            // otherwise create a new scope. This mirrors ScopedProfileChatClient's pattern.
+            var scopeExisted = _contextAccessor.Context is not null;
+            IAIRuntimeContextScope? createdScope = null;
 
-            // Resolve profile
-            var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+            try
+            {
+                if (!scopeExisted)
+                {
+                    createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                    _contributors.Populate(createdScope.Context);
+                }
 
-            // Create client and merge options
-            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-            var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+                PopulateInlineChatContext(_contextAccessor.Context!, builder, scopeExisted);
 
-            var response = await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
-            isSuccess = true;
-            return response;
+                // Resolve profile
+                var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+
+                // Create client and merge options
+                var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+                var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+
+                var response = await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
+                isSuccess = true;
+                return response;
+            }
+            finally
+            {
+                createdScope?.Dispose();
+            }
         }
         finally
         {
@@ -172,24 +190,38 @@ internal sealed class AIChatService : IAIChatService
 
         try
         {
-            // Create scope with builder's context items
-            using var scope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-            _contributors.Populate(scope.Context);
-            PopulateInlineChatContext(scope.Context, builder);
+            // Reuse existing scope if one exists, otherwise create a new scope
+            var scopeExisted = _contextAccessor.Context is not null;
+            IAIRuntimeContextScope? createdScope = null;
 
-            // Resolve profile
-            var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
-
-            // Create client and merge options
-            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-            var mergedOptions = MergeOptions(profile, builder.ChatOptions);
-
-            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
+            try
             {
-                yield return update;
-            }
+                if (!scopeExisted)
+                {
+                    createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                    _contributors.Populate(createdScope.Context);
+                }
 
-            isSuccess = true;
+                PopulateInlineChatContext(_contextAccessor.Context!, builder, scopeExisted);
+
+                // Resolve profile
+                var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+
+                // Create client and merge options
+                var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+                var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+
+                await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
+                {
+                    yield return update;
+                }
+
+                isSuccess = true;
+            }
+            finally
+            {
+                createdScope?.Dispose();
+            }
         }
         finally
         {
@@ -215,7 +247,7 @@ internal sealed class AIChatService : IAIChatService
         var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
 
         // Wrap in ScopedInlineChatClient for per-call scope management
-        return new ScopedInlineChatClient(chatClient, builder, _scopeProvider, _contributors);
+        return new ScopedInlineChatClient(chatClient, builder, _contextAccessor, _scopeProvider, _contributors);
     }
 
     private static AIInlineChatBuilder BuildInlineChat(Action<AIInlineChatBuilder> configure)
@@ -241,11 +273,18 @@ internal sealed class AIChatService : IAIChatService
         return profile;
     }
 
-    private static void PopulateInlineChatContext(AIRuntimeContext context, AIInlineChatBuilder builder)
+    private static void PopulateInlineChatContext(AIRuntimeContext context, AIInlineChatBuilder builder, bool scopeExisted)
     {
-        context.SetValue(Constants.ContextKeys.FeatureType, "inline-chat");
-        context.SetValue(Constants.ContextKeys.FeatureId, builder.Id);
-        context.SetValue(Constants.ContextKeys.FeatureAlias, builder.Alias);
+        // Only set feature metadata when we created the scope ourselves.
+        // When a parent scope exists (e.g., prompt service), it already has its own feature
+        // identity — we should not overwrite it. This allows add-on packages to call the
+        // inline chat API without losing their feature identity in telemetry/audit.
+        if (!scopeExisted)
+        {
+            context.SetValue(Constants.ContextKeys.FeatureType, "inline-chat");
+            context.SetValue(Constants.ContextKeys.FeatureId, builder.Id);
+            context.SetValue(Constants.ContextKeys.FeatureAlias, builder.Alias);
+        }
 
         // Set guardrail IDs override if specified
         if (builder.GuardrailIds.Count > 0)

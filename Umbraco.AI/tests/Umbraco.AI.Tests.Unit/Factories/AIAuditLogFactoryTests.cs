@@ -317,7 +317,7 @@ public class AIAuditLogFactoryTests
         var input = "[tool_call:tc_001] authenticate({\"token\":\"secret-abc123\"})";
 
         // Act
-        var result = AIAuditLogRedactor.ApplyRedaction(input, patterns, logger);
+        var result = AIAuditLogRedactor.ApplyRedactions(input, patterns, logger);
 
         // Assert
         result.ShouldNotBeNull();
@@ -334,7 +334,7 @@ public class AIAuditLogFactoryTests
         var input = "[tool:tc_001] -> {\"key\":\"api_key_xyz789\"}";
 
         // Act
-        var result = AIAuditLogRedactor.ApplyRedaction(input, patterns, logger);
+        var result = AIAuditLogRedactor.ApplyRedactions(input, patterns, logger);
 
         // Assert
         result.ShouldNotBeNull();

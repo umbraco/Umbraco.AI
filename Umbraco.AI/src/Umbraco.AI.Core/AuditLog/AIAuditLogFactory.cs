@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -69,24 +68,13 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             StartTime = DateTime.UtcNow,
         };
 
-        // Capture prompt snapshot if configured
-        if (_options.CurrentValue.PersistPrompts && context.Prompt is not null)
-        {
-            var prompt = FormatPromptSnapshot(context.Prompt, context.Capability);
-            prompt = ApplyRedaction(prompt);
-            auditLog.PromptSnapshot = prompt;
-            
-            _logger.LogDebug("Captured prompt snapshot for audit-log {AuditLogId}: {Length} characters",
-                auditLog.Id, prompt?.Length ?? 0);
-        }
-
         return auditLog;
     }
 
     private const int MaxArgumentLength = 500;
     private const int MaxResultLength = 1000;
 
-    private static string? FormatPromptSnapshot(object? promptObj, AICapability capability)
+    internal static string? FormatPromptSnapshot(object? promptObj, AICapability capability)
     {
         if (promptObj is null)
         {
@@ -221,22 +209,5 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
     }
 
     private string? ApplyRedaction(string? input)
-    {
-        if (string.IsNullOrEmpty(input) || _options.CurrentValue.RedactionPatterns.Count == 0)
-            return input;
-
-        var result = input;
-        foreach (var pattern in _options.CurrentValue.RedactionPatterns)
-        {
-            try
-            {
-                result = Regex.Replace(result, pattern, "[REDACTED]", RegexOptions.IgnoreCase);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to apply redaction pattern: {Pattern}", pattern);
-            }
-        }
-        return result;
-    }
+        => AIAuditLogRedactor.ApplyRedaction(input, _options.CurrentValue.RedactionPatterns, _logger);
 }

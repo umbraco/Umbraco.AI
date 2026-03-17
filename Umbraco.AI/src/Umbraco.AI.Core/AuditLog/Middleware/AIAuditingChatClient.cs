@@ -34,11 +34,16 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        var messages = chatMessages.ToList();
         var (auditScope, auditLog) = await StartAuditLogAsync(
-            chatMessages.ToList(), cancellationToken);
+            messages, cancellationToken);
 
         // Enrich the ambient Activity with Umbraco-specific tags (independent of audit logging)
         AIActivityEnricher.EnrichCurrentActivity(auditLog, _runtimeContextAccessor);
+
+        var auditPrompt = auditLog is not null
+            ? new AIAuditPrompt { Data = messages, Capability = AICapability.Chat }
+            : null;
 
         try
         {
@@ -47,14 +52,13 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             // Complete audit-log (if exists)
             if (auditLog is not null)
             {
-                var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
-
                 await _auditLogService.QueueCompleteAuditLogAsync(
                     auditLog,
+                    auditPrompt,
                     new AIAuditResponse
                     {
-                        Data = trackingChatClient?.LastResponseMessages,
-                        Usage = trackingChatClient?.LastUsageDetails,
+                        Data = response.Messages,
+                        Usage = response.Usage,
                     },
                     cancellationToken);
             }
@@ -66,7 +70,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             if (auditLog is not null)
             {
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog, ex, cancellationToken);
+                    auditLog, auditPrompt, ex, cancellationToken);
             }
 
             throw;
@@ -82,11 +86,16 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        var messages = chatMessages.ToList();
         var (auditScope, auditLog) = await StartAuditLogAsync(
-            chatMessages.ToList(), cancellationToken);
+            messages, cancellationToken);
 
         // Enrich the ambient Activity with Umbraco-specific tags (independent of audit logging)
         AIActivityEnricher.EnrichCurrentActivity(auditLog, _runtimeContextAccessor);
+
+        var auditPrompt = auditLog is not null
+            ? new AIAuditPrompt { Data = messages, Capability = AICapability.Chat }
+            : null;
 
         IAsyncEnumerable<ChatResponseUpdate> stream;
 
@@ -99,7 +108,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             if (auditLog is not null)
             {
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog, ex, cancellationToken);
+                    auditLog, auditPrompt, ex, cancellationToken);
             }
 
             auditScope?.Dispose();
@@ -109,7 +118,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         // Stream updates - wrap in error-capturing enumerator to handle
         // exceptions thrown during iteration (e.g., guardrail blocks)
         await foreach (var update in WrapStreamWithErrorCapture(
-            stream, auditLog, auditScope, cancellationToken))
+            stream, auditLog, auditPrompt, auditScope, cancellationToken))
         {
             yield return update;
         }
@@ -121,6 +130,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
 
             await _auditLogService.QueueCompleteAuditLogAsync(
                 auditLog,
+                auditPrompt,
                 new AIAuditResponse
                 {
                     Data = trackingChatClient?.LastResponseMessages,
@@ -140,6 +150,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
     private async IAsyncEnumerable<ChatResponseUpdate> WrapStreamWithErrorCapture(
         IAsyncEnumerable<ChatResponseUpdate> stream,
         AIAuditLog? auditLog,
+        AIAuditPrompt? auditPrompt,
         AIAuditScope? auditScope,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -162,7 +173,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
                 if (auditLog is not null)
                 {
                     await _auditLogService.QueueRecordAuditLogFailureAsync(
-                        auditLog, ex, cancellationToken);
+                        auditLog, auditPrompt, ex, cancellationToken);
                 }
 
                 auditScope?.Dispose();

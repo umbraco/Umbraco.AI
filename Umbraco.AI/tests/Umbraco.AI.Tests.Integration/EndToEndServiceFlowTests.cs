@@ -22,6 +22,8 @@ namespace Umbraco.AI.Tests.Integration;
 /// End-to-end service flow tests that verify the complete pipeline works correctly
 /// using real services (not mocks) with fake providers.
 /// </summary>
+#pragma warning disable CS0618 // Integration tests for deprecated API surface — validates delegation works
+
 public class EndToEndServiceFlowTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;

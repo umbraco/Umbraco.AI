@@ -106,6 +106,13 @@ internal sealed class AIChatService : IAIChatService
 
         var builder = BuildInlineChat(configure);
 
+        // Pass-through mode: skip notifications and duration tracking.
+        // The parent feature (e.g., prompt) handles its own observability.
+        if (builder.IsPassThrough)
+        {
+            return await ExecuteInlineChatAsync(builder, messages, cancellationToken);
+        }
+
         // Publish executing notification
         var eventMessages = new EventMessages();
         var executingNotification = new AIChatExecutingNotification(
@@ -123,36 +130,9 @@ internal sealed class AIChatService : IAIChatService
 
         try
         {
-            // Reuse existing scope if one exists (e.g., prompt service already created one),
-            // otherwise create a new scope. This mirrors ScopedProfileChatClient's pattern.
-            var scopeExisted = _contextAccessor.Context is not null;
-            IAIRuntimeContextScope? createdScope = null;
-
-            try
-            {
-                if (!scopeExisted)
-                {
-                    createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                    _contributors.Populate(createdScope.Context);
-                }
-
-                builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
-
-                // Resolve profile
-                var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
-
-                // Create client and merge options
-                var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-                var mergedOptions = MergeOptions(profile, callerOptions: null);
-
-                var response = await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
-                isSuccess = true;
-                return response;
-            }
-            finally
-            {
-                createdScope?.Dispose();
-            }
+            var response = await ExecuteInlineChatAsync(builder, messages, cancellationToken);
+            isSuccess = true;
+            return response;
         }
         finally
         {
@@ -173,6 +153,16 @@ internal sealed class AIChatService : IAIChatService
 
         var builder = BuildInlineChat(configure);
 
+        // Pass-through mode: skip notifications and duration tracking
+        if (builder.IsPassThrough)
+        {
+            await foreach (var update in StreamInlineChatCoreAsync(builder, messages, cancellationToken))
+            {
+                yield return update;
+            }
+            yield break;
+        }
+
         // Publish executing notification
         var eventMessages = new EventMessages();
         var executingNotification = new AIChatExecutingNotification(
@@ -190,38 +180,12 @@ internal sealed class AIChatService : IAIChatService
 
         try
         {
-            // Reuse existing scope if one exists, otherwise create a new scope
-            var scopeExisted = _contextAccessor.Context is not null;
-            IAIRuntimeContextScope? createdScope = null;
-
-            try
+            await foreach (var update in StreamInlineChatCoreAsync(builder, messages, cancellationToken))
             {
-                if (!scopeExisted)
-                {
-                    createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                    _contributors.Populate(createdScope.Context);
-                }
-
-                builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
-
-                // Resolve profile
-                var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
-
-                // Create client and merge options
-                var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-                var mergedOptions = MergeOptions(profile, callerOptions: null);
-
-                await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
-                {
-                    yield return update;
-                }
-
-                isSuccess = true;
+                yield return update;
             }
-            finally
-            {
-                createdScope?.Dispose();
-            }
+
+            isSuccess = true;
         }
         finally
         {
@@ -229,6 +193,69 @@ internal sealed class AIChatService : IAIChatService
                 builder.Id, builder.Alias!, builder.Name, builder.ProfileId,
                 stopwatch.Elapsed, isSuccess, eventMessages);
             await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    private async Task<ChatResponse> ExecuteInlineChatAsync(
+        AIInlineChatBuilder builder,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken)
+    {
+        var scopeExisted = _contextAccessor.Context is not null;
+        IAIRuntimeContextScope? createdScope = null;
+
+        try
+        {
+            if (!scopeExisted)
+            {
+                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
+
+            var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+            var mergedOptions = MergeOptions(profile, callerOptions: null);
+
+            return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
+        }
+        finally
+        {
+            createdScope?.Dispose();
+        }
+    }
+
+    private async IAsyncEnumerable<ChatResponseUpdate> StreamInlineChatCoreAsync(
+        AIInlineChatBuilder builder,
+        IEnumerable<ChatMessage> messages,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var scopeExisted = _contextAccessor.Context is not null;
+        IAIRuntimeContextScope? createdScope = null;
+
+        try
+        {
+            if (!scopeExisted)
+            {
+                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
+
+            var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+            var mergedOptions = MergeOptions(profile, callerOptions: null);
+
+            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
+            {
+                yield return update;
+            }
+        }
+        finally
+        {
+            createdScope?.Dispose();
         }
     }
 

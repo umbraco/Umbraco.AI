@@ -2,10 +2,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.EmbeddedAgents;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
@@ -22,6 +24,7 @@ using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
@@ -516,5 +519,177 @@ internal sealed class AIAgentService : IAIAgentService
 
             await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<MsAIAgent> CreateEmbeddedAgentAsync(
+        Action<AIEmbeddedAgentBuilder> configure,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var (agent, builder) = BuildEmbeddedAgent(configure);
+
+        var additionalProperties = BuildEmbeddedAgentProperties(builder);
+
+        return await _agentFactory.CreateAgentAsync(
+            agent,
+            builder.ContextItems,
+            additionalTools: null,
+            additionalProperties,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AgentResponse> RunEmbeddedAgentAsync(
+        Action<AIEmbeddedAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var (agent, builder) = BuildEmbeddedAgent(configure);
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, request: null, frontendTools: null, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Embedded agent execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var additionalProperties = BuildEmbeddedAgentProperties(builder);
+            var mafAgent = await _agentFactory.CreateAgentAsync(
+                agent,
+                builder.ContextItems,
+                additionalTools: null,
+                additionalProperties,
+                cancellationToken);
+
+            var response = await mafAgent.RunAsync(messages, session: null, options: null, cancellationToken);
+            isSuccess = true;
+            return response;
+        }
+        finally
+        {
+            var executedNotification = new AIAgentExecutedNotification(
+                agent,
+                request: null,
+                frontendTools: null,
+                stopwatch.Elapsed,
+                isSuccess,
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<AgentResponseUpdate> StreamEmbeddedAgentAsync(
+        Action<AIEmbeddedAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var (agent, builder) = BuildEmbeddedAgent(configure);
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, request: null, frontendTools: null, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Embedded agent execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var additionalProperties = BuildEmbeddedAgentProperties(builder);
+            var mafAgent = await _agentFactory.CreateAgentAsync(
+                agent,
+                builder.ContextItems,
+                additionalTools: null,
+                additionalProperties,
+                cancellationToken);
+
+            await foreach (var update in mafAgent.RunStreamingAsync(messages, session: null, options: null, cancellationToken))
+            {
+                yield return update;
+            }
+
+            isSuccess = true;
+        }
+        finally
+        {
+            var executedNotification = new AIAgentExecutedNotification(
+                agent,
+                request: null,
+                frontendTools: null,
+                stopwatch.Elapsed,
+                isSuccess,
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Builds a transient agent entity and resolves the "all tools" flag.
+    /// </summary>
+    private (AIAgent Agent, AIEmbeddedAgentBuilder Builder) BuildEmbeddedAgent(Action<AIEmbeddedAgentBuilder> configure)
+    {
+        var builder = new AIEmbeddedAgentBuilder();
+        configure(builder);
+
+        // If WithAllTools() was called, resolve all tool IDs from the collection
+        if (builder.UseAllTools)
+        {
+            var allToolIds = _toolCollection.Select(t => t.Id).ToArray();
+            builder.WithTools(allToolIds);
+        }
+
+        var agent = builder.Build();
+        return (agent, builder);
+    }
+
+    /// <summary>
+    /// Builds the additional properties dictionary for embedded agent execution.
+    /// Sets the feature type to "embedded-agent" for audit/telemetry distinction.
+    /// </summary>
+    private static Dictionary<string, object?> BuildEmbeddedAgentProperties(AIEmbeddedAgentBuilder builder)
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            { CoreConstants.ContextKeys.FeatureType, "embedded-agent" },
+        };
+
+        // Merge any additional properties from the builder
+        if (builder.AdditionalProperties is not null)
+        {
+            foreach (var kvp in builder.AdditionalProperties)
+            {
+                properties[kvp.Key] = kvp.Value;
+            }
+        }
+
+        return properties;
     }
 }

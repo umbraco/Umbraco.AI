@@ -1,6 +1,10 @@
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Agent.Core.EmbeddedAgents;
 using Umbraco.Cms.Core.Models;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
@@ -178,5 +182,71 @@ public interface IAIAgentService
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
         AIAgentExecutionOptions options,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a reusable embedded agent — an agent that runs purely in code without
+    /// being managed through the backoffice UI.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The returned agent participates in the full middleware pipeline (auditing, tracking,
+    /// guardrails, telemetry) and can use profiles and registered tools. It is not persisted
+    /// and does not appear in the backoffice.
+    /// </para>
+    /// <para>
+    /// The agent can be reused for multiple executions — each <c>RunAsync</c> or
+    /// <c>RunStreamingAsync</c> call creates a fresh runtime context scope automatically.
+    /// </para>
+    /// <para>
+    /// <strong>Note:</strong> Calling <c>RunAsync</c>/<c>RunStreamingAsync</c> directly on
+    /// the returned agent does not publish <see cref="AIAgentExecutingNotification"/> or
+    /// <see cref="AIAgentExecutedNotification"/>. Use <see cref="RunEmbeddedAgentAsync"/> or
+    /// <see cref="StreamEmbeddedAgentAsync"/> for notification support.
+    /// </para>
+    /// </remarks>
+    /// <param name="configure">Action to configure the embedded agent via the builder.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A MAF <see cref="MsAIAgent"/> ready for use with RunAsync/RunStreamingAsync.</returns>
+    Task<MsAIAgent> CreateEmbeddedAgentAsync(
+        Action<AIEmbeddedAgentBuilder> configure,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs an embedded agent with a one-shot execution, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a convenience method that creates the embedded agent, publishes
+    /// <see cref="AIAgentExecutingNotification"/>, executes the agent, and publishes
+    /// <see cref="AIAgentExecutedNotification"/>.
+    /// </para>
+    /// </remarks>
+    /// <param name="configure">Action to configure the embedded agent via the builder.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent response.</returns>
+    Task<AgentResponse> RunEmbeddedAgentAsync(
+        Action<AIEmbeddedAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams an embedded agent execution, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a convenience method that creates the embedded agent, publishes
+    /// <see cref="AIAgentExecutingNotification"/>, streams the agent execution, and publishes
+    /// <see cref="AIAgentExecutedNotification"/> when complete.
+    /// </para>
+    /// </remarks>
+    /// <param name="configure">Action to configure the embedded agent via the builder.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of agent response updates.</returns>
+    IAsyncEnumerable<AgentResponseUpdate> StreamEmbeddedAgentAsync(
+        Action<AIEmbeddedAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);
 }

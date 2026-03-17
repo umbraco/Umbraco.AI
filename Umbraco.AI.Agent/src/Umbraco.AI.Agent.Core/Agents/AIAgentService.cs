@@ -7,7 +7,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
-using Umbraco.AI.Agent.Core.EmbeddedAgents;
+using Umbraco.AI.Agent.Core.InlineAgents;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
@@ -522,15 +522,15 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
-    public async Task<MsAIAgent> CreateEmbeddedAgentAsync(
-        Action<AIEmbeddedAgentBuilder> configure,
+    public async Task<MsAIAgent> CreateInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        var (agent, builder) = BuildEmbeddedAgent(configure);
+        var (agent, builder) = BuildInlineAgent(configure);
 
-        var additionalProperties = BuildEmbeddedAgentProperties(builder);
+        var additionalProperties = BuildInlineAgentProperties(builder);
 
         return await _agentFactory.CreateAgentAsync(
             agent,
@@ -541,15 +541,15 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
-    public async Task<AgentResponse> RunEmbeddedAgentAsync(
-        Action<AIEmbeddedAgentBuilder> configure,
+    public async Task<AgentResponse> RunInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var (agent, builder) = BuildEmbeddedAgent(configure);
+        var (agent, builder) = BuildInlineAgent(configure);
 
         // Publish executing notification
         var eventMessages = new EventMessages();
@@ -559,7 +559,7 @@ internal sealed class AIAgentService : IAIAgentService
         if (executingNotification.Cancel)
         {
             var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
-            throw new InvalidOperationException($"Embedded agent execution cancelled: {errorMessages}");
+            throw new InvalidOperationException($"Inline agent execution cancelled: {errorMessages}");
         }
 
         var stopwatch = Stopwatch.StartNew();
@@ -567,7 +567,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         try
         {
-            var additionalProperties = BuildEmbeddedAgentProperties(builder);
+            var additionalProperties = BuildInlineAgentProperties(builder);
             var mafAgent = await _agentFactory.CreateAgentAsync(
                 agent,
                 builder.ContextItems,
@@ -595,15 +595,15 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<AgentResponseUpdate> StreamEmbeddedAgentAsync(
-        Action<AIEmbeddedAgentBuilder> configure,
+    public async IAsyncEnumerable<AgentResponseUpdate> StreamInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var (agent, builder) = BuildEmbeddedAgent(configure);
+        var (agent, builder) = BuildInlineAgent(configure);
 
         // Publish executing notification
         var eventMessages = new EventMessages();
@@ -613,7 +613,7 @@ internal sealed class AIAgentService : IAIAgentService
         if (executingNotification.Cancel)
         {
             var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
-            throw new InvalidOperationException($"Embedded agent execution cancelled: {errorMessages}");
+            throw new InvalidOperationException($"Inline agent execution cancelled: {errorMessages}");
         }
 
         var stopwatch = Stopwatch.StartNew();
@@ -621,7 +621,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         try
         {
-            var additionalProperties = BuildEmbeddedAgentProperties(builder);
+            var additionalProperties = BuildInlineAgentProperties(builder);
             var mafAgent = await _agentFactory.CreateAgentAsync(
                 agent,
                 builder.ContextItems,
@@ -654,9 +654,9 @@ internal sealed class AIAgentService : IAIAgentService
     /// <summary>
     /// Builds a transient agent entity and resolves the "all tools" flag.
     /// </summary>
-    private (AIAgent Agent, AIEmbeddedAgentBuilder Builder) BuildEmbeddedAgent(Action<AIEmbeddedAgentBuilder> configure)
+    private (AIAgent Agent, AIInlineAgentBuilder Builder) BuildInlineAgent(Action<AIInlineAgentBuilder> configure)
     {
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         configure(builder);
 
         // If WithAllTools() was called, resolve all tool IDs from the collection
@@ -671,15 +671,21 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Builds the additional properties dictionary for embedded agent execution.
-    /// Sets the feature type to "embedded-agent" for audit/telemetry distinction.
+    /// Builds the additional properties dictionary for inline agent execution.
+    /// Sets the feature type to "inline-agent" for audit/telemetry distinction.
     /// </summary>
-    private static Dictionary<string, object?> BuildEmbeddedAgentProperties(AIEmbeddedAgentBuilder builder)
+    private static Dictionary<string, object?> BuildInlineAgentProperties(AIInlineAgentBuilder builder)
     {
         var properties = new Dictionary<string, object?>
         {
-            { CoreConstants.ContextKeys.FeatureType, "embedded-agent" },
+            { CoreConstants.ContextKeys.FeatureType, "inline-agent" },
         };
+
+        // Add ChatOptions override if set
+        if (builder.ChatOptions is not null)
+        {
+            properties[CoreConstants.ContextKeys.ChatOptionsOverride] = builder.ChatOptions;
+        }
 
         // Merge any additional properties from the builder
         if (builder.AdditionalProperties is not null)

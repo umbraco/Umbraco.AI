@@ -1,18 +1,19 @@
 using System.Text.Json;
+using Microsoft.Extensions.AI;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.EmbeddedAgents;
+using Umbraco.AI.Agent.Core.InlineAgents;
 using Xunit;
 
-namespace Umbraco.AI.Agent.Tests.Unit.EmbeddedAgents;
+namespace Umbraco.AI.Agent.Tests.Unit.InlineAgents;
 
-public class AIEmbeddedAgentBuilderTests
+public class AIInlineAgentBuilderTests
 {
     [Fact]
     public void Build_WithAlias_CreatesStandardAgent()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder.WithAlias("test-agent");
 
         // Act
@@ -32,7 +33,7 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_WithNameAndDescription_SetsProperties()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder
             .WithAlias("test-agent")
             .WithName("Test Agent")
@@ -51,7 +52,7 @@ public class AIEmbeddedAgentBuilderTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder.WithAlias("test-agent").WithProfile(profileId);
 
         // Act
@@ -65,7 +66,7 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_WithInstructions_CreatesStandardConfig()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder
             .WithAlias("test-agent")
             .WithInstructions("You are a helpful assistant.");
@@ -84,7 +85,7 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_WithToolsAndScopes_SetsAllowedIds()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder
             .WithAlias("test-agent")
             .WithTools("tool-a", "tool-b")
@@ -105,7 +106,7 @@ public class AIEmbeddedAgentBuilderTests
     {
         // Arrange
         var settings = JsonDocument.Parse("""{"key": "value"}""").RootElement;
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder
             .WithAlias("test-pipeline")
             .WithWorkflow("sequential-pipeline", settings);
@@ -126,7 +127,7 @@ public class AIEmbeddedAgentBuilderTests
     {
         // Arrange
         var guardrailId = Guid.NewGuid();
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder
             .WithAlias("test-agent")
             .WithGuardrails(guardrailId);
@@ -142,7 +143,7 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_WithoutAlias_Throws()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() => builder.Build())
@@ -153,7 +154,7 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_WithBothInstructionsAndWorkflow_Throws()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder
             .WithAlias("test-agent")
             .WithInstructions("Some instructions")
@@ -168,10 +169,10 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_SameAlias_ProducesSameId()
     {
         // Arrange
-        var builder1 = new AIEmbeddedAgentBuilder();
+        var builder1 = new AIInlineAgentBuilder();
         builder1.WithAlias("deterministic-test");
 
-        var builder2 = new AIEmbeddedAgentBuilder();
+        var builder2 = new AIInlineAgentBuilder();
         builder2.WithAlias("deterministic-test");
 
         // Act
@@ -186,10 +187,10 @@ public class AIEmbeddedAgentBuilderTests
     public void Build_DifferentAliases_ProduceDifferentIds()
     {
         // Arrange
-        var builder1 = new AIEmbeddedAgentBuilder();
+        var builder1 = new AIInlineAgentBuilder();
         builder1.WithAlias("agent-alpha");
 
-        var builder2 = new AIEmbeddedAgentBuilder();
+        var builder2 = new AIInlineAgentBuilder();
         builder2.WithAlias("agent-beta");
 
         // Act
@@ -204,7 +205,7 @@ public class AIEmbeddedAgentBuilderTests
     public void UseAllTools_DefaultsFalse()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
 
         // Assert
         builder.UseAllTools.ShouldBeFalse();
@@ -214,10 +215,34 @@ public class AIEmbeddedAgentBuilderTests
     public void WithAllTools_SetsFlag()
     {
         // Arrange
-        var builder = new AIEmbeddedAgentBuilder();
+        var builder = new AIInlineAgentBuilder();
         builder.WithAllTools();
 
         // Assert
         builder.UseAllTools.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WithChatOptions_StoresOptions()
+    {
+        // Arrange
+        var builder = new AIInlineAgentBuilder();
+        var options = new ChatOptions { Temperature = 0.5f, MaxOutputTokens = 100 };
+
+        // Act
+        builder.WithAlias("test-agent").WithChatOptions(options);
+
+        // Assert
+        builder.ChatOptions.ShouldBe(options);
+    }
+
+    [Fact]
+    public void ChatOptions_DefaultsToNull()
+    {
+        // Arrange
+        var builder = new AIInlineAgentBuilder();
+
+        // Assert
+        builder.ChatOptions.ShouldBeNull();
     }
 }

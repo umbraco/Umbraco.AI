@@ -2,7 +2,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
-using Umbraco.AI.Agent.Core.EmbeddedAgents;
+using Umbraco.AI.Agent.Core.InlineAgents;
 using Umbraco.Cms.Core.Models;
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
@@ -185,7 +185,7 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Creates a reusable embedded agent — an agent that runs purely in code without
+    /// Creates a reusable inline agent — an agent that runs purely in code without
     /// being managed through the backoffice UI.
     /// </summary>
     /// <remarks>
@@ -201,52 +201,52 @@ public interface IAIAgentService
     /// <para>
     /// <strong>Note:</strong> Calling <c>RunAsync</c>/<c>RunStreamingAsync</c> directly on
     /// the returned agent does not publish <see cref="AIAgentExecutingNotification"/> or
-    /// <see cref="AIAgentExecutedNotification"/>. Use <see cref="RunEmbeddedAgentAsync"/> or
-    /// <see cref="StreamEmbeddedAgentAsync"/> for notification support.
+    /// <see cref="AIAgentExecutedNotification"/>. Use <see cref="RunInlineAgentAsync"/> or
+    /// <see cref="StreamInlineAgentAsync"/> for notification support.
     /// </para>
     /// </remarks>
-    /// <param name="configure">Action to configure the embedded agent via the builder.</param>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A MAF <see cref="MsAIAgent"/> ready for use with RunAsync/RunStreamingAsync.</returns>
-    Task<MsAIAgent> CreateEmbeddedAgentAsync(
-        Action<AIEmbeddedAgentBuilder> configure,
+    Task<MsAIAgent> CreateInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Runs an embedded agent with a one-shot execution, including notification publishing.
+    /// Runs an inline agent with a one-shot execution, including notification publishing.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This is a convenience method that creates the embedded agent, publishes
+    /// This is a convenience method that creates the inline agent, publishes
     /// <see cref="AIAgentExecutingNotification"/>, executes the agent, and publishes
     /// <see cref="AIAgentExecutedNotification"/>.
     /// </para>
     /// </remarks>
-    /// <param name="configure">Action to configure the embedded agent via the builder.</param>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
     /// <param name="messages">The chat messages to send to the agent.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent response.</returns>
-    Task<AgentResponse> RunEmbeddedAgentAsync(
-        Action<AIEmbeddedAgentBuilder> configure,
+    Task<AgentResponse> RunInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Streams an embedded agent execution, including notification publishing.
+    /// Streams an inline agent execution, including notification publishing.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This is a convenience method that creates the embedded agent, publishes
+    /// This is a convenience method that creates the inline agent, publishes
     /// <see cref="AIAgentExecutingNotification"/>, streams the agent execution, and publishes
     /// <see cref="AIAgentExecutedNotification"/> when complete.
     /// </para>
     /// </remarks>
-    /// <param name="configure">Action to configure the embedded agent via the builder.</param>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
     /// <param name="messages">The chat messages to send to the agent.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of agent response updates.</returns>
-    IAsyncEnumerable<AgentResponseUpdate> StreamEmbeddedAgentAsync(
-        Action<AIEmbeddedAgentBuilder> configure,
+    IAsyncEnumerable<AgentResponseUpdate> StreamInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);
 }

@@ -3,8 +3,10 @@ using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Tests.Unit.Services;
 
@@ -13,6 +15,8 @@ public class AIChatServiceTests
     private readonly Mock<IAIChatClientFactory> _clientFactoryMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
+    private readonly Mock<IEventAggregator> _eventAggregatorMock;
+    private readonly Mock<IAIRuntimeContextScopeProvider> _scopeProviderMock;
     private readonly AIChatService _service;
 
     public AIChatServiceTests()
@@ -24,11 +28,17 @@ public class AIChatServiceTests
         {
             DefaultChatProfileAlias = "default-chat"
         });
+        _eventAggregatorMock = new Mock<IEventAggregator>();
+        _scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
+        var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
 
         _service = new AIChatService(
             _clientFactoryMock.Object,
             _profileServiceMock.Object,
-            _optionsMock.Object);
+            _optionsMock.Object,
+            _eventAggregatorMock.Object,
+            _scopeProviderMock.Object,
+            contributorCollection);
     }
 
     #region GetChatResponseAsync - Default profile

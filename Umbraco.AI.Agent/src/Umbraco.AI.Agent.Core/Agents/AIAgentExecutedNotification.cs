@@ -36,12 +36,12 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     }
 
     /// <summary>
-    /// Gets the agent that was executed, or null for embedded agent executions.
+    /// Gets the agent that was executed, or null for inline agent executions.
     /// </summary>
     public AIAgent Agent { get; }
 
     /// <summary>
-    /// Gets the execution run request, or null for embedded agent executions.
+    /// Gets the execution run request, or null for inline agent executions.
     /// </summary>
     public AGUIRunRequest? Request { get; }
 

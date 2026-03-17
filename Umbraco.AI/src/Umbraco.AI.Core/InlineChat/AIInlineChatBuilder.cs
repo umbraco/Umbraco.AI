@@ -17,7 +17,7 @@ namespace Umbraco.AI.Core.InlineChat;
 /// <strong>Example:</strong>
 /// </para>
 /// <code>
-/// var response = await chatService.GetInlineChatResponseAsync(chat => chat
+/// var response = await chatService.GetChatResponseAsync(chat => chat
 ///     .WithAlias("my-summarizer")
 ///     .WithProfile(profileId)
 ///     .WithChatOptions(new ChatOptions { Temperature = 0.3f })
@@ -25,7 +25,7 @@ namespace Umbraco.AI.Core.InlineChat;
 ///     messages, cancellationToken);
 /// </code>
 /// </remarks>
-public sealed class AIInlineChatBuilder
+public sealed class AIChatBuilder
 {
     // Namespace GUID for deterministic ID generation (UUID v5)
     // Different from inline agent namespace to avoid ID collisions
@@ -50,7 +50,7 @@ public sealed class AIInlineChatBuilder
     /// </remarks>
     /// <param name="alias">A unique, URL-safe identifier for this inline chat.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithAlias(string alias)
+    public AIChatBuilder WithAlias(string alias)
     {
         _alias = alias;
         return this;
@@ -62,7 +62,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="name">The display name.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithName(string name)
+    public AIChatBuilder WithName(string name)
     {
         _name = name;
         return this;
@@ -73,7 +73,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="description">The description of what this chat does.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithDescription(string? description)
+    public AIChatBuilder WithDescription(string? description)
     {
         _description = description;
         return this;
@@ -85,7 +85,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="profileId">The profile ID.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithProfile(Guid profileId)
+    public AIChatBuilder WithProfile(Guid profileId)
     {
         _profileId = profileId;
         return this;
@@ -96,7 +96,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="options">The chat options to apply.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithChatOptions(ChatOptions options)
+    public AIChatBuilder WithChatOptions(ChatOptions options)
     {
         _chatOptions = options;
         return this;
@@ -107,7 +107,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="contextItems">The context items.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithContextItems(IEnumerable<AIRequestContextItem> contextItems)
+    public AIChatBuilder WithContextItems(IEnumerable<AIRequestContextItem> contextItems)
     {
         _contextItems = contextItems;
         return this;
@@ -118,7 +118,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="guardrailIds">The guardrail IDs to apply.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithGuardrails(params Guid[] guardrailIds)
+    public AIChatBuilder WithGuardrails(params Guid[] guardrailIds)
     {
         _guardrailIds = guardrailIds;
         return this;
@@ -129,7 +129,7 @@ public sealed class AIInlineChatBuilder
     /// </summary>
     /// <param name="properties">The additional properties.</param>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder WithAdditionalProperties(IReadOnlyDictionary<string, object?> properties)
+    public AIChatBuilder WithAdditionalProperties(IReadOnlyDictionary<string, object?> properties)
     {
         _additionalProperties = properties;
         return this;
@@ -150,7 +150,7 @@ public sealed class AIInlineChatBuilder
     /// </para>
     /// </remarks>
     /// <returns>The builder for chaining.</returns>
-    public AIInlineChatBuilder AsPassThrough()
+    public AIChatBuilder AsPassThrough()
     {
         _isPassThrough = true;
         return this;

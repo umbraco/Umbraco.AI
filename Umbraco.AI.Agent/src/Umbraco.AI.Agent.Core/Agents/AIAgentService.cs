@@ -528,9 +528,9 @@ internal sealed class AIAgentService : IAIAgentService
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        var (agent, builder) = BuildInlineAgent(configure);
+        var (agent, builder) = BuildAgent(configure);
 
-        var additionalProperties = BuildInlineAgentProperties(builder);
+        var additionalProperties = BuildAgentProperties(builder);
 
         return await _agentFactory.CreateAgentAsync(
             agent,
@@ -541,7 +541,7 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
-    public async Task<AgentResponse> RunInlineAgentAsync(
+    public async Task<AgentResponse> RunAgentAsync(
         Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default)
@@ -549,7 +549,7 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var (agent, builder) = BuildInlineAgent(configure);
+        var (agent, builder) = BuildAgent(configure);
 
         // Publish executing notification
         var eventMessages = new EventMessages();
@@ -567,7 +567,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         try
         {
-            var additionalProperties = BuildInlineAgentProperties(builder);
+            var additionalProperties = BuildAgentProperties(builder);
             var mafAgent = await _agentFactory.CreateAgentAsync(
                 agent,
                 builder.ContextItems,
@@ -595,7 +595,7 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<AgentResponseUpdate> StreamInlineAgentAsync(
+    public async IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
         Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -603,7 +603,7 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var (agent, builder) = BuildInlineAgent(configure);
+        var (agent, builder) = BuildAgent(configure);
 
         // Publish executing notification
         var eventMessages = new EventMessages();
@@ -621,7 +621,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         try
         {
-            var additionalProperties = BuildInlineAgentProperties(builder);
+            var additionalProperties = BuildAgentProperties(builder);
             var mafAgent = await _agentFactory.CreateAgentAsync(
                 agent,
                 builder.ContextItems,
@@ -654,7 +654,7 @@ internal sealed class AIAgentService : IAIAgentService
     /// <summary>
     /// Builds a transient agent entity and resolves the "all tools" flag.
     /// </summary>
-    private (AIAgent Agent, AIInlineAgentBuilder Builder) BuildInlineAgent(Action<AIInlineAgentBuilder> configure)
+    private (AIAgent Agent, AIInlineAgentBuilder Builder) BuildAgent(Action<AIInlineAgentBuilder> configure)
     {
         var builder = new AIInlineAgentBuilder();
         configure(builder);
@@ -674,7 +674,7 @@ internal sealed class AIAgentService : IAIAgentService
     /// Builds the additional properties dictionary for inline agent execution.
     /// Sets the feature type to "inline-agent" for audit/telemetry distinction.
     /// </summary>
-    private static Dictionary<string, object?> BuildInlineAgentProperties(AIInlineAgentBuilder builder)
+    private static Dictionary<string, object?> BuildAgentProperties(AIInlineAgentBuilder builder)
     {
         var properties = new Dictionary<string, object?>
         {

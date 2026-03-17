@@ -201,8 +201,8 @@ public interface IAIAgentService
     /// <para>
     /// <strong>Note:</strong> Calling <c>RunAsync</c>/<c>RunStreamingAsync</c> directly on
     /// the returned agent does not publish <see cref="AIAgentExecutingNotification"/> or
-    /// <see cref="AIAgentExecutedNotification"/>. Use <see cref="RunInlineAgentAsync"/> or
-    /// <see cref="StreamInlineAgentAsync"/> for notification support.
+    /// <see cref="AIAgentExecutedNotification"/>. Use <see cref="RunAgentAsync"/> or
+    /// <see cref="StreamAgentAsync"/> for notification support.
     /// </para>
     /// </remarks>
     /// <param name="configure">Action to configure the inline agent via the builder.</param>
@@ -226,7 +226,7 @@ public interface IAIAgentService
     /// <param name="messages">The chat messages to send to the agent.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent response.</returns>
-    Task<AgentResponse> RunInlineAgentAsync(
+    Task<AgentResponse> RunAgentAsync(
         Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);
@@ -245,7 +245,7 @@ public interface IAIAgentService
     /// <param name="messages">The chat messages to send to the agent.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of agent response updates.</returns>
-    IAsyncEnumerable<AgentResponseUpdate> StreamInlineAgentAsync(
+    IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
         Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);

@@ -110,7 +110,7 @@ Be objective and consistent in your evaluation.
                 new(ChatRole.User, judgmentPrompt)
             };
 
-            var response = await _chatService.GetInlineChatResponseAsync(chat =>
+            var response = await _chatService.GetChatResponseAsync(chat =>
             {
                 chat.WithAlias("test-llm-judge-grader");
                 if (config.ProfileId.HasValue)

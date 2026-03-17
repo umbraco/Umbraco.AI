@@ -66,7 +66,7 @@ public class CompleteChatController : ChatControllerBase
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
 
             // Get chat response
-            var response = await _chatService.GetInlineChatResponseAsync(chat =>
+            var response = await _chatService.GetChatResponseAsync(chat =>
             {
                 chat.WithAlias("management-api-chat");
                 if (profileId.HasValue)

@@ -72,6 +72,10 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
         // Enrich the ambient Activity with Umbraco-specific tags (independent of audit logging)
         AIActivityEnricher.EnrichCurrentActivity(auditLog, _runtimeContextAccessor);
 
+        var auditPrompt = auditLog is not null
+            ? new AIAuditPrompt { Data = values.ToList(), Capability = AICapability.Embedding }
+            : null;
+
         try
         {
             var result = await base.GenerateAsync(values, options, cancellationToken);
@@ -82,6 +86,7 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
 
                 await _auditLogService.QueueCompleteAuditLogAsync(
                     auditLog,
+                    auditPrompt,
                     new AIAuditResponse
                     {
                         Usage = trackingGenerator?.LastUsageDetails,
@@ -97,7 +102,7 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
             if (auditLog is not null)
             {
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog, ex, cancellationToken);
+                    auditLog, auditPrompt, ex, cancellationToken);
             }
 
             throw;

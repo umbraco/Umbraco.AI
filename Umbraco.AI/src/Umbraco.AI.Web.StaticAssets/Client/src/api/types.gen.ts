@@ -1772,6 +1772,35 @@ export type GuardrailAliasExistsResponses = {
 
 export type GuardrailAliasExistsResponse = GuardrailAliasExistsResponses[keyof GuardrailAliasExistsResponses];
 
+export type DeleteGuardrailData = {
+    body?: never;
+    path: {
+        guardrailIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}';
+};
+
+export type DeleteGuardrailErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type DeleteGuardrailError = DeleteGuardrailErrors[keyof DeleteGuardrailErrors];
+
+export type DeleteGuardrailResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type GetGuardrailByIdOrAliasData = {
     body?: never;
     path: {
@@ -1830,35 +1859,6 @@ export type UpdateGuardrailErrors = {
 export type UpdateGuardrailError = UpdateGuardrailErrors[keyof UpdateGuardrailErrors];
 
 export type UpdateGuardrailResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type DeleteGuardrailData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/guardrails/{id}';
-};
-
-export type DeleteGuardrailErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type DeleteGuardrailError = DeleteGuardrailErrors[keyof DeleteGuardrailErrors];
-
-export type DeleteGuardrailResponses = {
     /**
      * OK
      */

@@ -5,6 +5,47 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.5.0...Umbraco.AI@1.6.0) (2026-03-16)
+
+### feat
+
+* **core,agent,agent-deploy:** Generalize guardrail evaluators and promote GuardrailIds to agent level ([8371869](https://github.com/umbraco/Umbraco.AI/commit/8371869be6d3d84d8f2451f111d7086dc07e4aa9))
+* **core,agent:** Add classifier chat profile setting for agent routing ([c416145](https://github.com/umbraco/Umbraco.AI/commit/c41614519de91374fcb84a26f1dea269825c17e4))
+* **core,deploy:** Add guardrail Deploy support across all Deploy projects ([0527502](https://github.com/umbraco/Umbraco.AI/commit/052750206e2cecf613c686688c6d879edfd4fcf3))
+* **core,deploy:** Add guardrail persistence, notifications, versioning, and tests ([c08f9ff](https://github.com/umbraco/Umbraco.AI/commit/c08f9ffd6eb6b5ec77e7e09d214d4cef40857326))
+* **core,prompt,agent:** Add Governance tab to profile, prompt, and agent workspaces ([9983fdd](https://github.com/umbraco/Umbraco.AI/commit/9983fddf3f06b796230f263774ad25660d71307a))
+* **core,prompt,agent:** Add guardrail integrations for Prompt, Agent, and Tests ([b3a9b04](https://github.com/umbraco/Umbraco.AI/commit/b3a9b045d5d2e33d2da3de5bc2bf4843911d15c1))
+* **core,prompt,agent:** Show guardrail name in evaluation results and support delete by alias ([ff4cf0b](https://github.com/umbraco/Umbraco.AI/commit/ff4cf0bcab19e2ebd949080023b3e741dbd9c0c3))
+* **core:** Add Blocked status for guardrail-blocked audit logs ([40d1032](https://github.com/umbraco/Umbraco.AI/commit/40d1032d71ddb132f81b909eed27802616ec2f27))
+* **core:** Add guardrail test grader ([43e455d](https://github.com/umbraco/Umbraco.AI/commit/43e455dc187c8eeca3d35ae31676c2dfdb90c433))
+* **core:** Add OpenTelemetry tracing and metrics support ([37a8164](https://github.com/umbraco/Umbraco.AI/commit/37a81641a25692313ed3b4248a282179e2221c99))
+* **core:** Add Redact action and IAIGuardrailRedactable interface for guardrail evaluators ([86d5e11](https://github.com/umbraco/Umbraco.AI/commit/86d5e1125ec5bcb0817aae80ce25cc64101419b5))
+* **core:** Add response guardrails system for AI safety enforcement ([bdcffc4](https://github.com/umbraco/Umbraco.AI/commit/bdcffc4e2fe4bf8d4db72f879bb1bb12f082a3ae))
+* **core:** Implement redaction logic in guardrail chat client middleware ([afafa97](https://github.com/umbraco/Umbraco.AI/commit/afafa97fde53169fa161c20cfdb2ae3c3f061584))
+* **core:** Log warning when guardrail rules flag content ([5452bf6](https://github.com/umbraco/Umbraco.AI/commit/5452bf65856e350b57a573ec1e85792cc5305030))
+* **frontend:** Add guardrails UI feature with CRUD, rules editor, and profile integration ([04f573e](https://github.com/umbraco/Umbraco.AI/commit/04f573e30ce74082f5535e41658ee1b885ae9004))
+* **ui:** Add Redact option to guardrail rule configuration UI ([db7ae70](https://github.com/umbraco/Umbraco.AI/commit/db7ae704b923a348356651b29927062446f6061d))
+
+### fix
+
+* **core,agent,prompt:** Fix SQLite migration NullReferenceException in Development mode ([44306b9](https://github.com/umbraco/Umbraco.AI/commit/44306b9abc7bbe1846c7b3e5a88d2487f2b9c549))
+* **core,prompt,agent,copilot:** Add white-space nowrap to all uui-tag elements ([e4e9c04](https://github.com/umbraco/Umbraco.AI/commit/e4e9c04e3cbe7eb1c8782c20915032081d421f55))
+* **core,prompt,agent:** Fix UI labels, noResults localization key, and regenerate API clients ([dde99b2](https://github.com/umbraco/Umbraco.AI/commit/dde99b2770c675afc8b7979a3b737f06558bdaee))
+
+### refactor
+
+* **core,agent,prompt:** Move ConfigureDatabaseProvider to DbContext classes ([6f086dd](https://github.com/umbraco/Umbraco.AI/commit/6f086dd17b4aedb9be0f7594e0fe40aa50ca03d8))
+* **core,agent,prompt:** Remove redundant DataDirectory resolution from migration handlers ([b089bf1](https://github.com/umbraco/Umbraco.AI/commit/b089bf1b7e8da0eeaf9b2904c9cf2ca656342324))
+* **core,agent,prompt:** Simplify migration handler fix and correct root cause diagnosis ([c2dc3ec](https://github.com/umbraco/Umbraco.AI/commit/c2dc3ec43f99911a61e9e3737427e5ad6ffc62b7))
+* **core:** Extract shared Activity enrichment into AIActivityEnricher ([af5a90b](https://github.com/umbraco/Umbraco.AI/commit/af5a90bee2cec37866eba4dc0104a214f6c825ee))
+* **core:** Remove Enabled flag from AIGuardrailRule ([3e633c2](https://github.com/umbraco/Umbraco.AI/commit/3e633c2613bc6df29a0ba4308fde366ecc1c80de))
+* **core:** Rename IAIGuardrailRedactable to IAIRedactableGuardrail ([6f32635](https://github.com/umbraco/Umbraco.AI/commit/6f32635f45f42bf1fddc3be5d0a2666d815a48f1))
+* **core:** Rename IAIRedactableGuardrail to IAIRedactableGuardrailEvaluator ([b2a8b4f](https://github.com/umbraco/Umbraco.AI/commit/b2a8b4f24f50411fb4a10b4a095b1018edbde989))
+* **core:** Rename RedactableMatch to RedactionCandidate ([93daddb](https://github.com/umbraco/Umbraco.AI/commit/93daddb6c295134359f44f1dbfbe00f178ba0f37))
+* **frontend:** Replace hand-written guardrail API with generated SDK service ([57a0dde](https://github.com/umbraco/Umbraco.AI/commit/57a0dde1359d85174962b1eeb49c4bbec670b725))
+* **ui:** Reorder settings to show Classifier Chat Profile before Default Embedding Profile ([0037408](https://github.com/umbraco/Umbraco.AI/commit/00374082c243a4f2fef792c4af16115134b63180))
+* **ui:** Reorganize section sidebar into Configuration and Monitoring groups ([e7a4169](https://github.com/umbraco/Umbraco.AI/commit/e7a41697e66b53cc314c814dc37c61978c91b311))
+
 ## [1.5.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.4.1...Umbraco.AI@1.5.0) (2026-03-12)
 
 ### feat

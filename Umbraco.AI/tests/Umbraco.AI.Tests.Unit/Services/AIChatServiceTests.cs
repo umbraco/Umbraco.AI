@@ -7,8 +7,11 @@ using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 
 namespace Umbraco.AI.Tests.Unit.Services;
+
+#pragma warning disable CS0618 // Tests for deprecated API surface — will be removed with the methods in v3
 
 public class AIChatServiceTests
 {
@@ -29,7 +32,20 @@ public class AIChatServiceTests
             DefaultChatProfileAlias = "default-chat"
         });
         _eventAggregatorMock = new Mock<IEventAggregator>();
+        _eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
         _scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
+        var mockScope = new Mock<IAIRuntimeContextScope>();
+        mockScope.Setup(s => s.Context).Returns(new AIRuntimeContext([]));
+        _scopeProviderMock
+            .Setup(x => x.CreateScope(It.IsAny<IEnumerable<AIRequestContextItem>>()))
+            .Returns(mockScope.Object);
+        _scopeProviderMock
+            .Setup(x => x.CreateScope())
+            .Returns(mockScope.Object);
+
         var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
 
         _service = new AIChatService(
@@ -450,10 +466,13 @@ public class AIChatServiceTests
         // Act
         var client = await _service.GetChatClientAsync();
 
-        // Assert
-        client.ShouldBe(fakeChatClient);
+        // Assert — now returns ScopedInlineChatClient wrapping the factory client
+        client.ShouldNotBeNull();
         _profileServiceMock.Verify(
             x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _clientFactoryMock.Verify(
+            x => x.CreateClientAsync(defaultProfile, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -481,8 +500,8 @@ public class AIChatServiceTests
         // Act
         var client = await _service.GetChatClientAsync(profileId);
 
-        // Assert
-        client.ShouldBe(fakeChatClient);
+        // Assert — now returns ScopedInlineChatClient wrapping the factory client
+        client.ShouldNotBeNull();
         _profileServiceMock.Verify(
             x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()),
             Times.Once);

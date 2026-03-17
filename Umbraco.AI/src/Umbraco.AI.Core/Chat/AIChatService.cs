@@ -35,107 +35,62 @@ internal sealed class AIChatService : IAIChatService
         _contributors = contributors;
     }
 
-    public async Task<ChatResponse> GetChatResponseAsync(
+    #pragma warning disable CS0618 // Obsolete members - implementing the deprecated interface methods
+
+    public Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
-    }
+        => GetInlineChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId: null, options),
+            messages, cancellationToken);
 
-    public async Task<ChatResponse> GetChatResponseAsync(
+    public Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetProfileAsync(profileId, cancellationToken);
-        if (profile is null)
-        {
-            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
-        }
+        => GetInlineChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId, options),
+            messages, cancellationToken);
 
-        EnsureProfileSupportsChat(profile);
-
-        return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
-    }
-
-    private async Task<ChatResponse> GetChatResponseInternalAsync(
-        AIProfile profile,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options,
-        CancellationToken cancellationToken)
-    {
-        var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-        var mergedOptions = MergeOptions(profile, options);
-
-        return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
-    }
-
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
-        {
-            yield return update;
-        }
-    }
+        CancellationToken cancellationToken = default)
+        => StreamInlineChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId: null, options),
+            messages, cancellationToken);
 
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetProfileAsync(profileId, cancellationToken);
-        if (profile is null)
-        {
-            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
-        }
+        CancellationToken cancellationToken = default)
+        => StreamInlineChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId, options),
+            messages, cancellationToken);
 
-        EnsureProfileSupportsChat(profile);
-
-        await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
-        {
-            yield return update;
-        }
-    }
-
-    private async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseInternalAsync(
-        AIProfile profile,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-        var mergedOptions = MergeOptions(profile, options);
-
-        await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
-        {
-            yield return update;
-        }
-    }
-
-    public async Task<IChatClient> GetChatClientAsync(
+    public Task<IChatClient> GetChatClientAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
+        => CreateInlineChatClientAsync(
+            b => ConfigureLegacyChat(b, profileId, options: null),
+            cancellationToken);
+
+    #pragma warning restore CS0618
+
+    private static void ConfigureLegacyChat(AIInlineChatBuilder builder, Guid? profileId, ChatOptions? options)
     {
-        var profile = profileId.HasValue
-            ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
-            : await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-
-        if (profile is null)
+        builder.WithAlias("chat");
+        if (profileId.HasValue)
         {
-            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
+            builder.WithProfile(profileId.Value);
         }
-
-        EnsureProfileSupportsChat(profile);
-
-        return await _clientFactory.CreateClientAsync(profile, cancellationToken);
+        if (options is not null)
+        {
+            builder.WithChatOptions(options);
+        }
     }
 
     public async Task<ChatResponse> GetInlineChatResponseAsync(

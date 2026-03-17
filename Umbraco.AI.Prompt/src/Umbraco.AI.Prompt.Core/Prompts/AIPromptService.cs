@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
@@ -322,9 +323,14 @@ internal sealed class AIPromptService : IAIPromptService
 
         // 10. Execute via chat service — use profile override if provided
         var profileId = options.ProfileIdOverride ?? prompt.ProfileId;
-        var response = profileId.HasValue
-            ? await _chatService.GetChatResponseAsync(profileId.Value, messages, chatOptions, cancellationToken)
-            : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
+        var response = await _chatService.GetInlineChatResponseAsync(chat =>
+        {
+            chat.WithAlias($"prompt-{prompt.Alias}").WithChatOptions(chatOptions);
+            if (profileId.HasValue)
+            {
+                chat.WithProfile(profileId.Value);
+            }
+        }, messages, cancellationToken);
 
         var responseText = response.Text ?? string.Empty;
 
@@ -471,9 +477,14 @@ internal sealed class AIPromptService : IAIPromptService
             messages.Insert(0, new ChatMessage(ChatRole.System, enhancedInstructions));
 
             // Retry execution
-            var retryResponse = prompt.ProfileId.HasValue
-                ? await _chatService.GetChatResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
-                : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
+            var retryResponse = await _chatService.GetInlineChatResponseAsync(chat =>
+            {
+                chat.WithAlias($"prompt-{prompt.Alias}-retry").WithChatOptions(chatOptions);
+                if (prompt.ProfileId.HasValue)
+                {
+                    chat.WithProfile(prompt.ProfileId.Value);
+                }
+            }, messages, cancellationToken);
 
             var retryText = retryResponse.Text ?? string.Empty;
             var combinedUsage = CombineUsage(usage, retryResponse.Usage);

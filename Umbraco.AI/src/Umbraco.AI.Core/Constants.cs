@@ -148,5 +148,13 @@ public static class Constants
         /// Used by the test execution system to override guardrails for testing scenarios.
         /// </summary>
         public const string GuardrailIdsOverride = "Umbraco.AI.GuardrailIdsOverride";
+
+        /// <summary>
+        /// Key for chat options override in runtime context.
+        /// When set, the <see cref="Chat.AIChatOptionsOverrideChatMiddleware"/> merges these options
+        /// into the call's options (override values take precedence).
+        /// Used by inline agent and inline chat builders to pass ChatOptions through the middleware pipeline.
+        /// </summary>
+        public const string ChatOptionsOverride = "Umbraco.AI.ChatOptionsOverride";
     }
 }

@@ -83,6 +83,7 @@ public static partial class UmbracoBuilderExtensions
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
         builder.AIChatMiddleware()
             .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
+            .Append<AIChatOptionsOverrideChatMiddleware>()    // ChatOptions override from runtime context (before function invoking)
             .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
             .Append<AIGuardrailChatMiddleware>()         // Guardrail evaluation (pre/post-generate)

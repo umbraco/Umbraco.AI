@@ -107,7 +107,7 @@ export class UaiGuardrailDetailServerDataSource implements UmbDetailDataSource<U
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            GuardrailsService.deleteGuardrail({ path: { id: unique } }),
+            GuardrailsService.deleteGuardrail({ path: { guardrailIdOrAlias: unique } }),
         );
 
         if (error) {

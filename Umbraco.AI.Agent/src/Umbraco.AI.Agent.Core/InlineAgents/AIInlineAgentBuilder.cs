@@ -21,7 +21,7 @@ namespace Umbraco.AI.Agent.Core.InlineAgents;
 /// <strong>Standard agent example:</strong>
 /// </para>
 /// <code>
-/// var response = await agentService.RunInlineAgentAsync(agent => agent
+/// var response = await agentService.RunAgentAsync(agent => agent
 ///     .WithAlias("my-summarizer")
 ///     .WithInstructions("Summarize the provided content concisely.")
 ///     .WithToolScopes("content-read")

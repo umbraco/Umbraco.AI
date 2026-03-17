@@ -323,7 +323,7 @@ internal sealed class AIPromptService : IAIPromptService
 
         // 10. Execute via chat service — use profile override if provided
         var profileId = options.ProfileIdOverride ?? prompt.ProfileId;
-        var response = await _chatService.GetInlineChatResponseAsync(chat =>
+        var response = await _chatService.GetChatResponseAsync(chat =>
         {
             chat.WithAlias($"prompt-{prompt.Alias}")
                 .WithChatOptions(chatOptions)
@@ -479,7 +479,7 @@ internal sealed class AIPromptService : IAIPromptService
             messages.Insert(0, new ChatMessage(ChatRole.System, enhancedInstructions));
 
             // Retry execution
-            var retryResponse = await _chatService.GetInlineChatResponseAsync(chat =>
+            var retryResponse = await _chatService.GetChatResponseAsync(chat =>
             {
                 chat.WithAlias($"prompt-{prompt.Alias}-retry")
                     .WithChatOptions(chatOptions)

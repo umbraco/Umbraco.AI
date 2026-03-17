@@ -59,7 +59,7 @@ public static class Constants
     public static class FeatureTypes
     {
         /// <summary>
-        /// Feature type for inline chat executions via <see cref="Chat.IAIChatService.GetInlineChatResponseAsync"/>.
+        /// Feature type for inline chat executions via <see cref="Chat.IAIChatService.GetChatResponseAsync"/>.
         /// </summary>
         public const string InlineChat = "inline-chat";
 

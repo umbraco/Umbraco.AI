@@ -16,13 +16,13 @@ namespace Umbraco.AI.Core.InlineChat;
 /// and disposes any scope it created. This mirrors the <c>ScopedProfileChatClient</c> pattern.
 /// </para>
 /// <para>
-/// This client is returned by <see cref="IAIChatService.CreateInlineChatClientAsync"/> and
+/// This client is returned by <see cref="IAIChatService.CreateChatClientAsync"/> and
 /// does not publish notifications (matching <c>CreateInlineAgentAsync</c> behavior).
 /// </para>
 /// </remarks>
 internal sealed class ScopedInlineChatClient : DelegatingChatClient
 {
-    private readonly AIInlineChatBuilder _builder;
+    private readonly AIChatBuilder _builder;
     private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
@@ -37,7 +37,7 @@ internal sealed class ScopedInlineChatClient : DelegatingChatClient
     /// <param name="contributors">Collection of context contributors to populate the scope.</param>
     internal ScopedInlineChatClient(
         IChatClient innerClient,
-        AIInlineChatBuilder builder,
+        AIChatBuilder builder,
         IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)

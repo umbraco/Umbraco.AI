@@ -6,13 +6,13 @@ using Xunit;
 
 namespace Umbraco.AI.Tests.Unit.InlineChat;
 
-public class AIInlineChatBuilderTests
+public class AIChatBuilderTests
 {
     [Fact]
     public void Validate_WithoutAlias_Throws()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
 
         // Act & Assert
         Should.Throw<InvalidOperationException>(() => builder.Validate())
@@ -23,7 +23,7 @@ public class AIInlineChatBuilderTests
     public void Validate_WithAlias_DoesNotThrow()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         builder.WithAlias("test-chat");
 
         // Act & Assert
@@ -34,10 +34,10 @@ public class AIInlineChatBuilderTests
     public void Id_SameAlias_ProducesSameId()
     {
         // Arrange
-        var builder1 = new AIInlineChatBuilder();
+        var builder1 = new AIChatBuilder();
         builder1.WithAlias("deterministic-test");
 
-        var builder2 = new AIInlineChatBuilder();
+        var builder2 = new AIChatBuilder();
         builder2.WithAlias("deterministic-test");
 
         // Assert
@@ -49,10 +49,10 @@ public class AIInlineChatBuilderTests
     public void Id_DifferentAliases_ProduceDifferentIds()
     {
         // Arrange
-        var builder1 = new AIInlineChatBuilder();
+        var builder1 = new AIChatBuilder();
         builder1.WithAlias("chat-alpha");
 
-        var builder2 = new AIInlineChatBuilder();
+        var builder2 = new AIChatBuilder();
         builder2.WithAlias("chat-beta");
 
         // Assert
@@ -63,7 +63,7 @@ public class AIInlineChatBuilderTests
     public void Name_DefaultsToAlias()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         builder.WithAlias("my-chat");
 
         // Assert
@@ -74,7 +74,7 @@ public class AIInlineChatBuilderTests
     public void Name_WhenExplicitlySet_UsesSetValue()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         builder.WithAlias("my-chat").WithName("My Chat");
 
         // Assert
@@ -85,7 +85,7 @@ public class AIInlineChatBuilderTests
     public void ProfileId_DefaultsToNull()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
 
         // Assert
         builder.ProfileId.ShouldBeNull();
@@ -96,7 +96,7 @@ public class AIInlineChatBuilderTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         builder.WithProfile(profileId);
 
         // Assert
@@ -107,7 +107,7 @@ public class AIInlineChatBuilderTests
     public void WithChatOptions_StoresOptions()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         var options = new ChatOptions { Temperature = 0.5f, MaxOutputTokens = 100 };
 
         // Act
@@ -121,7 +121,7 @@ public class AIInlineChatBuilderTests
     public void ChatOptions_DefaultsToNull()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
 
         // Assert
         builder.ChatOptions.ShouldBeNull();
@@ -132,7 +132,7 @@ public class AIInlineChatBuilderTests
     {
         // Arrange
         var guardrailId = Guid.NewGuid();
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         builder.WithGuardrails(guardrailId);
 
         // Assert
@@ -143,7 +143,7 @@ public class AIInlineChatBuilderTests
     public void WithContextItems_StoresContextItems()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         var items = new[]
         {
             new AIRequestContextItem { Description = "test", Value = "value" }
@@ -160,7 +160,7 @@ public class AIInlineChatBuilderTests
     public void WithDescription_StoresDescription()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
 
         // Act
         builder.WithDescription("A test description");
@@ -173,7 +173,7 @@ public class AIInlineChatBuilderTests
     public void WithAdditionalProperties_StoresProperties()
     {
         // Arrange
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         var properties = new Dictionary<string, object?> { { "key", "value" } };
 
         // Act

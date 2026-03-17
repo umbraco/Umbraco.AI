@@ -44,7 +44,7 @@ internal sealed class AIChatService : IAIChatService
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-        => GetInlineChatResponseAsync(
+        => GetChatResponseAsync(
             b => ConfigureLegacyChat(b, profileId: null, options),
             messages, cancellationToken);
 
@@ -53,7 +53,7 @@ internal sealed class AIChatService : IAIChatService
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-        => GetInlineChatResponseAsync(
+        => GetChatResponseAsync(
             b => ConfigureLegacyChat(b, profileId, options),
             messages, cancellationToken);
 
@@ -61,7 +61,7 @@ internal sealed class AIChatService : IAIChatService
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-        => StreamInlineChatResponseAsync(
+        => StreamChatResponseAsync(
             b => ConfigureLegacyChat(b, profileId: null, options),
             messages, cancellationToken);
 
@@ -70,20 +70,20 @@ internal sealed class AIChatService : IAIChatService
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-        => StreamInlineChatResponseAsync(
+        => StreamChatResponseAsync(
             b => ConfigureLegacyChat(b, profileId, options),
             messages, cancellationToken);
 
     public Task<IChatClient> GetChatClientAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
-        => CreateInlineChatClientAsync(
+        => CreateChatClientAsync(
             b => ConfigureLegacyChat(b, profileId, options: null),
             cancellationToken);
 
     #pragma warning restore CS0618
 
-    private static void ConfigureLegacyChat(AIInlineChatBuilder builder, Guid? profileId, ChatOptions? options)
+    private static void ConfigureLegacyChat(AIChatBuilder builder, Guid? profileId, ChatOptions? options)
     {
         builder.WithAlias("chat");
         if (profileId.HasValue)
@@ -96,15 +96,15 @@ internal sealed class AIChatService : IAIChatService
         }
     }
 
-    public async Task<ChatResponse> GetInlineChatResponseAsync(
-        Action<AIInlineChatBuilder> configure,
+    public async Task<ChatResponse> GetChatResponseAsync(
+        Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var builder = BuildInlineChat(configure);
+        var builder = BuildChat(configure);
 
         // Pass-through mode: skip notifications and duration tracking.
         // The parent feature (e.g., prompt) handles its own observability.
@@ -143,15 +143,15 @@ internal sealed class AIChatService : IAIChatService
         }
     }
 
-    public async IAsyncEnumerable<ChatResponseUpdate> StreamInlineChatResponseAsync(
-        Action<AIInlineChatBuilder> configure,
+    public async IAsyncEnumerable<ChatResponseUpdate> StreamChatResponseAsync(
+        Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var builder = BuildInlineChat(configure);
+        var builder = BuildChat(configure);
 
         // Pass-through mode: skip notifications and duration tracking
         if (builder.IsPassThrough)
@@ -197,7 +197,7 @@ internal sealed class AIChatService : IAIChatService
     }
 
     private async Task<ChatResponse> ExecuteInlineChatAsync(
-        AIInlineChatBuilder builder,
+        AIChatBuilder builder,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken)
     {
@@ -227,7 +227,7 @@ internal sealed class AIChatService : IAIChatService
     }
 
     private async IAsyncEnumerable<ChatResponseUpdate> StreamInlineChatCoreAsync(
-        AIInlineChatBuilder builder,
+        AIChatBuilder builder,
         IEnumerable<ChatMessage> messages,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -259,13 +259,13 @@ internal sealed class AIChatService : IAIChatService
         }
     }
 
-    public async Task<IChatClient> CreateInlineChatClientAsync(
-        Action<AIInlineChatBuilder> configure,
+    public async Task<IChatClient> CreateChatClientAsync(
+        Action<AIChatBuilder> configure,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        var builder = BuildInlineChat(configure);
+        var builder = BuildChat(configure);
 
         // Resolve profile
         var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
@@ -277,9 +277,9 @@ internal sealed class AIChatService : IAIChatService
         return new ScopedInlineChatClient(chatClient, builder, _contextAccessor, _scopeProvider, _contributors);
     }
 
-    private static AIInlineChatBuilder BuildInlineChat(Action<AIInlineChatBuilder> configure)
+    private static AIChatBuilder BuildChat(Action<AIChatBuilder> configure)
     {
-        var builder = new AIInlineChatBuilder();
+        var builder = new AIChatBuilder();
         configure(builder);
         builder.Validate();
         return builder;

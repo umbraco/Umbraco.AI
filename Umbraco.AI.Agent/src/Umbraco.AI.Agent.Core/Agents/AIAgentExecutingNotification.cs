@@ -35,7 +35,7 @@ public sealed class AIAgentExecutingNotification : CancelableNotification
     public AIAgent Agent { get; }
 
     /// <summary>
-    /// Gets the execution run request, or null for embedded agent executions.
+    /// Gets the execution run request, or null for inline agent executions.
     /// </summary>
     public AGUIRunRequest? Request { get; }
 

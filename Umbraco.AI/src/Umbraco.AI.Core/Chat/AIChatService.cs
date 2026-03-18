@@ -7,6 +7,7 @@ using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Core.Chat;
@@ -294,24 +295,15 @@ internal sealed class AIChatService : IAIChatService
 
     private async Task<AIProfile> ResolveProfileAsync(Guid? profileId, string? profileAlias, CancellationToken cancellationToken)
     {
-        AIProfile? profile;
+        // Resolve alias to ID if needed
+        if (!profileId.HasValue && !string.IsNullOrWhiteSpace(profileAlias))
+        {
+            profileId = await _profileService.GetProfileIdByAliasAsync(profileAlias, cancellationToken);
+        }
 
-        if (profileId.HasValue)
-        {
-            profile = await _profileService.GetProfileAsync(profileId.Value, cancellationToken);
-        }
-        else if (!string.IsNullOrWhiteSpace(profileAlias))
-        {
-            profile = await _profileService.GetProfileByAliasAsync(profileAlias, cancellationToken);
-            if (profile is null)
-            {
-                throw new InvalidOperationException($"AI profile with alias '{profileAlias}' not found.");
-            }
-        }
-        else
-        {
-            profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        }
+        var profile = profileId.HasValue
+            ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
+            : await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
 
         if (profile is null)
         {
@@ -329,20 +321,8 @@ internal sealed class AIChatService : IAIChatService
     {
         if (builder.GuardrailAliases is { Count: > 0 } aliases)
         {
-            var resolvedIds = new List<Guid>(aliases.Count);
-
-            foreach (var alias in aliases)
-            {
-                var guardrail = await _guardrailService.GetGuardrailByAliasAsync(alias, cancellationToken);
-                if (guardrail is null)
-                {
-                    throw new InvalidOperationException($"AI guardrail with alias '{alias}' not found.");
-                }
-
-                resolvedIds.Add(guardrail.Id);
-            }
-
-            builder.SetResolvedGuardrailIds(resolvedIds);
+            builder.SetResolvedGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
         }
     }
 

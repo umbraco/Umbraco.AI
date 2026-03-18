@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Extensions;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
@@ -635,32 +636,15 @@ internal sealed class AIAgentService : IAIAgentService
         // Resolve profile alias to ID if needed
         if (builder.ProfileAlias is not null)
         {
-            var profile = await _profileService.GetProfileByAliasAsync(builder.ProfileAlias, cancellationToken);
-            if (profile is null)
-            {
-                throw new InvalidOperationException($"AI profile with alias '{builder.ProfileAlias}' not found.");
-            }
-
-            builder.SetResolvedProfileId(profile.Id);
+            builder.SetResolvedProfileId(
+                await _profileService.GetProfileIdByAliasAsync(builder.ProfileAlias, cancellationToken));
         }
 
         // Resolve guardrail aliases to IDs if needed
         if (builder.GuardrailAliases is { Count: > 0 } aliases)
         {
-            var resolvedIds = new List<Guid>(aliases.Count);
-
-            foreach (var alias in aliases)
-            {
-                var guardrail = await _guardrailService.GetGuardrailByAliasAsync(alias, cancellationToken);
-                if (guardrail is null)
-                {
-                    throw new InvalidOperationException($"AI guardrail with alias '{alias}' not found.");
-                }
-
-                resolvedIds.Add(guardrail.Id);
-            }
-
-            builder.SetResolvedGuardrailIds(resolvedIds);
+            builder.SetResolvedGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
         }
 
         var agent = builder.Build();

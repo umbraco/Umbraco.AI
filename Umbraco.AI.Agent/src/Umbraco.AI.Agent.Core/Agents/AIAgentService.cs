@@ -421,19 +421,21 @@ internal sealed class AIAgentService : IAIAgentService
 
         if (agent is null)
         {
-            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
-            yield return errorEmitter.EmitRunStarted();
-            yield return errorEmitter.EmitError("Agent not found", "NOT_FOUND");
-            yield return errorEmitter.EmitRunFinished(new InvalidOperationException("Agent not found"));
+            await foreach (var evt in EmitAGUIError(request, "Agent not found", "NOT_FOUND"))
+            {
+                yield return evt;
+            }
+
             yield break;
         }
 
         if (!agent.IsActive)
         {
-            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
-            yield return errorEmitter.EmitRunStarted();
-            yield return errorEmitter.EmitError($"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE");
-            yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent '{agent.Name}' is not active"));
+            await foreach (var evt in EmitAGUIError(request, $"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE"))
+            {
+                yield return evt;
+            }
+
             yield break;
         }
 
@@ -455,10 +457,11 @@ internal sealed class AIAgentService : IAIAgentService
         if (context is null)
         {
             // Notification was cancelled
-            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
-            yield return errorEmitter.EmitRunStarted();
-            yield return errorEmitter.EmitError("Agent execution cancelled", "EXECUTION_CANCELLED");
-            yield return errorEmitter.EmitRunFinished(new InvalidOperationException("Agent execution cancelled"));
+            await foreach (var evt in EmitAGUIError(request, "Agent execution cancelled", "EXECUTION_CANCELLED"))
+            {
+                yield return evt;
+            }
+
             yield break;
         }
 
@@ -507,7 +510,7 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(messages);
 
         var (agent, builder) = BuildAgent(configure);
-        var chatMessages = messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
+        var chatMessages = AsReadOnlyList(messages);
 
         // Publish executing notification
         var eventMessages = new EventMessages();
@@ -561,7 +564,7 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(messages);
 
         var (agent, builder) = BuildAgent(configure);
-        var chatMessages = messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
+        var chatMessages = AsReadOnlyList(messages);
 
         // Publish executing notification
         var eventMessages = new EventMessages();
@@ -666,7 +669,7 @@ internal sealed class AIAgentService : IAIAgentService
         CancellationToken cancellationToken)
     {
         var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
-        var chatMessages = messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
+        var chatMessages = AsReadOnlyList(messages);
 
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
@@ -702,7 +705,7 @@ internal sealed class AIAgentService : IAIAgentService
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
-        var chatMessages = messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
+        var chatMessages = AsReadOnlyList(messages);
 
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
@@ -781,6 +784,8 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Resolve allowed tool IDs for permission checking
         var allowedToolIds = await GetAllowedToolIdsAsync(agent, options.UserGroupIds, cancellationToken);
+        var allowedToolIdSet = new HashSet<string>(allowedToolIds, StringComparer.OrdinalIgnoreCase);
+        var allowedScopeIds = agent.GetStandardConfig()?.AllowedToolScopeIds;
 
         // Convert and filter frontend tools by permissions
         IList<AITool>? convertedFrontendTools = null;
@@ -795,9 +800,9 @@ internal sealed class AIAgentService : IAIAgentService
                     frontendTool.Scope,
                     frontendTool.IsDestructive);
 
-                bool isPermitted = allowedToolIds.Contains(frontendTool.Tool.Name, StringComparer.OrdinalIgnoreCase)
+                bool isPermitted = allowedToolIdSet.Contains(frontendTool.Tool.Name)
                     || (frontendTool.Scope is not null
-                        && (agent.GetStandardConfig()?.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false));
+                        && (allowedScopeIds?.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false));
 
                 if (isPermitted)
                 {
@@ -854,6 +859,27 @@ internal sealed class AIAgentService : IAIAgentService
 
         await _eventAggregator.PublishAsync(executedNotification);
     }
+
+    /// <summary>
+    /// Emits a complete AG-UI error sequence: run started, error, run finished.
+    /// </summary>
+    private static async IAsyncEnumerable<IAGUIEvent> EmitAGUIError(
+        AGUIRunRequest request,
+        string message,
+        string code)
+    {
+        var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
+        yield return emitter.EmitRunStarted();
+        yield return emitter.EmitError(message, code);
+        yield return emitter.EmitRunFinished(new InvalidOperationException(message));
+        await Task.CompletedTask; // Satisfy async enumerable contract
+    }
+
+    /// <summary>
+    /// Returns the messages as an <see cref="IReadOnlyList{T}"/>, avoiding a copy when possible.
+    /// </summary>
+    private static IReadOnlyList<ChatMessage> AsReadOnlyList(IEnumerable<ChatMessage> messages)
+        => messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
 
     private record AgentExecutionContext(
         AIAgent Agent,

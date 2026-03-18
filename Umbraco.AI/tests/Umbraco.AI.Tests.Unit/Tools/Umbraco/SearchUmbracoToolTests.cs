@@ -143,4 +143,57 @@ public class SearchUmbracoToolTests
         description.ShouldContain("content");
         description.ShouldContain("media");
     }
+
+    [Fact]
+    public void BuildTextQuery_SingleTerm_ProducesBoostedNameAndBroadQuery()
+    {
+        // Act
+        var result = SearchUmbracoTool.BuildTextQuery("homepage");
+
+        // Assert
+        result.ShouldContain("nodeName:homepage^10");
+        result.ShouldContain("homepage^1");
+        // Single term should NOT produce phrase clauses
+        result.ShouldNotContain("\"homepage\"");
+    }
+
+    [Fact]
+    public void BuildTextQuery_MultipleTerms_IncludesPhraseBoost()
+    {
+        // Act
+        var result = SearchUmbracoTool.BuildTextQuery("contact form");
+
+        // Assert
+        result.ShouldContain("nodeName:contact^10");
+        result.ShouldContain("nodeName:form^10");
+        result.ShouldContain("nodeName:\"contact form\"^15");
+        result.ShouldContain("contact^1");
+        result.ShouldContain("form^1");
+        result.ShouldContain("\"contact form\"^3");
+    }
+
+    [Fact]
+    public void EscapeLuceneTerm_EscapesSpecialCharacters()
+    {
+        // Act & Assert
+        SearchUmbracoTool.EscapeLuceneTerm("C++").ShouldBe("C\\+\\+");
+        SearchUmbracoTool.EscapeLuceneTerm("test:value").ShouldBe("test\\:value");
+        SearchUmbracoTool.EscapeLuceneTerm("hello world").ShouldBe("hello world");
+        SearchUmbracoTool.EscapeLuceneTerm("(foo)").ShouldBe("\\(foo\\)");
+    }
+
+    [Fact]
+    public void BuildTextQuery_CapsAtTenTerms()
+    {
+        // Arrange
+        var longQuery = "one two three four five six seven eight nine ten eleven twelve";
+
+        // Act
+        var result = SearchUmbracoTool.BuildTextQuery(longQuery);
+
+        // Assert - "eleven" and "twelve" should not appear
+        result.ShouldNotContain("eleven");
+        result.ShouldNotContain("twelve");
+        result.ShouldContain("ten");
+    }
 }

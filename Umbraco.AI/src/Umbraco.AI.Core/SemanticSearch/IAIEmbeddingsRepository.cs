@@ -55,4 +55,27 @@ internal interface IAIEmbeddingsRepository
     /// Gets the total count of stored embeddings.
     /// </summary>
     Task<int> GetCountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Searches for embeddings similar to the given query vector.
+    /// </summary>
+    /// <remarks>
+    /// The default implementations perform brute-force cosine similarity in memory.
+    /// Implementations backed by vector databases (e.g., pgvector, Azure AI Search)
+    /// can push similarity computation to the database for better performance at scale.
+    /// </remarks>
+    /// <param name="queryVector">The query embedding vector to compare against.</param>
+    /// <param name="entityType">Filter by entity type (e.g., "content", "media"), or null for all.</param>
+    /// <param name="entityTypeAliases">Filter by entity type aliases, or null/empty for all.</param>
+    /// <param name="minimumSimilarity">Minimum similarity threshold (0.0 to 1.0).</param>
+    /// <param name="maxResults">Maximum number of results to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Results ordered by descending similarity score.</returns>
+    Task<IReadOnlyList<EmbeddingSimilarityResult>> SearchByVectorAsync(
+        float[] queryVector,
+        string? entityType = null,
+        string[]? entityTypeAliases = null,
+        float minimumSimilarity = 0.5f,
+        int maxResults = 10,
+        CancellationToken cancellationToken = default);
 }

@@ -107,4 +107,35 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
     {
         return Task.FromResult(_embeddings.Count);
     }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<EmbeddingSimilarityResult>> SearchByVectorAsync(
+        float[] queryVector,
+        string? entityType = null,
+        string[]? entityTypeAliases = null,
+        float minimumSimilarity = 0.5f,
+        int maxResults = 10,
+        CancellationToken cancellationToken = default)
+    {
+        IEnumerable<AIEmbedding> query = _embeddings.Values;
+
+        if (entityType is not null)
+        {
+            query = query.Where(e => string.Equals(e.EntityType, entityType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (entityTypeAliases is { Length: > 0 })
+        {
+            query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias, StringComparer.OrdinalIgnoreCase));
+        }
+
+        IReadOnlyList<EmbeddingSimilarityResult> results = query
+            .Select(e => new EmbeddingSimilarityResult(e, VectorMath.CosineSimilarity(queryVector, VectorMath.DeserializeVector(e.Vector))))
+            .Where(r => r.SimilarityScore >= minimumSimilarity)
+            .OrderByDescending(r => r.SimilarityScore)
+            .Take(maxResults)
+            .ToList();
+
+        return Task.FromResult(results);
+    }
 }

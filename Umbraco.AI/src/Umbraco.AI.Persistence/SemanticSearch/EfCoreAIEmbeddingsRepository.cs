@@ -189,6 +189,48 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         return count;
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<EmbeddingSimilarityResult>> SearchByVectorAsync(
+        float[] queryVector,
+        string? entityType = null,
+        string[]? entityTypeAliases = null,
+        float minimumSimilarity = 0.5f,
+        int maxResults = 10,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        List<AIEmbeddingsEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AIEmbeddingsEntity> query = db.Embeddings;
+
+            if (entityType is not null)
+            {
+                query = query.Where(e => e.EntityType == entityType);
+            }
+
+            if (entityTypeAliases is { Length: > 0 })
+            {
+                query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias));
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        });
+
+        scope.Complete();
+
+        // Brute-force cosine similarity in memory.
+        // Implementations backed by vector databases can push this to the DB.
+        return entities
+            .Select(e => new EmbeddingSimilarityResult(
+                MapToDomain(e),
+                VectorMath.CosineSimilarity(queryVector, VectorMath.DeserializeVector(e.Vector))))
+            .Where(r => r.SimilarityScore >= minimumSimilarity)
+            .OrderByDescending(r => r.SimilarityScore)
+            .Take(maxResults)
+            .ToList();
+    }
+
     private static AIEmbedding MapToDomain(AIEmbeddingsEntity entity) => new()
     {
         Id = entity.Id,

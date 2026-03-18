@@ -49,23 +49,24 @@ public class AISemanticSearchServiceTests
     }
 
     [Fact]
-    public async Task SearchAsync_ReturnsSortedBySimilarity()
+    public async Task SearchAsync_DelegatesToRepositoryAndMapsResults()
     {
         // Arrange
         float[] queryVector = [1f, 0f, 0f];
-        float[] highSimilarityVector = [0.9f, 0.1f, 0f]; // High similarity
-        float[] lowSimilarityVector = [0.5f, 0.5f, 0.5f]; // Lower similarity
-
         SetupQueryEmbedding(queryVector);
 
-        var embeddings = new List<AIEmbedding>
+        var highMatch = CreateEmbedding(Guid.NewGuid(), "High Match", "content", [0.9f, 0.1f, 0f]);
+        var lowMatch = CreateEmbedding(Guid.NewGuid(), "Low Match", "content", [0.5f, 0.5f, 0.5f]);
+
+        var repositoryResults = new List<EmbeddingSimilarityResult>
         {
-            CreateEmbedding(Guid.NewGuid(), "Low Match", "content", lowSimilarityVector),
-            CreateEmbedding(Guid.NewGuid(), "High Match", "content", highSimilarityVector),
+            new(highMatch, 0.95f),
+            new(lowMatch, 0.72f),
         };
 
-        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(embeddings);
+        _repositoryMock.Setup(r => r.SearchByVectorAsync(
+                It.IsAny<float[]>(), null, null, 0.5f, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(repositoryResults);
 
         // Act
         var results = await _service.SearchAsync("test query");
@@ -73,102 +74,61 @@ public class AISemanticSearchServiceTests
         // Assert
         results.Count.ShouldBe(2);
         results[0].Name.ShouldBe("High Match");
+        results[0].SimilarityScore.ShouldBe(0.95f);
         results[1].Name.ShouldBe("Low Match");
-        results[0].SimilarityScore.ShouldBeGreaterThan(results[1].SimilarityScore);
+        results[1].SimilarityScore.ShouldBe(0.72f);
     }
 
     [Fact]
-    public async Task SearchAsync_WithTypeFilter_PassesFilterToRepository()
+    public async Task SearchAsync_PassesOptionsToRepository()
     {
         // Arrange
         float[] queryVector = [1f, 0f];
-        float[] matchVector = [0.9f, 0.1f];
-
         SetupQueryEmbedding(queryVector);
 
-        var filteredEmbeddings = new List<AIEmbedding>
-        {
-            CreateEmbedding(Guid.NewGuid(), "Content Item", "content", matchVector),
-        };
+        var contentItem = CreateEmbedding(Guid.NewGuid(), "Content Item", "content", [0.9f, 0.1f]);
+        var repositoryResults = new List<EmbeddingSimilarityResult> { new(contentItem, 0.9f) };
 
-        _repositoryMock.Setup(r => r.GetByFilterAsync("content", null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(filteredEmbeddings);
+        string[]? capturedAliases = null;
+        _repositoryMock.Setup(r => r.SearchByVectorAsync(
+                It.IsAny<float[]>(), "content", It.IsAny<string[]?>(), 0.7f, 5, It.IsAny<CancellationToken>()))
+            .Callback<float[], string?, string[]?, float, int, CancellationToken>(
+                (_, _, aliases, _, _, _) => capturedAliases = aliases)
+            .ReturnsAsync(repositoryResults);
 
-        var options = new SemanticSearchQueryOptions(TypeFilter: "content");
+        var aliases = new[] { "article", "blogPost" };
+        var options = new SemanticSearchQueryOptions(
+            TypeFilter: "content",
+            EntityTypeAliases: aliases,
+            MaxResults: 5,
+            MinimumSimilarity: 0.7f);
 
         // Act
         var results = await _service.SearchAsync("test", options);
 
         // Assert
         results.Count.ShouldBe(1);
-        results[0].EntityType.ShouldBe("content");
-        _repositoryMock.Verify(r => r.GetByFilterAsync("content", null, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.SearchByVectorAsync(
+            It.IsAny<float[]>(), "content", aliases, 0.7f, 5, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task SearchAsync_BelowMinimumSimilarity_ExcludesResults()
-    {
-        // Arrange
-        float[] queryVector = [1f, 0f];
-        float[] orthogonalVector = [0f, 1f]; // Cosine similarity ~0
-
-        SetupQueryEmbedding(queryVector);
-
-        var embeddings = new List<AIEmbedding>
-        {
-            CreateEmbedding(Guid.NewGuid(), "Unrelated", "content", orthogonalVector),
-        };
-
-        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(embeddings);
-
-        var options = new SemanticSearchQueryOptions(MinimumSimilarity: 0.5f);
-
-        // Act
-        var results = await _service.SearchAsync("test", options);
-
-        // Assert
-        results.Count.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task SearchAsync_NoEmbeddings_ReturnsEmpty()
+    public async Task SearchAsync_NoResults_ReturnsEmpty()
     {
         // Arrange
         float[] queryVector = [1f, 0f];
         SetupQueryEmbedding(queryVector);
 
-        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<AIEmbedding>());
+        _repositoryMock.Setup(r => r.SearchByVectorAsync(
+                It.IsAny<float[]>(), It.IsAny<string?>(), It.IsAny<string[]?>(),
+                It.IsAny<float>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<EmbeddingSimilarityResult>());
 
         // Act
         var results = await _service.SearchAsync("test");
 
         // Assert
         results.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task SearchAsync_RespectsMaxResults()
-    {
-        // Arrange
-        float[] queryVector = [1f, 0f];
-        SetupQueryEmbedding(queryVector);
-
-        var embeddings = Enumerable.Range(0, 20)
-            .Select(i => CreateEmbedding(Guid.NewGuid(), $"Item {i}", "content", [0.9f, 0.1f]))
-            .ToList();
-
-        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(embeddings);
-
-        var options = new SemanticSearchQueryOptions(MaxResults: 5);
-
-        // Act
-        var results = await _service.SearchAsync("test", options);
-
-        // Assert
-        results.Count.ShouldBe(5);
     }
 
     [Fact]

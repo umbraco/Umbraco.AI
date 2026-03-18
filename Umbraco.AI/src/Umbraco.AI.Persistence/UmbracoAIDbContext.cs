@@ -8,6 +8,7 @@ using Umbraco.AI.Persistence.Analytics;
 using Umbraco.AI.Persistence.Analytics.Usage;
 using Umbraco.AI.Persistence.Settings;
 using Umbraco.AI.Persistence.Versioning;
+using Umbraco.AI.Persistence.SemanticSearch;
 using Umbraco.AI.Persistence.Tests;
 using Umbraco.Cms.Core;
 
@@ -92,6 +93,11 @@ public class UmbracoAIDbContext : DbContext
     /// AI test transcripts (execution traces).
     /// </summary>
     internal DbSet<AITestTranscriptEntity> TestTranscripts { get; set; } = null!;
+
+    /// <summary>
+    /// AI content embeddings for semantic search.
+    /// </summary>
+    internal DbSet<AIContentEmbeddingEntity> ContentEmbeddings { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAIDbContext"/>.
@@ -853,6 +859,55 @@ public class UmbracoAIDbContext : DbContext
 
             entity.HasIndex(e => e.RunId)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<AIContentEmbeddingEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIContentEmbedding");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ContentKey)
+                .IsRequired();
+
+            entity.Property(e => e.ContentType)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(e => e.ContentTypeAlias)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.Property(e => e.TextContent)
+                .IsRequired();
+
+            entity.Property(e => e.Vector)
+                .IsRequired();
+
+            entity.Property(e => e.Dimensions)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.ModelId)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.DateIndexed)
+                .IsRequired();
+
+            entity.Property(e => e.ContentDateModified)
+                .IsRequired();
+
+            entity.HasIndex(e => e.ContentKey)
+                .IsUnique();
+
+            entity.HasIndex(e => e.ContentType);
+            entity.HasIndex(e => e.ProfileId);
         });
     }
 }

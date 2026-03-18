@@ -1,0 +1,88 @@
+using System.Collections.Concurrent;
+
+namespace Umbraco.AI.Core.SemanticSearch;
+
+/// <summary>
+/// In-memory implementation of the content embedding repository.
+/// Replaced by EF Core implementation when persistence is registered.
+/// </summary>
+internal sealed class InMemoryAIContentEmbeddingRepository : IAIContentEmbeddingRepository
+{
+    private readonly ConcurrentDictionary<Guid, ContentEmbedding> _embeddings = new();
+
+    /// <inheritdoc />
+    public Task<ContentEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    {
+        var embedding = _embeddings.Values.FirstOrDefault(e => e.ContentKey == contentKey);
+        return Task.FromResult(embedding);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<ContentEmbedding>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<ContentEmbedding> result = _embeddings.Values.ToList();
+        return Task.FromResult(result);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<ContentEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<ContentEmbedding> result = _embeddings.Values
+            .Where(e => e.ProfileId == profileId)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    /// <inheritdoc />
+    public Task SaveAsync(ContentEmbedding embedding, CancellationToken cancellationToken = default)
+    {
+        // Upsert by content key: find existing by content key and remove it first
+        var existing = _embeddings.Values.FirstOrDefault(e => e.ContentKey == embedding.ContentKey);
+        if (existing != null)
+        {
+            _embeddings.TryRemove(existing.Id, out _);
+        }
+
+        _embeddings[embedding.Id] = embedding;
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async Task SaveBatchAsync(IEnumerable<ContentEmbedding> embeddings, CancellationToken cancellationToken = default)
+    {
+        foreach (var embedding in embeddings)
+        {
+            await SaveAsync(embedding, cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task DeleteByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    {
+        var toRemove = _embeddings.Values.FirstOrDefault(e => e.ContentKey == contentKey);
+        if (toRemove != null)
+        {
+            _embeddings.TryRemove(toRemove.Id, out _);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task DeleteByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+    {
+        var toRemove = _embeddings.Values.Where(e => e.ProfileId == profileId).ToList();
+        foreach (var embedding in toRemove)
+        {
+            _embeddings.TryRemove(embedding.Id, out _);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<int> GetCountAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_embeddings.Count);
+    }
+}

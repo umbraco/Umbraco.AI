@@ -25,6 +25,28 @@ internal sealed class InMemoryAIContentEmbeddingRepository : IAIContentEmbedding
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<ContentEmbedding>> GetByFilterAsync(
+        string? contentType = null,
+        string[]? contentTypeAliases = null,
+        CancellationToken cancellationToken = default)
+    {
+        IEnumerable<ContentEmbedding> query = _embeddings.Values;
+
+        if (contentType is not null)
+        {
+            query = query.Where(e => string.Equals(e.ContentType, contentType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (contentTypeAliases is { Length: > 0 })
+        {
+            query = query.Where(e => contentTypeAliases.Contains(e.ContentTypeAlias, StringComparer.OrdinalIgnoreCase));
+        }
+
+        IReadOnlyList<ContentEmbedding> result = query.ToList();
+        return Task.FromResult(result);
+    }
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<ContentEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<ContentEmbedding> result = _embeddings.Values

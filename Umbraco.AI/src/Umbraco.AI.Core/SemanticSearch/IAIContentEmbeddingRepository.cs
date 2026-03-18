@@ -16,6 +16,17 @@ internal interface IAIContentEmbeddingRepository
     Task<IReadOnlyList<ContentEmbedding>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets embeddings matching the specified filters.
+    /// </summary>
+    /// <param name="contentType">Filter by content type (e.g., "content", "media"), or null for all.</param>
+    /// <param name="contentTypeAliases">Filter by content type aliases, or null/empty for all.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<IReadOnlyList<ContentEmbedding>> GetByFilterAsync(
+        string? contentType = null,
+        string[]? contentTypeAliases = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all embeddings for a specific profile.
     /// </summary>
     Task<IReadOnlyList<ContentEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default);

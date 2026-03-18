@@ -64,7 +64,7 @@ public class AISemanticSearchServiceTests
             CreateEmbedding(Guid.NewGuid(), "High Match", "content", highSimilarityVector),
         };
 
-        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 
         // Act
@@ -78,7 +78,7 @@ public class AISemanticSearchServiceTests
     }
 
     [Fact]
-    public async Task SearchAsync_WithTypeFilter_FiltersResults()
+    public async Task SearchAsync_WithTypeFilter_PassesFilterToRepository()
     {
         // Arrange
         float[] queryVector = [1f, 0f];
@@ -86,14 +86,13 @@ public class AISemanticSearchServiceTests
 
         SetupQueryEmbedding(queryVector);
 
-        var embeddings = new List<ContentEmbedding>
+        var filteredEmbeddings = new List<ContentEmbedding>
         {
             CreateEmbedding(Guid.NewGuid(), "Content Item", "content", matchVector),
-            CreateEmbedding(Guid.NewGuid(), "Media Item", "media", matchVector),
         };
 
-        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(embeddings);
+        _repositoryMock.Setup(r => r.GetByFilterAsync("content", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(filteredEmbeddings);
 
         var options = new SemanticSearchQueryOptions(TypeFilter: "content");
 
@@ -103,6 +102,7 @@ public class AISemanticSearchServiceTests
         // Assert
         results.Count.ShouldBe(1);
         results[0].ContentType.ShouldBe("content");
+        _repositoryMock.Verify(r => r.GetByFilterAsync("content", null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class AISemanticSearchServiceTests
             CreateEmbedding(Guid.NewGuid(), "Unrelated", "content", orthogonalVector),
         };
 
-        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 
         var options = new SemanticSearchQueryOptions(MinimumSimilarity: 0.5f);
@@ -138,7 +138,7 @@ public class AISemanticSearchServiceTests
         float[] queryVector = [1f, 0f];
         SetupQueryEmbedding(queryVector);
 
-        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ContentEmbedding>());
 
         // Act
@@ -159,7 +159,7 @@ public class AISemanticSearchServiceTests
             .Select(i => CreateEmbedding(Guid.NewGuid(), $"Item {i}", "content", [0.9f, 0.1f]))
             .ToList();
 
-        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+        _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 
         var options = new SemanticSearchQueryOptions(MaxResults: 5);

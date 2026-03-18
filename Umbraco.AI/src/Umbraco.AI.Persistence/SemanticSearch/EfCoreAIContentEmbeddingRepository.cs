@@ -41,6 +41,35 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<ContentEmbedding>> GetByFilterAsync(
+        string? contentType = null,
+        string[]? contentTypeAliases = null,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        List<AIContentEmbeddingEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AIContentEmbeddingEntity> query = db.ContentEmbeddings;
+
+            if (contentType is not null)
+            {
+                query = query.Where(e => e.ContentType == contentType);
+            }
+
+            if (contentTypeAliases is { Length: > 0 })
+            {
+                query = query.Where(e => contentTypeAliases.Contains(e.ContentTypeAlias));
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        });
+
+        scope.Complete();
+        return entities.Select(MapToDomain).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ContentEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();

@@ -47,28 +47,17 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, cancellationToken: cancellationToken);
         var queryVector = queryEmbedding.Vector.ToArray();
 
-        // Load all stored embeddings
-        var embeddings = await _repository.GetAllAsync(cancellationToken);
+        // Load embeddings with server-side filtering
+        var embeddings = await _repository.GetByFilterAsync(
+            options.TypeFilter,
+            options.ContentTypeAliases,
+            cancellationToken);
 
         // Compute similarity and filter
         var results = new List<(ContentEmbedding Embedding, float Similarity)>();
 
         foreach (var embedding in embeddings)
         {
-            // Apply type filter
-            if (options.TypeFilter is not null &&
-                !string.Equals(embedding.ContentType, options.TypeFilter, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            // Apply content type alias filter
-            if (options.ContentTypeAliases is { Length: > 0 } &&
-                !options.ContentTypeAliases.Contains(embedding.ContentTypeAlias, StringComparer.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
             var storedVector = VectorMath.DeserializeVector(embedding.Vector);
             var similarity = VectorMath.CosineSimilarity(queryVector, storedVector);
 

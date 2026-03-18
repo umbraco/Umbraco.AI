@@ -72,6 +72,7 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
             }
 
             await db.SaveChangesAsync(cancellationToken);
+            return true;
         });
 
         scope.Complete();
@@ -100,6 +101,7 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
             }
 
             await db.SaveChangesAsync(cancellationToken);
+            return true;
         });
 
         scope.Complete();
@@ -120,6 +122,8 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
                 db.ContentEmbeddings.Remove(entity);
                 await db.SaveChangesAsync(cancellationToken);
             }
+
+            return true;
         });
 
         scope.Complete();
@@ -138,6 +142,7 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
 
             db.ContentEmbeddings.RemoveRange(entities);
             await db.SaveChangesAsync(cancellationToken);
+            return true;
         });
 
         scope.Complete();

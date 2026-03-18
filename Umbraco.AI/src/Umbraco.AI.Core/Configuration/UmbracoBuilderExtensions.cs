@@ -32,6 +32,7 @@ using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Core.Tests.Graders;
+using Umbraco.AI.Core.SemanticSearch;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Tools.Web;
@@ -277,6 +278,21 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAITestRunner, AITestRunner>();
         services.AddSingleton<IAITestService, AITestService>();
         services.AddSingleton<IAITestRunService, AITestRunService>();
+
+        // Semantic search
+        services.Configure<AISemanticSearchOptions>(config.GetSection("Umbraco:AI:SemanticSearch"));
+        services.AddSingleton<IContentTextExtractor, ContentTextExtractor>();
+        services.AddSingleton<IAIContentEmbeddingRepository, InMemoryAIContentEmbeddingRepository>();
+        services.AddSingleton<ISemanticIndexSource, ContentSemanticIndexSource>();
+        services.AddSingleton<ISemanticIndexSource, MediaSemanticIndexSource>();
+        services.AddSingleton<IAISemanticSearchService, AISemanticSearchService>();
+
+        // Semantic search indexing handlers
+        builder.AddNotificationAsyncHandler<ContentPublishedNotification, ContentPublishedSemanticIndexHandler>();
+        builder.AddNotificationAsyncHandler<ContentUnpublishedNotification, ContentUnpublishedSemanticIndexHandler>();
+        builder.AddNotificationAsyncHandler<ContentDeletedNotification, ContentDeletedSemanticIndexHandler>();
+        builder.AddNotificationAsyncHandler<MediaSavedNotification, MediaSavedSemanticIndexHandler>();
+        builder.AddNotificationAsyncHandler<MediaDeletedNotification, MediaDeletedSemanticIndexHandler>();
 
         return builder;
     }

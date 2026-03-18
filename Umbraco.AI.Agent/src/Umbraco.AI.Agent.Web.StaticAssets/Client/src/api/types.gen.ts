@@ -377,16 +377,16 @@ export type UpdateAgentResponses = {
     200: unknown;
 };
 
-export type RunAgentData = {
+export type StreamAgentAGUIData = {
     body?: AGUIRunRequestModel;
     path: {
         agentIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/run';
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream-agui';
 };
 
-export type RunAgentErrors = {
+export type StreamAgentAGUIErrors = {
     /**
      * Bad Request
      */
@@ -401,16 +401,16 @@ export type RunAgentErrors = {
     404: ProblemDetails;
 };
 
-export type RunAgentError = RunAgentErrors[keyof RunAgentErrors];
+export type StreamAgentAGUIError = StreamAgentAGUIErrors[keyof StreamAgentAGUIErrors];
 
-export type RunAgentResponses = {
+export type StreamAgentAGUIResponses = {
     /**
      * Server-Sent Events stream
      */
     200: string;
 };
 
-export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];
+export type StreamAgentAGUIResponse = StreamAgentAGUIResponses[keyof StreamAgentAGUIResponses];
 
 export type AgentAliasExistsData = {
     body?: never;

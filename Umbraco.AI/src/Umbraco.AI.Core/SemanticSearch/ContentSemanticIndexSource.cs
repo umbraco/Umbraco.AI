@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
@@ -45,8 +46,6 @@ internal sealed class ContentSemanticIndexSource : ISemanticIndexSource
     public async IAsyncEnumerable<SemanticIndexEntry> GetAllEntriesAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Get root content, then traverse tree using published cache
-        var rootContent = _contentService.GetRootContent();
         using var ctx = _umbracoContextFactory.EnsureUmbracoContext();
         var cache = ctx.UmbracoContext.Content;
 
@@ -55,47 +54,34 @@ internal sealed class ContentSemanticIndexSource : ISemanticIndexSource
             yield break;
         }
 
-        foreach (var root in rootContent)
+        const int parentId = -1;
+        const int pageSize = 100;
+        var pageIndex = 0L;
+        IContent[] page;
+
+        do
         {
             cancellationToken.ThrowIfCancellationRequested();
+            page = _contentService.GetPagedDescendants(parentId, pageIndex, pageSize, out _).ToArray();
 
-            await foreach (var entry in EnumerateContentTreeAsync(root.Key, cache, cancellationToken))
+            foreach (var content in page)
             {
-                yield return entry;
-            }
-        }
-    }
-
-    private async IAsyncEnumerable<SemanticIndexEntry> EnumerateContentTreeAsync(
-        Guid contentKey,
-        Umbraco.Cms.Core.PublishedCache.IPublishedContentCache cache,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var published = await cache.GetByIdAsync(contentKey);
-        if (published is null)
-        {
-            yield break;
-        }
-
-        var entry = CreateEntry(published);
-        if (entry is not null)
-        {
-            yield return entry;
-        }
-
-        // Recurse children
-        if (published.Children is not null)
-        {
-            foreach (var child in published.Children)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                await foreach (var childEntry in EnumerateContentTreeAsync(child.Key, cache, cancellationToken))
+                var published = await cache.GetByIdAsync(content.Key);
+                if (published is null)
                 {
-                    yield return childEntry;
+                    continue;
+                }
+
+                var entry = CreateEntry(published);
+                if (entry is not null)
+                {
+                    yield return entry;
                 }
             }
+
+            pageIndex++;
         }
+        while (page.Length == pageSize);
     }
 
     private SemanticIndexEntry? CreateEntry(IPublishedContent content)

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
@@ -45,8 +46,6 @@ internal sealed class MediaSemanticIndexSource : ISemanticIndexSource
     public async IAsyncEnumerable<SemanticIndexEntry> GetAllEntriesAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Get all media keys via IMediaService, then resolve published views
-        var rootMedia = _mediaService.GetRootMedia();
         using var ctx = _umbracoContextFactory.EnsureUmbracoContext();
         var cache = ctx.UmbracoContext.Media;
 
@@ -55,46 +54,34 @@ internal sealed class MediaSemanticIndexSource : ISemanticIndexSource
             yield break;
         }
 
-        foreach (var root in rootMedia)
+        const int parentId = -1;
+        const int pageSize = 100;
+        var pageIndex = 0L;
+        IMedia[] page;
+
+        do
         {
             cancellationToken.ThrowIfCancellationRequested();
+            page = _mediaService.GetPagedDescendants(parentId, pageIndex, pageSize, out _).ToArray();
 
-            // Enumerate root and descendants via paged API
-            await foreach (var entry in EnumerateMediaTreeAsync(root.Key, cache, cancellationToken))
+            foreach (var media in page)
             {
-                yield return entry;
-            }
-        }
-    }
-
-    private async IAsyncEnumerable<SemanticIndexEntry> EnumerateMediaTreeAsync(
-        Guid mediaKey,
-        Umbraco.Cms.Core.PublishedCache.IPublishedMediaCache cache,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var published = await cache.GetByIdAsync(mediaKey);
-        if (published is not null)
-        {
-            var entry = CreateEntry(published);
-            if (entry is not null)
-            {
-                yield return entry;
-            }
-
-            // Recurse children
-            if (published.Children is not null)
-            {
-                foreach (var child in published.Children)
+                var published = await cache.GetByIdAsync(media.Key);
+                if (published is null)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    continue;
+                }
 
-                    await foreach (var childEntry in EnumerateMediaTreeAsync(child.Key, cache, cancellationToken))
-                    {
-                        yield return childEntry;
-                    }
+                var entry = CreateEntry(published);
+                if (entry is not null)
+                {
+                    yield return entry;
                 }
             }
+
+            pageIndex++;
         }
+        while (page.Length == pageSize);
     }
 
     private SemanticIndexEntry? CreateEntry(IPublishedContent media)

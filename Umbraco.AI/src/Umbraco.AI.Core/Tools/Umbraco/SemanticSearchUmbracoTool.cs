@@ -4,7 +4,6 @@ using Umbraco.AI.Core.SemanticSearch;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
-using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -120,18 +119,7 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
     {
         if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
         {
-            // Return basic results without enrichment
-            return results.Select(r => new UmbracoSearchResultItem(
-                r.ContentKey,
-                r.Name,
-                r.ContentType,
-                r.ContentTypeAlias,
-                null,
-                null,
-                r.SimilarityScore,
-                DateTime.MinValue,
-                "Unknown",
-                new Dictionary<string, object>())).ToList();
+            return results.Select(CreateBasicResultItem).ToList();
         }
 
         var enrichedResults = new List<UmbracoSearchResultItem>();
@@ -146,74 +134,27 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
 
             if (publishedItem is not null)
             {
-                enrichedResults.Add(CreateEnrichedResultItem(publishedItem, result.SimilarityScore, isMedia));
+                enrichedResults.Add(UmbracoSearchHelpers.CreateEnrichedResultItem(publishedItem, result.SimilarityScore, isMedia));
             }
             else
             {
-                // Fallback to basic result
-                enrichedResults.Add(new UmbracoSearchResultItem(
-                    result.ContentKey,
-                    result.Name,
-                    result.ContentType,
-                    result.ContentTypeAlias,
-                    null,
-                    null,
-                    result.SimilarityScore,
-                    DateTime.MinValue,
-                    "Unknown",
-                    new Dictionary<string, object>()));
+                enrichedResults.Add(CreateBasicResultItem(result));
             }
         }
 
         return enrichedResults;
     }
 
-    private static UmbracoSearchResultItem CreateEnrichedResultItem(IPublishedContent content, float score, bool isMedia)
-    {
-        var thumbnailUrl = isMedia ? GetMediaThumbnailUrl(content) : null;
-
-        return new UmbracoSearchResultItem(
-            content.Key,
-            content.Name,
-            isMedia ? "media" : "content",
-            content.ContentType.Alias,
-            content.Url(),
-            thumbnailUrl,
-            score,
-            content.UpdateDate,
-            GetContentPath(content),
-            new Dictionary<string, object>
-            {
-                { "Level", content.Level },
-                { "ContentTypeAlias", content.ContentType.Alias }
-            });
-    }
-
-    private static string? GetMediaThumbnailUrl(IPublishedContent media)
-    {
-        if (media.ContentType.Alias.Contains("Image", StringComparison.OrdinalIgnoreCase))
-        {
-            var url = media.Url();
-            if (!string.IsNullOrEmpty(url))
-            {
-                return $"{url}?width=200&height=200&mode=crop";
-            }
-        }
-
-        return media.Url();
-    }
-
-    private static string GetContentPath(IPublishedContent content)
-    {
-        var pathParts = new List<string>();
-        var current = content;
-
-        while (current is not null)
-        {
-            pathParts.Insert(0, current.Name);
-            current = current.Parent();
-        }
-
-        return string.Join(" > ", pathParts);
-    }
+    private static UmbracoSearchResultItem CreateBasicResultItem(SemanticSearchResult result) =>
+        new(
+            result.ContentKey,
+            result.Name,
+            result.ContentType,
+            result.ContentTypeAlias,
+            null,
+            null,
+            result.SimilarityScore,
+            DateTime.MinValue,
+            "Unknown",
+            new Dictionary<string, object>());
 }

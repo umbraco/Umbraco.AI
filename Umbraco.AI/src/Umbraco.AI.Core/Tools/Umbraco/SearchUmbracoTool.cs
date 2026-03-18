@@ -196,7 +196,7 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 
             if (publishedItem != null)
             {
-                enrichedResults.Add(CreateEnrichedResultItem(publishedItem, searchResult.Score, isMedia));
+                enrichedResults.Add(UmbracoSearchHelpers.CreateEnrichedResultItem(publishedItem, searchResult.Score, isMedia));
             }
             else
             {
@@ -239,54 +239,4 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
             new Dictionary<string, object>());
     }
 
-    private UmbracoSearchResultItem CreateEnrichedResultItem(IPublishedContent content, float score, bool isMedia)
-    {
-        var thumbnailUrl = isMedia ? GetMediaThumbnailUrl(content) : null;
-
-        return new UmbracoSearchResultItem(
-            content.Key,
-            content.Name,
-            isMedia ? "media" : "content",
-            content.ContentType.Alias,
-            content.Url(),
-            thumbnailUrl,
-            score,
-            content.UpdateDate,
-            GetContentPath(content),
-            new Dictionary<string, object>
-            {
-                { "Level", content.Level },
-                { "ContentTypeAlias", content.ContentType.Alias }
-            });
-    }
-
-    private string? GetMediaThumbnailUrl(IPublishedContent media)
-    {
-        // For images, generate a thumbnail URL with crop/resize
-        if (media.ContentType.Alias.Contains("Image", StringComparison.OrdinalIgnoreCase))
-        {
-            var url = media.Url();
-            if (!string.IsNullOrEmpty(url))
-            {
-                return $"{url}?width=200&height=200&mode=crop";
-            }
-        }
-
-        // For other media types, return the URL as-is (or null)
-        return media.Url();
-    }
-
-    private string GetContentPath(IPublishedContent content)
-    {
-        var pathParts = new List<string>();
-        var current = content;
-
-        while (current != null)
-        {
-            pathParts.Insert(0, current.Name);
-            current = current.Parent();
-        }
-
-        return string.Join(" > ", pathParts);
-    }
 }

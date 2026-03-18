@@ -152,11 +152,11 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
 
         foreach (var source in _sources.Values)
         {
-            var batch = new List<(SemanticIndexEntry Entry, string Text)>();
+            var batch = new List<SemanticIndexEntry>();
 
             await foreach (var entry in source.GetAllEntriesAsync(cancellationToken))
             {
-                batch.Add((entry, entry.Text));
+                batch.Add(entry);
 
                 if (batch.Count >= _options.BatchSize)
                 {
@@ -197,7 +197,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
     }
 
     private async Task<int> ProcessBatchAsync(
-        List<(SemanticIndexEntry Entry, string Text)> batch,
+        List<SemanticIndexEntry> batch,
         AIProfile profile,
         CancellationToken cancellationToken)
     {
@@ -208,7 +208,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
 
         for (var i = 0; i < batch.Count; i++)
         {
-            var entry = batch[i].Entry;
+            var entry = batch[i];
             var vector = embeddings[i].Vector.ToArray();
 
             contentEmbeddings.Add(new ContentEmbedding

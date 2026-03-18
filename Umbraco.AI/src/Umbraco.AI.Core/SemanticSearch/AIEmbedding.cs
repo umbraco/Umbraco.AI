@@ -3,7 +3,7 @@ namespace Umbraco.AI.Core.SemanticSearch;
 /// <summary>
 /// Represents a stored embedding for a piece of Umbraco content or media.
 /// </summary>
-internal class ContentEmbedding
+internal class AIEmbedding
 {
     /// <summary>
     /// Gets or sets the unique identifier.

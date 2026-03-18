@@ -5,52 +5,52 @@ using Umbraco.Cms.Persistence.EFCore.Scoping;
 namespace Umbraco.AI.Persistence.SemanticSearch;
 
 /// <summary>
-/// EF Core implementation of the content embedding repository.
+/// EF Core implementation of the embeddings repository.
 /// </summary>
-internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepository
+internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAIContentEmbeddingRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EfCoreAIEmbeddingsRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
 
     /// <inheritdoc />
-    public async Task<ContentEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    public async Task<AIEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AIContentEmbeddingEntity? entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.ContentEmbeddings.FirstOrDefaultAsync(e => e.ContentKey == contentKey, cancellationToken));
+        AIEmbeddingsEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+            await db.Embeddings.FirstOrDefaultAsync(e => e.ContentKey == contentKey, cancellationToken));
 
         scope.Complete();
         return entity is null ? null : MapToDomain(entity);
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ContentEmbedding>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AIEmbedding>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AIContentEmbeddingEntity> entities = await scope.ExecuteWithContextAsync(async db =>
-            await db.ContentEmbeddings.ToListAsync(cancellationToken));
+        List<AIEmbeddingsEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+            await db.Embeddings.ToListAsync(cancellationToken));
 
         scope.Complete();
         return entities.Select(MapToDomain).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ContentEmbedding>> GetByFilterAsync(
+    public async Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
         string? contentType = null,
         string[]? contentTypeAliases = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AIContentEmbeddingEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        List<AIEmbeddingsEntity> entities = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AIContentEmbeddingEntity> query = db.ContentEmbeddings;
+            IQueryable<AIEmbeddingsEntity> query = db.Embeddings;
 
             if (contentType is not null)
             {
@@ -70,30 +70,30 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ContentEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AIEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AIContentEmbeddingEntity> entities = await scope.ExecuteWithContextAsync(async db =>
-            await db.ContentEmbeddings.Where(e => e.ProfileId == profileId).ToListAsync(cancellationToken));
+        List<AIEmbeddingsEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+            await db.Embeddings.Where(e => e.ProfileId == profileId).ToListAsync(cancellationToken));
 
         scope.Complete();
         return entities.Select(MapToDomain).ToList();
     }
 
     /// <inheritdoc />
-    public async Task SaveAsync(ContentEmbedding embedding, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(AIEmbedding embedding, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
-            AIContentEmbeddingEntity? existing = await db.ContentEmbeddings
+            AIEmbeddingsEntity? existing = await db.Embeddings
                 .FirstOrDefaultAsync(e => e.ContentKey == embedding.ContentKey, cancellationToken);
 
             if (existing is null)
             {
-                db.ContentEmbeddings.Add(MapToEntity(embedding));
+                db.Embeddings.Add(MapToEntity(embedding));
             }
             else
             {
@@ -108,7 +108,7 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
     }
 
     /// <inheritdoc />
-    public async Task SaveBatchAsync(IEnumerable<ContentEmbedding> embeddings, CancellationToken cancellationToken = default)
+    public async Task SaveBatchAsync(IEnumerable<AIEmbedding> embeddings, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
@@ -116,12 +116,12 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
         {
             foreach (var embedding in embeddings)
             {
-                AIContentEmbeddingEntity? existing = await db.ContentEmbeddings
+                AIEmbeddingsEntity? existing = await db.Embeddings
                     .FirstOrDefaultAsync(e => e.ContentKey == embedding.ContentKey, cancellationToken);
 
                 if (existing is null)
                 {
-                    db.ContentEmbeddings.Add(MapToEntity(embedding));
+                    db.Embeddings.Add(MapToEntity(embedding));
                 }
                 else
                 {
@@ -143,12 +143,12 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
 
         await scope.ExecuteWithContextAsync(async db =>
         {
-            AIContentEmbeddingEntity? entity = await db.ContentEmbeddings
+            AIEmbeddingsEntity? entity = await db.Embeddings
                 .FirstOrDefaultAsync(e => e.ContentKey == contentKey, cancellationToken);
 
             if (entity is not null)
             {
-                db.ContentEmbeddings.Remove(entity);
+                db.Embeddings.Remove(entity);
                 await db.SaveChangesAsync(cancellationToken);
             }
 
@@ -165,11 +165,11 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
 
         await scope.ExecuteWithContextAsync(async db =>
         {
-            var entities = await db.ContentEmbeddings
+            var entities = await db.Embeddings
                 .Where(e => e.ProfileId == profileId)
                 .ToListAsync(cancellationToken);
 
-            db.ContentEmbeddings.RemoveRange(entities);
+            db.Embeddings.RemoveRange(entities);
             await db.SaveChangesAsync(cancellationToken);
             return true;
         });
@@ -183,13 +183,13 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var count = await scope.ExecuteWithContextAsync(async db =>
-            await db.ContentEmbeddings.CountAsync(cancellationToken));
+            await db.Embeddings.CountAsync(cancellationToken));
 
         scope.Complete();
         return count;
     }
 
-    private static ContentEmbedding MapToDomain(AIContentEmbeddingEntity entity) => new()
+    private static AIEmbedding MapToDomain(AIEmbeddingsEntity entity) => new()
     {
         Id = entity.Id,
         ContentKey = entity.ContentKey,
@@ -205,7 +205,7 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
         ContentDateModified = entity.ContentDateModified
     };
 
-    private static AIContentEmbeddingEntity MapToEntity(ContentEmbedding domain) => new()
+    private static AIEmbeddingsEntity MapToEntity(AIEmbedding domain) => new()
     {
         Id = domain.Id,
         ContentKey = domain.ContentKey,
@@ -221,7 +221,7 @@ internal class EfCoreAIContentEmbeddingRepository : IAIContentEmbeddingRepositor
         ContentDateModified = domain.ContentDateModified
     };
 
-    private static void UpdateEntity(AIContentEmbeddingEntity entity, ContentEmbedding domain)
+    private static void UpdateEntity(AIEmbeddingsEntity entity, AIEmbedding domain)
     {
         entity.Id = domain.Id;
         entity.ContentType = domain.ContentType;

@@ -1,19 +1,19 @@
 namespace Umbraco.AI.Core.SemanticSearch;
 
 /// <summary>
-/// Repository for persisting and querying content embeddings.
+/// Repository for persisting and querying embeddings.
 /// </summary>
-internal interface IAIContentEmbeddingRepository
+internal interface IAIEmbeddingsRepository
 {
     /// <summary>
     /// Gets an embedding by content key.
     /// </summary>
-    Task<ContentEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default);
+    Task<AIEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all stored embeddings.
     /// </summary>
-    Task<IReadOnlyList<ContentEmbedding>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AIEmbedding>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets embeddings matching the specified filters.
@@ -21,7 +21,7 @@ internal interface IAIContentEmbeddingRepository
     /// <param name="contentType">Filter by content type (e.g., "content", "media"), or null for all.</param>
     /// <param name="contentTypeAliases">Filter by content type aliases, or null/empty for all.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<IReadOnlyList<ContentEmbedding>> GetByFilterAsync(
+    Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
         string? contentType = null,
         string[]? contentTypeAliases = null,
         CancellationToken cancellationToken = default);
@@ -29,17 +29,17 @@ internal interface IAIContentEmbeddingRepository
     /// <summary>
     /// Gets all embeddings for a specific profile.
     /// </summary>
-    Task<IReadOnlyList<ContentEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AIEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves (upserts) an embedding by content key.
     /// </summary>
-    Task SaveAsync(ContentEmbedding embedding, CancellationToken cancellationToken = default);
+    Task SaveAsync(AIEmbedding embedding, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves a batch of embeddings.
     /// </summary>
-    Task SaveBatchAsync(IEnumerable<ContentEmbedding> embeddings, CancellationToken cancellationToken = default);
+    Task SaveBatchAsync(IEnumerable<AIEmbedding> embeddings, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes an embedding by content key.

@@ -15,14 +15,14 @@ namespace Umbraco.AI.Tests.Unit.Services;
 public class AISemanticSearchServiceTests
 {
     private readonly Mock<IAIEmbeddingService> _embeddingServiceMock;
-    private readonly Mock<IAIContentEmbeddingRepository> _repositoryMock;
+    private readonly Mock<IAIEmbeddingsRepository> _repositoryMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly AISemanticSearchService _service;
 
     public AISemanticSearchServiceTests()
     {
         _embeddingServiceMock = new Mock<IAIEmbeddingService>();
-        _repositoryMock = new Mock<IAIContentEmbeddingRepository>();
+        _repositoryMock = new Mock<IAIEmbeddingsRepository>();
         _profileServiceMock = new Mock<IAIProfileService>();
 
         var options = Options.Create(new AISemanticSearchOptions
@@ -58,7 +58,7 @@ public class AISemanticSearchServiceTests
 
         SetupQueryEmbedding(queryVector);
 
-        var embeddings = new List<ContentEmbedding>
+        var embeddings = new List<AIEmbedding>
         {
             CreateEmbedding(Guid.NewGuid(), "Low Match", "content", lowSimilarityVector),
             CreateEmbedding(Guid.NewGuid(), "High Match", "content", highSimilarityVector),
@@ -86,7 +86,7 @@ public class AISemanticSearchServiceTests
 
         SetupQueryEmbedding(queryVector);
 
-        var filteredEmbeddings = new List<ContentEmbedding>
+        var filteredEmbeddings = new List<AIEmbedding>
         {
             CreateEmbedding(Guid.NewGuid(), "Content Item", "content", matchVector),
         };
@@ -114,7 +114,7 @@ public class AISemanticSearchServiceTests
 
         SetupQueryEmbedding(queryVector);
 
-        var embeddings = new List<ContentEmbedding>
+        var embeddings = new List<AIEmbedding>
         {
             CreateEmbedding(Guid.NewGuid(), "Unrelated", "content", orthogonalVector),
         };
@@ -139,7 +139,7 @@ public class AISemanticSearchServiceTests
         SetupQueryEmbedding(queryVector);
 
         _repositoryMock.Setup(r => r.GetByFilterAsync(It.IsAny<string?>(), It.IsAny<string[]?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ContentEmbedding>());
+            .ReturnsAsync(new List<AIEmbedding>());
 
         // Act
         var results = await _service.SearchAsync("test");
@@ -196,7 +196,7 @@ public class AISemanticSearchServiceTests
             .ReturnsAsync(new Embedding<float>(vector));
     }
 
-    private static ContentEmbedding CreateEmbedding(Guid key, string name, string contentType, float[] vector) => new()
+    private static AIEmbedding CreateEmbedding(Guid key, string name, string contentType, float[] vector) => new()
     {
         Id = Guid.NewGuid(),
         ContentKey = key,

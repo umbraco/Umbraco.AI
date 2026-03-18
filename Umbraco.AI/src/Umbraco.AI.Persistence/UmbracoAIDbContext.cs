@@ -95,9 +95,9 @@ public class UmbracoAIDbContext : DbContext
     internal DbSet<AITestTranscriptEntity> TestTranscripts { get; set; } = null!;
 
     /// <summary>
-    /// AI content embeddings for semantic search.
+    /// AI embeddings for semantic search.
     /// </summary>
-    internal DbSet<AIContentEmbeddingEntity> ContentEmbeddings { get; set; } = null!;
+    internal DbSet<AIEmbeddingsEntity> Embeddings { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAIDbContext"/>.
@@ -861,9 +861,9 @@ public class UmbracoAIDbContext : DbContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<AIContentEmbeddingEntity>(entity =>
+        modelBuilder.Entity<AIEmbeddingsEntity>(entity =>
         {
-            entity.ToTable("umbracoAIContentEmbedding");
+            entity.ToTable("umbracoAIEmbedding");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.ContentKey)

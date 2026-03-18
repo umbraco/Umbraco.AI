@@ -61,7 +61,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIUsageRecordRepository, EfCoreAIUsageRecordRepository>();
         builder.Services.AddSingleton<IAIUsageStatisticsRepository, EfCoreAIUsageStatisticsRepository>();
         builder.Services.AddSingleton<IAISettingsRepository, EfCoreAISettingsRepository>();
-        builder.Services.AddSingleton<IAIContentEmbeddingRepository, EfCoreAIContentEmbeddingRepository>();
+        builder.Services.AddSingleton<IAIEmbeddingsRepository, EfCoreAIEmbeddingsRepository>();
 
         // Unified versioning repository
         builder.Services.AddSingleton<IAIEntityVersionRepository, EfCoreAIEntityVersionRepository>();

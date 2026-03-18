@@ -14,7 +14,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
 {
     private readonly Dictionary<string, ISemanticIndexSource> _sources;
     private readonly IAIEmbeddingService _embeddingService;
-    private readonly IAIContentEmbeddingRepository _repository;
+    private readonly IAIEmbeddingsRepository _repository;
     private readonly IAIProfileService _profileService;
     private readonly AISemanticSearchOptions _options;
     private readonly ILogger<AISemanticSearchService> _logger;
@@ -22,7 +22,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
     public AISemanticSearchService(
         IEnumerable<ISemanticIndexSource> sources,
         IAIEmbeddingService embeddingService,
-        IAIContentEmbeddingRepository repository,
+        IAIEmbeddingsRepository repository,
         IAIProfileService profileService,
         IOptions<AISemanticSearchOptions> options,
         ILogger<AISemanticSearchService> logger)
@@ -54,7 +54,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
             cancellationToken);
 
         // Compute similarity and filter
-        var results = new List<(ContentEmbedding Embedding, float Similarity)>();
+        var results = new List<(AIEmbedding Embedding, float Similarity)>();
 
         foreach (var embedding in embeddings)
         {
@@ -100,7 +100,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         var embedding = await _embeddingService.GenerateEmbeddingAsync(profile.Id, entry.Text, cancellationToken: cancellationToken);
         var vector = embedding.Vector.ToArray();
 
-        var contentEmbedding = new ContentEmbedding
+        var contentEmbedding = new AIEmbedding
         {
             Id = Guid.NewGuid(),
             ContentKey = entry.EntityKey,
@@ -193,14 +193,14 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         var texts = batch.Select(b => b.Text).ToList();
         var embeddings = await _embeddingService.GenerateEmbeddingsAsync(profile.Id, texts, cancellationToken: cancellationToken);
 
-        var contentEmbeddings = new List<ContentEmbedding>();
+        var contentEmbeddings = new List<AIEmbedding>();
 
         for (var i = 0; i < batch.Count; i++)
         {
             var entry = batch[i];
             var vector = embeddings[i].Vector.ToArray();
 
-            contentEmbeddings.Add(new ContentEmbedding
+            contentEmbeddings.Add(new AIEmbedding
             {
                 Id = Guid.NewGuid(),
                 ContentKey = entry.EntityKey,

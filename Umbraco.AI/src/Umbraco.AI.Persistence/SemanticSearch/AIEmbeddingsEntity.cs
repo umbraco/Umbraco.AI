@@ -1,9 +1,9 @@
 namespace Umbraco.AI.Persistence.SemanticSearch;
 
 /// <summary>
-/// EF Core entity representing a stored content embedding.
+/// EF Core entity representing a stored embedding.
 /// </summary>
-internal class AIContentEmbeddingEntity
+internal class AIEmbeddingsEntity
 {
     /// <summary>
     /// Unique identifier.

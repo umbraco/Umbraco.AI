@@ -282,7 +282,7 @@ public static partial class UmbracoBuilderExtensions
         // Semantic search
         services.Configure<AISemanticSearchOptions>(config.GetSection("Umbraco:AI:SemanticSearch"));
         services.AddSingleton<IContentTextExtractor, ContentTextExtractor>();
-        services.AddSingleton<IAIContentEmbeddingRepository, InMemoryAIContentEmbeddingRepository>();
+        services.AddSingleton<IAIEmbeddingsRepository, InMemoryAIEmbeddingsRepository>();
         services.AddSingleton<ISemanticIndexSource, ContentSemanticIndexSource>();
         services.AddSingleton<ISemanticIndexSource, MediaSemanticIndexSource>();
         services.AddSingleton<IAISemanticSearchService, AISemanticSearchService>();

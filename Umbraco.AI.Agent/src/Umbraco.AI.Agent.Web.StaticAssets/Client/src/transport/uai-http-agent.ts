@@ -77,7 +77,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             forwardedProps: input.forwardedProps,
         };
 
-        const result = await AgentsService.runAgent({
+        const result = await AgentsService.streamAgentAGUI({
             path: { agentIdOrAlias: this.#agentId },
             body,
             signal,

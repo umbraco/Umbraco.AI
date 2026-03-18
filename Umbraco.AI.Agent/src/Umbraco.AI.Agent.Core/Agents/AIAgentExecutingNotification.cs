@@ -1,5 +1,4 @@
-using Umbraco.AI.AGUI.Models;
-using Umbraco.AI.Core.Tools;
+using Microsoft.Extensions.AI;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
@@ -14,19 +13,16 @@ public sealed class AIAgentExecutingNotification : CancelableNotification
     /// Initializes a new instance of the <see cref="AIAgentExecutingNotification"/> class.
     /// </summary>
     /// <param name="agent">The agent being executed.</param>
-    /// <param name="request">The execution run request.</param>
-    /// <param name="frontendTools">The frontend tools provided for this execution.</param>
+    /// <param name="chatMessages">The chat messages for this execution.</param>
     /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIAgentExecutingNotification(
         AIAgent agent,
-        AGUIRunRequest? request,
-        IEnumerable<AIFrontendTool>? frontendTools,
+        IReadOnlyList<ChatMessage> chatMessages,
         EventMessages messages)
         : base(messages)
     {
         Agent = agent;
-        Request = request;
-        FrontendTools = frontendTools;
+        ChatMessages = chatMessages;
     }
 
     /// <summary>
@@ -35,12 +31,7 @@ public sealed class AIAgentExecutingNotification : CancelableNotification
     public AIAgent Agent { get; }
 
     /// <summary>
-    /// Gets the execution run request, or null for inline agent executions.
+    /// Gets the chat messages for this execution.
     /// </summary>
-    public AGUIRunRequest? Request { get; }
-
-    /// <summary>
-    /// Gets the frontend tools provided for this execution.
-    /// </summary>
-    public IEnumerable<AIFrontendTool>? FrontendTools { get; }
+    public IReadOnlyList<ChatMessage> ChatMessages { get; }
 }

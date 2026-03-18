@@ -143,6 +143,79 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Runs a persisted agent with a one-shot execution, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Orchestrates the complete agent lifecycle: resolves the agent by ID, validates it is active,
+    /// applies execution options (profile/context/permission overrides), publishes notifications,
+    /// and returns the agent response.
+    /// </para>
+    /// </remarks>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent response.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    Task<AgentResponse> RunAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs a persisted agent by alias with a one-shot execution, including notification publishing.
+    /// </summary>
+    /// <param name="agentAlias">The agent alias.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent response.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    Task<AgentResponse> RunAgentAsync(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams a persisted agent execution with M.E.AI types, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Orchestrates the complete agent lifecycle: resolves the agent by ID, validates it is active,
+    /// applies execution options, publishes notifications, and streams agent response updates.
+    /// </para>
+    /// </remarks>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of agent response updates.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams a persisted agent by alias with M.E.AI types, including notification publishing.
+    /// </summary>
+    /// <param name="agentAlias">The agent alias.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of agent response updates.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Streams an agent execution with AG-UI events.
     /// </summary>
     /// <remarks>
@@ -162,7 +235,7 @@ public interface IAIAgentService
     /// <param name="frontendTools">Frontend tools with metadata for permission filtering.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
-    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
@@ -177,7 +250,7 @@ public interface IAIAgentService
     /// <param name="options">Options controlling profile and context overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
-    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,

@@ -293,6 +293,7 @@ public static partial class UmbracoBuilderExtensions
         builder.AddNotificationAsyncHandler<ContentDeletedNotification, ContentDeletedSemanticIndexHandler>();
         builder.AddNotificationAsyncHandler<MediaSavedNotification, MediaSavedSemanticIndexHandler>();
         builder.AddNotificationAsyncHandler<MediaDeletedNotification, MediaDeletedSemanticIndexHandler>();
+        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, SemanticSearchStartupHandler>();
 
         return builder;
     }

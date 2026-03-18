@@ -126,11 +126,11 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
 
         foreach (var result in results)
         {
-            var isMedia = string.Equals(result.ContentType, "media", StringComparison.OrdinalIgnoreCase);
+            var isMedia = string.Equals(result.EntityType, "media", StringComparison.OrdinalIgnoreCase);
 
             IPublishedContent? publishedItem = isMedia
-                ? umbracoContext.Media?.GetById(result.ContentKey)
-                : umbracoContext.Content?.GetById(result.ContentKey);
+                ? umbracoContext.Media?.GetById(result.EntityKey)
+                : umbracoContext.Content?.GetById(result.EntityKey);
 
             if (publishedItem is not null)
             {
@@ -147,10 +147,10 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
 
     private static UmbracoSearchResultItem CreateBasicResultItem(SemanticSearchResult result) =>
         new(
-            result.ContentKey,
+            result.EntityKey,
             result.Name,
-            result.ContentType,
-            result.ContentTypeAlias,
+            result.EntityType,
+            result.EntityTypeAlias,
             null,
             null,
             result.SimilarityScore,

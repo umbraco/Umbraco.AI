@@ -17,12 +17,12 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
     }
 
     /// <inheritdoc />
-    public async Task<AIEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    public async Task<AIEmbedding?> GetByEntityKeyAsync(Guid entityKey, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIEmbeddingsEntity? entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.Embeddings.FirstOrDefaultAsync(e => e.ContentKey == contentKey, cancellationToken));
+            await db.Embeddings.FirstOrDefaultAsync(e => e.EntityKey == entityKey, cancellationToken));
 
         scope.Complete();
         return entity is null ? null : MapToDomain(entity);
@@ -42,8 +42,8 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
-        string? contentType = null,
-        string[]? contentTypeAliases = null,
+        string? entityType = null,
+        string[]? entityTypeAliases = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
@@ -52,14 +52,14 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         {
             IQueryable<AIEmbeddingsEntity> query = db.Embeddings;
 
-            if (contentType is not null)
+            if (entityType is not null)
             {
-                query = query.Where(e => e.ContentType == contentType);
+                query = query.Where(e => e.EntityType == entityType);
             }
 
-            if (contentTypeAliases is { Length: > 0 })
+            if (entityTypeAliases is { Length: > 0 })
             {
-                query = query.Where(e => contentTypeAliases.Contains(e.ContentTypeAlias));
+                query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias));
             }
 
             return await query.ToListAsync(cancellationToken);
@@ -89,7 +89,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         await scope.ExecuteWithContextAsync(async db =>
         {
             AIEmbeddingsEntity? existing = await db.Embeddings
-                .FirstOrDefaultAsync(e => e.ContentKey == embedding.ContentKey, cancellationToken);
+                .FirstOrDefaultAsync(e => e.EntityKey == embedding.EntityKey, cancellationToken);
 
             if (existing is null)
             {
@@ -117,7 +117,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
             foreach (var embedding in embeddings)
             {
                 AIEmbeddingsEntity? existing = await db.Embeddings
-                    .FirstOrDefaultAsync(e => e.ContentKey == embedding.ContentKey, cancellationToken);
+                    .FirstOrDefaultAsync(e => e.EntityKey == embedding.EntityKey, cancellationToken);
 
                 if (existing is null)
                 {
@@ -137,14 +137,14 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
     }
 
     /// <inheritdoc />
-    public async Task DeleteByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    public async Task DeleteByEntityKeyAsync(Guid entityKey, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
             AIEmbeddingsEntity? entity = await db.Embeddings
-                .FirstOrDefaultAsync(e => e.ContentKey == contentKey, cancellationToken);
+                .FirstOrDefaultAsync(e => e.EntityKey == entityKey, cancellationToken);
 
             if (entity is not null)
             {
@@ -192,9 +192,9 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
     private static AIEmbedding MapToDomain(AIEmbeddingsEntity entity) => new()
     {
         Id = entity.Id,
-        ContentKey = entity.ContentKey,
-        ContentType = entity.ContentType,
-        ContentTypeAlias = entity.ContentTypeAlias,
+        EntityKey = entity.EntityKey,
+        EntityType = entity.EntityType,
+        EntityTypeAlias = entity.EntityTypeAlias,
         Name = entity.Name,
         TextContent = entity.TextContent,
         Vector = entity.Vector,
@@ -202,15 +202,15 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         ProfileId = entity.ProfileId,
         ModelId = entity.ModelId,
         DateIndexed = entity.DateIndexed,
-        ContentDateModified = entity.ContentDateModified
+        EntityDateModified = entity.EntityDateModified
     };
 
     private static AIEmbeddingsEntity MapToEntity(AIEmbedding domain) => new()
     {
         Id = domain.Id,
-        ContentKey = domain.ContentKey,
-        ContentType = domain.ContentType,
-        ContentTypeAlias = domain.ContentTypeAlias,
+        EntityKey = domain.EntityKey,
+        EntityType = domain.EntityType,
+        EntityTypeAlias = domain.EntityTypeAlias,
         Name = domain.Name,
         TextContent = domain.TextContent,
         Vector = domain.Vector,
@@ -218,14 +218,14 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         ProfileId = domain.ProfileId,
         ModelId = domain.ModelId,
         DateIndexed = domain.DateIndexed,
-        ContentDateModified = domain.ContentDateModified
+        EntityDateModified = domain.EntityDateModified
     };
 
     private static void UpdateEntity(AIEmbeddingsEntity entity, AIEmbedding domain)
     {
         entity.Id = domain.Id;
-        entity.ContentType = domain.ContentType;
-        entity.ContentTypeAlias = domain.ContentTypeAlias;
+        entity.EntityType = domain.EntityType;
+        entity.EntityTypeAlias = domain.EntityTypeAlias;
         entity.Name = domain.Name;
         entity.TextContent = domain.TextContent;
         entity.Vector = domain.Vector;
@@ -233,6 +233,6 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         entity.ProfileId = domain.ProfileId;
         entity.ModelId = domain.ModelId;
         entity.DateIndexed = domain.DateIndexed;
-        entity.ContentDateModified = domain.ContentDateModified;
+        entity.EntityDateModified = domain.EntityDateModified;
     }
 }

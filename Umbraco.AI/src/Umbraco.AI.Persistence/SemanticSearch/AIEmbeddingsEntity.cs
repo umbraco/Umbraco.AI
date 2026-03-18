@@ -11,22 +11,22 @@ internal class AIEmbeddingsEntity
     public Guid Id { get; set; }
 
     /// <summary>
-    /// The Umbraco content/media key.
+    /// The Umbraco entity key.
     /// </summary>
-    public Guid ContentKey { get; set; }
+    public Guid EntityKey { get; set; }
 
     /// <summary>
-    /// The type: "content" or "media".
+    /// The entity type (e.g., "content", "media").
     /// </summary>
-    public string ContentType { get; set; } = string.Empty;
+    public string EntityType { get; set; } = string.Empty;
 
     /// <summary>
-    /// The content type alias (e.g., "article", "blogPost").
+    /// The entity type alias (e.g., "article", "blogPost", "Image").
     /// </summary>
-    public string ContentTypeAlias { get; set; } = string.Empty;
+    public string EntityTypeAlias { get; set; } = string.Empty;
 
     /// <summary>
-    /// The content name at time of indexing.
+    /// The entity name at time of indexing.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
@@ -61,7 +61,7 @@ internal class AIEmbeddingsEntity
     public DateTime DateIndexed { get; set; }
 
     /// <summary>
-    /// The content's last update date.
+    /// The entity's last update date.
     /// </summary>
-    public DateTime ContentDateModified { get; set; }
+    public DateTime EntityDateModified { get; set; }
 }

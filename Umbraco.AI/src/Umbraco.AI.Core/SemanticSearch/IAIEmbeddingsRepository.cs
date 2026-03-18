@@ -6,9 +6,9 @@ namespace Umbraco.AI.Core.SemanticSearch;
 internal interface IAIEmbeddingsRepository
 {
     /// <summary>
-    /// Gets an embedding by content key.
+    /// Gets an embedding by entity key.
     /// </summary>
-    Task<AIEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default);
+    Task<AIEmbedding?> GetByEntityKeyAsync(Guid entityKey, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all stored embeddings.
@@ -18,12 +18,12 @@ internal interface IAIEmbeddingsRepository
     /// <summary>
     /// Gets embeddings matching the specified filters.
     /// </summary>
-    /// <param name="contentType">Filter by content type (e.g., "content", "media"), or null for all.</param>
-    /// <param name="contentTypeAliases">Filter by content type aliases, or null/empty for all.</param>
+    /// <param name="entityType">Filter by entity type (e.g., "content", "media"), or null for all.</param>
+    /// <param name="entityTypeAliases">Filter by entity type aliases, or null/empty for all.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
-        string? contentType = null,
-        string[]? contentTypeAliases = null,
+        string? entityType = null,
+        string[]? entityTypeAliases = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -32,7 +32,7 @@ internal interface IAIEmbeddingsRepository
     Task<IReadOnlyList<AIEmbedding>> GetByProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Saves (upserts) an embedding by content key.
+    /// Saves (upserts) an embedding by entity key.
     /// </summary>
     Task SaveAsync(AIEmbedding embedding, CancellationToken cancellationToken = default);
 
@@ -42,9 +42,9 @@ internal interface IAIEmbeddingsRepository
     Task SaveBatchAsync(IEnumerable<AIEmbedding> embeddings, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes an embedding by content key.
+    /// Deletes an embedding by entity key.
     /// </summary>
-    Task DeleteByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default);
+    Task DeleteByEntityKeyAsync(Guid entityKey, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes all embeddings for a specific profile.

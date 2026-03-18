@@ -101,7 +101,7 @@ public class AISemanticSearchServiceTests
 
         // Assert
         results.Count.ShouldBe(1);
-        results[0].ContentType.ShouldBe("content");
+        results[0].EntityType.ShouldBe("content");
         _repositoryMock.Verify(r => r.GetByFilterAsync("content", null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -199,9 +199,9 @@ public class AISemanticSearchServiceTests
     private static AIEmbedding CreateEmbedding(Guid key, string name, string contentType, float[] vector) => new()
     {
         Id = Guid.NewGuid(),
-        ContentKey = key,
-        ContentType = contentType,
-        ContentTypeAlias = "article",
+        EntityKey = key,
+        EntityType = contentType,
+        EntityTypeAlias = "article",
         Name = name,
         TextContent = $"Text for {name}",
         Vector = VectorMath.SerializeVector(vector),
@@ -209,7 +209,7 @@ public class AISemanticSearchServiceTests
         ProfileId = Guid.NewGuid(),
         ModelId = "test-model",
         DateIndexed = DateTime.UtcNow,
-        ContentDateModified = DateTime.UtcNow
+        EntityDateModified = DateTime.UtcNow
     };
 
     private static AIProfile CreateProfile(Guid id, string modelId)

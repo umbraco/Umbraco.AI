@@ -1,7 +1,7 @@
 namespace Umbraco.AI.Core.SemanticSearch;
 
 /// <summary>
-/// Represents a stored embedding for a piece of Umbraco content or media.
+/// Represents a stored embedding for an Umbraco entity.
 /// </summary>
 internal class AIEmbedding
 {
@@ -11,22 +11,22 @@ internal class AIEmbedding
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the Umbraco content/media key.
+    /// Gets or sets the Umbraco entity key.
     /// </summary>
-    public Guid ContentKey { get; set; }
+    public Guid EntityKey { get; set; }
 
     /// <summary>
-    /// Gets or sets the type: "content" or "media".
+    /// Gets or sets the entity type (e.g., "content", "media").
     /// </summary>
-    public string ContentType { get; set; } = string.Empty;
+    public string EntityType { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the content type alias (e.g., "article", "blogPost").
+    /// Gets or sets the entity type alias (e.g., "article", "blogPost", "Image").
     /// </summary>
-    public string ContentTypeAlias { get; set; } = string.Empty;
+    public string EntityTypeAlias { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the content name at time of indexing.
+    /// Gets or sets the entity name at time of indexing.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
@@ -61,7 +61,7 @@ internal class AIEmbedding
     public DateTime DateIndexed { get; set; }
 
     /// <summary>
-    /// Gets or sets the content's last update date.
+    /// Gets or sets the entity's last update date.
     /// </summary>
-    public DateTime ContentDateModified { get; set; }
+    public DateTime EntityDateModified { get; set; }
 }

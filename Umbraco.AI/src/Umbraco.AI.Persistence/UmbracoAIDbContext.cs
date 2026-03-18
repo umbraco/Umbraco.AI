@@ -866,14 +866,14 @@ public class UmbracoAIDbContext : DbContext
             entity.ToTable("umbracoAIEmbedding");
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.ContentKey)
+            entity.Property(e => e.EntityKey)
                 .IsRequired();
 
-            entity.Property(e => e.ContentType)
+            entity.Property(e => e.EntityType)
                 .HasMaxLength(20)
                 .IsRequired();
 
-            entity.Property(e => e.ContentTypeAlias)
+            entity.Property(e => e.EntityTypeAlias)
                 .HasMaxLength(255)
                 .IsRequired();
 
@@ -900,13 +900,13 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.DateIndexed)
                 .IsRequired();
 
-            entity.Property(e => e.ContentDateModified)
+            entity.Property(e => e.EntityDateModified)
                 .IsRequired();
 
-            entity.HasIndex(e => e.ContentKey)
+            entity.HasIndex(e => e.EntityKey)
                 .IsUnique();
 
-            entity.HasIndex(e => e.ContentType);
+            entity.HasIndex(e => e.EntityType);
             entity.HasIndex(e => e.ProfileId);
         });
     }

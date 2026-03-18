@@ -50,7 +50,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         // Load embeddings with server-side filtering
         var embeddings = await _repository.GetByFilterAsync(
             options.TypeFilter,
-            options.ContentTypeAliases,
+            options.EntityTypeAliases,
             cancellationToken);
 
         // Compute similarity and filter
@@ -71,10 +71,10 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
             .OrderByDescending(r => r.Similarity)
             .Take(options.MaxResults)
             .Select(r => new SemanticSearchResult(
-                r.Embedding.ContentKey,
+                r.Embedding.EntityKey,
                 r.Embedding.Name,
-                r.Embedding.ContentType,
-                r.Embedding.ContentTypeAlias,
+                r.Embedding.EntityType,
+                r.Embedding.EntityTypeAlias,
                 r.Similarity,
                 Truncate(r.Embedding.TextContent, 200)))
             .ToList();
@@ -103,9 +103,9 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         var contentEmbedding = new AIEmbedding
         {
             Id = Guid.NewGuid(),
-            ContentKey = entry.EntityKey,
-            ContentType = entry.EntityType,
-            ContentTypeAlias = entry.EntityTypeAlias,
+            EntityKey = entry.EntityKey,
+            EntityType = entry.EntityType,
+            EntityTypeAlias = entry.EntityTypeAlias,
             Name = entry.Name,
             TextContent = entry.Text,
             Vector = VectorMath.SerializeVector(vector),
@@ -113,7 +113,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
             ProfileId = profile.Id,
             ModelId = profile.Model.ModelId,
             DateIndexed = DateTime.UtcNow,
-            ContentDateModified = entry.DateModified
+            EntityDateModified = entry.DateModified
         };
 
         await _repository.SaveAsync(contentEmbedding, cancellationToken);
@@ -123,7 +123,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
     /// <inheritdoc />
     public async Task RemoveEntityAsync(Guid entityKey, CancellationToken cancellationToken = default)
     {
-        await _repository.DeleteByContentKeyAsync(entityKey, cancellationToken);
+        await _repository.DeleteByEntityKeyAsync(entityKey, cancellationToken);
         _logger.LogDebug("Removed embedding for entity {EntityKey}", entityKey);
     }
 
@@ -203,9 +203,9 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
             contentEmbeddings.Add(new AIEmbedding
             {
                 Id = Guid.NewGuid(),
-                ContentKey = entry.EntityKey,
-                ContentType = entry.EntityType,
-                ContentTypeAlias = entry.EntityTypeAlias,
+                EntityKey = entry.EntityKey,
+                EntityType = entry.EntityType,
+                EntityTypeAlias = entry.EntityTypeAlias,
                 Name = entry.Name,
                 TextContent = entry.Text,
                 Vector = VectorMath.SerializeVector(vector),
@@ -213,7 +213,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
                 ProfileId = profile.Id,
                 ModelId = profile.Model.ModelId,
                 DateIndexed = DateTime.UtcNow,
-                ContentDateModified = entry.DateModified
+                EntityDateModified = entry.DateModified
             });
         }
 

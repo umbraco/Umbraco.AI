@@ -11,9 +11,9 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
     private readonly ConcurrentDictionary<Guid, AIEmbedding> _embeddings = new();
 
     /// <inheritdoc />
-    public Task<AIEmbedding?> GetByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    public Task<AIEmbedding?> GetByEntityKeyAsync(Guid entityKey, CancellationToken cancellationToken = default)
     {
-        var embedding = _embeddings.Values.FirstOrDefault(e => e.ContentKey == contentKey);
+        var embedding = _embeddings.Values.FirstOrDefault(e => e.EntityKey == entityKey);
         return Task.FromResult(embedding);
     }
 
@@ -26,20 +26,20 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
-        string? contentType = null,
-        string[]? contentTypeAliases = null,
+        string? entityType = null,
+        string[]? entityTypeAliases = null,
         CancellationToken cancellationToken = default)
     {
         IEnumerable<AIEmbedding> query = _embeddings.Values;
 
-        if (contentType is not null)
+        if (entityType is not null)
         {
-            query = query.Where(e => string.Equals(e.ContentType, contentType, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(e => string.Equals(e.EntityType, entityType, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (contentTypeAliases is { Length: > 0 })
+        if (entityTypeAliases is { Length: > 0 })
         {
-            query = query.Where(e => contentTypeAliases.Contains(e.ContentTypeAlias, StringComparer.OrdinalIgnoreCase));
+            query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias, StringComparer.OrdinalIgnoreCase));
         }
 
         IReadOnlyList<AIEmbedding> result = query.ToList();
@@ -58,8 +58,8 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
     /// <inheritdoc />
     public Task SaveAsync(AIEmbedding embedding, CancellationToken cancellationToken = default)
     {
-        // Upsert by content key: find existing by content key and remove it first
-        var existing = _embeddings.Values.FirstOrDefault(e => e.ContentKey == embedding.ContentKey);
+        // Upsert by entity key: find existing by entity key and remove it first
+        var existing = _embeddings.Values.FirstOrDefault(e => e.EntityKey == embedding.EntityKey);
         if (existing != null)
         {
             _embeddings.TryRemove(existing.Id, out _);
@@ -79,9 +79,9 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
     }
 
     /// <inheritdoc />
-    public Task DeleteByContentKeyAsync(Guid contentKey, CancellationToken cancellationToken = default)
+    public Task DeleteByEntityKeyAsync(Guid entityKey, CancellationToken cancellationToken = default)
     {
-        var toRemove = _embeddings.Values.FirstOrDefault(e => e.ContentKey == contentKey);
+        var toRemove = _embeddings.Values.FirstOrDefault(e => e.EntityKey == entityKey);
         if (toRemove != null)
         {
             _embeddings.TryRemove(toRemove.Id, out _);

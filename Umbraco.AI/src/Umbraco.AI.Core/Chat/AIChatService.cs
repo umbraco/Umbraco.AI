@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -14,6 +15,7 @@ internal sealed class AIChatService : IAIChatService
 {
     private readonly IAIChatClientFactory _clientFactory;
     private readonly IAIProfileService _profileService;
+    private readonly IAIGuardrailService _guardrailService;
     private readonly AIOptions _options;
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIRuntimeContextAccessor _contextAccessor;
@@ -23,6 +25,7 @@ internal sealed class AIChatService : IAIChatService
     public AIChatService(
         IAIChatClientFactory clientFactory,
         IAIProfileService profileService,
+        IAIGuardrailService guardrailService,
         IOptionsMonitor<AIOptions> options,
         IEventAggregator eventAggregator,
         IAIRuntimeContextAccessor contextAccessor,
@@ -31,6 +34,7 @@ internal sealed class AIChatService : IAIChatService
     {
         _clientFactory = clientFactory;
         _profileService = profileService;
+        _guardrailService = guardrailService;
         _options = options.CurrentValue;
         _eventAggregator = eventAggregator;
         _contextAccessor = contextAccessor;
@@ -212,9 +216,10 @@ internal sealed class AIChatService : IAIChatService
                 _contributors.Populate(createdScope.Context);
             }
 
+            await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
 
-            var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+            var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
             var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, callerOptions: null);
 
@@ -242,9 +247,10 @@ internal sealed class AIChatService : IAIChatService
                 _contributors.Populate(createdScope.Context);
             }
 
+            await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
 
-            var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+            var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
             var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, callerOptions: null);
 
@@ -267,8 +273,9 @@ internal sealed class AIChatService : IAIChatService
 
         var builder = BuildChat(configure);
 
-        // Resolve profile
-        var profile = await ResolveProfileAsync(builder.ProfileId, cancellationToken);
+        // Resolve aliases and profile
+        await ResolveBuilderAliasesAsync(builder, cancellationToken);
+        var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
 
         // Create the base client with middleware
         var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
@@ -285,11 +292,26 @@ internal sealed class AIChatService : IAIChatService
         return builder;
     }
 
-    private async Task<AIProfile> ResolveProfileAsync(Guid? profileId, CancellationToken cancellationToken)
+    private async Task<AIProfile> ResolveProfileAsync(Guid? profileId, string? profileAlias, CancellationToken cancellationToken)
     {
-        var profile = profileId.HasValue
-            ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
-            : await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
+        AIProfile? profile;
+
+        if (profileId.HasValue)
+        {
+            profile = await _profileService.GetProfileAsync(profileId.Value, cancellationToken);
+        }
+        else if (!string.IsNullOrWhiteSpace(profileAlias))
+        {
+            profile = await _profileService.GetProfileByAliasAsync(profileAlias, cancellationToken);
+            if (profile is null)
+            {
+                throw new InvalidOperationException($"AI profile with alias '{profileAlias}' not found.");
+            }
+        }
+        else
+        {
+            profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
+        }
 
         if (profile is null)
         {
@@ -298,6 +320,30 @@ internal sealed class AIChatService : IAIChatService
 
         EnsureProfileSupportsChat(profile);
         return profile;
+    }
+
+    /// <summary>
+    /// Resolves any alias-based references on the builder to their corresponding IDs.
+    /// </summary>
+    private async Task ResolveBuilderAliasesAsync(AIChatBuilder builder, CancellationToken cancellationToken)
+    {
+        if (builder.GuardrailAliases is { Count: > 0 } aliases)
+        {
+            var resolvedIds = new List<Guid>(aliases.Count);
+
+            foreach (var alias in aliases)
+            {
+                var guardrail = await _guardrailService.GetGuardrailByAliasAsync(alias, cancellationToken);
+                if (guardrail is null)
+                {
+                    throw new InvalidOperationException($"AI guardrail with alias '{alias}' not found.");
+                }
+
+                resolvedIds.Add(guardrail.Id);
+            }
+
+            builder.SetResolvedGuardrailIds(resolvedIds);
+        }
     }
 
 

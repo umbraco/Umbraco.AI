@@ -13,6 +13,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
@@ -42,6 +43,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly AIToolCollection _toolCollection;
     private readonly IAIProfileService _profileService;
+    private readonly IAIGuardrailService _guardrailService;
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
@@ -56,6 +58,7 @@ internal sealed class AIAgentService : IAIAgentService
         IAGUIMessageConverter messageConverter,
         AIToolCollection toolCollection,
         IAIProfileService profileService,
+        IAIGuardrailService guardrailService,
         IAIChatClientFactory chatClientFactory,
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
@@ -70,6 +73,7 @@ internal sealed class AIAgentService : IAIAgentService
         _messageConverter = messageConverter;
         _toolCollection = toolCollection;
         _profileService = profileService;
+        _guardrailService = guardrailService;
         _chatClientFactory = chatClientFactory;
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
@@ -488,7 +492,7 @@ internal sealed class AIAgentService : IAIAgentService
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        var (agent, builder) = BuildAgent(configure);
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
 
         var additionalProperties = BuildAgentProperties(builder);
 
@@ -509,7 +513,7 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var (agent, builder) = BuildAgent(configure);
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
         // Publish executing notification
@@ -563,7 +567,7 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(messages);
 
-        var (agent, builder) = BuildAgent(configure);
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
         // Publish executing notification
@@ -612,9 +616,11 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Builds a transient agent entity and resolves the "all tools" flag.
+    /// Builds a transient agent entity, resolving aliases and the "all tools" flag.
     /// </summary>
-    private (AIAgent Agent, AIInlineAgentBuilder Builder) BuildAgent(Action<AIInlineAgentBuilder> configure)
+    private async Task<(AIAgent Agent, AIInlineAgentBuilder Builder)> BuildAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        CancellationToken cancellationToken)
     {
         var builder = new AIInlineAgentBuilder();
         configure(builder);
@@ -624,6 +630,37 @@ internal sealed class AIAgentService : IAIAgentService
         {
             var allToolIds = _toolCollection.Select(t => t.Id).ToArray();
             builder.WithTools(allToolIds);
+        }
+
+        // Resolve profile alias to ID if needed
+        if (builder.ProfileAlias is not null)
+        {
+            var profile = await _profileService.GetProfileByAliasAsync(builder.ProfileAlias, cancellationToken);
+            if (profile is null)
+            {
+                throw new InvalidOperationException($"AI profile with alias '{builder.ProfileAlias}' not found.");
+            }
+
+            builder.SetResolvedProfileId(profile.Id);
+        }
+
+        // Resolve guardrail aliases to IDs if needed
+        if (builder.GuardrailAliases is { Count: > 0 } aliases)
+        {
+            var resolvedIds = new List<Guid>(aliases.Count);
+
+            foreach (var alias in aliases)
+            {
+                var guardrail = await _guardrailService.GetGuardrailByAliasAsync(alias, cancellationToken);
+                if (guardrail is null)
+                {
+                    throw new InvalidOperationException($"AI guardrail with alias '{alias}' not found.");
+                }
+
+                resolvedIds.Add(guardrail.Id);
+            }
+
+            builder.SetResolvedGuardrailIds(resolvedIds);
         }
 
         var agent = builder.Build();

@@ -35,9 +35,11 @@ public sealed class AIChatBuilder
     private string? _name;
     private string? _description;
     private Guid? _profileId;
+    private string? _profileAlias;
     private ChatOptions? _chatOptions;
     private IEnumerable<AIRequestContextItem>? _contextItems;
     private IReadOnlyList<Guid> _guardrailIds = [];
+    private IReadOnlyList<string>? _guardrailAliases;
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private bool _isPassThrough;
 
@@ -80,7 +82,7 @@ public sealed class AIChatBuilder
     }
 
     /// <summary>
-    /// Sets the profile to use for AI model configuration.
+    /// Sets the profile to use for AI model configuration by ID.
     /// If not set, the default chat profile is used.
     /// </summary>
     /// <param name="profileId">The profile ID.</param>
@@ -88,6 +90,20 @@ public sealed class AIChatBuilder
     public AIChatBuilder WithProfile(Guid profileId)
     {
         _profileId = profileId;
+        _profileAlias = null;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the profile to use for AI model configuration by alias.
+    /// If not set, the default chat profile is used.
+    /// </summary>
+    /// <param name="profileAlias">The profile alias.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIChatBuilder WithProfile(string profileAlias)
+    {
+        _profileAlias = profileAlias;
+        _profileId = null;
         return this;
     }
 
@@ -114,13 +130,26 @@ public sealed class AIChatBuilder
     }
 
     /// <summary>
-    /// Sets guardrail IDs for safety and compliance checks.
+    /// Sets guardrails for safety and compliance checks by ID.
     /// </summary>
     /// <param name="guardrailIds">The guardrail IDs to apply.</param>
     /// <returns>The builder for chaining.</returns>
     public AIChatBuilder WithGuardrails(params Guid[] guardrailIds)
     {
         _guardrailIds = guardrailIds;
+        _guardrailAliases = null;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets guardrails for safety and compliance checks by alias.
+    /// </summary>
+    /// <param name="guardrailAliases">The guardrail aliases to apply.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIChatBuilder WithGuardrails(params string[] guardrailAliases)
+    {
+        _guardrailAliases = guardrailAliases;
+        _guardrailIds = [];
         return this;
     }
 
@@ -183,6 +212,11 @@ public sealed class AIChatBuilder
     internal Guid? ProfileId => _profileId;
 
     /// <summary>
+    /// Gets the profile alias configured on this builder, if any.
+    /// </summary>
+    internal string? ProfileAlias => _profileAlias;
+
+    /// <summary>
     /// Gets the chat options configured on this builder.
     /// </summary>
     internal ChatOptions? ChatOptions => _chatOptions;
@@ -198,6 +232,11 @@ public sealed class AIChatBuilder
     internal IReadOnlyList<Guid> GuardrailIds => _guardrailIds;
 
     /// <summary>
+    /// Gets the guardrail aliases configured on this builder, if any.
+    /// </summary>
+    internal IReadOnlyList<string>? GuardrailAliases => _guardrailAliases;
+
+    /// <summary>
     /// Gets the additional properties configured on this builder.
     /// </summary>
     internal IReadOnlyDictionary<string, object?>? AdditionalProperties => _additionalProperties;
@@ -206,6 +245,12 @@ public sealed class AIChatBuilder
     /// Gets whether this execution is a pass-through within a parent feature.
     /// </summary>
     internal bool IsPassThrough => _isPassThrough;
+
+    /// <summary>
+    /// Sets resolved guardrail IDs from alias lookup. Used by the service layer
+    /// to resolve aliases before execution.
+    /// </summary>
+    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _guardrailIds = guardrailIds;
 
     /// <summary>
     /// Validates the builder configuration.

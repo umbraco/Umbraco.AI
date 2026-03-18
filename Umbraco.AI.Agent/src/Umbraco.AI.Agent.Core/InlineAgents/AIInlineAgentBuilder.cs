@@ -25,7 +25,8 @@ namespace Umbraco.AI.Agent.Core.InlineAgents;
 ///     .WithAlias("my-summarizer")
 ///     .WithInstructions("Summarize the provided content concisely.")
 ///     .WithToolScopes("content-read")
-///     .WithProfile(profileId),
+///     .WithProfile("my-chat-profile")
+///     .WithGuardrails("safety-check", "pii-filter"),
 ///     messages, cancellationToken);
 /// </code>
 /// <para>
@@ -46,6 +47,7 @@ public sealed class AIInlineAgentBuilder
     private string? _name;
     private string? _description;
     private Guid? _profileId;
+    private string? _profileAlias;
     private string? _instructions;
     private bool _useAllTools;
     private readonly List<string> _toolIds = [];
@@ -54,6 +56,7 @@ public sealed class AIInlineAgentBuilder
     private JsonElement? _workflowSettings;
     private IEnumerable<AIRequestContextItem>? _contextItems;
     private IReadOnlyList<Guid> _guardrailIds = [];
+    private IReadOnlyList<string>? _guardrailAliases;
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private ChatOptions? _chatOptions;
 
@@ -96,7 +99,7 @@ public sealed class AIInlineAgentBuilder
     }
 
     /// <summary>
-    /// Sets the profile to use for AI model configuration.
+    /// Sets the profile to use for AI model configuration by ID.
     /// If not set, the default chat profile is used.
     /// </summary>
     /// <param name="profileId">The profile ID.</param>
@@ -104,6 +107,20 @@ public sealed class AIInlineAgentBuilder
     public AIInlineAgentBuilder WithProfile(Guid profileId)
     {
         _profileId = profileId;
+        _profileAlias = null;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the profile to use for AI model configuration by alias.
+    /// If not set, the default chat profile is used.
+    /// </summary>
+    /// <param name="profileAlias">The profile alias.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIInlineAgentBuilder WithProfile(string profileAlias)
+    {
+        _profileAlias = profileAlias;
+        _profileId = null;
         return this;
     }
 
@@ -177,13 +194,26 @@ public sealed class AIInlineAgentBuilder
     }
 
     /// <summary>
-    /// Sets guardrail IDs for safety and compliance checks.
+    /// Sets guardrails for safety and compliance checks by ID.
     /// </summary>
     /// <param name="guardrailIds">The guardrail IDs to apply.</param>
     /// <returns>The builder for chaining.</returns>
     public AIInlineAgentBuilder WithGuardrails(params Guid[] guardrailIds)
     {
         _guardrailIds = guardrailIds;
+        _guardrailAliases = null;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets guardrails for safety and compliance checks by alias.
+    /// </summary>
+    /// <param name="guardrailAliases">The guardrail aliases to apply.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIInlineAgentBuilder WithGuardrails(params string[] guardrailAliases)
+    {
+        _guardrailAliases = guardrailAliases;
+        _guardrailIds = [];
         return this;
     }
 
@@ -210,6 +240,16 @@ public sealed class AIInlineAgentBuilder
     }
 
     /// <summary>
+    /// Gets the profile alias configured on this builder, if any.
+    /// </summary>
+    internal string? ProfileAlias => _profileAlias;
+
+    /// <summary>
+    /// Gets the guardrail aliases configured on this builder, if any.
+    /// </summary>
+    internal IReadOnlyList<string>? GuardrailAliases => _guardrailAliases;
+
+    /// <summary>
     /// Gets whether all tools should be included.
     /// </summary>
     internal bool UseAllTools => _useAllTools;
@@ -228,6 +268,18 @@ public sealed class AIInlineAgentBuilder
     /// Gets the chat options configured on this builder.
     /// </summary>
     internal ChatOptions? ChatOptions => _chatOptions;
+
+    /// <summary>
+    /// Sets a resolved profile ID from alias lookup. Used by the service layer
+    /// to resolve aliases before building the agent entity.
+    /// </summary>
+    internal void SetResolvedProfileId(Guid profileId) => _profileId = profileId;
+
+    /// <summary>
+    /// Sets resolved guardrail IDs from alias lookup. Used by the service layer
+    /// to resolve aliases before building the agent entity.
+    /// </summary>
+    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _guardrailIds = guardrailIds;
 
     /// <summary>
     /// Builds a transient <see cref="AIAgent"/> entity from the builder configuration.

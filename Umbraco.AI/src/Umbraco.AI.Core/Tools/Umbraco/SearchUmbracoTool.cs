@@ -17,7 +17,7 @@ namespace Umbraco.AI.Core.Tools.Umbraco;
 /// <param name="Tags">Filter by tags (exact match). Results must have at least one of the specified tags.</param>
 /// <param name="MaxResults">Maximum number of results to return.</param>
 public record SearchUmbracoArgs(
-    [property: Description("Search query to find content and media")]
+    [property: Description("Search query to find content and media. Use specific keywords or phrases for best results. Title matches are prioritized.")]
     string Query,
 
     [property: Description("Filter by type: 'content', 'media', or 'all' (default)")]
@@ -123,9 +123,9 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         var searcher = index.Searcher;
         var queryExecutor = searcher.CreateQuery();
 
-        // Build query with type filter if needed
         IBooleanOperation? booleanQuery = null;
 
+        // Type filter
         if (typeFilter == "content")
         {
             booleanQuery = queryExecutor.Field("__IndexType", "content");
@@ -135,29 +135,85 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
             booleanQuery = queryExecutor.Field("__IndexType", "media");
         }
 
-        // Split query into individual terms for tag matching
-        var queryTerms = query.Split([' ', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        // Build boosted text query using native Lucene syntax
+        var luceneQuery = BuildTextQuery(query);
 
-        // Add the search term - search content fields OR tags field (with individual terms)
         if (booleanQuery != null)
         {
-            booleanQuery = booleanQuery.And(q => q.ManagedQuery(query).Or().GroupedOr(["tags"], queryTerms), BooleanOperation.Or);
+            booleanQuery = booleanQuery.And().NativeQuery(luceneQuery);
         }
         else
         {
-            booleanQuery = queryExecutor.ManagedQuery(query).Or().GroupedOr(["tags"], queryTerms);
+            booleanQuery = queryExecutor.NativeQuery(luceneQuery);
         }
 
-        // Add explicit tag filter if specified (exact match, OR logic - must have at least one tag)
+        // Tag filter - only when explicit Tags parameter provided (pure filter, not mixed with text search)
         if (tags is { Length: > 0 })
         {
             booleanQuery = booleanQuery.And().GroupedOr(["tags"], tags);
         }
 
-        // Execute with options
-        var results = booleanQuery.Execute(new QueryOptions(0, maxResults));
+        return booleanQuery.Execute(new QueryOptions(0, maxResults));
+    }
 
-        return results;
+    internal static string BuildTextQuery(string query)
+    {
+        var terms = query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Cap at 10 terms to prevent excessively complex queries
+        if (terms.Length > 10)
+        {
+            terms = terms[..10];
+        }
+
+        var escapedTerms = terms.Select(EscapeLuceneTerm).ToArray();
+        var isMultiWord = escapedTerms.Length > 1;
+
+        var parts = new List<string>();
+
+        // Boosted name field matches (individual terms)
+        foreach (var term in escapedTerms)
+        {
+            parts.Add($"nodeName:{term}^10");
+        }
+
+        // Exact phrase match on name (multi-word only)
+        if (isMultiWord)
+        {
+            var phrase = string.Join(" ", escapedTerms);
+            parts.Add($"nodeName:\"{phrase}\"^15");
+        }
+
+        // Broad field search (individual terms, baseline boost)
+        foreach (var term in escapedTerms)
+        {
+            parts.Add($"{term}^1");
+        }
+
+        // Phrase match across default fields (multi-word only)
+        if (isMultiWord)
+        {
+            var phrase = string.Join(" ", escapedTerms);
+            parts.Add($"\"{phrase}\"^3");
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    internal static string EscapeLuceneTerm(string term)
+    {
+        var sb = new System.Text.StringBuilder(term.Length);
+        foreach (var c in term)
+        {
+            if (c is '+' or '-' or '!' or '(' or ')' or '{' or '}' or '[' or ']' or '^' or '"' or '~' or '*' or '?' or ':' or '\\' or '/')
+            {
+                sb.Append('\\');
+            }
+
+            sb.Append(c);
+        }
+
+        return sb.ToString();
     }
 
     private IReadOnlyList<UmbracoSearchResultItem> EnrichResults(ISearchResults searchResults)

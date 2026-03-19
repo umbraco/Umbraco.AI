@@ -3,7 +3,7 @@ namespace Umbraco.AI.Core.SemanticSearch;
 /// <summary>
 /// Provides semantic search capabilities using vector embeddings.
 /// </summary>
-internal interface IAISemanticSearchService
+public interface IAISemanticSearchService
 {
     /// <summary>
     /// Searches for entities semantically similar to the given query.

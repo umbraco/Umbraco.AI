@@ -3,7 +3,7 @@ namespace Umbraco.AI.Core.SemanticSearch;
 /// <summary>
 /// Configuration options for semantic search, bound to "Umbraco:AI:SemanticSearch".
 /// </summary>
-internal class AISemanticSearchOptions
+public class AISemanticSearchOptions
 {
     /// <summary>
     /// Gets or sets whether semantic search is enabled. Default is false (opt-in).

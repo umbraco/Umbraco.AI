@@ -7,7 +7,7 @@ namespace Umbraco.AI.Core.SemanticSearch;
 /// <param name="EntitySubTypes">Filter by entity sub-types.</param>
 /// <param name="MaxResults">Maximum number of results to return.</param>
 /// <param name="MinimumSimilarity">Minimum cosine similarity threshold.</param>
-internal record SemanticSearchQueryOptions(
+public record SemanticSearchQueryOptions(
     string? TypeFilter = null,
     string[]? EntitySubTypes = null,
     int MaxResults = 10,

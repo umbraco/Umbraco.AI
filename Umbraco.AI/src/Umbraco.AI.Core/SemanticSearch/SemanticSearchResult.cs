@@ -9,7 +9,7 @@ namespace Umbraco.AI.Core.SemanticSearch;
 /// <param name="EntitySubType">The entity sub-type.</param>
 /// <param name="SimilarityScore">The cosine similarity score (0.0 to 1.0).</param>
 /// <param name="TextSnippet">A snippet of the indexed text content.</param>
-internal record SemanticSearchResult(
+public record SemanticSearchResult(
     Guid EntityKey,
     string Name,
     string EntityType,

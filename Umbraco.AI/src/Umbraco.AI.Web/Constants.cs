@@ -250,6 +250,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Semantic Search features.
+            /// </summary>
+            public static class SemanticSearch
+            {
+                /// <summary>
+                /// The route segment for Semantic Search features.
+                /// </summary>
+                public const string RouteSegment = "semantic-search";
+
+                /// <summary>
+                /// The Swagger group name for Semantic Search features.
+                /// </summary>
+                public const string GroupName = "Semantic Search";
+            }
+
+            /// <summary>
             /// Defines constants for Tools features.
             /// </summary>
             public static class Tools

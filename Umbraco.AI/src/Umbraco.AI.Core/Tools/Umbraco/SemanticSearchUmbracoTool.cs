@@ -37,7 +37,7 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
     /// <summary>
     /// Initializes a new instance of <see cref="SemanticSearchUmbracoTool"/>.
     /// </summary>
-    internal SemanticSearchUmbracoTool(
+    public SemanticSearchUmbracoTool(
         IAISemanticSearchService service,
         IUmbracoContextAccessor umbracoContextAccessor,
         IOptions<AISemanticSearchOptions> options)

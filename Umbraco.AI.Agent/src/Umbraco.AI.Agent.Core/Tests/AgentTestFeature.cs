@@ -164,7 +164,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                 GuardrailIdsOverride = guardrailIdsOverride?.ToList()
             };
 
-            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, null, options, cancellationToken))
+            await foreach (var evt in _agentService.StreamAgentAGUIAsync(agentId, request, null, options, cancellationToken))
             {
                 // Track lifecycle events
                 if (evt is RunStartedEvent runStarted)

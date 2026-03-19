@@ -3,12 +3,16 @@ using Microsoft.AspNetCore.Http;
 namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
-/// Provides runtime context scope management using HttpContext.Items for storage.
+/// Provides runtime context scope management using HttpContext.Items for storage,
+/// with an AsyncLocal fallback for background tasks without HttpContext.
 /// </summary>
 /// <remarks>
 /// <para>
 /// This implementation stores a stack of runtime contexts in HttpContext.Items, making it
-/// available across async boundaries within the same HTTP request.
+/// available across async boundaries within the same HTTP request. When no HttpContext is
+/// available (e.g., background tasks, startup reindex, content publish handlers), an
+/// AsyncLocal-based stack is used instead, ensuring runtime context is still accessible
+/// for middleware such as audit logging.
 /// </para>
 /// <para>
 /// Nested scopes are supported: each call to <see cref="CreateScope(IEnumerable{AIRequestContextItem})"/>
@@ -18,6 +22,8 @@ namespace Umbraco.AI.Core.RuntimeContext;
 internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProvider, IAIRuntimeContextAccessor
 {
     private const string ContextKey = "Umbraco.AI.RuntimeContext";
+
+    private static readonly AsyncLocal<Stack<AIRuntimeContext>?> AsyncLocalStack = new();
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -41,6 +47,12 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
                 return stack.Peek();
             }
 
+            // Fall back to AsyncLocal for background tasks
+            if (httpContext is null && AsyncLocalStack.Value is { Count: > 0 } asyncStack)
+            {
+                return asyncStack.Peek();
+            }
+
             return null;
         }
     }
@@ -54,10 +66,21 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        // If no HttpContext, return a detached scope
+        // If no HttpContext, use AsyncLocal-based scope for background tasks
         if (httpContext == null)
         {
-            return new DetachedScope(new AIRuntimeContext(items));
+            var asyncStack = AsyncLocalStack.Value;
+            if (asyncStack is null)
+            {
+                asyncStack = new Stack<AIRuntimeContext>();
+                AsyncLocalStack.Value = asyncStack;
+            }
+
+            var asyncParentContext = asyncStack.Count > 0 ? asyncStack.Peek() : null;
+            var asyncContext = new AIRuntimeContext(items);
+            asyncStack.Push(asyncContext);
+
+            return new AsyncLocalScope(asyncContext, asyncStack, asyncParentContext);
         }
 
         // Get or create stack
@@ -127,24 +150,49 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     }
 
     /// <summary>
-    /// A detached scope for scenarios without HttpContext.
+    /// A scope backed by AsyncLocal storage for background tasks without HttpContext.
     /// </summary>
-    private sealed class DetachedScope : IAIRuntimeContextScope
+    private sealed class AsyncLocalScope : IAIRuntimeContextScope
     {
-        public DetachedScope(AIRuntimeContext context)
+        private readonly Stack<AIRuntimeContext> _stack;
+        private bool _disposed;
+
+        public AsyncLocalScope(
+            AIRuntimeContext context,
+            Stack<AIRuntimeContext> stack,
+            AIRuntimeContext? parentContext)
         {
+            _stack = stack;
             Context = context;
+            ParentContext = parentContext;
+            Depth = stack.Count;
         }
 
         public AIRuntimeContext Context { get; }
 
-        public AIRuntimeContext? ParentContext => null;
+        public AIRuntimeContext? ParentContext { get; }
 
-        public int Depth => 1;
+        public int Depth { get; }
 
         public void Dispose()
         {
-            // No-op: detached scopes don't manage any shared state
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            if (_stack.Count > 0 && ReferenceEquals(_stack.Peek(), Context))
+            {
+                _stack.Pop();
+            }
+
+            // Clean up AsyncLocal if empty
+            if (_stack.Count == 0)
+            {
+                AsyncLocalStack.Value = null;
+            }
         }
     }
 }

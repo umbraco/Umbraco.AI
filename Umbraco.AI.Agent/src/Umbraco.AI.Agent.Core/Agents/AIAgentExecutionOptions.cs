@@ -1,3 +1,5 @@
+using Umbraco.AI.Core.RuntimeContext;
+
 namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
@@ -22,4 +24,16 @@ public class AIAgentExecutionOptions
     /// When set, this value is stored in the runtime context for guardrail resolvers to pick up.
     /// </summary>
     public IReadOnlyList<Guid>? GuardrailIdsOverride { get; init; }
+
+    /// <summary>
+    /// Optional context items for headless execution.
+    /// Replaces AG-UI context conversion when executing agents programmatically.
+    /// </summary>
+    public IEnumerable<AIRequestContextItem>? ContextItems { get; init; }
+
+    /// <summary>
+    /// Optional user group IDs for permission resolution in headless contexts where
+    /// no BackOffice user is available. When null, falls back to the current BackOffice user's groups.
+    /// </summary>
+    public IEnumerable<Guid>? UserGroupIds { get; init; }
 }

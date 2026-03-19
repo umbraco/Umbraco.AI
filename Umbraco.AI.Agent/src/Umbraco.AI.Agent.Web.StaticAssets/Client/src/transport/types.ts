@@ -22,6 +22,40 @@ export interface UaiFrontendTool extends Tool {
 }
 
 // =============================================================================
+// Multimodal Content Types (AG-UI Multimodal Messages Draft)
+// =============================================================================
+
+/**
+ * Text content part for multimodal messages.
+ */
+export interface UaiTextInputContent {
+    type: "text";
+    text: string;
+}
+
+/**
+ * Binary content part for multimodal messages (images, PDFs, etc.).
+ * At least one of data, url, or id must be provided.
+ */
+export interface UaiBinaryInputContent {
+    type: "binary";
+    mimeType: string;
+    /** Base64-encoded binary data (initial upload) */
+    data?: string;
+    /** URL where the binary content can be retrieved */
+    url?: string;
+    /** Server-side reference ID (after snapshot, for subsequent turns) */
+    id?: string;
+    /** Original filename */
+    filename?: string;
+}
+
+/**
+ * Union of all input content types for multimodal messages.
+ */
+export type UaiInputContent = UaiTextInputContent | UaiBinaryInputContent;
+
+// =============================================================================
 // Domain Types for Agent Communication
 // =============================================================================
 
@@ -33,6 +67,8 @@ export interface UaiChatMessage {
     id: string;
     role: "user" | "assistant" | "tool";
     content: string;
+    /** Multimodal content parts (text + binary). When present, content is a text summary. */
+    contentParts?: UaiInputContent[];
     toolCalls?: UaiToolCallInfo[];
     /** Required for tool role messages - the ID of the tool call this is responding to */
     toolCallId?: string;

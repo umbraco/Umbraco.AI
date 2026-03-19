@@ -1,7 +1,7 @@
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UmbContextMinimal } from "@umbraco-cms/backoffice/context-api";
 import type { Observable } from "rxjs";
-import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo, UaiAgentItem } from "./types/index.js";
+import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo, UaiAgentItem, UaiInputContent } from "./types/index.js";
 import type { PendingApproval } from "./services/hitl.context.js";
 import type { UaiToolRendererManager } from "./services/tool-renderer.manager.js";
 
@@ -44,8 +44,8 @@ export interface UaiChatContextApi extends UmbContextMinimal {
     /** Tool renderer manager for manifest/element lookup. */
     readonly toolRendererManager: UaiToolRendererManager;
 
-    /** Send a user message to the agent. */
-    sendUserMessage(content: string): Promise<void>;
+    /** Send a user message to the agent, optionally with multimodal content parts. */
+    sendUserMessage(content: string, contentParts?: UaiInputContent[]): Promise<void>;
 
     /** Abort the current agent run. */
     abortRun(): void;

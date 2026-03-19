@@ -10,6 +10,9 @@ export type {
     UaiInterruptInfo,
     UaiInterruptOption,
     UaiAgentState,
+    UaiInputContent,
+    UaiTextInputContent,
+    UaiBinaryInputContent,
 } from "@umbraco-ai/agent";
 
 /**

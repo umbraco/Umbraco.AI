@@ -39,6 +39,7 @@ export type { UaiInterruptHandler, UaiInterruptContext } from "./chat/services/i
 
 // Types (re-exported from agent for convenience)
 export type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo, UaiAgentState } from "./chat/types/index.js";
+export type { UaiInputContent, UaiTextInputContent, UaiBinaryInputContent } from "./chat/types/index.js";
 export type { UaiAgentItem } from "./chat/types/index.js";
 
 // Utils

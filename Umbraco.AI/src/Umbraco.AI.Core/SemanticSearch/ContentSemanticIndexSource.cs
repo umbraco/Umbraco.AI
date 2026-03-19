@@ -47,12 +47,7 @@ internal sealed class ContentSemanticIndexSource : ISemanticIndexSource
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var ctx = _umbracoContextFactory.EnsureUmbracoContext();
-        var cache = ctx.UmbracoContext.Content;
-
-        if (cache is null)
-        {
-            yield break;
-        }
+        var cache = ctx.UmbracoContext.Content!;
 
         const int parentId = -1;
         const int pageSize = 100;

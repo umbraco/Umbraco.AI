@@ -41,6 +41,12 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         SemanticSearchQueryOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        var profile = await GetEmbeddingProfileAsync(cancellationToken);
+        if (profile is null)
+        {
+            return [];
+        }
+
         options ??= new SemanticSearchQueryOptions();
 
         // Generate query embedding
@@ -84,6 +90,11 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         }
 
         var profile = await GetEmbeddingProfileAsync(cancellationToken);
+        if (profile is null)
+        {
+            return;
+        }
+
         var embedding = await _embeddingService.GenerateEmbeddingAsync(profile.Id, entry.Text, cancellationToken: cancellationToken);
         var vector = embedding.Vector.ToArray();
 
@@ -118,6 +129,10 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
     public async Task ReindexAllAsync(CancellationToken cancellationToken = default)
     {
         var profile = await GetEmbeddingProfileAsync(cancellationToken);
+        if (profile is null)
+        {
+            return;
+        }
 
         // Clear existing embeddings for this profile
         await _repository.DeleteByProfileIdAsync(profile.Id, cancellationToken);
@@ -155,16 +170,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
     public async Task<SemanticSearchIndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken = default)
     {
         var count = await _repository.GetCountAsync(cancellationToken);
-
-        AIProfile? profile = null;
-        try
-        {
-            profile = await GetEmbeddingProfileAsync(cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            // No embedding profile configured
-        }
+        var profile = await GetEmbeddingProfileAsync(cancellationToken);
 
         return new SemanticSearchIndexStatus(
             count,
@@ -208,9 +214,17 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         return contentEmbeddings.Count;
     }
 
-    private async Task<AIProfile> GetEmbeddingProfileAsync(CancellationToken cancellationToken)
+    private async Task<AIProfile?> GetEmbeddingProfileAsync(CancellationToken cancellationToken)
     {
-        return await _profileService.GetDefaultProfileAsync(AICapability.Embedding, cancellationToken);
+        try
+        {
+            return await _profileService.GetDefaultProfileAsync(AICapability.Embedding, cancellationToken);
+        }
+        catch (AIProfileNotFoundException)
+        {
+            _logger.LogWarning("No default embedding profile configured. Semantic search operations will be skipped");
+            return null;
+        }
     }
 
     private static string? Truncate(string? text, int maxLength)

@@ -92,13 +92,13 @@ internal sealed class AIProfileService : IAIProfileService
 
         if (defaultProfileAlias is null)
         {
-            throw new InvalidOperationException($"Default {capability} profile is not configured.");
+            throw new AIProfileNotFoundException(capability, $"Default {capability} profile is not configured.");
         }
 
         var profileByAlias = await _repository.GetByAliasAsync(defaultProfileAlias, cancellationToken);
         if (profileByAlias is null)
         {
-            throw new InvalidOperationException($"Default {capability} profile with alias '{defaultProfileAlias}' not found.");
+            throw new AIProfileNotFoundException(capability, $"Default {capability} profile with alias '{defaultProfileAlias}' not found.");
         }
 
         return profileByAlias;

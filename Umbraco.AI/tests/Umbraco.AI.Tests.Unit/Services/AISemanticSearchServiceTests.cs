@@ -132,6 +132,26 @@ public class AISemanticSearchServiceTests
     }
 
     [Fact]
+    public async Task SearchAsync_NoEmbeddingProfile_ReturnsEmpty()
+    {
+        // Arrange
+        _profileServiceMock
+            .Setup(p => p.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIProfileNotFoundException(AICapability.Embedding, "No default profile"));
+
+        // Act
+        var results = await _service.SearchAsync("test query");
+
+        // Assert
+        results.ShouldBeEmpty();
+        _repositoryMock.Verify(
+            r => r.SearchByVectorAsync(
+                It.IsAny<float[]>(), It.IsAny<string?>(), It.IsAny<string[]?>(),
+                It.IsAny<float>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task GetIndexStatusAsync_ReturnsCount()
     {
         // Arrange

@@ -99,13 +99,6 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
 
             return new SearchUmbracoResult(true, enrichedResults, null);
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("profile", StringComparison.OrdinalIgnoreCase))
-        {
-            return new SearchUmbracoResult(
-                false,
-                Array.Empty<UmbracoSearchResultItem>(),
-                "No embedding profile configured. Set up a default embedding profile in Umbraco AI settings.");
-        }
         catch (Exception ex)
         {
             return new SearchUmbracoResult(

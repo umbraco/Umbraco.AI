@@ -9,7 +9,7 @@ import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-toke
 
 /**
  * Workspace view for Profile governance settings.
- * Displays guardrail picker for chat profiles, or a "not available" message for other capabilities.
+ * Displays guardrail picker for chat profiles.
  */
 @customElement("uai-profile-governance-workspace-view")
 export class UaiProfileGovernanceWorkspaceViewElement extends UmbLitElement {
@@ -60,14 +60,6 @@ export class UaiProfileGovernanceWorkspaceViewElement extends UmbLitElement {
 
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
-
-        if (!isChatSettings(this._model.settings)) {
-            return html`
-                <uui-box headline="Guardrails">
-                    <p>Guardrails are not available for ${this._model.capability} profiles.</p>
-                </uui-box>
-            `;
-        }
 
         const chatSettings = this.#getChatSettings();
 

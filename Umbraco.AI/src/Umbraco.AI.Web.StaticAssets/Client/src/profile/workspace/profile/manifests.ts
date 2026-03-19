@@ -1,8 +1,16 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
 import { UAI_PROFILE_WORKSPACE_ALIAS, UAI_PROFILE_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
+import { UAI_PROFILE_CAPABILITY_CONDITION_ALIAS } from "./profile-capability.condition.js";
 
 export const manifests: Array<UmbExtensionManifest> = [
+    // Workspace condition: matches profile capability from workspace context
+    {
+        type: "condition",
+        alias: UAI_PROFILE_CAPABILITY_CONDITION_ALIAS,
+        name: "Profile Capability Condition",
+        api: () => import("./profile-capability.condition.js"),
+    },
     {
         type: "workspace",
         kind: "routable",
@@ -46,6 +54,10 @@ export const manifests: Array<UmbExtensionManifest> = [
             {
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
                 match: UAI_PROFILE_WORKSPACE_ALIAS,
+            },
+            {
+                alias: UAI_PROFILE_CAPABILITY_CONDITION_ALIAS,
+                match: "chat",
             },
         ],
     },

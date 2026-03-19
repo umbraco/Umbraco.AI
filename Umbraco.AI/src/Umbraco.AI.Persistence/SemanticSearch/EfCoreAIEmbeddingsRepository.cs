@@ -43,7 +43,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
         string? entityType = null,
-        string[]? entityTypeAliases = null,
+        string[]? entitySubTypes = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
@@ -57,9 +57,9 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
                 query = query.Where(e => e.EntityType == entityType);
             }
 
-            if (entityTypeAliases is { Length: > 0 })
+            if (entitySubTypes is { Length: > 0 })
             {
-                query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias));
+                query = query.Where(e => entitySubTypes.Contains(e.EntitySubType));
             }
 
             return await query.ToListAsync(cancellationToken);
@@ -193,7 +193,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
     public async Task<IReadOnlyList<EmbeddingSimilarityResult>> SearchByVectorAsync(
         float[] queryVector,
         string? entityType = null,
-        string[]? entityTypeAliases = null,
+        string[]? entitySubTypes = null,
         float minimumSimilarity = 0.5f,
         int maxResults = 10,
         CancellationToken cancellationToken = default)
@@ -209,9 +209,9 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
                 query = query.Where(e => e.EntityType == entityType);
             }
 
-            if (entityTypeAliases is { Length: > 0 })
+            if (entitySubTypes is { Length: > 0 })
             {
-                query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias));
+                query = query.Where(e => entitySubTypes.Contains(e.EntitySubType));
             }
 
             return await query.ToListAsync(cancellationToken);
@@ -236,7 +236,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         Id = entity.Id,
         EntityKey = entity.EntityKey,
         EntityType = entity.EntityType,
-        EntityTypeAlias = entity.EntityTypeAlias,
+        EntitySubType = entity.EntitySubType,
         Name = entity.Name,
         TextContent = entity.TextContent,
         Vector = entity.Vector,
@@ -252,7 +252,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
         Id = domain.Id,
         EntityKey = domain.EntityKey,
         EntityType = domain.EntityType,
-        EntityTypeAlias = domain.EntityTypeAlias,
+        EntitySubType = domain.EntitySubType,
         Name = domain.Name,
         TextContent = domain.TextContent,
         Vector = domain.Vector,
@@ -267,7 +267,7 @@ internal class EfCoreAIEmbeddingsRepository : IAIEmbeddingsRepository
     {
         entity.Id = domain.Id;
         entity.EntityType = domain.EntityType;
-        entity.EntityTypeAlias = domain.EntityTypeAlias;
+        entity.EntitySubType = domain.EntitySubType;
         entity.Name = domain.Name;
         entity.TextContent = domain.TextContent;
         entity.Vector = domain.Vector;

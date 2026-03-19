@@ -873,7 +873,7 @@ public class UmbracoAIDbContext : DbContext
                 .HasMaxLength(20)
                 .IsRequired();
 
-            entity.Property(e => e.EntityTypeAlias)
+            entity.Property(e => e.EntitySubType)
                 .HasMaxLength(255)
                 .IsRequired();
 

@@ -99,7 +99,7 @@ public class AISemanticSearchServiceTests
         var aliases = new[] { "article", "blogPost" };
         var options = new SemanticSearchQueryOptions(
             TypeFilter: "content",
-            EntityTypeAliases: aliases,
+            EntitySubTypes: aliases,
             MaxResults: 5,
             MinimumSimilarity: 0.7f);
 
@@ -161,7 +161,7 @@ public class AISemanticSearchServiceTests
         Id = Guid.NewGuid(),
         EntityKey = key,
         EntityType = contentType,
-        EntityTypeAlias = "article",
+        EntitySubType = "article",
         Name = name,
         TextContent = $"Text for {name}",
         Vector = VectorMath.SerializeVector(vector),

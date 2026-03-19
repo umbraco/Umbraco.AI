@@ -19,11 +19,11 @@ internal interface IAIEmbeddingsRepository
     /// Gets embeddings matching the specified filters.
     /// </summary>
     /// <param name="entityType">Filter by entity type (e.g., "content", "media"), or null for all.</param>
-    /// <param name="entityTypeAliases">Filter by entity type aliases, or null/empty for all.</param>
+    /// <param name="entitySubTypes">Filter by entity sub-types, or null/empty for all.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
         string? entityType = null,
-        string[]? entityTypeAliases = null,
+        string[]? entitySubTypes = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -66,7 +66,7 @@ internal interface IAIEmbeddingsRepository
     /// </remarks>
     /// <param name="queryVector">The query embedding vector to compare against.</param>
     /// <param name="entityType">Filter by entity type (e.g., "content", "media"), or null for all.</param>
-    /// <param name="entityTypeAliases">Filter by entity type aliases, or null/empty for all.</param>
+    /// <param name="entitySubTypes">Filter by entity sub-types, or null/empty for all.</param>
     /// <param name="minimumSimilarity">Minimum similarity threshold (0.0 to 1.0).</param>
     /// <param name="maxResults">Maximum number of results to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -74,7 +74,7 @@ internal interface IAIEmbeddingsRepository
     Task<IReadOnlyList<EmbeddingSimilarityResult>> SearchByVectorAsync(
         float[] queryVector,
         string? entityType = null,
-        string[]? entityTypeAliases = null,
+        string[]? entitySubTypes = null,
         float minimumSimilarity = 0.5f,
         int maxResults = 10,
         CancellationToken cancellationToken = default);

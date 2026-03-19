@@ -51,7 +51,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         var results = await _repository.SearchByVectorAsync(
             queryVector,
             options.TypeFilter,
-            options.EntityTypeAliases,
+            options.EntitySubTypes,
             options.MinimumSimilarity,
             options.MaxResults,
             cancellationToken);
@@ -61,7 +61,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
                 r.Embedding.EntityKey,
                 r.Embedding.Name,
                 r.Embedding.EntityType,
-                r.Embedding.EntityTypeAlias,
+                r.Embedding.EntitySubType,
                 r.SimilarityScore,
                 Truncate(r.Embedding.TextContent, 200)))
             .ToList();
@@ -92,7 +92,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
             Id = Guid.NewGuid(),
             EntityKey = entry.EntityKey,
             EntityType = entry.EntityType,
-            EntityTypeAlias = entry.EntityTypeAlias,
+            EntitySubType = entry.EntitySubType,
             Name = entry.Name,
             TextContent = entry.Text,
             Vector = VectorMath.SerializeVector(vector),
@@ -192,7 +192,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
                 Id = Guid.NewGuid(),
                 EntityKey = entry.EntityKey,
                 EntityType = entry.EntityType,
-                EntityTypeAlias = entry.EntityTypeAlias,
+                EntitySubType = entry.EntitySubType,
                 Name = entry.Name,
                 TextContent = entry.Text,
                 Vector = VectorMath.SerializeVector(vector),

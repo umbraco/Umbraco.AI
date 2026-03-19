@@ -27,7 +27,7 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
     /// <inheritdoc />
     public Task<IReadOnlyList<AIEmbedding>> GetByFilterAsync(
         string? entityType = null,
-        string[]? entityTypeAliases = null,
+        string[]? entitySubTypes = null,
         CancellationToken cancellationToken = default)
     {
         IEnumerable<AIEmbedding> query = _embeddings.Values;
@@ -37,9 +37,9 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
             query = query.Where(e => string.Equals(e.EntityType, entityType, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (entityTypeAliases is { Length: > 0 })
+        if (entitySubTypes is { Length: > 0 })
         {
-            query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias, StringComparer.OrdinalIgnoreCase));
+            query = query.Where(e => entitySubTypes.Contains(e.EntitySubType, StringComparer.OrdinalIgnoreCase));
         }
 
         IReadOnlyList<AIEmbedding> result = query.ToList();
@@ -112,7 +112,7 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
     public Task<IReadOnlyList<EmbeddingSimilarityResult>> SearchByVectorAsync(
         float[] queryVector,
         string? entityType = null,
-        string[]? entityTypeAliases = null,
+        string[]? entitySubTypes = null,
         float minimumSimilarity = 0.5f,
         int maxResults = 10,
         CancellationToken cancellationToken = default)
@@ -124,9 +124,9 @@ internal sealed class InMemoryAIEmbeddingsRepository : IAIEmbeddingsRepository
             query = query.Where(e => string.Equals(e.EntityType, entityType, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (entityTypeAliases is { Length: > 0 })
+        if (entitySubTypes is { Length: > 0 })
         {
-            query = query.Where(e => entityTypeAliases.Contains(e.EntityTypeAlias, StringComparer.OrdinalIgnoreCase));
+            query = query.Where(e => entitySubTypes.Contains(e.EntitySubType, StringComparer.OrdinalIgnoreCase));
         }
 
         IReadOnlyList<EmbeddingSimilarityResult> results = query

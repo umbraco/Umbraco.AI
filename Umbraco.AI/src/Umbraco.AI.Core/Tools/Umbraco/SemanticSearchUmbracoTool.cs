@@ -150,7 +150,7 @@ public class SemanticSearchUmbracoTool : AIToolBase<SemanticSearchUmbracoArgs>
             result.EntityKey,
             result.Name,
             result.EntityType,
-            result.EntityTypeAlias,
+            result.EntitySubType,
             null,
             null,
             result.SimilarityScore,

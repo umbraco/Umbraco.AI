@@ -21,9 +21,9 @@ internal class AIEmbeddingsEntity
     public string EntityType { get; set; } = string.Empty;
 
     /// <summary>
-    /// The entity type alias (e.g., "article", "blogPost", "Image").
+    /// The entity sub-type (e.g., "article", "blogPost", "Image").
     /// </summary>
-    public string EntityTypeAlias { get; set; } = string.Empty;
+    public string EntitySubType { get; set; } = string.Empty;
 
     /// <summary>
     /// The entity name at time of indexing.

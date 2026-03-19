@@ -9,8 +9,8 @@
     <ItemGroup>
         <!-- Dont include the client folder as part of packaging nuget build -->
         <Content Remove="Client\**" />
-        <Content Include="Client\package.json" />
-        <Content Include="Client\tsconfig.json" />
+        <Content Include="Client\package.json" Pack="false" />
+        <Content Include="Client\tsconfig.json" Pack="false" />
 
         <!-- However make the Umbraco-package.json included for dotnet pack or nuget package and visible to the solution -->
         <None Include="Client\public\umbraco-package.json" Pack="false" />

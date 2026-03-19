@@ -260,6 +260,9 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageDailyRollupJob>();
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
 
+        // Initialize test feature collection (empty by default; add-on packages register their own features)
+        builder.AITestFeatures();
+
         // Register built-in test graders
         builder.AITestGraders()
             .Add<ExactMatchGrader>()

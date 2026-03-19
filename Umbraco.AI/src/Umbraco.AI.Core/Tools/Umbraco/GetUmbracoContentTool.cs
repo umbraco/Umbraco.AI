@@ -22,6 +22,10 @@ public record GetUmbracoContentArgs(
 /// <summary>
 /// Tool that retrieves a published content item from Umbraco by its key, including all property values.
 /// </summary>
+/// <remarks>
+/// Uses Umbraco's friendly extension methods (Parent(), Children(), Url(), Ancestors())
+/// which internally resolve the navigation query service for optimised tree traversal.
+/// </remarks>
 [AITool("get_umbraco_content", "Get Umbraco Content", ScopeId = ContentReadScope.ScopeId)]
 public class GetUmbracoContentTool : AIToolBase<GetUmbracoContentArgs>
 {
@@ -88,15 +92,9 @@ public class GetUmbracoContentTool : AIToolBase<GetUmbracoContentArgs>
 
     private static string GetContentPath(IPublishedContent content)
     {
-        var pathParts = new List<string>();
-        var current = content;
-
-        while (current != null)
-        {
-            pathParts.Insert(0, current.Name);
-            current = current.Parent();
-        }
-
+        var ancestors = content.Ancestors();
+        var pathParts = ancestors.Reverse().Select(a => a.Name).ToList();
+        pathParts.Add(content.Name);
         return string.Join(" > ", pathParts);
     }
 }

@@ -75,23 +75,13 @@ public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
         var current = new ContentTreeNode(
             content.Key, content.Name, content.ContentType.Alias, content.Url(), content.Level);
 
-        // Optionally get siblings (only when content has a parent)
+        // Optionally get siblings using the navigation-backed Siblings() extension
         IReadOnlyList<ContentTreeNode>? siblings = null;
         if (args.IncludeSiblings == true)
         {
-            var parent = content.Parent();
-            if (parent != null)
-            {
-                var siblingItems = parent.Children() ?? [];
-                siblings = siblingItems
-                    .Where(s => s.Key != content.Key) // Exclude self
-                    .Select(s => new ContentTreeNode(s.Key, s.Name, s.ContentType.Alias, s.Url(), s.Level))
-                    .ToList();
-            }
-            else
-            {
-                siblings = []; // Root-level content has no siblings accessible via published cache
-            }
+            siblings = content.Siblings()
+                .Select(s => new ContentTreeNode(s.Key, s.Name, s.ContentType.Alias, s.Url(), s.Level))
+                .ToList();
         }
 
         return Task.FromResult<object>(new GetContentTreePathResult(

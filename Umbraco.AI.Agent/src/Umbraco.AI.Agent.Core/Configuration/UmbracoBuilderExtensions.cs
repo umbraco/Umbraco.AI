@@ -58,6 +58,8 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAGUIMessageConverter, AGUIMessageConverter>();
         builder.Services.AddSingleton<IAGUIToolConverter, AGUIToolConverter>();
         builder.Services.AddSingleton<IAGUIContextConverter, AGUIContextConverter>();
+        builder.Services.AddSingleton<IAGUIFileStore, AGUIFileStore>();
+        builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
 
         // Register agent context resolver

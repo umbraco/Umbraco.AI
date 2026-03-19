@@ -15,6 +15,7 @@ import type {
     UaiToolCallInfo,
     UaiToolCallStatus,
     UaiAgentItem,
+    UaiInputContent,
 } from "../types/index.js";
 import { safeParseJson } from "../utils/json.js";
 import { UaiAgentClient } from "@umbraco-ai/agent";
@@ -118,8 +119,8 @@ export class UaiRunController extends UmbControllerBase {
     /** Context items to include in the next request */
     #pendingContext: Array<{ description: string; value: string }> = [];
 
-    sendUserMessage(content: string, context?: Array<{ description: string; value: string }>): void {
-        if (!this.#client || !content.trim()) return;
+    sendUserMessage(content: string, context?: Array<{ description: string; value: string }>, contentParts?: UaiInputContent[]): void {
+        if (!this.#client || (!content.trim() && !contentParts?.length)) return;
 
         this.#pendingContext = context ?? [];
         this.#errorHandled = false;
@@ -128,6 +129,7 @@ export class UaiRunController extends UmbControllerBase {
             id: crypto.randomUUID(),
             role: "user",
             content,
+            contentParts,
             timestamp: new Date(),
         };
 

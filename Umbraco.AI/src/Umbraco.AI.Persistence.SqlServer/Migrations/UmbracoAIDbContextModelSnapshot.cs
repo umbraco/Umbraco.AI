@@ -684,6 +684,67 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAIProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.SemanticSearch.AIEmbeddingsEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateIndexed")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Dimensions")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EntityDateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EntityKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EntitySubType")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TextContent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("Vector")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityKey")
+                        .IsUnique();
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("ProfileId");
+
+                    b.ToTable("umbracoAIEmbedding", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Settings.AISettingsEntity", b =>
                 {
                     b.Property<Guid>("Id")

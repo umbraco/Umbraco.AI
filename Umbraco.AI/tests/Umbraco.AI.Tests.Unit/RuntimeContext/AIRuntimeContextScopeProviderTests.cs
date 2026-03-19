@@ -122,7 +122,7 @@ public class AIRuntimeContextScopeProviderTests
     }
 
     [Fact]
-    public void CreateScope_NoHttpContext_ReturnsDetachedScope()
+    public void CreateScope_NoHttpContext_ContextAccessibleViaAccessor()
     {
         // Arrange
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
@@ -135,6 +135,41 @@ public class AIRuntimeContextScopeProviderTests
         scope.Context.ShouldNotBeNull();
         scope.ParentContext.ShouldBeNull();
         scope.Depth.ShouldBe(1);
+        _provider.Context.ShouldBeSameAs(scope.Context);
+    }
+
+    [Fact]
+    public void CreateScope_NoHttpContext_NestedScopesWorkCorrectly()
+    {
+        // Arrange
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+
+        // Act
+        using var scope1 = _provider.CreateScope();
+        using var scope2 = _provider.CreateScope();
+
+        // Assert
+        scope1.Depth.ShouldBe(1);
+        scope1.ParentContext.ShouldBeNull();
+        scope2.Depth.ShouldBe(2);
+        scope2.ParentContext.ShouldBeSameAs(scope1.Context);
+        _provider.Context.ShouldBeSameAs(scope2.Context);
+    }
+
+    [Fact]
+    public void CreateScope_NoHttpContext_DisposeRestoresParent()
+    {
+        // Arrange
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+        using var outerScope = _provider.CreateScope();
+
+        // Act
+        var innerScope = _provider.CreateScope();
+        _provider.Context.ShouldBeSameAs(innerScope.Context);
+        innerScope.Dispose();
+
+        // Assert
+        _provider.Context.ShouldBeSameAs(outerScope.Context);
     }
 
     [Fact]
@@ -199,7 +234,7 @@ public class AIRuntimeContextScopeProviderTests
     }
 
     [Fact]
-    public void DetachedScope_Dispose_DoesNotThrow()
+    public void AsyncLocalScope_Dispose_CleansUpAndDoesNotThrow()
     {
         // Arrange
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
@@ -207,5 +242,6 @@ public class AIRuntimeContextScopeProviderTests
 
         // Act & Assert
         Should.NotThrow(() => scope.Dispose());
+        _provider.Context.ShouldBeNull();
     }
 }

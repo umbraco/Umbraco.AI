@@ -67,6 +67,11 @@ public static class Constants
         /// Feature type for inline agent executions.
         /// </summary>
         public const string InlineAgent = "inline-agent";
+
+        /// <summary>
+        /// Feature type for semantic search operations (indexing and querying).
+        /// </summary>
+        public const string SemanticSearch = "semantic-search";
     }
 
     /// <summary>
@@ -172,5 +177,11 @@ public static class Constants
         /// Used by inline agent and inline chat builders to pass ChatOptions through the middleware pipeline.
         /// </summary>
         public const string ChatOptionsOverride = "Umbraco.AI.ChatOptionsOverride";
+
+        /// <summary>
+        /// Key indicating that audit logging should be suppressed for the current operation.
+        /// Used during bulk operations (e.g., semantic search reindexing) to avoid flooding the audit log.
+        /// </summary>
+        public const string SuppressAuditLog = "Umbraco.AI.SuppressAuditLog";
     }
 }

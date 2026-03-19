@@ -37,12 +37,14 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
         AIAuditScope? auditScope = null;
         AIAuditLog? auditLog = null;
 
-        if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
+        if (_auditLogOptions.CurrentValue.Enabled
+            && _runtimeContextAccessor.Context is { } runtimeContext
+            && runtimeContext.GetValue<bool>(Constants.ContextKeys.SuppressAuditLog) is false)
         {
             // Extract audit context from options and values
             var auditLogContext = AIAuditContext.ExtractFromRuntimeContext(
                 AICapability.Embedding,
-                _runtimeContextAccessor.Context,
+                runtimeContext,
                 values.ToList());
 
             // Extract metadata from options if present

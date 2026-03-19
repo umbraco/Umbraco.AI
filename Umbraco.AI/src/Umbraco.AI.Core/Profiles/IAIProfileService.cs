@@ -61,7 +61,7 @@ public interface IAIProfileService
     /// <param name="capability">The capability.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The default profile.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when no default profile is configured or found.</exception>
+    /// <exception cref="AIProfileNotFoundException">Thrown when no default profile is configured or found.</exception>
     Task<AIProfile> GetDefaultProfileAsync(AICapability capability, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -70,7 +70,7 @@ public interface IAIProfileService
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The classifier profile.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when no classifier or default chat profile is configured or found.</exception>
+    /// <exception cref="AIProfileNotFoundException">Thrown when no classifier or default chat profile is configured or found.</exception>
     Task<AIProfile> GetClassifierProfileAsync(CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -260,19 +260,13 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageDailyRollupJob>();
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
 
-        // Initialize test feature collection (empty by default; add-on packages register their own features)
-        builder.AITestFeatures();
+        // Auto-discover test features via [AITestFeature] attribute
+        builder.AITestFeatures()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestFeature, AITestFeatureAttribute>(cache: true));
 
-        // Register built-in test graders
+        // Auto-discover test graders via [AITestGrader] attribute
         builder.AITestGraders()
-            .Add<ExactMatchGrader>()
-            .Add<ContainsGrader>()
-            .Add<RegexGrader>()
-            .Add<JSONSchemaGrader>()
-            .Add<ToolCallGrader>()
-            .Add<LLMJudgeGrader>()
-            .Add<GuardrailGrader>();
-            //.Add<SemanticSimilarityGrader>();
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestGrader, AITestGraderAttribute>(cache: true));
 
         // Register test infrastructure services
         // Note: IAITestRepository and IAITestRunRepository are registered by persistence layer

@@ -6,6 +6,7 @@ using Shouldly;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.SemanticSearch;
 using Umbraco.AI.Tests.Common.Builders;
 using Xunit;
@@ -39,11 +40,17 @@ public class AISemanticSearchServiceTests
 
         var sources = new List<ISemanticIndexSource>();
 
+        var scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
+        var scopeMock = new Mock<IAIRuntimeContextScope>();
+        scopeMock.Setup(s => s.Context).Returns(new AIRuntimeContext([]));
+        scopeProviderMock.Setup(s => s.CreateScope()).Returns(scopeMock.Object);
+
         _service = new AISemanticSearchService(
             sources,
             _embeddingServiceMock.Object,
             _repositoryMock.Object,
             _profileServiceMock.Object,
+            scopeProviderMock.Object,
             options,
             Mock.Of<ILogger<AISemanticSearchService>>());
     }

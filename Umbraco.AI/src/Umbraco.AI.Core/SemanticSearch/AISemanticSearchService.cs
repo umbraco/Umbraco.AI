@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.SemanticSearch;
 
@@ -16,6 +17,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
     private readonly IAIEmbeddingService _embeddingService;
     private readonly IAIEmbeddingsRepository _repository;
     private readonly IAIProfileService _profileService;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AISemanticSearchOptions _options;
     private readonly ILogger<AISemanticSearchService> _logger;
 
@@ -24,6 +26,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         IAIEmbeddingService embeddingService,
         IAIEmbeddingsRepository repository,
         IAIProfileService profileService,
+        IAIRuntimeContextScopeProvider scopeProvider,
         IOptions<AISemanticSearchOptions> options,
         ILogger<AISemanticSearchService> logger)
     {
@@ -31,6 +34,7 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         _embeddingService = embeddingService;
         _repository = repository;
         _profileService = profileService;
+        _scopeProvider = scopeProvider;
         _options = options.Value;
         _logger = logger;
     }
@@ -48,6 +52,10 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         }
 
         options ??= new SemanticSearchQueryOptions();
+
+        // Set up runtime context with feature information for audit logging
+        using var scope = _scopeProvider.CreateScope();
+        scope.Context.SetValue(Constants.ContextKeys.FeatureType, Constants.FeatureTypes.SemanticSearch);
 
         // Generate query embedding
         var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, cancellationToken: cancellationToken);
@@ -95,6 +103,10 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
             return;
         }
 
+        // Set up runtime context with feature information for audit logging
+        using var scope = _scopeProvider.CreateScope();
+        scope.Context.SetValue(Constants.ContextKeys.FeatureType, Constants.FeatureTypes.SemanticSearch);
+
         var embedding = await _embeddingService.GenerateEmbeddingAsync(profile.Id, entry.Text, cancellationToken: cancellationToken);
         var vector = embedding.Vector.ToArray();
 
@@ -133,6 +145,11 @@ internal sealed class AISemanticSearchService : IAISemanticSearchService
         {
             return;
         }
+
+        // Set up runtime context: suppress audit logging for bulk reindex, but include feature type
+        using var scope = _scopeProvider.CreateScope();
+        scope.Context.SetValue(Constants.ContextKeys.FeatureType, Constants.FeatureTypes.SemanticSearch);
+        scope.Context.SetValue(Constants.ContextKeys.SuppressAuditLog, true);
 
         // Clear existing embeddings for this profile
         await _repository.DeleteByProfileIdAsync(profile.Id, cancellationToken);

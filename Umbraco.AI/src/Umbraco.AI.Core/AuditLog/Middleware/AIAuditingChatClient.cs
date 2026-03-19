@@ -191,7 +191,9 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         List<ChatMessage> chatMessages,
         CancellationToken cancellationToken)
     {
-        if (!_auditLogOptions.CurrentValue.Enabled || _runtimeContextAccessor.Context is null)
+        if (!_auditLogOptions.CurrentValue.Enabled
+            || _runtimeContextAccessor.Context is not { } runtimeContext
+            || runtimeContext.GetValue<bool>(Constants.ContextKeys.SuppressAuditLog))
         {
             return (null, null);
         }

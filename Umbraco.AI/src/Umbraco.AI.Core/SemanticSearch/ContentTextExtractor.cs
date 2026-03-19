@@ -108,6 +108,20 @@ internal partial class ContentTextExtractor : IContentTextExtractor
             case BlockListModel blockList:
                 ExtractBlockItemsText(blockList, sb, depth);
                 break;
+
+            // Collection of elements (e.g., third-party editors returning nested elements)
+            case IEnumerable<IPublishedElement> elements:
+                foreach (var element in elements)
+                {
+                    ExtractElementText(element, sb, depth + 1);
+                }
+
+                break;
+
+            // Single element (e.g., nested content from custom editors)
+            case IPublishedElement element:
+                ExtractElementText(element, sb, depth + 1);
+                break;
         }
     }
 

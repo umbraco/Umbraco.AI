@@ -39,6 +39,25 @@ if ($Force -and (Test-Path "Umbraco.AI.local.slnx")) {
 # Step 1: Install Umbraco templates
 if (-not $SkipTemplateInstall) {
     Write-Host "Installing Umbraco templates..." -ForegroundColor Green
+
+    # Uninstall all existing versions to avoid conflicts
+    Write-Host "Removing any existing Umbraco.Templates installations..." -ForegroundColor Gray
+    $installedTemplates = dotnet new uninstall 2>&1 | Out-String
+    if ($installedTemplates -match "Umbraco\.Templates") {
+        # Extract all unique Umbraco.Templates entries
+        $templateLines = $installedTemplates -split "`n" | Where-Object { $_ -match "Umbraco\.Templates" }
+        foreach ($line in $templateLines) {
+            if ($line -match "Umbraco\.Templates") {
+                try {
+                    dotnet new uninstall Umbraco.Templates 2>&1 | Out-Null
+                } catch {
+                    # Ignore errors during uninstall
+                }
+            }
+        }
+    }
+
+    # Install latest version
     dotnet new install Umbraco.Templates --force
 }
 
@@ -82,7 +101,7 @@ Copy-Item -Path $composerSourcePath -Destination $composerDestPath -Force
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
-dotnet new sln -n "Umbraco.AI.local" --force --format sln
+dotnet new sln -n "Umbraco.AI.local" --force --format slnx
 
 # Helper function to add all projects from a product's src folder
 function Add-ProductProjects {

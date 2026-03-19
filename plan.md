@@ -7,53 +7,57 @@ The [AG-UI multimodal draft](https://docs.ag-ui.com/drafts/multimodal-messages) 
 - **`TextInputContent`** — `{ type: "text", text: string }`
 - **`BinaryInputContent`** — `{ type: "binary", mimeType: string, data?: string (base64), url?: string, id?: string, filename?: string }`
 
-Our implementation follows this spec exactly in the AGUI library, then layers Umbraco-specific handling on top.
+At least one of `data`, `url`, or `id` must be provided on `BinaryInputContent`. The `id` field is designed for **reference to pre-uploaded/server-stored content** — the spec leaves resolution to the implementation.
+
+Our implementation follows this spec exactly in the AGUI library, then layers server-side file processing on top.
 
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Frontend (Agent.UI)                                    │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │ <uai-chat-input>                                │    │
-│  │  - File picker button (paperclip icon)          │    │
-│  │  - Attachment preview strip (thumbnails/chips)  │    │
-│  │  - On send: include files as BinaryInputContent │    │
-│  └─────────────────────────────────────────────────┘    │
-│                        │                                │
-│  Message sent with content: InputContent[]              │
-│  (text + binary parts with base64 data)                 │
-└────────────────────────┬────────────────────────────────┘
-                         │ POST /stream-agui
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│  AGUI Library (Protocol Layer)                          │
-│  - AGUIInputContent / AGUITextInputContent /            │
-│    AGUIBinaryInputContent models                        │
-│  - AGUIMessage.Content stays string for back-compat     │
-│  - AGUIMessage.ContentParts: AGUIInputContent[]? (new)  │
-│  - JSON polymorphic deserialization via "type" field    │
-└────────────────────────┬────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│  Agent.Core (Message Converter)                         │
-│  - AGUIMessageConverter handles ContentParts            │
-│  - TextInputContent → M.E.AI TextContent               │
-│  - BinaryInputContent → M.E.AI DataContent(bytes, mime)│
-│  - Falls back to Content string for plain messages      │
-└────────────────────────┬────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│  M.E.AI (Microsoft.Extensions.AI)                       │
-│  - ChatMessage with mixed AIContent list                │
-│  - DataContent(byte[], mediaType) for binary            │
-│  - TextContent(string) for text                         │
-│  - Sent to LLM providers (OpenAI vision, etc.)         │
-└─────────────────────────────────────────────────────────┘
+Turn 1 (file attached):
+
+  Frontend ──── BinaryInputContent { data: "base64...", mimeType, filename }
+     │
+     │  POST /stream-agui
+     ▼
+  AGUIStreamingService
+     │
+     ├─ IAGUIFileProcessor.ProcessInboundAsync(messages, threadId)
+     │   ├─ Finds BinaryInputContent with data (base64)
+     │   ├─ Decodes + stores in temp (scoped to threadId)
+     │   ├─ Returns rewritten messages: data → id reference
+     │   └─ Also returns resolved messages with raw bytes for converter
+     │
+     ├─ AGUIMessageConverter.ConvertToChatMessages(resolvedMessages)
+     │   ├─ TextInputContent → M.E.AI TextContent
+     │   └─ BinaryInputContent (with bytes) → M.E.AI DataContent
+     │
+     ├─ agent.RunStreamingAsync(chatMessages) → LLM
+     │
+     └─ Emits MessagesSnapshotEvent with rewritten messages (id refs, no base64)
+            │
+            ▼
+  Frontend receives snapshot → replaces local history (lightweight)
+
+Turn 2+ (no file, but history has file reference):
+
+  Frontend ──── BinaryInputContent { id: "tmp-abc123", mimeType, filename }
+     │
+     │  POST /stream-agui
+     ▼
+  AGUIStreamingService
+     │
+     ├─ IAGUIFileProcessor.ProcessInboundAsync(messages, threadId)
+     │   ├─ Finds BinaryInputContent with id
+     │   ├─ Resolves id → reads bytes from temp store
+     │   └─ Returns resolved messages with raw bytes for converter
+     │
+     ├─ AGUIMessageConverter.ConvertToChatMessages(resolvedMessages)
+     │   └─ BinaryInputContent (with bytes) → M.E.AI DataContent
+     │
+     └─ agent.RunStreamingAsync(chatMessages) → LLM
 ```
 
 ---
@@ -74,54 +78,125 @@ Create new models in `Models/` following the AG-UI draft spec:
 
 #### 1.2 Extend AGUIMessage
 
-Add a new property to `AGUIMessage`:
-```csharp
-[JsonPropertyName("content")]
-// Content becomes a polymorphic field:
-// - string (backward compatible)
-// - InputContent[] (multimodal)
-```
-
-**Approach:** Use a custom `JsonConverter` on AGUIMessage that handles the `content` field being either a `string` or an `array`. Add a `ContentParts` property for the multimodal case. A helper resolves which is populated:
+The AG-UI spec allows `content` to be either a `string` or `InputContent[]`. Use a custom `JsonConverter` on `AGUIMessage` that handles both:
 
 ```csharp
-// When content is a string → Content is set, ContentParts is null
-// When content is an array → ContentParts is set, Content is derived from text parts
+// When content is a JSON string → Content is set, ContentParts is null
+// When content is a JSON array  → ContentParts is set, Content derived from text parts
 ```
+
+Properties:
+- `Content` (string?) — backward compatible, text-only content
+- `ContentParts` (IEnumerable<AGUIInputContent>?) — multimodal content parts
 
 #### 1.3 Unit tests
 
 - Serialization/deserialization of text-only messages (backward compat)
 - Deserialization of multimodal content arrays
 - Round-trip for BinaryInputContent with base64 data
+- Round-trip for BinaryInputContent with id reference (no data)
 - Edge cases: empty content, mixed text+binary parts
 
 ---
 
-### Phase 2: Agent.Core — Message Converter
+### Phase 2: Agent.Core — File Processor + Message Converter
 
 **Package:** `Umbraco.AI.Agent.Core`
 
-#### 2.1 Extend AGUIMessageConverter
+#### 2.1 IAGUIFileProcessor — server-side file processing
+
+New interface in `Agent.Core/AGUI/`:
+
+```csharp
+public interface IAGUIFileProcessor
+{
+    /// <summary>
+    /// Processes inbound messages: stores base64 data, resolves id references.
+    /// Returns two sets of messages:
+    /// - Rewritten: base64 replaced with id refs (for MessagesSnapshotEvent)
+    /// - Resolved: binary content populated with raw bytes (for converter)
+    /// </summary>
+    Task<AGUIFileProcessorResult> ProcessInboundAsync(
+        IEnumerable<AGUIMessage> messages,
+        string threadId,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class AGUIFileProcessorResult
+{
+    /// <summary>Messages with base64 data swapped to id references (lightweight, for snapshot).</summary>
+    public required IEnumerable<AGUIMessage> RewrittenMessages { get; init; }
+
+    /// <summary>Messages with binary content resolved to bytes (for converter → LLM).</summary>
+    public required IEnumerable<AGUIMessage> ResolvedMessages { get; init; }
+}
+```
+
+#### 2.2 IAGUIFileStore — thread-scoped temp storage
+
+```csharp
+public interface IAGUIFileStore
+{
+    Task<string> StoreAsync(string threadId, byte[] data, string mimeType, string? filename,
+        CancellationToken cancellationToken = default);
+    Task<AGUIStoredFile?> ResolveAsync(string threadId, string fileId,
+        CancellationToken cancellationToken = default);
+    Task CleanupThreadAsync(string threadId, CancellationToken cancellationToken = default);
+}
+
+public sealed class AGUIStoredFile
+{
+    public required byte[] Data { get; init; }
+    public required string MimeType { get; init; }
+    public string? Filename { get; init; }
+}
+```
+
+Default implementation: file-on-disk in Umbraco temp folder, directory per thread ID.
+
+#### 2.3 Extend AGUIMessageConverter
 
 Update `ConvertToChatMessage()` to handle `ContentParts`:
 
 ```csharp
 // If ContentParts is present, convert each part:
 // - TextInputContent → TextContent
-// - BinaryInputContent → DataContent (decode base64 → bytes)
-// Falls back to existing Content string behavior
+// - BinaryInputContent (with resolved bytes) → DataContent(bytes, mimeType)
+// Falls back to existing Content string behavior for plain messages
 ```
 
-#### 2.2 Extend ConvertFromChatMessage (reverse direction)
+The converter stays pure — no file I/O. It receives already-resolved messages from the file processor.
+
+#### 2.4 Extend ConvertFromChatMessage (reverse direction)
 
 Handle `DataContent` in M.E.AI messages when converting back to AGUI format (for messages snapshot events).
 
-#### 2.3 Unit tests
+#### 2.5 Wire into AGUIStreamingService
 
-- Convert multimodal AGUIMessage → ChatMessage with DataContent
-- Convert ChatMessage with DataContent → AGUIMessage with ContentParts
+In `StreamCoreAsync`, before the existing message conversion (line 114):
+
+```csharp
+// Process files: store base64 data, resolve id references
+var fileResult = await _fileProcessor.ProcessInboundAsync(request.Messages, request.ThreadId, cancellationToken);
+
+// Convert resolved messages (with bytes) to M.E.AI format
+var chatMessages = _messageConverter.ConvertToChatMessages(fileResult.ResolvedMessages);
+
+// ... existing streaming logic ...
+
+// After run completes, emit snapshot with lightweight references
+yield return emitter.EmitMessagesSnapshot(fileResult.RewrittenMessages);
+```
+
+#### 2.6 Unit tests
+
+- File processor: base64 → store + rewrite to id
+- File processor: id → resolve bytes
+- File processor: pass-through for text-only messages
+- Converter: multimodal AGUIMessage with bytes → ChatMessage with DataContent
+- Converter: ChatMessage with DataContent → AGUIMessage with ContentParts
 - Backward compatibility: plain string messages still work
+- Integration: full flow from inbound base64 → stored → resolved → DataContent
 
 ---
 
@@ -137,9 +212,9 @@ interface UaiTextInputContent { type: "text"; text: string; }
 interface UaiBinaryInputContent {
   type: "binary";
   mimeType: string;
-  data?: string;      // base64
+  data?: string;      // base64 (initial upload)
   url?: string;
-  id?: string;
+  id?: string;        // server reference (after snapshot)
   filename?: string;
 }
 type UaiInputContent = UaiTextInputContent | UaiBinaryInputContent;
@@ -152,6 +227,10 @@ Add optional `contentParts?: UaiInputContent[]` to `UaiChatMessage`. When presen
 #### 3.3 Update UaiAgentClient message conversion
 
 In `uai-agent-client.ts`, update `#toAGUIMessage()` to pass `contentParts` through to the AG-UI message format when present.
+
+#### 3.4 Handle MessagesSnapshotEvent
+
+The `onMessagesSnapshot` callback already exists in the run controller — it replaces the local message history. After the first turn with files, the backend emits a snapshot with id-based references, and the frontend adopts them automatically. Subsequent turns send the lightweight references.
 
 ---
 
@@ -228,28 +307,42 @@ In `message.element.ts`, render inline images and file attachment chips for user
 
 | File | Change |
 |------|--------|
+| **AGUI Library** | |
 | `AGUI/Models/AGUIInputContent.cs` | **New** — Base content part type with polymorphic discriminator |
 | `AGUI/Models/AGUITextInputContent.cs` | **New** — Text content part |
 | `AGUI/Models/AGUIBinaryInputContent.cs` | **New** — Binary content part |
 | `AGUI/Models/AGUIMessage.cs` | **Modified** — Add ContentParts, custom JSON converter |
-| `Agent.Core/AGUI/AGUIMessageConverter.cs` | **Modified** — Handle ContentParts ↔ M.E.AI |
+| **Agent.Core** | |
+| `Agent.Core/AGUI/IAGUIFileProcessor.cs` | **New** — File processing interface + result type |
+| `Agent.Core/AGUI/AGUIFileProcessor.cs` | **New** — Default implementation |
+| `Agent.Core/AGUI/IAGUIFileStore.cs` | **New** — Thread-scoped file storage interface |
+| `Agent.Core/AGUI/AGUIFileStore.cs` | **New** — Temp folder implementation |
+| `Agent.Core/AGUI/AGUIMessageConverter.cs` | **Modified** — Handle ContentParts → M.E.AI DataContent |
+| `Agent.Core/AGUI/AGUIStreamingService.cs` | **Modified** — File processing + MessagesSnapshotEvent |
+| **Frontend Transport** | |
 | `Agent.Web.StaticAssets/.../transport/types.ts` | **Modified** — Add InputContent types |
 | `Agent.Web.StaticAssets/.../transport/uai-agent-client.ts` | **Modified** — Pass ContentParts |
+| **Chat UI** | |
 | `Agent.UI/.../chat/context.ts` | **Modified** — Extend sendUserMessage signature |
 | `Agent.UI/.../chat/components/input.element.ts` | **Modified** — File picker + preview strip |
 | `Agent.UI/.../chat/components/message.element.ts` | **Modified** — Render image/file attachments |
 | `Agent.UI/.../chat/services/run.controller.ts` | **Modified** — Wire contentParts |
 | `Copilot/.../copilot/copilot.context.ts` | **Modified** — Wire contentParts |
+| **Tests** | |
 | Tests (multiple) | **New/Modified** — Unit tests for all layers |
 
 ## Key Design Decisions
 
 1. **Follow AG-UI multimodal draft exactly** — Use `TextInputContent` and `BinaryInputContent` with `type` discriminator, not custom extensions via `forwardedProps`.
 
-2. **Base64 inline data for initial implementation** — The AG-UI draft supports `data` (base64), `url`, and `id` fields on `BinaryInputContent`. We start with base64 `data` for simplicity. A server upload endpoint returning URLs can be added later for large files using the `url` field.
+2. **Server-side file processing with thread-scoped storage** — Frontend sends base64 `data` on first upload. Backend stores files in temp, scoped to `threadId`. Returns lightweight `id` references via `MessagesSnapshotEvent`. Subsequent turns send `id` only — backend resolves to bytes.
 
-3. **Backward compatible** — Plain string `content` still works. `ContentParts` is optional and only used when files are attached.
+3. **File processing in streaming service, not converter** — `IAGUIFileProcessor` runs in `AGUIStreamingService.StreamCoreAsync` where the full `AGUIRunRequest` (including `threadId`) is available. Converter stays pure format mapping with no file I/O.
 
-4. **Shared in Agent.UI** — All chat surfaces (Copilot, future workspace chat) get file upload support automatically.
+4. **MessagesSnapshotEvent for history rewriting** — Already exists in AGUI library but not emitted. Used to swap base64 → id refs in frontend history after the first turn. Frontend's existing `onMessagesSnapshot` handler replaces local state automatically.
 
-5. **M.E.AI DataContent is the backend target** — This is already proven in the Prompt package's `ImageTemplateVariableProcessor` and `AIRuntimeContext.AddData()`.
+5. **Backward compatible** — Plain string `content` still works. `ContentParts` is optional and only used when files are attached. No breaking changes to existing message flow.
+
+6. **Shared in Agent.UI** — All chat surfaces (Copilot, future workspace chat) get file upload support automatically.
+
+7. **M.E.AI DataContent is the backend target** — Already proven in the Prompt package's `ImageTemplateVariableProcessor` and `AIRuntimeContext.AddData()`.

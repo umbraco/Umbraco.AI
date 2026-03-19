@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
+using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Strings;
 
@@ -12,6 +13,8 @@ namespace Umbraco.AI.Core.SemanticSearch;
 /// </summary>
 internal partial class ContentTextExtractor : IContentTextExtractor
 {
+    private const int MaxDepth = 5;
+
     private readonly AISemanticSearchOptions _options;
 
     public ContentTextExtractor(IOptions<AISemanticSearchOptions> options)
@@ -31,15 +34,7 @@ internal partial class ContentTextExtractor : IContentTextExtractor
             sb.AppendLine();
         }
 
-        // Iterate properties and extract text
-        foreach (var property in content.Properties)
-        {
-            var text = ExtractPropertyText(property);
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-                sb.AppendLine(text);
-            }
-        }
+        ExtractElementText(content, sb, depth: 0);
 
         var result = sb.ToString().Trim();
 
@@ -57,27 +52,87 @@ internal partial class ContentTextExtractor : IContentTextExtractor
         return result;
     }
 
-    private static string? ExtractPropertyText(IPublishedProperty property)
+    private static void ExtractElementText(IPublishedElement element, StringBuilder sb, int depth)
+    {
+        if (depth > MaxDepth)
+        {
+            return;
+        }
+
+        foreach (var property in element.Properties)
+        {
+            ExtractPropertyText(property, sb, depth);
+        }
+    }
+
+    private static void ExtractPropertyText(IPublishedProperty property, StringBuilder sb, int depth)
     {
         var value = property.GetValue();
         if (value is null)
         {
-            return null;
+            return;
         }
 
-        return value switch
+        switch (value)
         {
-            string s => string.IsNullOrWhiteSpace(s) ? null : s,
+            case string s when !string.IsNullOrWhiteSpace(s):
+                sb.AppendLine(s);
+                break;
 
             // IHtmlEncodedString is the type returned by RTE properties
-            IHtmlEncodedString html => StripHtml(html.ToHtmlString()),
+            case IHtmlEncodedString html:
+                var stripped = StripHtml(html.ToHtmlString());
+                if (!string.IsNullOrWhiteSpace(stripped))
+                {
+                    sb.AppendLine(stripped);
+                }
+
+                break;
 
             // Collections (e.g., tags)
-            IEnumerable<string> strings => string.Join(", ", strings),
+            case IEnumerable<string> strings:
+                var joined = string.Join(", ", strings);
+                if (!string.IsNullOrWhiteSpace(joined))
+                {
+                    sb.AppendLine(joined);
+                }
 
-            // Other value types - skip non-text types like pickers, media references, etc.
-            _ => null
-        };
+                break;
+
+            // Block Grid - recurse into items and their areas
+            case BlockGridModel blockGrid:
+                ExtractBlockGridText(blockGrid, sb, depth);
+                break;
+
+            // Block List - recurse into items
+            case BlockListModel blockList:
+                ExtractBlockItemsText(blockList, sb, depth);
+                break;
+        }
+    }
+
+    private static void ExtractBlockGridText(IEnumerable<BlockGridItem> items, StringBuilder sb, int depth)
+    {
+        foreach (var item in items)
+        {
+            ExtractElementText(item.Content, sb, depth + 1);
+
+            foreach (var area in item.Areas)
+            {
+                ExtractBlockGridText(area, sb, depth);
+            }
+        }
+    }
+
+    private static void ExtractBlockItemsText(
+        IEnumerable<IBlockReference<IPublishedElement, IPublishedElement>> items,
+        StringBuilder sb,
+        int depth)
+    {
+        foreach (var item in items)
+        {
+            ExtractElementText(item.Content, sb, depth + 1);
+        }
     }
 
     private static string? StripHtml(string? html)

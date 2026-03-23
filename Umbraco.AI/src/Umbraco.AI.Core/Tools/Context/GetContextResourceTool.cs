@@ -44,29 +44,29 @@ public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISys
         "Use list_context_resources first to discover available resources.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(GetContextResourceArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(GetContextResourceArgs args, CancellationToken cancellationToken = default)
     {
         var context = _contextAccessor.Context;
         if (context is null)
         {
-            return Task.FromResult<object>(new GetContextResourceResult(
+            return new GetContextResourceResult(
                 false,
                 null,
-                "No context is available."));
+                "No context is available.");
         }
 
         var resource = context.OnDemandResources.FirstOrDefault(r => r.Id == args.ResourceId);
         if (resource is null)
         {
-            return Task.FromResult<object>(new GetContextResourceResult(
+            return new GetContextResourceResult(
                 false,
                 null,
-                $"Resource with ID '{args.ResourceId}' not found. Use list_context_resources to see available resources."));
+                $"Resource with ID '{args.ResourceId}' not found. Use list_context_resources to see available resources.");
         }
 
-        var formattedContent = _formatter.FormatResourceForLlm(resource);
+        var formattedContent = await _formatter.FormatResourceForLlmAsync(resource, cancellationToken);
 
-        return Task.FromResult<object>(new GetContextResourceResult(
+        return new GetContextResourceResult(
             true,
             new ContextResourceContent(
                 resource.Id,
@@ -75,7 +75,7 @@ public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISys
                 resource.ResourceTypeId,
                 resource.ContextName,
                 formattedContent),
-            null));
+            null);
     }
 }
 

@@ -9,13 +9,15 @@ public interface IAIContextFormatter
     /// Formats the entire resolved context into text suitable for AI consumption.
     /// </summary>
     /// <param name="context">The resolved context.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Formatted text for the context.</returns>
-    string FormatContextForLlm(AIResolvedContext context);
+    Task<string>  FormatContextForLlmAsync(AIResolvedContext context, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Formats a single resource into text suitable for AI consumption.
     /// </summary>
     /// <param name="resource">The resolved resource.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Formatted text for the resource.</returns>
-    string FormatResourceForLlm(AIResolvedResource resource);
+    Task<string> FormatResourceForLlmAsync(AIResolvedResource resource, CancellationToken cancellationToken = default);
 }

@@ -31,7 +31,7 @@ internal static partial class PropertyValueFormatter
         foreach (var property in content.Properties)
         {
             var value = property.GetValue(culture);
-            var formattedValue = FormatValue(value, property.PropertyType.EditorAlias);
+            var formattedValue = FormatValue(value, property.PropertyType.EditorAlias, culture);
 
             properties.Add(new ContentPropertyItem(
                 property.Alias,
@@ -42,7 +42,7 @@ internal static partial class PropertyValueFormatter
         return properties;
     }
 
-    private static object? FormatValue(object? value, string editorAlias)
+    private static object? FormatValue(object? value, string editorAlias, string? culture = null)
     {
         if (value is null)
         {
@@ -54,7 +54,7 @@ internal static partial class PropertyValueFormatter
             "Umbraco.RichText" or "Umbraco.TinyMCE" => FormatRichText(value),
             "Umbraco.MediaPicker3" => FormatMediaPicker(value),
             "Umbraco.MultiNodeTreePicker" => FormatContentPicker(value),
-            _ => FormatDefault(value),
+            _ => FormatElementOrDefault(value, culture),
         };
     }
 
@@ -117,6 +117,35 @@ internal static partial class PropertyValueFormatter
         if (value is IEnumerable<IPublishedContent> contentItems)
         {
             return contentItems.Select(c => new { key = c.Key, name = c.Name, url = c.Url() }).ToArray();
+        }
+
+        return FormatDefault(value);
+    }
+
+    private static object FormatElement(IPublishedElement element, string? culture)
+    {
+        var props = new Dictionary<string, object?>();
+
+        foreach (var property in element.Properties)
+        {
+            var val = property.GetValue(culture);
+            props[property.Alias] = FormatValue(val, property.PropertyType.EditorAlias, culture);
+        }
+
+        return new { contentType = element.ContentType.Alias, properties = props };
+    }
+
+    private static object? FormatElementOrDefault(object? value, string? culture)
+    {
+        // Handle Block List, Block Grid, and any property editor returning element types
+        if (value is IEnumerable<IPublishedElement> elements)
+        {
+            return elements.Select(e => FormatElement(e, culture)).ToArray();
+        }
+
+        if (value is IPublishedElement element)
+        {
+            return FormatElement(element, culture);
         }
 
         return FormatDefault(value);

@@ -35,16 +35,15 @@ export class UaiChatMessageElement extends UmbLitElement {
 
         // Render multimodal content parts if present
         if (isUser && this.message.contentParts?.length) {
+            const textParts = this.message.contentParts.filter((p) => p.type === "text");
+            const binaryParts = this.message.contentParts.filter((p) => p.type === "binary");
+            const textContent = textParts.map((p) => (p as { text: string }).text).join("");
+
             return html`
-                ${this.message.contentParts.map((part) => {
-                    if (part.type === "text") {
-                        return html`<p>${part.text}</p>`;
-                    }
-                    if (part.type === "binary") {
-                        return this.#renderBinaryPart(part);
-                    }
-                    return html``;
-                })}
+                ${textContent ? html`<p>${textContent}</p>` : ""}
+                ${binaryParts.length
+                    ? html`<div class="attachments">${binaryParts.map((part) => this.#renderBinaryPart(part as { type: "binary"; mimeType: string; data?: string; url?: string; id?: string; filename?: string }))}</div>`
+                    : ""}
             `;
         }
 
@@ -206,12 +205,26 @@ export class UaiChatMessageElement extends UmbLitElement {
             margin-bottom: var(--uui-size-space-2);
         }
 
+        .markdown-content h1,
         .markdown-content h2,
         .markdown-content h3,
         .markdown-content h4 {
             margin-top: var(--uui-size-space-4);
             margin-bottom: var(--uui-size-space-2);
             font-size: 1.2em;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.4em;
+            line-height: 1.2;
+        }
+
+        .attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--uui-size-space-1);
+            margin-top: var(--uui-size-space-1);
+            justify-content: flex-end;
         }
 
         .inline-image {
@@ -233,6 +246,8 @@ export class UaiChatMessageElement extends UmbLitElement {
             border-radius: var(--uui-border-radius);
             font-size: 0.8rem;
             margin-top: var(--uui-size-space-1);
+            font-style: italic;
+            opacity: 0.8;
         }
 
         .tool-calls {

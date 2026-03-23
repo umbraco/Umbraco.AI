@@ -336,12 +336,10 @@ export class UaiChatInputElement extends UmbLitElement {
                     @dragleave=${this.#handleDragLeave}
                     @drop=${this.#handleDrop}
                 >
-                    ${this._isDragging
-                        ? html`<div class="drop-overlay">
-                              <uui-icon name="icon-download-alt"></uui-icon>
-                              <span>Drop files here</span>
-                          </div>`
-                        : nothing}
+                    <div class="drop-overlay ${this._isDragging ? "visible" : ""}">
+                        <uui-icon name="icon-download-alt"></uui-icon>
+                        <span>Drop files here</span>
+                    </div>
                     <uui-textarea
                         ${ref(this.#textareaRef)}
                         .value=${this._value}
@@ -423,14 +421,24 @@ export class UaiChatInputElement extends UmbLitElement {
         }
 
         .drop-overlay {
+            position: absolute;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: var(--uui-size-space-2);
-            padding: var(--uui-size-space-4);
+            background: var(--uui-color-surface);
             color: var(--uui-color-focus);
             font-size: var(--uui-type-small-size);
+            border-radius: var(--uui-border-radius);
+            z-index: 1;
             pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .drop-overlay.visible {
+            opacity: 1;
         }
 
         uui-textarea {

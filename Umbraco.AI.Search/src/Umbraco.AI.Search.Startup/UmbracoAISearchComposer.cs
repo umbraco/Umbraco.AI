@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core;
 using Umbraco.AI.Search.Core.Configuration;
-using Umbraco.AI.Search.Core.VectorStore;
+using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -32,9 +32,8 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.AddTransient<VectorIndexer>();
         builder.Services.AddTransient<VectorSearcher>();
 
-        // Register the in-memory vector store as default.
-        // Consumers can replace this with a persistent implementation.
-        builder.Services.AddSingleton<IVectorStore, InMemoryVectorStore>();
+        // Register EF Core persistence for the vector store (replaces in-memory default)
+        builder.AddUmbracoAISearchPersistence();
 
         // Register configuration options
         builder.Services.AddOptions<VectorSearchOptions>()

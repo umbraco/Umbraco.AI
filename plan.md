@@ -1,464 +1,187 @@
-# Guardrails UI Implementation Plan
+# Umbraco.AI Vector Search Plan
 
 ## Overview
 
-Add a complete "Guardrails" feature to the Umbraco.AI frontend, following the exact patterns established by the existing **Contexts** feature (for the workspace/editor/menu/collection/actions) and **Test Graders** (for the rules sub-editor within the guardrail editor). Also add a **Guardrails Picker** component (copying the Context Picker) for use in Profiles, Prompts, Agents, and Tests.
+Integrate Umbraco.AI with Umbraco.Cms.Search to provide vector-based semantic search as a search provider. This enables Umbraco content to be indexed with embeddings and searched semantically, alongside (not replacing) existing search providers like Examine.
 
-The backend Management API already exists with full CRUD + evaluator listing endpoints. The OpenAPI client needs to be regenerated.
-
----
-
-## Phase 1: OpenAPI Client Generation
-
-### 1.1 Regenerate the OpenAPI client
-- Run the demo site with `DemoSite-Claude` profile
-- Run `npm run generate-client` to pick up the new Guardrail endpoints
-- This produces the `GuardrailsService`, types (`GuardrailResponseModel`, `GuardrailItemResponseModel`, `GuardrailRuleModel`, `GuardrailEvaluatorInfoModel`, etc.) in `api/sdk.gen.ts` and `api/types.gen.ts`
+The codebase already has embedding generation infrastructure (`IAIEmbeddingService`, `AIEmbeddingService`, provider support for `text-embedding-3-large/small`, etc.). This plan adds the **indexing** and **searching** layers that plug into Umbraco.Cms.Search's provider model.
 
 ---
 
-## Phase 2: Core Guardrail Feature (copying Contexts pattern)
+## Architecture
 
-Create `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/guardrail/` with the following structure:
+### How It Fits Into Umbraco.Cms.Search
 
-### 2.1 Constants & Entity Types
+Umbraco.Cms.Search uses a **per-index provider pattern**:
+- Each index alias (e.g., `PublishedContentIndex`) maps to one `(IIndexer, ISearcher)` pair
+- `RegisterIndex<TIndexer, TSearcher>()` assigns implementations to a specific index
+- Multiple Composers can each register their own indexes independently
 
-**`guardrail/entity.ts`** (copy from `context/entity.ts`)
-```ts
-export const UAI_GUARDRAIL_ENTITY_TYPE = "uai:guardrail";
-export const UAI_GUARDRAIL_ROOT_ENTITY_TYPE = "uai:guardrail-root";
+### Critical DI Constraint: Avoid Becoming the Default Provider
+
+**Problem:** `services.AddTransient<IIndexer, VectorIndexer>()` would make our implementation the last-registered (and therefore default) `IIndexer`/`ISearcher`, overriding Examine or other providers.
+
+**Solution:** Register concrete types only — not the interfaces:
+
+```csharp
+// WRONG - becomes the default IIndexer/ISearcher, breaking other providers
+services.AddTransient<IIndexer, VectorIndexer>();
+services.AddTransient<ISearcher, VectorSearcher>();
+
+// CORRECT - available in DI for RegisterIndex<> resolution, no interface pollution
+services.AddTransient<VectorIndexer>();
+services.AddTransient<VectorSearcher>();
 ```
 
-**`guardrail/constants.ts`** (copy from `context/constants.ts`)
-```ts
-export const UAI_GUARDRAIL_ICON = "icon-shield"; // shield icon for safety
-// Re-export entity types and repository/workspace/collection constants
-```
+`RegisterIndex<VectorIndexer, VectorSearcher>()` resolves types from the container by concrete type. This keeps Examine (or whatever the user chose) as the default provider, and our vector implementation only activates for the specific index we register it against.
 
-### 2.2 Types
+### Composer Ordering
 
-**`guardrail/types.ts`** (adapted from `context/types.ts`)
-```ts
-export interface UaiGuardrailRuleModel {
-    id: string;
-    evaluatorId: string;
-    name: string;
-    phase: "PreGenerate" | "PostGenerate";
-    action: "Block" | "Warn";
-    config: Record<string, unknown> | null;
-    sortOrder: number;
-}
+Our Composer must use `[ComposeAfter(typeof(SearchCoreComposer))]` (or equivalent) to ensure `AddSearchCore()` has already run before we register our provider.
 
-export interface UaiGuardrailDetailModel {
-    unique: string;
-    entityType: UaiGuardrailEntityType;
-    alias: string;
-    name: string;
-    rules: UaiGuardrailRuleModel[];
-    dateCreated: string | null;
-    dateModified: string | null;
-    version: number;
-}
+---
 
-export interface UaiGuardrailItemModel {
-    unique: string;
-    entityType: UaiGuardrailEntityType;
-    alias: string;
-    name: string;
-    ruleCount: number;
-    dateCreated: string | null;
-    dateModified: string | null;
-}
-```
+## Component Design
 
-### 2.3 Type Mapper
+### 1. VectorIndexer (implements IIndexer)
 
-**`guardrail/type-mapper.ts`** (copy from `context/type-mapper.ts`)
-- `toDetailModel(response)` → `UaiGuardrailDetailModel`
-- `toItemModel(response)` → `UaiGuardrailItemModel`
-- `toRuleModel(rule)` → `UaiGuardrailRuleModel`
-- `toCreateRequest(model)` → API create request
-- `toUpdateRequest(model)` → API update request
-- `toRuleRequest(rule)` → API rule model
+Responsible for converting Umbraco content into vector embeddings and storing them.
 
-### 2.4 Repository Layer
+**Indexing flow:**
+1. Receives content from the Umbraco indexing pipeline (content saves, publish events)
+2. Extracts text fields from content (name, properties marked for indexing)
+3. Calls `IAIEmbeddingService.GenerateEmbeddingAsync()` to generate vector embeddings
+4. Stores vectors in a vector store (abstracted — see Vector Store Abstraction below)
 
-**`guardrail/repository/constants.ts`**
-```ts
-export const UAI_GUARDRAIL_DETAIL_REPOSITORY_ALIAS = "UmbracoAI.Repository.Guardrail.Detail";
-export const UAI_GUARDRAIL_DETAIL_STORE_ALIAS = "UmbracoAI.Store.Guardrail.Detail";
-export const UAI_GUARDRAIL_COLLECTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.Guardrail.Collection";
-```
+**Key considerations:**
+- Batch indexing support for rebuild scenarios
+- Configurable text extraction (which fields to embed, concatenation strategy)
+- Handles embedding dimension differences across providers/models
 
-**`guardrail/repository/detail/`** (copy from `context/repository/detail/`)
-- `guardrail-detail.store.ts` — `UaiGuardrailDetailStore` (extends `UmbDetailStoreBase`)
-- `guardrail-detail.server.data-source.ts` — CRUD via `GuardrailsService`
-- `guardrail-detail.repository.ts` — extends `UmbDetailRepositoryBase`, dispatches entity action events
+### 2. VectorSearcher (implements ISearcher)
 
-**`guardrail/repository/collection/`** (copy from `context/repository/collection/`)
-- `guardrail-collection.server.data-source.ts` — list via `GuardrailsService.getAllGuardrails()`
-- `guardrail-collection.repository.ts` — extends `UmbRepositoryBase`
+Responsible for semantic search queries against the vector store.
 
-**`guardrail/repository/evaluator/`** (new — for evaluator info)
-- `guardrail-evaluator-item.repository.ts` — fetches evaluator types via `GuardrailsService.getAllGuardrailEvaluators()`
+**Search flow:**
+1. Receives search query text
+2. Generates query embedding via `IAIEmbeddingService.GenerateEmbeddingAsync()`
+3. Performs similarity search against vector store (cosine similarity / ANN)
+4. Returns results mapped to Umbraco content IDs with relevance scores
 
-**`guardrail/repository/manifests.ts`** — registers all repositories + store
+### 3. Vector Store Abstraction
 
-### 2.5 Menu Item
+An abstraction layer for the actual vector storage backend, allowing pluggable implementations.
 
-**`guardrail/menu/manifests.ts`** (copy from `context/menu/manifests.ts`)
-```ts
+```csharp
+public interface IVectorStore
 {
-    type: "menuItem",
-    kind: "entityContainer",
-    alias: "UmbracoAI.MenuItem.Guardrails",
-    name: "Guardrails Menu Item",
-    weight: -10,  // Below Contexts (0), above Tests (-80)
-    meta: {
-        label: "Guardrails",
-        icon: UAI_GUARDRAIL_ICON,
-        entityType: UAI_GUARDRAIL_ROOT_ENTITY_TYPE,
-        childEntityTypes: [UAI_GUARDRAIL_ENTITY_TYPE],
-        menus: [UAI_CORE_MENU_ALIAS],
-    },
+    Task UpsertAsync(string indexName, string documentId, float[] vector, IDictionary<string, object>? metadata = null, CancellationToken ct = default);
+    Task DeleteAsync(string indexName, string documentId, CancellationToken ct = default);
+    Task<IEnumerable<VectorSearchResult>> SearchAsync(string indexName, float[] queryVector, int topK = 10, CancellationToken ct = default);
+    Task DeleteIndexAsync(string indexName, CancellationToken ct = default);
+}
+
+public record VectorSearchResult(string DocumentId, double Score, IDictionary<string, object>? Metadata);
+```
+
+**Initial implementation options:**
+- In-memory (for dev/testing)
+- SQLite-based (lightweight, no external dependencies)
+- Future: Qdrant, Pinecone, Azure AI Search, etc.
+
+### 4. Registration (Composer)
+
+```csharp
+[ComposeAfter(typeof(SearchCoreComposer))]
+public class VectorSearchComposer : IComposer
+{
+    public void Compose(IUmbracoBuilder builder)
+    {
+        // Register concrete types only — NOT as IIndexer/ISearcher
+        builder.Services.AddTransient<VectorIndexer>();
+        builder.Services.AddTransient<VectorSearcher>();
+        builder.Services.AddSingleton<IVectorStore, InMemoryVectorStore>(); // or configurable
+
+        // Register for a specific index (e.g., a new "VectorContentIndex")
+        builder.RegisterIndex<VectorIndexer, VectorSearcher>("VectorContentIndex");
+    }
 }
 ```
 
-### 2.6 Collection (List View)
+---
 
-**`guardrail/collection/constants.ts`**
-```ts
-export const UAI_GUARDRAIL_COLLECTION_ALIAS = "UmbracoAI.Collection.Guardrail";
+## Project Placement
+
+This could live in:
+
+**Option A: Inside `Umbraco.AI/` (Core)**
+- Pros: Direct access to `IAIEmbeddingService`, ships with core
+- Cons: Adds Umbraco.Cms.Search dependency to core
+
+**Option B: New add-on package `Umbraco.AI.Search/`**
+- Pros: Optional dependency, clean separation, users opt-in
+- Cons: More project scaffolding
+
+**Recommendation: Option B** — A separate `Umbraco.AI.Search` package that depends on both `Umbraco.AI.Core` (for embeddings) and `Umbraco.Cms.Search` (for the provider interfaces). Users install it only if they want vector search.
+
+### Proposed Structure
+
 ```
-
-**`guardrail/collection/guardrail-collection.element.ts`** (copy from `context/collection/context-collection.element.ts`)
-- Custom collection with search header
-
-**`guardrail/collection/views/table/guardrail-table-collection-view.element.ts`** (copy from context table view)
-- Table columns: Name (link), Alias (tag), Rules (count), Modified (date)
-
-**`guardrail/collection/action/`** (copy from `context/collection/action/`)
-- `guardrail-create-collection-action.element.ts` — "Create Guardrail" button
-- `manifests.ts`
-
-**`guardrail/collection/bulk-action/`** (copy from `context/collection/bulk-action/`)
-- `guardrail-bulk-delete.action.ts` — bulk delete using `UaiBulkDeleteActionBase`
-- `manifests.ts`
-
-**`guardrail/collection/manifests.ts`** — registers collection, view, actions, bulk actions
-
-### 2.7 Entity Actions
-
-**`guardrail/entity-actions/manifests.ts`** (copy from `context/entity-actions/manifests.ts`)
-- Create action (on root entity type) — navigates to create workspace
-- Delete action (on entity type) — uses `UaiDeleteActionBase`
-
-**`guardrail/entity-actions/guardrail-create.action.ts`**
-**`guardrail/entity-actions/guardrail-delete.action.ts`**
-
-### 2.8 Workspace
-
-**`guardrail/workspace/constants.ts`**
-```ts
-export const UAI_GUARDRAIL_WORKSPACE_ALIAS = "UmbracoAI.Workspace.Guardrail";
-export const UAI_GUARDRAIL_ROOT_WORKSPACE_ALIAS = "UmbracoAI.Workspace.GuardrailRoot";
+Umbraco.AI.Search/
+├── src/
+│   ├── Umbraco.AI.Search.Core/
+│   │   ├── VectorIndexer.cs
+│   │   ├── VectorSearcher.cs
+│   │   ├── VectorStore/
+│   │   │   ├── IVectorStore.cs
+│   │   │   ├── VectorSearchResult.cs
+│   │   │   └── InMemoryVectorStore.cs
+│   │   └── Configuration/
+│   │       └── VectorSearchOptions.cs
+│   ├── Umbraco.AI.Search.Startup/
+│   │   └── VectorSearchComposer.cs
+│   └── Umbraco.AI.Search/          # Meta-package
+├── tests/
+│   └── Umbraco.AI.Search.Tests.Unit/
+├── Umbraco.AI.Search.slnx
+└── CLAUDE.md
 ```
-
-**`guardrail/workspace/guardrail-root/`** (copy from `context/workspace/context-root/`)
-- `manifests.ts` — root workspace + collection view
-- `paths.ts` — `UAI_GUARDRAIL_ROOT_WORKSPACE_PATH`
-
-**`guardrail/workspace/guardrail/`** (copy from `context/workspace/context/`)
-
-- **`paths.ts`** — workspace, create, and edit path patterns
-- **`guardrail-workspace.context-token.ts`** — context token
-- **`guardrail-workspace.context.ts`** — `UaiGuardrailWorkspaceContext` (extends `UmbSubmittableWorkspaceContextBase`)
-  - Same scaffold/load/save/handleCommand/reload pattern as context workspace
-- **`guardrail-workspace-editor.element.ts`** — Editor shell with:
-  - Back button to collection
-  - Name input with alias lock (same pattern as context editor)
-  - Action menu for existing entities
-  - Footer breadcrumb
-- **`views/guardrail-details-workspace-view.element.ts`** — Settings view:
-  - Contains the **Rules Editor** (`<uai-guardrail-rule-config-builder>`) — see Phase 3
-- **`views/guardrail-info-workspace-view.element.ts`** — Info view:
-  - Version history (`<uai-version-history>`)
-  - Info box (Id, Date Created, Date Modified)
-- **`manifests.ts`** — registers workspace, views (Settings + Info), save action
-
-**`guardrail/workspace/manifests.ts`** — aggregates guardrail + guardrail-root manifests
-
-### 2.9 Barrel Exports & Registration
-
-**`guardrail/index.ts`** — re-exports constants, types, collection, components, repository, workspace
-**`guardrail/exports.ts`** — exports the picker component (for external use by add-ons)
-**`guardrail/manifests.ts`** — aggregates all sub-manifests (collection, entity-actions, menu, repository, workspace)
-
-**Update `src/manifests.ts`** — add `guardrailManifests` to the main bundle
-**Update `src/index.ts`** — add `export * from "./guardrail/index.js"`
 
 ---
 
-## Phase 3: Rules Editor (copying Test Graders pattern)
+## Open Questions
 
-### 3.1 Rule Config Builder Component
-
-**`guardrail/components/rule-config-builder/rule-config-builder.element.ts`** (copy from `test/components/grader-config-builder/`)
-
-`<uai-guardrail-rule-config-builder>` — List of rules with add/edit/remove:
-- Uses `<uui-ref-list>` + `<uui-ref-node>` for each rule
-- Shows rule name, detail summary (evaluator type, phase, action)
-- "Add Rule" button → opens evaluator type picker (reuse `UAI_ITEM_PICKER_MODAL`)
-- On type selection → opens rule config editor modal
-- Edit → opens rule config editor modal directly (skip type picker)
-- Remove → removes from list
-- Dispatches `UmbChangeEvent` on changes
-
-**`guardrail/components/rule-config-builder/index.ts`**
-**`guardrail/components/rule-config-builder/manifests.ts`** (empty array - component registered via barrel)
-
-### 3.2 Rule Config Editor Modal
-
-**`guardrail/modals/rule-config-editor/`** (copy from `test/modals/grader-config-editor/`)
-
-`<uai-guardrail-rule-config-editor-modal>` — Sidebar modal (medium) with:
-
-**Modal Data/Value interfaces:**
-```ts
-interface UaiGuardrailRuleConfigEditorModalData {
-    evaluatorId: string;
-    evaluatorName: string;
-    existingRule?: UaiGuardrailRuleConfig;
-}
-
-interface UaiGuardrailRuleConfigEditorModalValue {
-    rule: UaiGuardrailRuleConfig;
-}
-```
-
-**Form fields:**
-- **Name** (required text input)
-- **Phase** (dropdown: PreGenerate, PostGenerate — default PostGenerate)
-- **Action** (dropdown: Block, Warn — default Block)
-- **Evaluator Config** (dynamic `<uai-model-editor>` if evaluator has configSchema)
-
-**Fetches evaluator schema** from `GuardrailEvaluatorInfoModel.configSchema` on modal open.
-
-**`guardrail/modals/rule-config-editor/guardrail-rule-config-editor-modal.token.ts`**
-**`guardrail/modals/rule-config-editor/guardrail-rule-config-editor-modal.element.ts`**
-**`guardrail/modals/rule-config-editor/index.ts`**
-**`guardrail/modals/manifests.ts`** — registers modal
-
-### 3.3 Rule Types
-
-Add to `guardrail/types.ts`:
-```ts
-export interface UaiGuardrailRuleConfig {
-    id: string;
-    evaluatorId: string;
-    name: string;
-    phase: "PreGenerate" | "PostGenerate";
-    action: "Block" | "Warn";
-    config?: Record<string, unknown>;
-    sortOrder: number;
-}
-
-export function createEmptyRuleConfig(): UaiGuardrailRuleConfig { ... }
-export function getRuleSummary(rule: UaiGuardrailRuleConfig, evaluatorName?: string): string { ... }
-```
-
-### 3.4 Integration in Details Workspace View
-
-The `guardrail-details-workspace-view.element.ts` renders:
-```html
-<uui-box headline="Rules">
-    <umb-property-layout label="Rules" description="...">
-        <uai-guardrail-rule-config-builder
-            slot="editor"
-            .rules=${this._model.rules}
-            @change=${this.#onRulesChange}
-        />
-    </umb-property-layout>
-</uui-box>
-```
-
-On change, dispatches `UaiPartialUpdateCommand<UaiGuardrailDetailModel>({ rules }, "update-rules")`.
+1. **Index strategy:** Do we create a new dedicated index (e.g., `VectorContentIndex`), or allow re-registering an existing index like `PublishedContentIndex` with our vector provider?
+2. **Vector store default:** What's the right default vector store for v1? SQLite-backed would be zero-config for most users.
+3. **Text extraction:** How should we determine which content fields to embed? Configuration per content type? All text fields by default?
+4. **Hybrid search:** Should we support combining vector similarity scores with traditional full-text relevance in a single query?
+5. **Embedding model configuration:** Should this reuse existing Profiles/Connections, or have its own configuration for the embedding model to use?
 
 ---
 
-## Phase 4: Guardrails Picker Component (copying Context Picker)
+## Implementation Phases
 
-### 4.1 Picker Component
+### Phase 1: Foundation
+- Create `Umbraco.AI.Search` project structure
+- Implement `IVectorStore` abstraction + in-memory implementation
+- Implement `VectorIndexer` and `VectorSearcher`
+- Register as Umbraco.Cms.Search provider (concrete types only, per constraint above)
 
-**`guardrail/components/guardrail-picker/guardrail-picker.element.ts`** (copy from `context/components/context-picker/`)
+### Phase 2: Content Indexing
+- Text extraction from Umbraco content nodes
+- Integration with `IAIEmbeddingService` for vector generation
+- Batch rebuild support
+- Index lifecycle management (create/rebuild/delete)
 
-`<uai-guardrail-picker>` — Reusable picker for selecting guardrails:
-- Same API as context picker: `multiple`, `readonly`, `min`, `max`, `value`
-- Fetches guardrail items via `GuardrailsService.getAllGuardrails()`
-- Opens `UAI_ITEM_PICKER_MODAL` for selection
-- Shows selected guardrails as `<uui-ref-node>` with name, alias, rule count tag
-- Icon: `icon-shield`
-- Dispatches `UmbChangeEvent` on selection changes
+### Phase 3: Search Integration
+- Semantic search query handling
+- Result mapping back to Umbraco content
+- Score normalization and relevance tuning
 
-**`guardrail/components/guardrail-picker/index.ts`**
-**`guardrail/components/guardrail-picker/manifests.ts`** (empty array)
-**`guardrail/components/index.ts`** — barrel exports both components (rule-config-builder + guardrail-picker)
-**`guardrail/exports.ts`** — `export { UaiGuardrailPickerElement } from "./components/guardrail-picker/index.js"`
+### Phase 4: Agent Tool Integration
+- Implement `search.semantic` tool (referenced in agents design doc)
+- Replace/augment existing `SearchUmbracoTool` (Examine-based) with semantic option
 
-### 4.2 Profile Integration
-
-**Modify `profile/workspace/profile/views/profile-details-workspace-view.element.ts`:**
-- Add a "Guardrails" property layout in the chat settings section, below Contexts:
-```html
-<umb-property-layout label="Guardrails" description="Guardrails to apply to chat responses">
-    <uai-guardrail-picker
-        slot="editor"
-        multiple
-        .value=${chatSettings?.guardrailIds}
-        @change=${this.#onGuardrailIdsChange}
-    ></uai-guardrail-picker>
-</umb-property-layout>
-```
-- Add `#onGuardrailIdsChange` handler → `#updateChatSettings({ guardrailIds: picker.value })`
-- Add `guardrailIds` to `UaiChatProfileSettings` type
-
-> **Note:** This requires the backend to support `GuardrailIds` on profiles (chat settings). If the backend Profile model doesn't have `GuardrailIds` yet, this integration is deferred until it's added.
-
-### 4.3 Prompt Integration
-
-**Modify Prompt add-on frontend** (`Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client/`):
-- Add `<uai-guardrail-picker>` to the prompt editor details view
-- The Prompt API models already have `GuardrailIds` (added in backend)
-
-### 4.4 Agent Integration
-
-**Modify Agent add-on frontend** (`Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client/`):
-- Add `<uai-guardrail-picker>` to the standard agent config section
-- The Agent API models already have `GuardrailIds` on `StandardAgentConfigModel` (added in backend)
-
-### 4.5 Test Integration
-
-**Modify test execution UI** (if there's a test run form):
-- Add `<uai-guardrail-picker>` for `GuardrailIdsOverride` in test run request forms
-- The Test API models already have `GuardrailIdsOverride` (added in backend)
-
----
-
-## Phase 5: Localization
-
-**`src/lang/`** — Add guardrail-related localization keys:
-- `uaiGuardrail_selectGuardrail`, `uaiGuardrail_addGuardrail`, `uaiGuardrail_noGuardrailsAvailable`
-- `uaiGuardrail_bulkDeleteConfirm`, `uaiGuardrail_deleteConfirm`
-- `uaiGuardrail_rulePhasePreGenerate`, `uaiGuardrail_rulePhasePostGenerate`
-- `uaiGuardrail_ruleActionBlock`, `uaiGuardrail_ruleActionWarn`
-
----
-
-## File Summary
-
-### New Files (~35 files in core guardrail feature)
-
-```
-guardrail/
-├── entity.ts
-├── constants.ts
-├── types.ts
-├── type-mapper.ts
-├── index.ts
-├── exports.ts
-├── manifests.ts
-├── collection/
-│   ├── constants.ts
-│   ├── guardrail-collection.element.ts
-│   ├── index.ts
-│   ├── manifests.ts
-│   ├── action/
-│   │   ├── guardrail-create-collection-action.element.ts
-│   │   └── manifests.ts
-│   ├── bulk-action/
-│   │   ├── guardrail-bulk-delete.action.ts
-│   │   └── manifests.ts
-│   └── views/
-│       └── table/
-│           └── guardrail-table-collection-view.element.ts
-├── components/
-│   ├── index.ts
-│   ├── guardrail-picker/
-│   │   ├── guardrail-picker.element.ts
-│   │   ├── index.ts
-│   │   └── manifests.ts
-│   └── rule-config-builder/
-│       ├── rule-config-builder.element.ts
-│       ├── index.ts
-│       └── manifests.ts
-├── entity-actions/
-│   ├── guardrail-create.action.ts
-│   ├── guardrail-delete.action.ts
-│   └── manifests.ts
-├── menu/
-│   └── manifests.ts
-├── modals/
-│   ├── manifests.ts
-│   └── rule-config-editor/
-│       ├── guardrail-rule-config-editor-modal.element.ts
-│       ├── guardrail-rule-config-editor-modal.token.ts
-│       └── index.ts
-├── repository/
-│   ├── constants.ts
-│   ├── index.ts
-│   ├── manifests.ts
-│   ├── collection/
-│   │   ├── guardrail-collection.repository.ts
-│   │   ├── guardrail-collection.server.data-source.ts
-│   │   └── index.ts
-│   ├── detail/
-│   │   ├── guardrail-detail.repository.ts
-│   │   ├── guardrail-detail.server.data-source.ts
-│   │   ├── guardrail-detail.store.ts
-│   │   └── index.ts
-│   └── evaluator/
-│       ├── guardrail-evaluator-item.repository.ts
-│       └── index.ts
-└── workspace/
-    ├── constants.ts
-    ├── index.ts
-    ├── manifests.ts
-    ├── guardrail/
-    │   ├── guardrail-workspace.context.ts
-    │   ├── guardrail-workspace.context-token.ts
-    │   ├── guardrail-workspace-editor.element.ts
-    │   ├── manifests.ts
-    │   ├── paths.ts
-    │   ├── index.ts
-    │   └── views/
-    │       ├── guardrail-details-workspace-view.element.ts
-    │       └── guardrail-info-workspace-view.element.ts
-    └── guardrail-root/
-        ├── manifests.ts
-        ├── paths.ts
-        └── index.ts
-```
-
-### Modified Files
-
-| File | Change |
-|------|--------|
-| `src/manifests.ts` | Add `guardrailManifests` import and spread |
-| `src/index.ts` | Add `export * from "./guardrail/index.js"` |
-| `profile/types.ts` | Add `guardrailIds` to `UaiChatProfileSettings` |
-| `profile/.../profile-details-workspace-view.element.ts` | Add guardrail picker in chat settings |
-| Prompt frontend details view | Add guardrail picker |
-| Agent frontend config section | Add guardrail picker |
-| Test frontend run forms | Add guardrail override picker |
-
----
-
-## Implementation Order
-
-1. **Phase 1** — Generate OpenAPI client (prerequisite)
-2. **Phase 2** — Core guardrail feature (entity, repo, workspace, collection, menu, actions)
-3. **Phase 3** — Rules editor (rule-config-builder, rule-config-editor modal, evaluator repo)
-4. **Phase 4** — Guardrail picker + integrations (profile, prompt, agent, test)
-5. **Phase 5** — Localization keys
-
-Phases 2-3 can be built and verified independently before Phase 4 integrations.
+### Phase 5: Persistent Vector Store
+- SQLite or database-backed vector store implementation
+- Migration support (EF Core pattern matching existing products)

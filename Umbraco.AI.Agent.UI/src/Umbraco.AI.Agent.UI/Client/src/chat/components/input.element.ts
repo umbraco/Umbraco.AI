@@ -83,7 +83,6 @@ export class UaiChatInputElement extends UmbLitElement {
     @state()
     private _isDragging = false;
 
-    #dragCounter = 0;
     #chatContext?: UaiChatContextApi;
     #textareaRef = createRef<HTMLElement>();
     #fileInputRef = createRef<HTMLInputElement>();
@@ -153,33 +152,24 @@ export class UaiChatInputElement extends UmbLitElement {
         input.value = "";
     }
 
-    #handleDragEnter(e: DragEvent) {
+    #handleDragOver(e: DragEvent) {
         e.preventDefault();
-        e.stopPropagation();
-        this.#dragCounter++;
         if (e.dataTransfer?.types.includes("Files")) {
             this._isDragging = true;
         }
     }
 
-    #handleDragOver(e: DragEvent) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
     #handleDragLeave(e: DragEvent) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.#dragCounter--;
-        if (this.#dragCounter === 0) {
+        // Only clear when the drag leaves the input-box entirely (not moving between children)
+        const box = (e.currentTarget as HTMLElement);
+        const related = e.relatedTarget as Node | null;
+        if (!related || !box.contains(related)) {
             this._isDragging = false;
         }
     }
 
     #handleDrop(e: DragEvent) {
         e.preventDefault();
-        e.stopPropagation();
-        this.#dragCounter = 0;
         this._isDragging = false;
 
         if (!e.dataTransfer?.files) return;
@@ -331,7 +321,6 @@ export class UaiChatInputElement extends UmbLitElement {
             <div class="input-wrapper">
                 <div
                     class="input-box ${this._isDragging ? "drag-over" : ""}"
-                    @dragenter=${this.#handleDragEnter}
                     @dragover=${this.#handleDragOver}
                     @dragleave=${this.#handleDragLeave}
                     @drop=${this.#handleDrop}

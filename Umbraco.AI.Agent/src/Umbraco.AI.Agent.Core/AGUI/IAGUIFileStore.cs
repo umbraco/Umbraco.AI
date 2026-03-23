@@ -32,6 +32,14 @@ public interface IAGUIFileStore
     /// <param name="threadId">The conversation thread ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task CleanupThreadAsync(string threadId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cleans up thread directories whose files have not been modified within the given retention period.
+    /// </summary>
+    /// <param name="maxAge">The maximum age of files before they are cleaned up.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of thread directories deleted.</returns>
+    Task<int> CleanupExpiredAsync(TimeSpan maxAge, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

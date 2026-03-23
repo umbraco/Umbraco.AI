@@ -61,6 +61,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAGUIFileStore, AGUIFileStore>();
         builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
+        builder.Services.AddHostedService<AGUIFileCleanupBackgroundJob>();
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();

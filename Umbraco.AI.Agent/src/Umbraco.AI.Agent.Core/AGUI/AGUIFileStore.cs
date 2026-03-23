@@ -98,6 +98,46 @@ internal sealed class AGUIFileStore : IAGUIFileStore
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
+    public Task<int> CleanupExpiredAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
+    {
+        if (!_fileSystem.DirectoryExists(BasePath))
+        {
+            return Task.FromResult(0);
+        }
+
+        var cutoff = DateTimeOffset.UtcNow - maxAge;
+        var deleted = 0;
+
+        foreach (var threadDir in _fileSystem.GetDirectories(BasePath))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Check the most recent file modification in the thread directory
+            var files = _fileSystem.GetFiles(threadDir).ToList();
+            if (files.Count == 0)
+            {
+                // Empty directory — clean up
+                _fileSystem.DeleteDirectory(threadDir, recursive: true);
+                deleted++;
+                continue;
+            }
+
+            var lastModified = files
+                .Select(f => _fileSystem.GetLastModified(f))
+                .Max();
+
+            if (lastModified < cutoff)
+            {
+                _fileSystem.DeleteDirectory(threadDir, recursive: true);
+                deleted++;
+                _logger.LogDebug("Cleaned up expired thread directory {ThreadDir} (last modified: {LastModified})", threadDir, lastModified);
+            }
+        }
+
+        return Task.FromResult(deleted);
+    }
+
     private static string GetThreadPath(string threadId)
         => $"{BasePath}/{threadId}";
 

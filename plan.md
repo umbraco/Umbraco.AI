@@ -37,7 +37,7 @@ services.AddTransient<VectorSearcher>();
 
 ### Composer Ordering
 
-Our Composer must use `[ComposeAfter(typeof(SearchCoreComposer))]` (or equivalent) to ensure `AddSearchCore()` has already run before we register our provider.
+Our Composer must run **after** `AddSearchCore()` has been called. Since the search core setup is the implementor's responsibility (and we don't know their Composer type), we should use a low weight or `[ComposeAfter]` against a well-known Umbraco type to ensure we compose late enough. Documentation should make clear that `AddSearchCore()` is a prerequisite.
 
 ---
 
@@ -92,7 +92,7 @@ public record VectorSearchResult(string DocumentId, double Score, IDictionary<st
 ### 4. Registration (Composer)
 
 ```csharp
-[ComposeAfter(typeof(SearchCoreComposer))]
+// Requires AddSearchCore() to have been called by the implementor's Composer
 public class VectorSearchComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)

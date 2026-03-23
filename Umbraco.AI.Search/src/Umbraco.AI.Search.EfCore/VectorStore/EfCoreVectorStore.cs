@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.AI.Search.Persistence.VectorStore;
+namespace Umbraco.AI.Search.EfCore.VectorStore;
 
 /// <summary>
 /// EF Core implementation of the vector store that persists vectors to SQL Server or SQLite.

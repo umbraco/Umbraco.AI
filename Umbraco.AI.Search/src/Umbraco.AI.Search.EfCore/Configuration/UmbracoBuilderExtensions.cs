@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core.VectorStore;
-using Umbraco.AI.Search.Persistence;
-using Umbraco.AI.Search.Persistence.Notifications;
-using Umbraco.AI.Search.Persistence.VectorStore;
+using Umbraco.AI.Search.EfCore;
+using Umbraco.AI.Search.EfCore.Notifications;
+using Umbraco.AI.Search.EfCore.VectorStore;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;

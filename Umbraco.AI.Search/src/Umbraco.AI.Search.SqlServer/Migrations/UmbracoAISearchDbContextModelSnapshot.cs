@@ -2,20 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.AI.Search.Persistence;
+using Umbraco.AI.Search.EfCore;
 
 #nullable disable
 
-namespace Umbraco.AI.Search.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Search.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAISearchDbContext))]
-    [Migration("20260323131730_UmbracoAISearch_InitialCreate")]
-    partial class UmbracoAISearch_InitialCreate
+    partial class UmbracoAISearchDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,7 +21,7 @@ namespace Umbraco.AI.Search.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.AI.Search.Persistence.VectorStore.AIVectorEntryEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Search.EfCore.VectorStore.AIVectorEntryEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

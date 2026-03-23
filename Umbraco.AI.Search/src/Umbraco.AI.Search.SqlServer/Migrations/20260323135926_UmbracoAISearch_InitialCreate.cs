@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Umbraco.AI.Search.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Search.SqlServer.Migrations
 {
     /// <inheritdoc />
     public partial class UmbracoAISearch_InitialCreate : Migration
@@ -14,12 +14,12 @@ namespace Umbraco.AI.Search.Persistence.Sqlite.Migrations
                 name: "umbracoAISearchVectorEntry",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    IndexName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    DocumentId = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    Vector = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    Metadata = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IndexName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    DocumentId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Vector = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {

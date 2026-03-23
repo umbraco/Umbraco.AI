@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.AI.Search.Persistence.VectorStore;
+using Umbraco.AI.Search.EfCore.VectorStore;
 using Umbraco.Cms.Core;
 
-namespace Umbraco.AI.Search.Persistence;
+namespace Umbraco.AI.Search.EfCore;
 
 /// <summary>
 /// EF Core DbContext for Umbraco AI Search persistence.
@@ -39,18 +39,18 @@ public class UmbracoAISearchDbContext : DbContext
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Search.Persistence.SqlServer"));
+                    x.MigrationsAssembly("Umbraco.AI.Search.SqlServer"));
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Search.Persistence.Sqlite"));
+                    x.MigrationsAssembly("Umbraco.AI.Search.Sqlite"));
                 break;
 
             default:
                 throw new InvalidOperationException(
-                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Search.Persistence. " +
+                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Search.EfCore. " +
                     $"Supported providers: SQL Server, SQLite.");
         }
     }

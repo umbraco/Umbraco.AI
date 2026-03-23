@@ -1,4 +1,4 @@
-namespace Umbraco.AI.Search.Persistence.VectorStore;
+namespace Umbraco.AI.Search.EfCore.VectorStore;
 
 /// <summary>
 /// EF Core entity representing a stored vector with associated metadata.

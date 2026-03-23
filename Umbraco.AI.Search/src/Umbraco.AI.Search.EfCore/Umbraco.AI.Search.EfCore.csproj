@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Title>Umbraco AI Search Persistence</Title>
-        <Description>EF Core persistence layer for Umbraco AI Search</Description>
+        <Title>Umbraco AI Search EF Core</Title>
+        <Description>Shared EF Core infrastructure for database-backed vector store implementations</Description>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -19,10 +19,10 @@
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.AI.Search.Persistence.SqlServer</_Parameter1>
+            <_Parameter1>Umbraco.AI.Search.SqlServer</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.AI.Search.Persistence.Sqlite</_Parameter1>
+            <_Parameter1>Umbraco.AI.Search.Sqlite</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Search.Tests.Unit</_Parameter1>

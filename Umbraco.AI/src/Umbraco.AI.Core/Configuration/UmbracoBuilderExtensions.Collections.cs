@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
@@ -111,4 +112,21 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AIVersionableEntityAdapterCollectionBuilder AIVersionableEntityAdapters(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIVersionableEntityAdapterCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI file processing handler collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI file processing handler collection builder.</returns>
+    /// <remarks>
+    /// Use this to add, remove, or reorder file processing handlers. The first handler
+    /// where <see cref="IAIFileProcessingHandler.CanHandle"/> returns <c>true</c> wins.
+    /// <code>
+    /// builder.AIFileProcessingHandlers()
+    ///     .Append&lt;CsvFileProcessingHandler&gt;()
+    ///     .InsertBefore&lt;OpenXmlFileProcessingHandler, RtfFileProcessingHandler&gt;();
+    /// </code>
+    /// </remarks>
+    public static AIFileProcessingHandlerCollectionBuilder AIFileProcessingHandlers(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIFileProcessingHandlerCollectionBuilder>();
 }

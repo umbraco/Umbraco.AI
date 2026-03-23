@@ -41,6 +41,9 @@ export class UaiAgentClient {
     /** Accumulates tool call arguments during streaming */
     #pendingToolArgs = new Map<string, string>();
 
+    /** Stable thread ID for the conversation — persists across turns so file references resolve */
+    #threadId = crypto.randomUUID();
+
     /**
      * Create a new UaiAgentClient with an injected transport.
      * For production use, prefer the static create() factory method.
@@ -126,7 +129,6 @@ export class UaiAgentClient {
         tools?: UaiFrontendTool[],
         context?: Array<{ description: string; value: string }>,
     ): void {
-        const threadId = crypto.randomUUID();
         const runId = crypto.randomUUID();
 
         // Clear any pending tool args from previous run
@@ -143,7 +145,7 @@ export class UaiAgentClient {
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
         this.#transport
             .run({
-                threadId,
+                threadId: this.#threadId,
                 runId,
                 messages: convertedMessages,
                 tools: aguiTools,
@@ -366,9 +368,11 @@ export class UaiAgentClient {
 
     /**
      * Reset the client state.
-     * Clears pending tool arguments.
+     * Clears pending tool arguments and generates a new thread ID
+     * so file references from the previous conversation are not reused.
      */
     reset(): void {
         this.#pendingToolArgs.clear();
+        this.#threadId = crypto.randomUUID();
     }
 }

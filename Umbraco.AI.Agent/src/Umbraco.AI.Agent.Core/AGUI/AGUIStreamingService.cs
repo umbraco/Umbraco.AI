@@ -117,6 +117,18 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // Process file content: store base64, resolve id references
         var fileResult = await _fileProcessor.ProcessInboundAsync(request.Messages, emitter.ThreadId, cancellationToken);
 
+        // Emit messages snapshot only when files were rewritten (base64 → id references).
+        // This allows the frontend to adopt lightweight references for subsequent turns
+        // without disrupting the conversation when no files are present.
+        if (!ReferenceEquals(fileResult.RewrittenMessages, fileResult.ResolvedMessages))
+        {
+            yield return new MessagesSnapshotEvent
+            {
+                Messages = fileResult.RewrittenMessages,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            };
+        }
+
         // Convert resolved messages (with bytes) to M.E.AI chat messages
         var chatMessages = _messageConverter.ConvertToChatMessages(fileResult.ResolvedMessages);
 
@@ -172,14 +184,6 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
-
-        // Emit messages snapshot with rewritten messages (id references instead of base64)
-        // This allows the frontend to adopt lightweight references for subsequent turns
-        yield return new MessagesSnapshotEvent
-        {
-            Messages = fileResult.RewrittenMessages,
-            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-        };
     }
 
 

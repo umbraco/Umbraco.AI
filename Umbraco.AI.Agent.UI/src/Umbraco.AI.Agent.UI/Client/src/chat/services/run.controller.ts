@@ -277,7 +277,7 @@ export class UaiRunController extends UmbControllerBase {
                     const merged = { ...this.#agentState.value, ...delta } as UaiAgentState;
                     this.#agentState.next(merged);
                 },
-                onMessagesSnapshot: (messages) => this.#messages.next(messages),
+                onMessagesSnapshot: (snapshot) => this.#mergeMessagesSnapshot(snapshot),
                 onCustomEvent: (name, value) => {
                     if (name === "agent_selected") {
                         const agentInfo = value as { agentId: string; agentName: string; agentAlias: string };
@@ -441,5 +441,41 @@ export class UaiRunController extends UmbControllerBase {
             return msg;
         });
         this.#messages.next(updated);
+    }
+
+    /**
+     * Merge a server messages snapshot with existing client messages.
+     * Preserves client-only properties (agentName, contentParts, timestamp)
+     * for messages that already exist, while adopting updates from the snapshot
+     * (e.g., file ID references replacing base64 data).
+     */
+    #mergeMessagesSnapshot(snapshot: UaiChatMessage[]): void {
+        const existing = this.#messages.value;
+
+        // Build lookup of existing messages by ID for O(1) matching
+        const existingById = new Map<string, UaiChatMessage>();
+        for (const msg of existing) {
+            existingById.set(msg.id, msg);
+        }
+
+        // Merge: use snapshot order/content, but preserve client-enriched properties
+        const merged = snapshot.map((snapshotMsg) => {
+            const clientMsg = existingById.get(snapshotMsg.id);
+            if (!clientMsg) {
+                return snapshotMsg;
+            }
+
+            return {
+                ...snapshotMsg,
+                // Preserve client-only properties
+                agentName: clientMsg.agentName ?? snapshotMsg.agentName,
+                timestamp: clientMsg.timestamp,
+                // Use client contentParts if snapshot doesn't have them
+                // (snapshot may have updated file references)
+                contentParts: snapshotMsg.contentParts ?? clientMsg.contentParts,
+            };
+        });
+
+        this.#messages.next(merged);
     }
 }

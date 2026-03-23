@@ -80,6 +80,10 @@ export class UaiChatInputElement extends UmbLitElement {
     @state()
     private _attachments: AttachmentInfo[] = [];
 
+    @state()
+    private _isDragging = false;
+
+    #dragCounter = 0;
     #chatContext?: UaiChatContextApi;
     #textareaRef = createRef<HTMLElement>();
     #fileInputRef = createRef<HTMLInputElement>();
@@ -149,14 +153,34 @@ export class UaiChatInputElement extends UmbLitElement {
         input.value = "";
     }
 
+    #handleDragEnter(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.#dragCounter++;
+        if (e.dataTransfer?.types.includes("Files")) {
+            this._isDragging = true;
+        }
+    }
+
     #handleDragOver(e: DragEvent) {
         e.preventDefault();
         e.stopPropagation();
     }
 
+    #handleDragLeave(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.#dragCounter--;
+        if (this.#dragCounter === 0) {
+            this._isDragging = false;
+        }
+    }
+
     #handleDrop(e: DragEvent) {
         e.preventDefault();
         e.stopPropagation();
+        this.#dragCounter = 0;
+        this._isDragging = false;
 
         if (!e.dataTransfer?.files) return;
         for (const file of Array.from(e.dataTransfer.files)) {
@@ -305,7 +329,19 @@ export class UaiChatInputElement extends UmbLitElement {
 
         return html`
             <div class="input-wrapper">
-                <div class="input-box" @dragover=${this.#handleDragOver} @drop=${this.#handleDrop}>
+                <div
+                    class="input-box ${this._isDragging ? "drag-over" : ""}"
+                    @dragenter=${this.#handleDragEnter}
+                    @dragover=${this.#handleDragOver}
+                    @dragleave=${this.#handleDragLeave}
+                    @drop=${this.#handleDrop}
+                >
+                    ${this._isDragging
+                        ? html`<div class="drop-overlay">
+                              <uui-icon name="icon-download-alt"></uui-icon>
+                              <span>Drop files here</span>
+                          </div>`
+                        : nothing}
                     <uui-textarea
                         ${ref(this.#textareaRef)}
                         .value=${this._value}
@@ -371,6 +407,7 @@ export class UaiChatInputElement extends UmbLitElement {
         }
 
         .input-box {
+            position: relative;
             display: flex;
             flex-direction: column;
             gap: var(--uui-size-space-2);
@@ -378,6 +415,22 @@ export class UaiChatInputElement extends UmbLitElement {
             background: var(--uui-color-surface);
             border: 1px solid var(--uui-color-border);
             border-radius: var(--uui-border-radius);
+            transition: border-color 0.15s ease;
+        }
+
+        .input-box.drag-over {
+            border-color: var(--uui-color-focus);
+        }
+
+        .drop-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--uui-size-space-2);
+            padding: var(--uui-size-space-4);
+            color: var(--uui-color-focus);
+            font-size: var(--uui-type-small-size);
+            pointer-events: none;
         }
 
         uui-textarea {

@@ -2,6 +2,7 @@ using System.ComponentModel;
 
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Web;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -9,46 +10,63 @@ namespace Umbraco.AI.Core.Tools.Umbraco;
 /// <summary>
 /// Arguments for the GetContentTypeSchema tool.
 /// </summary>
-/// <param name="ContentKey">The key of a content item whose content type schema to retrieve.</param>
+/// <param name="ContentKey">Optional key of a content item whose content type schema to retrieve.</param>
+/// <param name="ContentTypeAlias">Optional content type alias to look up directly (e.g., 'blogPost', 'article').</param>
 public record GetContentTypeSchemaArgs(
-    [property: Description("The unique key (GUID) of a content item. The schema of its content type will be returned. Use IDs from search_umbraco or get_umbraco_content results.")]
-    Guid ContentKey);
+    [property: Description("The unique key (GUID) of a content item. The schema of its content type will be returned. Use IDs from search_umbraco or get_umbraco_content results. Provide either this or ContentTypeAlias.")]
+    Guid? ContentKey = null,
+
+    [property: Description("The content type alias to look up directly (e.g., 'blogPost', 'article'). Use this when you already know the content type alias from a previous tool call. Provide either this or ContentKey.")]
+    string? ContentTypeAlias = null);
 
 /// <summary>
-/// Tool that retrieves the schema of a content type from a content item,
+/// Tool that retrieves the schema of a content type,
 /// including property definitions and their editor types.
+/// Accepts either a content item key or a content type alias.
 /// </summary>
 [AITool("get_content_type_schema", "Get Content Type Schema", ScopeId = ContentReadScope.ScopeId)]
 public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
 {
     private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IPublishedContentTypeCache _publishedContentTypeCache;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContentTypeSchemaTool"/>.
     /// </summary>
     /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
-    public GetContentTypeSchemaTool(IUmbracoContextAccessor umbracoContextAccessor)
+    /// <param name="publishedContentTypeCache">The published content type cache for alias-based lookups.</param>
+    public GetContentTypeSchemaTool(
+        IUmbracoContextAccessor umbracoContextAccessor,
+        IPublishedContentTypeCache publishedContentTypeCache)
     {
         _umbracoContextAccessor = umbracoContextAccessor;
+        _publishedContentTypeCache = publishedContentTypeCache;
     }
 
     /// <inheritdoc />
     public override string Description =>
-        "Retrieves the content type schema for a given content item. " +
+        "Retrieves the content type schema by content item key or content type alias. " +
         "Returns the property definitions including alias, editor type, and value type. " +
         "Use this to understand what properties a document type has and what editors they use. " +
         "Useful for knowing what fields to fill in or what content structure to expect. " +
-        "Pass the key of any content item of the desired type.";
+        "Pass either a content item key or a content type alias directly.";
 
     /// <inheritdoc />
     protected override Task<object> ExecuteAsync(GetContentTypeSchemaArgs args, CancellationToken cancellationToken = default)
     {
-        if (args.ContentKey == Guid.Empty)
+        if ((args.ContentKey is null || args.ContentKey == Guid.Empty) && string.IsNullOrWhiteSpace(args.ContentTypeAlias))
         {
             return Task.FromResult<object>(new GetContentTypeSchemaResult(
-                false, null, "Content key cannot be empty."));
+                false, null, "Either ContentKey or ContentTypeAlias must be provided."));
         }
 
+        // If alias is provided, look up directly via the content type cache
+        if (!string.IsNullOrWhiteSpace(args.ContentTypeAlias))
+        {
+            return Task.FromResult<object>(ResolveByAlias(args.ContentTypeAlias));
+        }
+
+        // Otherwise resolve via content item
         if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
         {
             return Task.FromResult<object>(new GetContentTypeSchemaResult(
@@ -56,8 +74,8 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
         }
 
         // Try content cache first, then media cache
-        var content = umbracoContext.Content?.GetById(args.ContentKey)
-            ?? umbracoContext.Media?.GetById(args.ContentKey);
+        var content = umbracoContext.Content?.GetById(args.ContentKey!.Value)
+            ?? umbracoContext.Media?.GetById(args.ContentKey!.Value);
 
         if (content is null)
         {
@@ -65,8 +83,27 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
                 false, null, $"Content with key '{args.ContentKey}' was not found or is not published."));
         }
 
-        var contentType = content.ContentType;
+        return Task.FromResult<object>(BuildSchemaResult(content.ContentType));
+    }
 
+    private GetContentTypeSchemaResult ResolveByAlias(string alias)
+    {
+        // Try content types first, then media types
+        var contentType = _publishedContentTypeCache.Get(PublishedItemType.Content, alias)
+            ?? _publishedContentTypeCache.Get(PublishedItemType.Element, alias)
+            ?? _publishedContentTypeCache.Get(PublishedItemType.Media, alias);
+
+        if (contentType is null)
+        {
+            return new GetContentTypeSchemaResult(
+                false, null, $"Content type with alias '{alias}' was not found.");
+        }
+
+        return BuildSchemaResult(contentType);
+    }
+
+    private static GetContentTypeSchemaResult BuildSchemaResult(IPublishedContentType contentType)
+    {
         var properties = contentType.PropertyTypes
             .Select(pt => new ContentTypePropertySchema(
                 pt.Alias,
@@ -82,7 +119,7 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
             compositions,
             properties);
 
-        return Task.FromResult<object>(new GetContentTypeSchemaResult(true, schema, null));
+        return new GetContentTypeSchemaResult(true, schema, null);
     }
 }
 

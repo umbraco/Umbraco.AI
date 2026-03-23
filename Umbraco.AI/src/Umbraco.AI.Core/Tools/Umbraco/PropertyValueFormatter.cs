@@ -1,9 +1,9 @@
+using System.Net;
 using System.Text.RegularExpressions;
 
 using Microsoft.AspNetCore.Html;
 
 using Umbraco.Cms.Core.Models.PublishedContent;
-using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -20,12 +20,10 @@ internal static partial class PropertyValueFormatter
     /// Extracts properties from a published content item in an LLM-friendly format.
     /// </summary>
     /// <param name="content">The published content item.</param>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor for resolving media URLs.</param>
     /// <param name="culture">Optional culture for variant content.</param>
     /// <returns>A list of formatted property items.</returns>
     public static IReadOnlyList<ContentPropertyItem> ExtractProperties(
         IPublishedContent content,
-        IUmbracoContextAccessor umbracoContextAccessor,
         string? culture = null)
     {
         var properties = new List<ContentPropertyItem>();
@@ -33,7 +31,7 @@ internal static partial class PropertyValueFormatter
         foreach (var property in content.Properties)
         {
             var value = property.GetValue(culture);
-            var formattedValue = FormatValue(value, property.PropertyType.EditorAlias, umbracoContextAccessor);
+            var formattedValue = FormatValue(value, property.PropertyType.EditorAlias);
 
             properties.Add(new ContentPropertyItem(
                 property.Alias,
@@ -44,7 +42,7 @@ internal static partial class PropertyValueFormatter
         return properties;
     }
 
-    private static object? FormatValue(object? value, string editorAlias, IUmbracoContextAccessor umbracoContextAccessor)
+    private static object? FormatValue(object? value, string editorAlias)
     {
         if (value is null)
         {
@@ -54,7 +52,7 @@ internal static partial class PropertyValueFormatter
         return editorAlias switch
         {
             "Umbraco.RichText" or "Umbraco.TinyMCE" => FormatRichText(value),
-            "Umbraco.MediaPicker3" => FormatMediaPicker(value, umbracoContextAccessor),
+            "Umbraco.MediaPicker3" => FormatMediaPicker(value),
             "Umbraco.MultiNodeTreePicker" => FormatContentPicker(value),
             _ => FormatDefault(value),
         };
@@ -87,12 +85,13 @@ internal static partial class PropertyValueFormatter
 
         // Strip HTML tags to plain text for LLM consumption
         var plainText = StripHtmlRegex().Replace(html, " ");
+        plainText = WebUtility.HtmlDecode(plainText);
         plainText = CollapseWhitespaceRegex().Replace(plainText, " ").Trim();
 
         return Truncate(plainText);
     }
 
-    private static object? FormatMediaPicker(object? value, IUmbracoContextAccessor umbracoContextAccessor)
+    private static object? FormatMediaPicker(object? value)
     {
         // MediaPicker3 typically resolves to IPublishedContent or IEnumerable<IPublishedContent>
         if (value is IPublishedContent media)

@@ -88,7 +88,7 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
                 false, null, $"Content resolved from route '{route}' could not be loaded from the published cache."));
         }
 
-        var properties = PropertyValueFormatter.ExtractProperties(content, _umbracoContextAccessor, args.Culture);
+        var properties = PropertyValueFormatter.ExtractProperties(content, args.Culture);
 
         var parentInfo = content.Parent() is { } parent
             ? new ContentParentItem(parent.Key, parent.Name)
@@ -102,18 +102,10 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
             content.CreateDate,
             content.UpdateDate,
             content.Level,
-            GetContentPath(content),
+            ContentToolHelpers.GetContentPath(content),
             parentInfo,
             properties);
 
         return Task.FromResult<object>(new GetUmbracoContentResult(true, item, null));
-    }
-
-    private static string GetContentPath(IPublishedContent content)
-    {
-        var ancestors = content.Ancestors();
-        var pathParts = ancestors.Reverse().Select(a => a.Name).ToList();
-        pathParts.Add(content.Name);
-        return string.Join(" > ", pathParts);
     }
 }

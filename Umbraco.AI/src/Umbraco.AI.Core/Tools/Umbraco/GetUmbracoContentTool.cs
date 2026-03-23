@@ -69,7 +69,7 @@ public class GetUmbracoContentTool : AIToolBase<GetUmbracoContentArgs>
                 false, null, $"Content with key '{args.Key}' was not found or is not published."));
         }
 
-        var properties = PropertyValueFormatter.ExtractProperties(content, _umbracoContextAccessor, args.Culture);
+        var properties = PropertyValueFormatter.ExtractProperties(content, args.Culture);
 
         var parentInfo = content.Parent() is { } parent
             ? new ContentParentItem(parent.Key, parent.Name)
@@ -83,19 +83,11 @@ public class GetUmbracoContentTool : AIToolBase<GetUmbracoContentArgs>
             content.CreateDate,
             content.UpdateDate,
             content.Level,
-            GetContentPath(content),
+            ContentToolHelpers.GetContentPath(content),
             parentInfo,
             properties);
 
         return Task.FromResult<object>(new GetUmbracoContentResult(true, item, null));
-    }
-
-    private static string GetContentPath(IPublishedContent content)
-    {
-        var ancestors = content.Ancestors();
-        var pathParts = ancestors.Reverse().Select(a => a.Name).ToList();
-        pathParts.Add(content.Name);
-        return string.Join(" > ", pathParts);
     }
 }
 

@@ -28,6 +28,11 @@
     <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
 
+  <!-- Umbraco Search -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="1.0.0-beta.2" />
+  </ItemGroup>
+
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.2.0" />

@@ -1,0 +1,127 @@
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Search.Core.Configuration;
+using Umbraco.AI.Search.Core.VectorStore;
+using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Search.Core.Models.Indexing;
+using Umbraco.Cms.Search.Core.Services;
+
+namespace Umbraco.AI.Search.Core;
+
+/// <summary>
+/// An <see cref="IIndexer"/> implementation that generates vector embeddings from content
+/// fields and stores them in an <see cref="IVectorStore"/>.
+/// </summary>
+public sealed class VectorIndexer : IIndexer
+{
+    private readonly IVectorStore _vectorStore;
+    private readonly IAIEmbeddingService _embeddingService;
+    private readonly IOptions<VectorSearchOptions> _options;
+    private readonly ILogger<VectorIndexer> _logger;
+
+    public VectorIndexer(
+        IVectorStore vectorStore,
+        IAIEmbeddingService embeddingService,
+        IOptions<VectorSearchOptions> options,
+        ILogger<VectorIndexer> logger)
+    {
+        _vectorStore = vectorStore;
+        _embeddingService = embeddingService;
+        _options = options;
+        _logger = logger;
+    }
+
+    /// <inheritdoc />
+    public async Task AddOrUpdateAsync(
+        string indexAlias,
+        Guid id,
+        UmbracoObjectTypes objectType,
+        IEnumerable<Variation> variations,
+        IEnumerable<IndexField> fields,
+        ContentProtection protection)
+    {
+        var text = ExtractTextFromFields(fields);
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _logger.LogDebug("No text content to index for document {DocumentId} in {IndexAlias}, skipping", id, indexAlias);
+            return;
+        }
+
+        try
+        {
+            Embedding<float> embedding = await _embeddingService.GenerateEmbeddingAsync(text);
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["objectType"] = objectType.ToString(),
+            };
+
+            await _vectorStore.UpsertAsync(indexAlias, id.ToString("D"), embedding.Vector, metadata);
+
+            _logger.LogDebug("Indexed document {DocumentId} in {IndexAlias}", id, indexAlias);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate embedding for document {DocumentId} in {IndexAlias}", id, indexAlias);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteAsync(string indexAlias, IEnumerable<Guid> ids)
+    {
+        foreach (Guid id in ids)
+        {
+            await _vectorStore.DeleteAsync(indexAlias, id.ToString("D"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task ResetAsync(string indexAlias)
+    {
+        await _vectorStore.ResetAsync(indexAlias);
+        _logger.LogInformation("Reset vector index {IndexAlias}", indexAlias);
+    }
+
+    /// <inheritdoc />
+    public async Task<IndexMetadata> GetMetadataAsync(string indexAlias)
+    {
+        var count = await _vectorStore.GetDocumentCountAsync(indexAlias);
+        return new IndexMetadata(count, HealthStatus.Healthy);
+    }
+
+    private static string ExtractTextFromFields(IEnumerable<IndexField> fields)
+    {
+        var parts = new List<string>();
+
+        foreach (IndexField field in fields)
+        {
+            IndexValue value = field.Value;
+
+            AppendTexts(parts, value.TextsR1);
+            AppendTexts(parts, value.TextsR2);
+            AppendTexts(parts, value.TextsR3);
+            AppendTexts(parts, value.Texts);
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    private static void AppendTexts(List<string> parts, IEnumerable<string>? texts)
+    {
+        if (texts is null)
+        {
+            return;
+        }
+
+        foreach (var text in texts)
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                parts.Add(text);
+            }
+        }
+    }
+}

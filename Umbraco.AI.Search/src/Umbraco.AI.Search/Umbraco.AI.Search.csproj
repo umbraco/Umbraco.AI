@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Search</Title>
+        <Description>AI-powered vector search provider for Umbraco CMS</Description>
+        <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+        <PackageTags>umbraco ai search vector embeddings umbraco-marketplace</PackageTags>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+        <IncludeReferencedProjects>true</IncludeReferencedProjects>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj" />
+    </ItemGroup>
+</Project>

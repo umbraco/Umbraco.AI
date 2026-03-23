@@ -1499,7 +1499,7 @@
       "umbraco.ai.core": {
         "type": "Project",
         "dependencies": {
-          "DocumentFormat.OpenXml": "[3.3.0, )",
+          "DocumentFormat.OpenXml": "[3.3.0, 3.999.999)",
           "Microsoft.Extensions.AI": "[10.2.0, )",
           "Microsoft.Extensions.Caching.Memory": "[10.0.0, 10.999.999)",
           "Microsoft.Extensions.Options": "[10.0.0, 10.999.999)",
@@ -1512,7 +1512,7 @@
       },
       "DocumentFormat.OpenXml": {
         "type": "CentralTransitive",
-        "requested": "[3.3.0, )",
+        "requested": "[3.3.0, 3.999.999)",
         "resolved": "3.3.0",
         "contentHash": "JogRPJNiE6kKvbuCqVRX691pPWeGMqdQgjrUwRYkdpfkMmtElfqAgcRR73geYj7OtBeEpstldZXXzJw27LUI9w==",
         "dependencies": {

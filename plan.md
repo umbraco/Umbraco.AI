@@ -118,18 +118,18 @@ This could live in:
 - Pros: Direct access to `IAIEmbeddingService`, ships with core
 - Cons: Adds Umbraco.Cms.Search dependency to core
 
-**Option B: New add-on package `Umbraco.AI.VectorSearch/`**
+**Option B: New add-on package `Umbraco.AI.Search/`**
 - Pros: Optional dependency, clean separation, users opt-in
 - Cons: More project scaffolding
 
-**Recommendation: Option B** — A separate `Umbraco.AI.VectorSearch` package that depends on both `Umbraco.AI.Core` (for embeddings) and `Umbraco.Cms.Search` (for the provider interfaces). Users install it only if they want vector search.
+**Recommendation: Option B** — A separate `Umbraco.AI.Search` package that depends on both `Umbraco.AI.Core` (for embeddings) and `Umbraco.Cms.Search` (for the provider interfaces). Users install it only if they want vector search.
 
 ### Proposed Structure
 
 ```
-Umbraco.AI.VectorSearch/
+Umbraco.AI.Search/
 ├── src/
-│   ├── Umbraco.AI.VectorSearch.Core/
+│   ├── Umbraco.AI.Search.Core/
 │   │   ├── VectorIndexer.cs
 │   │   ├── VectorSearcher.cs
 │   │   ├── VectorStore/
@@ -138,12 +138,12 @@ Umbraco.AI.VectorSearch/
 │   │   │   └── InMemoryVectorStore.cs
 │   │   └── Configuration/
 │   │       └── VectorSearchOptions.cs
-│   ├── Umbraco.AI.VectorSearch.Startup/
+│   ├── Umbraco.AI.Search.Startup/
 │   │   └── VectorSearchComposer.cs
-│   └── Umbraco.AI.VectorSearch/          # Meta-package
+│   └── Umbraco.AI.Search/          # Meta-package
 ├── tests/
-│   └── Umbraco.AI.VectorSearch.Tests.Unit/
-├── Umbraco.AI.VectorSearch.slnx
+│   └── Umbraco.AI.Search.Tests.Unit/
+├── Umbraco.AI.Search.slnx
 └── CLAUDE.md
 ```
 
@@ -162,7 +162,7 @@ Umbraco.AI.VectorSearch/
 ## Implementation Phases
 
 ### Phase 1: Foundation
-- Create `Umbraco.AI.VectorSearch` project structure
+- Create `Umbraco.AI.Search` project structure
 - Implement `IVectorStore` abstraction + in-memory implementation
 - Implement `VectorIndexer` and `VectorSearcher`
 - Register as Umbraco.Cms.Search provider (concrete types only, per constraint above)

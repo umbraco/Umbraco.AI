@@ -3,7 +3,6 @@ using System.ComponentModel;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
-using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -69,23 +68,7 @@ public class GetUmbracoContentTool : AIToolBase<GetUmbracoContentArgs>
                 false, null, $"Content with key '{args.Key}' was not found or is not published."));
         }
 
-        var properties = PropertyValueFormatter.ExtractProperties(content, args.Culture);
-
-        var parentInfo = content.Parent() is { } parent
-            ? new ContentParentItem(parent.Key, parent.Name)
-            : null;
-
-        var item = new UmbracoContentItem(
-            content.Key,
-            content.Name,
-            content.ContentType.Alias,
-            content.Url(),
-            content.CreateDate,
-            content.UpdateDate,
-            content.Level,
-            ContentToolHelpers.GetContentPath(content),
-            parentInfo,
-            properties);
+        var item = ContentToolHelpers.BuildContentItem(content, args.Culture);
 
         return Task.FromResult<object>(new GetUmbracoContentResult(true, item, null));
     }

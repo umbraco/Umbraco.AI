@@ -17,7 +17,7 @@ public record GetContentTreePathArgs(
     Guid ContentKey,
 
     [property: Description("Whether to include sibling items at the same level (default false). Useful for understanding what other pages exist alongside this one.")]
-    bool? IncludeSiblings = false);
+    bool IncludeSiblings = false);
 
 /// <summary>
 /// Tool that retrieves the ancestor chain and optionally siblings for a content item,
@@ -77,7 +77,7 @@ public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
 
         // Optionally get siblings using the navigation-backed Siblings() extension
         IReadOnlyList<ContentTreeNode>? siblings = null;
-        if (args.IncludeSiblings == true)
+        if (args.IncludeSiblings)
         {
             siblings = content.Siblings()
                 .Select(s => new ContentTreeNode(s.Key, s.Name, s.ContentType.Alias, s.Url(), s.Level))

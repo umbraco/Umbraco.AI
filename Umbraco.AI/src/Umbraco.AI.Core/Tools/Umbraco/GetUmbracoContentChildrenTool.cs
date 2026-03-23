@@ -83,11 +83,9 @@ public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildre
                 c.ContentType.Alias.Equals(args.ContentTypeFilter, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Materialize for count before paging
+        // Materialize once, then count and page from the same list
         var allChildren = children.ToList();
         var totalCount = allChildren.Count;
-
-        // Apply paging
         var skip = Math.Max(args.Skip ?? 0, 0);
         var take = Math.Clamp(args.Take ?? 20, 1, 50);
 

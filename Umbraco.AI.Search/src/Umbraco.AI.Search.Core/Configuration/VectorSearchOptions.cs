@@ -6,12 +6,6 @@ namespace Umbraco.AI.Search.Core.Configuration;
 public sealed class VectorSearchOptions
 {
     /// <summary>
-    /// The embedding profile alias to use for generating vectors.
-    /// When null, the default embedding profile is used.
-    /// </summary>
-    public string? EmbeddingProfileAlias { get; set; }
-
-    /// <summary>
     /// Maximum number of results to return from vector similarity search
     /// before applying further filtering.
     /// </summary>

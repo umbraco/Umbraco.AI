@@ -4,6 +4,7 @@ using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Search.Core.Configuration;
 
 namespace Umbraco.AI.Search.Startup;
 
@@ -38,5 +39,10 @@ public sealed class UmbracoAISearchComposer : IComposer
         // Register configuration options
         builder.Services.AddOptions<VectorSearchOptions>()
             .BindConfiguration("Umbraco:AI:Search");
+
+        // Register as a named index so the search framework routes requests
+        // for "VectorContentIndex" to our VectorIndexer/VectorSearcher.
+        builder.Services.Configure<IndexOptions>(options =>
+            options.RegisterIndex<VectorIndexer, VectorSearcher>("VectorContentIndex"));
     }
 }

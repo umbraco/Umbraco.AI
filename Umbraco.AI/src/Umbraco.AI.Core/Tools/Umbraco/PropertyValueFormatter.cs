@@ -137,7 +137,19 @@ internal static partial class PropertyValueFormatter
 
     private static object? FormatElementOrDefault(object? value, string? culture)
     {
-        // Handle Block List, Block Grid, and any property editor returning element types
+        // IPublishedContent extends IPublishedElement, so check it first.
+        // IPublishedContent = cross-reference to another content/media node (show as link).
+        // IPublishedElement = embedded data owned by this property (extract nested properties).
+        if (value is IEnumerable<IPublishedContent> contentItems)
+        {
+            return contentItems.Select(c => new { key = c.Key, name = c.Name, url = c.Url() }).ToArray();
+        }
+
+        if (value is IPublishedContent content)
+        {
+            return new { key = content.Key, name = content.Name, url = content.Url() };
+        }
+
         if (value is IEnumerable<IPublishedElement> elements)
         {
             return elements.Select(e => FormatElement(e, culture)).ToArray();

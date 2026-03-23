@@ -5,7 +5,7 @@
 // Components
 export { UaiChatElement } from "./chat/components/chat.element.js";
 export { UaiChatMessageElement } from "./chat/components/message.element.js";
-export { UaiChatInputElement } from "./chat/components/input.element.js";
+export { UaiChatInputElement, DEFAULT_ALLOWED_MIME_TYPES } from "./chat/components/input.element.js";
 export { UaiAgentStatusElement } from "./chat/components/agent-status.element.js";
 export { UaiToolRendererElement } from "./chat/components/tool-renderer.element.js";
 export { UaiAgentToolStatusElement } from "./chat/components/tool-status.element.js";

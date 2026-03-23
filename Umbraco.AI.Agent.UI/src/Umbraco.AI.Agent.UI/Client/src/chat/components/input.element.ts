@@ -8,15 +8,41 @@ import type { UaiInputContent } from "../types/index.js";
 /** Maximum file size in bytes (default 10MB) */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-/** Allowed MIME type patterns */
-const ALLOWED_MIME_PATTERNS = [
+/** Default allowed MIME type patterns. Exported so consumers can extend. */
+export const DEFAULT_ALLOWED_MIME_TYPES: readonly string[] = [
+    // Images
     "image/png",
     "image/jpeg",
     "image/gif",
     "image/webp",
+    "image/svg+xml",
+    "image/bmp",
+    "image/tiff",
+
+    // Documents
     "application/pdf",
     "text/plain",
     "text/csv",
+    "text/html",
+    "text/markdown",
+
+    // Microsoft Office
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+
+    // OpenDocument
+    "application/vnd.oasis.opendocument.text",
+    "application/vnd.oasis.opendocument.spreadsheet",
+    "application/vnd.oasis.opendocument.presentation",
+
+    // Data formats
+    "application/json",
+    "application/xml",
+    "text/xml",
 ];
 
 interface AttachmentInfo {
@@ -38,6 +64,9 @@ export class UaiChatInputElement extends UmbLitElement {
 
     @property({ type: String })
     placeholder = "Type a message...";
+
+    @property({ attribute: false })
+    allowedMimeTypes: readonly string[] = DEFAULT_ALLOWED_MIME_TYPES;
 
     @state()
     private _value = "";
@@ -143,7 +172,7 @@ export class UaiChatInputElement extends UmbLitElement {
         }
 
         // Validate MIME type
-        if (!ALLOWED_MIME_PATTERNS.some((pattern) => file.type === pattern || file.type.startsWith(pattern.replace("*", "")))) {
+        if (!this.allowedMimeTypes.some((pattern) => file.type === pattern || file.type.startsWith(pattern.replace("*", "")))) {
             console.warn(`File "${file.name}" has unsupported type "${file.type}"`);
             return;
         }
@@ -272,7 +301,7 @@ export class UaiChatInputElement extends UmbLitElement {
 
     override render() {
         const hasNoAgents = this._agents.length === 0;
-        const acceptTypes = ALLOWED_MIME_PATTERNS.join(",");
+        const acceptTypes = this.allowedMimeTypes.join(",");
 
         return html`
             <div class="input-wrapper">

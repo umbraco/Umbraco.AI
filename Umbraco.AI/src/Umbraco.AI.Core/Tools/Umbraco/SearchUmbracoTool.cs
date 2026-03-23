@@ -421,7 +421,7 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
             thumbnailUrl,
             score,
             content.UpdateDate,
-            GetContentPath(content),
+            ContentToolHelpers.GetContentPath(content),
             new Dictionary<string, object>
             {
                 { "Level", content.Level },
@@ -445,17 +445,4 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         return media.Url();
     }
 
-    private string GetContentPath(IPublishedContent content)
-    {
-        var pathParts = new List<string>();
-        var current = content;
-
-        while (current != null)
-        {
-            pathParts.Insert(0, current.Name);
-            current = current.Parent();
-        }
-
-        return string.Join(" > ", pathParts);
-    }
 }

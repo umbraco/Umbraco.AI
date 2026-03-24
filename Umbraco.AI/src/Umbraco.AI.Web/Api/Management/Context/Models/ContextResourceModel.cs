@@ -35,9 +35,9 @@ public class ContextResourceModel
     public int SortOrder { get; set; }
 
     /// <summary>
-    /// Type-specific data object.
+    /// Type-specific settings object configured by the user.
     /// </summary>
-    public object? Data { get; set; }
+    public object? Settings { get; set; }
 
     /// <summary>
     /// Injection mode (Always, OnDemand).

@@ -23,19 +23,19 @@ public record GetContextResourceArgs(
 public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISystemTool
 {
     private readonly IAIContextAccessor _contextAccessor;
-    private readonly IAIContextFormatter _formatter;
+    private readonly IAIContextProcessor _processor;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContextResourceTool"/>.
     /// </summary>
     /// <param name="contextAccessor">The context accessor.</param>
-    /// <param name="formatter">The context formatter.</param>
+    /// <param name="processor">The context processor.</param>
     public GetContextResourceTool(
         IAIContextAccessor contextAccessor,
-        IAIContextFormatter formatter)
+        IAIContextProcessor processor)
     {
         _contextAccessor = contextAccessor;
-        _formatter = formatter;
+        _processor = processor;
     }
 
     /// <inheritdoc />
@@ -64,7 +64,7 @@ public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISys
                 $"Resource with ID '{args.ResourceId}' not found. Use list_context_resources to see available resources.");
         }
 
-        var formattedContent = await _formatter.FormatResourceForLlmAsync(resource, cancellationToken);
+        var formattedContent = await _processor.ProcessResourceForLlmAsync(resource, cancellationToken);
 
         return new GetContextResourceResult(
             true,

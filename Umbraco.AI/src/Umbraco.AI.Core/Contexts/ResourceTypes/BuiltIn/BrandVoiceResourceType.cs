@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
 /// Resource type for brand voice definitions including tone, audience, style, and patterns to avoid.
 /// </summary>
 [AIContextResourceType("brand-voice", "Brand Voice")]
-public sealed class BrandVoiceResourceType : AIContextResourceTypeBase<BrandVoiceResourceData>
+public sealed class BrandVoiceResourceType : AIContextResourceTypeBase<BrandVoiceResourceSettings>
 {
     /// <inheritdoc />
     public override string? Description => "Define tone, audience, style guidelines, and patterns to avoid";
@@ -23,7 +23,7 @@ public sealed class BrandVoiceResourceType : AIContextResourceTypeBase<BrandVoic
     { }
 
     /// <inheritdoc />
-    protected override string FormatForLlm(BrandVoiceResourceData data)
+    protected override string FormatForLlm(BrandVoiceResourceSettings data)
     {
         var sb = new StringBuilder();
 

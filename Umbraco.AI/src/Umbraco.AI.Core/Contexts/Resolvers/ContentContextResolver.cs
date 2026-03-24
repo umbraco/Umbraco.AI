@@ -160,7 +160,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
                     ResourceTypeId = resource.ResourceTypeId,
                     Name = resource.Name,
                     Description = resource.Description,
-                    Data = resource.Data,
+                    Settings = resource.Settings,
                     InjectionMode = resource.InjectionMode,
                     ContextName = freshContext.Name
                 });

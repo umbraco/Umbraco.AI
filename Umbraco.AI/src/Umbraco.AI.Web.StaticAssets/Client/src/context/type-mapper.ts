@@ -49,7 +49,7 @@ export const UaiContextTypeMapper = {
             description: resource.description ?? null,
             sortOrder: resource.sortOrder,
             // API returns object but generated types show string - cast through unknown until regenerated
-            data: (resource.data as unknown as Record<string, unknown>) ?? null,
+            settings: (resource.settings as unknown as Record<string, unknown>) ?? null,
             injectionMode: resource.injectionMode as UaiContextResourceInjectionMode,
         };
     },
@@ -78,7 +78,7 @@ export const UaiContextTypeMapper = {
             description: resource.description,
             sortOrder: resource.sortOrder,
             // API expects object but generated types show string - cast through unknown until regenerated
-            data: resource.data as unknown as string,
+            settings: resource.settings as unknown as string,
             injectionMode: resource.injectionMode,
         };
     },

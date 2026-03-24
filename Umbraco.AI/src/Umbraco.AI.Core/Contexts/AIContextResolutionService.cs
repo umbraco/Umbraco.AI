@@ -57,7 +57,7 @@ internal sealed class AIContextResolutionService : IAIContextResolutionService
                     ResourceTypeId = resource.ResourceTypeId,
                     Name = resource.Name,
                     Description = resource.Description,
-                    Data = resource.Data,
+                    Settings = resource.Settings,
                     InjectionMode = resource.InjectionMode,
                     Source = resolverTypeName,
                     ContextName = resource.ContextName

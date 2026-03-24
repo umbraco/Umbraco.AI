@@ -36,9 +36,9 @@ internal class AIContextResourceEntity
     public int SortOrder { get; set; }
 
     /// <summary>
-    /// JSON-serialized resource data.
+    /// JSON-serialized resource settings.
     /// </summary>
-    public string Data { get; set; } = string.Empty;
+    public string Settings { get; set; } = string.Empty;
 
     /// <summary>
     /// Injection mode (0=Always, 1=OnDemand).

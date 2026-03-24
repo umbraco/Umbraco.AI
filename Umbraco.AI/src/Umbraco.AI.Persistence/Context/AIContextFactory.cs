@@ -40,12 +40,12 @@ internal static class AIContextFactory
     /// <returns>The domain model.</returns>
     public static AIContextResource BuildResourceDomain(AIContextResourceEntity entity)
     {
-        object? data = null;
-        if (!string.IsNullOrEmpty(entity.Data))
+        object? settings = null;
+        if (!string.IsNullOrEmpty(entity.Settings))
         {
-            // Data is stored as JSON, deserialize to dynamic object
+            // Settings are stored as JSON, deserialize to dynamic object
             // The actual typed deserialization happens at the service layer
-            data = JsonSerializer.Deserialize<JsonElement>(entity.Data, Constants.DefaultJsonSerializerOptions);
+            settings = JsonSerializer.Deserialize<JsonElement>(entity.Settings, Constants.DefaultJsonSerializerOptions);
         }
 
         return new AIContextResource
@@ -55,7 +55,7 @@ internal static class AIContextFactory
             Name = entity.Name,
             Description = entity.Description,
             SortOrder = entity.SortOrder,
-            Data = data,
+            Settings = settings,
             InjectionMode = (AIContextResourceInjectionMode)entity.InjectionMode
         };
     }
@@ -99,7 +99,7 @@ internal static class AIContextFactory
             Name = resource.Name,
             Description = resource.Description,
             SortOrder = resource.SortOrder,
-            Data = resource.Data is null ? string.Empty : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions),
+            Settings = resource.Settings is null ? string.Empty : JsonSerializer.Serialize(resource.Settings, Constants.DefaultJsonSerializerOptions),
             InjectionMode = (int)resource.InjectionMode
         };
     }
@@ -131,7 +131,7 @@ internal static class AIContextFactory
         entity.Name = resource.Name;
         entity.Description = resource.Description;
         entity.SortOrder = resource.SortOrder;
-        entity.Data = resource.Data is null ? string.Empty : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions);
+        entity.Settings = resource.Settings is null ? string.Empty : JsonSerializer.Serialize(resource.Settings, Constants.DefaultJsonSerializerOptions);
         entity.InjectionMode = (int)resource.InjectionMode;
     }
 }

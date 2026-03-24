@@ -3,9 +3,9 @@ using Umbraco.AI.Core.EditableModels;
 namespace Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
 
 /// <summary>
-/// Data model for the Text resource type.
+/// Settings model for the Text resource type.
 /// </summary>
-public sealed class TextResourceData
+public sealed class TextResourceSettings
 {
     /// <summary>
     /// The text content (can be plain text or markdown).

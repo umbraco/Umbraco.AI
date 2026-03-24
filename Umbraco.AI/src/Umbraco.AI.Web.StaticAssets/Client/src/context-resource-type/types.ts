@@ -10,18 +10,18 @@ export interface UaiContextResourceTypeItemModel {
     name: string;
     description?: string | null;
     icon?: string | null;
-    dataSchema?: UaiEditableModelSchemaModel | null;
+    settingsSchema?: UaiEditableModelSchemaModel | null;
 }
 
 /**
  * ContextResourceType detail model for UI consumption.
  * Maps from API's ContextResourceTypeResponseModel.
- * Includes full contextResourceType information with data schema.
+ * Includes full contextResourceType information with settings schema.
  */
 export interface UaiContextResourceTypeDetailModel {
     id: string;
     name: string;
     description?: string | null;
     icon?: string | null;
-    dataSchema?: UaiEditableModelSchemaModel | null;
+    settingsSchema?: UaiEditableModelSchemaModel | null;
 }

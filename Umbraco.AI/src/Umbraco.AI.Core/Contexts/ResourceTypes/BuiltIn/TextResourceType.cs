@@ -4,7 +4,7 @@ namespace Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
 /// Resource type for free-form text/markdown instructions.
 /// </summary>
 [AIContextResourceType("text", "Text")]
-public sealed class TextResourceType : AIContextResourceTypeBase<TextResourceData>
+public sealed class TextResourceType : AIContextResourceTypeBase<TextResourceSettings>
 {
     /// <inheritdoc />
     public override string? Description => "Free-form text or markdown instructions";
@@ -21,7 +21,7 @@ public sealed class TextResourceType : AIContextResourceTypeBase<TextResourceDat
     { }
 
     /// <inheritdoc />
-    protected override string FormatForLlm(TextResourceData data)
+    protected override string FormatForLlm(TextResourceSettings data)
     {
         return data.Content?.Trim() ?? string.Empty;
     }

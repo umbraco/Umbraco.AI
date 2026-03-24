@@ -29,8 +29,8 @@ public class ContextResourceTypeMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.Icon = source.Icon;
-        target.DataSchema = source.DataType is not null
-            ? context.Map<EditableModelSchemaModel>(source.GetDataSchema())
+        target.SettingsSchema = source.SettingsType is not null
+            ? context.Map<EditableModelSchemaModel>(source.GetSettingsSchema())
             : null;
     }
 }

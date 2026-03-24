@@ -43,7 +43,7 @@ public class ContextMapDefinition : IMapDefinition
         {
             ResourceTypeId = source.ResourceTypeId,
             Name = source.Name,
-            Data = source.Data
+            Settings = source.Settings
         };
     }
 
@@ -70,7 +70,7 @@ public class ContextMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.SortOrder = source.SortOrder;
-        target.Data = source.Data;
+        target.Settings = source.Settings;
         target.InjectionMode = Enum.TryParse<AIContextResourceInjectionMode>(source.InjectionMode, true, out var mode)
             ? mode
             : AIContextResourceInjectionMode.Always;
@@ -107,7 +107,7 @@ public class ContextMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.SortOrder = source.SortOrder;
-        target.Data = source.Data;
+        target.Settings = source.Settings;
         target.InjectionMode = source.InjectionMode.ToString();
     }
 }

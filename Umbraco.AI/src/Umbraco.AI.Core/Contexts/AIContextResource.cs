@@ -33,9 +33,9 @@ public sealed class AIContextResource
     public int SortOrder { get; set; }
 
     /// <summary>
-    /// Type-specific data object.
+    /// Type-specific settings object configured by the user.
     /// </summary>
-    public object? Data { get; set; }
+    public object? Settings { get; set; }
 
     /// <summary>
     /// Determines how and when this resource is included in AI operations.

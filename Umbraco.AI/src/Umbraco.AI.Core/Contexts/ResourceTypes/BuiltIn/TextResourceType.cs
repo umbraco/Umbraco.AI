@@ -21,7 +21,7 @@ public sealed class TextResourceType : AIContextResourceTypeBase<TextResourceSet
     { }
 
     /// <inheritdoc />
-    protected override string FormatForLlm(TextResourceSettings data)
+    protected override string FormatDataForLlm(TextResourceSettings data)
     {
         return data.Content?.Trim() ?? string.Empty;
     }

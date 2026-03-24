@@ -100,7 +100,7 @@ public abstract class AIContextResourceTypeBase<TSettings, TData> : IAIContextRe
     /// </summary>
     /// <param name="data">The deserialized resource data.</param>
     /// <returns>Formatted text suitable for AI consumption.</returns>
-    protected virtual string FormatForLlm(TData data)
+    protected virtual string FormatDataForLlm(TData data)
     {
         // Default implementation: serialize to JSON
         return System.Text.Json.JsonSerializer.Serialize(data);
@@ -130,6 +130,6 @@ public abstract class AIContextResourceTypeBase<TSettings, TData> : IAIContextRe
         if (typedData is null)
             return  string.Empty;
 
-        return FormatForLlm(typedData);
+        return FormatDataForLlm(typedData);
     }
 }

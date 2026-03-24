@@ -1,10 +1,10 @@
-namespace Umbraco.AI.Agent.Core.AGUI;
+namespace Umbraco.AI.Agent.Core.FileStore;
 
 /// <summary>
 /// Thread-scoped temporary storage for binary file content.
 /// Stores files uploaded during a conversation and resolves them by ID on subsequent turns.
 /// </summary>
-public interface IAGUIFileStore
+public interface IAIFileStore
 {
     /// <summary>
     /// Stores binary data and returns a unique file ID.
@@ -24,7 +24,7 @@ public interface IAGUIFileStore
     /// <param name="fileId">The file ID returned by <see cref="StoreAsync"/>.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The stored file data, or <c>null</c> if not found.</returns>
-    Task<AGUIStoredFile?> ResolveAsync(string threadId, string fileId, CancellationToken cancellationToken = default);
+    Task<AIStoredFile?> ResolveAsync(string threadId, string fileId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Cleans up all files stored for a thread.
@@ -45,7 +45,7 @@ public interface IAGUIFileStore
 /// <summary>
 /// Represents a file stored in the temporary file store.
 /// </summary>
-public sealed class AGUIStoredFile
+public sealed class AIStoredFile
 {
     /// <summary>
     /// Gets the binary file data.

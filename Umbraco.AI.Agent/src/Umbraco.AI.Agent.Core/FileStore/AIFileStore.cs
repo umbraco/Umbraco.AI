@@ -2,21 +2,21 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.IO;
 
-namespace Umbraco.AI.Agent.Core.AGUI;
+namespace Umbraco.AI.Agent.Core.FileStore;
 
 /// <summary>
-/// Implementation of <see cref="IAGUIFileStore"/> backed by the Umbraco media file system.
+/// Implementation of <see cref="IAIFileStore"/> backed by the Umbraco media file system.
 /// Stores files in a thread-scoped directory under <c>agui-files/</c>, using <see cref="MediaFileManager.FileSystem"/>
 /// so that storage is portable across providers (local disk, Azure Blob, S3, etc.).
 /// </summary>
-internal sealed class AGUIFileStore : IAGUIFileStore
+internal sealed class AIFileStore : IAIFileStore
 {
     private const string BasePath = "agui-files";
 
     private readonly IFileSystem _fileSystem;
-    private readonly ILogger<AGUIFileStore> _logger;
+    private readonly ILogger<AIFileStore> _logger;
 
-    public AGUIFileStore(MediaFileManager mediaFileManager, ILogger<AGUIFileStore> logger)
+    public AIFileStore(MediaFileManager mediaFileManager, ILogger<AIFileStore> logger)
     {
         _fileSystem = mediaFileManager.FileSystem;
         _logger = logger;
@@ -51,7 +51,7 @@ internal sealed class AGUIFileStore : IAGUIFileStore
     }
 
     /// <inheritdoc />
-    public async Task<AGUIStoredFile?> ResolveAsync(string threadId, string fileId, CancellationToken cancellationToken = default)
+    public async Task<AIStoredFile?> ResolveAsync(string threadId, string fileId, CancellationToken cancellationToken = default)
     {
         var threadDir = GetThreadPath(threadId);
         var dataPath = $"{threadDir}/{fileId}.bin";
@@ -77,7 +77,7 @@ internal sealed class AGUIFileStore : IAGUIFileStore
             metadata = await JsonSerializer.DeserializeAsync<FileMetadata>(metaStream, cancellationToken: cancellationToken);
         }
 
-        return new AGUIStoredFile
+        return new AIStoredFile
         {
             Data = data,
             MimeType = metadata?.MimeType ?? "application/octet-stream",

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.AGUI;
+using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.AGUI.Models;
 using Xunit;
 
@@ -9,12 +10,12 @@ namespace Umbraco.AI.Agent.Tests.Unit.AGUI;
 
 public class AGUIFileProcessorTests
 {
-    private readonly Mock<IAGUIFileStore> _mockStore;
+    private readonly Mock<IAIFileStore> _mockStore;
     private readonly AGUIFileProcessor _processor;
 
     public AGUIFileProcessorTests()
     {
-        _mockStore = new Mock<IAGUIFileStore>();
+        _mockStore = new Mock<IAIFileStore>();
         _processor = new AGUIFileProcessor(
             _mockStore.Object,
             NullLogger<AGUIFileProcessor>.Instance);
@@ -106,7 +107,7 @@ public class AGUIFileProcessorTests
 
         _mockStore
             .Setup(s => s.ResolveAsync("thread-1", "file-abc", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AGUIStoredFile { Data = storedData, MimeType = "image/png", Filename = "test.png" });
+            .ReturnsAsync(new AIStoredFile { Data = storedData, MimeType = "image/png", Filename = "test.png" });
 
         // Act
         var result = await _processor.ProcessInboundAsync(messages, "thread-1");

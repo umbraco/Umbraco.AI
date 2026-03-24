@@ -7,32 +7,32 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.AI.Agent.Core.AGUI;
+namespace Umbraco.AI.Agent.Core.FileStore;
 
 /// <summary>
-/// Background service that periodically cleans up expired AG-UI file uploads.
+/// Background service that periodically cleans up expired file uploads.
 /// Thread directories whose files have not been modified within the configured
 /// <see cref="AIAgentOptions.FileRetentionHours"/> period are deleted.
 /// </summary>
-internal sealed class AGUIFileCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIFileCleanupBackgroundJob : RecurringHostedServiceBase
 {
-    private readonly IAGUIFileStore _fileStore;
+    private readonly IAIFileStore _fileStore;
     private readonly IOptionsMonitor<AIAgentOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
     private readonly IMainDom _mainDom;
-    private readonly ILogger<AGUIFileCleanupBackgroundJob> _logger;
+    private readonly ILogger<AIFileCleanupBackgroundJob> _logger;
 
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromHours(1);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
-    public AGUIFileCleanupBackgroundJob(
-        IAGUIFileStore fileStore,
+    public AIFileCleanupBackgroundJob(
+        IAIFileStore fileStore,
         IOptionsMonitor<AIAgentOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
         IMainDom mainDom,
-        ILogger<AGUIFileCleanupBackgroundJob> logger)
+        ILogger<AIFileCleanupBackgroundJob> logger)
         : base(logger, CleanupInterval, StartupDelay)
     {
         _fileStore = fileStore;
@@ -70,13 +70,13 @@ internal sealed class AGUIFileCleanupBackgroundJob : RecurringHostedServiceBase
             if (deleted > 0)
             {
                 _logger.LogInformation(
-                    "AG-UI file cleanup completed. Deleted {Count} expired thread directories (retention: {Hours}h).",
+                    "File cleanup completed. Deleted {Count} expired thread directories (retention: {Hours}h).",
                     deleted, _options.CurrentValue.FileRetentionHours);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to cleanup expired AG-UI files");
+            _logger.LogError(ex, "Failed to cleanup expired files");
             throw;
         }
     }

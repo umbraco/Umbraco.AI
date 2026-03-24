@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.AGUI.Models;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
@@ -9,10 +10,10 @@ namespace Umbraco.AI.Agent.Core.AGUI;
 /// </summary>
 internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 {
-    private readonly IAGUIFileStore _fileStore;
+    private readonly IAIFileStore _fileStore;
     private readonly ILogger<AGUIFileProcessor> _logger;
 
-    public AGUIFileProcessor(IAGUIFileStore fileStore, ILogger<AGUIFileProcessor> logger)
+    public AGUIFileProcessor(IAIFileStore fileStore, ILogger<AGUIFileProcessor> logger)
     {
         _fileStore = fileStore;
         _logger = logger;

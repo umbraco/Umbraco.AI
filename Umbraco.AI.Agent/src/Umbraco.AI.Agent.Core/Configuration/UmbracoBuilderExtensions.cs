@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Guardrails;
 using Umbraco.AI.Agent.Core.Models;
@@ -57,10 +58,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAGUIMessageConverter, AGUIMessageConverter>();
         builder.Services.AddSingleton<IAGUIToolConverter, AGUIToolConverter>();
         builder.Services.AddSingleton<IAGUIContextConverter, AGUIContextConverter>();
-        builder.Services.AddSingleton<IAGUIFileStore, AGUIFileStore>();
+        builder.Services.AddSingleton<IAIFileStore, AIFileStore>();
         builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
-        builder.Services.AddHostedService<AGUIFileCleanupBackgroundJob>();
+        builder.Services.AddHostedService<AIFileCleanupBackgroundJob>();
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();

@@ -88,7 +88,7 @@ public class EfCoreAIContextRepositoryTests : IClassFixture<EfCoreTestFixture>
                     ContextId = contextId,
                     ResourceTypeId = "brand-voice",
                     Name = "Brand Voice",
-                    Data = "{}",
+                    Settings = "{}",
                     SortOrder = 0,
                     InjectionMode = 0
                 }
@@ -451,7 +451,7 @@ public class EfCoreAIContextRepositoryTests : IClassFixture<EfCoreTestFixture>
                     ContextId = contextId,
                     ResourceTypeId = "text",
                     Name = "Text Resource",
-                    Data = "{}",
+                    Settings = "{}",
                     SortOrder = 0,
                     InjectionMode = 0
                 }
@@ -497,7 +497,7 @@ public class EfCoreAIContextRepositoryTests : IClassFixture<EfCoreTestFixture>
                     ContextId = contextId,
                     ResourceTypeId = "text",
                     Name = "Always Resource",
-                    Data = "{}",
+                    Settings = "{}",
                     SortOrder = 0,
                     InjectionMode = 0 // Always
                 },
@@ -507,7 +507,7 @@ public class EfCoreAIContextRepositoryTests : IClassFixture<EfCoreTestFixture>
                     ContextId = contextId,
                     ResourceTypeId = "brand-voice",
                     Name = "OnDemand Resource",
-                    Data = "{}",
+                    Settings = "{}",
                     SortOrder = 1,
                     InjectionMode = 1 // OnDemand
                 }

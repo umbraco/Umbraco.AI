@@ -14,7 +14,7 @@ export interface UaiContextResourceModel {
     name: string;
     description: string | null;
     sortOrder: number;
-    data: Record<string, unknown> | null;
+    settings: Record<string, unknown> | null;
     injectionMode: UaiContextResourceInjectionMode;
 }
 

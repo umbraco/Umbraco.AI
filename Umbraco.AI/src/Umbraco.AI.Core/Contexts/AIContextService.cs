@@ -212,7 +212,7 @@ internal sealed class AIContextService : IAIContextService
                 Name = r.Name,
                 Description = r.Description,
                 SortOrder = r.SortOrder,
-                Data = r.Data,
+                Settings = r.Settings,
                 InjectionMode = r.InjectionMode
             }).ToList(),
         };

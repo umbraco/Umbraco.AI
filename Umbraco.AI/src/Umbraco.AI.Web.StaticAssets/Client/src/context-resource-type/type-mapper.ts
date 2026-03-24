@@ -9,8 +9,8 @@ export const UaiContextResourceTypeTypeMapper = {
             name: response.name,
             description: response.description,
             icon: response.icon,
-            dataSchema: response.dataSchema
-                ? UaiCommonTypeMapper.toEditableModelSchemaModel(response.dataSchema)
+            settingsSchema: response.settingsSchema
+                ? UaiCommonTypeMapper.toEditableModelSchemaModel(response.settingsSchema)
                 : null,
         };
     },
@@ -21,8 +21,8 @@ export const UaiContextResourceTypeTypeMapper = {
             name: response.name,
             description: response.description,
             icon: response.icon,
-            dataSchema: response.dataSchema
-                ? UaiCommonTypeMapper.toEditableModelSchemaModel(response.dataSchema)
+            settingsSchema: response.settingsSchema
+                ? UaiCommonTypeMapper.toEditableModelSchemaModel(response.settingsSchema)
                 : null,
         };
     },

@@ -77,7 +77,7 @@ export class UaiResourceListElement extends UmbLitElement {
             name: result.resource.name,
             description: result.resource.description ?? null,
             sortOrder: this._items.length,
-            data: result.resource.data,
+            settings: result.resource.settings,
             injectionMode: result.resource.injectionMode,
         };
 
@@ -98,7 +98,7 @@ export class UaiResourceListElement extends UmbLitElement {
                 resource: {
                     name: card.name,
                     description: card.description,
-                    data: card.data ?? {},
+                    settings: card.settings ?? {},
                     injectionMode: card.injectionMode,
                 },
             },
@@ -115,7 +115,7 @@ export class UaiResourceListElement extends UmbLitElement {
                           ...item,
                           name: optionsResult.resource.name,
                           description: optionsResult.resource.description ?? null,
-                          data: optionsResult.resource.data,
+                          settings: optionsResult.resource.settings,
                           injectionMode: optionsResult.resource.injectionMode,
                       }
                     : item,

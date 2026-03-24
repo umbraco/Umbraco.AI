@@ -193,7 +193,7 @@ public static partial class UmbracoBuilderExtensions
         // Context system
         services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
         services.AddSingleton<IAIContextService, AIContextService>();
-        services.AddSingleton<IAIContextFormatter, AIContextFormatter>();
+        services.AddSingleton<IAIContextProcessor, AIContextProcessor>();
         services.AddSingleton<IAIContextAccessor, AIContextAccessor>();
 
         // Context resolution - pluggable resolver system

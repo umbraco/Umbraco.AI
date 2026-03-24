@@ -16,22 +16,22 @@ namespace Umbraco.AI.Core.Contexts.Middleware;
 public class AIContextInjectingChatMiddleware : IAIChatMiddleware
 {
     private readonly IAIContextResolutionService _contextResolutionService;
-    private readonly IAIContextFormatter _contextFormatter;
+    private readonly IAIContextProcessor _contextProcessor;
     private readonly IAIContextAccessor _contextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextInjectingChatMiddleware"/> class.
     /// </summary>
     /// <param name="contextResolutionService">The context resolution service.</param>
-    /// <param name="contextFormatter">The context formatter.</param>
+    /// <param name="contextProcessor">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor.</param>
     public AIContextInjectingChatMiddleware(
         IAIContextResolutionService contextResolutionService,
-        IAIContextFormatter contextFormatter,
+        IAIContextProcessor contextProcessor,
         IAIContextAccessor contextAccessor)
     {
         _contextResolutionService = contextResolutionService;
-        _contextFormatter = contextFormatter;
+        _contextProcessor = contextProcessor;
         _contextAccessor = contextAccessor;
     }
 
@@ -41,7 +41,7 @@ public class AIContextInjectingChatMiddleware : IAIChatMiddleware
         return new AIContextInjectingChatClient(
             client,
             _contextResolutionService,
-            _contextFormatter,
+            _contextProcessor,
             _contextAccessor);
     }
 }

@@ -3,9 +3,9 @@ using Umbraco.AI.Core.EditableModels;
 namespace Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
 
 /// <summary>
-/// Data model for the Brand Voice resource type.
+/// Settings model for the Brand Voice resource type.
 /// </summary>
-public sealed class BrandVoiceResourceData
+public sealed class BrandVoiceResourceSettings
 {
     /// <summary>
     /// Description of the tone to use (e.g., "Professional but approachable").

@@ -288,7 +288,7 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.SortOrder)
                 .IsRequired();
 
-            entity.Property(e => e.Data)
+            entity.Property(e => e.Settings)
                 .IsRequired();
 
             entity.Property(e => e.InjectionMode)

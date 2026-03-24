@@ -5,23 +5,23 @@ using Umbraco.AI.Core.Contexts.ResourceTypes;
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
-/// Default implementation of <see cref="IAIContextFormatter"/>.
+/// Default implementation of <see cref="IAIContextProcessor"/>.
 /// </summary>
-internal sealed class AIContextFormatter : IAIContextFormatter
+internal sealed class AIContextProcessor : IAIContextProcessor
 {
     private readonly AIContextResourceTypeCollection _resourceTypes;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AIContextFormatter"/> class.
+    /// Initializes a new instance of the <see cref="AIContextProcessor"/> class.
     /// </summary>
     /// <param name="resourceTypes">The collection of resource types.</param>
-    public AIContextFormatter(AIContextResourceTypeCollection resourceTypes)
+    public AIContextProcessor(AIContextResourceTypeCollection resourceTypes)
     {
         _resourceTypes = resourceTypes;
     }
 
     /// <inheritdoc />
-    public async Task<string> FormatContextForLlmAsync(AIResolvedContext context, CancellationToken cancellationToken = default)
+    public async Task<string> ProcessContextForLlmAsync(AIResolvedContext context, CancellationToken cancellationToken = default)
     {
         var hasInjected = context.InjectedResources.Count > 0;
         var hasOnDemand = context.OnDemandResources.Count > 0;
@@ -39,7 +39,7 @@ internal sealed class AIContextFormatter : IAIContextFormatter
 
             foreach (var resource in context.InjectedResources)
             {
-                var formatted = await FormatResourceForLlmAsync(resource, cancellationToken);
+                var formatted = await ProcessResourceForLlmAsync(resource, cancellationToken);
                 if (!string.IsNullOrWhiteSpace(formatted))
                 {
                     sb.AppendLine($"### {resource.Name}");
@@ -73,17 +73,21 @@ internal sealed class AIContextFormatter : IAIContextFormatter
     }
 
     /// <inheritdoc />
-    public async Task<string> FormatResourceForLlmAsync(AIResolvedResource resource, CancellationToken cancellationToken = default)
+    public async Task<string> ProcessResourceForLlmAsync(AIResolvedResource resource, CancellationToken cancellationToken = default)
     {
         var resourceType = _resourceTypes.GetById(resource.ResourceTypeId);
-        if (resourceType is not null) return await resourceType.FormatForLlmAsync(resource.Data, cancellationToken);
+        if (resourceType is not null)
+        {
+            var resolvedData = await resourceType.ResolveDataAsync(resource.Settings, cancellationToken);
+            return resourceType.FormatDataForLlm(resolvedData);
+        }
 
-        // Fallback: return the data as JSON string if resource type not found
-        if (resource.Data is null)
+        // Fallback: return the settings as JSON string if resource type not found
+        if (resource.Settings is null)
             return string.Empty;
 
-        return resource.Data is JsonElement jsonElement
+        return resource.Settings is JsonElement jsonElement
             ? jsonElement.ToString()
-            : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions);
+            : JsonSerializer.Serialize(resource.Settings, Constants.DefaultJsonSerializerOptions);
     }
 }

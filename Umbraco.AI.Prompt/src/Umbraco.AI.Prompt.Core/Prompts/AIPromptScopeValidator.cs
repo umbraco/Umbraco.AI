@@ -99,7 +99,7 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
     /// <summary>
     /// Resolves the property editor UI alias for a given content type alias and property alias.
     /// Uses the entity type to determine which content type service to query.
-    /// The UI alias is stored on the DataType, not the PropertyType.
+    /// The UI alias is stored on the SettingsType, not the PropertyType.
     /// </summary>
     private async Task<string?> ResolvePropertyEditorUiAliasAsync(
         string contentTypeAlias,

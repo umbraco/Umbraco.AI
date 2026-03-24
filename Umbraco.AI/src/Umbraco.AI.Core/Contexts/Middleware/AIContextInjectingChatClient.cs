@@ -16,7 +16,7 @@ namespace Umbraco.AI.Core.Contexts.Middleware;
 internal sealed class AIContextInjectingChatClient : DelegatingChatClient
 {
     private readonly IAIContextResolutionService _contextResolutionService;
-    private readonly IAIContextFormatter _contextFormatter;
+    private readonly IAIContextProcessor _contextProcessor;
     private readonly IAIContextAccessor _contextAccessor;
 
     /// <summary>
@@ -24,17 +24,17 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="contextResolutionService">The context resolution service.</param>
-    /// <param name="contextFormatter">The context formatter.</param>
+    /// <param name="contextProcessor">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor for tool access.</param>
     public AIContextInjectingChatClient(
         IChatClient innerClient,
         IAIContextResolutionService contextResolutionService,
-        IAIContextFormatter contextFormatter,
+        IAIContextProcessor contextProcessor,
         IAIContextAccessor contextAccessor)
         : base(innerClient)
     {
         _contextResolutionService = contextResolutionService;
-        _contextFormatter = contextFormatter;
+        _contextProcessor = contextProcessor;
         _contextAccessor = contextAccessor;
     }
 
@@ -102,7 +102,7 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
         // Format and inject context into system prompt:
         // - "Always" resources are injected with full content
         // - "OnDemand" resources are listed so the LLM knows they're available
-        var contextContent = await _contextFormatter.FormatContextForLlmAsync(resolvedContext, cancellationToken);
+        var contextContent = await _contextProcessor.ProcessContextForLlmAsync(resolvedContext, cancellationToken);
         if (!string.IsNullOrWhiteSpace(contextContent))
         {
             messages = InjectContextIntoMessages(messages, contextContent);

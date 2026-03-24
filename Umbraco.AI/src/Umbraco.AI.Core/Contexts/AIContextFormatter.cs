@@ -21,7 +21,7 @@ internal sealed class AIContextFormatter : IAIContextFormatter
     }
 
     /// <inheritdoc />
-    public async Task<string> FormatContextForLlmAsync(AIResolvedContext context, CancellationToken cancellationToken = default)
+    public string FormatContextForLlm(AIResolvedContext context)
     {
         var hasInjected = context.InjectedResources.Count > 0;
         var hasOnDemand = context.OnDemandResources.Count > 0;
@@ -39,7 +39,7 @@ internal sealed class AIContextFormatter : IAIContextFormatter
 
             foreach (var resource in context.InjectedResources)
             {
-                var formatted = await FormatResourceForLlmAsync(resource, cancellationToken);
+                var formatted = FormatResourceForLlm(resource);
                 if (!string.IsNullOrWhiteSpace(formatted))
                 {
                     sb.AppendLine($"### {resource.Name}");
@@ -73,11 +73,11 @@ internal sealed class AIContextFormatter : IAIContextFormatter
     }
 
     /// <inheritdoc />
-    public async Task<string> FormatResourceForLlmAsync(AIResolvedResource resource, CancellationToken cancellationToken = default)
+    public string FormatResourceForLlm(AIResolvedResource resource)
     {
         var resourceType = _resourceTypes.GetById(resource.ResourceTypeId);
-        if (resourceType is not null) return await resourceType.FormatForLlmAsync(resource.Data, cancellationToken);
-
+        if (resourceType is not null) return resourceType.FormatForLlm(resource.Data);
+        
         // Fallback: return the data as JSON string if resource type not found
         if (resource.Data is null)
             return string.Empty;

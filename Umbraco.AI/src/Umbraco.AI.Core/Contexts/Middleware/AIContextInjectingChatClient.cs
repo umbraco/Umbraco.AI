@@ -39,7 +39,7 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
     }
 
     #region IChatClient
-
+    
     /// <inheritdoc />
     public override async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
@@ -102,7 +102,7 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
         // Format and inject context into system prompt:
         // - "Always" resources are injected with full content
         // - "OnDemand" resources are listed so the LLM knows they're available
-        var contextContent = await _contextFormatter.FormatContextForLlmAsync(resolvedContext, cancellationToken);
+        var contextContent = _contextFormatter.FormatContextForLlm(resolvedContext);
         if (!string.IsNullOrWhiteSpace(contextContent))
         {
             messages = InjectContextIntoMessages(messages, contextContent);

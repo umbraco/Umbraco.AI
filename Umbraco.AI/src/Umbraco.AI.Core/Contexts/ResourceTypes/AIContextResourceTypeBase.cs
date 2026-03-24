@@ -58,23 +58,10 @@ public abstract class AIContextResourceTypeBase<TData> : IAIContextResourceType
     /// </summary>
     /// <param name="data">The deserialized resource data.</param>
     /// <returns>Formatted text suitable for AI consumption.</returns>
-    protected virtual string FormatForLlm(TData data)
-    {
-        // Default implementation: serialize to JSON
-        return System.Text.Json.JsonSerializer.Serialize(data);
-    }
-
-    /// <summary>
-    /// Asynchronously formats the strongly-typed resource data for injection into the LLM system prompt.
-    /// </summary>
-    /// <param name="data"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    protected virtual Task<string> FormatForLlmAsync(TData data, CancellationToken cancellationToken)
-         => Task.FromResult(FormatForLlm(data));
+    protected abstract string FormatForLlm(TData data);
 
     /// <inheritdoc />
-    public async Task<string> FormatForLlmAsync(object? dataObject, CancellationToken cancellationToken = default)
+    public string FormatForLlm(object? dataObject)
     {
         if (dataObject is null)
             return string.Empty;
@@ -84,6 +71,6 @@ public abstract class AIContextResourceTypeBase<TData> : IAIContextResourceType
         if (data is null)
             return string.Empty;
 
-        return await FormatForLlmAsync(data, cancellationToken);
+        return FormatForLlm(data);
     }
 }

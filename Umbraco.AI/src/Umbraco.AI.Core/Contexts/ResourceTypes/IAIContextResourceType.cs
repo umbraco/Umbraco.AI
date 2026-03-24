@@ -46,10 +46,9 @@ public interface IAIContextResourceType : IDiscoverable
     AIEditableModelSchema? GetDataSchema();
 
     /// <summary>
-    /// Asynchronously formats the resource data for injection into the LLM system prompt.
+    /// Formats the resource data for injection into the LLM system prompt.
     /// </summary>
-    /// <param name="data"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<string> FormatForLlmAsync(object? data, CancellationToken cancellationToken = default);
+    /// <param name="data">The resource data object.</param>
+    /// <returns>Formatted text suitable for AI consumption.</returns>
+    string FormatForLlm(object? data);
 }

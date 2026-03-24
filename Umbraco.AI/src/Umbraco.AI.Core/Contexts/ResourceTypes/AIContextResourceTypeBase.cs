@@ -41,10 +41,10 @@ public abstract class AIContextResourceTypeBase<TSettings, TData> : IAIContextRe
     public string Name { get; }
 
     /// <inheritdoc />
-    public abstract string? Description { get; }
+    public string? Description { get; }
 
     /// <inheritdoc />
-    public abstract string? Icon { get; }
+    public string? Icon { get; }
 
     /// <summary>
     /// Gets the data model type for this resource type.
@@ -81,6 +81,8 @@ public abstract class AIContextResourceTypeBase<TSettings, TData> : IAIContextRe
 
         Id = attribute.Id;
         Name = attribute.Name;
+        Description = attribute.Description;
+        Icon = attribute.Icon;
     }
 
     /// <summary>

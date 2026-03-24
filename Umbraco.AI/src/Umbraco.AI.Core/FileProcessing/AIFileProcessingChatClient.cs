@@ -1,5 +1,9 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.FileProcessing;
 
@@ -10,18 +14,26 @@ namespace Umbraco.AI.Core.FileProcessing;
 internal sealed class AIFileProcessingChatClient : DelegatingChatClient
 {
     private readonly AIFileProcessingHandlerCollection _handlers;
+    private readonly IOptionsMonitor<ContentSettings> _contentSettings;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIFileProcessingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="handlers">The collection of file processing handlers.</param>
+    /// <param name="contentSettings">The CMS content settings for file upload validation.</param>
+    /// <param name="logger">The logger.</param>
     public AIFileProcessingChatClient(
         IChatClient innerClient,
-        AIFileProcessingHandlerCollection handlers)
+        AIFileProcessingHandlerCollection handlers,
+        IOptionsMonitor<ContentSettings> contentSettings,
+        ILogger logger)
         : base(innerClient)
     {
         _handlers = handlers;
+        _contentSettings = contentSettings;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -90,6 +102,21 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
                     continue;
                 }
 
+                // Validate file extension against CMS content settings
+                var filename = !string.IsNullOrEmpty(dataContent.Name)
+                    ? dataContent.Name
+                    : GetFilenameFromUri(dataContent.Uri);
+
+                if (filename is not null)
+                {
+                    var extension = Path.GetExtension(filename)?.TrimStart('.');
+                    if (!string.IsNullOrEmpty(extension) && !_contentSettings.CurrentValue.IsFileAllowedForUpload(extension))
+                    {
+                        _logger.LogWarning("File \"{Filename}\" has disallowed extension \"{Extension}\", skipping", filename, extension);
+                        continue;
+                    }
+                }
+
                 var handler = FindHandler(dataContent.MediaType);
                 if (handler is null)
                 {
@@ -97,10 +124,6 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
                     processedContents.Add(content);
                     continue;
                 }
-
-                var filename = !string.IsNullOrEmpty(dataContent.Name)
-                    ? dataContent.Name
-                    : GetFilenameFromUri(dataContent.Uri);
 
                 var processingResult = await handler.ProcessAsync(
                     dataContent.Data,

@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -12,11 +15,17 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 {
     private readonly IAIFileStore _fileStore;
     private readonly IAIFileUrlProvider? _fileUrlProvider;
+    private readonly IOptionsMonitor<ContentSettings> _contentSettings;
     private readonly ILogger<AGUIFileProcessor> _logger;
 
-    public AGUIFileProcessor(IAIFileStore fileStore, ILogger<AGUIFileProcessor> logger, IAIFileUrlProvider? fileUrlProvider = null)
+    public AGUIFileProcessor(
+        IAIFileStore fileStore,
+        IOptionsMonitor<ContentSettings> contentSettings,
+        ILogger<AGUIFileProcessor> logger,
+        IAIFileUrlProvider? fileUrlProvider = null)
     {
         _fileStore = fileStore;
+        _contentSettings = contentSettings;
         _fileUrlProvider = fileUrlProvider;
         _logger = logger;
     }
@@ -98,6 +107,14 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         // Case 1: Has base64 data — store it and rewrite to ID reference
         if (!string.IsNullOrEmpty(binary.Data))
         {
+            // Validate file extension against CMS content settings
+            var extension = Path.GetExtension(binary.Filename)?.TrimStart('.');
+            if (!string.IsNullOrEmpty(extension) && !_contentSettings.CurrentValue.IsFileAllowedForUpload(extension))
+            {
+                _logger.LogWarning("File \"{Filename}\" has disallowed extension \"{Extension}\", skipping upload", binary.Filename, extension);
+                return (binary, binary);
+            }
+
             var bytes = Convert.FromBase64String(binary.Data);
             var fileId = await _fileStore.StoreAsync(threadId, bytes, binary.MimeType, binary.Filename, cancellationToken);
 

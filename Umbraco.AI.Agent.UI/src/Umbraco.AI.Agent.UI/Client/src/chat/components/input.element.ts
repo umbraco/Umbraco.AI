@@ -1,49 +1,14 @@
 import { customElement, property, state, css, html, ref, createRef, nothing, repeat } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbTemporaryFileConfigRepository } from "@umbraco-cms/backoffice/temporary-file";
+import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
 import { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "../context.js";
 import type { UaiAgentItem } from "../types/index.js";
 import type { UaiInputContent } from "../types/index.js";
 
 /** Maximum file size in bytes (default 10MB) */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-/** Default allowed MIME type patterns. Exported so consumers can extend. */
-export const DEFAULT_ALLOWED_MIME_TYPES: readonly string[] = [
-    // Images
-    "image/png",
-    "image/jpeg",
-    "image/gif",
-    "image/webp",
-    "image/svg+xml",
-    "image/bmp",
-    "image/tiff",
-
-    // Documents
-    "application/pdf",
-    "text/plain",
-    "text/csv",
-    "text/html",
-    "text/markdown",
-
-    // Microsoft Office
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-
-    // OpenDocument
-    "application/vnd.oasis.opendocument.text",
-    "application/vnd.oasis.opendocument.spreadsheet",
-    "application/vnd.oasis.opendocument.presentation",
-
-    // Data formats
-    "application/json",
-    "application/xml",
-    "text/xml",
-];
 
 interface AttachmentInfo {
     file: File;
@@ -65,9 +30,6 @@ export class UaiChatInputElement extends UmbLitElement {
     @property({ type: String })
     placeholder = "Type a message...";
 
-    @property({ attribute: false })
-    allowedMimeTypes: readonly string[] = DEFAULT_ALLOWED_MIME_TYPES;
-
     @state()
     private _value = "";
 
@@ -83,7 +45,15 @@ export class UaiChatInputElement extends UmbLitElement {
     @state()
     private _isDragging = false;
 
+    @state()
+    private _allowedExtensions: Array<string> = [];
+
+    @state()
+    private _disallowedExtensions: Array<string> = [];
+
     #chatContext?: UaiChatContextApi;
+    #notificationContext?: UmbNotificationContext;
+    #temporaryFileConfigRepository = new UmbTemporaryFileConfigRepository(this);
     #textareaRef = createRef<HTMLElement>();
     #fileInputRef = createRef<HTMLInputElement>();
 
@@ -99,6 +69,20 @@ export class UaiChatInputElement extends UmbLitElement {
                 this.observe(context.agents, (agents) => (this._agents = agents));
                 this.observe(context.selectedAgent, (agent) => (this._selectedAgentId = agent?.id ?? ""));
             }
+        });
+        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+            this.#notificationContext = context;
+        });
+
+        this.#temporaryFileConfigRepository.initialized.then(() => {
+            this.observe(
+                this.#temporaryFileConfigRepository.part("allowedUploadedFileExtensions"),
+                (extensions) => (this._allowedExtensions = extensions ?? []),
+            );
+            this.observe(
+                this.#temporaryFileConfigRepository.part("disallowedUploadedFilesExtensions"),
+                (extensions) => (this._disallowedExtensions = extensions ?? []),
+            );
         });
     }
 
@@ -178,16 +162,36 @@ export class UaiChatInputElement extends UmbLitElement {
         }
     }
 
+    #isFileAllowed(file: File): boolean {
+        const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase() : "";
+        if (!ext) return true; // No extension — allow (backend will validate)
+
+        if (this._allowedExtensions.length > 0) {
+            return this._allowedExtensions.some((e) => e.toLowerCase() === ext);
+        }
+
+        if (this._disallowedExtensions.length > 0) {
+            return !this._disallowedExtensions.some((e) => e.toLowerCase() === ext);
+        }
+
+        return true;
+    }
+
     #addAttachment(file: File) {
         // Validate size
         if (file.size > MAX_FILE_SIZE) {
-            console.warn(`File "${file.name}" exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+            this.#notificationContext?.peek("warning", {
+                data: { headline: "File too large", message: `"${file.name}" exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB.` },
+            });
             return;
         }
 
-        // Validate MIME type
-        if (!this.allowedMimeTypes.some((pattern) => file.type === pattern || file.type.startsWith(pattern.replace("*", "")))) {
-            console.warn(`File "${file.name}" has unsupported type "${file.type}"`);
+        // Validate file extension against CMS content settings
+        if (!this.#isFileAllowed(file)) {
+            const ext = file.name.includes(".") ? `.${file.name.split(".").pop()}` : "";
+            this.#notificationContext?.peek("warning", {
+                data: { headline: "File not allowed", message: `File type ${ext} is not permitted for upload.` },
+            });
             return;
         }
 
@@ -318,7 +322,7 @@ export class UaiChatInputElement extends UmbLitElement {
 
     override render() {
         const hasNoAgents = this._agents.length === 0;
-        const acceptTypes = this.allowedMimeTypes.join(",");
+        const acceptTypes = this._allowedExtensions.length > 0 ? this._allowedExtensions.map((e) => `.${e}`).join(",") : "";
 
         return html`
             <div class="input-wrapper">

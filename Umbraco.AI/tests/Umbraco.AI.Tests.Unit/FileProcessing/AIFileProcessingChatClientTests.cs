@@ -1,5 +1,10 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Moq;
 using Umbraco.AI.Core.FileProcessing;
+using Umbraco.Cms.Core.Configuration.Models;
 
 namespace Umbraco.AI.Tests.Unit.FileProcessing;
 
@@ -175,14 +180,48 @@ public class AIFileProcessingChatClientTests
 
     #endregion
 
+    [Fact]
+    public async Task GetResponseAsync_WithDisallowedExtension_StripsDataContent()
+    {
+        // Arrange
+        var handler = new FakeHandler("text/csv", "data");
+        var contentSettings = new ContentSettings();
+        contentSettings.DisallowedUploadedFileExtensions.Add("csv");
+
+        var (client, inner) = CreateClient([handler], contentSettings);
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.User,
+            [
+                new TextContent("Check this"),
+                CreateDataContent(new byte[] { 1 }, "text/csv", "data.csv"),
+            ]),
+        };
+
+        // Act
+        await client.GetResponseAsync(messages);
+
+        // Assert — CSV should be stripped, only text remains
+        var contents = inner.LastMessages![0].Contents;
+        contents.Count.ShouldBe(1);
+        contents[0].ShouldBeOfType<TextContent>();
+        ((TextContent)contents[0]).Text.ShouldBe("Check this");
+    }
+
     #region Test Helpers
 
     private static (AIFileProcessingChatClient Client, CapturingChatClient Inner) CreateClient(
         params IAIFileProcessingHandler[] handlers)
+        => CreateClient(handlers, new ContentSettings());
+
+    private static (AIFileProcessingChatClient Client, CapturingChatClient Inner) CreateClient(
+        IAIFileProcessingHandler[] handlers, ContentSettings contentSettings)
     {
         var inner = new CapturingChatClient();
         var collection = new AIFileProcessingHandlerCollection(() => handlers);
-        var client = new AIFileProcessingChatClient(inner, collection);
+        var contentSettingsMonitor = Mock.Of<IOptionsMonitor<ContentSettings>>(m => m.CurrentValue == contentSettings);
+        var client = new AIFileProcessingChatClient(inner, collection, contentSettingsMonitor, NullLoggerFactory.Instance.CreateLogger("test"));
         return (client, inner);
     }
 

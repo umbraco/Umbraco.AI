@@ -146,10 +146,16 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                         var bytes = Convert.FromBase64String(binaryPart.Data);
                         contents.Add(new DataContent(bytes, binaryPart.MimeType));
                     }
+                    else if (!string.IsNullOrEmpty(binaryPart.Id))
+                    {
+                        // Has a file store ID but no resolved data — skip.
+                        // The file processor should have resolved this; if it didn't,
+                        // the file may have expired or been cleaned up.
+                    }
                     else if (!string.IsNullOrEmpty(binaryPart.Url))
                     {
-                        // URL-based content
-                        contents.Add(new DataContent(new Uri(binaryPart.Url), binaryPart.MimeType));
+                        // External URL-based content (not from file store)
+                        contents.Add(new DataContent(new Uri(binaryPart.Url, UriKind.RelativeOrAbsolute), binaryPart.MimeType));
                     }
                     break;
             }

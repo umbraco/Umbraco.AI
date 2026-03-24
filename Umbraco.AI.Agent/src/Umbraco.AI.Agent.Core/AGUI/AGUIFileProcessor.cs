@@ -11,11 +11,13 @@ namespace Umbraco.AI.Agent.Core.AGUI;
 internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 {
     private readonly IAIFileStore _fileStore;
+    private readonly IAIFileUrlProvider? _fileUrlProvider;
     private readonly ILogger<AGUIFileProcessor> _logger;
 
-    public AGUIFileProcessor(IAIFileStore fileStore, ILogger<AGUIFileProcessor> logger)
+    public AGUIFileProcessor(IAIFileStore fileStore, ILogger<AGUIFileProcessor> logger, IAIFileUrlProvider? fileUrlProvider = null)
     {
         _fileStore = fileStore;
+        _fileUrlProvider = fileUrlProvider;
         _logger = logger;
     }
 
@@ -106,7 +108,8 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
             {
                 MimeType = binary.MimeType,
                 Id = fileId,
-                Filename = binary.Filename
+                Filename = binary.Filename,
+                Url = _fileUrlProvider?.GetFileUrl(threadId, fileId)
             };
 
             var resolvedPart = new AGUIBinaryInputContent
@@ -126,6 +129,17 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
             var stored = await _fileStore.ResolveAsync(threadId, binary.Id, cancellationToken);
             if (stored != null)
             {
+                // Ensure the rewritten part has a URL for frontend rendering
+                var rewrittenPart = binary.Url is not null
+                    ? binary
+                    : new AGUIBinaryInputContent
+                    {
+                        MimeType = binary.MimeType,
+                        Id = binary.Id,
+                        Filename = binary.Filename,
+                        Url = _fileUrlProvider?.GetFileUrl(threadId, binary.Id)
+                    };
+
                 var resolvedPart = new AGUIBinaryInputContent
                 {
                     MimeType = binary.MimeType,
@@ -134,7 +148,7 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
                     ResolvedData = stored.Data
                 };
 
-                return (binary, resolvedPart);
+                return (rewrittenPart, resolvedPart);
             }
 
             _logger.LogWarning("Could not resolve file {FileId} for thread {ThreadId}", binary.Id, threadId);

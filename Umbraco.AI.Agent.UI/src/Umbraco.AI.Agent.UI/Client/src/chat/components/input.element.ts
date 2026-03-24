@@ -222,16 +222,19 @@ export class UaiChatInputElement extends UmbLitElement {
                 contentParts.push({ type: "text", text: this._value });
             }
 
-            // Read files as base64 and add binary parts
-            for (const attachment of this._attachments) {
-                const base64 = await this.#readFileAsBase64(attachment.file);
-                contentParts.push({
-                    type: "binary",
-                    mimeType: attachment.file.type,
-                    data: base64,
-                    filename: attachment.file.name,
-                });
-            }
+            // Read files as base64 in parallel and add binary parts
+            const binaryParts = await Promise.all(
+                this._attachments.map(async (attachment) => {
+                    const base64 = await this.#readFileAsBase64(attachment.file);
+                    return {
+                        type: "binary" as const,
+                        mimeType: attachment.file.type,
+                        data: base64,
+                        filename: attachment.file.name,
+                    };
+                }),
+            );
+            contentParts.push(...binaryParts);
         }
 
         this.dispatchEvent(

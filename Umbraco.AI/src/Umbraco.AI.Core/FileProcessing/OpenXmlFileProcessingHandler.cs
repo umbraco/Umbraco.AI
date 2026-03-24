@@ -38,7 +38,9 @@ internal sealed class OpenXmlFileProcessingHandler : IAIFileProcessingHandler
         string? filename,
         CancellationToken cancellationToken = default)
     {
-        using var stream = new MemoryStream(data.ToArray());
+        using var stream = System.Runtime.InteropServices.MemoryMarshal.TryGetArray(data, out var segment)
+            ? new MemoryStream(segment.Array!, segment.Offset, segment.Count, writable: false)
+            : new MemoryStream(data.ToArray());
 
         var content = mimeType.ToLowerInvariant() switch
         {
@@ -125,33 +127,11 @@ internal sealed class OpenXmlFileProcessingHandler : IAIFileProcessingHandler
 
     private static void AppendWordTable(StringBuilder sb, Table table)
     {
-        var rows = table.Elements<TableRow>().ToList();
-        if (rows.Count == 0)
-        {
-            return;
-        }
+        var rows = table.Elements<TableRow>()
+            .Select(row => row.Elements<TableCell>()
+                .Select(c => GetCellText(c)));
 
-        var isFirstRow = true;
-        foreach (var row in rows)
-        {
-            var cells = row.Elements<TableCell>()
-                .Select(c => GetCellText(c).Replace("|", "\\|"))
-                .ToList();
-
-            sb.Append("| ");
-            sb.Append(string.Join(" | ", cells));
-            sb.AppendLine(" |");
-
-            if (isFirstRow)
-            {
-                sb.Append("| ");
-                sb.Append(string.Join(" | ", cells.Select(_ => "---")));
-                sb.AppendLine(" |");
-                isFirstRow = false;
-            }
-        }
-
-        sb.AppendLine();
+        AppendMarkdownTable(sb, rows);
     }
 
     private static string GetCellText(TableCell cell)
@@ -203,35 +183,43 @@ internal sealed class OpenXmlFileProcessingHandler : IAIFileProcessingHandler
                 sb.AppendLine();
             }
 
-            var rows = worksheetPart.Worksheet.Descendants<Row>().ToList();
-            if (rows.Count == 0)
-            {
-                continue;
-            }
+            var rows = worksheetPart.Worksheet.Descendants<Row>()
+                .Select(row => row.Elements<Cell>()
+                    .Select(c => GetCellValue(c, sharedStrings)));
 
-            var isFirstRow = true;
-            foreach (var row in rows)
-            {
-                var cells = row.Elements<Cell>().ToList();
-                var values = cells.Select(c => GetCellValue(c, sharedStrings).Replace("|", "\\|")).ToList();
-
-                sb.Append("| ");
-                sb.Append(string.Join(" | ", values));
-                sb.AppendLine(" |");
-
-                if (isFirstRow)
-                {
-                    sb.Append("| ");
-                    sb.Append(string.Join(" | ", values.Select(_ => "---")));
-                    sb.AppendLine(" |");
-                    isFirstRow = false;
-                }
-            }
-
-            sb.AppendLine();
+            AppendMarkdownTable(sb, rows);
         }
 
         return sb.ToString().TrimEnd();
+    }
+
+    private static void AppendMarkdownTable(StringBuilder sb, IEnumerable<IEnumerable<string>> rows)
+    {
+        var isFirstRow = true;
+        var hasRows = false;
+
+        foreach (var row in rows)
+        {
+            hasRows = true;
+            var cells = row.Select(c => c.Replace("|", "\\|")).ToList();
+
+            sb.Append("| ");
+            sb.Append(string.Join(" | ", cells));
+            sb.AppendLine(" |");
+
+            if (isFirstRow)
+            {
+                sb.Append("| ");
+                sb.Append(string.Join(" | ", cells.Select(_ => "---")));
+                sb.AppendLine(" |");
+                isFirstRow = false;
+            }
+        }
+
+        if (hasRows)
+        {
+            sb.AppendLine();
+        }
     }
 
     private static string GetCellValue(Cell cell, string[] sharedStrings)

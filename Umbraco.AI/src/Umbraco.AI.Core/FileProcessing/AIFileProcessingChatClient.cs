@@ -147,17 +147,5 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
     }
 
     private static string? GetFilenameFromUri(string? uri)
-    {
-        if (uri is null)
-        {
-            return null;
-        }
-
-        var lastSlash = uri.LastIndexOf('/');
-        var name = lastSlash >= 0 ? uri[(lastSlash + 1)..] : uri;
-
-        // Also handle backslashes for Windows-style paths
-        var lastBackslash = name.LastIndexOf('\\');
-        return lastBackslash >= 0 ? name[(lastBackslash + 1)..] : name;
-    }
+        => uri is null ? null : Path.GetFileName(uri);
 }

@@ -37,31 +37,20 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         }
 
         var messagesList = messages.ToList();
-
-        // Check if any messages have ContentParts with binary content
-        if (!HasBinaryContent(messagesList))
-        {
-            // No binary content — pass through unchanged
-            return new AGUIFileProcessorResult
-            {
-                RewrittenMessages = messagesList,
-                ResolvedMessages = messagesList
-            };
-        }
-
         var rewritten = new List<AGUIMessage>(messagesList.Count);
         var resolved = new List<AGUIMessage>(messagesList.Count);
+        var hasBinaryContent = false;
 
         foreach (var message in messagesList)
         {
             if (message.ContentParts is null || !message.ContentParts.OfType<AGUIBinaryInputContent>().Any())
             {
-                // No binary parts — pass through unchanged
                 rewritten.Add(message);
                 resolved.Add(message);
                 continue;
             }
 
+            hasBinaryContent = true;
             var rewrittenParts = new List<AGUIInputContent>(message.ContentParts.Count);
             var resolvedParts = new List<AGUIInputContent>(message.ContentParts.Count);
 
@@ -82,6 +71,16 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 
             rewritten.Add(CloneMessageWithParts(message, rewrittenParts));
             resolved.Add(CloneMessageWithParts(message, resolvedParts));
+        }
+
+        // If no binary content was found, return same references so caller can detect no-op
+        if (!hasBinaryContent)
+        {
+            return new AGUIFileProcessorResult
+            {
+                RewrittenMessages = messagesList,
+                ResolvedMessages = messagesList
+            };
         }
 
         return new AGUIFileProcessorResult
@@ -158,9 +157,6 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         // Case 3: Has URL — pass through (URL-based resolution not yet implemented)
         return (binary, binary);
     }
-
-    private static bool HasBinaryContent(List<AGUIMessage> messages)
-        => messages.Any(m => m.ContentParts?.OfType<AGUIBinaryInputContent>().Any() == true);
 
     private static AGUIMessage CloneMessageWithParts(AGUIMessage original, IList<AGUIInputContent> parts)
         => new()

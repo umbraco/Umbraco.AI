@@ -2,7 +2,7 @@ import { customElement, property, css, html } from "@umbraco-cms/backoffice/exte
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
-import type { UaiChatMessage } from "../types/index.js";
+import type { UaiChatMessage, UaiBinaryInputContent } from "../types/index.js";
 
 /**
  * Chat message component.
@@ -42,7 +42,7 @@ export class UaiChatMessageElement extends UmbLitElement {
             return html`
                 ${textContent ? html`<p>${textContent}</p>` : ""}
                 ${binaryParts.length
-                    ? html`<div class="attachments">${binaryParts.map((part) => this.#renderBinaryPart(part as { type: "binary"; mimeType: string; data?: string; url?: string; id?: string; filename?: string }))}</div>`
+                    ? html`<div class="attachments">${binaryParts.map((part) => this.#renderBinaryPart(part as UaiBinaryInputContent))}</div>`
                     : ""}
             `;
         }
@@ -59,7 +59,7 @@ export class UaiChatMessageElement extends UmbLitElement {
         return html`<div class="markdown-content">${unsafeHTML(htmlContent)}</div>`;
     }
 
-    #renderBinaryPart(part: { type: "binary"; mimeType: string; data?: string; url?: string; id?: string; filename?: string }) {
+    #renderBinaryPart(part: UaiBinaryInputContent) {
         // Render inline image for image types
         if (part.mimeType.startsWith("image/")) {
             let src: string | undefined;

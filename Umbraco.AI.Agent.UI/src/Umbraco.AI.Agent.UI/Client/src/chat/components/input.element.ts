@@ -6,6 +6,7 @@ import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-
 import { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "../context.js";
 import type { UaiAgentItem } from "../types/index.js";
 import type { UaiInputContent } from "../types/index.js";
+import "./voice-button.element.js";
 
 /** Maximum file size in bytes (default 10MB) */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -118,6 +119,13 @@ export class UaiChatInputElement extends UmbLitElement {
 
     #handleInput(e: Event) {
         this._value = (e.target as HTMLTextAreaElement).value;
+    }
+
+    #handleTranscription(e: CustomEvent<{ text: string }>) {
+        const transcribed = e.detail.text;
+        if (transcribed) {
+            this._value = this._value ? `${this._value} ${transcribed}` : transcribed;
+        }
     }
 
     #handleAttachClick() {
@@ -376,6 +384,10 @@ export class UaiChatInputElement extends UmbLitElement {
                                 @change=${this.#handleFileSelect}
                                 hidden
                             />
+                            <uai-voice-button
+                                ?disabled=${this.#isDisabled}
+                                @transcription=${this.#handleTranscription}
+                            ></uai-voice-button>
                         </div>
                         <uui-button
                             look="primary"

@@ -7,6 +7,7 @@ namespace Umbraco.AI.Agent.Core.AGUI;
 /// <summary>
 /// Default implementation of <see cref="IAGUIMessageConverter"/>.
 /// Responsible only for converting AG-UI messages to M.E.AI chat messages.
+/// Handles both plain text and multimodal content parts.
 /// </summary>
 internal sealed class AGUIMessageConverter : IAGUIMessageConverter
 {
@@ -41,6 +42,12 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             return ConvertToolResultMessage(message);
         }
 
+        // Multimodal message with content parts
+        if (message.ContentParts is { Count: > 0 })
+        {
+            return ConvertMultimodalMessage(message);
+        }
+
         // Regular message
         var role = ConvertToChatRole(message.Role);
         return new ChatMessage(role, message.Content ?? string.Empty);
@@ -55,6 +62,35 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             Role = role,
             Content = chatMessage.Text
         };
+
+        // Check for DataContent (binary data from LLM responses)
+        var dataContents = chatMessage.Contents?.OfType<DataContent>().ToList();
+        if (dataContents?.Count > 0)
+        {
+            var contentParts = new List<AGUIInputContent>();
+
+            // Add text content if present
+            var textContents = chatMessage.Contents?.OfType<TextContent>().ToList();
+            if (textContents?.Count > 0)
+            {
+                foreach (var textContent in textContents)
+                {
+                    contentParts.Add(new AGUITextInputContent { Text = textContent.Text ?? string.Empty });
+                }
+            }
+
+            // Add binary content
+            foreach (var dataContent in dataContents)
+            {
+                contentParts.Add(new AGUIBinaryInputContent
+                {
+                    MimeType = dataContent.MediaType ?? "application/octet-stream",
+                    Data = !dataContent.Data.IsEmpty ? Convert.ToBase64String(dataContent.Data.Span) : null
+                });
+            }
+
+            message.ContentParts = contentParts;
+        }
 
         // Check for function calls
         var functionCalls = chatMessage.Contents?.OfType<FunctionCallContent>().ToList();
@@ -83,6 +119,49 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
         }
 
         return message;
+    }
+
+    private static ChatMessage ConvertMultimodalMessage(AGUIMessage message)
+    {
+        var role = ConvertToChatRole(message.Role);
+        var contents = new List<AIContent>();
+
+        foreach (var part in message.ContentParts!)
+        {
+            switch (part)
+            {
+                case AGUITextInputContent textPart:
+                    contents.Add(new TextContent(textPart.Text));
+                    break;
+
+                case AGUIBinaryInputContent binaryPart:
+                    if (binaryPart.ResolvedData is { Length: > 0 })
+                    {
+                        // Use resolved bytes from file processor
+                        contents.Add(new DataContent(binaryPart.ResolvedData, binaryPart.MimeType));
+                    }
+                    else if (!string.IsNullOrEmpty(binaryPart.Data))
+                    {
+                        // Fallback: decode inline base64
+                        var bytes = Convert.FromBase64String(binaryPart.Data);
+                        contents.Add(new DataContent(bytes, binaryPart.MimeType));
+                    }
+                    else if (!string.IsNullOrEmpty(binaryPart.Id))
+                    {
+                        // Has a file store ID but no resolved data — skip.
+                        // The file processor should have resolved this; if it didn't,
+                        // the file may have expired or been cleaned up.
+                    }
+                    else if (!string.IsNullOrEmpty(binaryPart.Url))
+                    {
+                        // External URL-based content (not from file store)
+                        contents.Add(new DataContent(new Uri(binaryPart.Url, UriKind.RelativeOrAbsolute), binaryPart.MimeType));
+                    }
+                    break;
+            }
+        }
+
+        return new ChatMessage(role, contents);
     }
 
     private static ChatMessage ConvertAssistantMessageWithToolCalls(AGUIMessage message)

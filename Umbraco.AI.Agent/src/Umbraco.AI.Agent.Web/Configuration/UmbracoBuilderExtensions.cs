@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+using Umbraco.AI.Agent.Core.FileStore;
+using Umbraco.AI.Agent.Web.Api.Management.File;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
@@ -19,6 +21,9 @@ public static class UmbracoBuilderExtensions
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIAgentWeb(this IUmbracoBuilder builder)
     {
+        // Register file URL provider for serving uploaded files
+        builder.Services.AddSingleton<IAIFileUrlProvider, AIFileUrlProvider>();
+
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<AgentMapDefinition>();

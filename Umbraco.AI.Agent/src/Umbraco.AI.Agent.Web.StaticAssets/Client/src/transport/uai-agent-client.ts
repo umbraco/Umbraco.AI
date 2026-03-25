@@ -18,6 +18,7 @@ import {
     StateSnapshotEvent,
     StateDeltaEvent,
     MessagesSnapshotEvent, CustomEvent,
+    type UaiInputContent,
 } from "./types.js";
 
 /**
@@ -39,6 +40,9 @@ export class UaiAgentClient {
 
     /** Accumulates tool call arguments during streaming */
     #pendingToolArgs = new Map<string, string>();
+
+    /** Stable thread ID for the conversation — persists across turns so file references resolve */
+    #threadId = crypto.randomUUID();
 
     /**
      * Create a new UaiAgentClient with an injected transport.
@@ -73,13 +77,18 @@ export class UaiAgentClient {
 
     /**
      * Convert UaiChatMessage to AG-UI Message format.
+     * When contentParts is present, sends it as the content field (multimodal).
      */
     static #toAGUIMessage(m: UaiChatMessage): Message {
         if (m.role === "user") {
+            // When contentParts are present, send as content array (AG-UI multimodal draft)
+            const content = m.contentParts && m.contentParts.length > 0
+                ? m.contentParts as unknown as string  // AG-UI client types content as string, but protocol accepts array
+                : m.content;
             return {
                 id: m.id,
                 role: "user" as const,
-                content: m.content,
+                content,
             };
         } else if (m.role === "assistant") {
             // Include tool calls if present - critical for LLM to know what was already called
@@ -120,7 +129,6 @@ export class UaiAgentClient {
         tools?: UaiFrontendTool[],
         context?: Array<{ description: string; value: string }>,
     ): void {
-        const threadId = crypto.randomUUID();
         const runId = crypto.randomUUID();
 
         // Clear any pending tool args from previous run
@@ -137,7 +145,7 @@ export class UaiAgentClient {
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
         this.#transport
             .run({
-                threadId,
+                threadId: this.#threadId,
                 runId,
                 messages: convertedMessages,
                 tools: aguiTools,
@@ -307,15 +315,37 @@ export class UaiAgentClient {
         const rawMessages = event.messages as Array<{
             id: string;
             role: string;
-            content: string;
+            content: string | UaiInputContent[];
+            toolCalls?: Array<{ id: string; type: string; function: { name: string; arguments: string } }>;
+            toolCallId?: string;
         }>;
 
-        const messages: UaiChatMessage[] = rawMessages.map((m) => ({
-            id: m.id,
-            role: m.role as "user" | "assistant" | "tool",
-            content: m.content,
-            timestamp: new Date(),
-        }));
+        const messages: UaiChatMessage[] = rawMessages.map((m) => {
+            // Content can be a string or an array of content parts (multimodal)
+            const isMultimodal = Array.isArray(m.content);
+            const contentParts = isMultimodal ? (m.content as UaiInputContent[]) : undefined;
+            const textContent = isMultimodal
+                ? (m.content as UaiInputContent[])
+                    .filter((p): p is { type: "text"; text: string } => p.type === "text")
+                    .map((p) => p.text)
+                    .join("")
+                : (m.content as string);
+
+            return {
+                id: m.id,
+                role: m.role as "user" | "assistant" | "tool",
+                content: textContent,
+                contentParts,
+                toolCalls: m.toolCalls?.map((tc) => ({
+                    id: tc.id,
+                    name: tc.function.name,
+                    arguments: tc.function.arguments ?? "{}",
+                    status: "completed" as const,
+                })),
+                toolCallId: m.toolCallId,
+                timestamp: new Date(),
+            };
+        });
 
         this.#callbacks.onMessagesSnapshot?.(messages);
     }
@@ -338,9 +368,11 @@ export class UaiAgentClient {
 
     /**
      * Reset the client state.
-     * Clears pending tool arguments.
+     * Clears pending tool arguments and generates a new thread ID
+     * so file references from the previous conversation are not reused.
      */
     reset(): void {
         this.#pendingToolArgs.clear();
+        this.#threadId = crypto.randomUUID();
     }
 }

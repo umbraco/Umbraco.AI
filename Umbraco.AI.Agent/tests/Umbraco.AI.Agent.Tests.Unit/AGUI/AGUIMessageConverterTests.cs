@@ -264,4 +264,115 @@ public class AGUIMessageConverterTests
     }
 
     #endregion
+
+    #region Multimodal Content Tests
+
+    [Fact]
+    public void ConvertToChatMessage_WithContentParts_CreatesMultimodalContent()
+    {
+        // Arrange
+        var imageBytes = new byte[] { 1, 2, 3, 4, 5 };
+        var message = new AGUIMessage
+        {
+            Role = AGUIMessageRole.User,
+            Content = "What's in this image?",
+            ContentParts = new List<AGUIInputContent>
+            {
+                new AGUITextInputContent { Text = "What's in this image?" },
+                new AGUIBinaryInputContent
+                {
+                    MimeType = "image/png",
+                    ResolvedData = imageBytes
+                }
+            }
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert
+        result.Role.ShouldBe(ChatRole.User);
+        result.Contents.ShouldNotBeNull();
+        result.Contents.Count.ShouldBe(2);
+
+        var textContent = result.Contents[0].ShouldBeOfType<TextContent>();
+        textContent.Text.ShouldBe("What's in this image?");
+
+        var dataContent = result.Contents[1].ShouldBeOfType<DataContent>();
+        dataContent.MediaType.ShouldBe("image/png");
+        dataContent.Data.ToArray().ShouldBe(imageBytes);
+    }
+
+    [Fact]
+    public void ConvertToChatMessage_WithBase64FallbackData_DecodesBase64()
+    {
+        // Arrange
+        var base64 = Convert.ToBase64String(new byte[] { 10, 20, 30 });
+        var message = new AGUIMessage
+        {
+            Role = AGUIMessageRole.User,
+            ContentParts = new List<AGUIInputContent>
+            {
+                new AGUIBinaryInputContent
+                {
+                    MimeType = "application/pdf",
+                    Data = base64
+                }
+            }
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert
+        var dataContent = result.Contents.OfType<DataContent>().Single();
+        dataContent.MediaType.ShouldBe("application/pdf");
+        dataContent.Data.ToArray().ShouldBe(new byte[] { 10, 20, 30 });
+    }
+
+    [Fact]
+    public void ConvertToChatMessage_EmptyContentParts_FallsBackToContent()
+    {
+        // Arrange
+        var message = new AGUIMessage
+        {
+            Role = AGUIMessageRole.User,
+            Content = "Plain text",
+            ContentParts = new List<AGUIInputContent>()
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert — empty content parts falls back to plain text path
+        result.Text.ShouldBe("Plain text");
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_WithDataContent_CreatesContentParts()
+    {
+        // Arrange
+        var contents = new List<AIContent>
+        {
+            new TextContent("Describe this"),
+            new DataContent(new byte[] { 1, 2, 3 }, "image/jpeg")
+        };
+        var chatMessage = new ChatMessage(ChatRole.User, contents);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        result.ContentParts.ShouldNotBeNull();
+        result.ContentParts.Count.ShouldBe(2);
+
+        var textPart = result.ContentParts[0].ShouldBeOfType<AGUITextInputContent>();
+        textPart.Text.ShouldBe("Describe this");
+
+        var binaryPart = result.ContentParts[1].ShouldBeOfType<AGUIBinaryInputContent>();
+        binaryPart.MimeType.ShouldBe("image/jpeg");
+        binaryPart.Data.ShouldNotBeNull();
+    }
+
+    #endregion
 }

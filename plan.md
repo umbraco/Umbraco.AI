@@ -1,464 +1,348 @@
-# Guardrails UI Implementation Plan
+# File Uploads & AI Processing - Implementation Plan
 
-## Overview
+## AG-UI Multimodal Messages Draft Alignment
 
-Add a complete "Guardrails" feature to the Umbraco.AI frontend, following the exact patterns established by the existing **Contexts** feature (for the workspace/editor/menu/collection/actions) and **Test Graders** (for the rules sub-editor within the guardrail editor). Also add a **Guardrails Picker** component (copying the Context Picker) for use in Profiles, Prompts, Agents, and Tests.
+The [AG-UI multimodal draft](https://docs.ag-ui.com/drafts/multimodal-messages) (Implemented, Oct 2025) extends message `content` to be either a `string` or an array of `InputContent` parts:
 
-The backend Management API already exists with full CRUD + evaluator listing endpoints. The OpenAPI client needs to be regenerated.
+- **`TextInputContent`** — `{ type: "text", text: string }`
+- **`BinaryInputContent`** — `{ type: "binary", mimeType: string, data?: string (base64), url?: string, id?: string, filename?: string }`
 
----
+At least one of `data`, `url`, or `id` must be provided on `BinaryInputContent`. The `id` field is designed for **reference to pre-uploaded/server-stored content** — the spec leaves resolution to the implementation.
 
-## Phase 1: OpenAPI Client Generation
-
-### 1.1 Regenerate the OpenAPI client
-- Run the demo site with `DemoSite-Claude` profile
-- Run `npm run generate-client` to pick up the new Guardrail endpoints
-- This produces the `GuardrailsService`, types (`GuardrailResponseModel`, `GuardrailItemResponseModel`, `GuardrailRuleModel`, `GuardrailEvaluatorInfoModel`, etc.) in `api/sdk.gen.ts` and `api/types.gen.ts`
+Our implementation follows this spec exactly in the AGUI library, then layers server-side file processing on top.
 
 ---
 
-## Phase 2: Core Guardrail Feature (copying Contexts pattern)
+## Architecture Overview
 
-Create `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/guardrail/` with the following structure:
+```
+Turn 1 (file attached):
 
-### 2.1 Constants & Entity Types
+  Frontend ──── BinaryInputContent { data: "base64...", mimeType, filename }
+     │
+     │  POST /stream-agui
+     ▼
+  AGUIStreamingService
+     │
+     ├─ IAGUIFileProcessor.ProcessInboundAsync(messages, threadId)
+     │   ├─ Finds BinaryInputContent with data (base64)
+     │   ├─ Decodes + stores in temp (scoped to threadId)
+     │   ├─ Returns rewritten messages: data → id reference
+     │   └─ Also returns resolved messages with raw bytes for converter
+     │
+     ├─ AGUIMessageConverter.ConvertToChatMessages(resolvedMessages)
+     │   ├─ TextInputContent → M.E.AI TextContent
+     │   └─ BinaryInputContent (with bytes) → M.E.AI DataContent
+     │
+     ├─ agent.RunStreamingAsync(chatMessages) → LLM
+     │
+     └─ Emits MessagesSnapshotEvent with rewritten messages (id refs, no base64)
+            │
+            ▼
+  Frontend receives snapshot → replaces local history (lightweight)
 
-**`guardrail/entity.ts`** (copy from `context/entity.ts`)
-```ts
-export const UAI_GUARDRAIL_ENTITY_TYPE = "uai:guardrail";
-export const UAI_GUARDRAIL_ROOT_ENTITY_TYPE = "uai:guardrail-root";
+Turn 2+ (no file, but history has file reference):
+
+  Frontend ──── BinaryInputContent { id: "tmp-abc123", mimeType, filename }
+     │
+     │  POST /stream-agui
+     ▼
+  AGUIStreamingService
+     │
+     ├─ IAGUIFileProcessor.ProcessInboundAsync(messages, threadId)
+     │   ├─ Finds BinaryInputContent with id
+     │   ├─ Resolves id → reads bytes from temp store
+     │   └─ Returns resolved messages with raw bytes for converter
+     │
+     ├─ AGUIMessageConverter.ConvertToChatMessages(resolvedMessages)
+     │   └─ BinaryInputContent (with bytes) → M.E.AI DataContent
+     │
+     └─ agent.RunStreamingAsync(chatMessages) → LLM
 ```
 
-**`guardrail/constants.ts`** (copy from `context/constants.ts`)
-```ts
-export const UAI_GUARDRAIL_ICON = "icon-shield"; // shield icon for safety
-// Re-export entity types and repository/workspace/collection constants
+---
+
+## Implementation Steps
+
+### Phase 1: AGUI Library — Multimodal Content Types
+
+**Package:** `Umbraco.AI.AGUI`
+
+#### 1.1 Add content part models
+
+Create new models in `Models/` following the AG-UI draft spec:
+
+- `AGUIInputContent.cs` — Base class with `[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]` and derived type attributes
+- `AGUITextInputContent.cs` — `{ type: "text", text: string }`
+- `AGUIBinaryInputContent.cs` — `{ type: "binary", mimeType: string, data?: string, url?: string, id?: string, filename?: string }`
+
+#### 1.2 Extend AGUIMessage
+
+The AG-UI spec allows `content` to be either a `string` or `InputContent[]`. Use a custom `JsonConverter` on `AGUIMessage` that handles both:
+
+```csharp
+// When content is a JSON string → Content is set, ContentParts is null
+// When content is a JSON array  → ContentParts is set, Content derived from text parts
 ```
 
-### 2.2 Types
+Properties:
+- `Content` (string?) — backward compatible, text-only content
+- `ContentParts` (IEnumerable<AGUIInputContent>?) — multimodal content parts
 
-**`guardrail/types.ts`** (adapted from `context/types.ts`)
-```ts
-export interface UaiGuardrailRuleModel {
-    id: string;
-    evaluatorId: string;
-    name: string;
-    phase: "PreGenerate" | "PostGenerate";
-    action: "Block" | "Warn";
-    config: Record<string, unknown> | null;
-    sortOrder: number;
-}
+#### 1.3 Unit tests
 
-export interface UaiGuardrailDetailModel {
-    unique: string;
-    entityType: UaiGuardrailEntityType;
-    alias: string;
-    name: string;
-    rules: UaiGuardrailRuleModel[];
-    dateCreated: string | null;
-    dateModified: string | null;
-    version: number;
-}
+- Serialization/deserialization of text-only messages (backward compat)
+- Deserialization of multimodal content arrays
+- Round-trip for BinaryInputContent with base64 data
+- Round-trip for BinaryInputContent with id reference (no data)
+- Edge cases: empty content, mixed text+binary parts
 
-export interface UaiGuardrailItemModel {
-    unique: string;
-    entityType: UaiGuardrailEntityType;
-    alias: string;
-    name: string;
-    ruleCount: number;
-    dateCreated: string | null;
-    dateModified: string | null;
-}
-```
+---
 
-### 2.3 Type Mapper
+### Phase 2: Agent.Core — File Processor + Message Converter
 
-**`guardrail/type-mapper.ts`** (copy from `context/type-mapper.ts`)
-- `toDetailModel(response)` → `UaiGuardrailDetailModel`
-- `toItemModel(response)` → `UaiGuardrailItemModel`
-- `toRuleModel(rule)` → `UaiGuardrailRuleModel`
-- `toCreateRequest(model)` → API create request
-- `toUpdateRequest(model)` → API update request
-- `toRuleRequest(rule)` → API rule model
+**Package:** `Umbraco.AI.Agent.Core`
 
-### 2.4 Repository Layer
+#### 2.1 IAGUIFileProcessor — server-side file processing
 
-**`guardrail/repository/constants.ts`**
-```ts
-export const UAI_GUARDRAIL_DETAIL_REPOSITORY_ALIAS = "UmbracoAI.Repository.Guardrail.Detail";
-export const UAI_GUARDRAIL_DETAIL_STORE_ALIAS = "UmbracoAI.Store.Guardrail.Detail";
-export const UAI_GUARDRAIL_COLLECTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.Guardrail.Collection";
-```
+New interface in `Agent.Core/AGUI/`:
 
-**`guardrail/repository/detail/`** (copy from `context/repository/detail/`)
-- `guardrail-detail.store.ts` — `UaiGuardrailDetailStore` (extends `UmbDetailStoreBase`)
-- `guardrail-detail.server.data-source.ts` — CRUD via `GuardrailsService`
-- `guardrail-detail.repository.ts` — extends `UmbDetailRepositoryBase`, dispatches entity action events
-
-**`guardrail/repository/collection/`** (copy from `context/repository/collection/`)
-- `guardrail-collection.server.data-source.ts` — list via `GuardrailsService.getAllGuardrails()`
-- `guardrail-collection.repository.ts` — extends `UmbRepositoryBase`
-
-**`guardrail/repository/evaluator/`** (new — for evaluator info)
-- `guardrail-evaluator-item.repository.ts` — fetches evaluator types via `GuardrailsService.getAllGuardrailEvaluators()`
-
-**`guardrail/repository/manifests.ts`** — registers all repositories + store
-
-### 2.5 Menu Item
-
-**`guardrail/menu/manifests.ts`** (copy from `context/menu/manifests.ts`)
-```ts
+```csharp
+public interface IAGUIFileProcessor
 {
-    type: "menuItem",
-    kind: "entityContainer",
-    alias: "UmbracoAI.MenuItem.Guardrails",
-    name: "Guardrails Menu Item",
-    weight: -10,  // Below Contexts (0), above Tests (-80)
-    meta: {
-        label: "Guardrails",
-        icon: UAI_GUARDRAIL_ICON,
-        entityType: UAI_GUARDRAIL_ROOT_ENTITY_TYPE,
-        childEntityTypes: [UAI_GUARDRAIL_ENTITY_TYPE],
-        menus: [UAI_CORE_MENU_ALIAS],
-    },
+    /// <summary>
+    /// Processes inbound messages: stores base64 data, resolves id references.
+    /// Returns two sets of messages:
+    /// - Rewritten: base64 replaced with id refs (for MessagesSnapshotEvent)
+    /// - Resolved: binary content populated with raw bytes (for converter)
+    /// </summary>
+    Task<AGUIFileProcessorResult> ProcessInboundAsync(
+        IEnumerable<AGUIMessage> messages,
+        string threadId,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class AGUIFileProcessorResult
+{
+    /// <summary>Messages with base64 data swapped to id references (lightweight, for snapshot).</summary>
+    public required IEnumerable<AGUIMessage> RewrittenMessages { get; init; }
+
+    /// <summary>Messages with binary content resolved to bytes (for converter → LLM).</summary>
+    public required IEnumerable<AGUIMessage> ResolvedMessages { get; init; }
 }
 ```
 
-### 2.6 Collection (List View)
+#### 2.2 IAGUIFileStore — thread-scoped temp storage
 
-**`guardrail/collection/constants.ts`**
-```ts
-export const UAI_GUARDRAIL_COLLECTION_ALIAS = "UmbracoAI.Collection.Guardrail";
-```
-
-**`guardrail/collection/guardrail-collection.element.ts`** (copy from `context/collection/context-collection.element.ts`)
-- Custom collection with search header
-
-**`guardrail/collection/views/table/guardrail-table-collection-view.element.ts`** (copy from context table view)
-- Table columns: Name (link), Alias (tag), Rules (count), Modified (date)
-
-**`guardrail/collection/action/`** (copy from `context/collection/action/`)
-- `guardrail-create-collection-action.element.ts` — "Create Guardrail" button
-- `manifests.ts`
-
-**`guardrail/collection/bulk-action/`** (copy from `context/collection/bulk-action/`)
-- `guardrail-bulk-delete.action.ts` — bulk delete using `UaiBulkDeleteActionBase`
-- `manifests.ts`
-
-**`guardrail/collection/manifests.ts`** — registers collection, view, actions, bulk actions
-
-### 2.7 Entity Actions
-
-**`guardrail/entity-actions/manifests.ts`** (copy from `context/entity-actions/manifests.ts`)
-- Create action (on root entity type) — navigates to create workspace
-- Delete action (on entity type) — uses `UaiDeleteActionBase`
-
-**`guardrail/entity-actions/guardrail-create.action.ts`**
-**`guardrail/entity-actions/guardrail-delete.action.ts`**
-
-### 2.8 Workspace
-
-**`guardrail/workspace/constants.ts`**
-```ts
-export const UAI_GUARDRAIL_WORKSPACE_ALIAS = "UmbracoAI.Workspace.Guardrail";
-export const UAI_GUARDRAIL_ROOT_WORKSPACE_ALIAS = "UmbracoAI.Workspace.GuardrailRoot";
-```
-
-**`guardrail/workspace/guardrail-root/`** (copy from `context/workspace/context-root/`)
-- `manifests.ts` — root workspace + collection view
-- `paths.ts` — `UAI_GUARDRAIL_ROOT_WORKSPACE_PATH`
-
-**`guardrail/workspace/guardrail/`** (copy from `context/workspace/context/`)
-
-- **`paths.ts`** — workspace, create, and edit path patterns
-- **`guardrail-workspace.context-token.ts`** — context token
-- **`guardrail-workspace.context.ts`** — `UaiGuardrailWorkspaceContext` (extends `UmbSubmittableWorkspaceContextBase`)
-  - Same scaffold/load/save/handleCommand/reload pattern as context workspace
-- **`guardrail-workspace-editor.element.ts`** — Editor shell with:
-  - Back button to collection
-  - Name input with alias lock (same pattern as context editor)
-  - Action menu for existing entities
-  - Footer breadcrumb
-- **`views/guardrail-details-workspace-view.element.ts`** — Settings view:
-  - Contains the **Rules Editor** (`<uai-guardrail-rule-config-builder>`) — see Phase 3
-- **`views/guardrail-info-workspace-view.element.ts`** — Info view:
-  - Version history (`<uai-version-history>`)
-  - Info box (Id, Date Created, Date Modified)
-- **`manifests.ts`** — registers workspace, views (Settings + Info), save action
-
-**`guardrail/workspace/manifests.ts`** — aggregates guardrail + guardrail-root manifests
-
-### 2.9 Barrel Exports & Registration
-
-**`guardrail/index.ts`** — re-exports constants, types, collection, components, repository, workspace
-**`guardrail/exports.ts`** — exports the picker component (for external use by add-ons)
-**`guardrail/manifests.ts`** — aggregates all sub-manifests (collection, entity-actions, menu, repository, workspace)
-
-**Update `src/manifests.ts`** — add `guardrailManifests` to the main bundle
-**Update `src/index.ts`** — add `export * from "./guardrail/index.js"`
-
----
-
-## Phase 3: Rules Editor (copying Test Graders pattern)
-
-### 3.1 Rule Config Builder Component
-
-**`guardrail/components/rule-config-builder/rule-config-builder.element.ts`** (copy from `test/components/grader-config-builder/`)
-
-`<uai-guardrail-rule-config-builder>` — List of rules with add/edit/remove:
-- Uses `<uui-ref-list>` + `<uui-ref-node>` for each rule
-- Shows rule name, detail summary (evaluator type, phase, action)
-- "Add Rule" button → opens evaluator type picker (reuse `UAI_ITEM_PICKER_MODAL`)
-- On type selection → opens rule config editor modal
-- Edit → opens rule config editor modal directly (skip type picker)
-- Remove → removes from list
-- Dispatches `UmbChangeEvent` on changes
-
-**`guardrail/components/rule-config-builder/index.ts`**
-**`guardrail/components/rule-config-builder/manifests.ts`** (empty array - component registered via barrel)
-
-### 3.2 Rule Config Editor Modal
-
-**`guardrail/modals/rule-config-editor/`** (copy from `test/modals/grader-config-editor/`)
-
-`<uai-guardrail-rule-config-editor-modal>` — Sidebar modal (medium) with:
-
-**Modal Data/Value interfaces:**
-```ts
-interface UaiGuardrailRuleConfigEditorModalData {
-    evaluatorId: string;
-    evaluatorName: string;
-    existingRule?: UaiGuardrailRuleConfig;
+```csharp
+public interface IAGUIFileStore
+{
+    Task<string> StoreAsync(string threadId, byte[] data, string mimeType, string? filename,
+        CancellationToken cancellationToken = default);
+    Task<AGUIStoredFile?> ResolveAsync(string threadId, string fileId,
+        CancellationToken cancellationToken = default);
+    Task CleanupThreadAsync(string threadId, CancellationToken cancellationToken = default);
 }
 
-interface UaiGuardrailRuleConfigEditorModalValue {
-    rule: UaiGuardrailRuleConfig;
+public sealed class AGUIStoredFile
+{
+    public required byte[] Data { get; init; }
+    public required string MimeType { get; init; }
+    public string? Filename { get; init; }
 }
 ```
 
-**Form fields:**
-- **Name** (required text input)
-- **Phase** (dropdown: PreGenerate, PostGenerate — default PostGenerate)
-- **Action** (dropdown: Block, Warn — default Block)
-- **Evaluator Config** (dynamic `<uai-model-editor>` if evaluator has configSchema)
+Default implementation: file-on-disk in Umbraco temp folder, directory per thread ID.
 
-**Fetches evaluator schema** from `GuardrailEvaluatorInfoModel.configSchema` on modal open.
+#### 2.3 Extend AGUIMessageConverter
 
-**`guardrail/modals/rule-config-editor/guardrail-rule-config-editor-modal.token.ts`**
-**`guardrail/modals/rule-config-editor/guardrail-rule-config-editor-modal.element.ts`**
-**`guardrail/modals/rule-config-editor/index.ts`**
-**`guardrail/modals/manifests.ts`** — registers modal
+Update `ConvertToChatMessage()` to handle `ContentParts`:
 
-### 3.3 Rule Types
+```csharp
+// If ContentParts is present, convert each part:
+// - TextInputContent → TextContent
+// - BinaryInputContent (with resolved bytes) → DataContent(bytes, mimeType)
+// Falls back to existing Content string behavior for plain messages
+```
 
-Add to `guardrail/types.ts`:
-```ts
-export interface UaiGuardrailRuleConfig {
-    id: string;
-    evaluatorId: string;
-    name: string;
-    phase: "PreGenerate" | "PostGenerate";
-    action: "Block" | "Warn";
-    config?: Record<string, unknown>;
-    sortOrder: number;
+The converter stays pure — no file I/O. It receives already-resolved messages from the file processor.
+
+#### 2.4 Extend ConvertFromChatMessage (reverse direction)
+
+Handle `DataContent` in M.E.AI messages when converting back to AGUI format (for messages snapshot events).
+
+#### 2.5 Wire into AGUIStreamingService
+
+In `StreamCoreAsync`, before the existing message conversion (line 114):
+
+```csharp
+// Process files: store base64 data, resolve id references
+var fileResult = await _fileProcessor.ProcessInboundAsync(request.Messages, request.ThreadId, cancellationToken);
+
+// Convert resolved messages (with bytes) to M.E.AI format
+var chatMessages = _messageConverter.ConvertToChatMessages(fileResult.ResolvedMessages);
+
+// ... existing streaming logic ...
+
+// After run completes, emit snapshot with lightweight references
+yield return emitter.EmitMessagesSnapshot(fileResult.RewrittenMessages);
+```
+
+#### 2.6 Unit tests
+
+- File processor: base64 → store + rewrite to id
+- File processor: id → resolve bytes
+- File processor: pass-through for text-only messages
+- Converter: multimodal AGUIMessage with bytes → ChatMessage with DataContent
+- Converter: ChatMessage with DataContent → AGUIMessage with ContentParts
+- Backward compatibility: plain string messages still work
+- Integration: full flow from inbound base64 → stored → resolved → DataContent
+
+---
+
+### Phase 3: Frontend Transport — TypeScript Types
+
+**Package:** `Umbraco.AI.Agent.Web.StaticAssets`
+
+#### 3.1 Add TypeScript content part types
+
+In `transport/types.ts`, add:
+```typescript
+interface UaiTextInputContent { type: "text"; text: string; }
+interface UaiBinaryInputContent {
+  type: "binary";
+  mimeType: string;
+  data?: string;      // base64 (initial upload)
+  url?: string;
+  id?: string;        // server reference (after snapshot)
+  filename?: string;
 }
-
-export function createEmptyRuleConfig(): UaiGuardrailRuleConfig { ... }
-export function getRuleSummary(rule: UaiGuardrailRuleConfig, evaluatorName?: string): string { ... }
+type UaiInputContent = UaiTextInputContent | UaiBinaryInputContent;
 ```
 
-### 3.4 Integration in Details Workspace View
+#### 3.2 Extend UaiChatMessage
 
-The `guardrail-details-workspace-view.element.ts` renders:
-```html
-<uui-box headline="Rules">
-    <umb-property-layout label="Rules" description="...">
-        <uai-guardrail-rule-config-builder
-            slot="editor"
-            .rules=${this._model.rules}
-            @change=${this.#onRulesChange}
-        />
-    </umb-property-layout>
-</uui-box>
-```
+Add optional `contentParts?: UaiInputContent[]` to `UaiChatMessage`. When present, `content` becomes a display-friendly text summary.
 
-On change, dispatches `UaiPartialUpdateCommand<UaiGuardrailDetailModel>({ rules }, "update-rules")`.
+#### 3.3 Update UaiAgentClient message conversion
+
+In `uai-agent-client.ts`, update `#toAGUIMessage()` to pass `contentParts` through to the AG-UI message format when present.
+
+#### 3.4 Handle MessagesSnapshotEvent
+
+The `onMessagesSnapshot` callback already exists in the run controller — it replaces the local message history. After the first turn with files, the backend emits a snapshot with id-based references, and the frontend adopts them automatically. Subsequent turns send the lightweight references.
 
 ---
 
-## Phase 4: Guardrails Picker Component (copying Context Picker)
+### Phase 4: Chat Input — File Upload UI
 
-### 4.1 Picker Component
+**Package:** `Umbraco.AI.Agent.UI`
 
-**`guardrail/components/guardrail-picker/guardrail-picker.element.ts`** (copy from `context/components/context-picker/`)
+#### 4.1 Add file picker to chat input
 
-`<uai-guardrail-picker>` — Reusable picker for selecting guardrails:
-- Same API as context picker: `multiple`, `readonly`, `min`, `max`, `value`
-- Fetches guardrail items via `GuardrailsService.getAllGuardrails()`
-- Opens `UAI_ITEM_PICKER_MODAL` for selection
-- Shows selected guardrails as `<uui-ref-node>` with name, alias, rule count tag
-- Icon: `icon-shield`
-- Dispatches `UmbChangeEvent` on selection changes
+Modify `input.element.ts`:
+- Add paperclip/attachment button in `left-actions` area (next to agent selector)
+- Hidden `<input type="file" multiple accept="image/*,.pdf,.txt,.csv,.doc,.docx">` triggered by button
+- Track selected files in `_attachments` state array
 
-**`guardrail/components/guardrail-picker/index.ts`**
-**`guardrail/components/guardrail-picker/manifests.ts`** (empty array)
-**`guardrail/components/index.ts`** — barrel exports both components (rule-config-builder + guardrail-picker)
-**`guardrail/exports.ts`** — `export { UaiGuardrailPickerElement } from "./components/guardrail-picker/index.js"`
+#### 4.2 Attachment preview strip
 
-### 4.2 Profile Integration
+Add a preview area between the textarea and the divider:
+- Image files: small thumbnail previews with remove button
+- Documents: chip with filename + file type icon + remove button
+- Show file size
+- Drag-and-drop support on the input area
 
-**Modify `profile/workspace/profile/views/profile-details-workspace-view.element.ts`:**
-- Add a "Guardrails" property layout in the chat settings section, below Contexts:
-```html
-<umb-property-layout label="Guardrails" description="Guardrails to apply to chat responses">
-    <uai-guardrail-picker
-        slot="editor"
-        multiple
-        .value=${chatSettings?.guardrailIds}
-        @change=${this.#onGuardrailIdsChange}
-    ></uai-guardrail-picker>
-</umb-property-layout>
-```
-- Add `#onGuardrailIdsChange` handler → `#updateChatSettings({ guardrailIds: picker.value })`
-- Add `guardrailIds` to `UaiChatProfileSettings` type
+#### 4.3 Update send event
 
-> **Note:** This requires the backend to support `GuardrailIds` on profiles (chat settings). If the backend Profile model doesn't have `GuardrailIds` yet, this integration is deferred until it's added.
+When dispatching the `send` event, include attachments:
+- Read files as base64 via `FileReader`
+- Build `UaiInputContent[]` array: text content + binary parts
+- Dispatch with `detail: { text, contentParts }` instead of just string
 
-### 4.3 Prompt Integration
+#### 4.4 Update chat component
 
-**Modify Prompt add-on frontend** (`Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client/`):
-- Add `<uai-guardrail-picker>` to the prompt editor details view
-- The Prompt API models already have `GuardrailIds` (added in backend)
+Modify `chat.element.ts` to pass the enriched send payload to `context.sendUserMessage()`.
 
-### 4.4 Agent Integration
+#### 4.5 File validation
 
-**Modify Agent add-on frontend** (`Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client/`):
-- Add `<uai-guardrail-picker>` to the standard agent config section
-- The Agent API models already have `GuardrailIds` on `StandardAgentConfigModel` (added in backend)
-
-### 4.5 Test Integration
-
-**Modify test execution UI** (if there's a test run form):
-- Add `<uai-guardrail-picker>` for `GuardrailIdsOverride` in test run request forms
-- The Test API models already have `GuardrailIdsOverride` (added in backend)
+- Max file size (configurable, default 10MB)
+- Allowed MIME types (configurable allow-list)
+- Visual feedback for rejected files
 
 ---
 
-## Phase 5: Localization
+### Phase 5: Chat Context — Wire Through
 
-**`src/lang/`** — Add guardrail-related localization keys:
-- `uaiGuardrail_selectGuardrail`, `uaiGuardrail_addGuardrail`, `uaiGuardrail_noGuardrailsAvailable`
-- `uaiGuardrail_bulkDeleteConfirm`, `uaiGuardrail_deleteConfirm`
-- `uaiGuardrail_rulePhasePreGenerate`, `uaiGuardrail_rulePhasePostGenerate`
-- `uaiGuardrail_ruleActionBlock`, `uaiGuardrail_ruleActionWarn`
+**Package:** `Umbraco.AI.Agent.UI` + `Umbraco.AI.Agent.Copilot`
+
+#### 5.1 Update UaiChatContextApi
+
+Extend `sendUserMessage` signature:
+```typescript
+sendUserMessage(content: string, contentParts?: UaiInputContent[]): Promise<void>;
+```
+
+#### 5.2 Update Copilot context implementation
+
+Wire `contentParts` through `CopilotContext → RunController → AgentClient → HTTP transport`.
+
+#### 5.3 Update message display
+
+In `message.element.ts`, render inline images and file attachment chips for user messages that contain binary content parts.
 
 ---
 
-## File Summary
+### Phase 6: Allowed file types & size configuration (stretch)
 
-### New Files (~35 files in core guardrail feature)
+- Configurable via `UaiChatContextApi` or a new configuration context
+- Default image types: PNG, JPEG, GIF, WebP
+- Default document types: PDF, TXT, CSV
+- Max file size setting
+- Could be agent-specific (some agents handle images, others don't)
 
-```
-guardrail/
-├── entity.ts
-├── constants.ts
-├── types.ts
-├── type-mapper.ts
-├── index.ts
-├── exports.ts
-├── manifests.ts
-├── collection/
-│   ├── constants.ts
-│   ├── guardrail-collection.element.ts
-│   ├── index.ts
-│   ├── manifests.ts
-│   ├── action/
-│   │   ├── guardrail-create-collection-action.element.ts
-│   │   └── manifests.ts
-│   ├── bulk-action/
-│   │   ├── guardrail-bulk-delete.action.ts
-│   │   └── manifests.ts
-│   └── views/
-│       └── table/
-│           └── guardrail-table-collection-view.element.ts
-├── components/
-│   ├── index.ts
-│   ├── guardrail-picker/
-│   │   ├── guardrail-picker.element.ts
-│   │   ├── index.ts
-│   │   └── manifests.ts
-│   └── rule-config-builder/
-│       ├── rule-config-builder.element.ts
-│       ├── index.ts
-│       └── manifests.ts
-├── entity-actions/
-│   ├── guardrail-create.action.ts
-│   ├── guardrail-delete.action.ts
-│   └── manifests.ts
-├── menu/
-│   └── manifests.ts
-├── modals/
-│   ├── manifests.ts
-│   └── rule-config-editor/
-│       ├── guardrail-rule-config-editor-modal.element.ts
-│       ├── guardrail-rule-config-editor-modal.token.ts
-│       └── index.ts
-├── repository/
-│   ├── constants.ts
-│   ├── index.ts
-│   ├── manifests.ts
-│   ├── collection/
-│   │   ├── guardrail-collection.repository.ts
-│   │   ├── guardrail-collection.server.data-source.ts
-│   │   └── index.ts
-│   ├── detail/
-│   │   ├── guardrail-detail.repository.ts
-│   │   ├── guardrail-detail.server.data-source.ts
-│   │   ├── guardrail-detail.store.ts
-│   │   └── index.ts
-│   └── evaluator/
-│       ├── guardrail-evaluator-item.repository.ts
-│       └── index.ts
-└── workspace/
-    ├── constants.ts
-    ├── index.ts
-    ├── manifests.ts
-    ├── guardrail/
-    │   ├── guardrail-workspace.context.ts
-    │   ├── guardrail-workspace.context-token.ts
-    │   ├── guardrail-workspace-editor.element.ts
-    │   ├── manifests.ts
-    │   ├── paths.ts
-    │   ├── index.ts
-    │   └── views/
-    │       ├── guardrail-details-workspace-view.element.ts
-    │       └── guardrail-info-workspace-view.element.ts
-    └── guardrail-root/
-        ├── manifests.ts
-        ├── paths.ts
-        └── index.ts
-```
+---
 
-### Modified Files
+## File Changes Summary
 
 | File | Change |
 |------|--------|
-| `src/manifests.ts` | Add `guardrailManifests` import and spread |
-| `src/index.ts` | Add `export * from "./guardrail/index.js"` |
-| `profile/types.ts` | Add `guardrailIds` to `UaiChatProfileSettings` |
-| `profile/.../profile-details-workspace-view.element.ts` | Add guardrail picker in chat settings |
-| Prompt frontend details view | Add guardrail picker |
-| Agent frontend config section | Add guardrail picker |
-| Test frontend run forms | Add guardrail override picker |
+| **AGUI Library** | |
+| `AGUI/Models/AGUIInputContent.cs` | **New** — Base content part type with polymorphic discriminator |
+| `AGUI/Models/AGUITextInputContent.cs` | **New** — Text content part |
+| `AGUI/Models/AGUIBinaryInputContent.cs` | **New** — Binary content part |
+| `AGUI/Models/AGUIMessage.cs` | **Modified** — Add ContentParts, custom JSON converter |
+| **Agent.Core** | |
+| `Agent.Core/AGUI/IAGUIFileProcessor.cs` | **New** — File processing interface + result type |
+| `Agent.Core/AGUI/AGUIFileProcessor.cs` | **New** — Default implementation |
+| `Agent.Core/AGUI/IAGUIFileStore.cs` | **New** — Thread-scoped file storage interface |
+| `Agent.Core/AGUI/AGUIFileStore.cs` | **New** — Temp folder implementation |
+| `Agent.Core/AGUI/AGUIMessageConverter.cs` | **Modified** — Handle ContentParts → M.E.AI DataContent |
+| `Agent.Core/AGUI/AGUIStreamingService.cs` | **Modified** — File processing + MessagesSnapshotEvent |
+| **Frontend Transport** | |
+| `Agent.Web.StaticAssets/.../transport/types.ts` | **Modified** — Add InputContent types |
+| `Agent.Web.StaticAssets/.../transport/uai-agent-client.ts` | **Modified** — Pass ContentParts |
+| **Chat UI** | |
+| `Agent.UI/.../chat/context.ts` | **Modified** — Extend sendUserMessage signature |
+| `Agent.UI/.../chat/components/input.element.ts` | **Modified** — File picker + preview strip |
+| `Agent.UI/.../chat/components/message.element.ts` | **Modified** — Render image/file attachments |
+| `Agent.UI/.../chat/services/run.controller.ts` | **Modified** — Wire contentParts |
+| `Copilot/.../copilot/copilot.context.ts` | **Modified** — Wire contentParts |
+| **Tests** | |
+| Tests (multiple) | **New/Modified** — Unit tests for all layers |
 
----
+## Key Design Decisions
 
-## Implementation Order
+1. **Follow AG-UI multimodal draft exactly** — Use `TextInputContent` and `BinaryInputContent` with `type` discriminator, not custom extensions via `forwardedProps`.
 
-1. **Phase 1** — Generate OpenAPI client (prerequisite)
-2. **Phase 2** — Core guardrail feature (entity, repo, workspace, collection, menu, actions)
-3. **Phase 3** — Rules editor (rule-config-builder, rule-config-editor modal, evaluator repo)
-4. **Phase 4** — Guardrail picker + integrations (profile, prompt, agent, test)
-5. **Phase 5** — Localization keys
+2. **Server-side file processing with thread-scoped storage** — Frontend sends base64 `data` on first upload. Backend stores files in temp, scoped to `threadId`. Returns lightweight `id` references via `MessagesSnapshotEvent`. Subsequent turns send `id` only — backend resolves to bytes.
 
-Phases 2-3 can be built and verified independently before Phase 4 integrations.
+3. **File processing in streaming service, not converter** — `IAGUIFileProcessor` runs in `AGUIStreamingService.StreamCoreAsync` where the full `AGUIRunRequest` (including `threadId`) is available. Converter stays pure format mapping with no file I/O.
+
+4. **MessagesSnapshotEvent for history rewriting** — Already exists in AGUI library but not emitted. Used to swap base64 → id refs in frontend history after the first turn. Frontend's existing `onMessagesSnapshot` handler replaces local state automatically.
+
+5. **Backward compatible** — Plain string `content` still works. `ContentParts` is optional and only used when files are attached. No breaking changes to existing message flow.
+
+6. **Shared in Agent.UI** — All chat surfaces (Copilot, future workspace chat) get file upload support automatically.
+
+7. **M.E.AI DataContent is the backend target** — Already proven in the Prompt package's `ImageTemplateVariableProcessor` and `AIRuntimeContext.AddData()`.

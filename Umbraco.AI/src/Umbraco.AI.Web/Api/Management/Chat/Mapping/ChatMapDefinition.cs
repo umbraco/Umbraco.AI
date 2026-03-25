@@ -29,7 +29,30 @@ public class ChatMapDefinition : IMapDefinition
             _ => ChatRole.User
         };
 
-        return new ChatMessage(role, source.Content);
+        // Multimodal content — build AIContent list
+        if (source.ContentParts is { Count: > 0 })
+        {
+            var contents = new List<AIContent>();
+            foreach (var part in source.ContentParts)
+            {
+                switch (part)
+                {
+                    case TextChatContentPartModel text:
+                        contents.Add(new TextContent(text.Text));
+                        break;
+                    case BinaryChatContentPartModel binary:
+                        var bytes = Convert.FromBase64String(binary.Data);
+                        contents.Add(new DataContent(bytes, binary.MimeType) { Name = binary.Filename });
+                        break;
+                }
+            }
+            return new ChatMessage(role, contents);
+        }
+
+        // Plain text fallback
+#pragma warning disable CS0618 // Type or member is obsolete
+        return new ChatMessage(role, source.Content ?? string.Empty);
+#pragma warning restore CS0618
     }
 
     // Umbraco.Code.MapAll
@@ -38,7 +61,9 @@ public class ChatMapDefinition : IMapDefinition
         target.Message = new ChatMessageModel
         {
             Role = "assistant",
+#pragma warning disable CS0618 // Type or member is obsolete
             Content = source.Text ?? string.Empty
+#pragma warning restore CS0618
         };
         target.FinishReason = source.FinishReason?.ToString();
         target.Usage = source.Usage is not null ? context.Map<UsageModel>(source.Usage) : null;

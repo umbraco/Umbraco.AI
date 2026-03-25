@@ -145,6 +145,34 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<AIVectorEntry>> GetVectorsByDocumentAsync(string indexName, string documentId, string? culture = null, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+
+        IReadOnlyList<AIVectorEntry> results = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AIVectorEntryEntity> query = db.VectorEntries
+                .Where(e => e.IndexName == indexName && e.DocumentId == documentId);
+
+            if (culture is not null)
+            {
+                query = query.Where(e => e.Culture == culture);
+            }
+
+            List<AIVectorEntryEntity> entries = await query
+                .OrderBy(e => e.ChunkIndex)
+                .ToListAsync(cancellationToken);
+
+            return (IReadOnlyList<AIVectorEntry>)entries
+                .Select(e => new AIVectorEntry(e.DocumentId, e.Culture, e.ChunkIndex, BytesToVector(e.Vector).ToArray(), DeserializeMetadata(e.Metadata)))
+                .ToList();
+        });
+
+        scope.Complete();
+        return results;
+    }
+
+    /// <inheritdoc />
     public async Task ResetAsync(string indexName, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();

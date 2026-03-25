@@ -153,6 +153,51 @@ public class InMemoryAIVectorStoreTests
     }
 
     [Fact]
+    public async Task GetVectorsByDocumentAsync_ReturnsStoredVectorsOrderedByChunk()
+    {
+        await _store.UpsertAsync(IndexName, "doc1", "en", 2, new float[] { 0.5f, 0.5f });
+        await _store.UpsertAsync(IndexName, "doc1", "en", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", "en", 1, new float[] { 0.0f, 1.0f });
+
+        IReadOnlyList<AIVectorEntry> results = await _store.GetVectorsByDocumentAsync(IndexName, "doc1", "en");
+
+        results.Count.ShouldBe(3);
+        results[0].ChunkIndex.ShouldBe(0);
+        results[1].ChunkIndex.ShouldBe(1);
+        results[2].ChunkIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetVectorsByDocumentAsync_FiltersByCulture()
+    {
+        await _store.UpsertAsync(IndexName, "doc1", "en", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", "da", 0, new float[] { 0.0f, 1.0f });
+
+        IReadOnlyList<AIVectorEntry> results = await _store.GetVectorsByDocumentAsync(IndexName, "doc1", "en");
+
+        results.Count.ShouldBe(1);
+        results[0].Culture.ShouldBe("en");
+    }
+
+    [Fact]
+    public async Task GetVectorsByDocumentAsync_NoCultureFilter_ReturnsAll()
+    {
+        await _store.UpsertAsync(IndexName, "doc1", "en", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", "da", 0, new float[] { 0.0f, 1.0f });
+
+        IReadOnlyList<AIVectorEntry> results = await _store.GetVectorsByDocumentAsync(IndexName, "doc1");
+
+        results.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetVectorsByDocumentAsync_NonExistentDocument_ReturnsEmpty()
+    {
+        IReadOnlyList<AIVectorEntry> results = await _store.GetVectorsByDocumentAsync(IndexName, "nonexistent");
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task MultipleIndexes_AreIsolated()
     {
         await _store.UpsertAsync("index-a", "doc1", null, 0, new float[] { 1.0f, 0.0f });

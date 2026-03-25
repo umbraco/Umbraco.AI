@@ -75,6 +75,22 @@ public sealed class InMemoryAIVectorStore : IAIVectorStore
         return Task.FromResult(results);
     }
 
+    public Task<IReadOnlyList<AIVectorEntry>> GetVectorsByDocumentAsync(string indexName, string documentId, string? culture = null, CancellationToken cancellationToken = default)
+    {
+        if (!_indexes.TryGetValue(indexName, out ConcurrentDictionary<ChunkKey, VectorEntry>? index))
+        {
+            return Task.FromResult<IReadOnlyList<AIVectorEntry>>(Array.Empty<AIVectorEntry>());
+        }
+
+        IReadOnlyList<AIVectorEntry> results = index
+            .Where(kvp => kvp.Key.DocumentId == documentId && (culture is null || kvp.Key.Culture == culture))
+            .OrderBy(kvp => kvp.Key.ChunkIndex)
+            .Select(kvp => new AIVectorEntry(kvp.Key.DocumentId, kvp.Key.Culture, kvp.Key.ChunkIndex, kvp.Value.Vector, kvp.Value.Metadata))
+            .ToList();
+
+        return Task.FromResult(results);
+    }
+
     public Task ResetAsync(string indexName, CancellationToken cancellationToken = default)
     {
         _indexes.TryRemove(indexName, out _);

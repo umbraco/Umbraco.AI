@@ -48,7 +48,7 @@ public sealed class AIVectorIndexer : IIndexer
         UmbracoObjectTypes objectType,
         IEnumerable<Variation> variations,
         IEnumerable<IndexField> fields,
-        ContentProtection protection)
+        ContentProtection? protection)
     {
         var documentId = id.ToString("D");
 

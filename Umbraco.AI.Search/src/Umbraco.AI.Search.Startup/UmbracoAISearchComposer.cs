@@ -6,7 +6,10 @@ using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Search.Core.Configuration;
+using Umbraco.Cms.Search.Core.DependencyInjection;
+using Umbraco.Cms.Search.Core.Services.ContentIndexing;
 
 namespace Umbraco.AI.Search.Startup;
 
@@ -29,6 +32,8 @@ public sealed class UmbracoAISearchComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
+        // builder.AddSearchCore();
+
         builder.Services.AddSingleton<IAITokenCounter, WordBasedAITokenCounter>();
         builder.Services.AddSingleton<IAITextChunker, RecursiveAITextChunker>();
 
@@ -55,6 +60,7 @@ public sealed class UmbracoAISearchComposer : IComposer
             .BindConfiguration("Umbraco:AI:Search");
 
         builder.Services.Configure<IndexOptions>(options =>
-            options.RegisterIndex<AIVectorIndexer, AIVectorSearcher>("VectorContentIndex"));
+            options.RegisterContentIndex<AIVectorIndexer, AIVectorSearcher, IPublishedContentChangeStrategy>(AISearchConstants.IndexAliases.Search,
+                UmbracoObjectTypes.Document, UmbracoObjectTypes.Media));
     }
 }

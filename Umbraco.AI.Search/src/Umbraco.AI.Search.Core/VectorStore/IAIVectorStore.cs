@@ -27,6 +27,12 @@ public interface IAIVectorStore
     Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, string? culture = null, int topK = 10, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Retrieves stored vectors for a document, optionally filtered by culture.
+    /// </summary>
+    /// <returns>The stored vectors ordered by chunk index, or empty if not found.</returns>
+    Task<IReadOnlyList<AIVectorEntry>> GetVectorsByDocumentAsync(string indexName, string documentId, string? culture = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Removes all vectors for a given index.
     /// </summary>
     Task ResetAsync(string indexName, CancellationToken cancellationToken = default);

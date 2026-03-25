@@ -8,14 +8,14 @@ namespace Umbraco.AI.Persistence.Analytics.Usage;
 /// <summary>
 /// EF Core repository for managing aggregated AI usage statistics.
 /// </summary>
-internal sealed class EfCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepository
+internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
-    private readonly ILogger<EfCoreAIUsageStatisticsRepository> _logger;
+    private readonly ILogger<EFCoreAIUsageStatisticsRepository> _logger;
 
-    public EfCoreAIUsageStatisticsRepository(
+    public EFCoreAIUsageStatisticsRepository(
         IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
-        ILogger<EfCoreAIUsageStatisticsRepository> logger)
+        ILogger<EFCoreAIUsageStatisticsRepository> logger)
     {
         _scopeProvider = scopeProvider;
         _logger = logger;

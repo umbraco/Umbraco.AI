@@ -9,7 +9,7 @@ namespace Umbraco.AI.Tests.Common.Fixtures;
 /// <summary>
 /// Test implementation of <see cref="IEFCoreScopeProvider{TDbContext}"/> for unit testing.
 /// </summary>
-public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
+public class TestEFCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
 {
     private readonly Func<UmbracoAIDbContext> _contextFactory;
 
@@ -17,7 +17,7 @@ public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
     /// Initializes a new test scope provider.
     /// </summary>
     /// <param name="contextFactory">Factory to create DbContext instances.</param>
-    public TestEfCoreScopeProvider(Func<UmbracoAIDbContext> contextFactory)
+    public TestEFCoreScopeProvider(Func<UmbracoAIDbContext> contextFactory)
     {
         _contextFactory = contextFactory;
     }
@@ -27,7 +27,7 @@ public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
         RepositoryCacheMode repositoryCacheMode = RepositoryCacheMode.Unspecified,
         bool? scopeFileSystems = null)
     {
-        return new TestEfCoreScope(_contextFactory());
+        return new TestEFCoreScope(_contextFactory());
     }
 
     /// <inheritdoc />
@@ -57,7 +57,7 @@ public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
 /// <summary>
 /// Test implementation of <see cref="IEfCoreScope{TDbContext}"/> for unit testing.
 /// </summary>
-public class TestEfCoreScope : IEfCoreScope<UmbracoAIDbContext>
+public class TestEFCoreScope : IEfCoreScope<UmbracoAIDbContext>
 {
     private readonly UmbracoAIDbContext _context;
     private bool _completed;
@@ -66,7 +66,7 @@ public class TestEfCoreScope : IEfCoreScope<UmbracoAIDbContext>
     /// <summary>
     /// Initializes a new test scope with the given context.
     /// </summary>
-    public TestEfCoreScope(UmbracoAIDbContext context)
+    public TestEFCoreScope(UmbracoAIDbContext context)
     {
         _context = context;
     }
@@ -76,7 +76,7 @@ public class TestEfCoreScope : IEfCoreScope<UmbracoAIDbContext>
     {
         if (_disposed)
         {
-            throw new ObjectDisposedException(nameof(TestEfCoreScope));
+            throw new ObjectDisposedException(nameof(TestEFCoreScope));
         }
 
         return await method(_context);
@@ -87,7 +87,7 @@ public class TestEfCoreScope : IEfCoreScope<UmbracoAIDbContext>
     {
         if (_disposed)
         {
-            throw new ObjectDisposedException(nameof(TestEfCoreScope));
+            throw new ObjectDisposedException(nameof(TestEFCoreScope));
         }
 
         await method(_context);

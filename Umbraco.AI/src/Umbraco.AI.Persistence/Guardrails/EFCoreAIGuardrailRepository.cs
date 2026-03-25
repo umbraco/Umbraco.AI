@@ -7,11 +7,11 @@ namespace Umbraco.AI.Persistence.Guardrails;
 /// <summary>
 /// EF Core implementation of the AI guardrail repository.
 /// </summary>
-internal class EfCoreAIGuardrailRepository : IAIGuardrailRepository
+internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAIGuardrailRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIGuardrailRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }

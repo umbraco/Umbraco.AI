@@ -7,11 +7,11 @@ namespace Umbraco.AI.Persistence.Tests;
 /// <summary>
 /// EF Core implementation of the AI test run repository.
 /// </summary>
-internal class EfCoreAITestRunRepository : IAITestRunRepository
+internal class EFCoreAITestRunRepository : IAITestRunRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAITestRunRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAITestRunRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }

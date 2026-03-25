@@ -772,7 +772,7 @@ public record ContextSource(string Level, string? EntityName, string ContextName
 
 ## Repository Interfaces
 
-Repositories follow the same patterns as `EfCoreAIProfileRepository` and `EfCoreAIConnectionRepository`, using `IEFCoreScopeProvider<UmbracoAIDbContext>` with explicit scope completion:
+Repositories follow the same patterns as `EFCoreAIProfileRepository` and `EFCoreAIConnectionRepository`, using `IEFCoreScopeProvider<UmbracoAIDbContext>` with explicit scope completion:
 
 ```csharp
 public interface IAIContextRepository
@@ -802,11 +802,11 @@ public interface IAIContentContextAssignmentRepository
 **Example EF Core Repository Implementation:**
 
 ```csharp
-internal class EfCoreAIContextRepository : IAIContextRepository
+internal class EFCoreAIContextRepository : IAIContextRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAIContextRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIContextRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
@@ -2389,7 +2389,7 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 3. `IAIContextResourceType` interface and `AIContextResourceTypeBase<T>` base class
 4. Built-in resource types: `BrandVoiceResourceType`, `DocumentResourceType`, `ExternalLinkResourceType`, `TextResourceType`
 5. Resource type auto-discovery via `[AIContextResourceTypeAttribute]`
-6. `IAIContextRepository` and `EfCoreAIContextRepository` (with scope provider pattern)
+6. `IAIContextRepository` and `EFCoreAIContextRepository` (with scope provider pattern)
 7. `IAIContentContextAssignmentRepository` and EF Core implementation
 8. `IAIContextService` and `IAIContentContextAssignmentService` (SaveAsync pattern)
 9. `IAIContextResolver` for multi-level resolution

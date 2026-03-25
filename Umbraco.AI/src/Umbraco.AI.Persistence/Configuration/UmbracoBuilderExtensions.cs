@@ -51,25 +51,25 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIConnectionFactory, AIConnectionFactory>();
 
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
-        builder.Services.AddSingleton<IAIConnectionRepository, EfCoreAIConnectionRepository>();
-        builder.Services.AddSingleton<IAIProfileRepository, EfCoreAIProfileRepository>();
-        builder.Services.AddSingleton<IAIContextRepository, EfCoreAIContextRepository>();
-        builder.Services.AddSingleton<IAIGuardrailRepository, EfCoreAIGuardrailRepository>();
-        builder.Services.AddSingleton<IAIAuditLogRepository, EfCoreAIAuditLogRepository>();
-        builder.Services.AddSingleton<IAIUsageRecordRepository, EfCoreAIUsageRecordRepository>();
-        builder.Services.AddSingleton<IAIUsageStatisticsRepository, EfCoreAIUsageStatisticsRepository>();
-        builder.Services.AddSingleton<IAISettingsRepository, EfCoreAISettingsRepository>();
+        builder.Services.AddSingleton<IAIConnectionRepository, EFCoreAIConnectionRepository>();
+        builder.Services.AddSingleton<IAIProfileRepository, EFCoreAIProfileRepository>();
+        builder.Services.AddSingleton<IAIContextRepository, EFCoreAIContextRepository>();
+        builder.Services.AddSingleton<IAIGuardrailRepository, EFCoreAIGuardrailRepository>();
+        builder.Services.AddSingleton<IAIAuditLogRepository, EFCoreAIAuditLogRepository>();
+        builder.Services.AddSingleton<IAIUsageRecordRepository, EFCoreAIUsageRecordRepository>();
+        builder.Services.AddSingleton<IAIUsageStatisticsRepository, EFCoreAIUsageStatisticsRepository>();
+        builder.Services.AddSingleton<IAISettingsRepository, EFCoreAISettingsRepository>();
 
         // Unified versioning repository
-        builder.Services.AddSingleton<IAIEntityVersionRepository, EfCoreAIEntityVersionRepository>();
+        builder.Services.AddSingleton<IAIEntityVersionRepository, EFCoreAIEntityVersionRepository>();
 
         // Test factory for entity/domain mapping with encryption support
         builder.Services.AddSingleton<IAITestFactory, AITestFactory>();
 
         // Test framework repositories
-        builder.Services.AddSingleton<IAITestRepository, EfCoreAITestRepository>();
-        builder.Services.AddSingleton<IAITestRunRepository, EfCoreAITestRunRepository>();
-        builder.Services.AddSingleton<IAITestTranscriptRepository, EfCoreAITestTranscriptRepository>();
+        builder.Services.AddSingleton<IAITestRepository, EFCoreAITestRepository>();
+        builder.Services.AddSingleton<IAITestRunRepository, EFCoreAITestRunRepository>();
+        builder.Services.AddSingleton<IAITestTranscriptRepository, EFCoreAITestTranscriptRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAIMigrationNotificationHandler>();

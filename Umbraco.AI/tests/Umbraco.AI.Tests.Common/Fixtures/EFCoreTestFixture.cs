@@ -7,7 +7,7 @@ namespace Umbraco.AI.Tests.Common.Fixtures;
 /// <summary>
 /// Test fixture that provides in-memory SQLite database for EF Core repository tests.
 /// </summary>
-public class EfCoreTestFixture : IDisposable
+public class EFCoreTestFixture : IDisposable
 {
     private readonly SqliteConnection _connection;
 
@@ -26,7 +26,7 @@ public class EfCoreTestFixture : IDisposable
     /// <summary>
     /// Initializes the test fixture with an in-memory SQLite database.
     /// </summary>
-    public EfCoreTestFixture()
+    public EFCoreTestFixture()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();

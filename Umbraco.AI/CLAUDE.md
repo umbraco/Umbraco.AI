@@ -86,7 +86,7 @@ var connection = new AIConnectionBuilder()
 
 **Fixtures** - Test infrastructure:
 
-- `EfCoreTestFixture` - In-memory SQLite database for EF Core repository tests
+- `EFCoreTestFixture` - In-memory SQLite database for EF Core repository tests
 
 ### Test Patterns
 

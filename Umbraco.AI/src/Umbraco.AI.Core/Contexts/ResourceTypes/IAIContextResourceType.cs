@@ -34,21 +34,34 @@ public interface IAIContextResourceType : IDiscoverable
     string? Icon { get; }
 
     /// <summary>
+    /// Gets the type that represents the settings model for this resource type.
+    /// </summary>
+    Type? SettingsType { get; }
+
+    /// <summary>
+    /// Gets the settings schema that describes the fields for this resource type.
+    /// Used by the UI to render resource settings forms.
+    /// </summary>
+    /// <returns>The settings schema, or null if the resource type has no data model.</returns>
+    AIEditableModelSchema? GetSettingsSchema();
+
+    /// <summary>
     /// Gets the type that represents the data model for this resource type.
     /// </summary>
     Type? DataType { get; }
 
     /// <summary>
-    /// Gets the data schema that describes the fields for this resource type.
-    /// Used by the UI to render resource data forms.
+    /// Asynchronously resolves the resource data based on the provided settings.
     /// </summary>
-    /// <returns>The data schema, or null if the resource type has no data model.</returns>
-    AIEditableModelSchema? GetDataSchema();
+    /// <param name="settings">The settings object that may contain parameters for data resolution.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>The resolved resource data, or null if resolution fails.</returns>
+    Task<object?> ResolveDataAsync(object? settings, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Formats the resource data for injection into the LLM system prompt.
+    /// Asynchronously formats the resource data for injection into the LLM system prompt.
     /// </summary>
-    /// <param name="data">The resource data object.</param>
-    /// <returns>Formatted text suitable for AI consumption.</returns>
-    string FormatForLlm(object? data);
+    /// <param name="data"></param>
+    /// <returns></returns>
+    string FormatDataForLlm(object? data);
 }

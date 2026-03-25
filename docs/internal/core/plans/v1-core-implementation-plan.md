@@ -446,8 +446,8 @@ src/Umbraco.AI.Persistence/           (SHARED CORE)
 │   ├── AIConnectionEntity.cs
 │   └── AIProfileEntity.cs
 ├── Repositories/
-│   ├── EfCoreAIConnectionRepository.cs
-│   └── EfCoreAIProfileRepository.cs
+│   ├── EFCoreAIConnectionRepository.cs
+│   └── EFCoreAIProfileRepository.cs
 ├── Notifications/
 │   └── RunAIMigrationNotificationHandler.cs
 ├── Extensions/
@@ -486,8 +486,8 @@ public static IUmbracoBuilder AddUmbracoAIPersistence(this IUmbracoBuilder build
     });
 
     // Replace in-memory repositories with EF Core implementations
-    builder.Services.AddScoped<IAIConnectionRepository, EfCoreAIConnectionRepository>();
-    builder.Services.AddScoped<IAIProfileRepository, EfCoreAIProfileRepository>();
+    builder.Services.AddScoped<IAIConnectionRepository, EFCoreAIConnectionRepository>();
+    builder.Services.AddScoped<IAIProfileRepository, EFCoreAIProfileRepository>();
 
     return builder;
 }
@@ -571,16 +571,16 @@ public class RunAIMigrationNotificationHandler
 }
 ```
 
-### Repository Pattern with IEfCoreScopeProvider
+### Repository Pattern with IEFCoreScopeProvider
 
-**EfCoreAIConnectionRepository.cs:**
+**EFCoreAIConnectionRepository.cs:**
 
 ```csharp
-public class EfCoreAIConnectionRepository : IAIConnectionRepository
+public class EFCoreAIConnectionRepository : IAIConnectionRepository
 {
-    private readonly IEfCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAIConnectionRepository(IEfCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIConnectionRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
         => _scopeProvider = scopeProvider;
 
     public async Task<AIConnection?> GetAsync(Guid id, CancellationToken ct = default)
@@ -670,7 +670,7 @@ Migrations auto-apply on startup via `RunAIMigrationNotificationHandler`.
 
 Test repository methods with in-memory SQLite:
 
-**EfCoreAIConnectionRepository:**
+**EFCoreAIConnectionRepository:**
 
 - `GetAsync` - Returns null when not found
 - `GetAllAsync` - Returns empty list when no data
@@ -680,7 +680,7 @@ Test repository methods with in-memory SQLite:
 - `DeleteAsync` - Returns false when not found
 - Settings JSON serialization/deserialization
 
-**EfCoreAIProfileRepository:**
+**EFCoreAIProfileRepository:**
 
 - `GetByIdAsync` - Returns null when not found
 - `GetByAliasAsync` - Case-insensitive alias lookup
@@ -694,10 +694,10 @@ Test repository methods with in-memory SQLite:
 - Verify migrations apply cleanly to empty database
 - Verify schema matches entity configuration
 
-**Test Fixture (`tests/Umbraco.AI.Tests.Common/Fixtures/EfCoreTestFixture.cs`):**
+**Test Fixture (`tests/Umbraco.AI.Tests.Common/Fixtures/EFCoreTestFixture.cs`):**
 
 ```csharp
-public class EfCoreTestFixture : IDisposable
+public class EFCoreTestFixture : IDisposable
 {
     private readonly SqliteConnection _connection;
 
@@ -709,7 +709,7 @@ public class EfCoreTestFixture : IDisposable
         return new UmbracoAIDbContext(options);
     }
 
-    public EfCoreTestFixture()
+    public EFCoreTestFixture()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
@@ -725,11 +725,11 @@ public class EfCoreTestFixture : IDisposable
 Usage in tests:
 
 ```csharp
-public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EFCoreAIConnectionRepositoryTests : IClassFixture<EFCoreTestFixture>
 {
-    private readonly EfCoreTestFixture _fixture;
+    private readonly EFCoreTestFixture _fixture;
 
-    public EfCoreAIConnectionRepositoryTests(EfCoreTestFixture fixture)
+    public EFCoreAIConnectionRepositoryTests(EFCoreTestFixture fixture)
         => _fixture = fixture;
 
     [Fact]
@@ -737,7 +737,7 @@ public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
     {
         await using var context = _fixture.CreateContext();
         var scopeProvider = CreateScopeProvider(context);
-        var repository = new EfCoreAIConnectionRepository(scopeProvider);
+        var repository = new EFCoreAIConnectionRepository(scopeProvider);
 
         var result = await repository.GetAsync(Guid.NewGuid());
 

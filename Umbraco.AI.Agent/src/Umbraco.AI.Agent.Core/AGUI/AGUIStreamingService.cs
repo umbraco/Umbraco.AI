@@ -4,6 +4,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 
@@ -22,6 +23,7 @@ namespace Umbraco.AI.Agent.Core.AGUI;
 internal sealed class AGUIStreamingService : IAGUIStreamingService
 {
     private readonly IAGUIMessageConverter _messageConverter;
+    private readonly IAGUIFileProcessor _fileProcessor;
     private readonly ILogger<AGUIStreamingService> _logger;
 
     /// <summary>
@@ -29,9 +31,11 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     /// </summary>
     public AGUIStreamingService(
         IAGUIMessageConverter messageConverter,
+        IAGUIFileProcessor fileProcessor,
         ILogger<AGUIStreamingService> logger)
     {
         _messageConverter = messageConverter;
+        _fileProcessor = fileProcessor;
         _logger = logger;
     }
 
@@ -110,8 +114,23 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         HashSet<string> frontendToolNames,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // Convert AG-UI messages to M.E.AI chat messages
-        var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
+        // Process file content: store base64, resolve id references
+        var fileResult = await _fileProcessor.ProcessInboundAsync(request.Messages, emitter.ThreadId, cancellationToken);
+
+        // Emit messages snapshot only when files were rewritten (base64 → id references).
+        // This allows the frontend to adopt lightweight references for subsequent turns
+        // without disrupting the conversation when no files are present.
+        if (!ReferenceEquals(fileResult.RewrittenMessages, fileResult.ResolvedMessages))
+        {
+            yield return new MessagesSnapshotEvent
+            {
+                Messages = fileResult.RewrittenMessages,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            };
+        }
+
+        // Convert resolved messages (with bytes) to M.E.AI chat messages
+        var chatMessages = _messageConverter.ConvertToChatMessages(fileResult.ResolvedMessages);
 
         // Handle resume - inject tool results from resume payload
         if (request.Resume != null)

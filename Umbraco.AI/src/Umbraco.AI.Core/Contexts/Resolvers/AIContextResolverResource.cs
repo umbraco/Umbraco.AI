@@ -30,9 +30,9 @@ public sealed class AIContextResolverResource
     public string? Description { get; init; }
 
     /// <summary>
-    /// Type-specific data object.
+    /// Type-specific settings object configured by the user.
     /// </summary>
-    public object? Data { get; init; }
+    public object? Settings { get; init; }
 
     /// <summary>
     /// Determines how and when this resource is included in AI operations.

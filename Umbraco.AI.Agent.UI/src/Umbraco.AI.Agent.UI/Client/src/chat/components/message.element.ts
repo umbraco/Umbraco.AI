@@ -2,7 +2,7 @@ import { customElement, property, css, html } from "@umbraco-cms/backoffice/exte
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
-import type { UaiChatMessage } from "../types/index.js";
+import type { UaiChatMessage, UaiBinaryInputContent } from "../types/index.js";
 
 /**
  * Chat message component.
@@ -31,11 +31,25 @@ export class UaiChatMessageElement extends UmbLitElement {
     }
 
     #renderContent() {
+        const isUser = this.message.role === "user";
+
+        // Render multimodal content parts if present
+        if (isUser && this.message.contentParts?.length) {
+            const textParts = this.message.contentParts.filter((p) => p.type === "text");
+            const binaryParts = this.message.contentParts.filter((p) => p.type === "binary");
+            const textContent = textParts.map((p) => (p as { text: string }).text).join("");
+
+            return html`
+                ${textContent ? html`<p>${textContent}</p>` : ""}
+                ${binaryParts.length
+                    ? html`<div class="attachments">${binaryParts.map((part) => this.#renderBinaryPart(part as UaiBinaryInputContent))}</div>`
+                    : ""}
+            `;
+        }
+
         if (!this.message.content) {
             return html``;
         }
-
-        const isUser = this.message.role === "user";
 
         if (isUser) {
             return html`<p>${this.message.content}</p>`;
@@ -43,6 +57,30 @@ export class UaiChatMessageElement extends UmbLitElement {
 
         const htmlContent = marked.parse(this.message.content) as string;
         return html`<div class="markdown-content">${unsafeHTML(htmlContent)}</div>`;
+    }
+
+    #renderBinaryPart(part: UaiBinaryInputContent) {
+        // Render inline image for image types
+        if (part.mimeType.startsWith("image/")) {
+            let src: string | undefined;
+            if (part.data) {
+                src = `data:${part.mimeType};base64,${part.data}`;
+            } else if (part.url) {
+                src = part.url;
+            }
+
+            if (src) {
+                return html`<img class="inline-image" src=${src} alt=${part.filename ?? "Attached image"} />`;
+            }
+        }
+
+        // Render file chip for non-image or unresolvable binary
+        return html`
+            <div class="file-chip">
+                <uui-icon name="icon-document"></uui-icon>
+                <span>${part.filename ?? "File"}</span>
+            </div>
+        `;
     }
 
     #renderToolCalls() {
@@ -167,12 +205,49 @@ export class UaiChatMessageElement extends UmbLitElement {
             margin-bottom: var(--uui-size-space-2);
         }
 
+        .markdown-content h1,
         .markdown-content h2,
         .markdown-content h3,
         .markdown-content h4 {
             margin-top: var(--uui-size-space-4);
             margin-bottom: var(--uui-size-space-2);
             font-size: 1.2em;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.4em;
+            line-height: 1.2;
+        }
+
+        .attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--uui-size-space-1);
+            margin-top: var(--uui-size-space-1);
+            justify-content: flex-end;
+        }
+
+        .inline-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: var(--uui-border-radius);
+            border: 1px solid var(--uui-color-border);
+            display: block;
+            margin-top: var(--uui-size-space-1);
+        }
+
+        .file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--uui-size-space-1);
+            padding: var(--uui-size-space-1) var(--uui-size-space-2);
+            background: var(--uui-color-surface-alt);
+            border: 1px solid var(--uui-color-border);
+            border-radius: var(--uui-border-radius);
+            font-size: 0.8rem;
+            margin-top: var(--uui-size-space-1);
+            font-style: italic;
+            opacity: 0.8;
         }
 
         .tool-calls {

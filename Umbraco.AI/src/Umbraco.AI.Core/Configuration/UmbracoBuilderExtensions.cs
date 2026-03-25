@@ -15,6 +15,7 @@ using Umbraco.AI.Core.Contexts.Middleware;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -81,8 +82,13 @@ public static partial class UmbracoBuilderExtensions
         // Initialize middleware collection builders with default middleware
         // Use AIChatMiddleware() and AIEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
+        // File processing handlers (extensible - add custom handlers via AIFileProcessingHandlers())
+        builder.AIFileProcessingHandlers()
+            .Append<OpenXmlFileProcessingHandler>();
+
         builder.AIChatMiddleware()
             .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
+            .Append<AIFileProcessingChatMiddleware>()         // File processing (converts Office docs to text, before options override)
             .Append<AIChatOptionsOverrideChatMiddleware>()    // ChatOptions override from runtime context (before function invoking)
             .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
@@ -187,7 +193,7 @@ public static partial class UmbracoBuilderExtensions
         // Context system
         services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
         services.AddSingleton<IAIContextService, AIContextService>();
-        services.AddSingleton<IAIContextFormatter, AIContextFormatter>();
+        services.AddSingleton<IAIContextProcessor, AIContextProcessor>();
         services.AddSingleton<IAIContextAccessor, AIContextAccessor>();
 
         // Context resolution - pluggable resolver system

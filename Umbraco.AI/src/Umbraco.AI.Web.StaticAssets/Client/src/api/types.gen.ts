@@ -135,7 +135,7 @@ export type ContextResourceModel = {
     name: string;
     description?: string | null;
     sortOrder: number;
-    data?: unknown;
+    settings?: unknown;
     injectionMode: string;
 };
 
@@ -144,7 +144,7 @@ export type ContextResourceTypeResponseModel = {
     name: string;
     description?: string | null;
     icon?: string | null;
-    dataSchema?: EditableModelSchemaModel | null;
+    settingsSchema?: EditableModelSchemaModel | null;
 };
 
 export type ContextResponseModel = {

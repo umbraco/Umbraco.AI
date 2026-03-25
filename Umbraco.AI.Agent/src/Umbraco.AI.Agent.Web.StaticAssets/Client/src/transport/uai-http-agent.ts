@@ -93,12 +93,20 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     }
 
     #toAGUIMessage(msg: Message): AGUIMessageModel {
-        // Handle content which can be string or ContentPart[]
+        // Handle content which can be string or ContentPart[] (AG-UI multimodal draft).
+        // When content is an array, pass it through as-is — the server's AGUIMessageJsonConverter
+        // handles both string and array formats for the "content" JSON property.
+        // We use a type assertion because AGUIMessageModel (generated from OpenAPI) types
+        // content as string, but the actual JSON protocol supports arrays.
         let content: string | undefined;
+        let contentArray: unknown[] | undefined;
+
         if (typeof msg.content === "string") {
             content = msg.content;
         } else if (Array.isArray(msg.content)) {
-            // Extract text from content parts
+            // Preserve full content parts array (text + binary) for the server
+            contentArray = msg.content;
+            // Also extract text summary for backward-compatible content field
             content = msg.content
                 .filter((part): part is { type: "text"; text: string } => part.type === "text")
                 .map((part) => part.text)
@@ -120,13 +128,21 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             );
         }
 
-        return {
+        const result: AGUIMessageModel = {
             id: msg.id,
             role: this.#mapRole(msg.role),
             content,
             toolCallId: "toolCallId" in msg ? (msg.toolCallId as string) : undefined,
             toolCalls,
         };
+
+        // Override content with the multimodal array when present.
+        // The server's custom JSON converter parses both string and array formats.
+        if (contentArray) {
+            (result as Record<string, unknown>).content = contentArray;
+        }
+
+        return result;
     }
 
     #mapRole(role: string): AGUIMessageRoleModel {

@@ -27,7 +27,7 @@ public static class UmbracoBuilderExtensions
         });
 
         // Replace in-memory repository with EF Core implementation
-        builder.Services.AddSingleton<IAIPromptRepository, EfCoreAIPromptRepository>();
+        builder.Services.AddSingleton<IAIPromptRepository, EFCoreAIPromptRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunPromptMigrationNotificationHandler>();

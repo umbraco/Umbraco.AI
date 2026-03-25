@@ -29,7 +29,7 @@ public class ContextResourceTypeResponseModel
     public string? Icon { get; set; }
 
     /// <summary>
-    /// The data schema for this resource type.
+    /// The settings schema for this resource type, describing the fields configurable by the user.
     /// </summary>
-    public EditableModelSchemaModel? DataSchema { get; set; }
+    public EditableModelSchemaModel? SettingsSchema { get; set; }
 }

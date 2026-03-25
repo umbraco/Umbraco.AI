@@ -17,6 +17,16 @@ public sealed class AIContextResourceTypeAttribute : Attribute
     public string Name { get; }
 
     /// <summary>
+    /// Gets or sets the description of the resource type for the UI.
+    /// </summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Umbraco icon alias for the UI.
+    /// </summary>
+    public string? Icon { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AIContextResourceTypeAttribute"/> class.
     /// </summary>
     /// <param name="id">The unique identifier (e.g., "brand-voice", "text").</param>

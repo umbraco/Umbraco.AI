@@ -104,6 +104,14 @@
           "NETStandard.Library": "1.6.1"
         }
       },
+      "DocumentFormat.OpenXml.Framework": {
+        "type": "Transitive",
+        "resolved": "3.3.0",
+        "contentHash": "R5CLzEoeyr7XDB7g3NTxRobcU19agaxVAhGZm+fZUShJGiU4bw8oUgnA2BNFepigJckfFMayOBMAbV3kDXNInA==",
+        "dependencies": {
+          "System.IO.Packaging": "8.0.1"
+        }
+      },
       "DotNet.Glob": {
         "type": "Transitive",
         "resolved": "3.1.0",
@@ -1370,6 +1378,11 @@
         "resolved": "7.0.0",
         "contentHash": "Ckj+tg2BVOZ0oLp7FAbjfvRyA/BMkUhVxROLd+x22zncRR6KD7CdFzAYp+9Mo2cedxAMo2X9ZNyhZu68jdDITw=="
       },
+      "System.IO.Packaging": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "KYkIOAvPexQOLDxPO2g0BVoWInnQhPpkFzRqvNrNrMhVT6kqhVr0zEb6KCHlptLFukxnZrjuMVAnxK7pOGUYrw=="
+      },
       "System.Linq.Async": {
         "type": "Transitive",
         "resolved": "7.0.0",
@@ -1447,6 +1460,7 @@
       "umbraco.ai.core": {
         "type": "Project",
         "dependencies": {
+          "DocumentFormat.OpenXml": "[3.3.0, 3.999.999)",
           "Microsoft.Extensions.AI": "[10.2.0, )",
           "Microsoft.Extensions.Caching.Memory": "[10.0.0, 10.999.999)",
           "Microsoft.Extensions.Options": "[10.0.0, 10.999.999)",
@@ -1455,6 +1469,15 @@
           "Umbraco.Cms.Core": "[17.1.0, 17.999.999)",
           "Umbraco.Cms.Infrastructure": "[17.1.0, 17.999.999)",
           "Umbraco.Cms.Web.Common": "[17.1.0, 17.999.999)"
+        }
+      },
+      "DocumentFormat.OpenXml": {
+        "type": "CentralTransitive",
+        "requested": "[3.3.0, 3.999.999)",
+        "resolved": "3.3.0",
+        "contentHash": "JogRPJNiE6kKvbuCqVRX691pPWeGMqdQgjrUwRYkdpfkMmtElfqAgcRR73geYj7OtBeEpstldZXXzJw27LUI9w==",
+        "dependencies": {
+          "DocumentFormat.OpenXml.Framework": "3.3.0"
         }
       },
       "Microsoft.Extensions.AI": {

@@ -223,13 +223,13 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
     // ─── Run Actions ───────────────────────────────────────────────────────────
 
-    async sendUserMessage(content: string): Promise<void> {
+    async sendUserMessage(content: string, contentParts?: import("@umbraco-ai/agent-ui").UaiInputContent[]): Promise<void> {
         const items = await this.#requestContextCollector.collect();
         const context = items.map((item) => ({
             description: item.description,
             value: item.value ?? "",
         }));
-        this.#runController.sendUserMessage(content, context);
+        this.#runController.sendUserMessage(content, context, contentParts);
     }
 
     abortRun(): void {

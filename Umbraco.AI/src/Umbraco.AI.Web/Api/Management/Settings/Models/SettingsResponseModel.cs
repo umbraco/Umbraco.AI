@@ -19,4 +19,9 @@ public class SettingsResponseModel
     /// The ID of the profile to use for internal classification tasks (e.g., agent routing).
     /// </summary>
     public Guid? ClassifierChatProfileId { get; set; }
+
+    /// <summary>
+    /// The ID of the default profile to use for speech-to-text operations.
+    /// </summary>
+    public Guid? DefaultSpeechToTextProfileId { get; set; }
 }

@@ -1,4 +1,4 @@
-namespace Umbraco.AI.Search.EFCore.VectorStore;
+namespace Umbraco.AI.Search.Sqlite.VectorStore;
 
 /// <summary>
 /// EF Core entity representing a stored vector with associated metadata.

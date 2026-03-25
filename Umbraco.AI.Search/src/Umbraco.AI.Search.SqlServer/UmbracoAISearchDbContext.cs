@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.AI.Search.EFCore.VectorStore;
-using Umbraco.Cms.Core;
+using Umbraco.AI.Search.SqlServer.VectorStore;
 
-namespace Umbraco.AI.Search.EFCore;
+namespace Umbraco.AI.Search.SqlServer;
 
 /// <summary>
-/// EF Core DbContext for Umbraco AI Search persistence.
+/// EF Core DbContext for Umbraco AI Search persistence on SQL Server.
 /// </summary>
 public class UmbracoAISearchDbContext : DbContext
 {
@@ -20,39 +19,6 @@ public class UmbracoAISearchDbContext : DbContext
     public UmbracoAISearchDbContext(DbContextOptions<UmbracoAISearchDbContext> options)
         : base(options)
     {
-    }
-
-    /// <summary>
-    /// Configures the EF Core database provider with the correct migrations assembly.
-    /// </summary>
-    internal static void ConfigureProvider(
-        DbContextOptionsBuilder options,
-        string? connectionString,
-        string? providerName)
-    {
-        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(providerName))
-        {
-            return;
-        }
-
-        switch (providerName)
-        {
-            case Constants.ProviderNames.SQLServer:
-                options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Search.SqlServer"));
-                break;
-
-            case Constants.ProviderNames.SQLLite:
-            case "Microsoft.Data.SQLite":
-                options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Search.Sqlite"));
-                break;
-
-            default:
-                throw new InvalidOperationException(
-                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Search.EFCore. " +
-                    $"Supported providers: SQL Server, SQLite.");
-        }
     }
 
     /// <inheritdoc />
@@ -77,6 +43,7 @@ public class UmbracoAISearchDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Vector)
+                .HasColumnType("vector(1536)")
                 .IsRequired();
 
             entity.Property(e => e.Metadata);

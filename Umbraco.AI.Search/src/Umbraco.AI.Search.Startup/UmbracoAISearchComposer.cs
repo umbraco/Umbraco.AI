@@ -1,9 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Umbraco.AI.Search.Core;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
+using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core.Composing;
+using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Search.Core.Configuration;
 
@@ -28,24 +31,38 @@ public sealed class UmbracoAISearchComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        // Register concrete types only — NOT as IIndexer/ISearcher.
-        // This keeps them available in DI for index registration to resolve,
-        // without polluting the default IIndexer/ISearcher resolution.
         builder.Services.AddSingleton<IAITokenCounter, WordBasedAITokenCounter>();
         builder.Services.AddSingleton<IAITextChunker, RecursiveAITextChunker>();
 
         builder.Services.AddTransient<AIVectorIndexer>();
         builder.Services.AddTransient<AIVectorSearcher>();
 
-        // Register EF Core persistence for the vector store (replaces in-memory default)
-        builder.AddUmbracoAISearchPersistence();
+        // Register both providers — the correct IAIVectorStore is resolved at runtime
+        builder.AddUmbracoAISearchSqlServer();
+        builder.AddUmbracoAISearchSqlite();
 
-        // Register configuration options
+        // Resolve IAIVectorStore based on configured database provider
+        builder.Services.AddSingleton<IAIVectorStore>(sp =>
+        {
+            var connectionStrings = sp.GetRequiredService<IOptions<ConnectionStrings>>().Value;
+
+            return connectionStrings.ProviderName switch
+            {
+                Umbraco.Cms.Core.Constants.ProviderNames.SQLServer =>
+                    sp.GetRequiredService<SqlServer.VectorStore.SqlServerAIVectorStore>(),
+
+                Umbraco.Cms.Core.Constants.ProviderNames.SQLLite or "Microsoft.Data.SQLite" =>
+                    sp.GetRequiredService<Sqlite.VectorStore.SqliteAIVectorStore>(),
+
+                _ => throw new InvalidOperationException(
+                    $"Unsupported database provider '{connectionStrings.ProviderName}' for Umbraco.AI.Search. " +
+                    "Supported: SQL Server, SQLite."),
+            };
+        });
+
         builder.Services.AddOptions<AIVectorSearchOptions>()
             .BindConfiguration("Umbraco:AI:Search");
 
-        // Register as a named index so the search framework routes requests
-        // for "VectorContentIndex" to our AIVectorIndexer/AIVectorSearcher.
         builder.Services.Configure<IndexOptions>(options =>
             options.RegisterIndex<AIVectorIndexer, AIVectorSearcher>("VectorContentIndex"));
     }

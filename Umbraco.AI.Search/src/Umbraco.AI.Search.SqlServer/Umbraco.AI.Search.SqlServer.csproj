@@ -7,11 +7,21 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+        <PackageReference Include="Umbraco.Cms.Persistence.EFCore" />
         <PackageReference Include="Umbraco.Cms.Persistence.EFCore.SqlServer" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Search.EFCore\Umbraco.AI.Search.EFCore.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Search.Core\Umbraco.AI.Search.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Search.Startup</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Search.Tests.Unit</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Numerics.Tensors;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -6,21 +5,21 @@ using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.AI.Search.EFCore.VectorStore;
+namespace Umbraco.AI.Search.Sqlite.VectorStore;
 
 /// <summary>
-/// EF Core implementation of the vector store that persists vectors to SQL Server or SQLite.
+/// SQLite implementation of the vector store using brute-force in-memory similarity search.
 /// </summary>
 /// <remarks>
-/// Vectors are stored as binary blobs (IEEE 754 float arrays). Similarity search is performed
-/// in-memory after loading candidate vectors from the database, since neither SQL Server nor
-/// SQLite have native vector similarity support.
+/// Vectors are stored as binary blobs (IEEE 754 float arrays). Similarity search loads
+/// all candidate vectors and computes cosine similarity in .NET. A future version will
+/// use sqlite-vec for native vector search.
 /// </remarks>
-internal sealed class EFCoreAIVectorStore : IAIVectorStore
+internal sealed class SqliteAIVectorStore : IAIVectorStore
 {
     private readonly IEFCoreScopeProvider<UmbracoAISearchDbContext> _scopeProvider;
 
-    public EFCoreAIVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
+    public SqliteAIVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }

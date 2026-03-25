@@ -20,14 +20,14 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task UpsertAsync(string indexName, string documentId, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(string indexName, string documentId, string? culture, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
             AIVectorEntryEntity? existing = await db.VectorEntries
-                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId && e.ChunkIndex == chunkIndex, cancellationToken);
+                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId && e.Culture == culture && e.ChunkIndex == chunkIndex, cancellationToken);
 
             byte[] vectorBytes = VectorToBytes(vector);
             string? metadataJson = metadata is not null ? JsonSerializer.Serialize(metadata) : null;
@@ -38,6 +38,7 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
                 {
                     IndexName = indexName,
                     DocumentId = documentId,
+                    Culture = culture,
                     ChunkIndex = chunkIndex,
                     Vector = vectorBytes,
                     Metadata = metadataJson,
@@ -57,7 +58,30 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(string indexName, string documentId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(string indexName, string documentId, string? culture, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+
+        await scope.ExecuteWithContextAsync<bool>(async db =>
+        {
+            List<AIVectorEntryEntity> entities = await db.VectorEntries
+                .Where(e => e.IndexName == indexName && e.DocumentId == documentId && e.Culture == culture)
+                .ToListAsync(cancellationToken);
+
+            if (entities.Count > 0)
+            {
+                db.VectorEntries.RemoveRange(entities);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            return true;
+        });
+
+        scope.Complete();
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteDocumentAsync(string indexName, string documentId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
@@ -80,7 +104,7 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, string? culture = null, int topK = 10, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
@@ -90,16 +114,27 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
         {
             // Use VECTOR_DISTANCE for server-side cosine similarity search.
             // VECTOR_DISTANCE returns distance (lower = more similar), so we compute 1 - distance for similarity score.
-            List<VectorSearchRow> rows = await db.Database
-                .SqlQuery<VectorSearchRow>(
-                    $"""
-                    SELECT DocumentId, 1.0 - VECTOR_DISTANCE('cosine', Vector, {queryBytes}) AS Score, Metadata
-                    FROM umbracoAISearchVectorEntry
-                    WHERE IndexName = {indexName}
-                    ORDER BY Score DESC
-                    OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
-                    """)
-                .ToListAsync(cancellationToken);
+            List<VectorSearchRow> rows = culture is not null
+                ? await db.Database
+                    .SqlQuery<VectorSearchRow>(
+                        $"""
+                        SELECT DocumentId, 1.0 - VECTOR_DISTANCE('cosine', Vector, {queryBytes}) AS Score, Metadata
+                        FROM umbracoAISearchVectorEntry
+                        WHERE IndexName = {indexName} AND Culture = {culture}
+                        ORDER BY Score DESC
+                        OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
+                        """)
+                    .ToListAsync(cancellationToken)
+                : await db.Database
+                    .SqlQuery<VectorSearchRow>(
+                        $"""
+                        SELECT DocumentId, 1.0 - VECTOR_DISTANCE('cosine', Vector, {queryBytes}) AS Score, Metadata
+                        FROM umbracoAISearchVectorEntry
+                        WHERE IndexName = {indexName}
+                        ORDER BY Score DESC
+                        OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
+                        """)
+                    .ToListAsync(cancellationToken);
 
             return (IReadOnlyList<AIVectorSearchResult>)rows
                 .Select(r => new AIVectorSearchResult(r.DocumentId, r.Score, DeserializeMetadata(r.Metadata)))

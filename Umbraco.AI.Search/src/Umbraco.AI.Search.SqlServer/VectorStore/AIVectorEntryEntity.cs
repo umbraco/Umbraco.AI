@@ -21,6 +21,11 @@ internal class AIVectorEntryEntity
     public string DocumentId { get; set; } = string.Empty;
 
     /// <summary>
+    /// The culture code for this entry, or null for invariant content.
+    /// </summary>
+    public string? Culture { get; set; }
+
+    /// <summary>
     /// Zero-based index of this chunk within the document.
     /// </summary>
     public int ChunkIndex { get; set; }

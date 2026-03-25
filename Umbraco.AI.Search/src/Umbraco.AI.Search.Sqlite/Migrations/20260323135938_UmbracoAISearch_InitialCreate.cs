@@ -18,6 +18,7 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     IndexName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     DocumentId = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    Culture = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
                     ChunkIndex = table.Column<int>(type: "INTEGER", nullable: false),
                     Vector = table.Column<byte[]>(type: "BLOB", nullable: false),
                     Metadata = table.Column<string>(type: "TEXT", nullable: true)
@@ -33,14 +34,14 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
                 column: "IndexName");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId",
+                name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId_Culture",
                 table: "umbracoAISearchVectorEntry",
-                columns: new[] { "IndexName", "DocumentId" });
+                columns: new[] { "IndexName", "DocumentId", "Culture" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId_ChunkIndex",
+                name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId_Culture_ChunkIndex",
                 table: "umbracoAISearchVectorEntry",
-                columns: new[] { "IndexName", "DocumentId", "ChunkIndex" },
+                columns: new[] { "IndexName", "DocumentId", "Culture", "ChunkIndex" },
                 unique: true);
         }
 

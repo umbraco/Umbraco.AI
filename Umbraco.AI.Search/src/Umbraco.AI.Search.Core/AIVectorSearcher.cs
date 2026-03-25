@@ -63,6 +63,7 @@ public sealed class AIVectorSearcher : ISearcher
             IReadOnlyList<AIVectorSearchResult> vectorResults = await _vectorStore.SearchAsync(
                 indexAlias,
                 queryEmbedding.Vector,
+                culture,
                 topK);
 
             // Deduplicate by document: multiple chunks from the same document may match.

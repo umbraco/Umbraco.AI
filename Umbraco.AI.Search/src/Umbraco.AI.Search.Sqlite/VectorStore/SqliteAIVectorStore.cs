@@ -25,14 +25,14 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task UpsertAsync(string indexName, string documentId, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(string indexName, string documentId, string? culture, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
             AIVectorEntryEntity? existing = await db.VectorEntries
-                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId && e.ChunkIndex == chunkIndex, cancellationToken);
+                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId && e.Culture == culture && e.ChunkIndex == chunkIndex, cancellationToken);
 
             byte[] vectorBytes = VectorToBytes(vector);
             string? metadataJson = metadata is not null ? JsonSerializer.Serialize(metadata) : null;
@@ -43,6 +43,7 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
                 {
                     IndexName = indexName,
                     DocumentId = documentId,
+                    Culture = culture,
                     ChunkIndex = chunkIndex,
                     Vector = vectorBytes,
                     Metadata = metadataJson,
@@ -62,7 +63,30 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(string indexName, string documentId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(string indexName, string documentId, string? culture, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+
+        await scope.ExecuteWithContextAsync<bool>(async db =>
+        {
+            List<AIVectorEntryEntity> entities = await db.VectorEntries
+                .Where(e => e.IndexName == indexName && e.DocumentId == documentId && e.Culture == culture)
+                .ToListAsync(cancellationToken);
+
+            if (entities.Count > 0)
+            {
+                db.VectorEntries.RemoveRange(entities);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            return true;
+        });
+
+        scope.Complete();
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteDocumentAsync(string indexName, string documentId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
@@ -85,15 +109,21 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, string? culture = null, int topK = 10, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync(async db =>
         {
-            List<AIVectorEntryEntity> entries = await db.VectorEntries
-                .Where(e => e.IndexName == indexName)
-                .ToListAsync(cancellationToken);
+            IQueryable<AIVectorEntryEntity> query = db.VectorEntries
+                .Where(e => e.IndexName == indexName);
+
+            if (culture is not null)
+            {
+                query = query.Where(e => e.Culture == culture);
+            }
+
+            List<AIVectorEntryEntity> entries = await query.ToListAsync(cancellationToken);
 
             if (entries.Count == 0)
             {

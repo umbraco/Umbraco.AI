@@ -28,6 +28,10 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
                     b.Property<int>("ChunkIndex")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Culture")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DocumentId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -49,9 +53,9 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
 
                     b.HasIndex("IndexName");
 
-                    b.HasIndex("IndexName", "DocumentId");
+                    b.HasIndex("IndexName", "DocumentId", "Culture");
 
-                    b.HasIndex("IndexName", "DocumentId", "ChunkIndex")
+                    b.HasIndex("IndexName", "DocumentId", "Culture", "ChunkIndex")
                         .IsUnique();
 
                     b.ToTable("umbracoAISearchVectorEntry", (string)null);

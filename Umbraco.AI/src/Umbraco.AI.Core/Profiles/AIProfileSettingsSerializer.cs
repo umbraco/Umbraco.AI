@@ -35,7 +35,7 @@ internal static class AIProfileSettingsSerializer
         {
             AICapability.Chat => JsonSerializer.Deserialize<AIChatProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
             AICapability.Embedding => JsonSerializer.Deserialize<AIEmbeddingProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
-            // Future: Add Media, Moderation cases when implemented
+            AICapability.SpeechToText => JsonSerializer.Deserialize<AISpeechToTextProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
             _ => null
         };
     }

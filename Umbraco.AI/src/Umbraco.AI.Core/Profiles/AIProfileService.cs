@@ -70,6 +70,7 @@ internal sealed class AIProfileService : IAIProfileService
         {
             AICapability.Chat => settings.DefaultChatProfileId,
             AICapability.Embedding => settings.DefaultEmbeddingProfileId,
+            AICapability.SpeechToText => settings.DefaultSpeechToTextProfileId,
             _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
         };
 
@@ -87,6 +88,7 @@ internal sealed class AIProfileService : IAIProfileService
         {
             AICapability.Chat => _options.DefaultChatProfileAlias,
             AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
+            AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
             _ => null
         };
 

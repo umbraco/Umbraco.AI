@@ -2,6 +2,7 @@ using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.SpeechToText;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Versioning;
@@ -47,6 +48,22 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AIEmbeddingMiddlewareCollectionBuilder AIEmbeddingMiddleware(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIEmbeddingMiddlewareCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI speech-to-text middleware collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI speech-to-text middleware collection builder.</returns>
+    /// <remarks>
+    /// Use this to add, remove, or reorder speech-to-text middleware. Example:
+    /// <code>
+    /// builder.AISpeechToTextMiddleware()
+    ///     .Append&lt;LoggingSpeechToTextMiddleware&gt;()
+    ///     .Append&lt;CachingMiddleware&gt;();
+    /// </code>
+    /// </remarks>
+    public static AISpeechToTextMiddlewareCollectionBuilder AISpeechToTextMiddleware(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AISpeechToTextMiddlewareCollectionBuilder>();
 
     /// <summary>
     /// Gets the AI tools collection builder.

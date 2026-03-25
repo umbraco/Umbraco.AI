@@ -8,7 +8,7 @@ using Umbraco.AI.Extensions;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.SpeechToText.Models;
 
-#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
+#pragma warning disable MEAI001 // SpeechToTextOptions/SpeechToTextResponse are experimental in M.E.AI
 
 namespace Umbraco.AI.Web.Api.Management.SpeechToText.Controllers;
 
@@ -69,20 +69,16 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
                 SpeechLanguage = language
             };
 
+            // Resolve profile ID from IdOrAlias
+            var profileId = profileIdOrAlias != null
+                ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken)
+                : null;
+
             await using var audioStream = audioFile.OpenReadStream();
 
-            SpeechToTextResponse result;
-
-            if (profileIdOrAlias != null)
-            {
-                var idOrAlias = IdOrAlias.Parse(profileIdOrAlias, null);
-                var profileId = await _profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
-                result = await _speechToTextService.TranscribeAsync(profileId, audioStream, options, cancellationToken);
-            }
-            else
-            {
-                result = await _speechToTextService.TranscribeAsync(audioStream, options, cancellationToken);
-            }
+            var result = profileId.HasValue
+                ? await _speechToTextService.TranscribeAsync(profileId.Value, audioStream, options, cancellationToken)
+                : await _speechToTextService.TranscribeAsync(audioStream, options, cancellationToken);
 
             var response = new SpeechToTextResponseModel
             {

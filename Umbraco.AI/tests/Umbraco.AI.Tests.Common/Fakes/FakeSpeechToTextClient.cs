@@ -32,7 +32,7 @@ public class FakeSpeechToTextClient : ISpeechToTextClient
         return Task.FromResult(new SpeechToTextResponse(_defaultText));
     }
 
-    public IAsyncEnumerable<StreamingSpeechToTextResponse> GetStreamingTextAsync(
+    public IAsyncEnumerable<SpeechToTextResponseUpdate> GetStreamingTextAsync(
         Stream audioSpeechStream,
         SpeechToTextOptions? options = null,
         CancellationToken cancellationToken = default)

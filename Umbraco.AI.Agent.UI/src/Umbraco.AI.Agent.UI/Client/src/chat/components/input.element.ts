@@ -6,7 +6,6 @@ import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-
 import { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "../context.js";
 import type { UaiAgentItem } from "../types/index.js";
 import type { UaiInputContent } from "../types/index.js";
-import "./voice-button.element.js";
 
 /** Maximum file size in bytes (default 10MB) */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;

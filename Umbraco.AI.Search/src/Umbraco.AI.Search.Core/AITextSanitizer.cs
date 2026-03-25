@@ -6,7 +6,7 @@ namespace Umbraco.AI.Search.Core;
 /// <summary>
 /// Utility for cleaning text before chunking and embedding.
 /// </summary>
-public static partial class AITextSanitizer
+internal static partial class AITextSanitizer
 {
     /// <summary>
     /// Strips HTML tags, decodes HTML entities, and normalizes whitespace.

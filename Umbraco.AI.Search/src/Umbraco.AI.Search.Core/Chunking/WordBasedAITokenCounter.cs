@@ -6,7 +6,7 @@ namespace Umbraco.AI.Search.Core.Chunking;
 /// for most embedding models. Can be replaced via DI with a model-specific
 /// tokenizer for higher accuracy.
 /// </summary>
-public sealed class WordBasedAITokenCounter : IAITokenCounter
+internal sealed class WordBasedAITokenCounter : IAITokenCounter
 {
     private const double TokensPerWord = 1.3;
 

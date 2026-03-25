@@ -4,7 +4,7 @@ namespace Umbraco.AI.Search.Core.Chunking;
 /// Splits text into chunks using a recursive character splitting strategy.
 /// Tries to split on paragraph boundaries first, then sentences, then words.
 /// </summary>
-public sealed class RecursiveAITextChunker : IAITextChunker
+internal sealed class RecursiveAITextChunker : IAITextChunker
 {
     private static readonly string[] Separators = ["\n\n", "\n", ". ", " "];
 

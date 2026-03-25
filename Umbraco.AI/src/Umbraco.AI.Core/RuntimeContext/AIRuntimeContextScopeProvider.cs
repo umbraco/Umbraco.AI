@@ -22,6 +22,12 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
+    /// Fallback storage for detached scopes (no HttpContext available).
+    /// Uses AsyncLocal so each async flow gets its own stack.
+    /// </summary>
+    private static readonly AsyncLocal<Stack<AIRuntimeContext>?> _detachedContextStack = new();
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AIRuntimeContextScopeProvider"/> class.
     /// </summary>
     /// <param name="httpContextAccessor">The HTTP context accessor.</param>
@@ -41,6 +47,12 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
                 return stack.Peek();
             }
 
+            // Fallback to detached (AsyncLocal) storage
+            if (_detachedContextStack.Value is { Count: > 0 } detachedStack)
+            {
+                return detachedStack.Peek();
+            }
+
             return null;
         }
     }
@@ -54,10 +66,21 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        // If no HttpContext, return a detached scope
+        // If no HttpContext, use AsyncLocal-backed detached scope
         if (httpContext == null)
         {
-            return new DetachedScope(new AIRuntimeContext(items));
+            var detachedStack = _detachedContextStack.Value;
+            if (detachedStack is null)
+            {
+                detachedStack = new Stack<AIRuntimeContext>();
+                _detachedContextStack.Value = detachedStack;
+            }
+
+            var detachedParent = detachedStack.Count > 0 ? detachedStack.Peek() : null;
+            var detachedContext = new AIRuntimeContext(items);
+            detachedStack.Push(detachedContext);
+
+            return new DetachedScope(detachedContext, detachedStack, detachedParent);
         }
 
         // Get or create stack
@@ -128,23 +151,46 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
 
     /// <summary>
     /// A detached scope for scenarios without HttpContext.
+    /// Uses AsyncLocal-backed stack for context accessibility via the accessor.
     /// </summary>
     private sealed class DetachedScope : IAIRuntimeContextScope
     {
-        public DetachedScope(AIRuntimeContext context)
+        private readonly Stack<AIRuntimeContext> _stack;
+        private bool _disposed;
+
+        public DetachedScope(AIRuntimeContext context, Stack<AIRuntimeContext> stack, AIRuntimeContext? parentContext)
         {
             Context = context;
+            ParentContext = parentContext;
+            _stack = stack;
         }
 
         public AIRuntimeContext Context { get; }
 
-        public AIRuntimeContext? ParentContext => null;
+        public AIRuntimeContext? ParentContext { get; }
 
-        public int Depth => 1;
+        public int Depth => _stack.Count;
 
         public void Dispose()
         {
-            // No-op: detached scopes don't manage any shared state
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            // Pop this context from the detached stack
+            if (_stack.Count > 0 && ReferenceEquals(_stack.Peek(), Context))
+            {
+                _stack.Pop();
+            }
+
+            // Clean up AsyncLocal if stack is empty
+            if (_stack.Count == 0)
+            {
+                _detachedContextStack.Value = null;
+            }
         }
     }
 }

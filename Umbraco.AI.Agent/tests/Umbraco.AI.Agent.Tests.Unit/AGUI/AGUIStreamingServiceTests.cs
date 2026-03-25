@@ -90,11 +90,10 @@ public class AGUIStreamingServiceTests
         // Act
         var events = await CollectEvents(agent, request);
 
-        // Assert (RunStarted + MessagesSnapshot + RunFinished)
-        events.Count.ShouldBe(3);
+        // Assert (RunStarted + RunFinished — no MessagesSnapshot when no files were rewritten)
+        events.Count.ShouldBe(2);
         events[0].ShouldBeOfType<RunStartedEvent>();
-        events[1].ShouldBeOfType<MessagesSnapshotEvent>();
-        events[2].ShouldBeOfType<RunFinishedEvent>();
+        events[1].ShouldBeOfType<RunFinishedEvent>();
     }
 
     #endregion

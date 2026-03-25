@@ -81,7 +81,7 @@ public class GetContentByRouteToolTests
         result.ShouldBeOfType<GetUmbracoContentResult>();
         var contentResult = (GetUmbracoContentResult)result;
         contentResult.Success.ShouldBeFalse();
-        contentResult.Message.ShouldContain("not found");
+        contentResult.Message.ShouldContain("No published content was found");
     }
 
     [Fact]

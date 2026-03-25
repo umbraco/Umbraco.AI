@@ -9,6 +9,7 @@ using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Cache;
@@ -249,6 +250,10 @@ public class ServiceResolutionTests : IDisposable
         // Profile resolution
         services.AddSingleton<IAIProfileRepository, InMemoryAIProfileRepository>();
         services.AddSingleton<IAIProfileService, AIProfileService>();
+
+        // Guardrail system
+        services.AddSingleton<IAIGuardrailRepository, InMemoryAIGuardrailRepository>();
+        services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
 
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core.VectorStore;
-using Umbraco.AI.Search.EfCore;
-using Umbraco.AI.Search.EfCore.Notifications;
-using Umbraco.AI.Search.EfCore.VectorStore;
+using Umbraco.AI.Search.EFCore;
+using Umbraco.AI.Search.EFCore.Notifications;
+using Umbraco.AI.Search.EFCore.VectorStore;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
@@ -28,7 +28,7 @@ public static class UmbracoBuilderExtensions
         });
 
         // Replace in-memory vector store with EF Core implementation
-        builder.Services.AddSingleton<IAIVectorStore, EfCoreAIVectorStore>();
+        builder.Services.AddSingleton<IAIVectorStore, EFCoreAIVectorStore>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchMigrationNotificationHandler>();

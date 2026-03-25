@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.AI.Search.EfCore.VectorStore;
+using Umbraco.AI.Search.EFCore.VectorStore;
 using Umbraco.Cms.Core;
 
-namespace Umbraco.AI.Search.EfCore;
+namespace Umbraco.AI.Search.EFCore;
 
 /// <summary>
 /// EF Core DbContext for Umbraco AI Search persistence.
@@ -50,7 +50,7 @@ public class UmbracoAISearchDbContext : DbContext
 
             default:
                 throw new InvalidOperationException(
-                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Search.EfCore. " +
+                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Search.EFCore. " +
                     $"Supported providers: SQL Server, SQLite.");
         }
     }

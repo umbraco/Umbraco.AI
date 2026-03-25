@@ -4,7 +4,7 @@ using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
-namespace Umbraco.AI.Search.EfCore.Notifications;
+namespace Umbraco.AI.Search.EFCore.Notifications;
 
 /// <summary>
 /// Notification handler that runs pending EF Core migrations for AI Search on application startup.

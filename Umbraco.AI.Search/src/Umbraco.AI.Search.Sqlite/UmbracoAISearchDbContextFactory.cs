@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Umbraco.AI.Search.EfCore;
+using Umbraco.AI.Search.EFCore;
 
 namespace Umbraco.AI.Search.Sqlite;
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.AI.Search.EfCore;
+using Umbraco.AI.Search.EFCore;
 
 #nullable disable
 
@@ -24,7 +24,7 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.AI.Search.EfCore.VectorStore.AIVectorEntryEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Search.EFCore.VectorStore.AIVectorEntryEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

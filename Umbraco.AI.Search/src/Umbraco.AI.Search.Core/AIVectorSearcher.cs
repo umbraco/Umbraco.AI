@@ -96,7 +96,7 @@ public sealed class AIVectorSearcher : ISearcher
     /// <param name="culture">Optional culture filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Deduplicated results ordered by similarity score (descending).</returns>
-    public async Task<List<AIVectorSearchResult>> SearchByQueryAsync(
+    internal async Task<List<AIVectorSearchResult>> SearchByQueryAsync(
         string indexAlias,
         string query,
         string? culture = null,
@@ -114,7 +114,7 @@ public sealed class AIVectorSearcher : ISearcher
     /// <param name="culture">Optional culture filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Deduplicated results ordered by similarity score (descending).</returns>
-    public async Task<List<AIVectorSearchResult>> SearchByVectorAsync(
+    internal async Task<List<AIVectorSearchResult>> SearchByVectorAsync(
         string indexAlias,
         ReadOnlyMemory<float> queryVector,
         string? culture = null,

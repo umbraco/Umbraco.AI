@@ -274,8 +274,8 @@ ProductName/
 │   │   │   ├── AIConnectionEntity.cs
 │   │   │   └── AIProfileEntity.cs
 │   │   └── Repositories/
-│   │       ├── EfCoreAIConnectionRepository.cs
-│   │       └── EfCoreAIProfileRepository.cs
+│   │       ├── EFCoreAIConnectionRepository.cs
+│   │       └── EFCoreAIProfileRepository.cs
 │   │
 │   ├── ProductName.Persistence.SqlServer/   # SQL Server Migrations
 │   │   └── Migrations/

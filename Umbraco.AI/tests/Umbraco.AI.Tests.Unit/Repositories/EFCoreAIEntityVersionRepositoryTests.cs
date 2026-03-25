@@ -5,20 +5,20 @@ using Umbraco.AI.Tests.Common.Fixtures;
 
 namespace Umbraco.AI.Tests.Unit.Repositories;
 
-[Collection("EfCoreEntityVersionTests")]
-public class EfCoreAIEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixture>
+[Collection("EFCoreEntityVersionTests")]
+public class EFCoreAIEntityVersionRepositoryTests : IClassFixture<EFCoreTestFixture>
 {
-    private readonly EfCoreTestFixture _fixture;
+    private readonly EFCoreTestFixture _fixture;
 
-    public EfCoreAIEntityVersionRepositoryTests(EfCoreTestFixture fixture)
+    public EFCoreAIEntityVersionRepositoryTests(EFCoreTestFixture fixture)
     {
         _fixture = fixture;
     }
 
-    private EfCoreAIEntityVersionRepository CreateRepository(UmbracoAIDbContext context)
+    private EFCoreAIEntityVersionRepository CreateRepository(UmbracoAIDbContext context)
     {
-        var scopeProvider = new TestEfCoreScopeProvider(() => context);
-        return new EfCoreAIEntityVersionRepository(scopeProvider);
+        var scopeProvider = new TestEFCoreScopeProvider(() => context);
+        return new EFCoreAIEntityVersionRepository(scopeProvider);
     }
 
     private async Task ClearEntityVersionsAsync()
@@ -484,7 +484,7 @@ public class EfCoreAIEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
 /// <summary>
 /// Collection definition to prevent parallel test execution for entity version repository tests.
 /// </summary>
-[CollectionDefinition("EfCoreEntityVersionTests", DisableParallelization = true)]
-public class EfCoreEntityVersionTestsCollection
+[CollectionDefinition("EFCoreEntityVersionTests", DisableParallelization = true)]
+public class EFCoreEntityVersionTestsCollection
 {
 }

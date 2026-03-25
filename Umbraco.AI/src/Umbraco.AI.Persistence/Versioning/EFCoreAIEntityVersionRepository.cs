@@ -8,15 +8,15 @@ namespace Umbraco.AI.Persistence.Versioning;
 /// <summary>
 /// EF Core implementation of <see cref="IAIEntityVersionRepository"/>.
 /// </summary>
-internal sealed class EfCoreAIEntityVersionRepository : IAIEntityVersionRepository
+internal sealed class EFCoreAIEntityVersionRepository : IAIEntityVersionRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EfCoreAIEntityVersionRepository"/> class.
+    /// Initializes a new instance of the <see cref="EFCoreAIEntityVersionRepository"/> class.
     /// </summary>
     /// <param name="scopeProvider">The EF Core scope provider.</param>
-    public EfCoreAIEntityVersionRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIEntityVersionRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }

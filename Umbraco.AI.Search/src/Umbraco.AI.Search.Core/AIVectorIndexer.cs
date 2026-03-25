@@ -12,20 +12,20 @@ namespace Umbraco.AI.Search.Core;
 
 /// <summary>
 /// An <see cref="IIndexer"/> implementation that generates vector embeddings from content
-/// fields and stores them in an <see cref="IVectorStore"/>.
+/// fields and stores them in an <see cref="IAIVectorStore"/>.
 /// </summary>
-public sealed class VectorIndexer : IIndexer
+public sealed class AIVectorIndexer : IIndexer
 {
-    private readonly IVectorStore _vectorStore;
+    private readonly IAIVectorStore _vectorStore;
     private readonly IAIEmbeddingService _embeddingService;
-    private readonly IOptions<VectorSearchOptions> _options;
-    private readonly ILogger<VectorIndexer> _logger;
+    private readonly IOptions<AIVectorSearchOptions> _options;
+    private readonly ILogger<AIVectorIndexer> _logger;
 
-    public VectorIndexer(
-        IVectorStore vectorStore,
+    public AIVectorIndexer(
+        IAIVectorStore vectorStore,
         IAIEmbeddingService embeddingService,
-        IOptions<VectorSearchOptions> options,
-        ILogger<VectorIndexer> logger)
+        IOptions<AIVectorSearchOptions> options,
+        ILogger<AIVectorIndexer> logger)
     {
         _vectorStore = vectorStore;
         _embeddingService = embeddingService;

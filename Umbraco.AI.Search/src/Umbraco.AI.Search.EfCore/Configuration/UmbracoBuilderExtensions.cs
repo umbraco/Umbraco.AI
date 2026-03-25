@@ -28,7 +28,7 @@ public static class UmbracoBuilderExtensions
         });
 
         // Replace in-memory vector store with EF Core implementation
-        builder.Services.AddSingleton<IVectorStore, EfCoreVectorStore>();
+        builder.Services.AddSingleton<IAIVectorStore, EfCoreAIVectorStore>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchMigrationNotificationHandler>();

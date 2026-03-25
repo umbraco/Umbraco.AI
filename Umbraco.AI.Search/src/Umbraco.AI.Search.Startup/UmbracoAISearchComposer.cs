@@ -13,7 +13,7 @@ namespace Umbraco.AI.Search.Startup;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This Composer registers the <see cref="VectorIndexer"/> and <see cref="VectorSearcher"/>
+/// This Composer registers the <see cref="AIVectorIndexer"/> and <see cref="AIVectorSearcher"/>
 /// as concrete types only — not as <c>IIndexer</c>/<c>ISearcher</c> — to avoid becoming the
 /// default search provider and overriding Examine or other providers.
 /// </para>
@@ -30,19 +30,19 @@ public sealed class UmbracoAISearchComposer : IComposer
         // Register concrete types only — NOT as IIndexer/ISearcher.
         // This keeps them available in DI for index registration to resolve,
         // without polluting the default IIndexer/ISearcher resolution.
-        builder.Services.AddTransient<VectorIndexer>();
-        builder.Services.AddTransient<VectorSearcher>();
+        builder.Services.AddTransient<AIVectorIndexer>();
+        builder.Services.AddTransient<AIVectorSearcher>();
 
         // Register EF Core persistence for the vector store (replaces in-memory default)
         builder.AddUmbracoAISearchPersistence();
 
         // Register configuration options
-        builder.Services.AddOptions<VectorSearchOptions>()
+        builder.Services.AddOptions<AIVectorSearchOptions>()
             .BindConfiguration("Umbraco:AI:Search");
 
         // Register as a named index so the search framework routes requests
-        // for "VectorContentIndex" to our VectorIndexer/VectorSearcher.
+        // for "VectorContentIndex" to our AIVectorIndexer/AIVectorSearcher.
         builder.Services.Configure<IndexOptions>(options =>
-            options.RegisterIndex<VectorIndexer, VectorSearcher>("VectorContentIndex"));
+            options.RegisterIndex<AIVectorIndexer, AIVectorSearcher>("VectorContentIndex"));
     }
 }

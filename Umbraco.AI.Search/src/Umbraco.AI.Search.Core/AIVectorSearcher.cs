@@ -17,18 +17,18 @@ namespace Umbraco.AI.Search.Core;
 /// An <see cref="ISearcher"/> implementation that performs semantic similarity search
 /// using vector embeddings.
 /// </summary>
-public sealed class VectorSearcher : ISearcher
+public sealed class AIVectorSearcher : ISearcher
 {
-    private readonly IVectorStore _vectorStore;
+    private readonly IAIVectorStore _vectorStore;
     private readonly IAIEmbeddingService _embeddingService;
-    private readonly IOptions<VectorSearchOptions> _options;
-    private readonly ILogger<VectorSearcher> _logger;
+    private readonly IOptions<AIVectorSearchOptions> _options;
+    private readonly ILogger<AIVectorSearcher> _logger;
 
-    public VectorSearcher(
-        IVectorStore vectorStore,
+    public AIVectorSearcher(
+        IAIVectorStore vectorStore,
         IAIEmbeddingService embeddingService,
-        IOptions<VectorSearchOptions> options,
-        ILogger<VectorSearcher> logger)
+        IOptions<AIVectorSearchOptions> options,
+        ILogger<AIVectorSearcher> logger)
     {
         _vectorStore = vectorStore;
         _embeddingService = embeddingService;
@@ -60,13 +60,13 @@ public sealed class VectorSearcher : ISearcher
             Embedding<float> queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query);
 
             var topK = _options.Value.DefaultTopK;
-            IReadOnlyList<VectorSearchResult> vectorResults = await _vectorStore.SearchAsync(
+            IReadOnlyList<AIVectorSearchResult> vectorResults = await _vectorStore.SearchAsync(
                 indexAlias,
                 queryEmbedding.Vector,
                 topK);
 
             // Apply pagination
-            List<VectorSearchResult> paged = vectorResults
+            List<AIVectorSearchResult> paged = vectorResults
                 .Skip(skip)
                 .Take(take)
                 .ToList();

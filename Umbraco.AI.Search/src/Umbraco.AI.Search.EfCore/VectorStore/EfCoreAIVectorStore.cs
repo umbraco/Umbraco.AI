@@ -16,11 +16,11 @@ namespace Umbraco.AI.Search.EfCore.VectorStore;
 /// in-memory after loading candidate vectors from the database, since neither SQL Server nor
 /// SQLite have native vector similarity support.
 /// </remarks>
-internal class EfCoreVectorStore : IVectorStore
+internal sealed class EfCoreAIVectorStore : IAIVectorStore
 {
     private readonly IEFCoreScopeProvider<UmbracoAISearchDbContext> _scopeProvider;
 
-    public EfCoreVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
+    public EfCoreAIVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
@@ -84,11 +84,11 @@ internal class EfCoreVectorStore : IVectorStore
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<VectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
-        IReadOnlyList<VectorSearchResult> results = await scope.ExecuteWithContextAsync(async db =>
+        IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync(async db =>
         {
             List<AIVectorEntryEntity> entries = await db.VectorEntries
                 .Where(e => e.IndexName == indexName)
@@ -96,11 +96,11 @@ internal class EfCoreVectorStore : IVectorStore
 
             if (entries.Count == 0)
             {
-                return (IReadOnlyList<VectorSearchResult>)Array.Empty<VectorSearchResult>();
+                return (IReadOnlyList<AIVectorSearchResult>)Array.Empty<AIVectorSearchResult>();
             }
 
-            return (IReadOnlyList<VectorSearchResult>)entries
-                .Select(e => new VectorSearchResult(
+            return (IReadOnlyList<AIVectorSearchResult>)entries
+                .Select(e => new AIVectorSearchResult(
                     e.DocumentId,
                     TensorPrimitives.CosineSimilarity(queryVector.Span, BytesToVector(e.Vector)),
                     DeserializeMetadata(e.Metadata)))

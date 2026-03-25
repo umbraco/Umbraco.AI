@@ -3,7 +3,7 @@ namespace Umbraco.AI.Search.Core.Configuration;
 /// <summary>
 /// Configuration options for AI vector search.
 /// </summary>
-public sealed class VectorSearchOptions
+public sealed class AIVectorSearchOptions
 {
     /// <summary>
     /// Maximum number of results to return from vector similarity search

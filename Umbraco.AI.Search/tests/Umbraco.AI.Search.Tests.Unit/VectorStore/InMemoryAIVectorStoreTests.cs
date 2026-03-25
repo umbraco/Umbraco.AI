@@ -4,9 +4,9 @@ using Xunit;
 
 namespace Umbraco.AI.Search.Tests.Unit.VectorStore;
 
-public class InMemoryVectorStoreTests
+public class InMemoryAIVectorStoreTests
 {
-    private readonly InMemoryVectorStore _store = new();
+    private readonly InMemoryAIVectorStore _store = new();
     private const string IndexName = "test-index";
 
     [Fact]
@@ -56,7 +56,7 @@ public class InMemoryVectorStoreTests
         // Query vector close to X axis
         float[] query = [0.9f, 0.1f, 0.0f];
 
-        IReadOnlyList<VectorSearchResult> results = await _store.SearchAsync(IndexName, query, topK: 3);
+        IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, query, topK: 3);
 
         results.Count.ShouldBe(3);
         results[0].DocumentId.ShouldBe("doc-x");
@@ -68,7 +68,7 @@ public class InMemoryVectorStoreTests
     {
         float[] query = [1.0f, 0.0f, 0.0f];
 
-        IReadOnlyList<VectorSearchResult> results = await _store.SearchAsync(IndexName, query);
+        IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, query);
 
         results.ShouldBeEmpty();
     }
@@ -80,7 +80,7 @@ public class InMemoryVectorStoreTests
         await _store.UpsertAsync(IndexName, "doc2", new float[] { 0.0f, 1.0f });
         await _store.UpsertAsync(IndexName, "doc3", new float[] { 0.5f, 0.5f });
 
-        IReadOnlyList<VectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f }, topK: 2);
+        IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f }, topK: 2);
 
         results.Count.ShouldBe(2);
     }
@@ -91,7 +91,7 @@ public class InMemoryVectorStoreTests
         var metadata = new Dictionary<string, object> { ["type"] = "article" };
         await _store.UpsertAsync(IndexName, "doc1", new float[] { 1.0f, 0.0f }, metadata);
 
-        IReadOnlyList<VectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f });
+        IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f });
 
         results[0].Metadata.ShouldNotBeNull();
         results[0].Metadata!["type"].ShouldBe("article");

@@ -6,7 +6,7 @@ namespace Umbraco.AI.Search.Core.VectorStore;
 /// <summary>
 /// In-memory vector store for development and testing. Not suitable for production use.
 /// </summary>
-public sealed class InMemoryVectorStore : IVectorStore
+public sealed class InMemoryAIVectorStore : IAIVectorStore
 {
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, VectorEntry>> _indexes = new();
 
@@ -27,15 +27,15 @@ public sealed class InMemoryVectorStore : IVectorStore
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<VectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default)
     {
         if (!_indexes.TryGetValue(indexName, out ConcurrentDictionary<string, VectorEntry>? index) || index.IsEmpty)
         {
-            return Task.FromResult<IReadOnlyList<VectorSearchResult>>(Array.Empty<VectorSearchResult>());
+            return Task.FromResult<IReadOnlyList<AIVectorSearchResult>>(Array.Empty<AIVectorSearchResult>());
         }
 
-        IReadOnlyList<VectorSearchResult> results = index
-            .Select(kvp => new VectorSearchResult(
+        IReadOnlyList<AIVectorSearchResult> results = index
+            .Select(kvp => new AIVectorSearchResult(
                 kvp.Key,
                 TensorPrimitives.CosineSimilarity(queryVector.Span, kvp.Value.Vector.AsSpan()),
                 kvp.Value.Metadata))

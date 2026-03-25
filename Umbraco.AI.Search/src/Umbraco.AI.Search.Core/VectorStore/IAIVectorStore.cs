@@ -3,7 +3,7 @@ namespace Umbraco.AI.Search.Core.VectorStore;
 /// <summary>
 /// Abstraction for vector storage backends used by the AI search provider.
 /// </summary>
-public interface IVectorStore
+public interface IAIVectorStore
 {
     /// <summary>
     /// Inserts or updates a vector with associated metadata.
@@ -18,7 +18,7 @@ public interface IVectorStore
     /// <summary>
     /// Performs a similarity search against stored vectors.
     /// </summary>
-    Task<IReadOnlyList<VectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, int topK = 10, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes all vectors for a given index.

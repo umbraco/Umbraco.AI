@@ -32,6 +32,9 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("int");
+
                     b.Property<string>("DocumentId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -53,7 +56,9 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
 
                     b.HasIndex("IndexName");
 
-                    b.HasIndex("IndexName", "DocumentId")
+                    b.HasIndex("IndexName", "DocumentId");
+
+                    b.HasIndex("IndexName", "DocumentId", "ChunkIndex")
                         .IsUnique();
 
                     b.ToTable("umbracoAISearchVectorEntry", (string)null);

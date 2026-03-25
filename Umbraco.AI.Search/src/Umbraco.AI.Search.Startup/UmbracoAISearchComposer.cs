@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core;
+using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core.Composing;
@@ -30,6 +31,9 @@ public sealed class UmbracoAISearchComposer : IComposer
         // Register concrete types only — NOT as IIndexer/ISearcher.
         // This keeps them available in DI for index registration to resolve,
         // without polluting the default IIndexer/ISearcher resolution.
+        builder.Services.AddSingleton<IAITokenCounter, WordBasedAITokenCounter>();
+        builder.Services.AddSingleton<IAITextChunker, RecursiveAITextChunker>();
+
         builder.Services.AddTransient<AIVectorIndexer>();
         builder.Services.AddTransient<AIVectorSearcher>();
 

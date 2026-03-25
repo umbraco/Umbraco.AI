@@ -6,12 +6,12 @@ namespace Umbraco.AI.Search.Core.VectorStore;
 public interface IAIVectorStore
 {
     /// <summary>
-    /// Inserts or updates a vector with associated metadata.
+    /// Inserts or updates a vector chunk with associated metadata.
     /// </summary>
-    Task UpsertAsync(string indexName, string documentId, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default);
+    Task UpsertAsync(string indexName, string documentId, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Removes a document's vector from the store.
+    /// Removes all vector chunks for a document from the store.
     /// </summary>
     Task DeleteAsync(string indexName, string documentId, CancellationToken cancellationToken = default);
 

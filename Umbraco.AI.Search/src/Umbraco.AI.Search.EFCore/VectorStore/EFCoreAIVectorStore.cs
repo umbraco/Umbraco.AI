@@ -26,14 +26,14 @@ internal sealed class EFCoreAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task UpsertAsync(string indexName, string documentId, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(string indexName, string documentId, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
             AIVectorEntryEntity? existing = await db.VectorEntries
-                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId, cancellationToken);
+                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId && e.ChunkIndex == chunkIndex, cancellationToken);
 
             byte[] vectorBytes = VectorToBytes(vector);
             string? metadataJson = metadata is not null ? JsonSerializer.Serialize(metadata) : null;
@@ -44,6 +44,7 @@ internal sealed class EFCoreAIVectorStore : IAIVectorStore
                 {
                     IndexName = indexName,
                     DocumentId = documentId,
+                    ChunkIndex = chunkIndex,
                     Vector = vectorBytes,
                     Metadata = metadataJson,
                 });
@@ -68,12 +69,13 @@ internal sealed class EFCoreAIVectorStore : IAIVectorStore
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
-            AIVectorEntryEntity? entity = await db.VectorEntries
-                .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId, cancellationToken);
+            List<AIVectorEntryEntity> entities = await db.VectorEntries
+                .Where(e => e.IndexName == indexName && e.DocumentId == documentId)
+                .ToListAsync(cancellationToken);
 
-            if (entity is not null)
+            if (entities.Count > 0)
             {
-                db.VectorEntries.Remove(entity);
+                db.VectorEntries.RemoveRange(entities);
                 await db.SaveChangesAsync(cancellationToken);
             }
 

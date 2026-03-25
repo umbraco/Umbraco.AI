@@ -21,6 +21,11 @@ internal class AIVectorEntryEntity
     public string DocumentId { get; set; } = string.Empty;
 
     /// <summary>
+    /// Zero-based index of this chunk within the document.
+    /// </summary>
+    public int ChunkIndex { get; set; }
+
+    /// <summary>
     /// The vector stored as a binary blob (IEEE 754 float array).
     /// </summary>
     public byte[] Vector { get; set; } = [];

@@ -14,46 +14,56 @@ public class InMemoryAIVectorStoreTests
     {
         float[] vector = [1.0f, 0.0f, 0.0f];
 
-        await _store.UpsertAsync(IndexName, "doc1", vector);
+        await _store.UpsertAsync(IndexName, "doc1", 0, vector);
 
         var count = await _store.GetDocumentCountAsync(IndexName);
         count.ShouldBe(1);
     }
 
     [Fact]
-    public async Task UpsertAsync_SameDocumentId_OverwritesPrevious()
+    public async Task UpsertAsync_SameChunk_OverwritesPrevious()
     {
         float[] vector1 = [1.0f, 0.0f, 0.0f];
         float[] vector2 = [0.0f, 1.0f, 0.0f];
 
-        await _store.UpsertAsync(IndexName, "doc1", vector1);
-        await _store.UpsertAsync(IndexName, "doc1", vector2);
+        await _store.UpsertAsync(IndexName, "doc1", 0, vector1);
+        await _store.UpsertAsync(IndexName, "doc1", 0, vector2);
 
         var count = await _store.GetDocumentCountAsync(IndexName);
         count.ShouldBe(1);
     }
 
     [Fact]
-    public async Task DeleteAsync_RemovesDocument()
+    public async Task UpsertAsync_MultipleChunks_StoresAll()
     {
-        float[] vector = [1.0f, 0.0f, 0.0f];
-        await _store.UpsertAsync(IndexName, "doc1", vector);
+        await _store.UpsertAsync(IndexName, "doc1", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", 1, new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync(IndexName, "doc1", 2, new float[] { 0.5f, 0.5f });
+
+        var count = await _store.GetDocumentCountAsync(IndexName);
+        count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_RemovesAllChunksForDocument()
+    {
+        await _store.UpsertAsync(IndexName, "doc1", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", 1, new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync(IndexName, "doc2", 0, new float[] { 0.5f, 0.5f });
 
         await _store.DeleteAsync(IndexName, "doc1");
 
         var count = await _store.GetDocumentCountAsync(IndexName);
-        count.ShouldBe(0);
+        count.ShouldBe(1); // Only doc2 chunk 0 remains
     }
 
     [Fact]
     public async Task SearchAsync_ReturnsResultsOrderedBySimilarity()
     {
-        // Three orthogonal-ish vectors
-        await _store.UpsertAsync(IndexName, "doc-x", new float[] { 1.0f, 0.0f, 0.0f });
-        await _store.UpsertAsync(IndexName, "doc-y", new float[] { 0.0f, 1.0f, 0.0f });
-        await _store.UpsertAsync(IndexName, "doc-xy", new float[] { 0.7f, 0.7f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc-x", 0, new float[] { 1.0f, 0.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc-y", 0, new float[] { 0.0f, 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc-xy", 0, new float[] { 0.7f, 0.7f, 0.0f });
 
-        // Query vector close to X axis
         float[] query = [0.9f, 0.1f, 0.0f];
 
         IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, query, topK: 3);
@@ -61,6 +71,19 @@ public class InMemoryAIVectorStoreTests
         results.Count.ShouldBe(3);
         results[0].DocumentId.ShouldBe("doc-x");
         results[0].Score.ShouldBeGreaterThan(results[1].Score);
+    }
+
+    [Fact]
+    public async Task SearchAsync_MultipleChunks_ReturnsAllChunkResults()
+    {
+        await _store.UpsertAsync(IndexName, "doc1", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", 1, new float[] { 0.0f, 1.0f });
+
+        IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f }, topK: 10);
+
+        // Both chunks should appear in results (deduplication is handled by the searcher, not the store)
+        results.Count.ShouldBe(2);
+        results.ShouldAllBe(r => r.DocumentId == "doc1");
     }
 
     [Fact]
@@ -76,9 +99,9 @@ public class InMemoryAIVectorStoreTests
     [Fact]
     public async Task SearchAsync_TopKLimitsResults()
     {
-        await _store.UpsertAsync(IndexName, "doc1", new float[] { 1.0f, 0.0f });
-        await _store.UpsertAsync(IndexName, "doc2", new float[] { 0.0f, 1.0f });
-        await _store.UpsertAsync(IndexName, "doc3", new float[] { 0.5f, 0.5f });
+        await _store.UpsertAsync(IndexName, "doc1", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc2", 0, new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync(IndexName, "doc3", 0, new float[] { 0.5f, 0.5f });
 
         IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f }, topK: 2);
 
@@ -89,7 +112,7 @@ public class InMemoryAIVectorStoreTests
     public async Task SearchAsync_IncludesMetadata()
     {
         var metadata = new Dictionary<string, object> { ["type"] = "article" };
-        await _store.UpsertAsync(IndexName, "doc1", new float[] { 1.0f, 0.0f }, metadata);
+        await _store.UpsertAsync(IndexName, "doc1", 0, new float[] { 1.0f, 0.0f }, metadata);
 
         IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f });
 
@@ -100,8 +123,8 @@ public class InMemoryAIVectorStoreTests
     [Fact]
     public async Task ResetAsync_ClearsAllDocuments()
     {
-        await _store.UpsertAsync(IndexName, "doc1", new float[] { 1.0f, 0.0f });
-        await _store.UpsertAsync(IndexName, "doc2", new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync(IndexName, "doc1", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc2", 0, new float[] { 0.0f, 1.0f });
 
         await _store.ResetAsync(IndexName);
 
@@ -119,8 +142,8 @@ public class InMemoryAIVectorStoreTests
     [Fact]
     public async Task MultipleIndexes_AreIsolated()
     {
-        await _store.UpsertAsync("index-a", "doc1", new float[] { 1.0f, 0.0f });
-        await _store.UpsertAsync("index-b", "doc1", new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync("index-a", "doc1", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync("index-b", "doc1", 0, new float[] { 0.0f, 1.0f });
 
         var countA = await _store.GetDocumentCountAsync("index-a");
         var countB = await _store.GetDocumentCountAsync("index-b");

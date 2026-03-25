@@ -18,6 +18,7 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IndexName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     DocumentId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ChunkIndex = table.Column<int>(type: "int", nullable: false),
                     Vector = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -34,7 +35,12 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId",
                 table: "umbracoAISearchVectorEntry",
-                columns: new[] { "IndexName", "DocumentId" },
+                columns: new[] { "IndexName", "DocumentId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId_ChunkIndex",
+                table: "umbracoAISearchVectorEntry",
+                columns: new[] { "IndexName", "DocumentId", "ChunkIndex" },
                 unique: true);
         }
 

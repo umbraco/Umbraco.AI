@@ -65,8 +65,16 @@ public sealed class AIVectorSearcher : ISearcher
                 queryEmbedding.Vector,
                 topK);
 
-            // Apply pagination
-            List<AIVectorSearchResult> paged = vectorResults
+            // Deduplicate by document: multiple chunks from the same document may match.
+            // Use the best chunk score (max) per document.
+            List<AIVectorSearchResult> deduplicated = vectorResults
+                .GroupBy(r => r.DocumentId)
+                .Select(g => g.OrderByDescending(r => r.Score).First())
+                .OrderByDescending(r => r.Score)
+                .ToList();
+
+            // Apply pagination after deduplication
+            List<AIVectorSearchResult> paged = deduplicated
                 .Skip(skip)
                 .Take(take)
                 .ToList();
@@ -85,7 +93,7 @@ public sealed class AIVectorSearcher : ISearcher
                 return new Document(id, objectType);
             });
 
-            return new SearchResult(vectorResults.Count, documents, [], null);
+            return new SearchResult(deduplicated.Count, documents, [], null);
         }
         catch (Exception ex)
         {

@@ -73,14 +73,20 @@ public class UmbracoAISearchDbContext : DbContext
                 .HasMaxLength(255)
                 .IsRequired();
 
+            entity.Property(e => e.ChunkIndex)
+                .IsRequired();
+
             entity.Property(e => e.Vector)
                 .IsRequired();
 
             entity.Property(e => e.Metadata);
 
-            // Composite unique index: one document per index
-            entity.HasIndex(e => new { e.IndexName, e.DocumentId })
+            // Composite unique index: one chunk per document per index
+            entity.HasIndex(e => new { e.IndexName, e.DocumentId, e.ChunkIndex })
                 .IsUnique();
+
+            // Index for fast lookups by document (delete all chunks for a document)
+            entity.HasIndex(e => new { e.IndexName, e.DocumentId });
 
             // Index for fast lookups by index name (reset, count, search)
             entity.HasIndex(e => e.IndexName);

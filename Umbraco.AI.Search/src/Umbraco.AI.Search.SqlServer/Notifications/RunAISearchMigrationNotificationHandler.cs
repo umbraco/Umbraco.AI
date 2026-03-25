@@ -7,7 +7,7 @@ using Umbraco.Cms.Core.Notifications;
 namespace Umbraco.AI.Search.SqlServer.Notifications;
 
 /// <summary>
-/// Notification handler that runs pending EF Core migrations for AI Search on SQL Server at application startup.
+/// Runs pending EF Core migrations for AI Search on SQL Server at application startup.
 /// </summary>
 public class RunAISearchSqlServerMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
@@ -22,11 +22,6 @@ public class RunAISearchSqlServerMigrationNotificationHandler
         UmbracoApplicationStartedNotification notification,
         CancellationToken cancellationToken)
     {
-        if (_connectionStrings.Value.ProviderName != Umbraco.Cms.Core.Constants.ProviderNames.SQLServer)
-        {
-            return;
-        }
-
         var optionsBuilder = new DbContextOptionsBuilder<UmbracoAISearchDbContext>();
         optionsBuilder.UseSqlServer(
             _connectionStrings.Value.ConnectionString,

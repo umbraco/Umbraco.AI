@@ -7,7 +7,7 @@ using Umbraco.Cms.Core.Notifications;
 namespace Umbraco.AI.Search.Sqlite.Notifications;
 
 /// <summary>
-/// Notification handler that runs pending EF Core migrations for AI Search on SQLite at application startup.
+/// Runs pending EF Core migrations for AI Search on SQLite at application startup.
 /// </summary>
 public class RunAISearchSqliteMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
@@ -22,14 +22,6 @@ public class RunAISearchSqliteMigrationNotificationHandler
         UmbracoApplicationStartedNotification notification,
         CancellationToken cancellationToken)
     {
-        var providerName = _connectionStrings.Value.ProviderName;
-
-        if (providerName != Umbraco.Cms.Core.Constants.ProviderNames.SQLLite
-            && providerName != "Microsoft.Data.SQLite")
-        {
-            return;
-        }
-
         var optionsBuilder = new DbContextOptionsBuilder<UmbracoAISearchDbContext>();
         optionsBuilder.UseSqlite(
             _connectionStrings.Value.ConnectionString,

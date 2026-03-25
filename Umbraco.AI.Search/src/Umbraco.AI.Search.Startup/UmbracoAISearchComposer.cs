@@ -1,12 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Umbraco.AI.Search.Core;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
-using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.AI.Search.Extensions;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
-using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Search.Core.Configuration;
 
@@ -37,28 +35,18 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.AddTransient<AIVectorIndexer>();
         builder.Services.AddTransient<AIVectorSearcher>();
 
-        // Register both providers — the correct IAIVectorStore is resolved at runtime
-        builder.AddUmbracoAISearchSqlServer();
-        builder.AddUmbracoAISearchSqlite();
+        // Register the correct persistence provider based on the configured database.
+        // Umbraco stores the provider name at ConnectionStrings:umbracoDbDSN_ProviderName.
+        var providerName = builder.Config.GetSection("ConnectionStrings:umbracoDbDSN_ProviderName").Value;
 
-        // Resolve IAIVectorStore based on configured database provider
-        builder.Services.AddSingleton<IAIVectorStore>(sp =>
+        if (providerName == Constants.ProviderNames.SQLServer)
         {
-            var connectionStrings = sp.GetRequiredService<IOptions<ConnectionStrings>>().Value;
-
-            return connectionStrings.ProviderName switch
-            {
-                Umbraco.Cms.Core.Constants.ProviderNames.SQLServer =>
-                    sp.GetRequiredService<SqlServer.VectorStore.SqlServerAIVectorStore>(),
-
-                Umbraco.Cms.Core.Constants.ProviderNames.SQLLite or "Microsoft.Data.SQLite" =>
-                    sp.GetRequiredService<Sqlite.VectorStore.SqliteAIVectorStore>(),
-
-                _ => throw new InvalidOperationException(
-                    $"Unsupported database provider '{connectionStrings.ProviderName}' for Umbraco.AI.Search. " +
-                    "Supported: SQL Server, SQLite."),
-            };
-        });
+            builder.AddUmbracoAISearchSqlServer();
+        }
+        else
+        {
+            builder.AddUmbracoAISearchSqlite();
+        }
 
         builder.Services.AddOptions<AIVectorSearchOptions>()
             .BindConfiguration("Umbraco:AI:Search");

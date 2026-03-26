@@ -5,6 +5,38 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.5.0...Umbraco.AI.Agent@1.6.0) (2026-03-26)
+
+### ⚠ BREAKING CHANGE
+
+* **agent:** AIEmbeddedAgentBuilder renamed to AIInlineAgentBuilder.
+CreateEmbeddedAgentAsync, RunEmbeddedAgentAsync, StreamEmbeddedAgentAsync
+renamed to CreateInlineAgentAsync, RunInlineAgentAsync,
+StreamInlineAgentAsync.
+
+Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+
+### feat
+
+* **agent:** Add embedded agent support for programmatic agent execution ([fa0f906](https://github.com/umbraco/Umbraco.AI/commit/fa0f906c3cb498cbb260be696145dc18f6a7da5c))
+* **agent:** Add file uploads and AI processing implementation (#102) ([4dec0d8](https://github.com/umbraco/Umbraco.AI/commit/4dec0d84ecc7990643b9075cfe85317509dfc002)), closes [#102](https://github.com/umbraco/Umbraco.AI/issues/102)
+* **agent:** Add headless RunAgentAsync and StreamAgentAsync for persisted agents ([521ceb1](https://github.com/umbraco/Umbraco.AI/commit/521ceb1af46ddfc31cb22c24924724265e1b947b))
+* **agent:** Rename embedded agent API to inline agent ([d7b2540](https://github.com/umbraco/Umbraco.AI/commit/d7b2540a95b197a8dba034d2eb4fcc978140e83f))
+* **core,agent:** Add alias-based WithProfile and WithGuardrails to inline builders ([ff75a6d](https://github.com/umbraco/Umbraco.AI/commit/ff75a6db612e7dc153824a0764fccd7ee9e2db23))
+* **core,agent:** Add ChatOptions override support for inline executions ([abf7557](https://github.com/umbraco/Umbraco.AI/commit/abf75570cebe641f01e02fbeb04f13941551fcde))
+
+### fix
+
+* **agent:** Fix AGUI casing in generated OpenAPI client ([0870333](https://github.com/umbraco/Umbraco.AI/commit/087033322ce5bb78a41846ad7b903547554befa7))
+* **agent:** Include error message in RUN_FINISHED event ([1cee179](https://github.com/umbraco/Umbraco.AI/commit/1cee179b810ddb5d58c78bdb54d887ee18c0855c))
+* **core,agent:** Fix failing tests across multiple subsystems ([048db39](https://github.com/umbraco/Umbraco.AI/commit/048db39a77a0965d855d6524e5f4b5fed7c48d25))
+
+### refactor
+
+* **agent:** Simplify AIAgentService with shared helpers ([b2ab3cb](https://github.com/umbraco/Umbraco.AI/commit/b2ab3cb4a297e21270cedfe0a116fd6333e9d3b0))
+* **core,agent:** Drop unnecessary Inline prefix from API names ([644d318](https://github.com/umbraco/Umbraco.AI/commit/644d3184fc4a22855189959746dc2d623448b709))
+* **core,prompt,agent:** Rename EfCore to EFCore for CMS consistency ([56caf34](https://github.com/umbraco/Umbraco.AI/commit/56caf3410cbe48599eb62060fdc88c0485fc30d1))
+
 ## [1.5.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.4.0...Umbraco.AI.Agent@1.5.0) (2026-03-16)
 
 ### feat

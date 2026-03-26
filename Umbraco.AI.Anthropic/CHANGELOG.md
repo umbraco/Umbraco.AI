@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@1.2.2...Umbraco.AI.Anthropic@1.3.0) (2026-03-26)
+
+### fix
+
+* **core,openai,anthropic,google,microsoft-foundry:** Fix graders and update provider packages ([087a132](https://github.com/umbraco/Umbraco.AI/commit/087a1327d18412e64502c0ac780a8b4b2343cbec))
+
 ## [1.2.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@1.2.2...Umbraco.AI.Anthropic@1.2.3) (2026-03-16)
 
 ### fix

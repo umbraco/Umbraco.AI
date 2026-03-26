@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [1.0.0-beta2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Deploy@1.0.0-beta1...Umbraco.AI.Agent.Deploy@1.0.0-beta2) (2026-03-16)
+## [1.0.0-beta2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Deploy@1.0.0-beta1...Umbraco.AI.Agent.Deploy@1.0.0-beta2) (2026-03-26)
 
 ### feat
 

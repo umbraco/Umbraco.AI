@@ -10,6 +10,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="..\..\README.md" Pack="true" PackagePath="docs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj" />
     </ItemGroup>
 </Project>

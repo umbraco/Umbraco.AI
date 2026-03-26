@@ -5,6 +5,26 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.6.0...Umbraco.AI@1.7.0) (2026-03-26)
+
+### feat
+
+* **core,agent:** Add alias-based WithProfile and WithGuardrails to inline builders ([ff75a6d](https://github.com/umbraco/Umbraco.AI/commit/ff75a6db612e7dc153824a0764fccd7ee9e2db23))
+* **core,agent:** Add ChatOptions override support for inline executions ([abf7557](https://github.com/umbraco/Umbraco.AI/commit/abf75570cebe641f01e02fbeb04f13941551fcde))
+* **core:** Add AsPassThrough to inline chat builder ([f8e90d0](https://github.com/umbraco/Umbraco.AI/commit/f8e90d0dcbde1c90158039f99995a3e5b3fc5bf2))
+* **core:** Add element type support to PropertyValueFormatter ([1b1788e](https://github.com/umbraco/Umbraco.AI/commit/1b1788efadb90565b023828be396c26edb58bb6f))
+* **core:** Add get_content_by_route tool using IDocumentUrlService ([d7abbef](https://github.com/umbraco/Umbraco.AI/commit/d7abbef2d62805c05069ee6f59a74e257727ff5f))
+* **core:** Add inline chat builder with notifications and telemetry ([95cd1a8](https://github.com/umbraco/Umbraco.AI/commit/95cd1a87100f4c348ba88c398c94d7eeb63e8f5e))
+* **core:** Add read tools for copilot content access ([1473b3b](https://github.com/umbraco/Umbraco.AI/commit/1473b3b68d75713ebf4e961c7ac2f9994b95f97f))
+* **core:** Improve search relevance with field boosting and phrase matching ([d8880ba](https://github.com/umbraco/Umbraco.AI/commit/d8880ba1c6b70500364086d9090157ae9a6f4138))
+* **search,core:** Add Umbraco.AI.Search semantic vector search package ([dfffb84](https://github.com/umbraco/Umbraco.AI/commit/dfffb848d41449639a965da8cfde833c8c426b50))
+
+### fix
+
+* **core:** Distinguish IPublishedContent from IPublishedElement in formatter ([9b4bf60](https://github.com/umbraco/Umbraco.AI/commit/9b4bf600268186164176f0b78f221cb0b136d7c7))
+* **core:** Filter search results by user start node permissions ([7881163](https://github.com/umbraco/Umbraco.AI/commit/788116398a1060b82e8b0eed201c2ad32ddf793c))
+* **core:** Reuse existing runtime context scope in inline chat API ([6c021f4](https://github.com/umbraco/Umbraco.AI/commit/6c021f4984da3e9e7cea9760aba26d8f750e111b))
+
 ## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.5.0...Umbraco.AI@1.6.0) (2026-03-16)
 
 ### feat

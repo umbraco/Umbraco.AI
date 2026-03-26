@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha4...Umbraco.AI.Agent.UI@1.0.0-alpha5) (2026-03-26)
+
+### feat
+
+* **agent-ui:** Add file upload support with drag-and-drop, image preview, and multimodal messages ([4dec0d8](https://github.com/umbraco/Umbraco.AI/commit/4dec0d84ecc7990643b9075cfe85317509dfc002))
+
 ## [1.0.0-alpha4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha3...Umbraco.AI.Agent.UI@1.0.0-alpha4) (2026-03-16)
 
 ### fix

@@ -4,12 +4,15 @@ using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.Search;
 using Umbraco.AI.Search.Extensions;
+using Umbraco.AI.Search.Core.Notifications;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Search.Core.Configuration;
 using Umbraco.Cms.Search.Core.DependencyInjection;
+using Umbraco.Cms.Search.Core.Notifications;
 using Umbraco.Cms.Search.Core.Services;
 using Umbraco.Cms.Search.Core.Services.ContentIndexing;
 
@@ -62,6 +65,13 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.Configure<IndexOptions>(options =>
             options.RegisterContentIndex<AIVectorIndexer, AIVectorSearcher, IPublishedContentChangeStrategy>(AISearchConstants.IndexAliases.Search,
                 UmbracoObjectTypes.Document, UmbracoObjectTypes.Media));
+
+        // Workaround: IPublishedContentChangeStrategy does not handle media changes.
+        // Listen to cache refresher + rebuild notifications to index media directly.
+        // See: https://github.com/umbraco/Umbraco.Cms.Search/issues/108
+        // TODO: Remove when the CMS Search framework supports media via RegisterContentIndex.
+        builder.AddNotificationHandler<MediaCacheRefresherNotification, MediaIndexingNotificationHandler>();
+        builder.AddNotificationAsyncHandler<IndexRebuildCompletedNotification, MediaIndexingNotificationHandler>();
 
         // Ensure AddSearchCore() is called after all composers have run.
         // Uses a deferred registration so we can check if another composer

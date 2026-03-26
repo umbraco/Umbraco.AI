@@ -71,6 +71,12 @@ public sealed class AIVectorIndexer : IIndexer
             ChunkOverlap = _options.Value.ChunkOverlap,
         };
 
+        // Delete all existing vectors for this document before re-indexing.
+        // This handles the case where content switches between invariant and
+        // variant — old invariant entries (culture=null) would otherwise be
+        // orphaned when the document is re-indexed with culture-specific fields.
+        await _vectorStore.DeleteDocumentAsync(indexAlias, documentId);
+
         foreach (var cultureGroup in fieldsByCulture)
         {
             var culture = cultureGroup.Key;
@@ -78,17 +84,13 @@ public sealed class AIVectorIndexer : IIndexer
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                _logger.LogDebug("No text content for document {DocumentId} culture {Culture} in {IndexAlias}, deleting existing chunks", id, culture ?? "invariant", indexAlias);
-                await _vectorStore.DeleteAsync(indexAlias, documentId, culture);
+                _logger.LogDebug("No text content for document {DocumentId} culture {Culture} in {IndexAlias}", id, culture ?? "invariant", indexAlias);
                 continue;
             }
 
             try
             {
                 IReadOnlyList<AITextChunk> chunks = _textChunker.ChunkText(text, chunkingOptions);
-
-                // Delete all existing chunks for this document+culture before inserting new ones
-                await _vectorStore.DeleteAsync(indexAlias, documentId, culture);
 
                 // Generate embeddings for all chunks in batch
                 IEnumerable<string> chunkTexts = chunks.Select(c => c.Text);

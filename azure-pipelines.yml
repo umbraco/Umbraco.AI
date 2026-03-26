@@ -28,6 +28,9 @@ parameters:
             changeVar: MicrosoftfoundryChanged
             hasNpm: false
           # Add-ons (have frontend but don't export types)
+          - name: Umbraco.AI.Search
+            changeVar: SearchChanged
+            hasNpm: false
           - name: Umbraco.AI.Prompt
             changeVar: PromptChanged
             hasNpm: false

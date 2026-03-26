@@ -91,6 +91,20 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>
+                <umb-property-layout
+                    label="Default Speech to Text Profile"
+                    description="The default profile to use for speech-to-text transcription when no profile is specified in API calls."
+                >
+                    <div slot="editor">
+                        <uai-profile-picker
+                            name="defaultSpeechToTextProfileId"
+                            capability="SpeechToText"
+                            .value=${this._model?.defaultSpeechToTextProfileId ?? undefined}
+                            @change=${this.#onPropertyChange}
+                        >
+                        </uai-profile-picker>
+                    </div>
+                </umb-property-layout>
             </uui-box>
         `;
     }

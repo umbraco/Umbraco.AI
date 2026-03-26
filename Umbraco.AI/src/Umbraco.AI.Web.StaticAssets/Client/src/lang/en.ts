@@ -32,6 +32,7 @@ export default {
         embedding: "Embedding",
         media: "Media",
         moderation: "Moderation",
+        speechtotext: "Speech to Text",
     },
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",

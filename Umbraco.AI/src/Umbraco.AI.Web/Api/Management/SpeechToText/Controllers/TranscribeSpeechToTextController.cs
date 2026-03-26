@@ -47,7 +47,7 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> TranscribeAudio(
-        [FromForm] IFormFile audioFile,
+        IFormFile audioFile,
         [FromQuery] string? profileIdOrAlias = null,
         [FromQuery] string? language = null,
         CancellationToken cancellationToken = default)

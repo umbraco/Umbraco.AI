@@ -3,9 +3,11 @@ using System.Numerics.Tensors;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.AI.Search.Core.Search;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
 
@@ -42,6 +44,10 @@ public record SemanticSearchArgs(
 ///   <item><b>Document ID</b> — retrieves stored embeddings for the document, averages them, and finds similar content (excluding the source document).</item>
 /// </list>
 /// </para>
+/// <para>
+/// Results are filtered by the backoffice user's start node restrictions to ensure
+/// users only see content they have access to.
+/// </para>
 /// </remarks>
 [AITool("semantic_search", "Semantic Search", ScopeId = SearchScope.ScopeId)]
 public class SemanticSearchTool : AIToolBase<SemanticSearchArgs>
@@ -51,6 +57,7 @@ public class SemanticSearchTool : AIToolBase<SemanticSearchArgs>
     private readonly AIVectorSearcher _searcher;
     private readonly IAIVectorStore _vectorStore;
     private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
     private readonly ILogger<SemanticSearchTool> _logger;
 
     /// <summary>
@@ -60,11 +67,13 @@ public class SemanticSearchTool : AIToolBase<SemanticSearchArgs>
         AIVectorSearcher searcher,
         IAIVectorStore vectorStore,
         IUmbracoContextAccessor umbracoContextAccessor,
+        IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
         ILogger<SemanticSearchTool> logger)
     {
         _searcher = searcher;
         _vectorStore = vectorStore;
         _umbracoContextAccessor = umbracoContextAccessor;
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _logger = logger;
     }
 
@@ -99,8 +108,19 @@ public class SemanticSearchTool : AIToolBase<SemanticSearchArgs>
                 deduplicated = await _searcher.SearchByQueryAsync(IndexName, args.Query!, args.Culture, cancellationToken);
             }
 
+            // Resolve user start node restrictions
+            var user = _backOfficeSecurityAccessor.BackOfficeSecurity?.CurrentUser;
+            int[]? startContentIds = null;
+            int[]? startMediaIds = null;
+
+            if (user is not null)
+            {
+                startContentIds = GetEffectiveStartNodeIds(user.StartContentIds, user.Groups.Select(g => g.StartContentId));
+                startMediaIds = GetEffectiveStartNodeIds(user.StartMediaIds, user.Groups.Select(g => g.StartMediaId));
+            }
+
             List<SemanticSearchResultItem> results = EnrichResults(
-                deduplicated.Take(maxResults).ToList());
+                deduplicated, maxResults, startContentIds, startMediaIds);
 
             return new SemanticSearchResult(true, results, null);
         }
@@ -131,47 +151,132 @@ public class SemanticSearchTool : AIToolBase<SemanticSearchArgs>
         return results.Where(r => r.DocumentId != documentId).ToList();
     }
 
-    private List<SemanticSearchResultItem> EnrichResults(List<AIVectorSearchResult> vectorResults)
+    private List<SemanticSearchResultItem> EnrichResults(
+        List<AIVectorSearchResult> vectorResults,
+        int maxResults,
+        int[]? startContentIds,
+        int[]? startMediaIds)
     {
+        var hasRestrictions = !IsUnrestricted(startContentIds) || !IsUnrestricted(startMediaIds);
+
         _umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext);
 
-        return vectorResults.Select(r =>
+        // Without Umbraco context we can't verify paths for access control.
+        // If the user has start node restrictions, return empty to avoid leaking content.
+        if (umbracoContext is null && hasRestrictions)
         {
+            return [];
+        }
+
+        var results = new List<SemanticSearchResultItem>();
+
+        foreach (AIVectorSearchResult r in vectorResults)
+        {
+            if (results.Count >= maxResults)
+            {
+                break;
+            }
+
             var objectType = r.Metadata?.TryGetValue("objectType", out var objType) == true
                 ? objType.ToString()
                 : null;
 
-            // Try to resolve published content for richer results
+            var isMedia = objectType == nameof(UmbracoObjectTypes.Media);
+
+            // Try to resolve published content for richer results and access verification
             if (Guid.TryParse(r.DocumentId, out Guid key) && umbracoContext is not null)
             {
-                IPublishedContent? content = objectType == nameof(UmbracoObjectTypes.Media)
+                IPublishedContent? content = isMedia
                     ? umbracoContext.Media?.GetById(key)
                     : umbracoContext.Content?.GetById(key);
 
-                if (content is not null)
+                if (content is null)
                 {
-                    return new SemanticSearchResultItem(
-                        r.DocumentId,
-                        content.Name ?? r.DocumentId,
-                        content.ContentType.Alias,
-                        objectType == nameof(UmbracoObjectTypes.Media) ? "media" : "content",
-                        content.Url(),
-                        GetContentPath(content),
-                        r.Score);
-                }
-            }
+                    // Can't resolve content — skip if restricted, include basic result otherwise
+                    if (!hasRestrictions)
+                    {
+                        results.Add(CreateBasicResult(r, objectType));
+                    }
 
-            // Fallback: return with just the document ID
-            return new SemanticSearchResultItem(
-                r.DocumentId,
-                r.DocumentId,
-                null,
-                objectType,
-                null,
-                null,
-                r.Score);
-        }).ToList();
+                    continue;
+                }
+
+                // Check start node restrictions
+                if (hasRestrictions && !IsUnderStartNode(content, isMedia, startContentIds, startMediaIds))
+                {
+                    continue;
+                }
+
+                results.Add(new SemanticSearchResultItem(
+                    r.DocumentId,
+                    content.Name ?? r.DocumentId,
+                    content.ContentType.Alias,
+                    isMedia ? "media" : "content",
+                    content.Url(),
+                    GetContentPath(content),
+                    r.Score));
+            }
+            else if (!hasRestrictions)
+            {
+                results.Add(CreateBasicResult(r, objectType));
+            }
+        }
+
+        return results;
     }
+
+    // ── Start node filtering ────────────────────────────────────────────
+
+    private static bool IsUnderStartNode(
+        IPublishedContent content,
+        bool isMedia,
+        int[]? startContentIds,
+        int[]? startMediaIds)
+    {
+        var relevantStartIds = isMedia ? startMediaIds : startContentIds;
+
+        if (IsUnrestricted(relevantStartIds))
+        {
+            return true;
+        }
+
+        // The Path property contains the ancestor chain as comma-separated integer IDs
+        // (for example "-1,1234,5678"). Check if any start node ID appears in the path.
+        var path = content.Path;
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        var pathIds = path.Split(',');
+        return relevantStartIds!.Any(startId => pathIds.Contains(startId.ToString()));
+    }
+
+    private static int[]? GetEffectiveStartNodeIds(int[]? userStartNodeIds, IEnumerable<int?> groupStartNodeIds)
+    {
+        // User-level start nodes take precedence when set
+        if (userStartNodeIds is { Length: > 0 })
+        {
+            return userStartNodeIds;
+        }
+
+        // Fall back to group start nodes
+        var groupIds = groupStartNodeIds
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToArray();
+
+        return groupIds.Length > 0 ? groupIds : null;
+    }
+
+    private static bool IsUnrestricted(int[]? ids)
+        => ids is null or { Length: 0 } || Array.Exists(ids, static id => id == -1);
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    private static SemanticSearchResultItem CreateBasicResult(AIVectorSearchResult r, string? objectType)
+        => new(r.DocumentId, r.DocumentId, null, objectType, null, null, r.Score);
 
     private static string GetContentPath(IPublishedContent content)
     {

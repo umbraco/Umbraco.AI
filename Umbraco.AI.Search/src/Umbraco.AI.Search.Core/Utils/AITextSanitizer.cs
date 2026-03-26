@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace Umbraco.AI.Search.Core;
+namespace Umbraco.AI.Search.Core.Utils;
 
 /// <summary>
 /// Utility for cleaning text before chunking and embedding.

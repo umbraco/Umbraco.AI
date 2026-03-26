@@ -1,5 +1,5 @@
 using Shouldly;
-using Umbraco.AI.Search.Core;
+using Umbraco.AI.Search.Core.Utils;
 using Xunit;
 
 namespace Umbraco.AI.Search.Tests.Unit;

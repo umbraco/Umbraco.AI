@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
+using Umbraco.AI.Search.Core.Search;
 using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
@@ -9,6 +10,7 @@ using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Search.Core.Configuration;
 using Umbraco.Cms.Search.Core.DependencyInjection;
+using Umbraco.Cms.Search.Core.Services;
 using Umbraco.Cms.Search.Core.Services.ContentIndexing;
 
 namespace Umbraco.AI.Search.Startup;
@@ -23,8 +25,8 @@ namespace Umbraco.AI.Search.Startup;
 /// default search provider and overriding Examine or other providers.
 /// </para>
 /// <para>
-/// Prerequisite: <c>AddSearchCore()</c> must have been called by the implementor's Composer
-/// before this Composer runs. Use <c>[ComposeAfter]</c> in your Composer if needed.
+/// Search core registration (<c>AddSearchCore()</c>) is deferred until after all composers
+/// have run, so it is only called if no other composer has already registered it.
 /// </para>
 /// </remarks>
 [ComposeAfter(typeof(AI.Startup.Configuration.UmbracoAIComposer))]
@@ -32,8 +34,6 @@ public sealed class UmbracoAISearchComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        // builder.AddSearchCore();
-
         builder.Services.AddSingleton<IAITokenCounter, WordBasedAITokenCounter>();
         builder.Services.AddSingleton<IAITextChunker, RecursiveAITextChunker>();
 
@@ -62,5 +62,17 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.Configure<IndexOptions>(options =>
             options.RegisterContentIndex<AIVectorIndexer, AIVectorSearcher, IPublishedContentChangeStrategy>(AISearchConstants.IndexAliases.Search,
                 UmbracoObjectTypes.Document, UmbracoObjectTypes.Media));
+
+        // Ensure AddSearchCore() is called after all composers have run.
+        // Uses a deferred registration so we can check if another composer
+        // (e.g., Examine) has already registered the search core services.
+        builder.WithCollectionBuilder<DeferredServiceRegistration>()
+            .Add(services =>
+            {
+                if (services.All(s => s.ServiceType != typeof(ISearcherResolver)))
+                {
+                    builder.AddSearchCore();
+                }
+            });
     }
 }

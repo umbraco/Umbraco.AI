@@ -118,9 +118,16 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
             IQueryable<AIVectorEntryEntity> query = db.VectorEntries
                 .Where(e => e.IndexName == indexName);
 
+            // Culture filtering follows CMS Search conventions:
+            // - culture provided: include that culture + invariant (null) entries
+            // - culture null: include only invariant (null) entries
             if (culture is not null)
             {
-                query = query.Where(e => e.Culture == culture);
+                query = query.Where(e => e.Culture == culture || e.Culture == null);
+            }
+            else
+            {
+                query = query.Where(e => e.Culture == null);
             }
 
             List<AIVectorEntryEntity> entries = await query.ToListAsync(cancellationToken);

@@ -93,14 +93,28 @@ public class InMemoryAIVectorStoreTests
     }
 
     [Fact]
-    public async Task SearchAsync_NoCultureFilter_ReturnsAll()
+    public async Task SearchAsync_NoCultureFilter_ReturnsInvariantOnly()
     {
         await _store.UpsertAsync(IndexName, "doc1", "en", 0, new float[] { 1.0f, 0.0f });
         await _store.UpsertAsync(IndexName, "doc1", "da", 0, new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync(IndexName, "doc2", null, 0, new float[] { 0.5f, 0.5f });
 
         IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f }, topK: 10);
 
-        results.Count.ShouldBe(2);
+        results.Count.ShouldBe(1); // Only invariant doc2
+        results[0].DocumentId.ShouldBe("doc2");
+    }
+
+    [Fact]
+    public async Task SearchAsync_WithCulture_ReturnsMatchingAndInvariant()
+    {
+        await _store.UpsertAsync(IndexName, "doc1", "en", 0, new float[] { 1.0f, 0.0f });
+        await _store.UpsertAsync(IndexName, "doc1", "da", 0, new float[] { 0.0f, 1.0f });
+        await _store.UpsertAsync(IndexName, "doc2", null, 0, new float[] { 0.5f, 0.5f });
+
+        IReadOnlyList<AIVectorSearchResult> results = await _store.SearchAsync(IndexName, new float[] { 1.0f, 0.0f }, culture: "en", topK: 10);
+
+        results.Count.ShouldBe(2); // en doc1 + invariant doc2
     }
 
     [Fact]

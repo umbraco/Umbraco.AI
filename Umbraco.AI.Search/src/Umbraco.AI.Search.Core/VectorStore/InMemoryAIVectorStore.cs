@@ -59,9 +59,12 @@ public sealed class InMemoryAIVectorStore : IAIVectorStore
             return Task.FromResult<IReadOnlyList<AIVectorSearchResult>>(Array.Empty<AIVectorSearchResult>());
         }
 
+        // Culture filtering follows CMS Search conventions:
+        // - culture provided: include that culture + invariant (null) entries
+        // - culture null: include only invariant (null) entries
         var entries = culture is not null
-            ? index.Where(kvp => kvp.Key.Culture == culture)
-            : index.AsEnumerable();
+            ? index.Where(kvp => kvp.Key.Culture == culture || kvp.Key.Culture is null)
+            : index.Where(kvp => kvp.Key.Culture is null);
 
         IReadOnlyList<AIVectorSearchResult> results = entries
             .Select(kvp => new AIVectorSearchResult(

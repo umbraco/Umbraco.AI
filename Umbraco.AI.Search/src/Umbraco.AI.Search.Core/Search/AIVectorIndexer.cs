@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
@@ -9,7 +10,7 @@ using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Search.Core.Models.Indexing;
 using Umbraco.Cms.Search.Core.Services;
 
-namespace Umbraco.AI.Search.Core;
+namespace Umbraco.AI.Search.Core.Search;
 
 /// <summary>
 /// An <see cref="IIndexer"/> implementation that generates vector embeddings from content
@@ -103,6 +104,11 @@ public sealed class AIVectorIndexer : IIndexer
                         ["totalChunks"] = chunks.Count,
                     };
 
+                    if (protection?.AccessIds.Any() == true)
+                    {
+                        metadata["accessIds"] = string.Join(",", protection.AccessIds);
+                    }
+
                     await _vectorStore.UpsertAsync(indexAlias, documentId, culture, i, embeddings[i].Vector, metadata);
                 }
 
@@ -169,7 +175,7 @@ public sealed class AIVectorIndexer : IIndexer
                 continue;
             }
 
-            var cleaned = AITextSanitizer.StripHtml(text);
+            var cleaned = Utils.AITextSanitizer.StripHtml(text);
 
             if (!string.IsNullOrWhiteSpace(cleaned))
             {

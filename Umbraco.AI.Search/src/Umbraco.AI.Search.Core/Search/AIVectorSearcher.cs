@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.VectorStore;
@@ -11,7 +12,7 @@ using Umbraco.Cms.Search.Core.Models.Searching.Filtering;
 using Umbraco.Cms.Search.Core.Models.Searching.Sorting;
 using Umbraco.Cms.Search.Core.Services;
 
-namespace Umbraco.AI.Search.Core;
+namespace Umbraco.AI.Search.Core.Search;
 
 /// <summary>
 /// An <see cref="ISearcher"/> implementation that performs semantic similarity search
@@ -59,8 +60,15 @@ public sealed class AIVectorSearcher : ISearcher
         {
             List<AIVectorSearchResult> deduplicated = await SearchByQueryAsync(indexAlias, query, culture);
 
-            // Apply pagination after deduplication
-            List<AIVectorSearchResult> paged = deduplicated
+            // Filter by access protection — mirrors CMS Search Examine provider behaviour.
+            // Public content (no accessIds) is always included.
+            // Protected content requires a matching principal or group.
+            List<AIVectorSearchResult> accessible = deduplicated
+                .Where(r => IsAccessible(r, accessContext))
+                .ToList();
+
+            // Apply pagination after deduplication and access filtering
+            List<AIVectorSearchResult> paged = accessible
                 .Skip(skip)
                 .Take(take)
                 .ToList();
@@ -79,13 +87,49 @@ public sealed class AIVectorSearcher : ISearcher
                 return new Document(id, objectType);
             });
 
-            return new SearchResult(deduplicated.Count, documents, [], null);
+            return new SearchResult(accessible.Count, documents, [], null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Vector search failed for index {IndexAlias}", indexAlias);
             return new SearchResult(0, [], [], null);
         }
+    }
+
+    /// <summary>
+    /// Checks whether a vector result is accessible given the current access context.
+    /// </summary>
+    private static bool IsAccessible(AIVectorSearchResult result, AccessContext? accessContext)
+    {
+        // No protection metadata → public content, always accessible
+        if (result.Metadata?.TryGetValue("accessIds", out var accessIdsObj) != true
+            || accessIdsObj is not string accessIdsStr
+            || string.IsNullOrEmpty(accessIdsStr))
+        {
+            return true;
+        }
+
+        // Protected content with no access context → not accessible
+        if (accessContext is null)
+        {
+            return false;
+        }
+
+        // Check if the principal or any of their groups match the allowed access IDs
+        HashSet<string> accessIds = [.. accessIdsStr.Split(',', StringSplitOptions.RemoveEmptyEntries)];
+        var principalKey = accessContext.PrincipalId.ToString("D");
+
+        if (accessIds.Contains(principalKey))
+        {
+            return true;
+        }
+
+        if (accessContext.GroupIds is not null)
+        {
+            return accessContext.GroupIds.Any(g => accessIds.Contains(g.ToString("D")));
+        }
+
+        return false;
     }
 
     /// <summary>

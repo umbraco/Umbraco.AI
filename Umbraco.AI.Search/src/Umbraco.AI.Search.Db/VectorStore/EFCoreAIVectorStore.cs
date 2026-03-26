@@ -1,28 +1,32 @@
 using System.Numerics.Tensors;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.AI.Search.Sqlite.VectorStore;
+namespace Umbraco.AI.Search.Db.VectorStore;
 
 /// <summary>
-/// SQLite implementation of the vector store using brute-force in-memory similarity search.
+/// EF Core implementation of <see cref="IAIVectorStore"/> with brute-force cosine similarity search.
 /// </summary>
 /// <remarks>
-/// Vectors are stored as binary blobs (IEEE 754 float arrays). Similarity search loads
-/// all candidate vectors and computes cosine similarity in .NET. A future version will
-/// use sqlite-vec for native vector search.
+/// Vectors are stored as JSON arrays in string columns. Similarity search loads candidate vectors
+/// and computes cosine similarity in .NET using <see cref="TensorPrimitives"/>. Provider-specific
+/// subclasses (e.g. SQL Server) can override <see cref="SearchAsync"/> to use native vector operations.
 /// </remarks>
-internal sealed class SqliteAIVectorStore : IAIVectorStore
+internal class EFCoreAIVectorStore : IAIVectorStore
 {
     private readonly IEFCoreScopeProvider<UmbracoAISearchDbContext> _scopeProvider;
 
-    public SqliteAIVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
+    public EFCoreAIVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
+
+    /// <summary>
+    /// Gets the scope provider for database access. Available to subclasses for native search implementations.
+    /// </summary>
+    protected IEFCoreScopeProvider<UmbracoAISearchDbContext> ScopeProvider => _scopeProvider;
 
     /// <inheritdoc />
     public async Task UpsertAsync(string indexName, string documentId, string? culture, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
@@ -34,7 +38,7 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
             AIVectorEntryEntity? existing = await db.VectorEntries
                 .FirstOrDefaultAsync(e => e.IndexName == indexName && e.DocumentId == documentId && e.Culture == culture && e.ChunkIndex == chunkIndex, cancellationToken);
 
-            byte[] vectorBytes = VectorToBytes(vector);
+            string vectorJson = VectorToJson(vector);
             string? metadataJson = metadata is not null ? JsonSerializer.Serialize(metadata) : null;
 
             if (existing is null)
@@ -45,13 +49,13 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
                     DocumentId = documentId,
                     Culture = culture,
                     ChunkIndex = chunkIndex,
-                    Vector = vectorBytes,
+                    Vector = vectorJson,
                     Metadata = metadataJson,
                 });
             }
             else
             {
-                existing.Vector = vectorBytes;
+                existing.Vector = vectorJson;
                 existing.Metadata = metadataJson;
             }
 
@@ -109,11 +113,11 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, string? culture = null, int topK = 10, CancellationToken cancellationToken = default)
+    public virtual async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, string? culture = null, int topK = 10, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
-        IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync(async db =>
+        IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync<IReadOnlyList<AIVectorSearchResult>>(async db =>
         {
             IQueryable<AIVectorEntryEntity> query = db.VectorEntries
                 .Where(e => e.IndexName == indexName);
@@ -134,13 +138,13 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
 
             if (entries.Count == 0)
             {
-                return (IReadOnlyList<AIVectorSearchResult>)Array.Empty<AIVectorSearchResult>();
+                return Array.Empty<AIVectorSearchResult>();
             }
 
-            return (IReadOnlyList<AIVectorSearchResult>)entries
+            return entries
                 .Select(e => new AIVectorSearchResult(
                     e.DocumentId,
-                    TensorPrimitives.CosineSimilarity(queryVector.Span, BytesToVector(e.Vector)),
+                    TensorPrimitives.CosineSimilarity(queryVector.Span, JsonToVector(e.Vector)),
                     DeserializeMetadata(e.Metadata)))
                 .OrderByDescending(r => r.Score)
                 .Take(topK)
@@ -156,7 +160,7 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
-        IReadOnlyList<AIVectorEntry> results = await scope.ExecuteWithContextAsync(async db =>
+        IReadOnlyList<AIVectorEntry> results = await scope.ExecuteWithContextAsync<IReadOnlyList<AIVectorEntry>>(async db =>
         {
             IQueryable<AIVectorEntryEntity> query = db.VectorEntries
                 .Where(e => e.IndexName == indexName && e.DocumentId == documentId);
@@ -170,8 +174,8 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
                 .OrderBy(e => e.ChunkIndex)
                 .ToListAsync(cancellationToken);
 
-            return (IReadOnlyList<AIVectorEntry>)entries
-                .Select(e => new AIVectorEntry(e.DocumentId, e.Culture, e.ChunkIndex, BytesToVector(e.Vector).ToArray(), DeserializeMetadata(e.Metadata)))
+            return entries
+                .Select(e => new AIVectorEntry(e.DocumentId, e.Culture, e.ChunkIndex, JsonToVector(e.Vector), DeserializeMetadata(e.Metadata)))
                 .ToList();
         });
 
@@ -214,17 +218,15 @@ internal sealed class SqliteAIVectorStore : IAIVectorStore
         return count;
     }
 
-    private static byte[] VectorToBytes(ReadOnlyMemory<float> vector)
-    {
-        var bytes = new byte[vector.Length * sizeof(float)];
-        MemoryMarshal.AsBytes(vector.Span).CopyTo(bytes);
-        return bytes;
-    }
+    // ── Helpers ──────────────────────────────────────────────────────────
 
-    private static ReadOnlySpan<float> BytesToVector(byte[] bytes)
-        => MemoryMarshal.Cast<byte, float>(bytes);
+    internal static string VectorToJson(ReadOnlyMemory<float> vector)
+        => JsonSerializer.Serialize(vector.ToArray());
 
-    private static IDictionary<string, object>? DeserializeMetadata(string? json)
+    internal static float[] JsonToVector(string json)
+        => JsonSerializer.Deserialize<float[]>(json) ?? [];
+
+    internal static IDictionary<string, object>? DeserializeMetadata(string? json)
     {
         if (string.IsNullOrEmpty(json))
         {

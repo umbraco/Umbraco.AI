@@ -18,7 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Umbraco.AI.Search.Core\Umbraco.AI.Search.Core.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Search.SqlServer\Umbraco.AI.Search.SqlServer.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Search.Sqlite\Umbraco.AI.Search.Sqlite.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Search.Db.SqlServer\Umbraco.AI.Search.Db.SqlServer.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Search.Db.Sqlite\Umbraco.AI.Search.Db.Sqlite.csproj" />
     </ItemGroup>
 </Project>

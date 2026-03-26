@@ -4,8 +4,8 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
-import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
-import { isChatSettings } from "../../../types.js";
+import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings } from "../../../types.js";
+import { isChatSettings, isEmbeddingSettings } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
@@ -166,11 +166,37 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onDimensionsChange(event: Event) {
+        event.stopPropagation();
+        const target = event.target as HTMLInputElement;
+        const value = target.value;
+        const dimensions = value ? parseInt(value, 10) : null;
+        this.#updateEmbeddingSettings({ dimensions });
+    }
+
+    #updateEmbeddingSettings(updates: Partial<UaiEmbeddingProfileSettings>) {
+        const currentSettings = this._model?.settings ?? null;
+        const embeddingSettings: UaiEmbeddingProfileSettings = isEmbeddingSettings(currentSettings)
+            ? { ...currentSettings, ...updates }
+            : {
+                $type: "embedding",
+                dimensions: updates.dimensions ?? null,
+            };
+
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: embeddingSettings }, "settings"),
+        );
+    }
+
     /**
      * Gets the current chat settings, or null if not a chat profile.
      */
     #getChatSettings(): UaiChatProfileSettings | null {
         return isChatSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiChatProfileSettings) : null;
+    }
+
+    #getEmbeddingSettings(): UaiEmbeddingProfileSettings | null {
+        return isEmbeddingSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiEmbeddingProfileSettings) : null;
     }
 
     /**
@@ -185,7 +211,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             return this.#renderChatSettings();
         }
 
-        // Embedding profiles have no additional settings currently
+        if (capability === "embedding") {
+            return this.#renderEmbeddingSettings();
+        }
+
         return nothing;
     }
 
@@ -242,6 +271,29 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-context-picker>
                 </umb-property-layout>
 
+            </uui-box>
+        `;
+    }
+
+    #renderEmbeddingSettings() {
+        const embeddingSettings = this.#getEmbeddingSettings();
+
+        return html`
+            <uui-box headline="Settings">
+                <umb-property-layout
+                    label="Dimensions"
+                    description="Number of dimensions for generated embeddings. Leave empty to use the model's default."
+                >
+                    <uui-input
+                        slot="editor"
+                        type="number"
+                        min="1"
+                        max="1998"
+                        .value=${embeddingSettings?.dimensions?.toString() ?? ""}
+                        @input=${this.#onDimensionsChange}
+                        placeholder="Default"
+                    ></uui-input>
+                </umb-property-layout>
             </uui-box>
         `;
     }

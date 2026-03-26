@@ -32,6 +32,7 @@ export interface UaiChatProfileSettings extends UaiProfileSettings {
  */
 export interface UaiEmbeddingProfileSettings extends UaiProfileSettings {
     $type: "embedding";
+    dimensions: number | null;
 }
 
 /**

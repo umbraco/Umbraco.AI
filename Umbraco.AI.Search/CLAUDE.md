@@ -33,8 +33,9 @@ Umbraco.AI.Search provides AI-powered semantic vector search for Umbraco CMS con
 | Project | Purpose |
 | --- | --- |
 | `Umbraco.AI.Search.Core` | Domain models, services, interfaces, indexer, searcher, tools |
-| `Umbraco.AI.Search.SqlServer` | SQL Server EF Core DbContext, migrations, vector store |
-| `Umbraco.AI.Search.Sqlite` | SQLite EF Core DbContext, migrations, vector store |
+| `Umbraco.AI.Search.Db` | Shared EF Core DbContext, entity, base vector store (brute-force search) |
+| `Umbraco.AI.Search.Db.SqlServer` | SQL Server migrations + native `VECTOR_DISTANCE` search override |
+| `Umbraco.AI.Search.Db.Sqlite` | SQLite migrations |
 | `Umbraco.AI.Search.Startup` | Umbraco Composer for DI registration |
 | `Umbraco.AI.Search` | Meta-package that bundles all components |
 
@@ -49,11 +50,11 @@ Umbraco.AI.Search provides AI-powered semantic vector search for Umbraco CMS con
 
 Uses EF Core with provider-specific migrations. Migration prefix: `UmbracoAISearch_`.
 
-SQL Server store detects version at runtime:
-- SQL Server 2025+: native `VECTOR_DISTANCE()` with `CAST`
-- Older versions: brute-force cosine similarity in .NET
+Vectors are stored as JSON arrays in `nvarchar(max)` (SQL Server) / `TEXT` (SQLite) columns. This enables SQL Server 2025's native `VECTOR_DISTANCE()` via nvarchar-to-vector CAST at query time.
 
-Column type is `varbinary(max)` for compatibility across all SQL Server versions.
+SQL Server store detects capabilities at runtime:
+- SQL Server 2025+ with ≤1998 dimensions: native `VECTOR_DISTANCE()` for server-side cosine similarity
+- Older versions or >1998 dimensions: brute-force cosine similarity in .NET via `TensorPrimitives`
 
 ### CMS Search Integration
 
@@ -70,3 +71,4 @@ Options bound from `Umbraco:AI:Search` in `appsettings.json`:
 | `ChunkSize` | `512` | Maximum tokens per text chunk |
 | `ChunkOverlap` | `50` | Token overlap between chunks |
 | `DefaultTopK` | `100` | Max candidates from vector search |
+| `MinScore` | `0.3` | Minimum cosine similarity score (0.0–1.0) to include a result |

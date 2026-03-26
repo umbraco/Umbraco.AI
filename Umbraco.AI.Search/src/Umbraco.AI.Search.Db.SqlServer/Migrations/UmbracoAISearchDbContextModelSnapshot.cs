@@ -2,20 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.AI.Search.SqlServer;
+using Umbraco.AI.Search.Db;
 
 #nullable disable
 
-namespace Umbraco.AI.Search.SqlServer.Migrations
+namespace Umbraco.AI.Search.Db.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAISearchDbContext))]
-    [Migration("20260326105611_UmbracoAISearch_PendingModelSync")]
-    partial class UmbracoAISearch_PendingModelSync
+    partial class UmbracoAISearchDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,7 +21,7 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.AI.Search.SqlServer.VectorStore.AIVectorEntryEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Search.Db.VectorStore.AIVectorEntryEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -52,9 +49,9 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
                     b.Property<string>("Metadata")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("Vector")
+                    b.Property<string>("Vector")
                         .IsRequired()
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

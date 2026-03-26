@@ -52,6 +52,8 @@ ProductName/
 └── CLAUDE.md
 ```
 
+**Search package** (Umbraco.AI.Search) uses `Db`, `Db.SqlServer`, `Db.Sqlite` instead of `Persistence.*` — these are `IAIVectorStore` implementations, not domain entity persistence.
+
 **Provider packages**: Single `src/ProviderName/` project + `tests/ProviderName.Tests.Unit/`.
 
 ### Core Concepts

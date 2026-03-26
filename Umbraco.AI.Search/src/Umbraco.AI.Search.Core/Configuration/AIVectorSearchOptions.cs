@@ -12,6 +12,12 @@ public sealed class AIVectorSearchOptions
     public int DefaultTopK { get; set; } = 100;
 
     /// <summary>
+    /// Minimum cosine similarity score (0.0–1.0) for a result to be included.
+    /// Results below this threshold are discarded as irrelevant.
+    /// </summary>
+    public double MinScore { get; set; } = 0.3;
+
+    /// <summary>
     /// Maximum number of tokens per chunk when splitting content for embedding.
     /// </summary>
     public int ChunkSize { get; set; } = 512;

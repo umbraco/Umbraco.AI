@@ -2,8 +2,9 @@
   <Folder Name="/src/">
     <Project Path="src/Umbraco.AI.Search/Umbraco.AI.Search.csproj" />
     <Project Path="src/Umbraco.AI.Search.Core/Umbraco.AI.Search.Core.csproj" />
-    <Project Path="src/Umbraco.AI.Search.SqlServer/Umbraco.AI.Search.SqlServer.csproj" />
-    <Project Path="src/Umbraco.AI.Search.Sqlite/Umbraco.AI.Search.Sqlite.csproj" />
+    <Project Path="src/Umbraco.AI.Search.Db/Umbraco.AI.Search.Db.csproj" />
+    <Project Path="src/Umbraco.AI.Search.Db.SqlServer/Umbraco.AI.Search.Db.SqlServer.csproj" />
+    <Project Path="src/Umbraco.AI.Search.Db.Sqlite/Umbraco.AI.Search.Db.Sqlite.csproj" />
     <Project Path="src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj" />
   </Folder>
   <Folder Name="/tests/">

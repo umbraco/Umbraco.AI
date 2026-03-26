@@ -148,17 +148,26 @@ public sealed class AIVectorIndexer : IIndexer
 
     private static string ExtractTextFromFields(IEnumerable<IndexField> fields)
     {
-        var parts = new List<string>();
+        var r1Parts = new List<string>();
+        var otherParts = new List<string>();
 
         foreach (IndexField field in fields)
         {
             IndexValue value = field.Value;
 
-            AppendTexts(parts, value.TextsR1);
-            AppendTexts(parts, value.TextsR2);
-            AppendTexts(parts, value.TextsR3);
-            AppendTexts(parts, value.Texts);
+            AppendTexts(r1Parts, value.TextsR1);
+            AppendTexts(otherParts, value.TextsR2);
+            AppendTexts(otherParts, value.TextsR3);
+            AppendTexts(otherParts, value.Texts);
         }
+
+        // Prepend R1 text (typically the document name) so it has stronger influence
+        // in the embedding. Without this, titles get diluted by body content and
+        // exact title matches can rank below tangentially related pages.
+        var parts = new List<string>(r1Parts.Count + otherParts.Count + r1Parts.Count);
+        parts.AddRange(r1Parts);
+        parts.AddRange(otherParts);
+        parts.AddRange(r1Parts);
 
         return string.Join(" ", parts);
     }

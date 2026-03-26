@@ -3,14 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.AI.Search.Sqlite;
+using Umbraco.AI.Search.Db;
 
 #nullable disable
 
-namespace Umbraco.AI.Search.Sqlite.Migrations
+namespace Umbraco.AI.Search.Db.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAISearchDbContext))]
-    [Migration("20260323135938_UmbracoAISearch_InitialCreate")]
+    [Migration("20260326125548_UmbracoAISearch_InitialCreate")]
     partial class UmbracoAISearch_InitialCreate
     {
         /// <inheritdoc />
@@ -19,7 +19,7 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.AI.Search.Sqlite.VectorStore.AIVectorEntryEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Search.Db.VectorStore.AIVectorEntryEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,9 +45,9 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
                     b.Property<string>("Metadata")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("Vector")
+                    b.Property<string>("Vector")
                         .IsRequired()
-                        .HasColumnType("BLOB");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

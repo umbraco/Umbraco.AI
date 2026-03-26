@@ -164,17 +164,19 @@ public sealed class AIVectorSearcher : ISearcher
         string? culture = null,
         CancellationToken cancellationToken = default)
     {
-        var topK = _options.Value.DefaultTopK;
+        var options = _options.Value;
         IReadOnlyList<AIVectorSearchResult> vectorResults = await _vectorStore.SearchAsync(
             indexAlias,
             queryVector,
             culture,
-            topK,
+            options.DefaultTopK,
             cancellationToken);
 
         // Deduplicate by document: multiple chunks from the same document may match.
         // Use the best chunk score (max) per document.
+        // Filter by minimum score to discard irrelevant results.
         return vectorResults
+            .Where(r => r.Score >= options.MinScore)
             .GroupBy(r => r.DocumentId)
             .Select(g => g.OrderByDescending(r => r.Score).First())
             .OrderByDescending(r => r.Score)

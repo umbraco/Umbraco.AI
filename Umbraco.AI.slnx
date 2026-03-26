@@ -33,8 +33,9 @@
   </Folder>
   <Folder Name="/AddOns/Search/">
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Core/Umbraco.AI.Search.Core.csproj" />
-    <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.SqlServer/Umbraco.AI.Search.SqlServer.csproj" />
-    <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Sqlite/Umbraco.AI.Search.Sqlite.csproj" />
+    <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Db/Umbraco.AI.Search.Db.csproj" />
+    <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Db.SqlServer/Umbraco.AI.Search.Db.SqlServer.csproj" />
+    <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Db.Sqlite/Umbraco.AI.Search.Db.Sqlite.csproj" />
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj" />
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search/Umbraco.AI.Search.csproj" />
     <Project Path="Umbraco.AI.Search/tests/Umbraco.AI.Search.Tests.Unit/Umbraco.AI.Search.Tests.Unit.csproj" />

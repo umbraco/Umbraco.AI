@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Umbraco.AI.Search.SqlServer;
+using Umbraco.AI.Search.Db;
+
+namespace Umbraco.AI.Search.Db.Sqlite;
 
 /// <summary>
 /// Design-time factory for creating <see cref="UmbracoAISearchDbContext"/> for EF Core migrations.
@@ -14,8 +16,8 @@ public class UmbracoAISearchDbContextFactory : IDesignTimeDbContextFactory<Umbra
         var optionsBuilder = new DbContextOptionsBuilder<UmbracoAISearchDbContext>();
 
         // Use a dummy connection string for design-time operations
-        optionsBuilder.UseSqlServer(
-            "Server=.;Database=UmbracoAISearch_Design;Integrated Security=true;TrustServerCertificate=true",
+        optionsBuilder.UseSqlite(
+            "Data Source=:memory:",
             x => x.MigrationsAssembly(typeof(UmbracoAISearchDbContextFactory).Assembly.FullName));
 
         return new UmbracoAISearchDbContext(optionsBuilder.Options);

@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Umbraco.AI.Search.Sqlite.Migrations
+namespace Umbraco.AI.Search.Db.SqlServer.Migrations
 {
     /// <inheritdoc />
     public partial class UmbracoAISearch_InitialCreate : Migration
@@ -14,14 +14,14 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
                 name: "umbracoAISearchVectorEntry",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    IndexName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    DocumentId = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    Culture = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
-                    ChunkIndex = table.Column<int>(type: "INTEGER", nullable: false),
-                    Vector = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    Metadata = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IndexName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    DocumentId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Culture = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    ChunkIndex = table.Column<int>(type: "int", nullable: false),
+                    Vector = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -42,7 +42,8 @@ namespace Umbraco.AI.Search.Sqlite.Migrations
                 name: "IX_umbracoAISearchVectorEntry_IndexName_DocumentId_Culture_ChunkIndex",
                 table: "umbracoAISearchVectorEntry",
                 columns: new[] { "IndexName", "DocumentId", "Culture", "ChunkIndex" },
-                unique: true);
+                unique: true,
+                filter: "[Culture] IS NOT NULL");
         }
 
         /// <inheritdoc />

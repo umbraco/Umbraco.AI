@@ -1,9 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core.VectorStore;
-using Umbraco.AI.Search.SqlServer;
-using Umbraco.AI.Search.SqlServer.Notifications;
-using Umbraco.AI.Search.SqlServer.VectorStore;
+using Umbraco.AI.Search.Db;
+using Umbraco.AI.Search.Db.Notifications;
+using Umbraco.AI.Search.Db.SqlServer.VectorStore;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
@@ -17,18 +16,17 @@ public static partial class UmbracoBuilderExtensions
 {
     /// <summary>
     /// Adds SQL Server persistence for Umbraco AI Search vector store.
-    /// Uses native <c>vector</c> type and <c>VECTOR_DISTANCE()</c> for server-side similarity search.
+    /// Uses native <c>VECTOR_DISTANCE()</c> for server-side similarity search on SQL Server 2025+.
     /// </summary>
     public static IUmbracoBuilder AddUmbracoAISearchSqlServer(this IUmbracoBuilder builder)
     {
         builder.Services.AddUmbracoDbContext<UmbracoAISearchDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            options.UseSqlServer(connectionString, x =>
-                x.MigrationsAssembly(typeof(SqlServerAIVectorStore).Assembly.FullName));
+            UmbracoAISearchDbContext.ConfigureProvider(options, connectionString, providerName);
         });
 
         builder.Services.AddSingleton<IAIVectorStore, SqlServerAIVectorStore>();
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchSqlServerMigrationNotificationHandler>();
+        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchMigrationNotificationHandler>();
 
         return builder;
     }

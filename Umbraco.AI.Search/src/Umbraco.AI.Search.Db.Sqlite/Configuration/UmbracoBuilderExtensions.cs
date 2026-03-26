@@ -1,9 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Search.Core.VectorStore;
-using Umbraco.AI.Search.Sqlite;
-using Umbraco.AI.Search.Sqlite.Notifications;
-using Umbraco.AI.Search.Sqlite.VectorStore;
+using Umbraco.AI.Search.Db;
+using Umbraco.AI.Search.Db.Notifications;
+using Umbraco.AI.Search.Db.VectorStore;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
@@ -23,12 +22,11 @@ public static partial class UmbracoBuilderExtensions
     {
         builder.Services.AddUmbracoDbContext<UmbracoAISearchDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            options.UseSqlite(connectionString, x =>
-                x.MigrationsAssembly(typeof(SqliteAIVectorStore).Assembly.FullName));
+            UmbracoAISearchDbContext.ConfigureProvider(options, connectionString, providerName);
         });
 
-        builder.Services.AddSingleton<IAIVectorStore, SqliteAIVectorStore>();
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchSqliteMigrationNotificationHandler>();
+        builder.Services.AddSingleton<IAIVectorStore, EFCoreAIVectorStore>();
+        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchMigrationNotificationHandler>();
 
         return builder;
     }

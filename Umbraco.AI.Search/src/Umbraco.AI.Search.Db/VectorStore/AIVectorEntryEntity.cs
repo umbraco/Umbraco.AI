@@ -1,4 +1,4 @@
-namespace Umbraco.AI.Search.Sqlite.VectorStore;
+namespace Umbraco.AI.Search.Db.VectorStore;
 
 /// <summary>
 /// EF Core entity representing a stored vector with associated metadata.
@@ -31,9 +31,9 @@ internal class AIVectorEntryEntity
     public int ChunkIndex { get; set; }
 
     /// <summary>
-    /// The vector stored as a binary blob (IEEE 754 float array).
+    /// The vector stored as a JSON array (e.g. "[1.0, 2.0, 3.0]").
     /// </summary>
-    public byte[] Vector { get; set; } = [];
+    public string Vector { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional JSON-serialized metadata associated with the vector.

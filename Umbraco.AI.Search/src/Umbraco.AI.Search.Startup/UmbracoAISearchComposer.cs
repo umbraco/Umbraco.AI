@@ -28,8 +28,8 @@ namespace Umbraco.AI.Search.Startup;
 /// default search provider and overriding Examine or other providers.
 /// </para>
 /// <para>
-/// Search core registration (<c>AddSearchCore()</c>) is deferred until after all composers
-/// have run, so it is only called if no other composer has already registered it.
+/// Search core registration (<c>AddSearchCore()</c>) is called conditionally — only if no
+/// other package (e.g., Examine) has already registered <c>ISearcherResolver</c>.
 /// </para>
 /// </remarks>
 [ComposeAfter(typeof(AI.Startup.Configuration.UmbracoAIComposer))]
@@ -73,16 +73,14 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.AddNotificationHandler<MediaCacheRefresherNotification, MediaIndexingNotificationHandler>();
         builder.AddNotificationAsyncHandler<IndexRebuildCompletedNotification, MediaIndexingNotificationHandler>();
 
-        // Ensure AddSearchCore() is called after all composers have run.
-        // Uses a deferred registration so we can check if another composer
-        // (e.g., Examine) has already registered the search core services.
-        builder.WithCollectionBuilder<DeferredServiceRegistration>()
-            .Add(services =>
-            {
-                if (services.All(s => s.ServiceType != typeof(ISearcherResolver)))
-                {
-                    builder.AddSearchCore();
-                }
-            });
+        // Register search core services if no other package (e.g., Examine) has already done so.
+        // AddSearchCore() is not idempotent (registers transients and notification handlers),
+        // so we check for ISearcherResolver as a sentinel before calling it.
+        // TODO: Remove guard when Umbraco.Cms.Search makes AddSearchCore() idempotent.
+        // See: https://github.com/umbraco/Umbraco.Cms.Search/pull/109
+        if (builder.Services.All(s => s.ServiceType != typeof(ISearcherResolver)))
+        {
+            builder.AddSearchCore();
+        }
     }
 }

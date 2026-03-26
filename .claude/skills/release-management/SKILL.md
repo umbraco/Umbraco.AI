@@ -22,8 +22,9 @@ Guide users through the complete release preparation process:
 8. **Update version.json** files for each product
 9. **Generate release-manifest.json** via `/release-manifest-management`
 10. **Generate CHANGELOG.md** files via `/changelog-management`
-11. **Validate** all files are consistent
-12. **Commit all changes** to the release branch
+11. **Changelog review** - Review generated changelogs for quality and completeness
+12. **Validate** all files are consistent
+13. **Commit all changes** to the release branch
 
 ## Workflow
 
@@ -420,7 +421,107 @@ For each product in the manifest:
 
 2. **Verify changelog** was generated correctly
 
-### Phase 11: Validation
+### Phase 10.5: Changelog Review
+
+After generating changelogs, review each product's new version entry for quality and completeness.
+
+#### Step 1: Noise Detection
+
+For each product's changelog entry, check for and flag:
+
+1. **Internal-only entries that shouldn't be public:**
+   - `refactor` sections — these are hidden from changelogs per convention (types hidden: refactor, chore, docs, test, ci, build). If the generator included them, they should be removed
+   - Test-only fixes (e.g., "Fix failing tests") — not user-facing
+   - Build/CI changes (e.g., "Exclude dev files from NuGet package")
+   - Generated code changes (e.g., "Fix casing in generated OpenAPI client")
+
+2. **Leaked metadata:**
+   - `Co-Authored-By` lines in commit bodies that leaked into changelog entries
+   - PR merge commit noise
+   - Internal tool references (e.g., "after /simplify review")
+
+3. **Duplicate cross-product entries:**
+   - Same commit appearing in multiple product changelogs — verify it's actually relevant to each product
+
+#### Step 2: Completeness Check
+
+For each product being released, verify the changelog captured all meaningful changes:
+
+1. **Compare changelog entries against actual file changes:**
+   ```bash
+   # Get files changed for the product
+   git diff <tag>..HEAD --name-only -- <ProductFolder>/ | grep -v 'CHANGELOG.md\|version.json'
+
+   # Get commits that touched those files
+   git log <tag>..HEAD --pretty=format:"%h %s" -- <ProductFolder>/
+   ```
+
+2. **Look for missing entries** — commits scoped to other products (e.g., `feat(agent)`) that touched this product's files won't be captured by the changelog generator since it filters by scope. Common cases:
+   - Cross-product features where the commit scope doesn't match all affected products
+   - Batch commits that span multiple product directories
+
+3. **For each missing change, determine if it's changelog-worthy:**
+   - Does it change user-facing behavior? → Add a manually written entry
+   - Is it only adapting to a dependency change? → Skip (internal plumbing)
+   - Is it a meaningful new feature/fix that users should know about? → Add entry
+
+#### Step 3: Empty Changelog Assessment
+
+For products with **empty changelog entries** (version header but no content):
+
+1. **Review what actually changed** in the product directory:
+   ```bash
+   git diff <tag>..HEAD --stat -- <ProductFolder>/ | grep -v 'CHANGELOG.md\|version.json'
+   ```
+
+2. **Categorize the changes:**
+   - **Build/tooling only** (lock files, csproj conditions, slnx migrations, CLAUDE.md) → Recommend dropping from release
+   - **Dependency adaptation** (adapting to API changes in a dependency, no new features) → Recommend dropping OR add a brief entry
+   - **Real features/fixes** that were missed by the generator → Add entries manually
+
+3. **If recommending to drop a product**, remind about the release manifest:
+   - Move it from `include` to `exclude` in `release-manifest.json`
+   - Revert its `version.json` to the pre-release value
+   - Revert peer dependency version changes if applicable
+
+#### Step 4: Present Review
+
+Present findings to the user organized by severity:
+
+```
+Changelog Review Results:
+
+🔴 Issues requiring attention:
+- [Product]: Empty changelog — only build changes detected, recommend dropping
+- [Product]: Missing entry for [feature] — cross-product commit scoped elsewhere
+
+🟡 Noise to clean up:
+- [Product]: Refactor section should be removed (14 entries)
+- [Product]: "Fix failing tests" entry is internal-only
+- [Product]: Co-Authored-By leaked into breaking change body
+
+✅ Clean:
+- [Product]: Changelog looks good
+- [Product]: Changelog looks good
+```
+
+#### Step 5: Apply Fixes
+
+After user confirms:
+
+1. **Remove noise entries** — Edit changelogs to remove flagged items
+2. **Add missing entries** — Write manually crafted entries for missed changes
+3. **Drop products** — Update release manifest, revert versions
+4. **Re-validate** — Ensure all changelogs still have content after cleanup
+
+#### Important Notes
+
+- This phase is about **editorial quality**, not format validation (that's Phase 12)
+- The changelog generator works by matching commit scopes to products. Cross-product commits with a single scope will only appear in that scope's changelog. This is a known limitation — manual additions are expected.
+- When adding manual entries, follow the same format as generated entries but use a scope matching the product being edited
+- Refactor/chore/docs types should NEVER appear in public changelogs per project convention
+
+### Phase 12: Validation
 
 Verify all files are consistent:
 
@@ -429,7 +530,7 @@ Verify all files are consistent:
 3. **Check release-manifest.json** includes all intended products
 4. **Report any issues** to user
 
-### Phase 12: Commit Changes
+### Phase 13: Commit Changes
 
 **All work has been done on the release branch.** Now commit everything:
 
@@ -572,10 +673,19 @@ Phase 10: Generate changelogs
 You invoke /changelog-management for each product
 All changelogs generated
 
-Phase 11: Validate
+Phase 10.5: Changelog review
+You review each product's changelog for noise (refactor entries, leaked metadata)
+You check completeness by comparing changelog entries against actual file changes
+You flag: Umbraco.AI.OpenAI has a "Fix failing tests" entry (internal-only)
+You flag: Umbraco.AI.Prompt is missing an entry for a cross-product feature
+You present review results to user
+User confirms fixes
+You remove the internal-only entry and add the missing feature entry
+
+Phase 12: Validate
 You verify all files are correct
 
-Phase 12: Commit changes
+Phase 13: Commit changes
 You commit all changes to the release branch
 You show summary and next steps
 ```

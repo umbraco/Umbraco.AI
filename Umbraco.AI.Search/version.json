@@ -1,14 +1,17 @@
 {
-  "version": "1.0.0-beta1",
-  "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
-  "publicReleaseRefSpec": [
-    "^refs/heads/main$",
-    "^refs/heads/release/.*$",
-    "^refs/heads/hotfix/.*$"
-  ],
-  "cloudBuild": {
-    "buildNumber": {
-      "enabled": true
+    "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
+    "version": "1.0.0-beta.{height}",
+    "assemblyVersion": {
+        "precision": "build"
+    },
+    "gitCommitIdShortFixedLength": 7,
+    "nugetPackageVersion": {
+        "semVer": 2
+    },
+    "publicReleaseRefSpec": ["^refs/heads/main$", "^refs/heads/hotfix/", "^refs/heads/release/"],
+    "cloudBuild": {
+        "buildNumber": {
+            "enabled": false
+        }
     }
-  }
 }

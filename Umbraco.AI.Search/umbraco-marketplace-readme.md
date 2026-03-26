@@ -1,6 +1,6 @@
 ## Umbraco.AI.Search
 
-AI-powered semantic vector search for Umbraco CMS - find content by meaning, not just keywords.
+AI-powered semantic vector search for Umbraco CMS - find content by meaning, not just keywords. Built on Umbraco.Cms.Search, it works alongside Examine and other search providers.
 
 ### Features
 
@@ -15,6 +15,7 @@ AI-powered semantic vector search for Umbraco CMS - find content by meaning, not
 ### Requirements
 
 - Umbraco CMS 17.0.0+
+- Umbraco.Cms.Search 1.0.0+
 - Umbraco.AI 1.0.0+
 - .NET 10.0
 - An embedding-capable AI provider (e.g. Umbraco.AI.OpenAI)

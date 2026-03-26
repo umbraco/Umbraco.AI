@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Events;
@@ -26,6 +27,11 @@ public class RunAISearchSqlServerMigrationNotificationHandler
         optionsBuilder.UseSqlServer(
             _connectionStrings.Value.ConnectionString,
             x => x.MigrationsAssembly(typeof(RunAISearchSqlServerMigrationNotificationHandler).Assembly.FullName));
+
+        // Downgrade PendingModelChangesWarning from exception to log so migrations
+        // can still be applied during development when the model has unreleased changes.
+        optionsBuilder.ConfigureWarnings(w =>
+            w.Log(RelationalEventId.PendingModelChangesWarning));
 
         await using var dbContext = new UmbracoAISearchDbContext(optionsBuilder.Options);
 

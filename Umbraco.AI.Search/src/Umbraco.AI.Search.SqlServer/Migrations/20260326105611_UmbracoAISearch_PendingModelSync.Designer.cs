@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Umbraco.AI.Search.SqlServer;
 
@@ -10,9 +11,11 @@ using Umbraco.AI.Search.SqlServer;
 namespace Umbraco.AI.Search.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAISearchDbContext))]
-    partial class UmbracoAISearchDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326105611_UmbracoAISearch_PendingModelSync")]
+    partial class UmbracoAISearch_PendingModelSync
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

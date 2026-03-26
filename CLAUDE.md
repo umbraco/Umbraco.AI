@@ -11,6 +11,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.Agent.UI | `Umbraco.AI.Agent.UI/` | Add-on (chat UI library) |
 | Umbraco.AI.Agent.Copilot | `Umbraco.AI.Agent.Copilot/` | Add-on (frontend-only) |
 | Umbraco.AI.Prompt | `Umbraco.AI.Prompt/` | Add-on |
+| Umbraco.AI.Search | `Umbraco.AI.Search/` | Add-on |
 | Umbraco.AI.Deploy | `Umbraco.AI.Deploy/` | Deploy |
 | Umbraco.AI.Prompt.Deploy | `Umbraco.AI.Prompt.Deploy/` | Deploy |
 | Umbraco.AI.Agent.Deploy | `Umbraco.AI.Agent.Deploy/` | Deploy |
@@ -28,6 +29,7 @@ Umbraco.AI (Core)
 ├── Umbraco.AI.Prompt → Prompt.Deploy (depends on Prompt + Deploy)
 ├── Umbraco.AI.Agent → Agent.UI → Agent.Copilot
 │                     → Agent.Deploy (depends on Agent + Deploy)
+├── Umbraco.AI.Search
 └── Umbraco.AI.Deploy
 ```
 
@@ -130,7 +132,7 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 - .NET 10.0 (`net10.0`), Umbraco CMS 17.x, Central Package Management via `Directory.Packages.props`
 - Frontend: Lit + TypeScript + Vite + @hey-api/openapi-ts
 - Frontend source: `src/*/Web.StaticAssets/Client/` -> `wwwroot/App_Plugins/`
-- Database: SQL Server & SQLite via EF Core; migration prefixes: `UmbracoAI_`, `UmbracoAIPrompt_`, `UmbracoAIAgent_`
+- Database: SQL Server & SQLite via EF Core; migration prefixes: `UmbracoAI_`, `UmbracoAIPrompt_`, `UmbracoAIAgent_`, `UmbracoAISearch_`
 
 ## Key Files
 

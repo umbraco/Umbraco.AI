@@ -74,18 +74,43 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
                 ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken)
                 : null;
 
-            await using var audioStream = audioFile.OpenReadStream();
-
-            var result = profileId.HasValue
-                ? await _speechToTextService.TranscribeAsync(profileId.Value, audioStream, options, cancellationToken)
-                : await _speechToTextService.TranscribeAsync(audioStream, options, cancellationToken);
-
-            var response = new SpeechToTextResponseModel
+            // Save to a temp file so M.E.AI's OpenAISpeechToTextClient picks up
+            // the correct extension from FileStream.Name (it defaults to "audio.mp3"
+            // for non-FileStream inputs, causing format mismatch).
+            var extension = Path.GetExtension(audioFile.FileName);
+            if (string.IsNullOrEmpty(extension))
             {
-                Text = result.Text ?? string.Empty
-            };
+                extension = MimeTypeToExtension(audioFile.ContentType);
+            }
 
-            return Ok(response);
+            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}{extension}");
+            try
+            {
+                await using (var fileStream = new FileStream(tempPath, FileMode.Create))
+                {
+                    await audioFile.CopyToAsync(fileStream, cancellationToken);
+                }
+
+                await using var audioStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read);
+
+                var result = profileId.HasValue
+                    ? await _speechToTextService.TranscribeAsync(profileId.Value, audioStream, options, cancellationToken)
+                    : await _speechToTextService.TranscribeAsync(audioStream, options, cancellationToken);
+
+                var response = new SpeechToTextResponseModel
+                {
+                    Text = result.Text ?? string.Empty
+                };
+
+                return Ok(response);
+            }
+            finally
+            {
+                if (System.IO.File.Exists(tempPath))
+                {
+                    System.IO.File.Delete(tempPath);
+                }
+            }
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
@@ -101,4 +126,16 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
             });
         }
     }
+
+    private static string MimeTypeToExtension(string? contentType) => contentType?.ToLowerInvariant() switch
+    {
+        "audio/webm" => ".webm",
+        "audio/ogg" => ".ogg",
+        "audio/wav" or "audio/wave" => ".wav",
+        "audio/mp3" or "audio/mpeg" => ".mp3",
+        "audio/mp4" => ".mp4",
+        "audio/flac" => ".flac",
+        "audio/x-m4a" or "audio/m4a" => ".m4a",
+        _ => ".webm"
+    };
 }

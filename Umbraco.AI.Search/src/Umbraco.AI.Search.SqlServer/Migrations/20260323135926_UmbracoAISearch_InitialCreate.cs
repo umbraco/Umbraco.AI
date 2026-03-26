@@ -20,7 +20,7 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
                     DocumentId = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Culture = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
                     ChunkIndex = table.Column<int>(type: "int", nullable: false),
-                    Vector = table.Column<byte[]>(type: "vector(1536)", nullable: false),
+                    Vector = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>

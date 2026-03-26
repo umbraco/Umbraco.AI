@@ -54,7 +54,7 @@ namespace Umbraco.AI.Search.SqlServer.Migrations
 
                     b.Property<byte[]>("Vector")
                         .IsRequired()
-                        .HasColumnType("vector(1536)");
+                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 

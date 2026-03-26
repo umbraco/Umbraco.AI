@@ -46,7 +46,7 @@ public class UmbracoAISearchDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.Vector)
-                .HasColumnType("vector(1536)")
+                .HasColumnType("varbinary(max)")
                 .IsRequired();
 
             entity.Property(e => e.Metadata);

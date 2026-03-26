@@ -1,3 +1,4 @@
+using System.Numerics.Tensors;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -7,12 +8,17 @@ using Umbraco.Cms.Persistence.EFCore.Scoping;
 namespace Umbraco.AI.Search.SqlServer.VectorStore;
 
 /// <summary>
-/// SQL Server implementation of the vector store using native <c>vector</c> type
-/// and <c>VECTOR_DISTANCE()</c> for server-side similarity search.
+/// SQL Server implementation of the vector store.
 /// </summary>
+/// <remarks>
+/// On SQL Server 2025+, uses <c>VECTOR_DISTANCE()</c> with <c>CAST</c> for server-side
+/// cosine similarity search. On older versions, falls back to loading vectors and computing
+/// cosine similarity in .NET (same approach as the SQLite provider).
+/// </remarks>
 internal sealed class SqlServerAIVectorStore : IAIVectorStore
 {
     private readonly IEFCoreScopeProvider<UmbracoAISearchDbContext> _scopeProvider;
+    private bool? _supportsNativeVectors;
 
     public SqlServerAIVectorStore(IEFCoreScopeProvider<UmbracoAISearchDbContext> scopeProvider)
     {
@@ -108,37 +114,14 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
     {
         using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
-        byte[] queryBytes = VectorToBytes(queryVector);
-
         IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync(async db =>
         {
-            // Use VECTOR_DISTANCE for server-side cosine similarity search.
-            // VECTOR_DISTANCE returns distance (lower = more similar), so we compute 1 - distance for similarity score.
-            List<VectorSearchRow> rows = culture is not null
-                ? await db.Database
-                    .SqlQuery<VectorSearchRow>(
-                        $"""
-                        SELECT DocumentId, 1.0 - VECTOR_DISTANCE('cosine', Vector, {queryBytes}) AS Score, Metadata
-                        FROM umbracoAISearchVectorEntry
-                        WHERE IndexName = {indexName} AND Culture = {culture}
-                        ORDER BY Score DESC
-                        OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
-                        """)
-                    .ToListAsync(cancellationToken)
-                : await db.Database
-                    .SqlQuery<VectorSearchRow>(
-                        $"""
-                        SELECT DocumentId, 1.0 - VECTOR_DISTANCE('cosine', Vector, {queryBytes}) AS Score, Metadata
-                        FROM umbracoAISearchVectorEntry
-                        WHERE IndexName = {indexName}
-                        ORDER BY Score DESC
-                        OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
-                        """)
-                    .ToListAsync(cancellationToken);
+            if (await SupportsNativeVectorsAsync(db, cancellationToken))
+            {
+                return await SearchNativeAsync(db, indexName, queryVector, culture, topK, cancellationToken);
+            }
 
-            return (IReadOnlyList<AIVectorSearchResult>)rows
-                .Select(r => new AIVectorSearchResult(r.DocumentId, r.Score, DeserializeMetadata(r.Metadata)))
-                .ToList();
+            return await SearchBruteForceAsync(db, indexName, queryVector, culture, topK, cancellationToken);
         });
 
         scope.Complete();
@@ -208,6 +191,130 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
         return count;
     }
 
+    // ── Search strategies ───────────────────────────────────────────────
+
+    /// <summary>
+    /// SQL Server 2025+ path: uses <c>VECTOR_DISTANCE('cosine', CAST(... AS vector(1536)), ...)</c>
+    /// for server-side similarity ranking.
+    /// </summary>
+    private static async Task<IReadOnlyList<AIVectorSearchResult>> SearchNativeAsync(
+        UmbracoAISearchDbContext db,
+        string indexName,
+        ReadOnlyMemory<float> queryVector,
+        string? culture,
+        int topK,
+        CancellationToken cancellationToken)
+    {
+        byte[] queryBytes = VectorToBytes(queryVector);
+
+        // VECTOR_DISTANCE returns distance (lower = more similar), so 1 - distance = similarity.
+        // CAST from varbinary to vector at query time — avoids requiring vector column type in schema.
+        List<VectorSearchRow> rows = culture is not null
+            ? await db.Database
+                .SqlQuery<VectorSearchRow>(
+                    $"""
+                    SELECT DocumentId,
+                           1.0 - VECTOR_DISTANCE('cosine', CAST(Vector AS vector(1536)), CAST({queryBytes} AS vector(1536))) AS Score,
+                           Metadata
+                    FROM umbracoAISearchVectorEntry
+                    WHERE IndexName = {indexName} AND (Culture = {culture} OR Culture IS NULL)
+                    ORDER BY Score DESC
+                    OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
+                    """)
+                .ToListAsync(cancellationToken)
+            : await db.Database
+                .SqlQuery<VectorSearchRow>(
+                    $"""
+                    SELECT DocumentId,
+                           1.0 - VECTOR_DISTANCE('cosine', CAST(Vector AS vector(1536)), CAST({queryBytes} AS vector(1536))) AS Score,
+                           Metadata
+                    FROM umbracoAISearchVectorEntry
+                    WHERE IndexName = {indexName} AND Culture IS NULL
+                    ORDER BY Score DESC
+                    OFFSET 0 ROWS FETCH NEXT {topK} ROWS ONLY
+                    """)
+                .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(r => new AIVectorSearchResult(r.DocumentId, r.Score, DeserializeMetadata(r.Metadata)))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Pre-2025 fallback: loads candidate vectors and computes cosine similarity in .NET.
+    /// </summary>
+    private static async Task<IReadOnlyList<AIVectorSearchResult>> SearchBruteForceAsync(
+        UmbracoAISearchDbContext db,
+        string indexName,
+        ReadOnlyMemory<float> queryVector,
+        string? culture,
+        int topK,
+        CancellationToken cancellationToken)
+    {
+        IQueryable<AIVectorEntryEntity> query = db.VectorEntries
+            .Where(e => e.IndexName == indexName);
+
+        // Culture filtering follows CMS Search conventions:
+        // - culture provided: include that culture + invariant (null) entries
+        // - culture null: include only invariant (null) entries
+        if (culture is not null)
+        {
+            query = query.Where(e => e.Culture == culture || e.Culture == null);
+        }
+        else
+        {
+            query = query.Where(e => e.Culture == null);
+        }
+
+        List<AIVectorEntryEntity> entries = await query.ToListAsync(cancellationToken);
+
+        if (entries.Count == 0)
+        {
+            return Array.Empty<AIVectorSearchResult>();
+        }
+
+        return entries
+            .Select(e => new AIVectorSearchResult(
+                e.DocumentId,
+                TensorPrimitives.CosineSimilarity(queryVector.Span, BytesToVector(e.Vector)),
+                DeserializeMetadata(e.Metadata)))
+            .OrderByDescending(r => r.Score)
+            .Take(topK)
+            .ToList();
+    }
+
+    // ── Version detection ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Detects whether the SQL Server instance supports native vector operations (version 17+).
+    /// Result is cached for the lifetime of this instance.
+    /// </summary>
+    private async Task<bool> SupportsNativeVectorsAsync(UmbracoAISearchDbContext db, CancellationToken cancellationToken)
+    {
+        if (_supportsNativeVectors.HasValue)
+        {
+            return _supportsNativeVectors.Value;
+        }
+
+        try
+        {
+            var majorVersion = await db.Database
+                .SqlQuery<int>($"SELECT CAST(SERVERPROPERTY('ProductMajorVersion') AS int) AS [Value]")
+                .SingleAsync(cancellationToken);
+
+            _supportsNativeVectors = majorVersion >= 17;
+        }
+        catch
+        {
+            // If we can't determine the version, assume no native vector support
+            _supportsNativeVectors = false;
+        }
+
+        return _supportsNativeVectors.Value;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+
     private static byte[] VectorToBytes(ReadOnlyMemory<float> vector)
     {
         var bytes = new byte[vector.Length * sizeof(float)];
@@ -217,6 +324,9 @@ internal sealed class SqlServerAIVectorStore : IAIVectorStore
 
     private static float[] VectorBytesToFloats(byte[] bytes)
         => MemoryMarshal.Cast<byte, float>(bytes).ToArray();
+
+    private static ReadOnlySpan<float> BytesToVector(byte[] bytes)
+        => MemoryMarshal.Cast<byte, float>(bytes);
 
     private static IDictionary<string, object>? DeserializeMetadata(string? json)
     {

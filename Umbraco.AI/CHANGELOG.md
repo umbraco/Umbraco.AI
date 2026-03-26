@@ -21,27 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### fix
 
-* **core,agent:** Fix failing tests across multiple subsystems ([048db39](https://github.com/umbraco/Umbraco.AI/commit/048db39a77a0965d855d6524e5f4b5fed7c48d25))
 * **core:** Distinguish IPublishedContent from IPublishedElement in formatter ([9b4bf60](https://github.com/umbraco/Umbraco.AI/commit/9b4bf600268186164176f0b78f221cb0b136d7c7))
 * **core:** Filter search results by user start node permissions ([7881163](https://github.com/umbraco/Umbraco.AI/commit/788116398a1060b82e8b0eed201c2ad32ddf793c))
 * **core:** Reuse existing runtime context scope in inline chat API ([6c021f4](https://github.com/umbraco/Umbraco.AI/commit/6c021f4984da3e9e7cea9760aba26d8f750e111b))
-
-### refactor
-
-* **core,agent:** Drop unnecessary Inline prefix from API names ([644d318](https://github.com/umbraco/Umbraco.AI/commit/644d3184fc4a22855189959746dc2d623448b709))
-* **core,prompt,agent:** Rename EfCore to EFCore for CMS consistency ([56caf34](https://github.com/umbraco/Umbraco.AI/commit/56caf3410cbe48599eb62060fdc88c0485fc30d1))
-* **core:** Clean up read tools from PR review feedback ([eaff70c](https://github.com/umbraco/Umbraco.AI/commit/eaff70cfdf3b5c154f069a27418925b4b01caf44))
-* **core:** Deprecate old chat service API and migrate callers ([0a134ce](https://github.com/umbraco/Umbraco.AI/commit/0a134ce44e285b7a0aaf71b1b4307372069c5ea7))
-* **core:** Extract alias resolution into shared extension methods ([c683f74](https://github.com/umbraco/Umbraco.AI/commit/c683f7443a7ab8aa9ae3ba6f06c6d9aff7e26129))
-* **core:** Extract deterministic GUID generation to shared utility ([676111f](https://github.com/umbraco/Umbraco.AI/commit/676111fac0d5c5353dfc6e8860960dd5b0c41a9b))
-* **core:** Make context resource formatting async ([b829492](https://github.com/umbraco/Umbraco.AI/commit/b82949241dc0c8934a7d1b183592e5ef01930abe))
-* **core:** Move Description and Icon into AIContextResourceType attribute ([1c107ae](https://github.com/umbraco/Umbraco.AI/commit/1c107aeaf07ed46b608755b99fa49efb5c64d659))
-* **core:** Rename context resource Data to Settings and formatter to processor ([09197ff](https://github.com/umbraco/Umbraco.AI/commit/09197ff9a398d43f5a42c584011af55a1ae77b3e))
-* **core:** Rename FormatForLlm to FormatDataForLlm and regenerate API clients ([f67e330](https://github.com/umbraco/Umbraco.AI/commit/f67e3300e451375fcbcaaadc9911f58496c67152))
-* **core:** Simplify GetContentTypeSchemaTool to alias-only lookup ([64bc223](https://github.com/umbraco/Umbraco.AI/commit/64bc2239615a906ab2d29ae91a95ab6e19738598))
-* **core:** Simplify inline chat implementation ([77d2449](https://github.com/umbraco/Umbraco.AI/commit/77d24493c3d201b4f87c3003b812537abe642144))
-* **core:** Simplify read tools after /simplify review ([d0717f9](https://github.com/umbraco/Umbraco.AI/commit/d0717f91592da646addaa57fa0984b4f3056f25c))
-* **core:** Use friendly navigation extensions in read tools ([a86fc1a](https://github.com/umbraco/Umbraco.AI/commit/a86fc1acddd06a31f46c106c1271c835ab907598))
 
 ## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.5.0...Umbraco.AI@1.6.0) (2026-03-16)
 

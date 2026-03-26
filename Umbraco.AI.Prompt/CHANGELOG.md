@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.5.0...Umbraco.AI.Prompt@1.6.0) (2026-03-26)
 
-### refactor
+### feat
 
-* **core,prompt,agent:** Rename EfCore to EFCore for CMS consistency ([56caf34](https://github.com/umbraco/Umbraco.AI/commit/56caf3410cbe48599eb62060fdc88c0485fc30d1))
+* **prompt:** Migrate prompt execution to inline chat builder API ([0a134ce](https://github.com/umbraco/Umbraco.AI/commit/0a134ce44e285b7a0aaf71b1b4307372069c5ea7))
 
 ## [1.5.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.4.0...Umbraco.AI.Prompt@1.5.0) (2026-03-16)
 

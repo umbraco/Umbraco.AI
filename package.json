@@ -49,7 +49,7 @@
         "@umbraco-ai/core": "^1.7.0",
         "@umbraco-ai/agent": "^1.6.0",
         "@umbraco-ai/agent-ui": "^1.0.0-alpha5",
-        "@umbraco-ai/agent-copilot": "^1.0.0-alpha6",
+        "@umbraco-ai/agent-copilot": "^1.0.0-alpha5",
         "@umbraco-ai/prompt": "^1.6.0",
         "@umbraco-cms/backoffice": "^17.1.0"
     },

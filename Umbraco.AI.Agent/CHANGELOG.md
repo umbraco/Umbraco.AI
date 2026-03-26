@@ -14,8 +14,6 @@ CreateEmbeddedAgentAsync, RunEmbeddedAgentAsync, StreamEmbeddedAgentAsync
 renamed to CreateInlineAgentAsync, RunInlineAgentAsync,
 StreamInlineAgentAsync.
 
-Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-
 ### feat
 
 * **agent:** Add embedded agent support for programmatic agent execution ([fa0f906](https://github.com/umbraco/Umbraco.AI/commit/fa0f906c3cb498cbb260be696145dc18f6a7da5c))
@@ -27,15 +25,7 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 ### fix
 
-* **agent:** Fix AGUI casing in generated OpenAPI client ([0870333](https://github.com/umbraco/Umbraco.AI/commit/087033322ce5bb78a41846ad7b903547554befa7))
 * **agent:** Include error message in RUN_FINISHED event ([1cee179](https://github.com/umbraco/Umbraco.AI/commit/1cee179b810ddb5d58c78bdb54d887ee18c0855c))
-* **core,agent:** Fix failing tests across multiple subsystems ([048db39](https://github.com/umbraco/Umbraco.AI/commit/048db39a77a0965d855d6524e5f4b5fed7c48d25))
-
-### refactor
-
-* **agent:** Simplify AIAgentService with shared helpers ([b2ab3cb](https://github.com/umbraco/Umbraco.AI/commit/b2ab3cb4a297e21270cedfe0a116fd6333e9d3b0))
-* **core,agent:** Drop unnecessary Inline prefix from API names ([644d318](https://github.com/umbraco/Umbraco.AI/commit/644d3184fc4a22855189959746dc2d623448b709))
-* **core,prompt,agent:** Rename EfCore to EFCore for CMS consistency ([56caf34](https://github.com/umbraco/Umbraco.AI/commit/56caf3410cbe48599eb62060fdc88c0485fc30d1))
 
 ## [1.5.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.4.0...Umbraco.AI.Agent@1.5.0) (2026-03-16)
 

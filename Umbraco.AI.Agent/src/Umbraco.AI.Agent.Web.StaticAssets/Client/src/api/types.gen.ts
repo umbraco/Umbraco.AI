@@ -124,9 +124,24 @@ export type AgentWorkflowItemResponseModel = {
     settingsSchema?: EditableModelSchemaModel | null;
 };
 
+export type BinaryChatContentPartModel = ChatContentPartModel & {
+    $type: string;
+    mimeType: string;
+    data: string;
+    filename?: string | null;
+};
+
+export type ChatContentPartModel = {
+    [key: string]: never;
+};
+
 export type ChatMessageModel = {
     role: string;
-    content: string;
+    /**
+     * @deprecated
+     */
+    content?: string | null;
+    contentParts?: Array<TextChatContentPartModel | BinaryChatContentPartModel> | null;
 };
 
 export type CreateAgentRequestModel = {
@@ -199,6 +214,11 @@ export type StandardAgentConfigModel = AgentConfigModel & {
     userGroupPermissions?: {
         [key: string]: AiAgentUserGroupPermissionsModel;
     } | null;
+};
+
+export type TextChatContentPartModel = ChatContentPartModel & {
+    $type: string;
+    text: string;
 };
 
 export type UpdateAgentRequestModel = {
@@ -561,3 +581,29 @@ export type GetAgentWorkflowsResponses = {
 };
 
 export type GetAgentWorkflowsResponse = GetAgentWorkflowsResponses[keyof GetAgentWorkflowsResponses];
+
+export type GetFileData = {
+    body?: never;
+    path: {
+        threadId: string;
+        fileId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}';
+};
+
+export type GetFileErrors = {
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetFileError = GetFileErrors[keyof GetFileErrors];
+
+export type GetFileResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};

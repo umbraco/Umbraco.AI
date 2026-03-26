@@ -1,0 +1,197 @@
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Search.Core.Chunking;
+using Umbraco.AI.Search.Core.Configuration;
+using Umbraco.AI.Search.Core.VectorStore;
+using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Search.Core.Models.Indexing;
+using Umbraco.Cms.Search.Core.Services;
+
+namespace Umbraco.AI.Search.Core.Search;
+
+/// <summary>
+/// An <see cref="IIndexer"/> implementation that generates vector embeddings from content
+/// fields and stores them in an <see cref="IAIVectorStore"/>.
+/// </summary>
+/// <remarks>
+/// Content is split into chunks before embedding to handle documents that exceed
+/// embedding model token limits and to improve retrieval granularity.
+/// </remarks>
+public sealed class AIVectorIndexer : IIndexer
+{
+    private readonly IAIVectorStore _vectorStore;
+    private readonly IAIEmbeddingService _embeddingService;
+    private readonly IAITextChunker _textChunker;
+    private readonly IOptions<AIVectorSearchOptions> _options;
+    private readonly ILogger<AIVectorIndexer> _logger;
+
+    public AIVectorIndexer(
+        IAIVectorStore vectorStore,
+        IAIEmbeddingService embeddingService,
+        IAITextChunker textChunker,
+        IOptions<AIVectorSearchOptions> options,
+        ILogger<AIVectorIndexer> logger)
+    {
+        _vectorStore = vectorStore;
+        _embeddingService = embeddingService;
+        _textChunker = textChunker;
+        _options = options;
+        _logger = logger;
+    }
+
+    /// <inheritdoc />
+    public async Task AddOrUpdateAsync(
+        string indexAlias,
+        Guid id,
+        UmbracoObjectTypes objectType,
+        IEnumerable<Variation> variations,
+        IEnumerable<IndexField> fields,
+        ContentProtection? protection)
+    {
+        var documentId = id.ToString("D");
+
+        // Group fields by culture to generate separate embeddings per language variant.
+        // Fields without a culture are grouped under null (invariant content).
+        var fieldsByCulture = fields
+            .GroupBy(f => f.Culture)
+            .ToList();
+
+        if (fieldsByCulture.Count == 0)
+        {
+            _logger.LogDebug("No fields to index for document {DocumentId} in {IndexAlias}", id, indexAlias);
+            return;
+        }
+
+        var chunkingOptions = new AITextChunkingOptions
+        {
+            MaxChunkSize = _options.Value.ChunkSize,
+            ChunkOverlap = _options.Value.ChunkOverlap,
+        };
+
+        // Delete all existing vectors for this document before re-indexing.
+        // This handles the case where content switches between invariant and
+        // variant — old invariant entries (culture=null) would otherwise be
+        // orphaned when the document is re-indexed with culture-specific fields.
+        await _vectorStore.DeleteDocumentAsync(indexAlias, documentId);
+
+        foreach (var cultureGroup in fieldsByCulture)
+        {
+            var culture = cultureGroup.Key;
+            var text = ExtractTextFromFields(cultureGroup);
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _logger.LogDebug("No text content for document {DocumentId} culture {Culture} in {IndexAlias}", id, culture ?? "invariant", indexAlias);
+                continue;
+            }
+
+            try
+            {
+                IReadOnlyList<AITextChunk> chunks = _textChunker.ChunkText(text, chunkingOptions);
+
+                // Generate embeddings for all chunks in batch
+                IEnumerable<string> chunkTexts = chunks.Select(c => c.Text);
+                GeneratedEmbeddings<Embedding<float>> embeddings =
+                    await _embeddingService.GenerateEmbeddingsAsync(chunkTexts);
+
+                for (var i = 0; i < chunks.Count; i++)
+                {
+                    var metadata = new Dictionary<string, object>
+                    {
+                        ["objectType"] = objectType.ToString(),
+                        ["chunkIndex"] = i,
+                        ["totalChunks"] = chunks.Count,
+                    };
+
+                    if (protection?.AccessIds.Any() == true)
+                    {
+                        metadata["accessIds"] = string.Join(",", protection.AccessIds);
+                    }
+
+                    await _vectorStore.UpsertAsync(indexAlias, documentId, culture, i, embeddings[i].Vector, metadata);
+                }
+
+                _logger.LogDebug("Indexed document {DocumentId} culture {Culture} in {IndexAlias} ({ChunkCount} chunks)", id, culture ?? "invariant", indexAlias, chunks.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate embeddings for document {DocumentId} culture {Culture} in {IndexAlias}", id, culture ?? "invariant", indexAlias);
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteAsync(string indexAlias, IEnumerable<Guid> ids)
+    {
+        foreach (Guid id in ids)
+        {
+            await _vectorStore.DeleteDocumentAsync(indexAlias, id.ToString("D"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task ResetAsync(string indexAlias)
+    {
+        await _vectorStore.ResetAsync(indexAlias);
+        _logger.LogInformation("Reset vector index {IndexAlias}", indexAlias);
+    }
+
+    /// <inheritdoc />
+    public async Task<IndexMetadata> GetMetadataAsync(string indexAlias)
+    {
+        var count = await _vectorStore.GetDocumentCountAsync(indexAlias);
+        return new IndexMetadata(count, HealthStatus.Healthy);
+    }
+
+    private static string ExtractTextFromFields(IEnumerable<IndexField> fields)
+    {
+        var r1Parts = new List<string>();
+        var otherParts = new List<string>();
+
+        foreach (IndexField field in fields)
+        {
+            IndexValue value = field.Value;
+
+            AppendTexts(r1Parts, value.TextsR1);
+            AppendTexts(otherParts, value.TextsR2);
+            AppendTexts(otherParts, value.TextsR3);
+            AppendTexts(otherParts, value.Texts);
+        }
+
+        // Prepend R1 text (typically the document name) so it has stronger influence
+        // in the embedding. Without this, titles get diluted by body content and
+        // exact title matches can rank below tangentially related pages.
+        var parts = new List<string>(r1Parts.Count + otherParts.Count + r1Parts.Count);
+        parts.AddRange(r1Parts);
+        parts.AddRange(otherParts);
+        parts.AddRange(r1Parts);
+
+        return string.Join(" ", parts);
+    }
+
+    private static void AppendTexts(List<string> parts, IEnumerable<string>? texts)
+    {
+        if (texts is null)
+        {
+            return;
+        }
+
+        foreach (var text in texts)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                continue;
+            }
+
+            var cleaned = Utils.AITextSanitizer.StripHtml(text);
+
+            if (!string.IsNullOrWhiteSpace(cleaned))
+            {
+                parts.Add(cleaned);
+            }
+        }
+    }
+}

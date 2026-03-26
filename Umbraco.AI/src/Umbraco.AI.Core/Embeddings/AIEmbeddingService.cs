@@ -118,6 +118,8 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
 
     private static EmbeddingGenerationOptions? MergeOptions(AIProfile profile, EmbeddingGenerationOptions? callerOptions)
     {
+        var profileDimensions = (profile.Settings as AIEmbeddingProfileSettings)?.Dimensions;
+
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings
         if (callerOptions != null)
@@ -125,7 +127,7 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
             return new EmbeddingGenerationOptions
             {
                 ModelId = callerOptions.ModelId ?? profile.Model.ModelId,
-                Dimensions = callerOptions.Dimensions,
+                Dimensions = callerOptions.Dimensions ?? profileDimensions,
                 AdditionalProperties = callerOptions.AdditionalProperties
             };
         }
@@ -133,7 +135,8 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
         // No caller options, use profile defaults
         return new EmbeddingGenerationOptions
         {
-            ModelId = profile.Model.ModelId
+            ModelId = profile.Model.ModelId,
+            Dimensions = profileDimensions
         };
     }
 

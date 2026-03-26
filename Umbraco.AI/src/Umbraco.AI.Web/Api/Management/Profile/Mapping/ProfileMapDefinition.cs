@@ -109,7 +109,10 @@ public class ProfileMapDefinition : IMapDefinition
                 ContextIds = chat.ContextIds,
                 GuardrailIds = chat.GuardrailIds
             },
-            AIEmbeddingProfileSettings => new EmbeddingProfileSettingsModel(),
+            AIEmbeddingProfileSettings embedding => new EmbeddingProfileSettingsModel
+            {
+                Dimensions = embedding.Dimensions
+            },
             _ => null
         };
     }
@@ -127,6 +130,10 @@ public class ProfileMapDefinition : IMapDefinition
                 GuardrailIds = chat.GuardrailIds
             },
             AICapability.Chat => new AIChatProfileSettings(),
+            AICapability.Embedding when settings is EmbeddingProfileSettingsModel embedding => new AIEmbeddingProfileSettings
+            {
+                Dimensions = embedding.Dimensions
+            },
             AICapability.Embedding => new AIEmbeddingProfileSettings(),
             _ => null
         };

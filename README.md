@@ -28,6 +28,7 @@ This is a monorepo containing multiple Umbraco.AI packages:
 | [**Umbraco.AI.Agent.UI**](Umbraco.AI.Agent.UI/)                 | Reusable chat UI infrastructure (library)  | 1.x     | `Umbraco.AI.Agent.UI/`      |
 | [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/)       | Copilot chat UI for agents (frontend-only) | 1.x     | `Umbraco.AI.Agent.Copilot/`  |
 | [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/)                     | Prompt template management                 | 1.x     | `Umbraco.AI.Prompt/`         |
+| [**Umbraco.AI.Search**](Umbraco.AI.Search/)                     | AI-powered semantic vector search          | 1.x     | `Umbraco.AI.Search/`         |
 
 ### Deploy
 

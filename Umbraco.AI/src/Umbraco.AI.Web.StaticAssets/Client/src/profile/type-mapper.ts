@@ -10,8 +10,9 @@ import type {
     UaiProfileItemModel,
     UaiProfileSettings,
     UaiChatProfileSettings,
+    UaiEmbeddingProfileSettings,
 } from "./types.js";
-import { isChatSettings } from "./types.js";
+import { isChatSettings, isEmbeddingSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
@@ -93,7 +94,10 @@ export const UaiProfileTypeMapper = {
         }
 
         if (type === "embedding") {
-            return { $type: "embedding" };
+            return {
+                $type: "embedding",
+                dimensions: (settings.dimensions as number) ?? null,
+            } as UaiEmbeddingProfileSettings;
         }
 
         return null;
@@ -119,9 +123,13 @@ export const UaiProfileTypeMapper = {
             } as unknown as ChatProfileSettingsModel;
         }
 
-        // Embedding settings
-        return {
-            $type: "embedding",
-        } as EmbeddingProfileSettingsModel;
+        if (isEmbeddingSettings(settings)) {
+            return {
+                $type: "embedding",
+                dimensions: settings.dimensions,
+            } as unknown as EmbeddingProfileSettingsModel;
+        }
+
+        return null;
     },
 };

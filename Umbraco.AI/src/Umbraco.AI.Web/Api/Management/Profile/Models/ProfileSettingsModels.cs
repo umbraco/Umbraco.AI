@@ -44,4 +44,11 @@ public class ChatProfileSettingsModel : ProfileSettingsModel
 /// <summary>
 /// Settings model for Embedding capability profiles.
 /// </summary>
-public class EmbeddingProfileSettingsModel : ProfileSettingsModel { }
+public class EmbeddingProfileSettingsModel : ProfileSettingsModel
+{
+    /// <summary>
+    /// The number of dimensions for the generated embeddings.
+    /// When null, the model's default dimension count is used.
+    /// </summary>
+    public int? Dimensions { get; init; }
+}

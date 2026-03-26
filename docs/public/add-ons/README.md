@@ -14,6 +14,7 @@ Umbraco.AI can be extended with add-on packages that provide specialized functio
 | [Prompt Management](prompt/README.md)    | `Umbraco.AI.Prompt`        | Create, manage, and execute reusable prompt templates  |
 | [Agent Runtime](agent/README.md)         | `Umbraco.AI.Agent`         | Configure and run AI agents with streaming responses   |
 | [Agent Copilot](agent-copilot/README.md) | `Umbraco.AI.Agent.Copilot` | Chat sidebar UI for agent interaction (requires Agent) |
+| [Semantic Search](search/README.md)      | `Umbraco.AI.Search`        | AI-powered vector search for content and media         |
 | [Deploy Support](deploy/README.md)       | `Umbraco.AI.Deploy`        | Deploy AI configuration across environments            |
 
 ## Architecture
@@ -93,6 +94,7 @@ Add-ons that store data have their own database tables with a package-specific p
 | ------ | ------------------ |
 | Prompt | `UmbracoAIPrompt_` |
 | Agent  | `UmbracoAIAgent_`  |
+| Search | `UmbracoAISearch_` |
 
 {% hint style="info" %}
 Agent Copilot and Deploy packages are integration-only packages with no database tables.

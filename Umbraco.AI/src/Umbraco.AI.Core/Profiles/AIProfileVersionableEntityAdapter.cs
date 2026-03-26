@@ -290,8 +290,10 @@ internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAda
     /// </summary>
     private static void CompareEmbeddingSettings(AIEmbeddingProfileSettings from, AIEmbeddingProfileSettings to, List<AIValueChange> changes)
     {
-        // AIEmbeddingProfileSettings is currently empty
-        // Add comparisons here when properties are added
+        if (from.Dimensions != to.Dimensions)
+        {
+            changes.Add(new AIValueChange("Settings.Dimensions", from.Dimensions?.ToString(), to.Dimensions?.ToString()));
+        }
     }
 
     /// <summary>

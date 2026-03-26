@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Configuration.Models;
@@ -41,6 +42,11 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
                 optionsBuilder,
                 _connectionStrings.Value.ConnectionString,
                 _connectionStrings.Value.ProviderName);
+
+            // Downgrade PendingModelChangesWarning from exception to log so migrations
+            // can still be applied during development when the model has unreleased changes.
+            optionsBuilder.ConfigureWarnings(w =>
+                w.Log(RelationalEventId.PendingModelChangesWarning));
 
             await using UmbracoAIPromptDbContext dbContext = new UmbracoAIPromptDbContext(optionsBuilder.Options);
 

@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.RuntimeContext;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
 
@@ -11,13 +12,22 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
 {
     private readonly IAIConnectionService _connectionService;
     private readonly AISpeechToTextMiddlewareCollection _middleware;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     public AISpeechToTextClientFactory(
         IAIConnectionService connectionService,
-        AISpeechToTextMiddlewareCollection middleware)
+        AISpeechToTextMiddlewareCollection middleware,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors)
     {
         _connectionService = connectionService;
         _middleware = middleware;
+        _runtimeContextAccessor = runtimeContextAccessor;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
     }
 
     public async Task<ISpeechToTextClient> CreateClientAsync(
@@ -32,6 +42,16 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
 
         // Apply middleware in order
         client = ApplyMiddleware(client);
+
+        // Wrap in scoped client to set profile metadata per-execution
+        // This is the outermost wrapper so middleware can access profile metadata in context
+        // Creates scope if needed for standalone usage
+        client = new ScopedProfileSpeechToTextClient(
+            client,
+            profile,
+            _runtimeContextAccessor,
+            _scopeProvider,
+            _contributors);
 
         return client;
     }

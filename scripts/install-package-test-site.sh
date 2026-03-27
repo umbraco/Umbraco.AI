@@ -220,6 +220,10 @@ dotnet add package Umbraco.AI.Prompt $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Agent..."
 dotnet add package Umbraco.AI.Agent $PRERELEASE_FLAG
 
+# Search add-on
+echo "  Installing Umbraco.AI.Search..."
+dotnet add package Umbraco.AI.Search $PRERELEASE_FLAG
+
 # Agent Copilot (frontend-only static assets)
 echo "  Installing Umbraco.AI.Agent.Copilot..."
 dotnet add package Umbraco.AI.Agent.Copilot $PRERELEASE_FLAG

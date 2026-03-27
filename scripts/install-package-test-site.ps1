@@ -167,6 +167,9 @@ Install-Package "Umbraco.AI.MicrosoftFoundry"
 Install-Package "Umbraco.AI.Prompt"
 Install-Package "Umbraco.AI.Agent"
 
+# Search add-on
+Install-Package "Umbraco.AI.Search"
+
 # Agent Copilot (frontend-only static assets)
 Install-Package "Umbraco.AI.Agent.Copilot"
 

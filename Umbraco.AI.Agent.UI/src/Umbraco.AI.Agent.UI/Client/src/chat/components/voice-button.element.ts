@@ -1,19 +1,14 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
-
-type VoiceButtonState = "idle" | "recording" | "transcribing";
-
-/** Audio MIME type to use for recording — webm/opus is well-supported in modern browsers. */
-const PREFERRED_MIME_TYPE = "audio/webm;codecs=opus";
-const FALLBACK_MIME_TYPE = "audio/webm";
+import { SpeechToTextRecorder, type SpeechToTextRecorderState } from "@umbraco-ai/core";
 
 /**
  * Voice recording button for speech-to-text transcription.
  *
- * Records audio via MediaRecorder API and sends it to the Umbraco AI
- * speech-to-text endpoint. On success fires a `transcription` custom event.
+ * Records audio and sends it to the Umbraco AI speech-to-text endpoint
+ * via the shared {@link SpeechToTextRecorder}. On success fires a
+ * `transcription` custom event.
  *
  * @fires transcription - Dispatched when transcription succeeds. detail: { text: string }
  */
@@ -32,28 +27,28 @@ export class UaiVoiceButtonElement extends UmbLitElement {
     disabled = false;
 
     @state()
-    private _state: VoiceButtonState = "idle";
+    private _state: SpeechToTextRecorderState = "idle";
 
-    #mediaRecorder?: MediaRecorder;
-    #chunks: Blob[] = [];
-    #authToken?: string | (() => string | Promise<string | undefined>);
-    #baseUrl = "";
-    #credentials: RequestCredentials = "same-origin";
+    #recorder?: SpeechToTextRecorder;
     #notificationContext?: UmbNotificationContext;
 
     constructor() {
         super();
-        this.consumeContext(UMB_AUTH_CONTEXT, (authContext) => {
-            const config = authContext?.getOpenApiConfiguration();
-            if (config) {
-                this.#authToken = config.token ?? undefined;
-                this.#baseUrl = config.base ?? "";
-                this.#credentials = (config.credentials as RequestCredentials) ?? "same-origin";
-            }
-        });
         this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
             this.#notificationContext = context;
         });
+    }
+
+    #getRecorder(): SpeechToTextRecorder {
+        // Lazy-create so config properties (profileIdOrAlias, language) are settled
+        if (!this.#recorder) {
+            this.#recorder = new SpeechToTextRecorder({
+                profileIdOrAlias: this.profileIdOrAlias,
+                language: this.language,
+            });
+            this.observe(this.#recorder.state$, (s) => { this._state = s; });
+        }
+        return this.#recorder;
     }
 
     async #handleClick() {
@@ -64,29 +59,12 @@ export class UaiVoiceButtonElement extends UmbLitElement {
         } else if (this._state === "recording") {
             await this.#stopAndTranscribe();
         }
-        // If transcribing, ignore click
     }
 
     async #startRecording() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            const mimeType = MediaRecorder.isTypeSupported(PREFERRED_MIME_TYPE)
-                ? PREFERRED_MIME_TYPE
-                : FALLBACK_MIME_TYPE;
-
-            this.#chunks = [];
-            this.#mediaRecorder = new MediaRecorder(stream, { mimeType });
-
-            this.#mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    this.#chunks.push(e.data);
-                }
-            };
-
-            this.#mediaRecorder.start();
-            this._state = "recording";
-        } catch (err) {
+            await this.#getRecorder().startRecording();
+        } catch {
             this.#notificationContext?.peek("danger", {
                 data: {
                     headline: "Microphone access denied",
@@ -97,14 +75,8 @@ export class UaiVoiceButtonElement extends UmbLitElement {
     }
 
     async #stopAndTranscribe() {
-        if (!this.#mediaRecorder) return;
-
-        this._state = "transcribing";
-
-        const audioBlob = await this.#stopRecorder();
-
         try {
-            const text = await this.#transcribe(audioBlob);
+            const text = await this.#getRecorder().stopAndTranscribe();
             this.dispatchEvent(
                 new CustomEvent("transcription", {
                     detail: { text },
@@ -119,62 +91,12 @@ export class UaiVoiceButtonElement extends UmbLitElement {
                     message: err instanceof Error ? err.message : "An error occurred during transcription.",
                 },
             });
-        } finally {
-            this._state = "idle";
         }
     }
 
-    #stopRecorder(): Promise<Blob> {
-        return new Promise((resolve) => {
-            this.#mediaRecorder!.onstop = () => {
-                const mimeType = this.#mediaRecorder!.mimeType || "audio/webm";
-                const blob = new Blob(this.#chunks, { type: mimeType });
-
-                // Stop all tracks to release microphone
-                this.#mediaRecorder!.stream.getTracks().forEach((t) => t.stop());
-                this.#mediaRecorder = undefined;
-                this.#chunks = [];
-
-                resolve(blob);
-            };
-            this.#mediaRecorder!.stop();
-        });
-    }
-
-    async #transcribe(audioBlob: Blob): Promise<string> {
-        const formData = new FormData();
-        formData.append("audioFile", audioBlob, "recording.webm");
-
-        const url = new URL(`${this.#baseUrl}/umbraco/ai/management/api/v1/speech-to-text/transcribe`);
-        if (this.profileIdOrAlias) {
-            url.searchParams.set("profileIdOrAlias", this.profileIdOrAlias);
-        }
-        if (this.language) {
-            url.searchParams.set("language", this.language);
-        }
-
-        const headers: Record<string, string> = {};
-        const rawToken = typeof this.#authToken === "function"
-            ? await this.#authToken()
-            : this.#authToken;
-        if (rawToken) {
-            headers["Authorization"] = `Bearer ${rawToken}`;
-        }
-
-        const response = await fetch(url.toString(), {
-            method: "POST",
-            body: formData,
-            headers,
-            credentials: this.#credentials,
-        });
-
-        if (!response.ok) {
-            const problem = await response.json().catch(() => null);
-            throw new Error(problem?.detail ?? `Transcription request failed (${response.status})`);
-        }
-
-        const result = await response.json() as { text: string };
-        return result.text;
+    override disconnectedCallback() {
+        super.disconnectedCallback();
+        this.#recorder?.cancel();
     }
 
     override render() {
@@ -198,7 +120,7 @@ export class UaiVoiceButtonElement extends UmbLitElement {
             >
                 ${isTranscribing
                     ? html`<uui-loader-circle></uui-loader-circle>`
-                    : html`<uui-icon name="icon-microphone"></uui-icon>`}
+                    : html`<uui-icon name="icon-mic"></uui-icon>`}
             </uui-button>
         `;
     }

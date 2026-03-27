@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.VectorStore;
@@ -23,6 +25,7 @@ namespace Umbraco.AI.Search.Core.Search;
 public sealed class AIVectorIndexer : IIndexer
 {
     private readonly IAIVectorStore _vectorStore;
+    private readonly IAIProfileService _profileService;
     private readonly IAIEmbeddingService _embeddingService;
     private readonly IAITextChunker _textChunker;
     private readonly IOptions<AIVectorSearchOptions> _options;
@@ -30,12 +33,14 @@ public sealed class AIVectorIndexer : IIndexer
 
     public AIVectorIndexer(
         IAIVectorStore vectorStore,
+        IAIProfileService profileService,
         IAIEmbeddingService embeddingService,
         IAITextChunker textChunker,
         IOptions<AIVectorSearchOptions> options,
         ILogger<AIVectorIndexer> logger)
     {
         _vectorStore = vectorStore;
+        _profileService = profileService;
         _embeddingService = embeddingService;
         _textChunker = textChunker;
         _options = options;
@@ -51,6 +56,14 @@ public sealed class AIVectorIndexer : IIndexer
         IEnumerable<IndexField> fields,
         ContentProtection? protection)
     {
+        // On a fresh install, no embedding profile exists yet — skip indexing
+        // until the administrator configures one.
+        if (!await _profileService.HasDefaultProfileAsync(AICapability.Embedding))
+        {
+            _logger.LogDebug("No default embedding profile configured, skipping vector indexing for {IndexAlias}", indexAlias);
+            return;
+        }
+
         var documentId = id.ToString("D");
 
         // Group fields by culture to generate separate embeddings per language variant.

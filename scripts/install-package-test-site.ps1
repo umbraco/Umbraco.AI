@@ -124,6 +124,7 @@ if ($Feed -eq "release") {
       <package pattern="*" />
       <package pattern="Umbraco.AI" />
       <package pattern="Umbraco.AI.*" />
+      <package pattern="Umbraco.Cms.Search.*" />
     </packageSource>
   </packageSourceMapping>
 </configuration>

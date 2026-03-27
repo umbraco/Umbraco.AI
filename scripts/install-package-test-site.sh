@@ -170,6 +170,7 @@ else
     </packageSource>
     <packageSource key="nuget.org">
       <package pattern="*" />
+      <package pattern="Umbraco.Cms.Search.*" />
     </packageSource>
   </packageSourceMapping>
 </configuration>

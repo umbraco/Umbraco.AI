@@ -60,9 +60,40 @@ internal sealed class AIProfileService : IAIProfileService
         CancellationToken cancellationToken = default)
         => _repository.GetPagedAsync(filter, capability, skip, take, cancellationToken);
 
+    public async Task<bool> HasDefaultProfileAsync(
+        AICapability capability,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = await TryGetDefaultProfileAsync(capability, cancellationToken);
+        return profile is not null;
+    }
+
     public async Task<AIProfile> GetDefaultProfileAsync(
         AICapability capability,
         CancellationToken cancellationToken = default)
+    {
+        var profile = await TryGetDefaultProfileAsync(capability, cancellationToken);
+        if (profile is not null)
+        {
+            return profile;
+        }
+
+        // Produce a specific error message depending on what's missing
+        var alias = capability switch
+        {
+            AICapability.Chat => _options.DefaultChatProfileAlias,
+            AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
+            _ => null
+        };
+
+        throw alias is not null
+            ? new InvalidOperationException($"Default {capability} profile with alias '{alias}' not found.")
+            : new InvalidOperationException($"Default {capability} profile is not configured.");
+    }
+
+    private async Task<AIProfile?> TryGetDefaultProfileAsync(
+        AICapability capability,
+        CancellationToken cancellationToken)
     {
         // 1. Try database settings first
         var settings = await _settingsService.GetSettingsAsync(cancellationToken);
@@ -94,16 +125,10 @@ internal sealed class AIProfileService : IAIProfileService
 
         if (defaultProfileAlias is null)
         {
-            throw new InvalidOperationException($"Default {capability} profile is not configured.");
+            return null;
         }
 
-        var profileByAlias = await _repository.GetByAliasAsync(defaultProfileAlias, cancellationToken);
-        if (profileByAlias is null)
-        {
-            throw new InvalidOperationException($"Default {capability} profile with alias '{defaultProfileAlias}' not found.");
-        }
-
-        return profileByAlias;
+        return await _repository.GetByAliasAsync(defaultProfileAlias, cancellationToken);
     }
 
     public async Task<AIProfile> GetClassifierProfileAsync(

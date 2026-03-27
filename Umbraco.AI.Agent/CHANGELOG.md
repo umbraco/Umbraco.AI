@@ -5,6 +5,28 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.5.0...Umbraco.AI.Agent@1.6.0) (2026-03-26)
+
+### ⚠ BREAKING CHANGE
+
+* **agent:** AIEmbeddedAgentBuilder renamed to AIInlineAgentBuilder.
+CreateEmbeddedAgentAsync, RunEmbeddedAgentAsync, StreamEmbeddedAgentAsync
+renamed to CreateInlineAgentAsync, RunInlineAgentAsync,
+StreamInlineAgentAsync.
+
+### feat
+
+* **agent:** Add embedded agent support for programmatic agent execution ([fa0f906](https://github.com/umbraco/Umbraco.AI/commit/fa0f906c3cb498cbb260be696145dc18f6a7da5c))
+* **agent:** Add file uploads and AI processing implementation (#102) ([4dec0d8](https://github.com/umbraco/Umbraco.AI/commit/4dec0d84ecc7990643b9075cfe85317509dfc002)), closes [#102](https://github.com/umbraco/Umbraco.AI/issues/102)
+* **agent:** Add headless RunAgentAsync and StreamAgentAsync for persisted agents ([521ceb1](https://github.com/umbraco/Umbraco.AI/commit/521ceb1af46ddfc31cb22c24924724265e1b947b))
+* **agent:** Rename embedded agent API to inline agent ([d7b2540](https://github.com/umbraco/Umbraco.AI/commit/d7b2540a95b197a8dba034d2eb4fcc978140e83f))
+* **core,agent:** Add alias-based WithProfile and WithGuardrails to inline builders ([ff75a6d](https://github.com/umbraco/Umbraco.AI/commit/ff75a6db612e7dc153824a0764fccd7ee9e2db23))
+* **core,agent:** Add ChatOptions override support for inline executions ([abf7557](https://github.com/umbraco/Umbraco.AI/commit/abf75570cebe641f01e02fbeb04f13941551fcde))
+
+### fix
+
+* **agent:** Include error message in RUN_FINISHED event ([1cee179](https://github.com/umbraco/Umbraco.AI/commit/1cee179b810ddb5d58c78bdb54d887ee18c0855c))
+
 ## [1.5.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.4.0...Umbraco.AI.Agent@1.5.0) (2026-03-16)
 
 ### feat

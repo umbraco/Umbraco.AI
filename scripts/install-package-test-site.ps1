@@ -124,6 +124,7 @@ if ($Feed -eq "release") {
       <package pattern="*" />
       <package pattern="Umbraco.AI" />
       <package pattern="Umbraco.AI.*" />
+      <package pattern="Umbraco.Cms.Search.*" />
     </packageSource>
   </packageSourceMapping>
 </configuration>
@@ -166,6 +167,9 @@ Install-Package "Umbraco.AI.MicrosoftFoundry"
 # Add-on packages (includes Startup + Web.StaticAssets)
 Install-Package "Umbraco.AI.Prompt"
 Install-Package "Umbraco.AI.Agent"
+
+# Search add-on
+Install-Package "Umbraco.AI.Search"
 
 # Agent Copilot (frontend-only static assets)
 Install-Package "Umbraco.AI.Agent.Copilot"

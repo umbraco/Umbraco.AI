@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.Search;
@@ -19,6 +21,7 @@ public class AIVectorIndexerTests
     private const string IndexAlias = "test-index";
 
     private readonly InMemoryAIVectorStore _store = new();
+    private readonly Mock<IAIProfileService> _profileServiceMock = new();
     private readonly Mock<IAIEmbeddingService> _embeddingServiceMock = new();
     private readonly Mock<IAITextChunker> _chunkerMock = new();
     private readonly AIVectorIndexer _indexer;
@@ -46,8 +49,14 @@ public class AIVectorIndexerTests
                 return new GeneratedEmbeddings<Embedding<float>>(embeddings);
             });
 
+        // Default: embedding profile is configured
+        _profileServiceMock
+            .Setup(p => p.HasDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         _indexer = new AIVectorIndexer(
             _store,
+            _profileServiceMock.Object,
             _embeddingServiceMock.Object,
             _chunkerMock.Object,
             options,

@@ -23,8 +23,7 @@ public class OpenAISpeechToTextCapability(OpenAIProvider provider) : AISpeechToT
     private static readonly Regex[] IncludePatterns =
     [
         new(@"^whisper-", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^gpt-4o-transcribe", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^gpt-4o-mini-transcribe", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"-transcribe", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     /// <inheritdoc />

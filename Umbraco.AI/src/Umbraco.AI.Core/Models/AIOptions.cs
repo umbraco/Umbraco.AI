@@ -20,6 +20,11 @@ public class AIOptions
     /// </summary>
     public string? ClassifierChatProfileAlias { get; set; }
 
+    /// <summary>
+    /// The default speech-to-text profile alias to use when none is specified.
+    /// </summary>
+    public string? DefaultSpeechToTextProfileAlias { get; set; }
+
     // TODO: public string? DefaultImageProviderAlias { get; set; }
     // TODO: public string? DefaultModerationProviderAlias { get; set; }
     // TODO: public string? DefaultToolProviderAlias { get; set; }

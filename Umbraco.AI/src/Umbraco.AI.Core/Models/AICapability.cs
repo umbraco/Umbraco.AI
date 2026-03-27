@@ -23,5 +23,12 @@ public enum AICapability
     /// <summary>
     /// Content moderation capability
     /// </summary>
-    Moderation = 3
+    Moderation = 3,
+
+    /// <summary>
+    /// Speech-to-text transcription capability
+    /// </summary>
+    SpeechToText = 4
+
+    // Future: TextToSpeech = 5, SpeechToSpeech = 6
 }

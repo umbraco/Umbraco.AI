@@ -120,6 +120,13 @@ export class UaiChatInputElement extends UmbLitElement {
         this._value = (e.target as HTMLTextAreaElement).value;
     }
 
+    #handleTranscription(e: CustomEvent<{ text: string }>) {
+        const transcribed = e.detail.text;
+        if (transcribed) {
+            this._value = this._value ? `${this._value} ${transcribed}` : transcribed;
+        }
+    }
+
     #handleAttachClick() {
         this.#fileInputRef.value?.click();
     }
@@ -376,6 +383,10 @@ export class UaiChatInputElement extends UmbLitElement {
                                 @change=${this.#handleFileSelect}
                                 hidden
                             />
+                            <uai-voice-button
+                                ?disabled=${this.#isDisabled}
+                                @transcription=${this.#handleTranscription}
+                            ></uai-voice-button>
                         </div>
                         <uui-button
                             look="primary"

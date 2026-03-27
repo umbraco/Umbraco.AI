@@ -105,8 +105,11 @@ public static partial class UmbracoBuilderExtensions
             .Append<AIUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
             .Append<AIAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)
 
-        // Initialize speech-to-text middleware collection (empty for now - middleware added in Phase 4)
-        builder.AISpeechToTextMiddleware();
+        builder.AISpeechToTextMiddleware()
+            .Append<AIOpenTelemetrySpeechToTextMiddleware>()          // OpenTelemetry tracing (innermost - zero cost when unconfigured)
+            .Append<AITrackingSpeechToTextMiddleware>()               // Tracks transcription results
+            .Append<AIUsageRecordingSpeechToTextMiddleware>()         // Records usage to database for analytics
+            .Append<AIAuditingSpeechToTextMiddleware>();              // Audit logging (optional, can be disabled)
 
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()

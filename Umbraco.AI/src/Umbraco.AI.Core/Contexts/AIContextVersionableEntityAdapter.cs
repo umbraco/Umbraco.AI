@@ -39,7 +39,7 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
                 r.Name,
                 r.Description,
                 r.SortOrder,
-                Data = r.Data is null ? null : JsonSerializer.Serialize(r.Data, Constants.DefaultJsonSerializerOptions),
+                Settings = r.Settings is null ? null : JsonSerializer.Serialize(r.Settings, Constants.DefaultJsonSerializerOptions),
                 InjectionMode = (int)r.InjectionMode
             }).ToList()
         };
@@ -67,13 +67,17 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
                 foreach (var resourceElement in resourcesElement.EnumerateArray())
                 {
                     object? data = null;
-                    if (resourceElement.TryGetProperty("data", out var dataElement) &&
-                        dataElement.ValueKind == JsonValueKind.String)
+                    // Support both "settings" (new) and "data" (legacy snapshots) property names
+                    var settingsElement = resourceElement.TryGetProperty("settings", out var settingsEl) ? settingsEl
+                        : resourceElement.TryGetProperty("data", out var dataElement) ? dataElement
+                        : default;
+
+                    if (settingsElement.ValueKind == JsonValueKind.String)
                     {
-                        var dataJson = dataElement.GetString();
-                        if (!string.IsNullOrEmpty(dataJson))
+                        var settingsJson = settingsElement.GetString();
+                        if (!string.IsNullOrEmpty(settingsJson))
                         {
-                            data = JsonSerializer.Deserialize<JsonElement>(dataJson, Constants.DefaultJsonSerializerOptions);
+                            data = JsonSerializer.Deserialize<JsonElement>(settingsJson, Constants.DefaultJsonSerializerOptions);
                         }
                     }
 
@@ -86,7 +90,7 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
                         Description = resourceElement.TryGetProperty("description", out var descEl) && descEl.ValueKind == JsonValueKind.String
                             ? descEl.GetString() : null,
                         SortOrder = resourceElement.GetProperty("sortOrder").GetInt32(),
-                        Data = data,
+                        Settings = data,
                         InjectionMode = (AIContextResourceInjectionMode)resourceElement.GetProperty("injectionMode").GetInt32()
                     });
                 }
@@ -198,13 +202,13 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
             changes.Add(new AIValueChange($"{prefix}.InjectionMode", from.InjectionMode.ToString(), to.InjectionMode.ToString()));
         }
 
-        // Compare data with deep inspection using shared utility
-        var success = AIJsonComparer.CompareObjects(from.Data, to.Data, $"{prefix}.Data", changes);
+        // Compare settings with deep inspection using shared utility
+        var success = AIJsonComparer.CompareObjects(from.Settings, to.Settings, $"{prefix}.Settings", changes);
 
-        if (!success && !Equals(from.Data, to.Data))
+        if (!success && !Equals(from.Settings, to.Settings))
         {
             // Fallback if comparison failed
-            changes.Add(new AIValueChange($"{prefix}.Data", "(modified)", "(modified)"));
+            changes.Add(new AIValueChange($"{prefix}.Settings", "(modified)", "(modified)"));
         }
 
         return changes;

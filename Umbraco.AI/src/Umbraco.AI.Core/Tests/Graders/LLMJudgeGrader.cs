@@ -110,22 +110,14 @@ Be objective and consistent in your evaluation.
                 new(ChatRole.User, judgmentPrompt)
             };
 
-            ChatResponse response;
-            if (config.ProfileId.HasValue)
+            var response = await _chatService.GetChatResponseAsync(chat =>
             {
-                response = await _chatService.GetChatResponseAsync(
-                    config.ProfileId.Value,
-                    messages,
-                    null,
-                    cancellationToken);
-            }
-            else
-            {
-                response = await _chatService.GetChatResponseAsync(
-                    messages,
-                    null,
-                    cancellationToken);
-            }
+                chat.WithAlias("test-llm-judge-grader");
+                if (config.ProfileId.HasValue)
+                {
+                    chat.WithProfile(config.ProfileId.Value);
+                }
+            }, messages, cancellationToken);
 
             // Parse judgment result
             var judgmentText = response.Messages.LastOrDefault()?.Text ?? string.Empty;

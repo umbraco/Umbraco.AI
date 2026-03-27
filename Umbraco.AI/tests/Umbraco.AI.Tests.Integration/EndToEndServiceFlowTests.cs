@@ -10,6 +10,7 @@ using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
@@ -22,6 +23,8 @@ namespace Umbraco.AI.Tests.Integration;
 /// End-to-end service flow tests that verify the complete pipeline works correctly
 /// using real services (not mocks) with fake providers.
 /// </summary>
+#pragma warning disable CS0618 // Integration tests for deprecated API surface — validates delegation works
+
 public class EndToEndServiceFlowTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
@@ -461,6 +464,10 @@ public class EndToEndServiceFlowTests : IDisposable
         // Profile resolution
         services.AddSingleton<IAIProfileRepository, InMemoryAIProfileRepository>();
         services.AddSingleton<IAIProfileService, AIProfileService>();
+
+        // Guardrail system
+        services.AddSingleton<IAIGuardrailRepository, InMemoryAIGuardrailRepository>();
+        services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
 
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();

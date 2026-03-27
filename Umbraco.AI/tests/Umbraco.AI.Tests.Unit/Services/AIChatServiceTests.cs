@@ -1,18 +1,27 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 
 namespace Umbraco.AI.Tests.Unit.Services;
+
+#pragma warning disable CS0618 // Tests for deprecated API surface — will be removed with the methods in v3
 
 public class AIChatServiceTests
 {
     private readonly Mock<IAIChatClientFactory> _clientFactoryMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
+    private readonly Mock<IEventAggregator> _eventAggregatorMock;
+    private readonly Mock<IAIRuntimeContextAccessor> _contextAccessorMock;
+    private readonly Mock<IAIRuntimeContextScopeProvider> _scopeProviderMock;
     private readonly AIChatService _service;
 
     public AIChatServiceTests()
@@ -24,11 +33,46 @@ public class AIChatServiceTests
         {
             DefaultChatProfileAlias = "default-chat"
         });
+        _eventAggregatorMock = new Mock<IEventAggregator>();
+        _eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var runtimeContext = new AIRuntimeContext([]);
+        _contextAccessorMock = new Mock<IAIRuntimeContextAccessor>();
+        // No existing scope by default — inline chat creates its own
+        _contextAccessorMock.Setup(x => x.Context).Returns((AIRuntimeContext?)null);
+
+        _scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
+        var mockScope = new Mock<IAIRuntimeContextScope>();
+        mockScope.Setup(s => s.Context).Returns(runtimeContext);
+        _scopeProviderMock
+            .Setup(x => x.CreateScope(It.IsAny<IEnumerable<AIRequestContextItem>>()))
+            .Returns(() =>
+            {
+                // After creating scope, the accessor should return the context
+                _contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
+                return mockScope.Object;
+            });
+        _scopeProviderMock
+            .Setup(x => x.CreateScope())
+            .Returns(() =>
+            {
+                _contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
+                return mockScope.Object;
+            });
+
+        var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
 
         _service = new AIChatService(
             _clientFactoryMock.Object,
             _profileServiceMock.Object,
-            _optionsMock.Object);
+            new Mock<IAIGuardrailService>().Object,
+            _optionsMock.Object,
+            _eventAggregatorMock.Object,
+            _contextAccessorMock.Object,
+            _scopeProviderMock.Object,
+            contributorCollection);
     }
 
     #region GetChatResponseAsync - Default profile
@@ -440,10 +484,13 @@ public class AIChatServiceTests
         // Act
         var client = await _service.GetChatClientAsync();
 
-        // Assert
-        client.ShouldBe(fakeChatClient);
+        // Assert — now returns ScopedInlineChatClient wrapping the factory client
+        client.ShouldNotBeNull();
         _profileServiceMock.Verify(
             x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _clientFactoryMock.Verify(
+            x => x.CreateClientAsync(defaultProfile, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -471,8 +518,8 @@ public class AIChatServiceTests
         // Act
         var client = await _service.GetChatClientAsync(profileId);
 
-        // Assert
-        client.ShouldBe(fakeChatClient);
+        // Assert — now returns ScopedInlineChatClient wrapping the factory client
+        client.ShouldNotBeNull();
         _profileServiceMock.Verify(
             x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()),
             Times.Once);

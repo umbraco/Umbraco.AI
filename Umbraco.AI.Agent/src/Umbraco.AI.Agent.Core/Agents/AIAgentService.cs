@@ -2,17 +2,21 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.InlineAgents;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Extensions;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
@@ -22,6 +26,7 @@ using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
@@ -35,9 +40,11 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIAgentFactory _agentFactory;
     private readonly IAGUIStreamingService _streamingService;
     private readonly IAGUIContextConverter _contextConverter;
+    private readonly IAGUIMessageConverter _messageConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly AIToolCollection _toolCollection;
     private readonly IAIProfileService _profileService;
+    private readonly IAIGuardrailService _guardrailService;
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
@@ -49,8 +56,10 @@ internal sealed class AIAgentService : IAIAgentService
         IAIAgentFactory agentFactory,
         IAGUIStreamingService streamingService,
         IAGUIContextConverter contextConverter,
+        IAGUIMessageConverter messageConverter,
         AIToolCollection toolCollection,
         IAIProfileService profileService,
+        IAIGuardrailService guardrailService,
         IAIChatClientFactory chatClientFactory,
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
@@ -62,8 +71,10 @@ internal sealed class AIAgentService : IAIAgentService
         _agentFactory = agentFactory;
         _streamingService = streamingService;
         _contextConverter = contextConverter;
+        _messageConverter = messageConverter;
         _toolCollection = toolCollection;
         _profileService = profileService;
+        _guardrailService = guardrailService;
         _chatClientFactory = chatClientFactory;
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
@@ -348,15 +359,60 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
-    public IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    public Task<AgentResponse> RunAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => RunPersistedAgentAsync(agentId, messages, options ?? new AIAgentExecutionOptions(), cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AgentResponse> RunAgentAsync(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var agent = await GetAgentByAliasAsync(agentAlias, cancellationToken)
+            ?? throw new InvalidOperationException($"Agent with alias '{agentAlias}' not found.");
+
+        return await RunPersistedAgentAsync(agent.Id, messages, options ?? new AIAgentExecutionOptions(), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => StreamPersistedAgentAsync(agentId, messages, options ?? new AIAgentExecutionOptions(), cancellationToken);
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var agent = await GetAgentByAliasAsync(agentAlias, cancellationToken)
+            ?? throw new InvalidOperationException($"Agent with alias '{agentAlias}' not found.");
+
+        await foreach (var update in StreamPersistedAgentAsync(agent.Id, messages, options ?? new AIAgentExecutionOptions(), cancellationToken))
+        {
+            yield return update;
+        }
+    }
+
+    /// <inheritdoc />
+    public IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
         CancellationToken cancellationToken = default)
-        => StreamAgentAsync(agentId, request, frontendTools, new AIAgentExecutionOptions(), cancellationToken);
+        => StreamAgentAGUIAsync(agentId, request, frontendTools, new AIAgentExecutionOptions(), cancellationToken);
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    public async IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
@@ -370,23 +426,365 @@ internal sealed class AIAgentService : IAIAgentService
 
         if (agent is null)
         {
-            // Emit error event and finish
-            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
-            yield return errorEmitter.EmitRunStarted();
-            yield return errorEmitter.EmitError("Agent not found", "NOT_FOUND");
-            yield return errorEmitter.EmitRunFinished(new InvalidOperationException("Agent not found"));
+            await foreach (var evt in EmitAGUIError(request, "Agent not found", "NOT_FOUND"))
+            {
+                yield return evt;
+            }
+
             yield break;
         }
 
         if (!agent.IsActive)
         {
-            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
-            yield return errorEmitter.EmitRunStarted();
-            yield return errorEmitter.EmitError($"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE");
-            yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent '{agent.Name}' is not active"));
+            await foreach (var evt in EmitAGUIError(request, $"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE"))
+            {
+                yield return evt;
+            }
+
             yield break;
         }
 
+        // Convert AG-UI messages to M.E.AI before publishing notification
+        var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
+
+        // Prepare agent execution (profile override, notification, permissions, MAF agent creation)
+        var context = await PrepareAgentExecutionAsync(
+            agent, chatMessages, options, frontendTools,
+            contextItems: _contextConverter.ConvertToRequestContextItems(request.Context),
+            additionalProperties: new Dictionary<string, object?>
+            {
+                { Constants.ContextKeys.RunId, request.RunId },
+                { Constants.ContextKeys.ThreadId, request.ThreadId },
+                { CoreConstants.ContextKeys.LogKeys, new[] { Constants.ContextKeys.RunId, Constants.ContextKeys.ThreadId } }
+            },
+            cancellationToken);
+
+        if (context is null)
+        {
+            // Notification was cancelled
+            await foreach (var evt in EmitAGUIError(request, "Agent execution cancelled", "EXECUTION_CANCELLED"))
+            {
+                yield return evt;
+            }
+
+            yield break;
+        }
+
+        // Stream via AG-UI streaming service
+        bool streamCompleted = false;
+        try
+        {
+            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, cancellationToken))
+            {
+                yield return evt;
+            }
+            streamCompleted = true;
+        }
+        finally
+        {
+            await PublishExecutedNotificationAsync(context, streamCompleted);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<MsAIAgent> CreateInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
+
+        var additionalProperties = BuildAgentProperties(builder);
+
+        return await _agentFactory.CreateAgentAsync(
+            agent,
+            builder.ContextItems,
+            additionalTools: null,
+            additionalProperties,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AgentResponse> RunAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
+        var chatMessages = AsReadOnlyList(messages);
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, chatMessages, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Inline agent execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var additionalProperties = BuildAgentProperties(builder);
+            var mafAgent = await _agentFactory.CreateAgentAsync(
+                agent,
+                builder.ContextItems,
+                additionalTools: null,
+                additionalProperties,
+                cancellationToken);
+
+            var response = await mafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            isSuccess = true;
+            return response;
+        }
+        finally
+        {
+            var executedNotification = new AIAgentExecutedNotification(
+                agent,
+                chatMessages,
+                stopwatch.Elapsed,
+                isSuccess,
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
+        var chatMessages = AsReadOnlyList(messages);
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, chatMessages, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Inline agent execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var additionalProperties = BuildAgentProperties(builder);
+            var mafAgent = await _agentFactory.CreateAgentAsync(
+                agent,
+                builder.ContextItems,
+                additionalTools: null,
+                additionalProperties,
+                cancellationToken);
+
+            await foreach (var update in mafAgent.RunStreamingAsync(chatMessages, session: null, options: null, cancellationToken))
+            {
+                yield return update;
+            }
+
+            isSuccess = true;
+        }
+        finally
+        {
+            var executedNotification = new AIAgentExecutedNotification(
+                agent,
+                chatMessages,
+                stopwatch.Elapsed,
+                isSuccess,
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Builds a transient agent entity, resolving aliases and the "all tools" flag.
+    /// </summary>
+    private async Task<(AIAgent Agent, AIInlineAgentBuilder Builder)> BuildAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        CancellationToken cancellationToken)
+    {
+        var builder = new AIInlineAgentBuilder();
+        configure(builder);
+
+        // If WithAllTools() was called, resolve all tool IDs from the collection
+        if (builder.UseAllTools)
+        {
+            var allToolIds = _toolCollection.Select(t => t.Id).ToArray();
+            builder.WithTools(allToolIds);
+        }
+
+        // Resolve profile alias to ID if needed
+        if (builder.ProfileAlias is not null)
+        {
+            builder.SetResolvedProfileId(
+                await _profileService.GetProfileIdByAliasAsync(builder.ProfileAlias, cancellationToken));
+        }
+
+        // Resolve guardrail aliases to IDs if needed
+        if (builder.GuardrailAliases is { Count: > 0 } aliases)
+        {
+            builder.SetResolvedGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
+        }
+
+        var agent = builder.Build();
+        return (agent, builder);
+    }
+
+    /// <summary>
+    /// Builds the additional properties dictionary for inline agent execution.
+    /// Sets the feature type to "inline-agent" for audit/telemetry distinction.
+    /// </summary>
+    private static Dictionary<string, object?> BuildAgentProperties(AIInlineAgentBuilder builder)
+    {
+        var properties = new Dictionary<string, object?>
+        {
+            { CoreConstants.ContextKeys.FeatureType, CoreConstants.FeatureTypes.InlineAgent },
+        };
+
+        // Add ChatOptions override if set
+        if (builder.ChatOptions is not null)
+        {
+            properties[CoreConstants.ContextKeys.ChatOptionsOverride] = builder.ChatOptions;
+        }
+
+        // Merge any additional properties from the builder
+        if (builder.AdditionalProperties is not null)
+        {
+            foreach (var kvp in builder.AdditionalProperties)
+            {
+                properties[kvp.Key] = kvp.Value;
+            }
+        }
+
+        return properties;
+    }
+
+    /// <summary>
+    /// Runs a persisted agent by ID with full orchestration.
+    /// </summary>
+    private async Task<AgentResponse> RunPersistedAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions options,
+        CancellationToken cancellationToken)
+    {
+        var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
+        var chatMessages = AsReadOnlyList(messages);
+
+        var context = await PrepareAgentExecutionAsync(
+            agent, chatMessages, options, frontendTools: null,
+            contextItems: options.ContextItems,
+            additionalProperties: null,
+            cancellationToken);
+
+        if (context is null)
+        {
+            throw new InvalidOperationException("Agent execution cancelled by notification handler.");
+        }
+
+        bool isSuccess = false;
+        try
+        {
+            var response = await context.MafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            isSuccess = true;
+            return response;
+        }
+        finally
+        {
+            await PublishExecutedNotificationAsync(context, isSuccess);
+        }
+    }
+
+    /// <summary>
+    /// Streams a persisted agent by ID with full orchestration.
+    /// </summary>
+    private async IAsyncEnumerable<AgentResponseUpdate> StreamPersistedAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions options,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
+        var chatMessages = AsReadOnlyList(messages);
+
+        var context = await PrepareAgentExecutionAsync(
+            agent, chatMessages, options, frontendTools: null,
+            contextItems: options.ContextItems,
+            additionalProperties: null,
+            cancellationToken);
+
+        if (context is null)
+        {
+            throw new InvalidOperationException("Agent execution cancelled by notification handler.");
+        }
+
+        bool isSuccess = false;
+        try
+        {
+            await foreach (var update in context.MafAgent.RunStreamingAsync(chatMessages, session: null, options: null, cancellationToken))
+            {
+                yield return update;
+            }
+            isSuccess = true;
+        }
+        finally
+        {
+            await PublishExecutedNotificationAsync(context, isSuccess);
+        }
+    }
+
+    /// <summary>
+    /// Resolves a persisted agent by ID and validates it is active.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found or inactive.</exception>
+    private async Task<AIAgent> ResolveActiveAgentAsync(Guid agentId, CancellationToken cancellationToken)
+    {
+        var agent = await GetAgentAsync(agentId, cancellationToken)
+            ?? throw new InvalidOperationException($"Agent with ID '{agentId}' not found.");
+
+        if (!agent.IsActive)
+        {
+            throw new InvalidOperationException($"Agent '{agent.Name}' is not active.");
+        }
+
+        return agent;
+    }
+
+    /// <summary>
+    /// Shared orchestration for persisted agent execution: applies overrides, publishes
+    /// executing notification, resolves permissions, filters frontend tools, and creates the MAF agent.
+    /// Returns null if the notification was cancelled.
+    /// </summary>
+    private async Task<AgentExecutionContext?> PrepareAgentExecutionAsync(
+        AIAgent agent,
+        IReadOnlyList<ChatMessage> chatMessages,
+        AIAgentExecutionOptions options,
+        IEnumerable<AIFrontendTool>? frontendTools,
+        IEnumerable<AIRequestContextItem>? contextItems,
+        Dictionary<string, object?>? additionalProperties,
+        CancellationToken cancellationToken)
+    {
         // Apply profile override if specified
         if (options.ProfileIdOverride.HasValue)
         {
@@ -395,30 +793,22 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Publish executing notification (before execution)
         var eventMessages = new EventMessages();
-        var executingNotification = new AIAgentExecutingNotification(agent, request, frontendTools, eventMessages);
+        var executingNotification = new AIAgentExecutingNotification(agent, chatMessages, eventMessages);
         await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
 
-        // Check if cancelled
         if (executingNotification.Cancel)
         {
-            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
-            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
-            yield return errorEmitter.EmitRunStarted();
-            yield return errorEmitter.EmitError($"Agent execution cancelled: {errorMessages}", "EXECUTION_CANCELLED");
-            yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent execution cancelled: {errorMessages}"));
-            yield break;
+            return null;
         }
 
-        // Track execution duration with high-resolution timer
         var stopwatch = Stopwatch.StartNew();
 
-        // 2. Convert AG-UI context and create frontend tools with permission filtering
-        var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
+        // Resolve allowed tool IDs for permission checking
+        var allowedToolIds = await GetAllowedToolIdsAsync(agent, options.UserGroupIds, cancellationToken);
+        var allowedToolIdSet = new HashSet<string>(allowedToolIds, StringComparer.OrdinalIgnoreCase);
+        var allowedScopeIds = agent.GetStandardConfig()?.AllowedToolScopeIds;
 
-        // Get allowed tool IDs for permission checking (uses current user's groups)
-        var allowedToolIds = await GetAllowedToolIdsAsync(agent, userGroupIds: null, cancellationToken);
-
-        // Convert AIFrontendTools to AIFrontendToolFunction and filter by permissions
+        // Convert and filter frontend tools by permissions
         IList<AITool>? convertedFrontendTools = null;
         if (frontendTools is not null)
         {
@@ -426,25 +816,14 @@ internal sealed class AIAgentService : IAIAgentService
 
             foreach (var frontendTool in frontendTools)
             {
-                // Create AIFrontendToolFunction with metadata already attached
                 var toolFunction = new Chat.AIFrontendToolFunction(
                     frontendTool.Tool,
                     frontendTool.Scope,
                     frontendTool.IsDestructive);
 
-                // Check if tool is permitted
-                bool isPermitted = false;
-
-                // Check if tool ID is explicitly allowed
-                if (allowedToolIds.Contains(frontendTool.Tool.Name, StringComparer.OrdinalIgnoreCase))
-                {
-                    isPermitted = true;
-                }
-                // Check if tool has scope and scope is allowed
-                else if (frontendTool.Scope is not null && (agent.GetStandardConfig()?.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false))
-                {
-                    isPermitted = true;
-                }
+                bool isPermitted = allowedToolIdSet.Contains(frontendTool.Tool.Name)
+                    || (frontendTool.Scope is not null
+                        && (allowedScopeIds?.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false));
 
                 if (isPermitted)
                 {
@@ -455,66 +834,80 @@ internal sealed class AIAgentService : IAIAgentService
             convertedFrontendTools = tools.Count > 0 ? tools : null;
         }
 
-        // 3. Build additional properties for telemetry/logging
-        var additionalProperties = new Dictionary<string, object?>
-        {
-            { Constants.ContextKeys.RunId, request.RunId },
-            { Constants.ContextKeys.ThreadId, request.ThreadId },
-            { CoreConstants.ContextKeys.LogKeys, new[]
-            {
-                Constants.ContextKeys.RunId,
-                Constants.ContextKeys.ThreadId
-            }}
-        };
+        // Build additional properties
+        additionalProperties ??= new Dictionary<string, object?>();
 
-        // Set context IDs override in additional properties for AgentContextResolver to pick up
         if (options.ContextIdsOverride is not null)
         {
             additionalProperties[Constants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
         }
 
-        // Set guardrail IDs override in additional properties for guardrail resolvers to pick up
         if (options.GuardrailIdsOverride is not null)
         {
             additionalProperties[AI.Core.Constants.ContextKeys.GuardrailIdsOverride] = options.GuardrailIdsOverride;
         }
 
-        // 4. Create MAF agent
-        //    System message injection is handled automatically by ScopedAIAgent
-        var agentInst = await _agentFactory.CreateAgentAsync(
+        // Create MAF agent
+        var mafAgent = await _agentFactory.CreateAgentAsync(
             agent,
             contextItems,
             convertedFrontendTools,
             additionalProperties,
             cancellationToken);
 
-        // 5. Stream via AG-UI streaming service and publish executed notification when done
-        //    No additionalSystemPrompt needed - ScopedAIAgent handles it
-        bool streamCompleted = false;
-        try
-        {
-            await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
-            {
-                yield return evt;
-            }
-            streamCompleted = true;
-        }
-        finally
-        {
-            // Calculate duration using high-resolution timer
-            var duration = stopwatch.Elapsed;
-
-            // Publish executed notification (after execution completes or fails)
-            var executedNotification = new AIAgentExecutedNotification(
-                agent,
-                request,
-                frontendTools,
-                duration,
-                streamCompleted, // isSuccess based on whether stream completed
-                eventMessages)
-                .WithStateFrom(executingNotification);
-
-            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
-        }
+        return new AgentExecutionContext(
+            agent,
+            mafAgent,
+            chatMessages,
+            eventMessages,
+            executingNotification,
+            convertedFrontendTools,
+            stopwatch);
     }
+
+    /// <summary>
+    /// Publishes the executed notification with duration and success status.
+    /// </summary>
+    private async Task PublishExecutedNotificationAsync(AgentExecutionContext context, bool isSuccess)
+    {
+        var executedNotification = new AIAgentExecutedNotification(
+            context.Agent,
+            context.ChatMessages,
+            context.Stopwatch.Elapsed,
+            isSuccess,
+            context.EventMessages)
+            .WithStateFrom(context.ExecutingNotification);
+
+        await _eventAggregator.PublishAsync(executedNotification);
+    }
+
+    /// <summary>
+    /// Emits a complete AG-UI error sequence: run started, error, run finished.
+    /// </summary>
+    private static async IAsyncEnumerable<IAGUIEvent> EmitAGUIError(
+        AGUIRunRequest request,
+        string message,
+        string code)
+    {
+        var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
+        yield return emitter.EmitRunStarted();
+        yield return emitter.EmitError(message, code);
+        yield return emitter.EmitRunFinished(new InvalidOperationException(message));
+        await Task.CompletedTask; // Satisfy async enumerable contract
+    }
+
+    /// <summary>
+    /// Returns the messages as an <see cref="IReadOnlyList{T}"/>, avoiding a copy when possible.
+    /// </summary>
+    private static IReadOnlyList<ChatMessage> AsReadOnlyList(IEnumerable<ChatMessage> messages)
+        => messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
+
+    private record AgentExecutionContext(
+        AIAgent Agent,
+        MsAIAgent MafAgent,
+        IReadOnlyList<ChatMessage> ChatMessages,
+        EventMessages EventMessages,
+        AIAgentExecutingNotification ExecutingNotification,
+        IList<AITool>? ConvertedFrontendTools,
+        Stopwatch Stopwatch);
 }

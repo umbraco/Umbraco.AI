@@ -57,9 +57,24 @@ export type AuditLogItemResponseModel = {
     errorMessage?: string | null;
 };
 
+export type BinaryChatContentPartModel = ChatContentPartModel & {
+    $type: string;
+    mimeType: string;
+    data: string;
+    filename?: string | null;
+};
+
+export type ChatContentPartModel = {
+    [key: string]: never;
+};
+
 export type ChatMessageModel = {
     role: string;
-    content: string;
+    /**
+     * @deprecated
+     */
+    content?: string | null;
+    contentParts?: Array<TextChatContentPartModel | BinaryChatContentPartModel> | null;
 };
 
 export type ChatProfileSettingsModel = ProfileSettingsModel & {
@@ -135,7 +150,7 @@ export type ContextResourceModel = {
     name: string;
     description?: string | null;
     sortOrder: number;
-    data?: unknown;
+    settings?: unknown;
     injectionMode: string;
 };
 
@@ -144,7 +159,7 @@ export type ContextResourceTypeResponseModel = {
     name: string;
     description?: string | null;
     icon?: string | null;
-    dataSchema?: EditableModelSchemaModel | null;
+    settingsSchema?: EditableModelSchemaModel | null;
 };
 
 export type ContextResponseModel = {
@@ -226,6 +241,7 @@ export type EmbeddingItemModel = {
 
 export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
     $type: string;
+    dimensions?: number | null;
 };
 
 export type EmbeddingResponseModel = {
@@ -657,6 +673,11 @@ export type TestVariationModel = {
     runCount?: number | null;
     contextIds?: Array<string> | null;
     testFeatureConfig?: unknown;
+};
+
+export type TextChatContentPartModel = ChatContentPartModel & {
+    $type: string;
+    text: string;
 };
 
 export type ToolItemResponseModel = {

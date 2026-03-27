@@ -2,12 +2,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Guardrails;
 using Umbraco.AI.Agent.Core.Models;
 using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
-using Umbraco.AI.Agent.Core.Tests;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
@@ -58,7 +58,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAGUIMessageConverter, AGUIMessageConverter>();
         builder.Services.AddSingleton<IAGUIToolConverter, AGUIToolConverter>();
         builder.Services.AddSingleton<IAGUIContextConverter, AGUIContextConverter>();
+        builder.Services.AddSingleton<IAIFileStore, AIFileStore>();
+        builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
+        builder.Services.AddHostedService<AIFileCleanupBackgroundJob>();
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();
@@ -79,9 +82,6 @@ public static class UmbracoBuilderExtensions
         // Auto-discover agent surfaces via [AIAgentSurface] attribute
         builder.AIAgentSurfaces()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentSurface, AIAgentSurfaceAttribute>(cache: true));
-
-        // Register agent test feature for AI testing
-        builder.AITestFeatures().Add<AgentTestFeature>();
 
         // Auto-discover agent workflows via [AIAgentWorkflow] attribute
         builder.AIAgentWorkflows()

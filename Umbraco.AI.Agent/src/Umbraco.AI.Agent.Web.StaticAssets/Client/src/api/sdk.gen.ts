@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -93,7 +93,7 @@ export class AgentsService {
     }
     
     public static runAgent<ThrowOnError extends boolean = false>(options: Options<RunAgentData, ThrowOnError>) {
-        return (options.client ?? client).sse.post<RunAgentResponses, RunAgentErrors, ThrowOnError>({
+        return (options.client ?? client).post<RunAgentResponses, RunAgentErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -101,6 +101,40 @@ export class AgentsService {
                 }
             ],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/run',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public static streamAgent<ThrowOnError extends boolean = false>(options: Options<StreamAgentData, ThrowOnError>) {
+        return (options.client ?? client).sse.post<StreamAgentResponses, StreamAgentErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public static streamAgentAGUI<ThrowOnError extends boolean = false>(options: Options<StreamAgentAGUIData, ThrowOnError>) {
+        return (options.client ?? client).sse.post<StreamAgentAGUIResponses, StreamAgentAGUIErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream-agui',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

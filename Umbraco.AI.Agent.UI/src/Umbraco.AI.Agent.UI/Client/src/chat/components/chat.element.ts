@@ -57,9 +57,9 @@ export class UaiChatElement extends UmbLitElement {
         });
     }
 
-    #handleSendMessage(e: CustomEvent<string>) {
-        const content = e.detail;
-        this.#chatContext?.sendUserMessage(content);
+    #handleSendMessage(e: CustomEvent<{ text: string; contentParts?: import("../types/index.js").UaiInputContent[] }>) {
+        const { text, contentParts } = e.detail;
+        this.#chatContext?.sendUserMessage(text, contentParts);
     }
 
     #handleInterruptResponse(e: CustomEvent<string>) {

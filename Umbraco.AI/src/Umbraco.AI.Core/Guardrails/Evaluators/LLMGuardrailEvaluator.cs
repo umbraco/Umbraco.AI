@@ -105,17 +105,14 @@ Be objective and consistent. A score of 1.0 means completely safe, 0.0 means hig
                 new(ChatRole.User, judgmentPrompt)
             };
 
-            ChatResponse response;
-            if (evalConfig.ProfileId.HasValue)
+            var response = await _chatService.GetChatResponseAsync(chat =>
             {
-                response = await _chatService.GetChatResponseAsync(
-                    evalConfig.ProfileId.Value, messages, null, cancellationToken);
-            }
-            else
-            {
-                response = await _chatService.GetChatResponseAsync(
-                    messages, null, cancellationToken);
-            }
+                chat.WithAlias("guardrail-llm-evaluator");
+                if (evalConfig.ProfileId.HasValue)
+                {
+                    chat.WithProfile(evalConfig.ProfileId.Value);
+                }
+            }, messages, cancellationToken);
 
             // Parse judgment
             var judgmentText = response.Text ?? string.Empty;

@@ -13,7 +13,7 @@ public class AIContextResourceBuilder
     private string _name = "Test Resource";
     private string? _description;
     private int _sortOrder;
-    private string _data = "{}";
+    private string _settings = "{}";
     private AIContextResourceInjectionMode _injectionMode = AIContextResourceInjectionMode.Always;
 
     public AIContextResourceBuilder WithId(Guid id)
@@ -46,9 +46,9 @@ public class AIContextResourceBuilder
         return this;
     }
 
-    public AIContextResourceBuilder WithData(string data)
+    public AIContextResourceBuilder WithSettings(string settings)
     {
-        _data = data;
+        _settings = settings;
         return this;
     }
 
@@ -73,7 +73,7 @@ public class AIContextResourceBuilder
     public AIContextResourceBuilder AsBrandVoice(string tone = "Professional", string targetAudience = "General")
     {
         _resourceTypeId = "brand-voice";
-        _data = System.Text.Json.JsonSerializer.Serialize(new
+        _settings = System.Text.Json.JsonSerializer.Serialize(new
         {
             tone,
             targetAudience,
@@ -87,7 +87,7 @@ public class AIContextResourceBuilder
     public AIContextResourceBuilder AsText(string content)
     {
         _resourceTypeId = "text";
-        _data = System.Text.Json.JsonSerializer.Serialize(new { content }, Constants.DefaultJsonSerializerOptions);
+        _settings = System.Text.Json.JsonSerializer.Serialize(new { content }, Constants.DefaultJsonSerializerOptions);
         return this;
     }
 
@@ -100,7 +100,7 @@ public class AIContextResourceBuilder
             Name = _name,
             Description = _description,
             SortOrder = _sortOrder,
-            Data = _data,
+            Settings = _settings,
             InjectionMode = _injectionMode
         };
     }

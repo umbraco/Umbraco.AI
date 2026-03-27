@@ -76,7 +76,7 @@ internal sealed class ProfileContextResolver : IAIContextResolver
                     ResourceTypeId = resource.ResourceTypeId,
                     Name = resource.Name,
                     Description = resource.Description,
-                    Data = resource.Data,
+                    Settings = resource.Settings,
                     InjectionMode = resource.InjectionMode,
                     ContextName = context.Name
                 });

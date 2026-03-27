@@ -124,6 +124,26 @@ export type AgentWorkflowItemResponseModel = {
     settingsSchema?: EditableModelSchemaModel | null;
 };
 
+export type BinaryChatContentPartModel = ChatContentPartModel & {
+    $type: string;
+    mimeType: string;
+    data: string;
+    filename?: string | null;
+};
+
+export type ChatContentPartModel = {
+    [key: string]: never;
+};
+
+export type ChatMessageModel = {
+    role: string;
+    /**
+     * @deprecated
+     */
+    content?: string | null;
+    contentParts?: Array<TextChatContentPartModel | BinaryChatContentPartModel> | null;
+};
+
 export type CreateAgentRequestModel = {
     alias: string;
     name: string;
@@ -181,6 +201,10 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
+export type RunAgentRequestModel = {
+    messages: Array<ChatMessageModel>;
+};
+
 export type StandardAgentConfigModel = AgentConfigModel & {
     $type: string;
     contextIds?: Array<string> | null;
@@ -190,6 +214,11 @@ export type StandardAgentConfigModel = AgentConfigModel & {
     userGroupPermissions?: {
         [key: string]: AiAgentUserGroupPermissionsModel;
     } | null;
+};
+
+export type TextChatContentPartModel = ChatContentPartModel & {
+    $type: string;
+    text: string;
 };
 
 export type UpdateAgentRequestModel = {
@@ -378,7 +407,7 @@ export type UpdateAgentResponses = {
 };
 
 export type RunAgentData = {
-    body?: AGUIRunRequestModel;
+    body?: RunAgentRequestModel;
     path: {
         agentIdOrAlias: string;
     };
@@ -405,12 +434,80 @@ export type RunAgentError = RunAgentErrors[keyof RunAgentErrors];
 
 export type RunAgentResponses = {
     /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type StreamAgentData = {
+    body?: RunAgentRequestModel;
+    path: {
+        agentIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream';
+};
+
+export type StreamAgentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type StreamAgentError = StreamAgentErrors[keyof StreamAgentErrors];
+
+export type StreamAgentResponses = {
+    /**
      * Server-Sent Events stream
      */
     200: string;
 };
 
-export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];
+export type StreamAgentResponse = StreamAgentResponses[keyof StreamAgentResponses];
+
+export type StreamAgentAGUIData = {
+    body?: AGUIRunRequestModel;
+    path: {
+        agentIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream-agui';
+};
+
+export type StreamAgentAGUIErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type StreamAgentAGUIError = StreamAgentAGUIErrors[keyof StreamAgentAGUIErrors];
+
+export type StreamAgentAGUIResponses = {
+    /**
+     * Server-Sent Events stream
+     */
+    200: string;
+};
+
+export type StreamAgentAGUIResponse = StreamAgentAGUIResponses[keyof StreamAgentAGUIResponses];
 
 export type AgentAliasExistsData = {
     body?: never;
@@ -484,3 +581,29 @@ export type GetAgentWorkflowsResponses = {
 };
 
 export type GetAgentWorkflowsResponse = GetAgentWorkflowsResponses[keyof GetAgentWorkflowsResponses];
+
+export type GetFileData = {
+    body?: never;
+    path: {
+        threadId: string;
+        fileId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}';
+};
+
+export type GetFileErrors = {
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetFileError = GetFileErrors[keyof GetFileErrors];
+
+export type GetFileResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};

@@ -15,6 +15,7 @@ using Umbraco.AI.Core.Contexts.Middleware;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -81,8 +82,14 @@ public static partial class UmbracoBuilderExtensions
         // Initialize middleware collection builders with default middleware
         // Use AIChatMiddleware() and AIEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
+        // File processing handlers (extensible - add custom handlers via AIFileProcessingHandlers())
+        builder.AIFileProcessingHandlers()
+            .Append<OpenXmlFileProcessingHandler>();
+
         builder.AIChatMiddleware()
             .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
+            .Append<AIFileProcessingChatMiddleware>()         // File processing (converts Office docs to text, before options override)
+            .Append<AIChatOptionsOverrideChatMiddleware>()    // ChatOptions override from runtime context (before function invoking)
             .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
             .Append<AIGuardrailChatMiddleware>()         // Guardrail evaluation (pre/post-generate)
@@ -186,7 +193,7 @@ public static partial class UmbracoBuilderExtensions
         // Context system
         services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
         services.AddSingleton<IAIContextService, AIContextService>();
-        services.AddSingleton<IAIContextFormatter, AIContextFormatter>();
+        services.AddSingleton<IAIContextProcessor, AIContextProcessor>();
         services.AddSingleton<IAIContextAccessor, AIContextAccessor>();
 
         // Context resolution - pluggable resolver system
@@ -202,9 +209,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Guardrail evaluator infrastructure - auto-discover via [AIGuardrailEvaluator] attribute
         builder.AIGuardrailEvaluators()
-            .Add<ContainsGuardrailEvaluator>()
-            .Add<RegexGuardrailEvaluator>()
-            .Add<LLMGuardrailEvaluator>();
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIGuardrailEvaluator, AIGuardrailEvaluatorAttribute>(cache: true));
 
         // Guardrail resolution - pluggable resolver system
         builder.AIGuardrailResolvers()
@@ -259,16 +264,13 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageDailyRollupJob>();
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
 
-        // Register built-in test graders
+        // Auto-discover test features via [AITestFeature] attribute
+        builder.AITestFeatures()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestFeature, AITestFeatureAttribute>(cache: true));
+
+        // Auto-discover test graders via [AITestGrader] attribute
         builder.AITestGraders()
-            .Add<ExactMatchGrader>()
-            .Add<ContainsGrader>()
-            .Add<RegexGrader>()
-            .Add<JSONSchemaGrader>()
-            .Add<ToolCallGrader>()
-            .Add<LLMJudgeGrader>()
-            .Add<GuardrailGrader>();
-            //.Add<SemanticSimilarityGrader>();
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestGrader, AITestGraderAttribute>(cache: true));
 
         // Register test infrastructure services
         // Note: IAITestRepository and IAITestRunRepository are registered by persistence layer

@@ -165,6 +165,10 @@ add_product_projects "Umbraco.AI.Google" "Google"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Amazon"
 
+# Step 10.2: Add Search projects
+echo "Adding Umbraco.AI.Search projects..."
+add_product_projects "Umbraco.AI.Search" "Search"
+
 # Step 11: Add demo site to solution
 echo "Adding demo site to solution..."
 dotnet sln "Umbraco.AI.local.slnx" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
@@ -222,6 +226,11 @@ fi
 # Agent Copilot add-on (frontend-only static assets)
 if [ -f "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj"
+fi
+
+# Search add-on (Startup only — no Web.StaticAssets)
+if [ -f "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj"
 fi
 
 echo ""

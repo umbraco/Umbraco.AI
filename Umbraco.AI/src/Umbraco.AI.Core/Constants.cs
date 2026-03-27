@@ -54,6 +54,22 @@ public static class Constants
     }
 
     /// <summary>
+    /// Well-known feature type values used in runtime context for telemetry, audit, and analytics.
+    /// </summary>
+    public static class FeatureTypes
+    {
+        /// <summary>
+        /// Feature type for inline chat executions via <see cref="Chat.IAIChatService.GetChatResponseAsync"/>.
+        /// </summary>
+        public const string InlineChat = "inline-chat";
+
+        /// <summary>
+        /// Feature type for inline agent executions.
+        /// </summary>
+        public const string InlineAgent = "inline-agent";
+    }
+
+    /// <summary>
     /// Keys for metadata in metadata collections.
     /// </summary>
     public static class ContextKeys
@@ -148,5 +164,13 @@ public static class Constants
         /// Used by the test execution system to override guardrails for testing scenarios.
         /// </summary>
         public const string GuardrailIdsOverride = "Umbraco.AI.GuardrailIdsOverride";
+
+        /// <summary>
+        /// Key for chat options override in runtime context.
+        /// When set, the <see cref="Chat.AIChatOptionsOverrideChatMiddleware"/> merges these options
+        /// into the call's options (override values take precedence).
+        /// Used by inline agent and inline chat builders to pass ChatOptions through the middleware pipeline.
+        /// </summary>
+        public const string ChatOptionsOverride = "Umbraco.AI.ChatOptionsOverride";
     }
 }

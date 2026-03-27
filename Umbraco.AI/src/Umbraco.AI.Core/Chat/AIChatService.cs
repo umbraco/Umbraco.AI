@@ -1,8 +1,14 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Core.Chat;
 
@@ -10,120 +16,317 @@ internal sealed class AIChatService : IAIChatService
 {
     private readonly IAIChatClientFactory _clientFactory;
     private readonly IAIProfileService _profileService;
+    private readonly IAIGuardrailService _guardrailService;
     private readonly AIOptions _options;
+    private readonly IEventAggregator _eventAggregator;
+    private readonly IAIRuntimeContextAccessor _contextAccessor;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     public AIChatService(
         IAIChatClientFactory clientFactory,
         IAIProfileService profileService,
-        IOptionsMonitor<AIOptions> options)
+        IAIGuardrailService guardrailService,
+        IOptionsMonitor<AIOptions> options,
+        IEventAggregator eventAggregator,
+        IAIRuntimeContextAccessor contextAccessor,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors)
     {
         _clientFactory = clientFactory;
         _profileService = profileService;
+        _guardrailService = guardrailService;
         _options = options.CurrentValue;
+        _eventAggregator = eventAggregator;
+        _contextAccessor = contextAccessor;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
     }
 
-    public async Task<ChatResponse> GetChatResponseAsync(
+    #pragma warning disable CS0618 // Obsolete members - implementing the deprecated interface methods
+
+    public Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
-    }
+        => GetChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId: null, options),
+            messages, cancellationToken);
 
-    public async Task<ChatResponse> GetChatResponseAsync(
+    public Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetProfileAsync(profileId, cancellationToken);
-        if (profile is null)
-        {
-            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
-        }
-        
-        EnsureProfileSupportsChat(profile);
-        
-        return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
-    }
+        => GetChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId, options),
+            messages, cancellationToken);
 
-    private async Task<ChatResponse> GetChatResponseInternalAsync(
-        AIProfile profile,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options,
-        CancellationToken cancellationToken)
-    {
-        var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-        var mergedOptions = MergeOptions(profile, options);
-
-        return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
-    }
-
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
-        {
-            yield return update;
-        }
-    }
+        CancellationToken cancellationToken = default)
+        => StreamChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId: null, options),
+            messages, cancellationToken);
 
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
+    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var profile = await _profileService.GetProfileAsync(profileId, cancellationToken);
-        if (profile is null)
-        {
-            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
-        }
+        CancellationToken cancellationToken = default)
+        => StreamChatResponseAsync(
+            b => ConfigureLegacyChat(b, profileId, options),
+            messages, cancellationToken);
 
-        EnsureProfileSupportsChat(profile);
-
-        await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
-        {
-            yield return update;
-        }
-    }
-
-    private async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseInternalAsync(
-        AIProfile profile,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
-        var mergedOptions = MergeOptions(profile, options);
-
-        await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
-        {
-            yield return update;
-        }
-    }
-
-    public async Task<IChatClient> GetChatClientAsync(
+    public Task<IChatClient> GetChatClientAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
+        => CreateChatClientAsync(
+            b => ConfigureLegacyChat(b, profileId, options: null),
+            cancellationToken);
+
+    #pragma warning restore CS0618
+
+    private static void ConfigureLegacyChat(AIChatBuilder builder, Guid? profileId, ChatOptions? options)
     {
+        builder.WithAlias("chat");
+        if (profileId.HasValue)
+        {
+            builder.WithProfile(profileId.Value);
+        }
+        if (options is not null)
+        {
+            builder.WithChatOptions(options);
+        }
+    }
+
+    public async Task<ChatResponse> GetChatResponseAsync(
+        Action<AIChatBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var builder = BuildChat(configure);
+
+        // Pass-through mode: skip notifications and duration tracking.
+        // The parent feature (e.g., prompt) handles its own observability.
+        if (builder.IsPassThrough)
+        {
+            return await ExecuteInlineChatAsync(builder, messages, cancellationToken);
+        }
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIChatExecutingNotification(
+            builder.Id, builder.Alias!, builder.Name, builder.ProfileId, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Inline chat execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var response = await ExecuteInlineChatAsync(builder, messages, cancellationToken);
+            isSuccess = true;
+            return response;
+        }
+        finally
+        {
+            var executedNotification = new AIChatExecutedNotification(
+                builder.Id, builder.Alias!, builder.Name, builder.ProfileId,
+                stopwatch.Elapsed, isSuccess, eventMessages);
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    public async IAsyncEnumerable<ChatResponseUpdate> StreamChatResponseAsync(
+        Action<AIChatBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var builder = BuildChat(configure);
+
+        // Pass-through mode: skip notifications and duration tracking
+        if (builder.IsPassThrough)
+        {
+            await foreach (var update in StreamInlineChatCoreAsync(builder, messages, cancellationToken))
+            {
+                yield return update;
+            }
+            yield break;
+        }
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIChatExecutingNotification(
+            builder.Id, builder.Alias!, builder.Name, builder.ProfileId, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Inline chat execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            await foreach (var update in StreamInlineChatCoreAsync(builder, messages, cancellationToken))
+            {
+                yield return update;
+            }
+
+            isSuccess = true;
+        }
+        finally
+        {
+            var executedNotification = new AIChatExecutedNotification(
+                builder.Id, builder.Alias!, builder.Name, builder.ProfileId,
+                stopwatch.Elapsed, isSuccess, eventMessages);
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    private async Task<ChatResponse> ExecuteInlineChatAsync(
+        AIChatBuilder builder,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken)
+    {
+        var scopeExisted = _contextAccessor.Context is not null;
+        IAIRuntimeContextScope? createdScope = null;
+
+        try
+        {
+            if (!scopeExisted)
+            {
+                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            await ResolveBuilderAliasesAsync(builder, cancellationToken);
+            builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
+
+            var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
+            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+            var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+
+            return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
+        }
+        finally
+        {
+            createdScope?.Dispose();
+        }
+    }
+
+    private async IAsyncEnumerable<ChatResponseUpdate> StreamInlineChatCoreAsync(
+        AIChatBuilder builder,
+        IEnumerable<ChatMessage> messages,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var scopeExisted = _contextAccessor.Context is not null;
+        IAIRuntimeContextScope? createdScope = null;
+
+        try
+        {
+            if (!scopeExisted)
+            {
+                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            await ResolveBuilderAliasesAsync(builder, cancellationToken);
+            builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
+
+            var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
+            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+            var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+
+            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
+            {
+                yield return update;
+            }
+        }
+        finally
+        {
+            createdScope?.Dispose();
+        }
+    }
+
+    public async Task<IChatClient> CreateChatClientAsync(
+        Action<AIChatBuilder> configure,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var builder = BuildChat(configure);
+
+        // Resolve aliases and profile
+        await ResolveBuilderAliasesAsync(builder, cancellationToken);
+        var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
+
+        // Create the base client with middleware
+        var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+
+        // Wrap in ScopedInlineChatClient for per-call scope management
+        return new ScopedInlineChatClient(chatClient, builder, _contextAccessor, _scopeProvider, _contributors);
+    }
+
+    private static AIChatBuilder BuildChat(Action<AIChatBuilder> configure)
+    {
+        var builder = new AIChatBuilder();
+        configure(builder);
+        builder.Validate();
+        return builder;
+    }
+
+    private async Task<AIProfile> ResolveProfileAsync(Guid? profileId, string? profileAlias, CancellationToken cancellationToken)
+    {
+        // Resolve alias to ID if needed
+        if (!profileId.HasValue && !string.IsNullOrWhiteSpace(profileAlias))
+        {
+            profileId = await _profileService.GetProfileIdByAliasAsync(profileAlias, cancellationToken);
+        }
+
         var profile = profileId.HasValue
             ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
             : await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        
+
         if (profile is null)
         {
             throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
         }
-        
-        EnsureProfileSupportsChat(profile);
 
-        return await _clientFactory.CreateClientAsync(profile, cancellationToken);
+        EnsureProfileSupportsChat(profile);
+        return profile;
     }
+
+    /// <summary>
+    /// Resolves any alias-based references on the builder to their corresponding IDs.
+    /// </summary>
+    private async Task ResolveBuilderAliasesAsync(AIChatBuilder builder, CancellationToken cancellationToken)
+    {
+        if (builder.GuardrailAliases is { Count: > 0 } aliases)
+        {
+            builder.SetResolvedGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
+        }
+    }
+
+
 
     private static ChatOptions MergeOptions(AIProfile profile, ChatOptions? callerOptions)
     {
@@ -160,7 +363,7 @@ internal sealed class AIChatService : IAIChatService
             MaxOutputTokens = chatSettings?.MaxTokens
         };
     }
-    
+
     private void EnsureProfileSupportsChat(AIProfile profile)
     {
         if (profile.Capability != AICapability.Chat)

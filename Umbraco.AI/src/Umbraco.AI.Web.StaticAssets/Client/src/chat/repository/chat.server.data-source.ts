@@ -38,7 +38,7 @@ export class UaiChatServerDataSource {
             data: {
                 message: {
                     role: data.message.role as UaiChatRole,
-                    content: data.message.content,
+                    content: data.message.content ?? "",
                 },
                 finishReason: data.finishReason,
                 usage: data.usage,

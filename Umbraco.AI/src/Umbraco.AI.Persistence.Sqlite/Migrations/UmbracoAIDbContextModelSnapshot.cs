@@ -495,10 +495,6 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<Guid>("ContextId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("TEXT");
@@ -514,6 +510,10 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<string>("ResourceTypeId")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Settings")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("SortOrder")

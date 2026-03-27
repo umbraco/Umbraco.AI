@@ -134,7 +134,7 @@ export default {
         generalLabel: "General",
         advancedLabel: "Advanced",
         featuresLabel: "Features",
-        dataLabel: "Data",
+        settingsLabel: "Settings",
         configLabel: "Configuration",
         contextLabel: "Context",
     },

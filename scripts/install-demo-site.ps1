@@ -39,6 +39,25 @@ if ($Force -and (Test-Path "Umbraco.AI.local.slnx")) {
 # Step 1: Install Umbraco templates
 if (-not $SkipTemplateInstall) {
     Write-Host "Installing Umbraco templates..." -ForegroundColor Green
+
+    # Uninstall all existing versions to avoid conflicts
+    Write-Host "Removing any existing Umbraco.Templates installations..." -ForegroundColor Gray
+    $installedTemplates = dotnet new uninstall 2>&1 | Out-String
+    if ($installedTemplates -match "Umbraco\.Templates") {
+        # Extract all unique Umbraco.Templates entries
+        $templateLines = $installedTemplates -split "`n" | Where-Object { $_ -match "Umbraco\.Templates" }
+        foreach ($line in $templateLines) {
+            if ($line -match "Umbraco\.Templates") {
+                try {
+                    dotnet new uninstall Umbraco.Templates 2>&1 | Out-Null
+                } catch {
+                    # Ignore errors during uninstall
+                }
+            }
+        }
+    }
+
+    # Install latest version
     dotnet new install Umbraco.Templates --force
 }
 
@@ -82,7 +101,7 @@ Copy-Item -Path $composerSourcePath -Destination $composerDestPath -Force
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
-dotnet new sln -n "Umbraco.AI.local" --force --format sln
+dotnet new sln -n "Umbraco.AI.local" --force --format slnx
 
 # Helper function to add all projects from a product's src folder
 function Add-ProductProjects {
@@ -142,6 +161,10 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 
+# Step 10.2: Add Search projects
+Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Search"
+
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
 dotnet sln "Umbraco.AI.local.slnx" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
@@ -199,6 +222,11 @@ if (Test-Path "Umbraco.AI.Agent.UI\src\Umbraco.AI.Agent.UI\Umbraco.AI.Agent.UI.c
 # Agent Copilot add-on (frontend-only static assets)
 if (Test-Path "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj"
+}
+
+# Search add-on (Startup only — no Web.StaticAssets)
+if (Test-Path "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj"
 }
 
 Write-Host ""

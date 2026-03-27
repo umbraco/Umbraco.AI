@@ -49,6 +49,22 @@ public class Constants
             }
 
             /// <summary>
+            /// File storage feature constants.
+            /// </summary>
+            public static class File
+            {
+                /// <summary>
+                /// Route segment for file endpoints.
+                /// </summary>
+                public const string RouteSegment = "files";
+
+                /// <summary>
+                /// Swagger group name for file endpoints.
+                /// </summary>
+                public const string GroupName = "Files";
+            }
+
+            /// <summary>
             /// AIOrchestration feature constants.
             /// </summary>
             public static class Orchestration

@@ -56,6 +56,14 @@ public interface IAIProfileService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks whether a default profile is configured and exists for the specified capability.
+    /// </summary>
+    /// <param name="capability">The capability.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if a default profile is configured and exists, false otherwise.</returns>
+    Task<bool> HasDefaultProfileAsync(AICapability capability, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the default profile for the specified capability.
     /// </summary>
     /// <param name="capability">The capability.</param>

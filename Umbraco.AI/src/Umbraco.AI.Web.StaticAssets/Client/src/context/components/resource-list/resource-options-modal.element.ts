@@ -22,7 +22,7 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
     private _resourceDescription = "";
 
     @state()
-    private _resourceData: Record<string, unknown> = {};
+    private _resourceSettings: Record<string, unknown> = {};
 
     @state()
     private _injectionMode: UaiContextResourceInjectionMode = "Always";
@@ -34,7 +34,7 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         if (this.data?.resource) {
             this._resourceName = this.data.resource.name;
             this._resourceDescription = this.data.resource.description ?? "";
-            this._resourceData = this.data.resource.data ?? {};
+            this._resourceSettings = this.data.resource.settings ?? {};
             this._injectionMode = this.data.resource.injectionMode;
         } else {
             // Default name from resource type
@@ -48,7 +48,7 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         const resource: UaiResourceOptionsData = {
             name: this._resourceName.trim(),
             description: this._resourceDescription.trim() || null,
-            data: this._resourceData,
+            settings: this._resourceSettings,
             injectionMode: this._injectionMode,
         };
 
@@ -68,8 +68,8 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         this._resourceDescription = (e.target as HTMLInputElement).value;
     }
 
-    #onDataChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
-        this._resourceData = e.detail.model;
+    #onSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+        this._resourceSettings = e.detail.model;
     }
 
     #onInjectionModeChange(e: Event) {
@@ -143,10 +143,10 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
                     </uui-box>
 
                     <uai-model-editor
-                        .schema=${this.data?.resourceType?.dataSchema}
-                        .model=${this._resourceData}
-                        @change=${this.#onDataChange}
-                        default-group="#uaiFieldGroups_dataLabel"
+                        .schema=${this.data?.resourceType?.settingsSchema}
+                        .model=${this._resourceSettings}
+                        @change=${this.#onSettingsChange}
+                        default-group="#uaiFieldGroups_settingsLabel"
                         style="margin-top: var(--uui-size-layout-1);"
                     >
                     </uai-model-editor>

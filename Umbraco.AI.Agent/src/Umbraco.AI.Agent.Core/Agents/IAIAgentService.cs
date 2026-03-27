@@ -1,6 +1,10 @@
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Agent.Core.InlineAgents;
 using Umbraco.Cms.Core.Models;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
@@ -139,6 +143,79 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Runs a persisted agent with a one-shot execution, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Orchestrates the complete agent lifecycle: resolves the agent by ID, validates it is active,
+    /// applies execution options (profile/context/permission overrides), publishes notifications,
+    /// and returns the agent response.
+    /// </para>
+    /// </remarks>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent response.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    Task<AgentResponse> RunAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs a persisted agent by alias with a one-shot execution, including notification publishing.
+    /// </summary>
+    /// <param name="agentAlias">The agent alias.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent response.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    Task<AgentResponse> RunAgentAsync(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams a persisted agent execution with M.E.AI types, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Orchestrates the complete agent lifecycle: resolves the agent by ID, validates it is active,
+    /// applies execution options, publishes notifications, and streams agent response updates.
+    /// </para>
+    /// </remarks>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of agent response updates.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams a persisted agent by alias with M.E.AI types, including notification publishing.
+    /// </summary>
+    /// <param name="agentAlias">The agent alias.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of agent response updates.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
+    IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Streams an agent execution with AG-UI events.
     /// </summary>
     /// <remarks>
@@ -158,7 +235,7 @@ public interface IAIAgentService
     /// <param name="frontendTools">Frontend tools with metadata for permission filtering.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
-    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
@@ -173,10 +250,76 @@ public interface IAIAgentService
     /// <param name="options">Options controlling profile and context overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
-    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AIFrontendTool>? frontendTools,
         AIAgentExecutionOptions options,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a reusable inline agent — an agent that runs purely in code without
+    /// being managed through the backoffice UI.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The returned agent participates in the full middleware pipeline (auditing, tracking,
+    /// guardrails, telemetry) and can use profiles and registered tools. It is not persisted
+    /// and does not appear in the backoffice.
+    /// </para>
+    /// <para>
+    /// The agent can be reused for multiple executions — each <c>RunAsync</c> or
+    /// <c>RunStreamingAsync</c> call creates a fresh runtime context scope automatically.
+    /// </para>
+    /// <para>
+    /// <strong>Note:</strong> Calling <c>RunAsync</c>/<c>RunStreamingAsync</c> directly on
+    /// the returned agent does not publish <see cref="AIAgentExecutingNotification"/> or
+    /// <see cref="AIAgentExecutedNotification"/>. Use <see cref="RunAgentAsync"/> or
+    /// <see cref="StreamAgentAsync"/> for notification support.
+    /// </para>
+    /// </remarks>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A MAF <see cref="MsAIAgent"/> ready for use with RunAsync/RunStreamingAsync.</returns>
+    Task<MsAIAgent> CreateInlineAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs an inline agent with a one-shot execution, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a convenience method that creates the inline agent, publishes
+    /// <see cref="AIAgentExecutingNotification"/>, executes the agent, and publishes
+    /// <see cref="AIAgentExecutedNotification"/>.
+    /// </para>
+    /// </remarks>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent response.</returns>
+    Task<AgentResponse> RunAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams an inline agent execution, including notification publishing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a convenience method that creates the inline agent, publishes
+    /// <see cref="AIAgentExecutingNotification"/>, streams the agent execution, and publishes
+    /// <see cref="AIAgentExecutedNotification"/> when complete.
+    /// </para>
+    /// </remarks>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of agent response updates.</returns>
+    IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
+        Action<AIInlineAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);
 }

@@ -10,6 +10,7 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Events.Messages;
+using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
 using Xunit;
@@ -19,21 +20,34 @@ namespace Umbraco.AI.Agent.Tests.Unit.AGUI;
 public class AGUIStreamingServiceTests
 {
     private readonly Mock<IAGUIMessageConverter> _mockConverter;
+    private readonly Mock<IAGUIFileProcessor> _mockFileProcessor;
     private readonly ILogger<AGUIStreamingService> _logger;
     private readonly AGUIStreamingService _service;
 
     public AGUIStreamingServiceTests()
     {
         _mockConverter = new Mock<IAGUIMessageConverter>();
+        _mockFileProcessor = new Mock<IAGUIFileProcessor>();
         _logger = NullLogger<AGUIStreamingService>.Instance;
         _service = new AGUIStreamingService(
             _mockConverter.Object,
+            _mockFileProcessor.Object,
             _logger);
 
         // Default converter setup
         _mockConverter
             .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
             .Returns(new List<ChatMessage>());
+
+        // Default file processor setup (pass-through)
+        _mockFileProcessor
+            .Setup(x => x.ProcessInboundAsync(It.IsAny<IEnumerable<AGUIMessage>?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<AGUIMessage>? msgs, string _, CancellationToken _) =>
+                new AGUIFileProcessorResult
+                {
+                    RewrittenMessages = msgs ?? [],
+                    ResolvedMessages = msgs ?? []
+                });
     }
 
     #region Basic Event Flow Tests
@@ -76,7 +90,7 @@ public class AGUIStreamingServiceTests
         // Act
         var events = await CollectEvents(agent, request);
 
-        // Assert
+        // Assert (RunStarted + RunFinished — no MessagesSnapshot when no files were rewritten)
         events.Count.ShouldBe(2);
         events[0].ShouldBeOfType<RunStartedEvent>();
         events[1].ShouldBeOfType<RunFinishedEvent>();

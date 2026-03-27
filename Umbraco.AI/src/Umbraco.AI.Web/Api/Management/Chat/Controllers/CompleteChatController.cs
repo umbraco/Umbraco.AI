@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Web.Api.Common.Configuration;
@@ -65,14 +66,14 @@ public class CompleteChatController : ChatControllerBase
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
 
             // Get chat response
-            var response = profileId.HasValue
-                ? await _chatService.GetChatResponseAsync(
-                    profileId.Value,
-                    messages,
-                    cancellationToken: cancellationToken)
-                : await _chatService.GetChatResponseAsync(
-                    messages,
-                    cancellationToken: cancellationToken);
+            var response = await _chatService.GetChatResponseAsync(chat =>
+            {
+                chat.WithAlias("management-api-chat");
+                if (profileId.HasValue)
+                {
+                    chat.WithProfile(profileId.Value);
+                }
+            }, messages, cancellationToken);
 
             return Ok(_umbracoMapper.Map<ChatResponseModel>(response));
         }

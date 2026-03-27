@@ -502,10 +502,6 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<Guid>("ContextId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -522,6 +518,10 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Settings")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");

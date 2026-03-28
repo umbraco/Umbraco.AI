@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
@@ -20,6 +21,8 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 internal sealed class AIPromptService : IAIPromptService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
     private readonly IAIPromptRepository _repository;
     private readonly IAIEntityVersionService _versionService;
     private readonly IAIChatService _chatService;
@@ -280,8 +283,19 @@ internal sealed class AIPromptService : IAIPromptService
             messages.Insert(0, new ChatMessage(ChatRole.System, contextContent));
         }
 
-        // 7.5. Inject format instructions for multiple options
-        if (prompt.OptionCount >= 2)
+        // 7.5. Inject format instructions based on option count
+        if (prompt.OptionCount == 1)
+        {
+            var formatInstructions = """
+                IMPORTANT: Return ONLY the requested content value.
+                Do NOT include any preamble, introduction, or explanation before the value.
+                Do NOT include any closing remarks, suggestions, or follow-up text after the value.
+                Do NOT wrap the value in markdown formatting unless the content itself requires it.
+                """;
+
+            messages.Insert(0, new ChatMessage(ChatRole.System, formatInstructions));
+        }
+        else if (prompt.OptionCount >= 2)
         {
             var formatInstructions = $$"""
                 IMPORTANT: Return your response as a JSON object with an "options" array containing {{prompt.OptionCount}} options.
@@ -290,35 +304,27 @@ internal sealed class AIPromptService : IAIPromptService
                 - "value": The actual content
                 - "description": Optional brief explanation
 
-                Example format:
-                ```json
-                {
-                  "options": [
-                    {
-                      "label": "Formal Tone",
-                      "value": "The content in formal style...",
-                      "description": "Professional and business-appropriate"
-                    },
-                    {
-                      "label": "Casual Style",
-                      "value": "The content in casual style...",
-                      "description": "Friendly and conversational"
-                    }
-                  ]
-                }
-                ```
-
                 Generate exactly {{prompt.OptionCount}} distinct options for the user to choose from.
                 """;
 
             messages.Insert(0, new ChatMessage(ChatRole.System, formatInstructions));
         }
 
-        // 8. Create ChatOptions with PromptId for context resolution, feature tracking, and system tools
+        // 8. Create ChatOptions with PromptId for context resolution, feature tracking, system tools, and structured output
         var chatOptions = new ChatOptions
         {
             Tools = _tools.ToSystemToolFunctions(_functionFactory).Cast<AITool>().ToList(),
-            ToolMode = ChatToolMode.Auto
+            ToolMode = ChatToolMode.Auto,
+            ResponseFormat = prompt.OptionCount switch
+            {
+                1 => ChatResponseFormat.ForJsonSchema<SingleValueResponse>(
+                    schemaName: "single_value",
+                    schemaDescription: "A single content value without any preamble or postamble"),
+                >= 2 => ChatResponseFormat.ForJsonSchema<MultiOptionResponse>(
+                    schemaName: "multi_option",
+                    schemaDescription: "Multiple distinct content options for the user to choose from"),
+                _ => null
+            }
         };
 
         // 10. Execute via chat service — use profile override if provided
@@ -347,36 +353,17 @@ internal sealed class AIPromptService : IAIPromptService
                 ResultOptions = [] // Empty array for informational
             },
 
-            1 => new AIPromptExecutionResult
-            {
-                Content = responseText,
-                Usage = response.Usage,
-                Messages = messages,
-                ResultOptions = [
-                    new AIPromptExecutionResult.AIPromptResultOption
-                    {
-                        Label = "Result",
-                        DisplayValue = responseText,
-                        Description = null,
-                        ValueChange = new AIValueChange
-                        {
-                            Path = request.PropertyAlias,
-                            Value = responseText,
-                            Culture = request.Culture,
-                            Segment = request.Segment
-                        }
-                    }
-                ]
-            },
+            1 => BuildSingleValueResult(responseText, response.Usage, messages, request),
 
-            >= 2 => await ParseMultipleResultResponseWithRetryAsync(
-                prompt,
-                messages,
-                chatOptions,
-                responseText,
-                response.Usage,
-                request,
-                cancellationToken),
+            >= 2 => BuildMultiOptionResult(responseText, response.Usage, messages, request)
+                ?? await ParseMultipleResultResponseWithRetryAsync(
+                    prompt,
+                    messages,
+                    chatOptions,
+                    responseText,
+                    response.Usage,
+                    request,
+                    cancellationToken),
 
             _ => throw new InvalidOperationException($"Invalid option count: {prompt.OptionCount}")
         };
@@ -412,6 +399,105 @@ internal sealed class AIPromptService : IAIPromptService
         }
 
         return context;
+    }
+
+    /// <summary>
+    /// Builds a single-value result, attempting to extract the value from structured JSON output.
+    /// Falls back to using the raw response text if the provider did not return structured JSON.
+    /// </summary>
+    private static AIPromptExecutionResult BuildSingleValueResult(
+        string responseText,
+        UsageDetails? usage,
+        IReadOnlyList<ChatMessage> messages,
+        AIPromptExecutionRequest request)
+    {
+        var displayValue = TryDeserializeSingleValue(responseText) ?? responseText;
+
+        return new AIPromptExecutionResult
+        {
+            Content = responseText,
+            Usage = usage,
+            Messages = messages,
+            ResultOptions =
+            [
+                new AIPromptExecutionResult.AIPromptResultOption
+                {
+                    Label = "Result",
+                    DisplayValue = displayValue,
+                    Description = null,
+                    ValueChange = new AIValueChange
+                    {
+                        Path = request.PropertyAlias,
+                        Value = displayValue,
+                        Culture = request.Culture,
+                        Segment = request.Segment
+                    }
+                }
+            ]
+        };
+    }
+
+    /// <summary>
+    /// Attempts to deserialize a structured single-value response.
+    /// Returns the extracted value, or null if the response is not valid structured JSON.
+    /// </summary>
+    internal static string? TryDeserializeSingleValue(string responseText)
+    {
+        try
+        {
+            var response = JsonSerializer.Deserialize<SingleValueResponse>(responseText, JsonOptions);
+            return response?.Value;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to build a multi-option result from structured JSON output.
+    /// Returns null if the response is not valid structured JSON, allowing fallback to retry-based parsing.
+    /// </summary>
+    internal static AIPromptExecutionResult? BuildMultiOptionResult(
+        string responseText,
+        UsageDetails? usage,
+        IReadOnlyList<ChatMessage> messages,
+        AIPromptExecutionRequest request)
+    {
+        try
+        {
+            var response = JsonSerializer.Deserialize<MultiOptionResponse>(responseText, JsonOptions);
+            if (response?.Options is not { Count: > 0 })
+            {
+                return null;
+            }
+
+            var resultOptions = response.Options.Select(option => new AIPromptExecutionResult.AIPromptResultOption
+            {
+                Label = option.Label,
+                DisplayValue = option.Value,
+                Description = option.Description,
+                ValueChange = new AIValueChange
+                {
+                    Path = request.PropertyAlias,
+                    Value = option.Value,
+                    Culture = request.Culture,
+                    Segment = request.Segment
+                }
+            }).ToList();
+
+            return new AIPromptExecutionResult
+            {
+                Content = responseText,
+                Usage = usage,
+                Messages = messages.ToList(),
+                ResultOptions = resultOptions
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     /// <summary>

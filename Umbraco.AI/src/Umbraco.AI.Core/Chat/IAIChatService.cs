@@ -115,6 +115,35 @@ public interface IAIChatService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a structured chat response using an inline chat builder, requesting the
+    /// response match type <typeparamref name="T"/>. Delegates to M.E.AI's structured
+    /// output extensions which handle schema generation, response format negotiation,
+    /// and deserialization.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Use <see cref="ChatResponse{T}.TryGetResult"/> for safe access when the provider
+    /// may not honor structured output, or <see cref="ChatResponse{T}.Result"/> when
+    /// structured output is expected to succeed. The raw response text is always available
+    /// via <see cref="ChatResponse.Text"/>.
+    /// </para>
+    /// <para>
+    /// Callers should NOT set <see cref="ChatOptions.ResponseFormat"/> via
+    /// <see cref="InlineChat.AIChatBuilder.WithChatOptions"/> — the structured output
+    /// extension sets it automatically based on <typeparamref name="T"/>.
+    /// </para>
+    /// </remarks>
+    /// <typeparam name="T">The type of structured output to request.</typeparam>
+    /// <param name="configure">Action to configure the inline chat via the builder.</param>
+    /// <param name="messages">The chat messages to send.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A typed chat response that can be deserialized to <typeparamref name="T"/>.</returns>
+    Task<ChatResponse<T>> GetStructuredResponseAsync<T>(
+        Action<AIChatBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a reusable inline chat client with scope management per-call.
     /// </summary>
     /// <remarks>

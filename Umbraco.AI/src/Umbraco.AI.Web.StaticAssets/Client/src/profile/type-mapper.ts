@@ -11,8 +11,9 @@ import type {
     UaiProfileSettings,
     UaiChatProfileSettings,
     UaiEmbeddingProfileSettings,
+    UaiSpeechToTextProfileSettings,
 } from "./types.js";
-import { isChatSettings, isEmbeddingSettings } from "./types.js";
+import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
@@ -100,6 +101,13 @@ export const UaiProfileTypeMapper = {
             } as UaiEmbeddingProfileSettings;
         }
 
+        if (type === "speechToText") {
+            return {
+                $type: "speechToText",
+                language: (settings.language as string) ?? null,
+            } as UaiSpeechToTextProfileSettings;
+        }
+
         return null;
     },
 
@@ -128,6 +136,13 @@ export const UaiProfileTypeMapper = {
                 $type: "embedding",
                 dimensions: settings.dimensions,
             } as unknown as EmbeddingProfileSettingsModel;
+        }
+
+        if (isSpeechToTextSettings(settings)) {
+            return {
+                $type: "speechToText",
+                language: settings.language,
+            } as unknown as EmbeddingProfileSettingsModel; // Cast through generated type until regenerated
         }
 
         return null;

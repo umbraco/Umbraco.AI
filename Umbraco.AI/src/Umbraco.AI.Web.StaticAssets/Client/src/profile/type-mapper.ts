@@ -3,6 +3,7 @@ import type {
     ProfileItemResponseModel,
     ChatProfileSettingsModel,
     EmbeddingProfileSettingsModel,
+    SpeechToTextProfileSettingsModel,
 } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
 import type {
@@ -17,9 +18,6 @@ import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings } from "./t
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
-        // Note: Cast to access version until API client is regenerated
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const version = (response as any).version as number | undefined;
         return {
             unique: response.id,
             entityType: UAI_PROFILE_ENTITY_TYPE,
@@ -32,7 +30,7 @@ export const UaiProfileTypeMapper = {
             tags: response.tags ?? [],
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
-            version: version ?? 1,
+            version: response.version ?? 1,
         };
     },
 
@@ -74,37 +72,37 @@ export const UaiProfileTypeMapper = {
     /**
      * Maps API response settings to internal model.
      * The API uses polymorphic JSON with $type discriminator.
-     * Note: Uses 'any' cast because generated types may not include 'settings' until regenerated.
      */
     mapResponseSettings(response: ProfileResponseModel): UaiProfileSettings | null {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const settings = (response as any).settings as Record<string, unknown> | undefined;
+        const settings = response.settings;
         if (!settings) return null;
 
-        // The API returns settings with $type discriminator
-        const type = settings.$type as string;
+        const type = settings.$type;
         if (type === "chat") {
+            const chat = settings as ChatProfileSettingsModel;
             return {
                 $type: "chat",
-                temperature: (settings.temperature as number) ?? null,
-                maxTokens: (settings.maxTokens as number) ?? null,
-                systemPromptTemplate: (settings.systemPromptTemplate as string) ?? null,
-                contextIds: (settings.contextIds as string[] | undefined) ?? [],
-                guardrailIds: (settings.guardrailIds as string[] | undefined) ?? [],
+                temperature: chat.temperature ?? null,
+                maxTokens: chat.maxTokens ?? null,
+                systemPromptTemplate: chat.systemPromptTemplate ?? null,
+                contextIds: chat.contextIds ?? [],
+                guardrailIds: chat.guardrailIds ?? [],
             } as UaiChatProfileSettings;
         }
 
         if (type === "embedding") {
+            const embedding = settings as EmbeddingProfileSettingsModel;
             return {
                 $type: "embedding",
-                dimensions: (settings.dimensions as number) ?? null,
+                dimensions: embedding.dimensions ?? null,
             } as UaiEmbeddingProfileSettings;
         }
 
         if (type === "speechToText") {
+            const stt = settings as SpeechToTextProfileSettingsModel;
             return {
                 $type: "speechToText",
-                language: (settings.language as string) ?? null,
+                language: stt.language ?? null,
             } as UaiSpeechToTextProfileSettings;
         }
 
@@ -116,11 +114,10 @@ export const UaiProfileTypeMapper = {
      */
     mapRequestSettings(
         settings: UaiProfileSettings | null,
-    ): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null {
+    ): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null {
         if (!settings) return null;
 
         if (isChatSettings(settings)) {
-            // Note: Uses 'unknown' cast because guardrailIds is not in the generated ChatProfileSettingsModel yet
             return {
                 $type: "chat",
                 temperature: settings.temperature,
@@ -128,21 +125,21 @@ export const UaiProfileTypeMapper = {
                 systemPromptTemplate: settings.systemPromptTemplate,
                 contextIds: settings.contextIds,
                 guardrailIds: settings.guardrailIds,
-            } as unknown as ChatProfileSettingsModel;
+            } as ChatProfileSettingsModel;
         }
 
         if (isEmbeddingSettings(settings)) {
             return {
                 $type: "embedding",
                 dimensions: settings.dimensions,
-            } as unknown as EmbeddingProfileSettingsModel;
+            } as EmbeddingProfileSettingsModel;
         }
 
         if (isSpeechToTextSettings(settings)) {
             return {
                 $type: "speechToText",
                 language: settings.language,
-            } as unknown as EmbeddingProfileSettingsModel; // Cast through generated type until regenerated
+            } as SpeechToTextProfileSettingsModel;
         }
 
         return null;

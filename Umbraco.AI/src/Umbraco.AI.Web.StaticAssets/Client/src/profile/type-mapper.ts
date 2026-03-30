@@ -77,8 +77,7 @@ export const UaiProfileTypeMapper = {
         const settings = response.settings;
         if (!settings) return null;
 
-        const type = settings.$type;
-        if (type === "chat") {
+        if (settings.$type === "chat") {
             const chat = settings as ChatProfileSettingsModel;
             return {
                 $type: "chat",
@@ -90,7 +89,7 @@ export const UaiProfileTypeMapper = {
             } as UaiChatProfileSettings;
         }
 
-        if (type === "embedding") {
+        if (settings.$type === "embedding") {
             const embedding = settings as EmbeddingProfileSettingsModel;
             return {
                 $type: "embedding",
@@ -98,7 +97,7 @@ export const UaiProfileTypeMapper = {
             } as UaiEmbeddingProfileSettings;
         }
 
-        if (type === "speechToText") {
+        if (settings.$type === "speechToText") {
             const stt = settings as SpeechToTextProfileSettingsModel;
             return {
                 $type: "speechToText",

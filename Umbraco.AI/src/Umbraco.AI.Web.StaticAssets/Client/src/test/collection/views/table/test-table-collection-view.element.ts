@@ -38,7 +38,6 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
         { name: "Name", alias: "name" },
         { name: "Alias", alias: "alias" },
         { name: "Feature", alias: "testFeature" },
-        { name: "Tags", alias: "tags" },
         { name: "Run Count", alias: "runCount" },
         { name: "Modified", alias: "dateModified" },
         { name: "", alias: "entityActions", align: "right" },
@@ -90,12 +89,6 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "testFeature",
                     value: item.testFeatureId,
-                },
-                {
-                    columnAlias: "tags",
-                    value: item.tags.length > 0
-                        ? html`${item.tags.map(tag => html`<uui-tag size="s">${tag}</uui-tag> `)}`
-                        : "-",
                 },
                 {
                     columnAlias: "runCount",

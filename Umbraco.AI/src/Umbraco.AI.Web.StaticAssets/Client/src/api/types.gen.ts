@@ -198,7 +198,7 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
     tags: Array<string>;
 };
 
@@ -400,7 +400,7 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -449,6 +449,11 @@ export type SettingsResponseModel = {
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
+};
+
+export type SpeechToTextProfileSettingsModel = ProfileSettingsModel & {
+    $type: string;
+    language?: string | null;
 };
 
 export type SpeechToTextResponseModel = {
@@ -725,7 +730,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
     tags: Array<string>;
 };
 

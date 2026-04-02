@@ -10,6 +10,7 @@ export class UaiSettingsRepository {
         return {
             defaultChatProfileId: data?.defaultChatProfileId ?? null,
             defaultEmbeddingProfileId: data?.defaultEmbeddingProfileId ?? null,
+            defaultSpeechToTextProfileId: data?.defaultSpeechToTextProfileId ?? null,
             classifierChatProfileId: data?.classifierChatProfileId ?? null,
         };
     }
@@ -19,12 +20,14 @@ export class UaiSettingsRepository {
             body: {
                 defaultChatProfileId: model.defaultChatProfileId ?? undefined,
                 defaultEmbeddingProfileId: model.defaultEmbeddingProfileId ?? undefined,
+                defaultSpeechToTextProfileId: model.defaultSpeechToTextProfileId ?? undefined,
                 classifierChatProfileId: model.classifierChatProfileId ?? undefined,
             },
         });
         return {
             defaultChatProfileId: data?.defaultChatProfileId ?? null,
             defaultEmbeddingProfileId: data?.defaultEmbeddingProfileId ?? null,
+            defaultSpeechToTextProfileId: data?.defaultSpeechToTextProfileId ?? null,
             classifierChatProfileId: data?.classifierChatProfileId ?? null,
         };
     }

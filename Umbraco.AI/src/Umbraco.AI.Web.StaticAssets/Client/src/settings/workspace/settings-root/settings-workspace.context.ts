@@ -28,6 +28,7 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
     #model = new UmbObjectState<UaiSettingsModel>({
         defaultChatProfileId: null,
         defaultEmbeddingProfileId: null,
+        defaultSpeechToTextProfileId: null,
         classifierChatProfileId: null,
     });
     readonly model = this.#model.asObservable();

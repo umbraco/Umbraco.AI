@@ -10,6 +10,7 @@ using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.SpeechToText;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Cache;
@@ -76,6 +77,22 @@ public class ServiceResolutionTests : IDisposable
     public void IAIChatClientFactory_CanBeResolved()
     {
         var factory = _serviceProvider.GetService<IAIChatClientFactory>();
+
+        factory.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IAISpeechToTextService_CanBeResolved()
+    {
+        var service = _serviceProvider.GetService<IAISpeechToTextService>();
+
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IAISpeechToTextClientFactory_CanBeResolved()
+    {
+        var factory = _serviceProvider.GetService<IAISpeechToTextClientFactory>();
 
         factory.ShouldNotBeNull();
     }
@@ -178,6 +195,16 @@ public class ServiceResolutionTests : IDisposable
         capability.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void AIProviderCollection_CanGetSpeechToTextCapabilityFromProvider()
+    {
+        var providers = _serviceProvider.GetRequiredService<AIProviderCollection>();
+
+        var capability = providers.GetCapability<IAISpeechToTextCapability>("fake-provider");
+
+        capability.ShouldNotBeNull();
+    }
+
     #endregion
 
     /// <summary>
@@ -200,7 +227,8 @@ public class ServiceResolutionTests : IDisposable
         // Register a fake provider (in real scenario, these are auto-discovered)
         var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability()
-            .WithEmbeddingCapability();
+            .WithEmbeddingCapability()
+            .WithSpeechToTextCapability();
         services.AddSingleton<IAIProvider>(fakeProvider);
 
         // Create provider collection from registered providers
@@ -215,6 +243,8 @@ public class ServiceResolutionTests : IDisposable
             _ => new AIChatMiddlewareCollection(() => Enumerable.Empty<IAIChatMiddleware>()));
         services.AddSingleton<AIEmbeddingMiddlewareCollection>(
             _ => new AIEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAIEmbeddingMiddleware>()));
+        services.AddSingleton<AISpeechToTextMiddlewareCollection>(
+            _ => new AISpeechToTextMiddlewareCollection(() => Enumerable.Empty<IAISpeechToTextMiddleware>()));
 
         // Runtime context infrastructure
         services.AddHttpContextAccessor();
@@ -258,9 +288,11 @@ public class ServiceResolutionTests : IDisposable
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
+        services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();
+        services.AddSingleton<IAISpeechToTextService, AISpeechToTextService>();
 
         // Required for options
         services.AddLogging();

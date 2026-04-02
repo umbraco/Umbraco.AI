@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
+
+#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -64,6 +67,21 @@ public interface IAIChatCapability : IAICapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>
     Task<IChatClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Defines an AI capability for speech-to-text transcription.
+/// </summary>
+public interface IAISpeechToTextCapability : IAICapability
+{
+    /// <summary>
+    /// Creates a speech-to-text client with the provided settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings (e.g., API key).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    Task<ISpeechToTextClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -287,5 +305,80 @@ public abstract class AIEmbeddingCapabilityBase<TSettings>(IAIProvider provider)
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
         return CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI speech-to-text capability.
+/// </summary>
+public abstract class AISpeechToTextCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAISpeechToTextCapability
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.SpeechToText;
+
+    /// <summary>
+    /// Creates a speech-to-text client with the specified model.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    protected virtual ISpeechToTextClient CreateClient(string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by speech-to-text capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a speech-to-text client with the specified model, asynchronously.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    protected virtual Task<ISpeechToTextClient> CreateClientAsync(string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(modelId));
+    }
+
+    Task<ISpeechToTextClient> IAISpeechToTextCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(modelId, cancellationToken);
+}
+
+/// <summary>
+/// Base implementation of an AI speech-to-text capability with specific settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
+public abstract class AISpeechToTextCapabilityBase<TSettings>(IAIProvider provider) : AICapabilityBase<TSettings>(provider), IAICapability<TSettings>, IAISpeechToTextCapability
+    where TSettings : class
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.SpeechToText;
+
+    /// <summary>
+    /// Creates a speech-to-text client with the provided settings and model.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    protected virtual ISpeechToTextClient CreateClient(TSettings settings, string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by speech-to-text capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a speech-to-text client with the provided settings and model, asynchronously.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    protected virtual Task<ISpeechToTextClient> CreateClientAsync(TSettings settings, string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(settings, modelId));
+    }
+
+    /// <inheritdoc />
+    Task<ISpeechToTextClient> IAISpeechToTextCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        return CreateClientAsync((TSettings)settings, modelId, cancellationToken);
     }
 }

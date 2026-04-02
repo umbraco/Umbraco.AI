@@ -116,7 +116,7 @@ fi
 INCLUDE_FILE="$GIT_ROOT/.worktreeinclude"
 
 if [[ -f "$INCLUDE_FILE" ]]; then
-  file_list=$(git -C "$GIT_ROOT" ls-files --others --ignored --exclude-from="$INCLUDE_FILE" 2>/dev/null)
+  file_list=$(git -C "$GIT_ROOT" ls-files --others --ignored --exclude-from="$INCLUDE_FILE" 2>/dev/null) || true
 
   if [[ -z "$file_list" ]]; then
     echo "No files matched .worktreeinclude patterns" >&2
@@ -125,9 +125,11 @@ if [[ -f "$INCLUDE_FILE" ]]; then
     echo "Copying $count file(s) from .worktreeinclude..." >&2
 
     # Bulk copy via tar (fast even for thousands of files, handles paths with spaces)
+    # Non-fatal: file copy is nice-to-have, must not prevent path output to stdout
     git -C "$GIT_ROOT" ls-files -z --others --ignored --exclude-from="$INCLUDE_FILE" 2>/dev/null | \
       tar -C "$GIT_ROOT" --null -T - -cf - 2>/dev/null | \
-      tar -C "$WORKTREE_PATH" -xf - 2>/dev/null
+      tar -C "$WORKTREE_PATH" -xf - 2>/dev/null || \
+      echo "Warning: some files could not be copied" >&2
 
     # Summary: group by top-level directory, show root files individually
     echo "$file_list" | awk -F/ '{print ($2 ? $1"/" : $0)}' | sort | uniq -c | \
@@ -137,7 +139,7 @@ if [[ -f "$INCLUDE_FILE" ]]; then
         else
           echo "  + $path ($cnt files)" >&2
         fi
-      done
+      done || true
   fi
 else
   echo "No .worktreeinclude file found - skipping file copy" >&2

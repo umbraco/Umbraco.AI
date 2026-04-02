@@ -138,7 +138,7 @@ public interface IAIChatService
     /// <param name="messages">The chat messages to send.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A typed chat response that can be deserialized to <typeparamref name="T"/>.</returns>
-    Task<ChatResponse<T>> GetStructuredResponseAsync<T>(
+    Task<ChatResponse<T>> GetStructuredChatResponseAsync<T>(
         Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);

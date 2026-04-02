@@ -201,7 +201,7 @@ internal sealed class AIChatService : IAIChatService
         }
     }
 
-    public async Task<ChatResponse<T>> GetStructuredResponseAsync<T>(
+    public async Task<ChatResponse<T>> GetStructuredChatResponseAsync<T>(
         Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default)

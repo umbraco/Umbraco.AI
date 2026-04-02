@@ -350,7 +350,7 @@ internal sealed class AIPromptService : IAIPromptService
 
             case 1:
             {
-                var response = await _chatService.GetStructuredResponseAsync<SingleValueResponse>(
+                var response = await _chatService.GetStructuredChatResponseAsync<SingleValueResponse>(
                     ConfigureChat, messages, cancellationToken);
                 var responseText = response.Text ?? string.Empty;
 
@@ -382,7 +382,7 @@ internal sealed class AIPromptService : IAIPromptService
 
             case >= 2:
             {
-                var response = await _chatService.GetStructuredResponseAsync<MultiOptionResponse>(
+                var response = await _chatService.GetStructuredChatResponseAsync<MultiOptionResponse>(
                     ConfigureChat, messages, cancellationToken);
                 var responseText = response.Text ?? string.Empty;
 

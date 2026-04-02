@@ -55,8 +55,19 @@ else
 fi
 
 WORKTREE_DIR="$GIT_ROOT/.claude/worktrees"
-WORKTREE_PATH="$WORKTREE_DIR/$NAME"
-BRANCH_NAME="feature/$NAME"
+
+# --- Determine branch name and worktree directory name ---
+# If name contains a slash, treat as an explicit branch name (e.g., PR checkout).
+# Otherwise, prefix with feature/ (gitflow convention for new work).
+# The directory name flattens slashes to dashes to avoid nested directories.
+if [[ "$NAME" == */* ]]; then
+  BRANCH_NAME="$NAME"
+  WORKTREE_SLUG="${NAME//\//-}"
+else
+  BRANCH_NAME="feature/$NAME"
+  WORKTREE_SLUG="$NAME"
+fi
+WORKTREE_PATH="$WORKTREE_DIR/$WORKTREE_SLUG"
 
 # --- Ensure .claude/worktrees is in .gitignore ---
 if ! grep -qF '.claude/worktrees' "$GIT_ROOT/.gitignore" 2>/dev/null; then
@@ -88,8 +99,11 @@ mkdir -p "$WORKTREE_DIR"
 if [[ -d "$WORKTREE_PATH" ]]; then
   echo "Worktree already exists: $WORKTREE_PATH" >&2
 elif git show-ref --verify --quiet "refs/heads/$BRANCH_NAME" 2>/dev/null; then
-  echo "Using existing branch: $BRANCH_NAME" >&2
+  echo "Using existing local branch: $BRANCH_NAME" >&2
   git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" >&2
+elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH_NAME" 2>/dev/null; then
+  echo "Tracking remote branch: origin/$BRANCH_NAME" >&2
+  git worktree add --track -b "$BRANCH_NAME" "$WORKTREE_PATH" "origin/$BRANCH_NAME" >&2
 else
   echo "Creating branch: $BRANCH_NAME (from origin/$DEFAULT_BRANCH)" >&2
   git worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH" "origin/$DEFAULT_BRANCH" >&2
@@ -134,4 +148,5 @@ fi
 # On Windows: /d/Work/... -> D:\Work\...
 # On Unix: passes through unchanged.
 ABSOLUTE_PATH=$(cd "$WORKTREE_PATH" && pwd)
+echo "Worktree ready: $BRANCH_NAME -> $WORKTREE_SLUG" >&2
 echo "$(to_native_path "$ABSOLUTE_PATH")"

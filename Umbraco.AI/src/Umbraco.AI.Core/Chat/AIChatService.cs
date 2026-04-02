@@ -201,6 +201,83 @@ internal sealed class AIChatService : IAIChatService
         }
     }
 
+    public async Task<ChatResponse<T>> GetStructuredChatResponseAsync<T>(
+        Action<AIChatBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var builder = BuildChat(configure);
+
+        // Pass-through mode: skip notifications and duration tracking.
+        if (builder.IsPassThrough)
+        {
+            return await ExecuteStructuredChatAsync<T>(builder, messages, cancellationToken);
+        }
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIChatExecutingNotification(
+            builder.Id, builder.Alias!, builder.Name, builder.ProfileId, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Inline chat execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var response = await ExecuteStructuredChatAsync<T>(builder, messages, cancellationToken);
+            isSuccess = true;
+            return response;
+        }
+        finally
+        {
+            var executedNotification = new AIChatExecutedNotification(
+                builder.Id, builder.Alias!, builder.Name, builder.ProfileId,
+                stopwatch.Elapsed, isSuccess, eventMessages);
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    private async Task<ChatResponse<T>> ExecuteStructuredChatAsync<T>(
+        AIChatBuilder builder,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken)
+    {
+        var scopeExisted = _contextAccessor.Context is not null;
+        IAIRuntimeContextScope? createdScope = null;
+
+        try
+        {
+            if (!scopeExisted)
+            {
+                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            await ResolveBuilderAliasesAsync(builder, cancellationToken);
+            builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
+
+            var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
+            var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+            var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+
+            return await chatClient.GetResponseAsync<T>(messages.ToList(), mergedOptions, cancellationToken: cancellationToken);
+        }
+        finally
+        {
+            createdScope?.Dispose();
+        }
+    }
+
     private async Task<ChatResponse> ExecuteInlineChatAsync(
         AIChatBuilder builder,
         IEnumerable<ChatMessage> messages,

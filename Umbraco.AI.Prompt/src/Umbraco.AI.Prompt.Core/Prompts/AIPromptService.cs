@@ -280,8 +280,21 @@ internal sealed class AIPromptService : IAIPromptService
             messages.Insert(0, new ChatMessage(ChatRole.System, contextContent));
         }
 
-        // 7.5. Inject format instructions for multiple options
-        if (prompt.OptionCount >= 2)
+        // 7.5. Inject format instructions based on option count.
+        // Inserted AFTER context messages so they appear closest to the user message,
+        // which makes LLMs more likely to follow them.
+        if (prompt.OptionCount == 1)
+        {
+            var formatInstructions = """
+                IMPORTANT: Return ONLY the requested content value.
+                Do NOT include any preamble, introduction, or explanation before the value.
+                Do NOT include any closing remarks, suggestions, or follow-up text after the value.
+                Do NOT wrap the value in markdown formatting unless the content itself requires it.
+                """;
+
+            messages.Add(new ChatMessage(ChatRole.System, formatInstructions));
+        }
+        else if (prompt.OptionCount >= 2)
         {
             var formatInstructions = $$"""
                 IMPORTANT: Return your response as a JSON object with an "options" array containing {{prompt.OptionCount}} options.
@@ -290,28 +303,10 @@ internal sealed class AIPromptService : IAIPromptService
                 - "value": The actual content
                 - "description": Optional brief explanation
 
-                Example format:
-                ```json
-                {
-                  "options": [
-                    {
-                      "label": "Formal Tone",
-                      "value": "The content in formal style...",
-                      "description": "Professional and business-appropriate"
-                    },
-                    {
-                      "label": "Casual Style",
-                      "value": "The content in casual style...",
-                      "description": "Friendly and conversational"
-                    }
-                  ]
-                }
-                ```
-
                 Generate exactly {{prompt.OptionCount}} distinct options for the user to choose from.
                 """;
 
-            messages.Insert(0, new ChatMessage(ChatRole.System, formatInstructions));
+            messages.Add(new ChatMessage(ChatRole.System, formatInstructions));
         }
 
         // 8. Create ChatOptions with PromptId for context resolution, feature tracking, and system tools
@@ -321,9 +316,8 @@ internal sealed class AIPromptService : IAIPromptService
             ToolMode = ChatToolMode.Auto
         };
 
-        // 10. Execute via chat service — use profile override if provided
         var profileId = options.ProfileIdOverride ?? prompt.ProfileId;
-        var response = await _chatService.GetChatResponseAsync(chat =>
+        void ConfigureChat(AIChatBuilder chat)
         {
             chat.WithAlias($"prompt-{prompt.Alias}")
                 .WithChatOptions(chatOptions)
@@ -332,54 +326,101 @@ internal sealed class AIPromptService : IAIPromptService
             {
                 chat.WithProfile(profileId.Value);
             }
-        }, messages, cancellationToken);
+        }
 
-        var responseText = response.Text ?? string.Empty;
+        // 10. Execute and build result based on option count.
+        // For OptionCount 1 and 2+, use structured output via GetStructuredResponseAsync<T>
+        // which delegates to M.E.AI's structured output extensions (schema, ResponseFormat, deserialization).
+        AIPromptExecutionResult result;
 
-        // 11. Build ResultOptions based on option count
-        var result = prompt.OptionCount switch
+        switch (prompt.OptionCount)
         {
-            0 => new AIPromptExecutionResult
+            case 0:
             {
-                Content = responseText,
-                Usage = response.Usage,
-                Messages = messages,
-                ResultOptions = [] // Empty array for informational
-            },
+                var response = await _chatService.GetChatResponseAsync(ConfigureChat, messages, cancellationToken);
+                result = new AIPromptExecutionResult
+                {
+                    Content = response.Text ?? string.Empty,
+                    Usage = response.Usage,
+                    Messages = messages,
+                    ResultOptions = [] // Empty array for informational
+                };
+                break;
+            }
 
-            1 => new AIPromptExecutionResult
+            case 1:
             {
-                Content = responseText,
-                Usage = response.Usage,
-                Messages = messages,
-                ResultOptions = [
-                    new AIPromptExecutionResult.AIPromptResultOption
-                    {
-                        Label = "Result",
-                        DisplayValue = responseText,
-                        Description = null,
-                        ValueChange = new AIValueChange
+                var response = await _chatService.GetStructuredChatResponseAsync<SingleValueResponse>(
+                    ConfigureChat, messages, cancellationToken);
+                var responseText = response.Text ?? string.Empty;
+
+                var displayValue = response.TryGetResult(out var parsed) ? parsed.Value : responseText;
+                result = new AIPromptExecutionResult
+                {
+                    Content = responseText,
+                    Usage = response.Usage,
+                    Messages = messages,
+                    ResultOptions =
+                    [
+                        new AIPromptExecutionResult.AIPromptResultOption
                         {
-                            Path = request.PropertyAlias,
-                            Value = responseText,
-                            Culture = request.Culture,
-                            Segment = request.Segment
+                            Label = "Result",
+                            DisplayValue = displayValue,
+                            Description = null,
+                            ValueChange = new AIValueChange
+                            {
+                                Path = request.PropertyAlias,
+                                Value = displayValue,
+                                Culture = request.Culture,
+                                Segment = request.Segment
+                            }
                         }
-                    }
-                ]
-            },
+                    ]
+                };
+                break;
+            }
 
-            >= 2 => await ParseMultipleResultResponseWithRetryAsync(
-                prompt,
-                messages,
-                chatOptions,
-                responseText,
-                response.Usage,
-                request,
-                cancellationToken),
+            case >= 2:
+            {
+                var response = await _chatService.GetStructuredChatResponseAsync<MultiOptionResponse>(
+                    ConfigureChat, messages, cancellationToken);
+                var responseText = response.Text ?? string.Empty;
 
-            _ => throw new InvalidOperationException($"Invalid option count: {prompt.OptionCount}")
-        };
+                if (response.TryGetResult(out var parsed) && parsed.Options is { Count: > 0 })
+                {
+                    result = new AIPromptExecutionResult
+                    {
+                        Content = responseText,
+                        Usage = response.Usage,
+                        Messages = messages,
+                        ResultOptions = parsed.Options.Select(option => new AIPromptExecutionResult.AIPromptResultOption
+                        {
+                            Label = option.Label,
+                            DisplayValue = option.Value,
+                            Description = option.Description,
+                            ValueChange = new AIValueChange
+                            {
+                                Path = request.PropertyAlias,
+                                Value = option.Value,
+                                Culture = request.Culture,
+                                Segment = request.Segment
+                            }
+                        }).ToList()
+                    };
+                }
+                else
+                {
+                    // Structured output not honored — fall back to retry-based parsing
+                    result = await ParseMultipleResultResponseWithRetryAsync(
+                        prompt, messages, chatOptions, responseText,
+                        response.Usage, request, cancellationToken);
+                }
+                break;
+            }
+
+            default:
+                throw new InvalidOperationException($"Invalid option count: {prompt.OptionCount}");
+        }
 
         // Publish executed notification (after execution)
         var executedNotification = new AIPromptExecutedNotification(prompt, request, result, eventMessages)

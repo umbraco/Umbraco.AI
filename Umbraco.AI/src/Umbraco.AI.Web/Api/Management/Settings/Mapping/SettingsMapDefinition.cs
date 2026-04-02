@@ -25,6 +25,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultChatProfileId = source.DefaultChatProfileId;
         target.DefaultEmbeddingProfileId = source.DefaultEmbeddingProfileId;
         target.ClassifierChatProfileId = source.ClassifierChatProfileId;
+        target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
     }
 
     // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
@@ -33,5 +34,6 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultChatProfileId = source.DefaultChatProfileId;
         target.DefaultEmbeddingProfileId = source.DefaultEmbeddingProfileId;
         target.ClassifierChatProfileId = source.ClassifierChatProfileId;
+        target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
     }
 }

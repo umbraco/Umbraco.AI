@@ -198,7 +198,7 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
     tags: Array<string>;
 };
 
@@ -400,7 +400,7 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -448,6 +448,16 @@ export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
+    defaultSpeechToTextProfileId?: string | null;
+};
+
+export type SpeechToTextProfileSettingsModel = ProfileSettingsModel & {
+    $type: string;
+    language?: string | null;
+};
+
+export type SpeechToTextResponseModel = {
+    text: string;
 };
 
 export type TestBatchResultsResponseModel = {
@@ -720,7 +730,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
     tags: Array<string>;
 };
 
@@ -728,6 +738,7 @@ export type UpdateSettingsRequestModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
+    defaultSpeechToTextProfileId?: string | null;
 };
 
 export type UpdateTestRequestModel = {
@@ -2168,6 +2179,44 @@ export type UpdateSettingsResponses = {
 };
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
+
+export type TranscribeAudioData = {
+    body?: {
+        audioFile?: Blob | File;
+    };
+    path?: never;
+    query?: {
+        profileIdOrAlias?: string;
+        language?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/speech-to-text/transcribe';
+};
+
+export type TranscribeAudioErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type TranscribeAudioError = TranscribeAudioErrors[keyof TranscribeAudioErrors];
+
+export type TranscribeAudioResponses = {
+    /**
+     * OK
+     */
+    200: SpeechToTextResponseModel;
+};
+
+export type TranscribeAudioResponse = TranscribeAudioResponses[keyof TranscribeAudioResponses];
 
 export type GetAllTestFeaturesData = {
     body?: never;

@@ -90,6 +90,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Speech-to-Text features.
+            /// </summary>
+            public static class SpeechToText
+            {
+                /// <summary>
+                /// The route segment for Speech-to-Text features.
+                /// </summary>
+                public const string RouteSegment = "speech-to-text";
+
+                /// <summary>
+                /// The Swagger group name for Speech-to-Text features.
+                /// </summary>
+                public const string GroupName = "Speech To Text";
+            }
+
+            /// <summary>
             /// Defines constants for Embedding features.
             /// </summary>
             public static class Embedding

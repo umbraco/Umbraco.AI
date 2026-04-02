@@ -8,6 +8,7 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Models;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(ChatProfileSettingsModel), "chat")]
 [JsonDerivedType(typeof(EmbeddingProfileSettingsModel), "embedding")]
+[JsonDerivedType(typeof(SpeechToTextProfileSettingsModel), "speechToText")]
 public abstract class ProfileSettingsModel { }
 
 /// <summary>
@@ -51,4 +52,15 @@ public class EmbeddingProfileSettingsModel : ProfileSettingsModel
     /// When null, the model's default dimension count is used.
     /// </summary>
     public int? Dimensions { get; init; }
+}
+
+/// <summary>
+/// Settings model for SpeechToText capability profiles.
+/// </summary>
+public class SpeechToTextProfileSettingsModel : ProfileSettingsModel
+{
+    /// <summary>
+    /// BCP-47 language hint for transcription (e.g., "en", "de", "ja").
+    /// </summary>
+    public string? Language { get; init; }
 }

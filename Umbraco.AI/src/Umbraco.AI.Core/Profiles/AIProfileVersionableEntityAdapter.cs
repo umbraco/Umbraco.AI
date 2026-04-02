@@ -198,6 +198,10 @@ internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAda
             case AIEmbeddingProfileSettings embeddingFrom when to is AIEmbeddingProfileSettings embeddingTo:
                 CompareEmbeddingSettings(embeddingFrom, embeddingTo, changes);
                 break;
+
+            case AISpeechToTextProfileSettings sttFrom when to is AISpeechToTextProfileSettings sttTo:
+                CompareSpeechToTextSettings(sttFrom, sttTo, changes);
+                break;
         }
     }
 
@@ -289,6 +293,20 @@ internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAda
         if (from.Dimensions != to.Dimensions)
         {
             changes.Add(new AIValueChange("Settings.Dimensions", from.Dimensions?.ToString(), to.Dimensions?.ToString()));
+        }
+    }
+
+    /// <summary>
+    /// Compares speech-to-text profile settings properties.
+    /// </summary>
+    private static void CompareSpeechToTextSettings(AISpeechToTextProfileSettings from, AISpeechToTextProfileSettings to, List<AIValueChange> changes)
+    {
+        if (from.Language != to.Language)
+        {
+            changes.Add(new AIValueChange(
+                "Settings.Language",
+                from.Language ?? "null",
+                to.Language ?? "null"));
         }
     }
 

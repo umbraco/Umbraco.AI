@@ -32,6 +32,7 @@ internal sealed class AIConfiguredProvider(IAIProvider provider, object resolved
             {
                 IAIChatCapability chat => new AIConfiguredChatCapability(chat, settings),
                 IAIEmbeddingCapability embedding => new AIConfiguredEmbeddingCapability(embedding, settings),
+                IAISpeechToTextCapability stt => new AIConfiguredSpeechToTextCapability(stt, settings),
                 _ => null
             };
             if (wrapped is not null)

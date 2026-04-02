@@ -3,6 +3,7 @@ import type {
     ProfileItemResponseModel,
     ChatProfileSettingsModel,
     EmbeddingProfileSettingsModel,
+    SpeechToTextProfileSettingsModel,
 } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
 import type {
@@ -11,8 +12,9 @@ import type {
     UaiProfileSettings,
     UaiChatProfileSettings,
     UaiEmbeddingProfileSettings,
+    UaiSpeechToTextProfileSettings,
 } from "./types.js";
-import { isChatSettings, isEmbeddingSettings } from "./types.js";
+import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
@@ -95,6 +97,14 @@ export const UaiProfileTypeMapper = {
             } as UaiEmbeddingProfileSettings;
         }
 
+        if (settings.$type === "speechToText") {
+            const stt = settings as SpeechToTextProfileSettingsModel;
+            return {
+                $type: "speechToText",
+                language: stt.language ?? null,
+            } as UaiSpeechToTextProfileSettings;
+        }
+
         return null;
     },
 
@@ -103,7 +113,7 @@ export const UaiProfileTypeMapper = {
      */
     mapRequestSettings(
         settings: UaiProfileSettings | null,
-    ): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null {
+    ): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null {
         if (!settings) return null;
 
         if (isChatSettings(settings)) {
@@ -122,6 +132,13 @@ export const UaiProfileTypeMapper = {
                 $type: "embedding",
                 dimensions: settings.dimensions,
             } as EmbeddingProfileSettingsModel;
+        }
+
+        if (isSpeechToTextSettings(settings)) {
+            return {
+                $type: "speechToText",
+                language: settings.language,
+            } as SpeechToTextProfileSettingsModel;
         }
 
         return null;

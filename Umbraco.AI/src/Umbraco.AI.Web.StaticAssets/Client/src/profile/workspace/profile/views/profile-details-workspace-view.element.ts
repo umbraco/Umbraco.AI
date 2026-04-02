@@ -4,8 +4,8 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
-import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings } from "../../../types.js";
-import { isChatSettings, isEmbeddingSettings } from "../../../types.js";
+import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings } from "../../../types.js";
+import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
@@ -199,6 +199,31 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         return isEmbeddingSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiEmbeddingProfileSettings) : null;
     }
 
+    #onLanguageChange(event: Event) {
+        event.stopPropagation();
+        const target = event.target as HTMLInputElement;
+        const language = target.value || null;
+        this.#updateSpeechToTextSettings({ language });
+    }
+
+    #updateSpeechToTextSettings(updates: Partial<UaiSpeechToTextProfileSettings>) {
+        const currentSettings = this._model?.settings ?? null;
+        const sttSettings: UaiSpeechToTextProfileSettings = isSpeechToTextSettings(currentSettings)
+            ? { ...currentSettings, ...updates }
+            : {
+                $type: "speechToText",
+                language: updates.language ?? null,
+            };
+
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: sttSettings }, "settings"),
+        );
+    }
+
+    #getSpeechToTextSettings(): UaiSpeechToTextProfileSettings | null {
+        return isSpeechToTextSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiSpeechToTextProfileSettings) : null;
+    }
+
     /**
      * Renders capability-specific settings based on the profile's capability.
      */
@@ -213,6 +238,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         if (capability === "embedding") {
             return this.#renderEmbeddingSettings();
+        }
+
+        if (capability === "speechtotext") {
+            return this.#renderSpeechToTextSettings();
         }
 
         return nothing;
@@ -292,6 +321,27 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${embeddingSettings?.dimensions?.toString() ?? ""}
                         @input=${this.#onDimensionsChange}
                         placeholder="Default"
+                    ></uui-input>
+                </umb-property-layout>
+            </uui-box>
+        `;
+    }
+
+    #renderSpeechToTextSettings() {
+        const sttSettings = this.#getSpeechToTextSettings();
+
+        return html`
+            <uui-box headline="Settings">
+                <umb-property-layout
+                    label="Language"
+                    description="BCP-47 language hint for transcription (e.g., &quot;en&quot;, &quot;de&quot;, &quot;ja&quot;). Leave empty for auto-detection."
+                >
+                    <uui-input
+                        slot="editor"
+                        type="text"
+                        .value=${sttSettings?.language ?? ""}
+                        @input=${this.#onLanguageChange}
+                        placeholder="Auto-detect"
                     ></uui-input>
                 </umb-property-layout>
             </uui-box>

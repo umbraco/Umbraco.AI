@@ -179,11 +179,12 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     }
 
     #renderSingleOption() {
+        const displayValue = this._resultOptions?.[0]?.displayValue ?? this._response;
         return html`
             <div class="response-content copy-container">
                 <umb-icon name="icon-wand color-blue" class="option-icon"></umb-icon>
-                <div style="white-space: pre-wrap;word-break: break-word;">${this._response}</div>
-                ${this.#renderCopyButton(this._response)}
+                <div style="white-space: pre-wrap;word-break: break-word;">${displayValue}</div>
+                ${this.#renderCopyButton(displayValue)}
             </div>
         `;
     }

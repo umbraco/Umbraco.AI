@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetFileData, GetFileErrors, GetFileResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -178,6 +178,15 @@ export class AgentsService {
                 }
             ],
             url: '/umbraco/ai/management/api/v1/agents/workflows',
+            ...options
+        });
+    }
+}
+
+export class FilesService {
+    public static getFile<ThrowOnError extends boolean = false>(options: Options<GetFileData, ThrowOnError>) {
+        return (options.client ?? client).get<GetFileResponses, GetFileErrors, ThrowOnError>({
+            url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}',
             ...options
         });
     }

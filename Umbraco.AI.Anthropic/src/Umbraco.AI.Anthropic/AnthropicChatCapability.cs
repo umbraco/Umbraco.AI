@@ -41,7 +41,7 @@ public class AnthropicChatCapability(AnthropicProvider provider) : AIChatCapabil
     /// <inheritdoc />
     protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
         => AnthropicProvider.CreateAnthropicClient(settings)
-            .AsIChatClient(modelId);
+            .Beta.AsIChatClient(modelId);
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId));

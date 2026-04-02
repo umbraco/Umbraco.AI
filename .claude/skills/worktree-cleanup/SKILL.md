@@ -16,7 +16,15 @@ You are cleaning up a git worktree and its associated local branch after the fea
 
    If the user provides an argument, use it as the worktree name or branch name.
 
-   If no argument is provided, list all worktrees and ask the user which one to remove:
+   If no argument is provided, first check if the current working directory is inside a worktree:
+   ```bash
+   # Get the main repo root and current working directory
+   MAIN_ROOT=$(git worktree list | head -1 | awk '{print $1}')
+   CWD=$(pwd)
+   ```
+   If `CWD` is inside a `.claude/worktrees/` path (i.e., we're currently in a worktree), extract the worktree name and ask the user: "You're currently in worktree `<name>` — clean up this one?" If they confirm, use it. If they decline, fall through to the list.
+
+   If not in a worktree (or user declined), list all worktrees and ask the user which one to remove:
    ```bash
    git worktree list
    ```

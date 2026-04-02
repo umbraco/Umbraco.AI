@@ -1,9 +1,8 @@
 ---
 name: worktree-cleanup
 description: Clean up a git worktree and its local branch after a feature has been merged. Use after a PR is merged or a feature branch is no longer needed.
-allowed-tools: Bash, Read
 user-invocable: true
-argument: Optional worktree name or branch name. If omitted, shows a list to choose from.
+argument-hint: Optional worktree name or branch name. If omitted, shows a list to choose from.
 ---
 
 # Worktree Cleanup

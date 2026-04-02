@@ -1,9 +1,8 @@
 ---
 name: worktree-merge
 description: Merge a feature worktree branch into dev and clean up. Use for lightweight features that don't need a PR — merges locally, pushes, then removes the worktree and branch.
-allowed-tools: Bash, Read, Skill
 user-invocable: true
-argument: Optional worktree name or branch name. If omitted, shows a list to choose from.
+argument-hint: Optional worktree name or branch name. If omitted, shows a list to choose from.
 ---
 
 # Worktree Merge

@@ -1,7 +1,6 @@
 ---
 name: changelog-management
 description: Generates changelogs for products from conventional commit history. Use when preparing a release, updating release documentation, or previewing unreleased changes before creating a release branch.
-allowed-tools: Bash, Read, AskUserQuestion
 ---
 
 # Changelog Manager

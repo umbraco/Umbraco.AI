@@ -1,7 +1,6 @@
 ---
 name: web-environment-setup
 description: Sets up Claude Code web environment for building the Umbraco.AI solution. Installs .NET SDK, configures proxy for NuGet, and prepares git for GitVersioning. Use this when starting a new Claude Code web session to build the project.
-allowed-tools: Bash, Read
 ---
 
 # Web Environment Setup

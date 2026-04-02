@@ -1,7 +1,6 @@
 ---
 name: repo-management
 description: Provides a unified interface for repository management including setup, releases, changelogs, and builds. Use when unsure which management task to perform, or when needing guidance on repository operations like building, releasing, or generating changelogs.
-allowed-tools: AskUserQuestion, Skill, Bash
 ---
 
 # Repository Manager

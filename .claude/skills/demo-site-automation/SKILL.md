@@ -2,7 +2,6 @@
 name: demo-site-automation
 description: Automates browser-based interactions with Umbraco.AI demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents). Use when testing UI workflows, creating or editing AI entities through the backoffice, or demonstrating Umbraco.AI features.
 argument-hint: [login|navigate-to-<section>|edit-<entity>|create-<entity>|status]
-allowed-tools: mcp__playwright__*, Bash, Read, Skill
 ---
 
 # Demo Site Browser Interactions

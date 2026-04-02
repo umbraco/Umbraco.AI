@@ -2,7 +2,6 @@
 name: demo-site-management
 description: Manages the Umbraco.AI demo site for development. Handles starting with DemoSite-Claude profile, port discovery via named pipes, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
 argument-hint: [start|stop|generate-client|status|restart|open]
-allowed-tools: Bash, Read, TaskOutput, TaskStop
 ---
 
 # Demo Site Management

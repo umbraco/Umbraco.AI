@@ -1,4 +1,9 @@
 <Project>
+  <PropertyGroup>
+    <!-- Repo root directory, used for locating shared build scripts -->
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+  </PropertyGroup>
+
   <Target Name="DisableCloudBuildNumberInAzureDevOps"
           AfterTargets="GetUmbracoBuildVersion"
           BeforeTargets="SetCloudBuildNumberWithVersion"

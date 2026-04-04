@@ -23,9 +23,17 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 
 function addVersion(url) {
     if (!url || typeof url !== 'string') return url;
-    // Don't double-add version
-    if (url.includes('?v=')) return url;
-    return `${url}?v=${version}`;
+
+    const qIndex = url.indexOf('?');
+    if (qIndex === -1) {
+        return `${url}?v=${version}`;
+    }
+
+    // Preserve existing query params and set/update 'v'
+    const base = url.substring(0, qIndex);
+    const params = new URLSearchParams(url.substring(qIndex + 1));
+    params.set('v', version);
+    return `${base}?${params.toString()}`;
 }
 
 // Update js paths in extensions

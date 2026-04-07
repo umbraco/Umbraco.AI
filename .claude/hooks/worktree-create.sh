@@ -23,8 +23,13 @@ if ! command -v jq &>/dev/null; then
   exit 1
 fi
 
-NAME=$(echo "$INPUT" | jq -r '.name')
-CWD=$(echo "$INPUT" | jq -r '.cwd')
+# Claude Code on Windows may send backslash paths (D:\Work\...) which are
+# invalid JSON escapes. Replace \<alphanum> with /<alphanum> to normalise
+# Windows paths while preserving valid JSON escapes (\", \\, \n, etc.).
+INPUT=$(printf '%s\n' "$INPUT" | sed 's/\\\([[:alnum:]]\)/\/\1/g')
+
+NAME=$(printf '%s\n' "$INPUT" | jq -r '.name')
+CWD=$(printf '%s\n' "$INPUT" | jq -r '.cwd')
 
 # --- Cross-platform path handling ---
 # Claude Code sends Windows paths (D:\Work\...) in JSON on Windows,
@@ -109,6 +114,14 @@ else
   git worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH" "origin/$DEFAULT_BRANCH" >&2
 fi
 
+# --- Output the worktree path FIRST (this is what Claude Code reads) ---
+# Emit the path before file-copy so Claude Code gets it immediately.
+# Convert to native path format so Claude Code (Node.js) can use it.
+# On Windows: /d/Work/... -> D:\Work\...
+# On Unix: passes through unchanged.
+ABSOLUTE_PATH=$(cd "$WORKTREE_PATH" && pwd)
+echo "$(to_native_path "$ABSOLUTE_PATH")"
+
 # --- Copy .worktreeinclude files ---
 # .worktreeinclude uses gitignore syntax (globs, negation, directory patterns).
 # We pass it directly to git's pattern matching engine via --exclude-from,
@@ -145,10 +158,4 @@ else
   echo "No .worktreeinclude file found - skipping file copy" >&2
 fi
 
-# --- Output the worktree path (this is what Claude Code reads) ---
-# Convert to native path format so Claude Code (Node.js) can use it.
-# On Windows: /d/Work/... -> D:\Work\...
-# On Unix: passes through unchanged.
-ABSOLUTE_PATH=$(cd "$WORKTREE_PATH" && pwd)
 echo "Worktree ready: $BRANCH_NAME -> $WORKTREE_SLUG" >&2
-echo "$(to_native_path "$ABSOLUTE_PATH")"

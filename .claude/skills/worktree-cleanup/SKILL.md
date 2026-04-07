@@ -31,9 +31,15 @@ You are cleaning up a git worktree and its associated local branch after the fea
 
    If there are no worktrees to clean up, tell the user and stop.
 
-2. **Check if we're currently inside the worktree** being removed. If `pwd` is inside the worktree path, switch to the main repo root first using the primary worktree path from `git worktree list`.
+2. **Check if we're currently inside the worktree** being removed (i.e., it was created with `EnterWorktree` in this session).
 
-3. **Remove the worktree** using git's worktree command:
+   **If inside the worktree:** Call `ExitWorktree` with `action: "remove"` and `discard_changes: true`. This cleanly releases the directory lock, removes the worktree, and switches the session back to the main repo. Then skip to step 4 (branch deletion) — the worktree directory is already gone.
+
+   **If NOT inside the worktree** (cleaning up a worktree from a previous session or one created manually):
+   
+   a. Make sure `pwd` is not inside the worktree path. If it is, `cd` to the main repo root first.
+   
+   b. Remove the worktree using git's worktree command:
    ```bash
    git worktree remove <path> --force
    ```
@@ -43,18 +49,18 @@ You are cleaning up a git worktree and its associated local branch after the fea
    git worktree prune
    ```
 
-4. **Delete the local branch** if it exists. Determine the branch name from the worktree or the user's input:
+3. **Delete the local branch** if it exists. Determine the branch name from the worktree or the user's input:
    ```bash
    git branch -d <branch-name>
    ```
    If `-d` fails because the branch isn't merged to HEAD (but is merged to its remote tracking branch), use `-D` after confirming with the user.
 
-5. **Prune stale worktree references:**
+4. **Prune stale worktree references:**
    ```bash
    git worktree prune
    ```
 
-6. **Show a summary** of what was cleaned up:
+5. **Show a summary** of what was cleaned up:
    - Worktree path removed
    - Branch deleted (if applicable)
    - Confirmation that everything is clean

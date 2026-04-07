@@ -7,7 +7,7 @@ namespace Umbraco.AI.Core.Configuration;
 /// Resolves the database connection string for Umbraco AI packages.
 /// </summary>
 /// <remarks>
-/// Checks for a dedicated <c>umbracoAiDbDSN</c> connection string first,
+/// Checks for a dedicated <c>umbracoAIDbDSN</c> connection string first,
 /// falling back to the standard Umbraco CMS connection string (<c>umbracoDbDSN</c>).
 /// This allows AI data to be stored in a separate database when desired.
 /// </remarks>
@@ -16,7 +16,7 @@ public static class AIConnectionStringResolver
     /// <summary>
     /// The connection string name for the dedicated AI database.
     /// </summary>
-    public const string ConnectionName = "umbracoAiDbDSN";
+    public const string ConnectionName = "umbracoAIDbDSN";
 
     /// <summary>
     /// The shared EF Core migrations history table for all Umbraco AI packages.

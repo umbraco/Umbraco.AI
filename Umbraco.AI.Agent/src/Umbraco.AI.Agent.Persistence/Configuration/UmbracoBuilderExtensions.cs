@@ -24,6 +24,8 @@ public static class UmbracoBuilderExtensions
         // Resolve AI connection string upfront (falls back to Umbraco CMS connection)
         var (aiConnectionString, aiProviderName) = AIConnectionStringResolver.Resolve(builder.Config);
 
+        // TODO: Pass shareUmbracoConnection: false when a custom connection string is configured.
+        // Requires Umbraco CMS fix: https://github.com/umbraco/Umbraco-CMS/pull/22133
         builder.Services.AddUmbracoDbContext<UmbracoAIAgentDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
             UmbracoAIAgentDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);

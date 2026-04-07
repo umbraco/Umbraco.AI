@@ -45,7 +45,7 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.AddTransient<AIVectorSearcher>();
 
         // Register the correct persistence provider based on the configured database.
-        // Uses AIConnectionStringResolver which checks umbracoAiDbDSN first, then falls back to umbracoDbDSN.
+        // Uses AIConnectionStringResolver which checks umbracoAIDbDSN first, then falls back to umbracoDbDSN.
         var (_, providerName) = AIConnectionStringResolver.Resolve(builder.Config);
 
         if (providerName == Constants.ProviderNames.SQLServer)

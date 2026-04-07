@@ -28,6 +28,9 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _selectedWorkflow?: UaiWorkflowItem;
 
+    // Remembers the schema when toggling to Text, so switching back to Structured restores it
+    #cachedOutputSchema?: Record<string, unknown>;
+
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
@@ -93,9 +96,21 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const select = event.target as HTMLElement & { value: string };
         if (!this._model || !isStandardConfig(this._model.config)) return;
 
+        let outputSchema: Record<string, unknown> | null;
+        if (select.value === "structured") {
+            // Restore cached schema, or start with empty object
+            outputSchema = this.#cachedOutputSchema ?? {};
+        } else {
+            // Cache current schema before clearing
+            if (this._model.config.outputSchema != null) {
+                this.#cachedOutputSchema = this._model.config.outputSchema;
+            }
+            outputSchema = null;
+        }
+
         const config: UaiStandardAgentConfig = {
             ...this._model.config,
-            outputSchema: select.value === "structured" ? this._model.config.outputSchema ?? {} : null,
+            outputSchema,
         };
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.outputSchema"),

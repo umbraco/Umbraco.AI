@@ -681,7 +681,6 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// <summary>
     /// Builds additional properties dict with OutputSchema override if present in execution options.
     /// </summary>
     private static Dictionary<string, object?>? BuildOutputSchemaOverride(AIAgentExecutionOptions options)

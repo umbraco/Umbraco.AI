@@ -88,6 +88,20 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onOutputFormatChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const select = event.target as HTMLElement & { value: string };
+        if (!this._model || !isStandardConfig(this._model.config)) return;
+
+        const config: UaiStandardAgentConfig = {
+            ...this._model.config,
+            outputSchema: select.value === "structured" ? this._model.config.outputSchema ?? {} : null,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.outputSchema"),
+        );
+    }
+
     #onOutputSchemaChange(event: Event) {
         event.stopPropagation();
         const editor = event.target as HTMLElement & { code: string };
@@ -217,19 +231,41 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
-            <uui-box headline="Output Schema">
+            <uui-box headline="Output">
                 <umb-property-layout
-                    label="JSON Schema"
-                    description="Define a JSON Schema that constrains this agent's output. When set, responses will conform to this structure."
+                    label="Output Format"
+                    description="How the agent's response should be formatted"
                 >
-                    <umb-code-editor
+                    <uui-select
                         slot="editor"
-                        language="json"
-                        .code=${config.outputSchema ? JSON.stringify(config.outputSchema, null, 2) : ""}
-                        disable-minimap
-                        @input=${this.#onOutputSchemaChange}
-                    ></umb-code-editor>
+                        .value=${config.outputSchema != null ? "structured" : "text"}
+                        .options=${[
+                            { name: "Text", value: "text", selected: config.outputSchema == null },
+                            { name: "Structured (JSON Schema)", value: "structured", selected: config.outputSchema != null },
+                        ]}
+                        @change=${this.#onOutputFormatChange}
+                        style="width: 100%;"
+                    ></uui-select>
                 </umb-property-layout>
+
+                ${config.outputSchema != null
+                    ? html`
+                          <umb-property-layout
+                              label="JSON Schema"
+                              description="Define the JSON Schema that constrains this agent's output"
+                          >
+                              <umb-code-editor
+                                  slot="editor"
+                                  language="json"
+                                  .code=${config.outputSchema && Object.keys(config.outputSchema).length > 0
+                                      ? JSON.stringify(config.outputSchema, null, 2)
+                                      : ""}
+                                  disable-minimap
+                                  @input=${this.#onOutputSchemaChange}
+                              ></umb-code-editor>
+                          </umb-property-layout>
+                      `
+                    : nothing}
             </uui-box>
         `;
     }

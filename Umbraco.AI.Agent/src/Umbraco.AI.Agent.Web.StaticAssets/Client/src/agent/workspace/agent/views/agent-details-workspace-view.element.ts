@@ -11,6 +11,7 @@ import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js
 import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
+import "@umbraco-cms/backoffice/code-editor";
 
 /**
  * Workspace view for Agent settings.
@@ -84,6 +85,30 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         };
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.contextIds"),
+        );
+    }
+
+    #onOutputSchemaChange(event: Event) {
+        event.stopPropagation();
+        const editor = event.target as HTMLElement & { code: string };
+        if (!this._model || !isStandardConfig(this._model.config)) return;
+
+        let outputSchema: Record<string, unknown> | null = null;
+        try {
+            const trimmed = editor.code.trim();
+            if (trimmed) {
+                outputSchema = JSON.parse(trimmed);
+            }
+        } catch {
+            return; // Don't update on invalid JSON
+        }
+
+        const config: UaiStandardAgentConfig = {
+            ...this._model.config,
+            outputSchema,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.outputSchema"),
         );
     }
 
@@ -191,6 +216,21 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
+
+            <uui-box headline="Output Schema">
+                <umb-property-layout
+                    label="JSON Schema"
+                    description="Define a JSON Schema that constrains this agent's output. When set, responses will conform to this structure."
+                >
+                    <umb-code-editor
+                        slot="editor"
+                        language="json"
+                        .code=${config.outputSchema ? JSON.stringify(config.outputSchema, null, 2) : ""}
+                        disable-minimap
+                        @input=${this.#onOutputSchemaChange}
+                    ></umb-code-editor>
+                </umb-property-layout>
+            </uui-box>
         `;
     }
 
@@ -258,6 +298,11 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             umb-input-markdown {
                 width: 100%;
                 --umb-code-editor-height: 400px;
+            }
+
+            umb-code-editor {
+                width: 100%;
+                --umb-code-editor-height: 300px;
             }
 
             uui-loader {

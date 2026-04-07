@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
@@ -560,6 +561,87 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <inheritdoc />
+    public async Task<AIStructuredAgentResponse<T>> RunStructuredAgentAsync<T>(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var effectiveOptions = options ?? new AIAgentExecutionOptions();
+        var response = await RunStructuredPersistedAgentAsync<T>(agentId, messages, effectiveOptions, cancellationToken);
+        return response;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIStructuredAgentResponse<T>> RunStructuredAgentAsync<T>(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var agent = await GetAgentByAliasAsync(agentAlias, cancellationToken)
+            ?? throw new InvalidOperationException($"Agent with alias '{agentAlias}' not found.");
+
+        return await RunStructuredAgentAsync<T>(agent.Id, messages, options, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<AIStructuredAgentResponse<T>> RunStructuredAgentAsync<T>(
+        Action<AIInlineAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentNullException.ThrowIfNull(messages);
+
+        var (agent, builder) = await BuildAgentAsync(configure, cancellationToken);
+        var chatMessages = AsReadOnlyList(messages);
+
+        // Publish executing notification
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, chatMessages, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Inline agent execution cancelled: {errorMessages}");
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        bool isSuccess = false;
+
+        try
+        {
+            var additionalProperties = BuildAgentProperties(builder);
+            ApplyStructuredOutputOverride<T>(additionalProperties);
+
+            var mafAgent = await _agentFactory.CreateAgentAsync(
+                agent,
+                builder.ContextItems,
+                additionalTools: null,
+                additionalProperties,
+                cancellationToken);
+
+            var response = await mafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            isSuccess = true;
+            return DeserializeStructuredResponse<T>(response);
+        }
+        finally
+        {
+            var executedNotification = new AIAgentExecutedNotification(
+                agent,
+                chatMessages,
+                stopwatch.Elapsed,
+                isSuccess,
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
     public async IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
         Action<AIInlineAgentBuilder> configure,
         IEnumerable<ChatMessage> messages,
@@ -678,6 +760,88 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         return properties;
+    }
+
+    /// <summary>
+    /// Sets <see cref="ChatOptions.ResponseFormat"/> via the ChatOptions override mechanism
+    /// so the LLM produces JSON matching <typeparamref name="T"/>.
+    /// </summary>
+    private static void ApplyStructuredOutputOverride<T>(Dictionary<string, object?> additionalProperties)
+    {
+        var responseFormat = AIOutputSchema.FromType<T>().ResponseFormat;
+        if (additionalProperties.TryGetValue(CoreConstants.ContextKeys.ChatOptionsOverride, out var existing)
+            && existing is ChatOptions existingOptions)
+        {
+            existingOptions.ResponseFormat = responseFormat;
+        }
+        else
+        {
+            additionalProperties[CoreConstants.ContextKeys.ChatOptionsOverride] = new ChatOptions
+            {
+                ResponseFormat = responseFormat
+            };
+        }
+    }
+
+    /// <summary>
+    /// Deserializes the agent response text into a typed <see cref="AIStructuredAgentResponse{T}"/>.
+    /// </summary>
+    private static AIStructuredAgentResponse<T> DeserializeStructuredResponse<T>(AgentResponse response)
+    {
+        T? result = default;
+        var text = response.Text;
+        if (!string.IsNullOrEmpty(text))
+        {
+            try
+            {
+                result = JsonSerializer.Deserialize<T>(text);
+            }
+            catch (JsonException)
+            {
+                // Provider did not honor structured output — result stays default
+            }
+        }
+
+        return new AIStructuredAgentResponse<T>(response, result);
+    }
+
+    /// <summary>
+    /// Runs a persisted agent with structured output by ID with full orchestration.
+    /// </summary>
+    private async Task<AIStructuredAgentResponse<T>> RunStructuredPersistedAgentAsync<T>(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions options,
+        CancellationToken cancellationToken)
+    {
+        var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
+        var chatMessages = AsReadOnlyList(messages);
+
+        var additionalProperties = new Dictionary<string, object?>();
+        ApplyStructuredOutputOverride<T>(additionalProperties);
+
+        var context = await PrepareAgentExecutionAsync(
+            agent, chatMessages, options, frontendTools: null,
+            contextItems: options.ContextItems,
+            additionalProperties: additionalProperties,
+            cancellationToken);
+
+        if (context is null)
+        {
+            throw new InvalidOperationException("Agent execution cancelled by notification handler.");
+        }
+
+        bool isSuccess = false;
+        try
+        {
+            var response = await context.MafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            isSuccess = true;
+            return DeserializeStructuredResponse<T>(response);
+        }
+        finally
+        {
+            await PublishExecutedNotificationAsync(context, isSuccess);
+        }
     }
 
     /// <summary>

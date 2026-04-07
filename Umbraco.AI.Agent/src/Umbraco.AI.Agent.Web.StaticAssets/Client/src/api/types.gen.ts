@@ -211,6 +211,7 @@ export type StandardAgentConfigModel = AgentConfigModel & {
     instructions?: string | null;
     allowedToolIds?: Array<string> | null;
     allowedToolScopeIds?: Array<string> | null;
+    outputSchema?: Record<string, unknown> | null;
     userGroupPermissions?: {
         [key: string]: AiAgentUserGroupPermissionsModel;
     } | null;

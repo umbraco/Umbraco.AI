@@ -305,6 +305,50 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Runs a persisted agent and returns a typed structured response.
+    /// The agent's output is constrained to match <typeparamref name="T"/> and deserialized automatically.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the structured output to.</typeparam>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A typed agent response containing the deserialized result.</returns>
+    Task<AIStructuredAgentResponse<T>> RunStructuredAgentAsync<T>(
+        Guid agentId,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs a persisted agent by alias and returns a typed structured response.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the structured output to.</typeparam>
+    /// <param name="agentAlias">The agent alias.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="options">Optional execution options for overrides.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A typed agent response containing the deserialized result.</returns>
+    Task<AIStructuredAgentResponse<T>> RunStructuredAgentAsync<T>(
+        string agentAlias,
+        IEnumerable<ChatMessage> messages,
+        AIAgentExecutionOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs an inline agent and returns a typed structured response.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the structured output to.</typeparam>
+    /// <param name="configure">Action to configure the inline agent via the builder.</param>
+    /// <param name="messages">The chat messages to send to the agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A typed agent response containing the deserialized result.</returns>
+    Task<AIStructuredAgentResponse<T>> RunStructuredAgentAsync<T>(
+        Action<AIInlineAgentBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Streams an inline agent execution, including notification publishing.
     /// </summary>
     /// <remarks>

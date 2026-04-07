@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.InlineChat;
 
@@ -139,6 +140,32 @@ public interface IAIChatService
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A typed chat response that can be deserialized to <typeparamref name="T"/>.</returns>
     Task<ChatResponse<T>> GetStructuredChatResponseAsync<T>(
+        Action<AIChatBuilder> configure,
+        IEnumerable<ChatMessage> messages,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a structured chat response using a runtime <see cref="AIOutputSchema"/>.
+    /// The response is constrained to the schema and returned as a parsed <see cref="JsonElement"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Use this overload when the output schema is defined at runtime (e.g., from a JSON Schema
+    /// document stored in the database or provided by an automation workflow). For compile-time
+    /// typed responses, use <see cref="GetStructuredChatResponseAsync{T}"/> instead.
+    /// </para>
+    /// <para>
+    /// The response format is set automatically from the schema — callers should NOT set
+    /// <see cref="ChatOptions.ResponseFormat"/> via <see cref="InlineChat.AIChatBuilder.WithChatOptions"/>.
+    /// </para>
+    /// </remarks>
+    /// <param name="schema">The output schema that constrains the response structure.</param>
+    /// <param name="configure">Action to configure the inline chat via the builder.</param>
+    /// <param name="messages">The chat messages to send.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A chat response containing the structured output as a <see cref="JsonElement"/>.</returns>
+    Task<ChatResponse<JsonElement>> GetStructuredChatResponseAsync(
+        AIOutputSchema schema,
         Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);

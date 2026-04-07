@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
@@ -26,6 +28,12 @@ public sealed class AIStandardAgentConfig : IAIAgentConfig
     /// Tools matching these scopes will be included automatically.
     /// </summary>
     public IReadOnlyList<string> AllowedToolScopeIds { get; set; } = [];
+
+    /// <summary>
+    /// Optional JSON Schema that constrains the agent's output to a specific structure.
+    /// When set, the agent's responses will conform to this schema (structured output).
+    /// </summary>
+    public JsonElement? OutputSchema { get; set; }
 
     /// <summary>
     /// User group-specific permission overrides.

@@ -33,6 +33,7 @@ export interface UaiStandardAgentConfig {
     instructions: string | null;
     allowedToolIds: string[];
     allowedToolScopeIds: string[];
+    outputSchema: Record<string, unknown> | null;
     userGroupPermissions: UaiUserGroupPermissionsMap;
 }
 

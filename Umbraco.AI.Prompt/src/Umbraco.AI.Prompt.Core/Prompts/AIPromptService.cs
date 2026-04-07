@@ -350,11 +350,14 @@ internal sealed class AIPromptService : IAIPromptService
 
             case 1:
             {
-                var response = await _chatService.GetStructuredChatResponseAsync<SingleValueResponse>(
-                    ConfigureChat, messages, cancellationToken);
+                var response = await _chatService.GetChatResponseAsync(chat =>
+                {
+                    ConfigureChat(chat);
+                    chat.WithOutputSchema(AIOutputSchema.FromType<SingleValueResponse>());
+                }, messages, cancellationToken);
                 var responseText = response.Text ?? string.Empty;
 
-                var displayValue = response.TryGetResult(out var parsed) ? parsed.Value : responseText;
+                var displayValue = response.TryGetResult<SingleValueResponse>(out var parsed) ? parsed.Value : responseText;
                 result = new AIPromptExecutionResult
                 {
                     Content = responseText,
@@ -382,11 +385,14 @@ internal sealed class AIPromptService : IAIPromptService
 
             case >= 2:
             {
-                var response = await _chatService.GetStructuredChatResponseAsync<MultiOptionResponse>(
-                    ConfigureChat, messages, cancellationToken);
+                var response = await _chatService.GetChatResponseAsync(chat =>
+                {
+                    ConfigureChat(chat);
+                    chat.WithOutputSchema(AIOutputSchema.FromType<MultiOptionResponse>());
+                }, messages, cancellationToken);
                 var responseText = response.Text ?? string.Empty;
 
-                if (response.TryGetResult(out var parsed) && parsed.Options is { Count: > 0 })
+                if (response.TryGetResult<MultiOptionResponse>(out var parsed) && parsed.Options is { Count: > 0 })
                 {
                     result = new AIPromptExecutionResult
                     {

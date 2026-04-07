@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
@@ -134,12 +135,27 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         // Get profile - use default Chat profile if not specified
         var chatClient = await CreateChatClientAsync(agent, cancellationToken);
 
-        return new ChatClientAgent(
-            chatClient,
-            instructions: agent.GetStandardConfig()?.Instructions,
-            name: agent.Name,
-            description: agent.Description,
-            tools: tools);
+        var config = agent.GetStandardConfig();
+
+        // Build ChatOptions — always needed for instructions and tools,
+        // plus output schema response format if configured
+        var chatOptions = new ChatOptions
+        {
+            Instructions = config?.Instructions,
+            Tools = tools,
+        };
+
+        if (config?.OutputSchema is JsonElement schema)
+        {
+            chatOptions.ResponseFormat = AIOutputSchema.FromJsonSchema(schema).ResponseFormat;
+        }
+
+        return new ChatClientAgent(chatClient, new ChatClientAgentOptions
+        {
+            Name = agent.Name,
+            Description = agent.Description,
+            ChatOptions = chatOptions
+        });
     }
 
     private async Task<MsAIAgent> CreateOrchestratedAgentAsync(

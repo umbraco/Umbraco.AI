@@ -11,6 +11,7 @@ import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js
 import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
+import "@umbraco-cms/backoffice/code-editor";
 
 /**
  * Workspace view for Agent settings.
@@ -26,6 +27,9 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
     @state()
     private _selectedWorkflow?: UaiWorkflowItem;
+
+    // Remembers the schema when toggling to Text, so switching back to Structured restores it
+    #cachedOutputSchema?: Record<string, unknown>;
 
     constructor() {
         super();
@@ -84,6 +88,56 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         };
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.contextIds"),
+        );
+    }
+
+    #onOutputFormatChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const select = event.target as HTMLElement & { value: string };
+        if (!this._model || !isStandardConfig(this._model.config)) return;
+
+        let outputSchema: Record<string, unknown> | null;
+        if (select.value === "structured") {
+            // Restore cached schema, or start with empty object
+            outputSchema = this.#cachedOutputSchema ?? {};
+        } else {
+            // Cache current schema before clearing
+            if (this._model.config.outputSchema != null) {
+                this.#cachedOutputSchema = this._model.config.outputSchema;
+            }
+            outputSchema = null;
+        }
+
+        const config: UaiStandardAgentConfig = {
+            ...this._model.config,
+            outputSchema,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.outputSchema"),
+        );
+    }
+
+    #onOutputSchemaChange(event: Event) {
+        event.stopPropagation();
+        const editor = event.target as HTMLElement & { code: string };
+        if (!this._model || !isStandardConfig(this._model.config)) return;
+
+        let outputSchema: Record<string, unknown> | null = null;
+        try {
+            const trimmed = editor.code.trim();
+            if (trimmed) {
+                outputSchema = JSON.parse(trimmed);
+            }
+        } catch {
+            return; // Don't update on invalid JSON
+        }
+
+        const config: UaiStandardAgentConfig = {
+            ...this._model.config,
+            outputSchema,
+        };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ config }, "config.outputSchema"),
         );
     }
 
@@ -191,6 +245,43 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
+
+            <uui-box headline="Output">
+                <umb-property-layout
+                    label="Output Format"
+                    description="How the agent's response should be formatted"
+                >
+                    <uui-select
+                        slot="editor"
+                        .value=${config.outputSchema != null ? "structured" : "text"}
+                        .options=${[
+                            { name: "Text", value: "text", selected: config.outputSchema == null },
+                            { name: "Structured (JSON Schema)", value: "structured", selected: config.outputSchema != null },
+                        ]}
+                        @change=${this.#onOutputFormatChange}
+                        style="width: 100%;"
+                    ></uui-select>
+                </umb-property-layout>
+
+                ${config.outputSchema != null
+                    ? html`
+                          <umb-property-layout
+                              label="JSON Schema"
+                              description="Define the JSON Schema that constrains this agent's output"
+                          >
+                              <umb-code-editor
+                                  slot="editor"
+                                  language="json"
+                                  .code=${config.outputSchema && Object.keys(config.outputSchema).length > 0
+                                      ? JSON.stringify(config.outputSchema, null, 2)
+                                      : ""}
+                                  disable-minimap
+                                  @input=${this.#onOutputSchemaChange}
+                              ></umb-code-editor>
+                          </umb-property-layout>
+                      `
+                    : nothing}
+            </uui-box>
         `;
     }
 
@@ -258,6 +349,15 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             umb-input-markdown {
                 width: 100%;
                 --umb-code-editor-height: 400px;
+            }
+
+            umb-code-editor {
+                width: 100%;
+                height: 300px;
+                --umb-code-editor-height: 300px;
+                border: 1px solid var(--uui-color-border);
+                border-radius: var(--uui-border-radius);
+                overflow: hidden;
             }
 
             uui-loader {

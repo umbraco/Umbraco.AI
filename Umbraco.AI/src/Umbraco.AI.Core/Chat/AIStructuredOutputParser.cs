@@ -9,6 +9,8 @@ namespace Umbraco.AI.Core.Chat;
 /// </summary>
 internal static class AIStructuredOutputParser
 {
+    private static readonly JsonSerializerOptions JsonOptions = JsonSerializerOptions.Web;
+
     internal static T GetResult<T>(string? text, string responseKind)
     {
         if (string.IsNullOrEmpty(text))
@@ -20,7 +22,7 @@ internal static class AIStructuredOutputParser
 
         try
         {
-            return JsonSerializer.Deserialize<T>(text)
+            return JsonSerializer.Deserialize<T>(text, JsonOptions)
                 ?? throw new InvalidOperationException(
                     $"Failed to deserialize {responseKind} response as {typeof(T).Name}: deserialization returned null. " +
                     $"Ensure the {responseKind} is configured with an output schema via WithOutputSchema().");
@@ -44,7 +46,7 @@ internal static class AIStructuredOutputParser
 
         try
         {
-            result = JsonSerializer.Deserialize<T>(text);
+            result = JsonSerializer.Deserialize<T>(text, JsonOptions);
             return result is not null;
         }
         catch (JsonException)

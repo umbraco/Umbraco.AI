@@ -50,6 +50,8 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             var response = await InnerClient.GetResponseAsync(chatMessages, options, cancellationToken);
 
             // Complete audit-log (if exists)
+            // Use CancellationToken.None so the status update is always persisted,
+            // even if the original request was cancelled (e.g. client disconnected)
             if (auditLog is not null)
             {
                 await _auditLogService.QueueCompleteAuditLogAsync(
@@ -60,7 +62,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
                         Data = response.Messages,
                         Usage = response.Usage,
                     },
-                    cancellationToken);
+                    CancellationToken.None);
             }
 
             return response;
@@ -69,8 +71,10 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         {
             if (auditLog is not null)
             {
+                // Use CancellationToken.None so the failure status is always persisted,
+                // even if the original request was cancelled (e.g. client disconnected)
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog, auditPrompt, ex, cancellationToken);
+                    auditLog, auditPrompt, ex, CancellationToken.None);
             }
 
             throw;
@@ -124,6 +128,8 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
         }
 
         // Mark audit-log as completed (only reached if no exception during streaming)
+        // Use CancellationToken.None so the status update is always persisted,
+        // even if the original request was cancelled (e.g. client disconnected)
         if (auditLog is not null)
         {
             var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
@@ -136,7 +142,7 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
                     Data = trackingChatClient?.LastResponseMessages,
                     Usage = trackingChatClient?.LastUsageDetails,
                 },
-                cancellationToken);
+                CancellationToken.None);
         }
 
         auditScope?.Dispose();
@@ -172,8 +178,10 @@ internal sealed class AIAuditingChatClient : DelegatingChatClient
             {
                 if (auditLog is not null)
                 {
+                    // Use CancellationToken.None so the failure status is always persisted,
+                    // even if the original request was cancelled (e.g. client disconnected)
                     await _auditLogService.QueueRecordAuditLogFailureAsync(
-                        auditLog, auditPrompt, ex, cancellationToken);
+                        auditLog, auditPrompt, ex, CancellationToken.None);
                 }
 
                 auditScope?.Dispose();

@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Agent.Core.Agents;
@@ -36,4 +37,10 @@ public class AIAgentExecutionOptions
     /// no BackOffice user is available. When null, falls back to the current BackOffice user's groups.
     /// </summary>
     public IEnumerable<Guid>? UserGroupIds { get; init; }
+
+    /// <summary>
+    /// Optional output schema to override the agent's configured <see cref="AIStandardAgentConfig.OutputSchema"/>.
+    /// When set, the agent's response will be constrained to this schema.
+    /// </summary>
+    public AIOutputSchema? OutputSchema { get; init; }
 }

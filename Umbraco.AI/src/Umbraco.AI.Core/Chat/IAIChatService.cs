@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.InlineChat;
 
@@ -111,61 +110,6 @@ public interface IAIChatService
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>An async stream of streaming chat updates.</returns>
     IAsyncEnumerable<ChatResponseUpdate> StreamChatResponseAsync(
-        Action<AIChatBuilder> configure,
-        IEnumerable<ChatMessage> messages,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a structured chat response using an inline chat builder, requesting the
-    /// response match type <typeparamref name="T"/>. Delegates to M.E.AI's structured
-    /// output extensions which handle schema generation, response format negotiation,
-    /// and deserialization.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Use <see cref="ChatResponse{T}.TryGetResult"/> for safe access when the provider
-    /// may not honor structured output, or <see cref="ChatResponse{T}.Result"/> when
-    /// structured output is expected to succeed. The raw response text is always available
-    /// via <see cref="ChatResponse.Text"/>.
-    /// </para>
-    /// <para>
-    /// Callers should NOT set <see cref="ChatOptions.ResponseFormat"/> via
-    /// <see cref="InlineChat.AIChatBuilder.WithChatOptions"/> — the structured output
-    /// extension sets it automatically based on <typeparamref name="T"/>.
-    /// </para>
-    /// </remarks>
-    /// <typeparam name="T">The type of structured output to request.</typeparam>
-    /// <param name="configure">Action to configure the inline chat via the builder.</param>
-    /// <param name="messages">The chat messages to send.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>A typed chat response that can be deserialized to <typeparamref name="T"/>.</returns>
-    Task<ChatResponse<T>> GetStructuredChatResponseAsync<T>(
-        Action<AIChatBuilder> configure,
-        IEnumerable<ChatMessage> messages,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a structured chat response using a runtime <see cref="AIOutputSchema"/>.
-    /// The response is constrained to the schema and returned as a parsed <see cref="JsonElement"/>.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Use this overload when the output schema is defined at runtime (e.g., from a JSON Schema
-    /// document stored in the database or provided by an automation workflow). For compile-time
-    /// typed responses, use <see cref="GetStructuredChatResponseAsync{T}"/> instead.
-    /// </para>
-    /// <para>
-    /// The response format is set automatically from the schema — callers should NOT set
-    /// <see cref="ChatOptions.ResponseFormat"/> via <see cref="InlineChat.AIChatBuilder.WithChatOptions"/>.
-    /// </para>
-    /// </remarks>
-    /// <param name="schema">The output schema that constrains the response structure.</param>
-    /// <param name="configure">Action to configure the inline chat via the builder.</param>
-    /// <param name="messages">The chat messages to send.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>A chat response containing the structured output as a <see cref="JsonElement"/>.</returns>
-    Task<ChatResponse<JsonElement>> GetStructuredChatResponseAsync(
-        AIOutputSchema schema,
         Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken = default);

@@ -50,6 +50,8 @@ internal sealed class AIAuditingSpeechToTextClient : AIBoundSpeechToTextClientBa
             var response = await base.GetTextAsync(audioSpeechStream, options, cancellationToken);
 
             // Complete audit-log (if exists)
+            // Use CancellationToken.None so the status update is always persisted,
+            // even if the original request was cancelled (e.g. client disconnected)
             if (auditLog is not null)
             {
                 await _auditLogService.QueueCompleteAuditLogAsync(
@@ -59,7 +61,7 @@ internal sealed class AIAuditingSpeechToTextClient : AIBoundSpeechToTextClientBa
                     {
                         Data = response.Text,
                     },
-                    cancellationToken);
+                    CancellationToken.None);
             }
 
             return response;
@@ -68,8 +70,10 @@ internal sealed class AIAuditingSpeechToTextClient : AIBoundSpeechToTextClientBa
         {
             if (auditLog is not null)
             {
+                // Use CancellationToken.None so the failure status is always persisted,
+                // even if the original request was cancelled (e.g. client disconnected)
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog, auditPrompt, ex, cancellationToken);
+                    auditLog, auditPrompt, ex, CancellationToken.None);
             }
 
             throw;
@@ -121,6 +125,8 @@ internal sealed class AIAuditingSpeechToTextClient : AIBoundSpeechToTextClientBa
         }
 
         // Mark audit-log as completed (only reached if no exception during streaming)
+        // Use CancellationToken.None so the status update is always persisted,
+        // even if the original request was cancelled (e.g. client disconnected)
         if (auditLog is not null)
         {
             var trackingClient = InnerClient.GetService<AITrackingSpeechToTextClient>();
@@ -132,7 +138,7 @@ internal sealed class AIAuditingSpeechToTextClient : AIBoundSpeechToTextClientBa
                 {
                     Data = trackingClient?.LastTranscriptionText,
                 },
-                cancellationToken);
+                CancellationToken.None);
         }
 
         auditScope?.Dispose();
@@ -168,8 +174,10 @@ internal sealed class AIAuditingSpeechToTextClient : AIBoundSpeechToTextClientBa
             {
                 if (auditLog is not null)
                 {
+                    // Use CancellationToken.None so the failure status is always persisted,
+                    // even if the original request was cancelled (e.g. client disconnected)
                     await _auditLogService.QueueRecordAuditLogFailureAsync(
-                        auditLog, auditPrompt, ex, cancellationToken);
+                        auditLog, auditPrompt, ex, CancellationToken.None);
                 }
 
                 auditScope?.Dispose();

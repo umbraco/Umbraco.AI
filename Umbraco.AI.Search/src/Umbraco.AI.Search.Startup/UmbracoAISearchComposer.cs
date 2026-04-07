@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Search.Core;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
@@ -44,11 +45,8 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.AddTransient<AIVectorSearcher>();
 
         // Register the correct persistence provider based on the configured database.
-        // Supports an optional umbracoAiDbDSN override for a separate AI database,
-        // falling back to the default umbracoDbDSN connection string.
-        var providerName =
-            builder.Config.GetSection("ConnectionStrings:umbracoAiDbDSN_ProviderName").Value
-            ?? builder.Config.GetSection("ConnectionStrings:umbracoDbDSN_ProviderName").Value;
+        // Uses AIConnectionStringResolver which checks umbracoAiDbDSN first, then falls back to umbracoDbDSN.
+        var (_, providerName) = AIConnectionStringResolver.Resolve(builder.Config);
 
         if (providerName == Constants.ProviderNames.SQLServer)
         {

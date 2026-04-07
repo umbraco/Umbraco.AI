@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Persistence.Notifications;
 using Umbraco.AI.Prompt.Persistence.Prompts;
@@ -20,10 +21,12 @@ public static class UmbracoBuilderExtensions
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIPromptPersistence(this IUmbracoBuilder builder)
     {
-        // Register DbContext with provider-specific migrations assembly
+        // Resolve AI connection string upfront (falls back to Umbraco CMS connection)
+        var (aiConnectionString, aiProviderName) = AIConnectionStringResolver.Resolve(builder.Config);
+
         builder.Services.AddUmbracoDbContext<UmbracoAIPromptDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            UmbracoAIPromptDbContext.ConfigureProvider(options, connectionString, providerName);
+            UmbracoAIPromptDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);
         });
 
         // Replace in-memory repository with EF Core implementation

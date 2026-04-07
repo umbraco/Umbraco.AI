@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
@@ -14,14 +14,14 @@ namespace Umbraco.AI.Search.Db.Notifications;
 internal sealed class RunAISearchMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    private readonly IOptions<ConnectionStrings> _connectionStrings;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<RunAISearchMigrationNotificationHandler> _logger;
 
     public RunAISearchMigrationNotificationHandler(
-        IOptions<ConnectionStrings> connectionStrings,
+        IConfiguration configuration,
         ILogger<RunAISearchMigrationNotificationHandler> logger)
     {
-        _connectionStrings = connectionStrings;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -34,16 +34,24 @@ internal sealed class RunAISearchMigrationNotificationHandler
         {
             _logger.LogInformation("Running Umbraco.AI.Search database migrations...");
 
+            var (connectionString, providerName) = AIConnectionStringResolver.Resolve(_configuration);
+
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAISearchDbContext>();
-            UmbracoAISearchDbContext.ConfigureProvider(
-                optionsBuilder,
-                _connectionStrings.Value.ConnectionString,
-                _connectionStrings.Value.ProviderName);
+            UmbracoAISearchDbContext.ConfigureProvider(optionsBuilder, connectionString, providerName);
 
             optionsBuilder.ConfigureWarnings(w =>
                 w.Log(RelationalEventId.PendingModelChangesWarning));
 
             await using var dbContext = new UmbracoAISearchDbContext(optionsBuilder.Options);
+
+            // Migrate history records from the shared __EFMigrationsHistory table to the
+            // per-product table. This ensures previously applied migrations are recognized.
+            await AIMigrationHistoryHelper.MigrateHistoryRecordsAsync(
+                dbContext.Database.GetDbConnection(),
+                UmbracoAISearchDbContext.MigrationsHistoryTableName,
+                UmbracoAISearchDbContext.MigrationPrefix,
+                _logger,
+                cancellationToken);
 
             IEnumerable<string> pending = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
             if (pending.Any())

@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Persistence.Notifications;
 using Umbraco.AI.Agent.Persistence.Agents;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
@@ -20,10 +21,12 @@ public static class UmbracoBuilderExtensions
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIAgentPersistence(this IUmbracoBuilder builder)
     {
-        // Register DbContext with provider-specific migrations assembly
+        // Resolve AI connection string upfront (falls back to Umbraco CMS connection)
+        var (aiConnectionString, aiProviderName) = AIConnectionStringResolver.Resolve(builder.Config);
+
         builder.Services.AddUmbracoDbContext<UmbracoAIAgentDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            UmbracoAIAgentDbContext.ConfigureProvider(options, connectionString, providerName);
+            UmbracoAIAgentDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);
         });
 
         // Replace in-memory repository with EF Core implementation

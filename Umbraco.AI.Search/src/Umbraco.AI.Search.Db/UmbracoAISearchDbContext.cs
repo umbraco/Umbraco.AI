@@ -23,6 +23,16 @@ public class UmbracoAISearchDbContext : DbContext
     }
 
     /// <summary>
+    /// The custom migrations history table name for Umbraco AI Search.
+    /// </summary>
+    internal const string MigrationsHistoryTableName = "__UmbracoAISearchMigrationsHistory";
+
+    /// <summary>
+    /// The migration name prefix used to identify Umbraco AI Search migrations.
+    /// </summary>
+    internal const string MigrationPrefix = "UmbracoAISearch_";
+
+    /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.
     /// </summary>
     internal static void ConfigureProvider(
@@ -39,13 +49,19 @@ public class UmbracoAISearchDbContext : DbContext
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Search.Db.SqlServer"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Search.Db.SqlServer");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Search.Db.Sqlite"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Search.Db.Sqlite");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             default:

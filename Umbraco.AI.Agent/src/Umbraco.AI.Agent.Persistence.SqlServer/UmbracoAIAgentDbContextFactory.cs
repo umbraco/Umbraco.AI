@@ -15,7 +15,11 @@ public class UmbracoAIAgentDbContextFactory : IDesignTimeDbContextFactory<Umbrac
 
         optionsBuilder.UseSqlServer(
             "Server=.;Database=UmbracoAIAgent_Design;Integrated Security=true;TrustServerCertificate=true",
-            x => x.MigrationsAssembly(typeof(UmbracoAIAgentDbContextFactory).Assembly.FullName));
+            x =>
+            {
+                x.MigrationsAssembly(typeof(UmbracoAIAgentDbContextFactory).Assembly.FullName);
+                x.MigrationsHistoryTable(UmbracoAIAgentDbContext.MigrationsHistoryTableName);
+            });
 
         return new UmbracoAIAgentDbContext(optionsBuilder.Options);
     }

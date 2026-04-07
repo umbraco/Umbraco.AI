@@ -102,6 +102,16 @@ public class UmbracoAIDbContext : DbContext
     }
 
     /// <summary>
+    /// The custom migrations history table name for Umbraco AI core.
+    /// </summary>
+    internal const string MigrationsHistoryTableName = "__UmbracoAIMigrationsHistory";
+
+    /// <summary>
+    /// The migration name prefix used to identify Umbraco AI core migrations.
+    /// </summary>
+    internal const string MigrationPrefix = "UmbracoAI_";
+
+    /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.
     /// </summary>
     internal static void ConfigureProvider(
@@ -118,13 +128,19 @@ public class UmbracoAIDbContext : DbContext
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Persistence.SqlServer"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.SqlServer");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Persistence.Sqlite"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.Sqlite");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             default:

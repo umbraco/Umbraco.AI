@@ -16,7 +16,11 @@ public class UmbracoAIDbContextFactory : IDesignTimeDbContextFactory<UmbracoAIDb
         // Use a dummy connection string for design-time operations
         optionsBuilder.UseSqlite(
             "Data Source=:memory:",
-            x => x.MigrationsAssembly(typeof(UmbracoAIDbContextFactory).Assembly.FullName));
+            x =>
+            {
+                x.MigrationsAssembly(typeof(UmbracoAIDbContextFactory).Assembly.FullName);
+                x.MigrationsHistoryTable(UmbracoAIDbContext.MigrationsHistoryTableName);
+            });
 
         return new UmbracoAIDbContext(optionsBuilder.Options);
     }

@@ -23,6 +23,16 @@ public class UmbracoAIPromptDbContext : DbContext
     }
 
     /// <summary>
+    /// The custom migrations history table name for Umbraco AI Prompt.
+    /// </summary>
+    internal const string MigrationsHistoryTableName = "__UmbracoAIPromptMigrationsHistory";
+
+    /// <summary>
+    /// The migration name prefix used to identify Umbraco AI Prompt migrations.
+    /// </summary>
+    internal const string MigrationPrefix = "UmbracoAIPrompt_";
+
+    /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.
     /// </summary>
     internal static void ConfigureProvider(
@@ -39,13 +49,19 @@ public class UmbracoAIPromptDbContext : DbContext
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.SqlServer"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.SqlServer");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.Sqlite"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.Sqlite");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             default:

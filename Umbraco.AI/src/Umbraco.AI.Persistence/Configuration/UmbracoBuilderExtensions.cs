@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
@@ -41,10 +43,12 @@ public static class UmbracoBuilderExtensions
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIPersistence(this IUmbracoBuilder builder)
     {
-        // Register DbContext using Umbraco's database provider detection with migrations assembly config
+        // Resolve AI connection string upfront (falls back to Umbraco CMS connection)
+        var (aiConnectionString, aiProviderName) = AIConnectionStringResolver.Resolve(builder.Config);
+
         builder.Services.AddUmbracoDbContext<UmbracoAIDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            UmbracoAIDbContext.ConfigureProvider(options, connectionString, providerName);
+            UmbracoAIDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);
         });
 
         // Connection factory for entity/domain mapping with encryption support

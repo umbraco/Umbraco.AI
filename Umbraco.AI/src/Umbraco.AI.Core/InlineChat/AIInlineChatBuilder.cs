@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Utilities;
 
@@ -37,6 +38,7 @@ public sealed class AIChatBuilder
     private Guid? _profileId;
     private string? _profileAlias;
     private ChatOptions? _chatOptions;
+    private AIOutputSchema? _outputSchema;
     private IEnumerable<AIRequestContextItem>? _contextItems;
     private IReadOnlyList<Guid> _guardrailIds = [];
     private IReadOnlyList<string>? _guardrailAliases;
@@ -115,6 +117,18 @@ public sealed class AIChatBuilder
     public AIChatBuilder WithChatOptions(ChatOptions options)
     {
         _chatOptions = options;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets an output schema that constrains the chat response to a specific structure.
+    /// The schema is applied as <see cref="ChatOptions.ResponseFormat"/> automatically.
+    /// </summary>
+    /// <param name="schema">The output schema to apply.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIChatBuilder WithOutputSchema(AIOutputSchema schema)
+    {
+        _outputSchema = schema;
         return this;
     }
 
@@ -220,6 +234,11 @@ public sealed class AIChatBuilder
     /// Gets the chat options configured on this builder.
     /// </summary>
     internal ChatOptions? ChatOptions => _chatOptions;
+
+    /// <summary>
+    /// Gets the output schema configured on this builder.
+    /// </summary>
+    internal AIOutputSchema? OutputSchema => _outputSchema;
 
     /// <summary>
     /// Gets the context items configured on this builder.

@@ -40,6 +40,11 @@ public sealed class StandardAgentConfigModel : AgentConfigModel
     public List<string>? AllowedToolScopeIds { get; set; }
 
     /// <summary>
+    /// Optional JSON Schema that constrains the agent's output to a specific structure.
+    /// </summary>
+    public JsonElement? OutputSchema { get; set; }
+
+    /// <summary>
     /// User group-specific permission overrides.
     /// Dictionary key is UserGroupId (Guid).
     /// </summary>

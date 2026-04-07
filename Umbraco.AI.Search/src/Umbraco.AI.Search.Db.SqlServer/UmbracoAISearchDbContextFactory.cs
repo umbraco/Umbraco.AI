@@ -18,7 +18,11 @@ public class UmbracoAISearchDbContextFactory : IDesignTimeDbContextFactory<Umbra
         // Use a dummy connection string for design-time operations
         optionsBuilder.UseSqlServer(
             "Server=.;Database=UmbracoAISearch_Design;Integrated Security=true;TrustServerCertificate=true",
-            x => x.MigrationsAssembly(typeof(UmbracoAISearchDbContextFactory).Assembly.FullName));
+            x =>
+            {
+                x.MigrationsAssembly(typeof(UmbracoAISearchDbContextFactory).Assembly.FullName);
+                x.MigrationsHistoryTable(UmbracoAISearchDbContext.MigrationsHistoryTableName);
+            });
 
         return new UmbracoAISearchDbContext(optionsBuilder.Options);
     }

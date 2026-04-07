@@ -15,7 +15,11 @@ public class UmbracoAIAgentDbContextFactory : IDesignTimeDbContextFactory<Umbrac
 
         optionsBuilder.UseSqlite(
             "Data Source=UmbracoAIAgent_Design.db",
-            x => x.MigrationsAssembly(typeof(UmbracoAIAgentDbContextFactory).Assembly.FullName));
+            x =>
+            {
+                x.MigrationsAssembly(typeof(UmbracoAIAgentDbContextFactory).Assembly.FullName);
+                x.MigrationsHistoryTable(UmbracoAIAgentDbContext.MigrationsHistoryTableName);
+            });
 
         return new UmbracoAIAgentDbContext(optionsBuilder.Options);
     }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Agent.Persistence.Agents;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Agent.Persistence;
@@ -23,6 +24,11 @@ public class UmbracoAIAgentDbContext : DbContext
     }
 
     /// <summary>
+    /// The shared migrations history table name for all Umbraco AI packages.
+    /// </summary>
+    internal const string MigrationsHistoryTableName = AIConnectionStringResolver.MigrationsHistoryTableName;
+
+    /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.
     /// </summary>
     internal static void ConfigureProvider(
@@ -39,13 +45,19 @@ public class UmbracoAIAgentDbContext : DbContext
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Agent.Persistence.SqlServer"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Agent.Persistence.SqlServer");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.AI.Agent.Persistence.Sqlite"));
+                {
+                    x.MigrationsAssembly("Umbraco.AI.Agent.Persistence.Sqlite");
+                    x.MigrationsHistoryTable(MigrationsHistoryTableName);
+                });
                 break;
 
             default:

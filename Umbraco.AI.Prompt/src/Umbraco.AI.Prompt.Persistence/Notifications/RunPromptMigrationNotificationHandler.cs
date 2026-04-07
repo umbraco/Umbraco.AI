@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
@@ -13,14 +13,14 @@ namespace Umbraco.AI.Prompt.Persistence.Notifications;
 /// </summary>
 internal sealed class RunPromptMigrationNotificationHandler : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    private readonly IOptions<ConnectionStrings> _connectionStrings;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<RunPromptMigrationNotificationHandler> _logger;
 
     public RunPromptMigrationNotificationHandler(
-        IOptions<ConnectionStrings> connectionStrings,
+        IConfiguration configuration,
         ILogger<RunPromptMigrationNotificationHandler> logger)
     {
-        _connectionStrings = connectionStrings;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -37,11 +37,10 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
             // NullReferenceException in SqliteDatabaseCreator.Exists() when the ProfiledDbConnection's
             // inner connection is disposed. Creating the context directly avoids the pooled factory.
             // See: https://github.com/umbraco/Umbraco-CMS/issues/22124
+            var (connectionString, providerName) = AIConnectionStringResolver.Resolve(_configuration);
+
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIPromptDbContext>();
-            UmbracoAIPromptDbContext.ConfigureProvider(
-                optionsBuilder,
-                _connectionStrings.Value.ConnectionString,
-                _connectionStrings.Value.ProviderName);
+            UmbracoAIPromptDbContext.ConfigureProvider(optionsBuilder, connectionString, providerName);
 
             // Downgrade PendingModelChangesWarning from exception to log so migrations
             // can still be applied during development when the model has unreleased changes.
@@ -49,6 +48,14 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
                 w.Log(RelationalEventId.PendingModelChangesWarning));
 
             await using UmbracoAIPromptDbContext dbContext = new UmbracoAIPromptDbContext(optionsBuilder.Options);
+
+            // Migrate history records from the shared __EFMigrationsHistory table to the
+            // per-product table. This ensures previously applied migrations are recognized.
+            await AIMigrationHistoryHelper.MigrateHistoryRecordsAsync(
+                dbContext.Database.GetDbConnection(),
+                AIConnectionStringResolver.MigrationsHistoryTableName,
+                _logger,
+                cancellationToken);
 
             IEnumerable<string> pending = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
             if (pending.Any())

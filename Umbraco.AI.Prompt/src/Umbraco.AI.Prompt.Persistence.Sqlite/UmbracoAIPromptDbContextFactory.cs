@@ -15,7 +15,11 @@ public class UmbracoAIPromptDbContextFactory : IDesignTimeDbContextFactory<Umbra
 
         optionsBuilder.UseSqlite(
             "Data Source=UmbracoAIPrompt_Design.db",
-            x => x.MigrationsAssembly(typeof(UmbracoAIPromptDbContextFactory).Assembly.FullName));
+            x =>
+            {
+                x.MigrationsAssembly(typeof(UmbracoAIPromptDbContextFactory).Assembly.FullName);
+                x.MigrationsHistoryTable(UmbracoAIPromptDbContext.MigrationsHistoryTableName);
+            });
 
         return new UmbracoAIPromptDbContext(optionsBuilder.Options);
     }

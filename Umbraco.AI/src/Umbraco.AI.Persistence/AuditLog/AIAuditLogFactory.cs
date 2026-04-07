@@ -33,8 +33,8 @@ internal static class AIAuditLogFactory
         return new AIAuditLog
         {
             Id = entity.Id,
-            StartTime = entity.StartTime,
-            EndTime = entity.EndTime,
+            StartTime = DateTime.SpecifyKind(entity.StartTime, DateTimeKind.Utc),
+            EndTime = entity.EndTime.HasValue ? DateTime.SpecifyKind(entity.EndTime.Value, DateTimeKind.Utc) : null,
             Status = (AIAuditLogStatus)entity.Status,
             ErrorCategory = entity.ErrorCategory.HasValue ? (AIAuditLogErrorCategory)entity.ErrorCategory.Value : null,
             ErrorMessage = entity.ErrorMessage,

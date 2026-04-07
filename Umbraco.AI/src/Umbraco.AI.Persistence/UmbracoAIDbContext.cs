@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Persistence.Connections;
 using Umbraco.AI.Persistence.Context;
 using Umbraco.AI.Persistence.Guardrails;
@@ -102,14 +103,9 @@ public class UmbracoAIDbContext : DbContext
     }
 
     /// <summary>
-    /// The custom migrations history table name for Umbraco AI core.
+    /// The shared migrations history table name for all Umbraco AI packages.
     /// </summary>
-    internal const string MigrationsHistoryTableName = "__UmbracoAIMigrationsHistory";
-
-    /// <summary>
-    /// The migration name prefix used to identify Umbraco AI core migrations.
-    /// </summary>
-    internal const string MigrationPrefix = "UmbracoAI_";
+    internal const string MigrationsHistoryTableName = AIConnectionStringResolver.MigrationsHistoryTableName;
 
     /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.

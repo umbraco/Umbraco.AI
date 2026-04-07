@@ -19,6 +19,11 @@ public static class AIConnectionStringResolver
     public const string ConnectionName = "umbracoAiDbDSN";
 
     /// <summary>
+    /// The shared EF Core migrations history table for all Umbraco AI packages.
+    /// </summary>
+    public const string MigrationsHistoryTableName = "__UmbracoAIMigrationsHistory";
+
+    /// <summary>
     /// Resolves the AI database connection string and provider name.
     /// </summary>
     /// <param name="configuration">The application configuration.</param>

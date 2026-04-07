@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Prompt.Persistence.Prompts;
 using Umbraco.Cms.Core;
 
@@ -23,14 +24,9 @@ public class UmbracoAIPromptDbContext : DbContext
     }
 
     /// <summary>
-    /// The custom migrations history table name for Umbraco AI Prompt.
+    /// The shared migrations history table name for all Umbraco AI packages.
     /// </summary>
-    internal const string MigrationsHistoryTableName = "__UmbracoAIPromptMigrationsHistory";
-
-    /// <summary>
-    /// The migration name prefix used to identify Umbraco AI Prompt migrations.
-    /// </summary>
-    internal const string MigrationPrefix = "UmbracoAIPrompt_";
+    internal const string MigrationsHistoryTableName = AIConnectionStringResolver.MigrationsHistoryTableName;
 
     /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.

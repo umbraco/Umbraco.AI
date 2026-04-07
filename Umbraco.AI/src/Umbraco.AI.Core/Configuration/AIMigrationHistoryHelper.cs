@@ -5,33 +5,29 @@ namespace Umbraco.AI.Core.Configuration;
 
 /// <summary>
 /// Helper for migrating EF Core migration history records from the shared
-/// <c>__EFMigrationsHistory</c> table to per-product history tables.
+/// <c>__EFMigrationsHistory</c> table to the Umbraco AI history table.
 /// </summary>
 /// <remarks>
 /// This is needed when transitioning from the default shared history table to
-/// per-product tables. Without this, EF Core would attempt to re-run all
+/// the dedicated AI table. Without this, EF Core would attempt to re-run all
 /// previously applied migrations because it cannot find them in the new table.
 /// </remarks>
 public static class AIMigrationHistoryHelper
 {
     private const string OldHistoryTable = "__EFMigrationsHistory";
+    private const string MigrationPattern = "%UmbracoAI%";
 
     /// <summary>
-    /// Copies migration history records matching <paramref name="migrationPrefix"/> from the
-    /// shared <c>__EFMigrationsHistory</c> table to the specified per-product history table.
+    /// Copies all Umbraco AI migration history records from the shared
+    /// <c>__EFMigrationsHistory</c> table to the dedicated AI history table.
     /// </summary>
-    /// <param name="connection">An unopened database connection.</param>
-    /// <param name="newHistoryTable">The new per-product history table name.</param>
-    /// <param name="migrationPrefix">
-    /// The migration name prefix to match (e.g., <c>"UmbracoAI_"</c>).
-    /// All records whose <c>MigrationId</c> contains this prefix will be copied.
-    /// </param>
+    /// <param name="connection">The database connection (opened if needed, restored to original state).</param>
+    /// <param name="newHistoryTable">The AI migrations history table name.</param>
     /// <param name="logger">Optional logger for diagnostics.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     public static async Task MigrateHistoryRecordsAsync(
         DbConnection connection,
         string newHistoryTable,
-        string migrationPrefix,
         ILogger? logger = null,
         CancellationToken cancellationToken = default)
     {
@@ -55,8 +51,7 @@ public static class AIMigrationHistoryHelper
 
             await EnsureHistoryTableExistsAsync(connection, newHistoryTable, isSqlite, cancellationToken);
 
-            var copied = await CopyHistoryRecordsAsync(
-                connection, newHistoryTable, migrationPrefix, isSqlite, cancellationToken);
+            var copied = await CopyHistoryRecordsAsync(connection, newHistoryTable, isSqlite, cancellationToken);
 
             if (copied > 0)
             {
@@ -114,29 +109,19 @@ public static class AIMigrationHistoryHelper
     }
 
     private static async Task<int> CopyHistoryRecordsAsync(
-        DbConnection connection, string newTable, string migrationPrefix,
-        bool isSqlite, CancellationToken ct)
+        DbConnection connection, string newTable, bool isSqlite, CancellationToken ct)
     {
         using var cmd = connection.CreateCommand();
 
-        // Migration IDs have the format "{timestamp}_{prefix}{name}" (e.g., "20240101_UmbracoAI_InitialCreate").
-        // Match on "_{prefix}" with escaped underscores to avoid substring collisions — e.g., "UmbracoAI_"
-        // must not match "UmbracoAIAgent_" records. SQL Server uses [_] for literal underscore; SQLite uses ESCAPE.
-        cmd.CommandText = isSqlite
-            ? $"""
-               INSERT INTO [{newTable}] ([MigrationId], [ProductVersion])
-               SELECT [MigrationId], [ProductVersion]
-               FROM [{OldHistoryTable}]
-               WHERE [MigrationId] LIKE '%\_{migrationPrefix}%' ESCAPE '\'
-               AND [MigrationId] NOT IN (SELECT [MigrationId] FROM [{newTable}])
-               """
-            : $"""
-               INSERT INTO [{newTable}] ([MigrationId], [ProductVersion])
-               SELECT [MigrationId], [ProductVersion]
-               FROM [{OldHistoryTable}]
-               WHERE [MigrationId] LIKE '%[_]{migrationPrefix}%'
-               AND [MigrationId] NOT IN (SELECT [MigrationId] FROM [{newTable}])
-               """;
+        // Copy all Umbraco AI migration records (Core, Agent, Prompt, Search) into the shared AI history table.
+        // All AI migration names contain "UmbracoAI" which distinguishes them from CMS migrations.
+        cmd.CommandText = $"""
+            INSERT INTO [{newTable}] ([MigrationId], [ProductVersion])
+            SELECT [MigrationId], [ProductVersion]
+            FROM [{OldHistoryTable}]
+            WHERE [MigrationId] LIKE '{MigrationPattern}'
+            AND [MigrationId] NOT IN (SELECT [MigrationId] FROM [{newTable}])
+            """;
 
         return await cmd.ExecuteNonQueryAsync(ct);
     }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Agent.Persistence.Agents;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Agent.Persistence;
@@ -23,14 +24,9 @@ public class UmbracoAIAgentDbContext : DbContext
     }
 
     /// <summary>
-    /// The custom migrations history table name for Umbraco AI Agent.
+    /// The shared migrations history table name for all Umbraco AI packages.
     /// </summary>
-    internal const string MigrationsHistoryTableName = "__UmbracoAIAgentMigrationsHistory";
-
-    /// <summary>
-    /// The migration name prefix used to identify Umbraco AI Agent migrations.
-    /// </summary>
-    internal const string MigrationPrefix = "UmbracoAIAgent_";
+    internal const string MigrationsHistoryTableName = AIConnectionStringResolver.MigrationsHistoryTableName;
 
     /// <summary>
     /// Configures the EF Core database provider with the correct migrations assembly.

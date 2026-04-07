@@ -53,8 +53,7 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
             // per-product table. This ensures previously applied migrations are recognized.
             await AIMigrationHistoryHelper.MigrateHistoryRecordsAsync(
                 dbContext.Database.GetDbConnection(),
-                UmbracoAIPromptDbContext.MigrationsHistoryTableName,
-                UmbracoAIPromptDbContext.MigrationPrefix,
+                AIConnectionStringResolver.MigrationsHistoryTableName,
                 _logger,
                 cancellationToken);
 

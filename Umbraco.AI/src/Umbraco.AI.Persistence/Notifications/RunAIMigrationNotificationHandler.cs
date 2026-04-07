@@ -55,8 +55,7 @@ public class RunAIMigrationNotificationHandler
         // per-product table. This ensures previously applied migrations are recognized.
         await AIMigrationHistoryHelper.MigrateHistoryRecordsAsync(
             dbContext.Database.GetDbConnection(),
-            UmbracoAIDbContext.MigrationsHistoryTableName,
-            UmbracoAIDbContext.MigrationPrefix,
+            AIConnectionStringResolver.MigrationsHistoryTableName,
             _logger,
             cancellationToken);
 

@@ -48,8 +48,7 @@ internal sealed class RunAISearchMigrationNotificationHandler
             // per-product table. This ensures previously applied migrations are recognized.
             await AIMigrationHistoryHelper.MigrateHistoryRecordsAsync(
                 dbContext.Database.GetDbConnection(),
-                UmbracoAISearchDbContext.MigrationsHistoryTableName,
-                UmbracoAISearchDbContext.MigrationPrefix,
+                AIConnectionStringResolver.MigrationsHistoryTableName,
                 _logger,
                 cancellationToken);
 

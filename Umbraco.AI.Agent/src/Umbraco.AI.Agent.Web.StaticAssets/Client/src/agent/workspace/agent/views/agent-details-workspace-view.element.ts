@@ -302,7 +302,11 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
             umb-code-editor {
                 width: 100%;
+                height: 300px;
                 --umb-code-editor-height: 300px;
+                border: 1px solid var(--uui-color-border);
+                border-radius: var(--uui-border-radius);
+                overflow: hidden;
             }
 
             uui-loader {

@@ -1,34 +1,66 @@
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 
 namespace Umbraco.AI.Tests.Unit.Services;
+
+#pragma warning disable CS0618 // Tests for deprecated API surface — will be removed with the methods in v3
 
 public class AIEmbeddingServiceTests
 {
     private readonly Mock<IAIEmbeddingGeneratorFactory> _generatorFactoryMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
-    private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
+    private readonly Mock<IEventAggregator> _eventAggregatorMock;
     private readonly AIEmbeddingService _service;
 
     public AIEmbeddingServiceTests()
     {
         _generatorFactoryMock = new Mock<IAIEmbeddingGeneratorFactory>();
         _profileServiceMock = new Mock<IAIProfileService>();
-        _optionsMock = new Mock<IOptionsMonitor<AIOptions>>();
-        _optionsMock.Setup(x => x.CurrentValue).Returns(new AIOptions
-        {
-            DefaultEmbeddingProfileAlias = "default-embedding"
-        });
+        _eventAggregatorMock = new Mock<IEventAggregator>();
+        _eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var runtimeContext = new AIRuntimeContext([]);
+        var contextAccessorMock = new Mock<IAIRuntimeContextAccessor>();
+        contextAccessorMock.Setup(x => x.Context).Returns((AIRuntimeContext?)null);
+
+        var scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
+        var mockScope = new Mock<IAIRuntimeContextScope>();
+        mockScope.Setup(s => s.Context).Returns(runtimeContext);
+        scopeProviderMock
+            .Setup(x => x.CreateScope(It.IsAny<IEnumerable<AIRequestContextItem>>()))
+            .Returns(() =>
+            {
+                contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
+                return mockScope.Object;
+            });
+        scopeProviderMock
+            .Setup(x => x.CreateScope())
+            .Returns(() =>
+            {
+                contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
+                return mockScope.Object;
+            });
+
+        var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
 
         _service = new AIEmbeddingService(
             _generatorFactoryMock.Object,
             _profileServiceMock.Object,
-            _optionsMock.Object);
+            new Mock<IAIGuardrailService>().Object,
+            _eventAggregatorMock.Object,
+            contextAccessorMock.Object,
+            scopeProviderMock.Object,
+            contributorCollection);
     }
 
     #region GenerateEmbeddingAsync - Default profile
@@ -433,8 +465,8 @@ public class AIEmbeddingServiceTests
         // Act
         var generator = await _service.GetEmbeddingGeneratorAsync();
 
-        // Assert
-        generator.ShouldBe(fakeGenerator);
+        // Assert — wrapped in ScopedInlineEmbeddingGenerator, not the raw fake
+        generator.ShouldNotBeNull();
         _profileServiceMock.Verify(
             x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -464,8 +496,8 @@ public class AIEmbeddingServiceTests
         // Act
         var generator = await _service.GetEmbeddingGeneratorAsync(profileId);
 
-        // Assert
-        generator.ShouldBe(fakeGenerator);
+        // Assert — wrapped in ScopedInlineEmbeddingGenerator, not the raw fake
+        generator.ShouldNotBeNull();
         _profileServiceMock.Verify(
             x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()),
             Times.Once);

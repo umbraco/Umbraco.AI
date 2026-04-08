@@ -2,7 +2,7 @@ import { css, customElement, html, property, repeat, state } from "@umbraco-cms/
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
-import { type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import type { UaiToolScope } from "../../types.js";
 import { UaiToolController } from "../../controllers/tool.controller.js";
 import { toCamelCase } from "../../utils.js";
 
@@ -89,7 +89,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
         if (!response.error && response.data) {
             // Map API scopes to internal model with localization
-            let scopes: UaiToolScopeItemModel[] = response.data.map((scope: ToolScopeItemResponseModel) => {
+            let scopes: UaiToolScopeItemModel[] = response.data.map((scope: UaiToolScope) => {
                 const camelCaseId = toCamelCase(scope.id);
                 return {
                     id: scope.id,

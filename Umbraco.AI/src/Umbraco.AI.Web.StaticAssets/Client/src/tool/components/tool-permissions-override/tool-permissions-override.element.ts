@@ -10,7 +10,8 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UaiToolRepository, type ToolItemResponseModel } from "../../repository/tool.repository.js";
+import { UaiToolRepository } from "../../repository/tool.repository.js";
+import type { UaiToolItem } from "../../types.js";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { toCamelCase } from "../../utils.js";
@@ -44,7 +45,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	 * Map of tool ID to full tool data.
 	 */
 	@state()
-	private _toolDataMap = new Map<string, ToolItemResponseModel>();
+	private _toolDataMap = new Map<string, UaiToolItem>();
 
 	/**
 	 * Inherited tool IDs from agent defaults.
@@ -93,7 +94,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 		const { data } = await this.#toolRepository.getTools();
 		if (!data) return;
 
-		const toolMap = new Map<string, ToolItemResponseModel>();
+		const toolMap = new Map<string, UaiToolItem>();
 		for (const tool of data) {
 			toolMap.set(tool.id, tool);
 		}
@@ -177,10 +178,10 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 
 		// Filter out already selected items and map to picker format
 		return data
-			.filter((tool: ToolItemResponseModel) =>
+			.filter((tool: UaiToolItem) =>
 				!this.allowedToolIds.includes(tool.id) && !this.inheritedToolIds.includes(tool.id)
 			)
-			.map((tool: ToolItemResponseModel) => {
+			.map((tool: UaiToolItem) => {
 				const camelCaseId = toCamelCase(tool.id);
 				const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name || tool.id;
 				const localizedDescription =

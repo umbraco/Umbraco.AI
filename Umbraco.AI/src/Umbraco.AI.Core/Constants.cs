@@ -67,6 +67,11 @@ public static class Constants
         /// Feature type for inline agent executions.
         /// </summary>
         public const string InlineAgent = "inline-agent";
+
+        /// <summary>
+        /// Feature type for inline speech-to-text executions via <see cref="SpeechToText.IAISpeechToTextService.TranscribeAsync"/>.
+        /// </summary>
+        public const string InlineSpeechToText = "inline-speech-to-text";
     }
 
     /// <summary>

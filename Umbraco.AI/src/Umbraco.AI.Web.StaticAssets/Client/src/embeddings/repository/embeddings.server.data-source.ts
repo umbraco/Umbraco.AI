@@ -21,7 +21,7 @@ export class UaiEmbeddingsServerDataSource {
             this.#host,
             EmbeddingsService.generateEmbeddings({
                 body: {
-                    profileIdOrAlias: request.profileIdOrAlias ?? null,
+                    profileIdOrAlias: request.profileIdOrAlias ?? undefined,
                     values: request.values,
                 },
                 signal: request.signal,

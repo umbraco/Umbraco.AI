@@ -72,6 +72,11 @@ public static class Constants
         /// Feature type for inline speech-to-text executions via <see cref="SpeechToText.IAISpeechToTextService.TranscribeAsync"/>.
         /// </summary>
         public const string InlineSpeechToText = "inline-speech-to-text";
+
+        /// <summary>
+        /// Feature type for inline embedding executions via <see cref="Embeddings.IAIEmbeddingService.GenerateEmbeddingsAsync"/>.
+        /// </summary>
+        public const string InlineEmbedding = "inline-embedding";
     }
 
     /// <summary>

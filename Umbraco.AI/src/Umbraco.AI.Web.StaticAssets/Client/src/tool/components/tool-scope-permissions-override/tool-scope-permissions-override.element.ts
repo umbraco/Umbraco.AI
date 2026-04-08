@@ -10,7 +10,7 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import type { UaiToolScope } from "../../types.js";
 import { UaiToolController } from "../../controllers/tool.controller.js";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
@@ -45,7 +45,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	 * Map of scope ID to full scope data.
 	 */
 	@state()
-	private _scopeDataMap = new Map<string, ToolScopeItemResponseModel>();
+	private _scopeDataMap = new Map<string, UaiToolScope>();
 
 	/**
 	 * Tool counts by scope ID.
@@ -107,7 +107,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 		const { data } = await this.#toolController.getToolScopes();
 		if (!data) return;
 
-		const scopeMap = new Map<string, ToolScopeItemResponseModel>();
+		const scopeMap = new Map<string, UaiToolScope>();
 		for (const scope of data) {
 			scopeMap.set(scope.id, scope);
 		}
@@ -210,13 +210,13 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 
 		// Filter out already selected items and map to picker format
 		return data
-			.filter((scope: ToolScopeItemResponseModel) =>
+			.filter((scope: UaiToolScope) =>
 				!this.allowedScopeIds.includes(scope.id) && !this.inheritedScopeIds.includes(scope.id)
 			)
-			.filter((scope: ToolScopeItemResponseModel) =>
+			.filter((scope: UaiToolScope) =>
 				!this.hideEmptyScopes || (this._toolCounts[scope.id] ?? 0) > 0
 			)
-			.map((scope: ToolScopeItemResponseModel) => {
+			.map((scope: UaiToolScope) => {
 				const camelCaseId = toCamelCase(scope.id);
 				const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
 				const localizedDescription =

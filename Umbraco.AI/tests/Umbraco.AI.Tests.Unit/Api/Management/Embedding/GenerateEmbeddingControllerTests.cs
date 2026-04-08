@@ -48,8 +48,8 @@ public class GenerateEmbeddingControllerTests
 
         _embeddingServiceMock
             .Setup(x => x.GenerateEmbeddingsAsync(
+                It.IsAny<Action<AIEmbeddingBuilder>>(),
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<EmbeddingGenerationOptions?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 
@@ -84,11 +84,12 @@ public class GenerateEmbeddingControllerTests
             new Embedding<float>(new[] { 0.1f, 0.2f, 0.3f })
         });
 
+        // IdOrAlias(Guid) returns the ID directly — no mock needed for resolution
+
         _embeddingServiceMock
             .Setup(x => x.GenerateEmbeddingsAsync(
-                profileId,
+                It.IsAny<Action<AIEmbeddingBuilder>>(),
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<EmbeddingGenerationOptions?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 
@@ -101,9 +102,8 @@ public class GenerateEmbeddingControllerTests
 
         // Assert
         _embeddingServiceMock.Verify(x => x.GenerateEmbeddingsAsync(
-            profileId,
+            It.IsAny<Action<AIEmbeddingBuilder>>(),
             It.IsAny<IEnumerable<string>>(),
-            It.IsAny<EmbeddingGenerationOptions?>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -123,8 +123,8 @@ public class GenerateEmbeddingControllerTests
 
         _embeddingServiceMock
             .Setup(x => x.GenerateEmbeddingsAsync(
+                It.IsAny<Action<AIEmbeddingBuilder>>(),
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<EmbeddingGenerationOptions?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 
@@ -135,31 +135,26 @@ public class GenerateEmbeddingControllerTests
         // Act
         await _controller.GenerateEmbeddings(requestModel);
 
-        // Assert - Should call the overload without profileId
+        // Assert
         _embeddingServiceMock.Verify(x => x.GenerateEmbeddingsAsync(
+            It.IsAny<Action<AIEmbeddingBuilder>>(),
             It.IsAny<IEnumerable<string>>(),
-            It.IsAny<EmbeddingGenerationOptions?>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GenerateEmbeddings_WithProfileNotFound_Returns404NotFound()
     {
-        // Arrange
-        var profileId = Guid.NewGuid();
+        // Arrange — use alias-based IdOrAlias so TryGetProfileIdAsync does a DB lookup
         var requestModel = new GenerateEmbeddingRequestModel
         {
-            ProfileIdOrAlias = new IdOrAlias(profileId),
+            ProfileIdOrAlias = new IdOrAlias("non-existent-profile"),
             Values = new[] { "Test text" }
         };
 
-        _embeddingServiceMock
-            .Setup(x => x.GenerateEmbeddingsAsync(
-                profileId,
-                It.IsAny<IEnumerable<string>>(),
-                It.IsAny<EmbeddingGenerationOptions?>(),
-                It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException($"Profile with ID '{profileId}' not found"));
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("non-existent-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var result = await _controller.GenerateEmbeddings(requestModel);
@@ -181,8 +176,8 @@ public class GenerateEmbeddingControllerTests
 
         _embeddingServiceMock
             .Setup(x => x.GenerateEmbeddingsAsync(
+                It.IsAny<Action<AIEmbeddingBuilder>>(),
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<EmbeddingGenerationOptions?>(),
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("API rate limit exceeded"));
 
@@ -215,8 +210,8 @@ public class GenerateEmbeddingControllerTests
 
         _embeddingServiceMock
             .Setup(x => x.GenerateEmbeddingsAsync(
+                It.IsAny<Action<AIEmbeddingBuilder>>(),
                 It.IsAny<IEnumerable<string>>(),
-                It.IsAny<EmbeddingGenerationOptions?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddings);
 

@@ -58,10 +58,16 @@ public class CompleteChatController : ChatControllerBase
         try
         {
             // Resolve the profile ID
-            var profileId = profileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken)
-                : null;
-                
+            Guid? profileId = null;
+            if (profileIdOrAlias != null)
+            {
+                profileId = await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken);
+                if (!profileId.HasValue)
+                {
+                    return ProfileNotFound();
+                }
+            }
+
             // Convert request messages to ChatMessage list
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
 
@@ -76,6 +82,10 @@ public class CompleteChatController : ChatControllerBase
             }, messages, cancellationToken);
 
             return Ok(_umbracoMapper.Map<ChatResponseModel>(response));
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        {
+            return ProfileNotFound();
         }
         catch (InvalidOperationException ex)
         {

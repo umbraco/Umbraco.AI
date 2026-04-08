@@ -2,7 +2,9 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.SpeechToText;
+using Umbraco.AI.Extensions;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.SpeechToText.Models;
 
@@ -17,13 +19,17 @@ namespace Umbraco.AI.Web.Api.Management.SpeechToText.Controllers;
 public class TranscribeSpeechToTextController : SpeechToTextControllerBase
 {
     private readonly IAISpeechToTextService _speechToTextService;
+    private readonly IAIProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranscribeSpeechToTextController"/> class.
     /// </summary>
-    public TranscribeSpeechToTextController(IAISpeechToTextService speechToTextService)
+    public TranscribeSpeechToTextController(
+        IAISpeechToTextService speechToTextService,
+        IAIProfileService profileService)
     {
         _speechToTextService = speechToTextService;
+        _profileService = profileService;
     }
 
     /// <summary>
@@ -77,22 +83,19 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
 
                 await using var audioStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read);
 
+                // Resolve profile ID from IdOrAlias
+                var profileId = profileIdOrAlias != null
+                    ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken)
+                    : null;
+
                 var result = await _speechToTextService.TranscribeAsync(
                     b =>
                     {
                         b.WithAlias("backoffice-transcription");
 
-                        if (profileIdOrAlias is not null)
+                        if (profileId.HasValue)
                         {
-                            var idOrAlias = IdOrAlias.Parse(profileIdOrAlias, null);
-                            if (idOrAlias.IsId)
-                            {
-                                b.WithProfile(idOrAlias.Id!.Value);
-                            }
-                            else
-                            {
-                                b.WithProfile(idOrAlias.Alias!);
-                            }
+                            b.WithProfile(profileId.Value);
                         }
 
                         if (language is not null)

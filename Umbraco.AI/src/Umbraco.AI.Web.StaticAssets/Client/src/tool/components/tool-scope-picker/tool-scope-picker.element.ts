@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import type { UaiToolScope } from "../../types.js";
 import { UaiToolController } from "../../controllers/tool.controller.js";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
@@ -118,7 +118,7 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
             // Preserve selection order
             this._items = this._selection
                 .map((id) => {
-                    const scope = data.find((s: ToolScopeItemResponseModel) => s.id.toLowerCase() === id.toLowerCase());
+                    const scope = data.find((s: UaiToolScope) => s.id.toLowerCase() === id.toLowerCase());
                     if (!scope) return undefined;
 
                     const camelCaseId = toCamelCase(scope.id);
@@ -177,13 +177,13 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
 
         // Filter out already selected items and map to picker format
         return data
-            .filter((scope: ToolScopeItemResponseModel) =>
+            .filter((scope: UaiToolScope) =>
                 !this._selection.some((id) => id.toLowerCase() === scope.id.toLowerCase())
             )
-            .filter((scope: ToolScopeItemResponseModel) =>
+            .filter((scope: UaiToolScope) =>
                 !this.hideEmptyScopes || (this._toolCounts[scope.id] ?? 0) > 0
             )
-            .map((scope: ToolScopeItemResponseModel) => {
+            .map((scope: UaiToolScope) => {
                 const camelCaseId = toCamelCase(scope.id);
                 const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
                 const localizedDescription =

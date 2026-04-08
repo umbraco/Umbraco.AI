@@ -57,6 +57,7 @@ public sealed class AIChatBuilder
     public AIChatBuilder WithAlias(string alias)
     {
         _alias = alias;
+        _id = null;
         return this;
     }
 

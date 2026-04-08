@@ -117,19 +117,48 @@ export class UaiAudioRecorder extends UmbControllerBase {
     }
 
     /**
-     * Poll host element visibility while recording.
-     * Uses checkVisibility() which detects CSS transforms, display:none,
-     * visibility:hidden, opacity:0, and content-visibility.
+     * Poll whether the host element is on-screen while recording.
+     * Checks both CSS visibility and whether the element's bounding rect
+     * is within the viewport — this catches elements hidden via CSS
+     * transforms (e.g. translateX(100%)) that checkVisibility() misses.
      */
     #startVisibilityWatch(): void {
         const hostElement = this._host.getHostElement();
         if (!hostElement) return;
 
         this.#visibilityTimer = setInterval(() => {
-            if (!hostElement.checkVisibility()) {
+            if (!this.#isElementOnScreen(hostElement)) {
                 this.cancel();
             }
         }, VISIBILITY_CHECK_INTERVAL);
+    }
+
+    #isElementOnScreen(element: Element): boolean {
+        // checkVisibility covers display:none, visibility:hidden, opacity:0
+        if (element.checkVisibility && !element.checkVisibility()) {
+            return false;
+        }
+
+        // Walk up to find the nearest ancestor with a real bounding box.
+        // Elements with display:contents have zero-size rects.
+        let target: Element | null = element;
+        while (target) {
+            const rect = target.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                return (
+                    rect.right > 0 &&
+                    rect.bottom > 0 &&
+                    rect.left < window.innerWidth &&
+                    rect.top < window.innerHeight
+                );
+            }
+            // Walk through shadow DOM boundaries
+            target = target.parentElement
+                ?? (target.getRootNode() as ShadowRoot).host
+                ?? null;
+        }
+
+        return false;
     }
 
     #stopVisibilityWatch(): void {

@@ -22,6 +22,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     }
 
     @state() private _isOpen = false;
+    @state() private _showContent = false;
 
     constructor() {
         super();
@@ -45,6 +46,11 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                     console.debug(`Copilot Sidebar is now ${isOpen ? "open" : "closed"}`);
                     this._isOpen = isOpen;
                     this.#updateContentOffset(isOpen);
+
+                    // Show content immediately on open; on close, wait for slide-out transition
+                    if (isOpen) {
+                        this._showContent = true;
+                    }
                 });
                 // Wait for agent package's client to be configured before loading agents
                 await agentClientReady;
@@ -73,10 +79,19 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
         this.#copilotContext?.close();
     }
 
+    #handleTransitionEnd(e: TransitionEvent) {
+        // Only react to the sidebar's own transform transition
+        if (e.propertyName === "transform" && !this._isOpen) {
+            this._showContent = false;
+        }
+    }
+
     override render() {
         return html`
-            <aside class="sidebar ${this._isOpen ? "open" : ""}">
-                ${this._isOpen ? html`
+            <aside
+                class="sidebar ${this._isOpen ? "open" : ""}"
+                @transitionend=${this.#handleTransitionEnd}>
+                ${this._showContent ? html`
                     <header class="sidebar-header">
                         <div class="header-content">
                             <h3 class="header-title">Umbraco Copilot</h3>

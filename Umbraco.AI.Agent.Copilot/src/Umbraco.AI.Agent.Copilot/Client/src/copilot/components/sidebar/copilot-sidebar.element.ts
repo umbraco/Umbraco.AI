@@ -76,18 +76,20 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     override render() {
         return html`
             <aside class="sidebar ${this._isOpen ? "open" : ""}">
-                <header class="sidebar-header">
-                    <div class="header-content">
-                        <h3 class="header-title">Umbraco Copilot</h3>
+                ${this._isOpen ? html`
+                    <header class="sidebar-header">
+                        <div class="header-content">
+                            <h3 class="header-title">Umbraco Copilot</h3>
+                        </div>
+                        <uui-button compact look="default" @click=${this.#handleClose}>
+                            <uui-icon name="icon-delete"></uui-icon>
+                        </uui-button>
+                    </header>
+                    <uai-entity-selector></uai-entity-selector>
+                    <div class="sidebar-content">
+                        <uai-chat></uai-chat>
                     </div>
-                    <uui-button compact look="default" @click=${this.#handleClose}>
-                        <uui-icon name="icon-delete"></uui-icon>
-                    </uui-button>
-                </header>
-                <uai-entity-selector></uai-entity-selector>
-                <div class="sidebar-content">
-                    <uai-chat></uai-chat>
-                </div>
+                ` : ''}
             </aside>
         `;
     }

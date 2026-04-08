@@ -8,16 +8,19 @@ export type UaiAudioRecorderState = "idle" | "recording";
 const PREFERRED_MIME_TYPE = "audio/webm;codecs=opus";
 const FALLBACK_MIME_TYPE = "audio/webm";
 
+/** How often to check host visibility while recording (ms). */
+const VISIBILITY_CHECK_INTERVAL = 500;
+
 /**
  * Manages browser audio recording via the MediaRecorder API.
  *
  * Extends `UmbControllerBase` so the recording is automatically cancelled
  * when the host element is destroyed (e.g., navigating away in the SPA).
  *
- * Also watches host visibility — if the host element becomes hidden
- * (e.g., a drawer closes or a section is navigated away from without
- * destroying the element), any active recording is cancelled and the
- * microphone is released.
+ * While recording, periodically checks whether the host element is still
+ * visible. If it becomes hidden (e.g., a drawer closes via CSS transform,
+ * or a section is navigated away from), the recording is cancelled and
+ * the microphone is released.
  *
  * Returns the recorded audio as a `Blob` — transcription is the caller's responsibility
  * via {@link UaiSpeechToTextController}.
@@ -39,7 +42,7 @@ export class UaiAudioRecorder extends UmbControllerBase {
     #mediaRecorder?: MediaRecorder;
     #chunks: Blob[] = [];
     #state$ = new BehaviorSubject<UaiAudioRecorderState>("idle");
-    #observer?: IntersectionObserver;
+    #visibilityTimer?: ReturnType<typeof setInterval>;
 
     /** Observable of the current recorder state. */
     get state$(): Observable<UaiAudioRecorderState> {
@@ -77,7 +80,7 @@ export class UaiAudioRecorder extends UmbControllerBase {
 
         this.#mediaRecorder.start();
         this.#state$.next("recording");
-        this.#observeVisibility();
+        this.#startVisibilityWatch();
     }
 
     /**
@@ -90,7 +93,7 @@ export class UaiAudioRecorder extends UmbControllerBase {
             throw new Error("No active recording to stop.");
         }
 
-        this.#disconnectObserver();
+        this.#stopVisibilityWatch();
         const blob = await this.#stopRecorder();
         this.#state$.next("idle");
         return blob;
@@ -98,7 +101,7 @@ export class UaiAudioRecorder extends UmbControllerBase {
 
     /** Cancel any active recording without returning audio. */
     cancel(): void {
-        this.#disconnectObserver();
+        this.#stopVisibilityWatch();
         if (this.#mediaRecorder && this.#mediaRecorder.state !== "inactive") {
             this.#mediaRecorder.stream.getTracks().forEach((t) => t.stop());
             this.#mediaRecorder.stop();
@@ -114,34 +117,26 @@ export class UaiAudioRecorder extends UmbControllerBase {
     }
 
     /**
-     * Watch the host element's visibility via IntersectionObserver.
-     * Cancels recording if the host becomes hidden (e.g., drawer closes).
+     * Poll host element visibility while recording.
+     * Uses checkVisibility() which detects CSS transforms, display:none,
+     * visibility:hidden, opacity:0, and content-visibility.
      */
-    #observeVisibility(): void {
+    #startVisibilityWatch(): void {
         const hostElement = this._host.getHostElement();
         if (!hostElement) return;
 
-        // IntersectionObserver fires immediately on observe() with the current state.
-        // Skip the first callback — we only care about transitions from visible to hidden.
-        let initialized = false;
-
-        this.#observer = new IntersectionObserver((entries) => {
-            if (!initialized) {
-                initialized = true;
-                return;
-            }
-            const isVisible = entries.some((e) => e.isIntersecting);
-            if (!isVisible && this.#state$.value === "recording") {
+        this.#visibilityTimer = setInterval(() => {
+            if (!hostElement.checkVisibility()) {
                 this.cancel();
             }
-        });
-
-        this.#observer.observe(hostElement);
+        }, VISIBILITY_CHECK_INTERVAL);
     }
 
-    #disconnectObserver(): void {
-        this.#observer?.disconnect();
-        this.#observer = undefined;
+    #stopVisibilityWatch(): void {
+        if (this.#visibilityTimer !== undefined) {
+            clearInterval(this.#visibilityTimer);
+            this.#visibilityTimer = undefined;
+        }
     }
 
     #stopRecorder(): Promise<Blob> {

@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiSpeechToTextRepository } from "../repository/speech-to-text.repository.js";
-import type { UaiTranscriptionOptions, UaiTranscriptionResult } from "../types.js";
+import type { UaiSpeechToTextOptions, UaiSpeechToTextResult } from "../types.js";
 
 /**
  * Public API for transcribing audio to text.
@@ -23,8 +23,8 @@ export class UaiSpeechToTextController extends UmbControllerBase {
      */
     async transcribe(
         audioFile: Blob,
-        options?: UaiTranscriptionOptions,
-    ): Promise<{ data?: UaiTranscriptionResult; error?: unknown }> {
+        options?: UaiSpeechToTextOptions,
+    ): Promise<{ data?: UaiSpeechToTextResult; error?: unknown }> {
         return this.#repository.transcribe({
             profileIdOrAlias: options?.profileIdOrAlias,
             language: options?.language,

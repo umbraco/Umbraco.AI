@@ -2,7 +2,7 @@
  * Result of a speech-to-text transcription.
  * @public
  */
-export interface UaiTranscriptionResult {
+export interface UaiSpeechToTextResult {
     text: string;
 }
 
@@ -10,7 +10,7 @@ export interface UaiTranscriptionResult {
  * Options for speech-to-text transcription (public API).
  * @public
  */
-export interface UaiTranscriptionOptions {
+export interface UaiSpeechToTextOptions {
     /** Profile ID (GUID) or alias. If omitted, uses the default speech-to-text profile. */
     profileIdOrAlias?: string;
     /** BCP-47 language hint (e.g., "en", "de"). */
@@ -23,7 +23,7 @@ export interface UaiTranscriptionOptions {
  * Internal request model for repository/data source.
  * @internal
  */
-export interface UaiTranscriptionRequest {
+export interface UaiSpeechToTextRequest {
     profileIdOrAlias?: string | null;
     language?: string | null;
     audioFile: Blob;

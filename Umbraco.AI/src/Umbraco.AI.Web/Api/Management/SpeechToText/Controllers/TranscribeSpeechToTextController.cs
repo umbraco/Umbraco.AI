@@ -2,9 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.SpeechToText;
-using Umbraco.AI.Extensions;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.SpeechToText.Models;
 
@@ -19,17 +17,13 @@ namespace Umbraco.AI.Web.Api.Management.SpeechToText.Controllers;
 public class TranscribeSpeechToTextController : SpeechToTextControllerBase
 {
     private readonly IAISpeechToTextService _speechToTextService;
-    private readonly IAIProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranscribeSpeechToTextController"/> class.
     /// </summary>
-    public TranscribeSpeechToTextController(
-        IAISpeechToTextService speechToTextService,
-        IAIProfileService profileService)
+    public TranscribeSpeechToTextController(IAISpeechToTextService speechToTextService)
     {
         _speechToTextService = speechToTextService;
-        _profileService = profileService;
     }
 
     /// <summary>
@@ -64,16 +58,6 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
 
         try
         {
-            var options = new SpeechToTextOptions
-            {
-                SpeechLanguage = language
-            };
-
-            // Resolve profile ID from IdOrAlias
-            var profileId = profileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken)
-                : null;
-
             // Save to a temp file so M.E.AI's OpenAISpeechToTextClient picks up
             // the correct extension from FileStream.Name (it defaults to "audio.mp3"
             // for non-FileStream inputs, causing format mismatch).
@@ -93,9 +77,30 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
 
                 await using var audioStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read);
 
-                var result = profileId.HasValue
-                    ? await _speechToTextService.TranscribeAsync(profileId.Value, audioStream, options, cancellationToken)
-                    : await _speechToTextService.TranscribeAsync(audioStream, options, cancellationToken);
+                var result = await _speechToTextService.TranscribeAsync(
+                    b =>
+                    {
+                        b.WithAlias("backoffice-transcription");
+
+                        if (profileIdOrAlias is not null)
+                        {
+                            var idOrAlias = IdOrAlias.Parse(profileIdOrAlias, null);
+                            if (idOrAlias.IsId)
+                            {
+                                b.WithProfile(idOrAlias.Id!.Value);
+                            }
+                            else
+                            {
+                                b.WithProfile(idOrAlias.Alias!);
+                            }
+                        }
+
+                        if (language is not null)
+                        {
+                            b.WithSpeechToTextOptions(new SpeechToTextOptions { SpeechLanguage = language });
+                        }
+                    },
+                    audioStream, cancellationToken);
 
                 var response = new SpeechToTextResponseModel
                 {

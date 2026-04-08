@@ -6,6 +6,7 @@
     "Umbraco.AI.Agent.Deploy",
     "Umbraco.AI.Agent.UI",
     "Umbraco.AI.Anthropic",
+    "Umbraco.AI.Deploy",
     "Umbraco.AI.Google",
     "Umbraco.AI.OpenAI",
     "Umbraco.AI.Prompt",

@@ -30,7 +30,7 @@ export class UaiVoiceButtonElement extends UmbLitElement {
     @state()
     private _state: VoiceButtonState = "idle";
 
-    #recorder = new UaiAudioRecorder();
+    #recorder = new UaiAudioRecorder(this);
     #sttController = new UaiSpeechToTextController(this);
     #notificationContext?: UmbNotificationContext;
 

@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.Embeddings;
 
@@ -9,13 +10,22 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
 {
     private readonly IAIConnectionService _connectionService;
     private readonly AIEmbeddingMiddlewareCollection _middleware;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     public AIEmbeddingGeneratorFactory(
         IAIConnectionService connectionService,
-        AIEmbeddingMiddlewareCollection middleware)
+        AIEmbeddingMiddlewareCollection middleware,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors)
     {
         _connectionService = connectionService;
         _middleware = middleware;
+        _runtimeContextAccessor = runtimeContextAccessor;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
     }
 
     public async Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(
@@ -30,6 +40,16 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
 
         // Apply middleware in order
         generator = ApplyMiddleware(generator);
+
+        // Wrap in scoped generator to set profile metadata per-execution
+        // This is the outermost wrapper so middleware can access profile metadata in context
+        // Creates scope if needed for standalone usage
+        generator = new ScopedProfileEmbeddingGenerator(
+            generator,
+            profile,
+            _runtimeContextAccessor,
+            _scopeProvider,
+            _contributors);
 
         return generator;
     }

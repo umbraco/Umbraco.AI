@@ -1,13 +1,13 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
-import { SpeechToTextRecorder, type SpeechToTextRecorderState } from "@umbraco-ai/core";
+import { UaiSpeechToTextRecorder, type UaiSpeechToTextRecorderState } from "@umbraco-ai/core";
 
 /**
  * Voice recording button for speech-to-text transcription.
  *
  * Records audio and sends it to the Umbraco AI speech-to-text endpoint
- * via the shared {@link SpeechToTextRecorder}. On success fires a
+ * via the shared {@link UaiSpeechToTextRecorder}. On success fires a
  * `transcription` custom event.
  *
  * @fires transcription - Dispatched when transcription succeeds. detail: { text: string }
@@ -27,9 +27,9 @@ export class UaiVoiceButtonElement extends UmbLitElement {
     disabled = false;
 
     @state()
-    private _state: SpeechToTextRecorderState = "idle";
+    private _state: UaiSpeechToTextRecorderState = "idle";
 
-    #recorder?: SpeechToTextRecorder;
+    #recorder?: UaiSpeechToTextRecorder;
     #notificationContext?: UmbNotificationContext;
 
     constructor() {
@@ -39,10 +39,10 @@ export class UaiVoiceButtonElement extends UmbLitElement {
         });
     }
 
-    #getRecorder(): SpeechToTextRecorder {
+    #getRecorder(): UaiSpeechToTextRecorder {
         // Lazy-create so config properties (profileIdOrAlias, language) are settled
         if (!this.#recorder) {
-            this.#recorder = new SpeechToTextRecorder({
+            this.#recorder = new UaiSpeechToTextRecorder(this, {
                 profileIdOrAlias: this.profileIdOrAlias,
                 language: this.language,
             });

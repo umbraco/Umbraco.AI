@@ -1,9 +1,10 @@
 import { BehaviorSubject, type Observable } from '@umbraco-cms/backoffice/external/rxjs';
-import { SpeechToTextService } from '../../api/index.js';
+import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
+import { UaiSpeechToTextController } from '../../speech-to-text/controllers/speech-to-text.controller.js';
 
-export type SpeechToTextRecorderState = "idle" | "recording" | "transcribing";
+export type UaiSpeechToTextRecorderState = "idle" | "recording" | "transcribing";
 
-export interface SpeechToTextRecorderConfig {
+export interface UaiSpeechToTextRecorderConfig {
     /** Optional AI profile ID or alias to use for transcription. */
     profileIdOrAlias?: string;
     /** Optional BCP-47 language hint (e.g., "en", "de"). */
@@ -16,38 +17,39 @@ const FALLBACK_MIME_TYPE = "audio/webm";
 
 /**
  * Self-contained speech-to-text recorder that handles both audio recording
- * and transcription via the Umbraco AI API.
- *
- * Uses the generated `SpeechToTextService` hey-api client for transcription,
- * which handles authentication automatically via the configured singleton client.
+ * and transcription via the {@link UaiSpeechToTextController}.
  *
  * State is exposed as an observable so Lit elements can bind to it with `this.observe()`.
  *
  * @example
  * ```ts
- * const recorder = new SpeechToTextRecorder();
+ * const recorder = new UaiSpeechToTextRecorder(this);
  * this.observe(recorder.state$, (state) => { this._state = state; });
  * await recorder.startRecording();
  * const text = await recorder.stopAndTranscribe();
  * ```
+ *
+ * @public
  */
-export class SpeechToTextRecorder {
+export class UaiSpeechToTextRecorder {
+    #controller: UaiSpeechToTextController;
     #mediaRecorder?: MediaRecorder;
     #chunks: Blob[] = [];
-    #state$ = new BehaviorSubject<SpeechToTextRecorderState>("idle");
-    #config: SpeechToTextRecorderConfig;
+    #state$ = new BehaviorSubject<UaiSpeechToTextRecorderState>("idle");
+    #config: UaiSpeechToTextRecorderConfig;
 
     /** Observable of the current recorder state. */
-    get state$(): Observable<SpeechToTextRecorderState> {
+    get state$(): Observable<UaiSpeechToTextRecorderState> {
         return this.#state$.asObservable();
     }
 
     /** Current state (synchronous read). */
-    get state(): SpeechToTextRecorderState {
+    get state(): UaiSpeechToTextRecorderState {
         return this.#state$.value;
     }
 
-    constructor(config: SpeechToTextRecorderConfig = {}) {
+    constructor(host: UmbControllerHost, config: UaiSpeechToTextRecorderConfig = {}) {
+        this.#controller = new UaiSpeechToTextController(host);
         this.#config = config;
     }
 
@@ -90,12 +92,9 @@ export class SpeechToTextRecorder {
         const audioBlob = await this.#stopRecorder();
 
         try {
-            const { data, error } = await SpeechToTextService.transcribeAudio({
-                body: { audioFile: audioBlob },
-                query: {
-                    profileIdOrAlias: this.#config.profileIdOrAlias,
-                    language: this.#config.language,
-                },
+            const { data, error } = await this.#controller.transcribe(audioBlob, {
+                profileIdOrAlias: this.#config.profileIdOrAlias,
+                language: this.#config.language,
             });
 
             if (error) {

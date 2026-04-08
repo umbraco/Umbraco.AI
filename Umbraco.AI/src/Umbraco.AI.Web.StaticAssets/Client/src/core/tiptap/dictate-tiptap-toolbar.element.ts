@@ -3,7 +3,7 @@ import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from '@umbraco-cms/backoffice/notification';
 import type { Editor } from '@umbraco-cms/backoffice/tiptap';
 import type { UmbTiptapToolbarElementApi } from '@umbraco-cms/backoffice/tiptap';
-import { SpeechToTextRecorder, type SpeechToTextRecorderState } from '../utils/speech-to-text-recorder.js';
+import { UaiSpeechToTextRecorder, type UaiSpeechToTextRecorderState } from '../utils/speech-to-text-recorder.js';
 
 /**
  * Tiptap toolbar button for speech-to-text dictation.
@@ -24,9 +24,9 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
     public manifest?: any;
 
     @state()
-    private _state: SpeechToTextRecorderState = 'idle';
+    private _state: UaiSpeechToTextRecorderState = 'idle';
 
-    #recorder = new SpeechToTextRecorder();
+    #recorder = new UaiSpeechToTextRecorder(this);
     #savedCursorPos?: number;
     #notificationContext?: UmbNotificationContext;
 

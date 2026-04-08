@@ -317,7 +317,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
                     ${this._prompts.map(
                         (prompt) => html`
                             <button
-                                class="dropdown-item"
+                                class="dropdown-item ${!prompt.description ? 'dropdown-item--name-only' : ''}"
                                 @click=${() => this.#onPromptSelect(prompt)}>
                                 <umb-icon name="icon-wand"></umb-icon>
                                 <div class="dropdown-item-content">
@@ -386,8 +386,21 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             gap: 2px;
         }
 
+        .dropdown-item--name-only {
+            align-items: center;
+            font-size: var(--uui-type-default-size);
+        }
+
+        .dropdown-item--name-only umb-icon {
+            margin-top: 0;
+        }
+
         .dropdown-item-name {
             font-weight: 500;
+        }
+
+        .dropdown-item--name-only .dropdown-item-name {
+            font-weight: normal;
         }
 
         .dropdown-item-description {

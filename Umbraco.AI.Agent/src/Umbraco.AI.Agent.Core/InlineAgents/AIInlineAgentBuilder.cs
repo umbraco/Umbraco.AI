@@ -59,6 +59,7 @@ public sealed class AIInlineAgentBuilder
     private IReadOnlyList<string>? _guardrailAliases;
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private ChatOptions? _chatOptions;
+    private JsonElement? _outputSchema;
 
     /// <summary>
     /// Sets the alias for the inline agent. Required for auditing and telemetry.
@@ -240,6 +241,18 @@ public sealed class AIInlineAgentBuilder
     }
 
     /// <summary>
+    /// Sets a JSON Schema that constrains the agent's output to a specific structure.
+    /// When set, the agent's responses will conform to this schema (structured output).
+    /// </summary>
+    /// <param name="schema">A JSON Schema document as a <see cref="JsonElement"/>.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIInlineAgentBuilder WithOutputSchema(JsonElement schema)
+    {
+        _outputSchema = schema;
+        return this;
+    }
+
+    /// <summary>
     /// Gets the profile alias configured on this builder, if any.
     /// </summary>
     internal string? ProfileAlias => _profileAlias;
@@ -268,6 +281,11 @@ public sealed class AIInlineAgentBuilder
     /// Gets the chat options configured on this builder.
     /// </summary>
     internal ChatOptions? ChatOptions => _chatOptions;
+
+    /// <summary>
+    /// Gets the output schema configured on this builder.
+    /// </summary>
+    internal JsonElement? OutputSchema => _outputSchema;
 
     /// <summary>
     /// Sets a resolved profile ID from alias lookup. Used by the service layer
@@ -332,6 +350,7 @@ public sealed class AIInlineAgentBuilder
                 Instructions = _instructions,
                 AllowedToolIds = _toolIds,
                 AllowedToolScopeIds = _toolScopeIds,
+                OutputSchema = _outputSchema,
             };
         }
 

@@ -137,6 +137,7 @@ public class UmbracoAIProfileServiceConnector(
             {
                 AICapability.Chat => artifact.Settings.Value.Deserialize<AIChatProfileSettings>(),
                 AICapability.Embedding => artifact.Settings.Value.Deserialize<AIEmbeddingProfileSettings>(),
+                AICapability.SpeechToText => artifact.Settings.Value.Deserialize<AISpeechToTextProfileSettings>(),
                 _ => null
             };
         }

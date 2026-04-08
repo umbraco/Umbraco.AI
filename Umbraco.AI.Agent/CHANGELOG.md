@@ -5,6 +5,15 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.6.0...Umbraco.AI.Agent@1.7.0) (2026-04-08)
+
+* Add custom connection string and per-product migrations history table (#117) ([237e545](https://github.com/umbraco/Umbraco.AI/commit/237e54568f6297a62d9649732735cfd248d25ca9)), closes [#117](https://github.com/umbraco/Umbraco.AI/issues/117) [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)
+* Add structured output support for chat and agents (#118) ([48f68d2](https://github.com/umbraco/Umbraco.AI/commit/48f68d29ff15bf6c80ce261fcd7037ddf9d513b4)), closes [#118](https://github.com/umbraco/Umbraco.AI/issues/118)
+
+### feat
+
+* **core,agent:** Add speech-to-text management API endpoint ([d92c550](https://github.com/umbraco/Umbraco.AI/commit/d92c550c4b62bcabb8c4a3aab24304827f759a3d))
+
 ## [1.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.5.0...Umbraco.AI.Agent@1.6.0) (2026-03-26)
 
 ### ⚠ BREAKING CHANGE

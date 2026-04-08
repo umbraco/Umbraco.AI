@@ -1,13 +1,9 @@
 using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
-using Umbraco.AI.Web.Api.Common.Configuration;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;
 
@@ -54,18 +50,27 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
         try
         {
             // Resolve profile ID from IdOrAlias
-            var profileId = requestModel.ProfileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
-                : null;
+            Guid? profileId = null;
+            if (requestModel.ProfileIdOrAlias != null)
+            {
+                profileId = await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken);
+                if (!profileId.HasValue)
+                {
+                    return ProfileNotFound();
+                }
+            }
 
-            var embeddings = profileId.HasValue
-                ? await _embeddingService.GenerateEmbeddingsAsync(
-                    profileId.Value,
-                    requestModel.Values,
-                    cancellationToken: cancellationToken)
-                : await _embeddingService.GenerateEmbeddingsAsync(
-                    requestModel.Values,
-                    cancellationToken: cancellationToken);
+            var embeddings = await _embeddingService.GenerateEmbeddingsAsync(
+                emb =>
+                {
+                    emb.WithAlias("management-api-embedding");
+                    if (profileId.HasValue)
+                    {
+                        emb.WithProfile(profileId.Value);
+                    }
+                },
+                requestModel.Values,
+                cancellationToken);
 
             // Map embeddings with their index position
             var embeddingItems = embeddings

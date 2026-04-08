@@ -26,6 +26,7 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.SpeechToText;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.AI.Core.RuntimeContext.Middleware;
@@ -104,6 +105,12 @@ public static partial class UmbracoBuilderExtensions
             .Append<AIUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
             .Append<AIAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)
 
+        builder.AISpeechToTextMiddleware()
+            .Append<AIOpenTelemetrySpeechToTextMiddleware>()          // OpenTelemetry tracing (innermost - zero cost when unconfigured)
+            .Append<AITrackingSpeechToTextMiddleware>()               // Tracks transcription results
+            .Append<AIUsageRecordingSpeechToTextMiddleware>()         // Records usage to database for analytics
+            .Append<AIAuditingSpeechToTextMiddleware>();              // Audit logging (optional, can be disabled)
+
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITool, AIToolAttribute>(cache: true));
@@ -179,10 +186,12 @@ public static partial class UmbracoBuilderExtensions
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
+        services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();
         services.AddSingleton<IAIEmbeddingService, AIEmbeddingService>();
+        services.AddSingleton<IAISpeechToTextService, AISpeechToTextService>();
         // TODO: services.AddSingleton<IAIToolService, AIToolService>();
 
         // Context resource type infrastructure - auto-discover via [AIContextResourceType] attribute

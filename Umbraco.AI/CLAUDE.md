@@ -168,9 +168,10 @@ Providers expose discrete capabilities:
 
 - `IAIChatCapability` - Chat completions (conversational AI)
 - `IAIEmbeddingCapability` - Text embeddings (vector representations)
+- `IAISpeechToTextCapability` - Speech-to-text transcription (audio → text)
 - Future: Media (image generation), Moderation (content safety)
 
-Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<string, Embedding<float>>`).
+Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<string, Embedding<float>>`, `ISpeechToTextClient`).
 
 ### Tool Scope System
 
@@ -219,10 +220,12 @@ builder.AIProviders()
 ### Key Services
 
 - `IAIChatService` - Primary developer interface for chat completions. Resolves profiles and creates configured clients automatically.
+- `IAISpeechToTextService` - Primary developer interface for speech-to-text transcription. Resolves profiles and creates configured clients automatically.
 - `IAIProfileService` - Profile CRUD and lookup by alias
 - `IAIConnectionService` - Connection CRUD and validation
 - `IAIRegistry` - Central registry of all providers and capabilities
 - `IAIChatClientFactory` - Creates `IChatClient` instances with middleware applied
+- `IAISpeechToTextClientFactory` - Creates `ISpeechToTextClient` instances with middleware applied
 
 ### Middleware Pipeline
 
@@ -253,6 +256,7 @@ Provider settings use `[AIField]` attributes for UI generation. Values prefixed 
 **Key Endpoints:**
 - `/v1/profile` - Profile management (connections, models, settings)
 - `/v1/connection` - Connection management (API keys, provider settings)
+- `/v1/speech-to-text/transcribe` - Speech-to-text transcription (POST audio file)
 - `/v1/tool-scope` - Tool scope discovery (GET all registered scopes)
   - Used by agents to discover available permission scopes
 
@@ -408,6 +412,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 
 - `Umbraco.AI.Core.Chat` - Chat service, factory, middleware (`IAIChatService`, `IAIChatClientFactory`)
 - `Umbraco.AI.Core.Embeddings` - Embedding service, factory, middleware (`IAIEmbeddingService`)
+- `Umbraco.AI.Core.SpeechToText` - Speech-to-text service, factory, middleware (`IAISpeechToTextService`, `IAISpeechToTextClientFactory`)
 - `Umbraco.AI.Core.Connections` - Connection model, service, repository (`AIConnection`, `IAIConnectionService`)
 - `Umbraco.AI.Core.Profiles` - Profile model, service, repository (`AIProfile`, `IAIProfileService`)
 

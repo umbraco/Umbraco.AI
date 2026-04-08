@@ -149,6 +149,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
                 Instructions = standard.Instructions,
                 AllowedToolIds = standard.AllowedToolIds?.ToList() ?? [],
                 AllowedToolScopeIds = standard.AllowedToolScopeIds?.ToList() ?? [],
+                OutputSchema = standard.OutputSchema,
                 UserGroupPermissions = MapUserGroupPermissionsFromRequest(standard.UserGroupPermissions)
             },
             OrchestratedAgentConfigModel orchestrated => new AIOrchestratedAgentConfig
@@ -171,6 +172,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
                 Instructions = standard.Instructions,
                 AllowedToolIds = standard.AllowedToolIds.ToList(),
                 AllowedToolScopeIds = standard.AllowedToolScopeIds.ToList(),
+                OutputSchema = standard.OutputSchema,
                 UserGroupPermissions = MapUserGroupPermissionsToResponse(standard.UserGroupPermissions)
             },
             AIAgentType.Orchestrated when source.Config is AIOrchestratedAgentConfig orchestrated => new OrchestratedAgentConfigModel

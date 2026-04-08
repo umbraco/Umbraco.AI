@@ -1,6 +1,8 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 
+#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
+
 namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
@@ -32,6 +34,24 @@ internal sealed class AIConfiguredEmbeddingCapability(IAIEmbeddingCapability inn
     /// <inheritdoc />
     public Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default)
          => inner.CreateGeneratorAsync(settings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
+        => inner.GetModelsAsync(settings, cancellationToken);
+}
+
+/// <summary>
+/// Decorator that wraps a speech-to-text capability with resolved settings.
+/// </summary>
+internal sealed class AIConfiguredSpeechToTextCapability(IAISpeechToTextCapability inner, object settings)
+    : IAIConfiguredSpeechToTextCapability
+{
+    /// <inheritdoc />
+    public AICapability Kind => inner.Kind;
+
+    /// <inheritdoc />
+    public Task<ISpeechToTextClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default)
+        => inner.CreateClientAsync(settings, modelId, cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)

@@ -1,0 +1,74 @@
+---
+name: worktree-cleanup
+description: Clean up a git worktree and its local branch after a feature has been merged. Use after a PR is merged or a feature branch is no longer needed.
+user-invocable: true
+argument-hint: Optional worktree name or branch name. If omitted, shows a list to choose from.
+---
+
+# Worktree Cleanup
+
+You are cleaning up a git worktree and its associated local branch after the feature has been merged or is no longer needed.
+
+## Steps
+
+1. **Determine which worktree to clean up.**
+
+   If the user provides an argument, use it as the worktree name or branch name.
+
+   If no argument is provided, first check if the current working directory is inside a worktree:
+   ```bash
+   # Get the main repo root and current working directory
+   MAIN_ROOT=$(git worktree list | head -1 | awk '{print $1}')
+   CWD=$(pwd)
+   ```
+   If `CWD` is inside a `.claude/worktrees/` path (i.e., we're currently in a worktree), extract the worktree name and ask the user: "You're currently in worktree `<name>` — clean up this one?" If they confirm, use it. If they decline, fall through to the list.
+
+   If not in a worktree (or user declined), list all worktrees and ask the user which one to remove:
+   ```bash
+   git worktree list
+   ```
+   Exclude the main worktree (the first entry, which is the primary repo checkout).
+
+   If there are no worktrees to clean up, tell the user and stop.
+
+2. **Check if we're currently inside the worktree** being removed (i.e., it was created with `EnterWorktree` in this session).
+
+   **If inside the worktree:** Call `ExitWorktree` with `action: "remove"` and `discard_changes: true`. This cleanly releases the directory lock, removes the worktree, and switches the session back to the main repo. Then skip to step 4 (branch deletion) — the worktree directory is already gone.
+
+   **If NOT inside the worktree** (cleaning up a worktree from a previous session or one created manually):
+   
+   a. Make sure `pwd` is not inside the worktree path. If it is, `cd` to the main repo root first.
+   
+   b. Remove the worktree using git's worktree command:
+   ```bash
+   git worktree remove <path> --force
+   ```
+   If that fails due to permissions (common on Windows), fall back to manual removal:
+   ```bash
+   rm -rf <path>
+   git worktree prune
+   ```
+
+3. **Delete the local branch** if it exists. Determine the branch name from the worktree or the user's input:
+   ```bash
+   git branch -d <branch-name>
+   ```
+   If `-d` fails because the branch isn't merged to HEAD (but is merged to its remote tracking branch), use `-D` after confirming with the user.
+
+4. **Prune stale worktree references:**
+   ```bash
+   git worktree prune
+   ```
+
+5. **Show a summary** of what was cleaned up:
+   - Worktree path removed
+   - Branch deleted (if applicable)
+   - Confirmation that everything is clean
+
+## Important
+
+- Always check we're not inside the worktree before removing it.
+- The worktree directory lives under `.claude/worktrees/<name>` by convention.
+- The branch name is typically `feature/<name>` where `<name>` matches the worktree directory name.
+- If the worktree directory doesn't exist but the git worktree ref is stale, `git worktree prune` handles it.
+- Never delete the `main`, `dev`, or `master` branches.

@@ -1,7 +1,6 @@
 ---
 name: post-release-cleanup
 description: Merges a release or hotfix branch back into main and dev, bumps version.json on dev so nightly builds produce versions higher than the released version, and optionally deletes the release branch. Use after a release has been deployed and tagged.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
 # Post-Release Cleanup

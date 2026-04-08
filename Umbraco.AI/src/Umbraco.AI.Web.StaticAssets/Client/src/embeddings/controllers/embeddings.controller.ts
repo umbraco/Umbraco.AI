@@ -23,7 +23,7 @@ export class UaiEmbeddingsController extends UmbControllerBase {
      */
     async generate(value: string, options?: UaiEmbeddingOptions): Promise<{ data?: number[]; error?: unknown }> {
         const result = await this.#repository.generate({
-            profileId: options?.profile,
+            profileIdOrAlias: options?.profileIdOrAlias,
             values: [value],
             signal: options?.signal,
         });
@@ -46,7 +46,7 @@ export class UaiEmbeddingsController extends UmbControllerBase {
         options?: UaiEmbeddingOptions,
     ): Promise<{ data?: UaiEmbeddingResult; error?: unknown }> {
         return this.#repository.generate({
-            profileId: options?.profile,
+            profileIdOrAlias: options?.profileIdOrAlias,
             values,
             signal: options?.signal,
         });

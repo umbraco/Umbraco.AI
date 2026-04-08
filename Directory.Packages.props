@@ -30,7 +30,7 @@
 
   <!-- Umbraco Search -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0-beta.2, 1.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0-beta.3, 1.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft.Extensions.AI -->
@@ -63,7 +63,7 @@
 
   <!-- Provider packages -->
   <ItemGroup>
-    <PackageVersion Include="Anthropic" Version="12.3.0" />
+    <PackageVersion Include="Anthropic" Version="12.9.0" />
     <PackageVersion Include="AWSSDK.Bedrock" Version="4.0.19.3" />
     <PackageVersion Include="AWSSDK.BedrockRuntime" Version="4.0.15.1" />
     <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.5.7" />

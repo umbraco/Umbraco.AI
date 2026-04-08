@@ -5,52 +5,49 @@ import { UaiToolRepository } from "../repository/tool.repository.js";
 import type { UaiFrontendToolRepositoryApi } from "../frontend-tool-repository.js";
 
 /**
- * Controller for tool operations including scope and counting.
- * Proxies UaiToolRepository and adds tool counting functionality.
+ * Public API for tool operations including scope and counting.
+ * @public
  */
 export class UaiToolController extends UmbControllerBase {
-	#toolRepository: UaiToolRepository;
+    #toolRepository: UaiToolRepository;
 
-	constructor(host: UmbControllerHost) {
-		super(host);
-		this.#toolRepository = new UaiToolRepository(host);
-	}
+    constructor(host: UmbControllerHost) {
+        super(host);
+        this.#toolRepository = new UaiToolRepository(host);
+    }
 
-	/**
-	 * Gets all registered tool scopes.
-	 * Proxies to UaiToolRepository.
-	 */
-	async getToolScopes() {
-		return this.#toolRepository.getToolScopes();
-	}
+    /**
+     * Gets all registered tool scopes.
+     */
+    async getToolScopes() {
+        return this.#toolRepository.getToolScopes();
+    }
 
-	/**
-	 * Gets all registered tools.
-	 * Proxies to UaiToolRepository.
-	 */
-	async getTools() {
-		return this.#toolRepository.getTools();
-	}
+    /**
+     * Gets all registered tools.
+     */
+    async getTools() {
+        return this.#toolRepository.getTools();
+    }
 
-	/**
-	 * Gets tool counts grouped by scope ID.
-	 * Combines backend and frontend tools.
-	 */
-	async getToolCountsByScope(): Promise<Record<string, number>> {
-		try {
-			const counts: Record<string, number> = {};
+    /**
+     * Gets tool counts grouped by scope ID.
+     * Combines backend and frontend tools.
+     */
+    async getToolCountsByScope(): Promise<Record<string, number>> {
+        try {
+            const counts: Record<string, number> = {};
 
-			// Fetch backend tools
-			const backendResponse = await this.#toolRepository.getTools();
-			if (!backendResponse.error && backendResponse.data) {
-				for (const tool of backendResponse.data) {
-					counts[tool.scopeId] = (counts[tool.scopeId] ?? 0) + 1;
-				}
-			}
+            // Fetch backend tools
+            const backendResponse = await this.#toolRepository.getTools();
+            if (!backendResponse.error && backendResponse.data) {
+                for (const tool of backendResponse.data) {
+                    counts[tool.scopeId] = (counts[tool.scopeId] ?? 0) + 1;
+                }
+            }
 
-			// Fetch frontend tools
-			try {
-				// Get the frontend tool repository manifest by alias
+            // Fetch frontend tools
+            try {
                 const frontendRepo = await createExtensionApiByAlias<UaiFrontendToolRepositoryApi>(this, "Uai.Repository.FrontendTool");
                 if (frontendRepo) {
                     const frontendTools = await frontendRepo.getTools();
@@ -58,15 +55,13 @@ export class UaiToolController extends UmbControllerBase {
                         counts[tool.scopeId] = (counts[tool.scopeId] ?? 0) + 1;
                     }
                 }
-			} catch {
-				// Frontend tool repository may not be available (Agent.UI not installed)
-				// This is okay - just count backend tools
-			}
+            } catch {
+                // Frontend tool repository may not be available (Agent.UI not installed)
+            }
 
-			return counts;
-		} catch {
-			// Return empty map on error
-			return {};
-		}
-	}
+            return counts;
+        } catch {
+            return {};
+        }
+    }
 }

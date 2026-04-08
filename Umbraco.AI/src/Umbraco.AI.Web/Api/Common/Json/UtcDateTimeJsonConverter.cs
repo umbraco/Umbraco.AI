@@ -30,8 +30,12 @@ public class UtcDateTimeJsonConverter : JsonConverter<DateTime>
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
-        // Always convert to UTC and format with explicit "Z" suffix
-        var utcDateTime = value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
+        // Always convert to UTC and format with explicit "Z" suffix.
+        // Treat Unspecified as UTC (project convention: all persisted datetimes are UTC).
+        // Only Local kind needs actual conversion via ToUniversalTime().
+        var utcDateTime = value.Kind == DateTimeKind.Local
+            ? value.ToUniversalTime()
+            : DateTime.SpecifyKind(value, DateTimeKind.Utc);
         writer.WriteStringValue(utcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
     }
 }
@@ -68,8 +72,12 @@ public class UtcNullableDateTimeJsonConverter : JsonConverter<DateTime?>
             return;
         }
 
-        // Always convert to UTC and format with explicit "Z" suffix
-        var utcDateTime = value.Value.Kind == DateTimeKind.Utc ? value.Value : value.Value.ToUniversalTime();
+        // Always convert to UTC and format with explicit "Z" suffix.
+        // Treat Unspecified as UTC (project convention: all persisted datetimes are UTC).
+        // Only Local kind needs actual conversion via ToUniversalTime().
+        var utcDateTime = value.Value.Kind == DateTimeKind.Local
+            ? value.Value.ToUniversalTime()
+            : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
         writer.WriteStringValue(utcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
     }
 }

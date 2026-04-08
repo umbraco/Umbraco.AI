@@ -27,6 +27,7 @@ public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
         _cache = cache;
         WithCapability<OpenAIChatCapability>();
         WithCapability<OpenAIEmbeddingCapability>();
+        WithCapability<OpenAISpeechToTextCapability>();
     }
 
     /// <summary>

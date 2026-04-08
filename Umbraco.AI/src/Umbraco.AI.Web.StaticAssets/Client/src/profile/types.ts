@@ -36,6 +36,14 @@ export interface UaiEmbeddingProfileSettings extends UaiProfileSettings {
 }
 
 /**
+ * SpeechToText-specific profile settings.
+ */
+export interface UaiSpeechToTextProfileSettings extends UaiProfileSettings {
+    $type: "speechToText";
+    language: string | null;
+}
+
+/**
  * Detail model for workspace editing.
  */
 export interface UaiProfileDetailModel extends UmbEntityModel {
@@ -78,4 +86,11 @@ export function isChatSettings(settings: UaiProfileSettings | null): settings is
  */
 export function isEmbeddingSettings(settings: UaiProfileSettings | null): settings is UaiEmbeddingProfileSettings {
     return settings?.$type === "embedding";
+}
+
+/**
+ * Type guard for speech-to-text settings.
+ */
+export function isSpeechToTextSettings(settings: UaiProfileSettings | null): settings is UaiSpeechToTextProfileSettings {
+    return settings?.$type === "speechToText";
 }

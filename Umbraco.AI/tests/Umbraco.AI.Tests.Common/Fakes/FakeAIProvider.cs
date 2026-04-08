@@ -61,6 +61,12 @@ public class FakeAIProvider : IAIProvider
         return this;
     }
 
+    public FakeAIProvider WithSpeechToTextCapability(IAISpeechToTextCapability? capability = null)
+    {
+        _capabilities[typeof(IAISpeechToTextCapability)] = capability ?? new FakeSpeechToTextCapability();
+        return this;
+    }
+
     public FakeAIProvider WithSettingsType<TSettings>() where TSettings : class
     {
         SettingsType = typeof(TSettings);

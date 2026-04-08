@@ -223,6 +223,7 @@ internal sealed class AIChatService : IAIChatService
             var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
             var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+            ApplyOutputSchema(mergedOptions, builder.OutputSchema);
 
             return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
         }
@@ -254,6 +255,7 @@ internal sealed class AIChatService : IAIChatService
             var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
             var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, builder.ChatOptions);
+            ApplyOutputSchema(mergedOptions, builder.OutputSchema);
 
             await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
             {
@@ -362,6 +364,18 @@ internal sealed class AIChatService : IAIChatService
             Temperature = chatSettings?.Temperature,
             MaxOutputTokens = chatSettings?.MaxTokens
         };
+    }
+
+    /// <summary>
+    /// Applies the output schema to the merged chat options if set.
+    /// OutputSchema takes precedence over any ResponseFormat already set via ChatOptions.
+    /// </summary>
+    private static void ApplyOutputSchema(ChatOptions options, AIOutputSchema? schema)
+    {
+        if (schema is not null)
+        {
+            options.ResponseFormat = schema.ResponseFormat;
+        }
     }
 
     private void EnsureProfileSupportsChat(AIProfile profile)

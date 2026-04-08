@@ -1,10 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiToolServerDataSource } from "./tool.server.data-source.js";
-import type { ToolScopeItemResponseModel, ToolItemResponseModel } from "../../api/types.gen.js";
-
-// Re-export types for use by other components
-export type { ToolScopeItemResponseModel, ToolItemResponseModel };
+import type { UaiToolScope, UaiToolItem } from "../types.js";
 
 /**
  * Repository for tool operations.
@@ -20,14 +17,14 @@ export class UaiToolRepository extends UmbControllerBase {
     /**
      * Gets all registered tool scopes.
      */
-    async getToolScopes(): Promise<{ data?: Array<ToolScopeItemResponseModel>; error?: unknown }> {
+    async getToolScopes(): Promise<{ data?: UaiToolScope[]; error?: unknown }> {
         return this.#dataSource.getToolScopes();
     }
 
     /**
      * Gets all registered tools.
      */
-    async getTools(): Promise<{ data?: Array<ToolItemResponseModel>; error?: unknown }> {
+    async getTools(): Promise<{ data?: UaiToolItem[]; error?: unknown }> {
         return this.#dataSource.getTools();
     }
 }

@@ -15,7 +15,11 @@ public class UmbracoAIPromptDbContextFactory : IDesignTimeDbContextFactory<Umbra
 
         optionsBuilder.UseSqlServer(
             "Server=.;Database=UmbracoAIPrompt_Design;Integrated Security=true;TrustServerCertificate=true",
-            x => x.MigrationsAssembly(typeof(UmbracoAIPromptDbContextFactory).Assembly.FullName));
+            x =>
+            {
+                x.MigrationsAssembly(typeof(UmbracoAIPromptDbContextFactory).Assembly.FullName);
+                x.MigrationsHistoryTable(UmbracoAIPromptDbContext.MigrationsHistoryTableName);
+            });
 
         return new UmbracoAIPromptDbContext(optionsBuilder.Options);
     }

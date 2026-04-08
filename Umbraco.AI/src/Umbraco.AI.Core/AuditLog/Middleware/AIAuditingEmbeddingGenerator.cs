@@ -84,6 +84,8 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
             {
                 var trackingGenerator = InnerGenerator as AITrackingEmbeddingGenerator<string, Embedding<float>>;
 
+                // Use CancellationToken.None so the status update is always persisted,
+                // even if the original request was cancelled (e.g. client disconnected)
                 await _auditLogService.QueueCompleteAuditLogAsync(
                     auditLog,
                     auditPrompt,
@@ -92,7 +94,7 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
                         Usage = trackingGenerator?.LastUsageDetails,
                         Data = trackingGenerator?.LastEmbeddings
                     },
-                    cancellationToken);
+                    CancellationToken.None);
             }
 
             return result;
@@ -101,8 +103,10 @@ internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
         {
             if (auditLog is not null)
             {
+                // Use CancellationToken.None so the failure status is always persisted,
+                // even if the original request was cancelled (e.g. client disconnected)
                 await _auditLogService.QueueRecordAuditLogFailureAsync(
-                    auditLog, auditPrompt, ex, cancellationToken);
+                    auditLog, auditPrompt, ex, CancellationToken.None);
             }
 
             throw;

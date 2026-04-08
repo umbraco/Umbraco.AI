@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.0.0-beta3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@1.0.0-beta2...Umbraco.AI.Deploy@1.0.0-beta3) (2026-04-08)
+
+### fix
+
+* **deploy:** Add SpeechToText profile settings deserialization ([a6200e5](https://github.com/umbraco/Umbraco.AI/commit/a6200e5caffd3e3d00f302764012e2dd38ad0976))
 ## [1.0.0-beta2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@1.0.0-beta1...Umbraco.AI.Deploy@1.0.0-beta2) (2026-03-16)
 
 ### feat

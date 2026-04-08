@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.AI.Search.Db;
 using Umbraco.AI.Search.Db.Notifications;
@@ -20,9 +21,13 @@ public static partial class UmbracoBuilderExtensions
     /// </summary>
     public static IUmbracoBuilder AddUmbracoAISearchSqlite(this IUmbracoBuilder builder)
     {
+        var (aiConnectionString, aiProviderName) = AIConnectionStringResolver.Resolve(builder.Config);
+
+        // TODO: Pass shareUmbracoConnection: false when a custom connection string is configured.
+        // Requires Umbraco CMS fix: https://github.com/umbraco/Umbraco-CMS/pull/22133
         builder.Services.AddUmbracoDbContext<UmbracoAISearchDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
-            UmbracoAISearchDbContext.ConfigureProvider(options, connectionString, providerName);
+            UmbracoAISearchDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);
         });
 
         builder.Services.AddSingleton<IAIVectorStore, EFCoreAIVectorStore>();

@@ -33,6 +33,7 @@ function mapConfigFromResponse(agentType: string, config: StandardAgentConfigMod
         instructions?: string;
         allowedToolIds?: string[];
         allowedToolScopeIds?: string[];
+        outputSchema?: Record<string, unknown>;
         userGroupPermissions?: Record<string, unknown>;
     } | null;
     return {
@@ -41,6 +42,7 @@ function mapConfigFromResponse(agentType: string, config: StandardAgentConfigMod
         instructions: standard?.instructions ?? null,
         allowedToolIds: standard?.allowedToolIds ?? [],
         allowedToolScopeIds: standard?.allowedToolScopeIds ?? [],
+        outputSchema: (standard?.outputSchema as Record<string, unknown>) ?? null,
         userGroupPermissions: (standard?.userGroupPermissions as UaiStandardAgentConfig["userGroupPermissions"]) ?? {},
     } satisfies UaiStandardAgentConfig;
 }
@@ -60,6 +62,7 @@ function mapConfigToRequest(config: UaiAgentConfig): StandardAgentConfigModel | 
         instructions: config.instructions,
         allowedToolIds: config.allowedToolIds,
         allowedToolScopeIds: config.allowedToolScopeIds,
+        outputSchema: config.outputSchema,
         userGroupPermissions: config.userGroupPermissions,
     } as StandardAgentConfigModel;
 }

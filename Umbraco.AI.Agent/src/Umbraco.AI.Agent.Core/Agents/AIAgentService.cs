@@ -681,6 +681,25 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
+    /// Builds additional properties dict with OutputSchema override if present in execution options.
+    /// </summary>
+    private static Dictionary<string, object?>? BuildOutputSchemaOverride(AIAgentExecutionOptions options)
+    {
+        if (options.OutputSchema is null)
+        {
+            return null;
+        }
+
+        return new Dictionary<string, object?>
+        {
+            [CoreConstants.ContextKeys.ChatOptionsOverride] = new ChatOptions
+            {
+                ResponseFormat = options.OutputSchema.ResponseFormat
+            }
+        };
+    }
+
+    /// <summary>
     /// Runs a persisted agent by ID with full orchestration.
     /// </summary>
     private async Task<AgentResponse> RunPersistedAgentAsync(
@@ -695,7 +714,7 @@ internal sealed class AIAgentService : IAIAgentService
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
             contextItems: options.ContextItems,
-            additionalProperties: null,
+            additionalProperties: BuildOutputSchemaOverride(options),
             cancellationToken);
 
         if (context is null)

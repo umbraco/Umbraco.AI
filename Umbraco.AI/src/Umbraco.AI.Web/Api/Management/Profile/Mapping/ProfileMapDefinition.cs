@@ -113,6 +113,10 @@ public class ProfileMapDefinition : IMapDefinition
             {
                 Dimensions = embedding.Dimensions
             },
+            AISpeechToTextProfileSettings speechToText => new SpeechToTextProfileSettingsModel
+            {
+                Language = speechToText.Language
+            },
             _ => null
         };
     }
@@ -135,6 +139,11 @@ public class ProfileMapDefinition : IMapDefinition
                 Dimensions = embedding.Dimensions
             },
             AICapability.Embedding => new AIEmbeddingProfileSettings(),
+            AICapability.SpeechToText when settings is SpeechToTextProfileSettingsModel speechToText => new AISpeechToTextProfileSettings
+            {
+                Language = speechToText.Language
+            },
+            AICapability.SpeechToText => new AISpeechToTextProfileSettings(),
             _ => null
         };
     }

@@ -46,6 +46,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
                             instructions: null,
                             allowedToolIds: [],
                             allowedToolScopeIds: [],
+                            outputSchema: null,
                             userGroupPermissions: {},
                       },
             guardrailIds: [],

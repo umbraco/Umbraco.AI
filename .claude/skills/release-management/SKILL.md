@@ -1,7 +1,6 @@
 ---
 name: release-management
 description: Orchestrates the complete release preparation process - detects changed products, analyzes commits for version bumps, updates version.json files, generates manifests and changelogs, and creates release branches. Use when preparing a new release.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, AskUserQuestion
 ---
 
 # Release Manager
@@ -479,9 +478,11 @@ For products with **empty changelog entries** (version header but no content):
    - **Dependency adaptation** (adapting to API changes in a dependency, no new features) → Recommend dropping OR add a brief entry
    - **Real features/fixes** that were missed by the generator → Add entries manually
 
-3. **If recommending to drop a product**, remind about the release manifest:
+3. **If recommending to drop a product**, update the release manifest and revert files:
    - Move it from `include` to `exclude` in `release-manifest.json`
+   - **IMPORTANT:** Every changed product that is NOT being released MUST appear in the `exclude` list. CI's change detection script checks all products with changes since their last tag — any changed product missing from both `include` and `exclude` will fail the build.
    - Revert its `version.json` to the pre-release value
+   - Revert its `CHANGELOG.md` changes
    - Revert peer dependency version changes if applicable
 
 #### Step 4: Present Review

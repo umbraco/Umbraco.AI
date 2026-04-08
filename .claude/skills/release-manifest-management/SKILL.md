@@ -1,7 +1,6 @@
 ---
 name: release-manifest-management
 description: Generates and manages the release-manifest.json file. Use when you need to create or update the manifest file that specifies which products to include in a release/hotfix. Called by the release-management orchestration skill.
-allowed-tools: Bash, Read, Write, Glob
 ---
 
 # Release Manifest Manager

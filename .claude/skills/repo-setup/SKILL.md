@@ -1,7 +1,6 @@
 ---
 name: repo-setup
 description: Performs initial repository setup including git hooks, demo site creation, and dependency installation. Use when cloning the repository for the first time, onboarding a new developer, or resetting the development environment.
-allowed-tools: Bash, AskUserQuestion, Read, Glob
 ---
 
 # Setup Repository

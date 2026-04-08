@@ -40,5 +40,6 @@
             <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
         </ItemGroup>
         <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+        <Exec Command="node &quot;$(RepoRoot)scripts/build/version-package-manifest.js&quot; &quot;$(PackageVersion)&quot; &quot;%(_PackageManifestFiles.FullPath)&quot;" />
     </Target>
 </Project>

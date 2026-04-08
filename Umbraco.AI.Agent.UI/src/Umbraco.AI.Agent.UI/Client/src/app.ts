@@ -9,6 +9,7 @@ import "./chat/components/hitl-approval.element.js";
 import "./chat/components/approval-base.element.js";
 import "./chat/components/message-copy-button.element.js";
 import "./chat/components/message-regenerate-button.element.js";
+import "./chat/components/voice-button.element.js";
 
 // Re-export all public APIs from the package.
 export * from "./index.js";

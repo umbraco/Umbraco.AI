@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -18,7 +17,6 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
     private readonly IAISpeechToTextClientFactory _clientFactory;
     private readonly IAIProfileService _profileService;
     private readonly IAIGuardrailService _guardrailService;
-    private readonly AIOptions _options;
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
@@ -28,7 +26,6 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
         IAISpeechToTextClientFactory clientFactory,
         IAIProfileService profileService,
         IAIGuardrailService guardrailService,
-        IOptionsMonitor<AIOptions> options,
         IEventAggregator eventAggregator,
         IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
@@ -37,7 +34,6 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
         _clientFactory = clientFactory;
         _profileService = profileService;
         _guardrailService = guardrailService;
-        _options = options.CurrentValue;
         _eventAggregator = eventAggregator;
         _contextAccessor = contextAccessor;
         _scopeProvider = scopeProvider;

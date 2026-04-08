@@ -2,7 +2,6 @@
 #pragma warning disable CS0618 // Tests for deprecated API surface — will be removed with the methods in v3
 
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -19,7 +18,6 @@ public class AISpeechToTextServiceTests
 {
     private readonly Mock<IAISpeechToTextClientFactory> _clientFactoryMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
-    private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
     private readonly Mock<IEventAggregator> _eventAggregatorMock;
     private readonly Mock<IAIRuntimeContextAccessor> _contextAccessorMock;
     private readonly Mock<IAIRuntimeContextScopeProvider> _scopeProviderMock;
@@ -29,11 +27,6 @@ public class AISpeechToTextServiceTests
     {
         _clientFactoryMock = new Mock<IAISpeechToTextClientFactory>();
         _profileServiceMock = new Mock<IAIProfileService>();
-        _optionsMock = new Mock<IOptionsMonitor<AIOptions>>();
-        _optionsMock.Setup(x => x.CurrentValue).Returns(new AIOptions
-        {
-            DefaultSpeechToTextProfileAlias = "default-stt"
-        });
         _eventAggregatorMock = new Mock<IEventAggregator>();
         _eventAggregatorMock
             .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
@@ -67,7 +60,6 @@ public class AISpeechToTextServiceTests
             _clientFactoryMock.Object,
             _profileServiceMock.Object,
             new Mock<IAIGuardrailService>().Object,
-            _optionsMock.Object,
             _eventAggregatorMock.Object,
             _contextAccessorMock.Object,
             _scopeProviderMock.Object,

@@ -56,6 +56,7 @@ public sealed class AISpeechToTextBuilder
     public AISpeechToTextBuilder WithAlias(string alias)
     {
         _alias = alias;
+        _id = null;
         return this;
     }
 

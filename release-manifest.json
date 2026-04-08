@@ -1,0 +1,19 @@
+{
+  "include": [
+    "Umbraco.AI",
+    "Umbraco.AI.Agent",
+    "Umbraco.AI.Agent.Copilot",
+    "Umbraco.AI.Agent.Deploy",
+    "Umbraco.AI.Agent.UI",
+    "Umbraco.AI.Anthropic",
+    "Umbraco.AI.Google",
+    "Umbraco.AI.OpenAI",
+    "Umbraco.AI.Prompt",
+    "Umbraco.AI.Search"
+  ],
+  "exclude": [
+    "Umbraco.AI.Amazon",
+    "Umbraco.AI.MicrosoftFoundry",
+    "Umbraco.AI.Prompt.Deploy"
+  ]
+}

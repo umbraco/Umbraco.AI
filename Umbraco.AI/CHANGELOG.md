@@ -5,6 +5,42 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.7.0...Umbraco.AI@1.8.0) (2026-04-08)
+
+* Add custom connection string and per-product migrations history table (#117) ([237e545](https://github.com/umbraco/Umbraco.AI/commit/237e54568f6297a62d9649732735cfd248d25ca9)), closes [#117](https://github.com/umbraco/Umbraco.AI/issues/117) [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)
+* Add structured output support for chat and agents (#118) ([48f68d2](https://github.com/umbraco/Umbraco.AI/commit/48f68d29ff15bf6c80ce261fcd7037ddf9d513b4)), closes [#118](https://github.com/umbraco/Umbraco.AI/issues/118)
+
+### feat
+
+* **core,agent:** Add speech-to-text management API endpoint ([d92c550](https://github.com/umbraco/Umbraco.AI/commit/d92c550c4b62bcabb8c4a3aab24304827f759a3d))
+* **core,embedding,speechtotext,frontend:** Standardize public API surface ([1d51516](https://github.com/umbraco/Umbraco.AI/commit/1d5151626ef5eb329f465a3b508776e5d310f07d))
+* **core,prompt,anthropic:** Add structured output via M.E.AI and fix prompt display ([d267d2d](https://github.com/umbraco/Umbraco.AI/commit/d267d2d8cbcd6c7e9d42efb6e8ae32092e5582f1))
+* **core:** Add default speech-to-text profile to settings UI ([39a24c0](https://github.com/umbraco/Umbraco.AI/commit/39a24c092ec6697273328d639e66d812e9d393e5))
+* **core:** Add middleware pipeline for speech-to-text clients ([34460de](https://github.com/umbraco/Umbraco.AI/commit/34460de7826c64da4197b71f8558cb615f6a4555))
+* **core:** Add SpeechToText capability abstractions ([733993a](https://github.com/umbraco/Umbraco.AI/commit/733993aecfa6c42133a3f6aba5aa581f171acab9))
+* **core:** Add SpeechToText service, factory, middleware, and DI wiring ([b87461d](https://github.com/umbraco/Umbraco.AI/commit/b87461d01b25d82c6e1ecf83e9dc9bb1393c496a))
+* **core:** Add STT profile settings to frontend type mapper and editor ([b294df0](https://github.com/umbraco/Umbraco.AI/commit/b294df072bee76c3ee1cf4f108bb18dba1cc2756))
+* **core:** Add Tiptap Dictate toolbar button and shared SpeechToTextRecorder ([b8f5741](https://github.com/umbraco/Umbraco.AI/commit/b8f57414f31dcb711f9cf285f31904c0bd24d68c))
+* **speechtotext,frontend:** Add UaiSpeechToTextController and standardize public API ([ae163dd](https://github.com/umbraco/Umbraco.AI/commit/ae163dd6ab41c69f3050d0715152a82097258073))
+* **speechtotext:** Add builder API for inline speech-to-text with full observability ([50446bb](https://github.com/umbraco/Umbraco.AI/commit/50446bb935d57c06917c3addccc356bf57df7ac5))
+
+### fix
+
+* **api,core:** Preserve UTC DateTimeKind when serializing persisted datetimes ([31226f0](https://github.com/umbraco/Umbraco.AI/commit/31226f0c79b6136770d821a4a98fe6ebef9a10b3)), closes [#108](https://github.com/umbraco/Umbraco.AI/issues/108)
+* **core:** Add ScopedProfileSpeechToTextClient for runtime context and hide empty audit fields ([4d94b2f](https://github.com/umbraco/Umbraco.AI/commit/4d94b2f9eb2fdf6d6d20144340865453569be3cd))
+* **core:** Remove [FromForm] on IFormFile to fix Swashbuckle generation ([7ed2ef8](https://github.com/umbraco/Umbraco.AI/commit/7ed2ef897f6597894beeecfcb975a4e0ce2e93a7))
+* **core:** Use temp FileStream for S2T to preserve audio format ([01af542](https://github.com/umbraco/Umbraco.AI/commit/01af542569ea5ce60b24164a94a8ce6c6093f00c))
+* **embedding:** Add ScopedProfileEmbeddingGenerator for runtime context metadata ([40b3f53](https://github.com/umbraco/Umbraco.AI/commit/40b3f53c58adda3ae6cd12841599a640ac4c662c))
+* **frontend:** Align embeddings API naming with chat and speech-to-text ([55373c4](https://github.com/umbraco/Umbraco.AI/commit/55373c48434d20edb18131f1d2ce8e9ffa5789be))
+* **frontend:** Pass host to UaiAudioRecorder in voice button ([417691b](https://github.com/umbraco/Umbraco.AI/commit/417691b79bd66fbcd1f73dcf53f9d81bf7e34cee))
+* **speechtotext,copilot:** Stop recording when copilot drawer closes ([194f01d](https://github.com/umbraco/Umbraco.AI/commit/194f01d4d493b07463f9a7becc880273b05be9d4))
+* **speechtotext:** Auto-cancel recording when host is destroyed ([b4eeb5d](https://github.com/umbraco/Umbraco.AI/commit/b4eeb5d7b48812fee4648344510f9dfc31bb5572))
+* **speechtotext:** Cancel recording when host element becomes hidden ([ca53dd0](https://github.com/umbraco/Umbraco.AI/commit/ca53dd0403e8f46dc4cc2e388878ac20c66dcb66))
+* **speechtotext:** Detect off-screen elements via bounding rect ([1e4ef2d](https://github.com/umbraco/Umbraco.AI/commit/1e4ef2dfb20e8f3025fa920bb4d80aee3153faba))
+* **speechtotext:** Restore disconnectedCallback to cancel recording on DOM removal ([6c9baf6](https://github.com/umbraco/Umbraco.AI/commit/6c9baf65c3fa090618b900dc8433412fdadf8f29))
+* **speechtotext:** Skip initial IntersectionObserver callback ([8f7a777](https://github.com/umbraco/Umbraco.AI/commit/8f7a77762b4b87d5f5c073152f64dae1bbde4882))
+* **speechtotext:** Use checkVisibility() instead of IntersectionObserver ([81b1666](https://github.com/umbraco/Umbraco.AI/commit/81b1666c0032dddbc2bae4f07af918b63c3ee201))
+
 ## [1.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.6.0...Umbraco.AI@1.7.0) (2026-03-26)
 
 ### feat

@@ -121,7 +121,15 @@ export class UaiAudioRecorder extends UmbControllerBase {
         const hostElement = this._host.getHostElement();
         if (!hostElement) return;
 
+        // IntersectionObserver fires immediately on observe() with the current state.
+        // Skip the first callback — we only care about transitions from visible to hidden.
+        let initialized = false;
+
         this.#observer = new IntersectionObserver((entries) => {
+            if (!initialized) {
+                initialized = true;
+                return;
+            }
             const isVisible = entries.some((e) => e.isIntersecting);
             if (!isVisible && this.#state$.value === "recording") {
                 this.cancel();

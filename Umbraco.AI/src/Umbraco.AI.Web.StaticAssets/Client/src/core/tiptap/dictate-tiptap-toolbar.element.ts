@@ -101,6 +101,11 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
         }
     }
 
+    override disconnectedCallback() {
+        super.disconnectedCallback();
+        this.#recorder.cancel();
+    }
+
     override render() {
         const isRecording = this._state === 'recording';
         const isTranscribing = this._state === 'transcribing';

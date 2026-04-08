@@ -58,9 +58,7 @@ SQL Server store detects capabilities at runtime:
 
 ### CMS Search Integration
 
-Registered via `RegisterContentIndex<AIVectorIndexer, AIVectorSearcher, IPublishedContentChangeStrategy>` for content indexing on publish.
-
-Media indexing uses a notification handler workaround (`MediaIndexingNotificationHandler`) because `IPublishedContentChangeStrategy` does not handle media. See: https://github.com/umbraco/Umbraco.Cms.Search/issues/108
+Registered via `RegisterContentIndex<AIVectorIndexer, AIVectorSearcher, IPublishedContentChangeStrategy>` for both content and media indexing.
 
 ### Configuration
 

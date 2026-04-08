@@ -1,14 +1,15 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
-import { UaiSpeechToTextRecorder, type UaiSpeechToTextRecorderState } from "@umbraco-ai/core";
+import { UaiAudioRecorder, UaiSpeechToTextController } from "@umbraco-ai/core";
+
+type VoiceButtonState = "idle" | "recording" | "transcribing";
 
 /**
  * Voice recording button for speech-to-text transcription.
  *
- * Records audio and sends it to the Umbraco AI speech-to-text endpoint
- * via the shared {@link UaiSpeechToTextRecorder}. On success fires a
- * `transcription` custom event.
+ * Records audio via {@link UaiAudioRecorder} and transcribes it via
+ * {@link UaiSpeechToTextController}. On success fires a `transcription` custom event.
  *
  * @fires transcription - Dispatched when transcription succeeds. detail: { text: string }
  */
@@ -27,28 +28,18 @@ export class UaiVoiceButtonElement extends UmbLitElement {
     disabled = false;
 
     @state()
-    private _state: UaiSpeechToTextRecorderState = "idle";
+    private _state: VoiceButtonState = "idle";
 
-    #recorder?: UaiSpeechToTextRecorder;
+    #recorder = new UaiAudioRecorder();
+    #sttController = new UaiSpeechToTextController(this);
     #notificationContext?: UmbNotificationContext;
 
     constructor() {
         super();
+        this.observe(this.#recorder.state$, (s) => { this._state = s; });
         this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
             this.#notificationContext = context;
         });
-    }
-
-    #getRecorder(): UaiSpeechToTextRecorder {
-        // Lazy-create so config properties (profileIdOrAlias, language) are settled
-        if (!this.#recorder) {
-            this.#recorder = new UaiSpeechToTextRecorder(this, {
-                profileIdOrAlias: this.profileIdOrAlias,
-                language: this.language,
-            });
-            this.observe(this.#recorder.state$, (s) => { this._state = s; });
-        }
-        return this.#recorder;
     }
 
     async #handleClick() {
@@ -63,7 +54,7 @@ export class UaiVoiceButtonElement extends UmbLitElement {
 
     async #startRecording() {
         try {
-            await this.#getRecorder().startRecording();
+            await this.#recorder.start();
         } catch {
             this.#notificationContext?.peek("danger", {
                 data: {
@@ -76,10 +67,23 @@ export class UaiVoiceButtonElement extends UmbLitElement {
 
     async #stopAndTranscribe() {
         try {
-            const text = await this.#getRecorder().stopAndTranscribe();
+            const audioBlob = await this.#recorder.stop();
+
+            this._state = "transcribing";
+            const { data, error } = await this.#sttController.transcribe(audioBlob, {
+                profileIdOrAlias: this.profileIdOrAlias,
+                language: this.language,
+            });
+
+            if (error) {
+                throw new Error(
+                    (error as { detail?: string })?.detail ?? "Transcription failed.",
+                );
+            }
+
             this.dispatchEvent(
                 new CustomEvent("transcription", {
-                    detail: { text },
+                    detail: { text: data?.text ?? "" },
                     bubbles: true,
                     composed: true,
                 }),
@@ -91,12 +95,14 @@ export class UaiVoiceButtonElement extends UmbLitElement {
                     message: err instanceof Error ? err.message : "An error occurred during transcription.",
                 },
             });
+        } finally {
+            this._state = "idle";
         }
     }
 
     override disconnectedCallback() {
         super.disconnectedCallback();
-        this.#recorder?.cancel();
+        this.#recorder.cancel();
     }
 
     override render() {

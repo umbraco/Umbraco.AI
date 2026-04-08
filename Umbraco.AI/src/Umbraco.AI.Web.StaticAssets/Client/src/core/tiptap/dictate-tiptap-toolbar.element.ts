@@ -3,7 +3,10 @@ import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from '@umbraco-cms/backoffice/notification';
 import type { Editor } from '@umbraco-cms/backoffice/tiptap';
 import type { UmbTiptapToolbarElementApi } from '@umbraco-cms/backoffice/tiptap';
-import { UaiSpeechToTextRecorder, type UaiSpeechToTextRecorderState } from '../utils/speech-to-text-recorder.js';
+import { UaiAudioRecorder } from '../utils/audio-recorder.js';
+import { UaiSpeechToTextController } from '../../speech-to-text/controllers/speech-to-text.controller.js';
+
+type DictationState = "idle" | "recording" | "transcribing";
 
 /**
  * Tiptap toolbar button for speech-to-text dictation.
@@ -24,9 +27,10 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
     public manifest?: any;
 
     @state()
-    private _state: UaiSpeechToTextRecorderState = 'idle';
+    private _state: DictationState = 'idle';
 
-    #recorder = new UaiSpeechToTextRecorder(this);
+    #recorder = new UaiAudioRecorder();
+    #sttController = new UaiSpeechToTextController(this);
     #savedCursorPos?: number;
     #notificationContext?: UmbNotificationContext;
 
@@ -53,7 +57,7 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
         this.#savedCursorPos = this.editor.state.selection.from;
 
         try {
-            await this.#recorder.startRecording();
+            await this.#recorder.start();
         } catch {
             this.#notificationContext?.peek('danger', {
                 data: {
@@ -68,8 +72,18 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
         if (!this.editor) return;
 
         try {
-            const text = await this.#recorder.stopAndTranscribe();
+            const audioBlob = await this.#recorder.stop();
 
+            this._state = 'transcribing';
+            const { data, error } = await this.#sttController.transcribe(audioBlob);
+
+            if (error) {
+                throw new Error(
+                    (error as { detail?: string })?.detail ?? 'Transcription failed.',
+                );
+            }
+
+            const text = data?.text;
             if (text) {
                 const insertPos = this.#savedCursorPos ?? this.editor.state.doc.content.size;
                 this.editor.chain().focus().insertContentAt(insertPos, text).run();
@@ -82,6 +96,7 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
                 },
             });
         } finally {
+            this._state = 'idle';
             this.#savedCursorPos = undefined;
         }
     }

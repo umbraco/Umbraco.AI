@@ -1,63 +1,51 @@
 import { BehaviorSubject, type Observable } from '@umbraco-cms/backoffice/external/rxjs';
-import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
-import { UaiSpeechToTextController } from '../../speech-to-text/controllers/speech-to-text.controller.js';
 
-export type UaiSpeechToTextRecorderState = "idle" | "recording" | "transcribing";
-
-export interface UaiSpeechToTextRecorderConfig {
-    /** Optional AI profile ID or alias to use for transcription. */
-    profileIdOrAlias?: string;
-    /** Optional BCP-47 language hint (e.g., "en", "de"). */
-    language?: string;
-}
+export type UaiAudioRecorderState = "idle" | "recording";
 
 /** Audio MIME type to use for recording — webm/opus is well-supported in modern browsers. */
 const PREFERRED_MIME_TYPE = "audio/webm;codecs=opus";
 const FALLBACK_MIME_TYPE = "audio/webm";
 
 /**
- * Self-contained speech-to-text recorder that handles both audio recording
- * and transcription via the {@link UaiSpeechToTextController}.
+ * Manages browser audio recording via the MediaRecorder API.
+ *
+ * Handles microphone access, chunk collection, and track cleanup.
+ * Returns the recorded audio as a `Blob` — transcription is the caller's responsibility
+ * via {@link UaiSpeechToTextController}.
  *
  * State is exposed as an observable so Lit elements can bind to it with `this.observe()`.
  *
  * @example
  * ```ts
- * const recorder = new UaiSpeechToTextRecorder(this);
- * this.observe(recorder.state$, (state) => { this._state = state; });
- * await recorder.startRecording();
- * const text = await recorder.stopAndTranscribe();
+ * const recorder = new UaiAudioRecorder();
+ * this.observe(recorder.state$, (state) => { this._recorderState = state; });
+ * await recorder.start();
+ * const audioBlob = await recorder.stop();
+ * const { data } = await sttController.transcribe(audioBlob);
  * ```
  *
  * @public
  */
-export class UaiSpeechToTextRecorder {
-    #controller: UaiSpeechToTextController;
+export class UaiAudioRecorder {
     #mediaRecorder?: MediaRecorder;
     #chunks: Blob[] = [];
-    #state$ = new BehaviorSubject<UaiSpeechToTextRecorderState>("idle");
-    #config: UaiSpeechToTextRecorderConfig;
+    #state$ = new BehaviorSubject<UaiAudioRecorderState>("idle");
 
     /** Observable of the current recorder state. */
-    get state$(): Observable<UaiSpeechToTextRecorderState> {
+    get state$(): Observable<UaiAudioRecorderState> {
         return this.#state$.asObservable();
     }
 
     /** Current state (synchronous read). */
-    get state(): UaiSpeechToTextRecorderState {
+    get state(): UaiAudioRecorderState {
         return this.#state$.value;
-    }
-
-    constructor(host: UmbControllerHost, config: UaiSpeechToTextRecorderConfig = {}) {
-        this.#controller = new UaiSpeechToTextController(host);
-        this.#config = config;
     }
 
     /**
      * Request microphone access and begin recording.
      * @throws Error if microphone access is denied.
      */
-    async startRecording(): Promise<void> {
+    async start(): Promise<void> {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         const mimeType = MediaRecorder.isTypeSupported(PREFERRED_MIME_TYPE)
@@ -78,39 +66,21 @@ export class UaiSpeechToTextRecorder {
     }
 
     /**
-     * Stop recording and transcribe the audio via the Umbraco AI API.
-     * @returns The transcribed text.
-     * @throws Error if recording or transcription fails.
+     * Stop recording and return the captured audio.
+     * @returns The recorded audio as a Blob.
+     * @throws Error if no active recording exists.
      */
-    async stopAndTranscribe(): Promise<string> {
+    async stop(): Promise<Blob> {
         if (!this.#mediaRecorder) {
             throw new Error("No active recording to stop.");
         }
 
-        this.#state$.next("transcribing");
-
-        const audioBlob = await this.#stopRecorder();
-
-        try {
-            const { data, error } = await this.#controller.transcribe(audioBlob, {
-                profileIdOrAlias: this.#config.profileIdOrAlias,
-                language: this.#config.language,
-            });
-
-            if (error) {
-                throw new Error(
-                    (error as { detail?: string })?.detail
-                    ?? "Transcription request failed.",
-                );
-            }
-
-            return data?.text ?? "";
-        } finally {
-            this.#state$.next("idle");
-        }
+        const blob = await this.#stopRecorder();
+        this.#state$.next("idle");
+        return blob;
     }
 
-    /** Cancel any active recording without transcribing. */
+    /** Cancel any active recording without returning audio. */
     cancel(): void {
         if (this.#mediaRecorder && this.#mediaRecorder.state !== "inactive") {
             this.#mediaRecorder.stream.getTracks().forEach((t) => t.stop());

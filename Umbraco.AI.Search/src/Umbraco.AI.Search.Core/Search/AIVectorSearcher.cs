@@ -146,7 +146,10 @@ public sealed class AIVectorSearcher : ISearcher
         string? culture = null,
         CancellationToken cancellationToken = default)
     {
-        Embedding<float> queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, cancellationToken: cancellationToken);
+        Embedding<float> queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(
+            emb => emb.WithAlias("ai-search-query").AsPassThrough(),
+            query,
+            cancellationToken);
         return await SearchByVectorAsync(indexAlias, queryEmbedding.Vector, culture, cancellationToken);
     }
 

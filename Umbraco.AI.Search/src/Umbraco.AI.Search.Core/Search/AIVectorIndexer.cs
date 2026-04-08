@@ -108,7 +108,9 @@ public sealed class AIVectorIndexer : IIndexer
                 // Generate embeddings for all chunks in batch
                 IEnumerable<string> chunkTexts = chunks.Select(c => c.Text);
                 GeneratedEmbeddings<Embedding<float>> embeddings =
-                    await _embeddingService.GenerateEmbeddingsAsync(chunkTexts);
+                    await _embeddingService.GenerateEmbeddingsAsync(
+                        emb => emb.WithAlias("ai-search-indexer").AsPassThrough(),
+                        chunkTexts);
 
                 for (var i = 0; i < chunks.Count; i++)
                 {

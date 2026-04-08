@@ -42,8 +42,8 @@ public class AIVectorIndexerTests
 
         // Default: embedding service returns a dummy vector
         _embeddingServiceMock
-            .Setup(e => e.GenerateEmbeddingsAsync(It.IsAny<IEnumerable<string>>(), null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IEnumerable<string> values, EmbeddingGenerationOptions? _, CancellationToken _) =>
+            .Setup(e => e.GenerateEmbeddingsAsync(It.IsAny<Action<AIEmbeddingBuilder>>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Action<AIEmbeddingBuilder> _, IEnumerable<string> values, CancellationToken _) =>
             {
                 var embeddings = values.Select(_ => new Embedding<float>(new float[] { 1.0f, 0.0f })).ToList();
                 return new GeneratedEmbeddings<Embedding<float>>(embeddings);

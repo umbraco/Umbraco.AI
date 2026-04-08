@@ -1,4 +1,6 @@
 import { BehaviorSubject, type Observable } from '@umbraco-cms/backoffice/external/rxjs';
+import { UmbControllerBase } from '@umbraco-cms/backoffice/class-api';
+import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
 
 export type UaiAudioRecorderState = "idle" | "recording";
 
@@ -9,7 +11,9 @@ const FALLBACK_MIME_TYPE = "audio/webm";
 /**
  * Manages browser audio recording via the MediaRecorder API.
  *
- * Handles microphone access, chunk collection, and track cleanup.
+ * Extends `UmbControllerBase` so the recording is automatically cancelled
+ * when the host element is destroyed (e.g., navigating away in the SPA).
+ *
  * Returns the recorded audio as a `Blob` — transcription is the caller's responsibility
  * via {@link UaiSpeechToTextController}.
  *
@@ -17,7 +21,7 @@ const FALLBACK_MIME_TYPE = "audio/webm";
  *
  * @example
  * ```ts
- * const recorder = new UaiAudioRecorder();
+ * const recorder = new UaiAudioRecorder(this);
  * this.observe(recorder.state$, (state) => { this._recorderState = state; });
  * await recorder.start();
  * const audioBlob = await recorder.stop();
@@ -26,7 +30,7 @@ const FALLBACK_MIME_TYPE = "audio/webm";
  *
  * @public
  */
-export class UaiAudioRecorder {
+export class UaiAudioRecorder extends UmbControllerBase {
     #mediaRecorder?: MediaRecorder;
     #chunks: Blob[] = [];
     #state$ = new BehaviorSubject<UaiAudioRecorderState>("idle");
@@ -39,6 +43,10 @@ export class UaiAudioRecorder {
     /** Current state (synchronous read). */
     get state(): UaiAudioRecorderState {
         return this.#state$.value;
+    }
+
+    constructor(host: UmbControllerHost) {
+        super(host);
     }
 
     /**
@@ -89,6 +97,11 @@ export class UaiAudioRecorder {
         this.#mediaRecorder = undefined;
         this.#chunks = [];
         this.#state$.next("idle");
+    }
+
+    override destroy(): void {
+        this.cancel();
+        super.destroy();
     }
 
     #stopRecorder(): Promise<Blob> {

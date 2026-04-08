@@ -29,7 +29,7 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
     @state()
     private _state: DictationState = 'idle';
 
-    #recorder = new UaiAudioRecorder();
+    #recorder = new UaiAudioRecorder(this);
     #sttController = new UaiSpeechToTextController(this);
     #savedCursorPos?: number;
     #notificationContext?: UmbNotificationContext;
@@ -99,11 +99,6 @@ export class UaiDictateTiptapToolbarElement extends UmbLitElement {
             this._state = 'idle';
             this.#savedCursorPos = undefined;
         }
-    }
-
-    override disconnectedCallback() {
-        super.disconnectedCallback();
-        this.#recorder.cancel();
     }
 
     override render() {

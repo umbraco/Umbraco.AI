@@ -20,7 +20,7 @@ export interface UaiEmbeddingResult {
  * @internal
  */
 export interface UaiEmbeddingRequest {
-    profileId?: string | null;
+    profileIdOrAlias?: string | null;
     values: string[];
     signal?: AbortSignal;
 }
@@ -31,7 +31,7 @@ export interface UaiEmbeddingRequest {
  */
 export interface UaiEmbeddingOptions {
     /** Profile ID (GUID) or alias. If omitted, uses the default embedding profile. */
-    profile?: string;
+    profileIdOrAlias?: string;
     /** AbortSignal for cancellation. */
     signal?: AbortSignal;
 }

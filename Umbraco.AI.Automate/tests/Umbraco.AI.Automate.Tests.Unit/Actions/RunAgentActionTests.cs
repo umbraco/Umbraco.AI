@@ -29,7 +29,7 @@ public class RunAgentActionTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidAgent_ReturnsSuccessWithOutput()
+    public async Task ExecuteAsync_WithValidAgent_ReturnsSuccess()
     {
         // Arrange
         var agent = new AIAgent
@@ -66,12 +66,48 @@ public class RunAgentActionTests
         // Assert
         result.Status.ShouldBe(ActionResultStatus.Success);
         result.OutputData.ShouldNotBeNull();
+    }
 
-        var output = result.OutputData.ShouldBeOfType<RunAgentOutput>();
-        output.AgentAlias.ShouldBe("test-agent");
-        output.IsSuccess.ShouldBeTrue();
-        output.Response.ShouldBe("Hello from agent!");
-        output.DurationMs.ShouldBeGreaterThanOrEqualTo(0);
+    [Fact]
+    public async Task ExecuteAsync_WithStructuredJsonResponse_ParsesOutput()
+    {
+        // Arrange
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+        };
+
+        var jsonResponse = """{"summary": "A test summary", "score": 42}""";
+        var responseMessage = new ChatMessage(ChatRole.Assistant, jsonResponse);
+        var agentResponse = new AgentResponse(responseMessage);
+
+        _agentServiceMock
+            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+
+        _agentServiceMock
+            .Setup(s => s.RunAgentAsync(
+                agent.Id,
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<AIAgentExecutionOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agentResponse);
+
+        var action = CreateAction();
+        var context = CreateContext(new RunAgentSettings
+        {
+            AgentId = TestAgentId,
+            Message = "Summarize",
+        });
+
+        // Act
+        var result = await action.ExecuteAsync(context, CancellationToken.None);
+
+        // Assert
+        result.Status.ShouldBe(ActionResultStatus.Success);
+        var output = result.OutputData.ShouldBeOfType<Dictionary<string, object?>>();
+        output["summary"]?.ToString().ShouldBe("A test summary");
     }
 
     [Fact]

@@ -1,8 +1,11 @@
 using System.Diagnostics;
+using System.Text.Json;
+using Json.Schema;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Cms.Core.Services;
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -11,13 +14,14 @@ namespace Umbraco.AI.Automate.Actions;
 
 /// <summary>
 /// An Automate action that executes an AI agent with a given message and returns the response.
+/// Uses dynamic output schema resolved from the agent's configured output schema.
 /// Runs the agent as the automation workspace's service account.
 /// </summary>
 [Action(UmbracoAIAutomateConstants.ActionTypes.RunAgent, "Run AI Agent",
     Description = "Executes an AI agent and returns its response.",
     Group = "AI",
     Icon = "icon-bot")]
-public sealed class RunAgentAction : ActionBase<RunAgentSettings, RunAgentOutput>
+public sealed class RunAgentAction : DynamicOutputActionBase<RunAgentSettings>
 {
     private readonly IAIAgentService _agentService;
     private readonly IUserService _userService;
@@ -36,6 +40,27 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, RunAgentOutput
         _agentService = agentService;
         _userService = userService;
         _logger = logger;
+    }
+
+    /// <inheritdoc />
+    protected override async Task<JsonSchema?> GetOutputSchemaAsync(
+        RunAgentSettings? settings,
+        CancellationToken cancellationToken = default)
+    {
+        if (settings is null || settings.AgentId == Guid.Empty)
+        {
+            return null;
+        }
+
+        AIAgent? agent = await _agentService.GetAgentAsync(settings.AgentId, cancellationToken);
+        JsonElement? outputSchema = agent?.GetStandardConfig()?.OutputSchema;
+
+        if (outputSchema is null)
+        {
+            return null;
+        }
+
+        return JsonSchema.FromText(outputSchema.Value.GetRawText());
     }
 
     /// <inheritdoc />
@@ -89,14 +114,12 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, RunAgentOutput
 
             stopwatch.Stop();
 
-            return Success(new RunAgentOutput
-            {
-                AgentId = agent.Id,
-                AgentAlias = agent.Alias,
-                IsSuccess = true,
-                Response = response.Text,
-                DurationMs = stopwatch.Elapsed.TotalMilliseconds,
-            });
+            // Return the response text as a dynamic object.
+            // If the agent has a structured output schema, the response will be JSON
+            // that matches the schema. Parse it so Automate can bind to individual fields.
+            var outputData = TryParseStructuredOutput(response.Text);
+
+            return Success(outputData);
         }
         catch (InvalidOperationException ex)
         {
@@ -116,6 +139,31 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, RunAgentOutput
                 context.AutomationId, context.RunId, settings.AgentId);
             return ActionResult.Failed(ex, StepRunErrorCategory.Unknown);
         }
+    }
+
+    private static object TryParseStructuredOutput(string responseText)
+    {
+        if (string.IsNullOrWhiteSpace(responseText))
+        {
+            return new { response = string.Empty };
+        }
+
+        try
+        {
+            // If the agent has a structured output schema, the response is JSON.
+            // Parse it to a dictionary so Automate can bind to individual properties.
+            var parsed = JsonSerializer.Deserialize<Dictionary<string, object?>>(responseText);
+            if (parsed is not null)
+            {
+                return parsed;
+            }
+        }
+        catch (JsonException)
+        {
+            // Not valid JSON -- fall through to plain text response
+        }
+
+        return new { response = responseText };
     }
 
     private async Task<IEnumerable<Guid>?> ResolveServiceAccountGroupIdsAsync(ActionContext context)

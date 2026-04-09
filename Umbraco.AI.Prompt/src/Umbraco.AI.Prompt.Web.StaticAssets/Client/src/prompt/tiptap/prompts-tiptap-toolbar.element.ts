@@ -4,11 +4,12 @@ import { UMB_PROPERTY_CONTEXT } from '@umbraco-cms/backoffice/property';
 import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content-type';
 import { UMB_CONTENT_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content';
 import { UMB_BLOCK_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/block';
+import { UMB_DOCUMENT_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/document';
 import { umbOpenModal } from '@umbraco-cms/backoffice/modal';
 import { tryExecute } from '@umbraco-cms/backoffice/resources';
 import type { Editor } from '@umbraco-cms/backoffice/tiptap';
 import type { UmbTiptapToolbarElementApi } from '@umbraco-cms/backoffice/tiptap';
-import { createEntityContextItem, resolveEntityAdapterByType } from '@umbraco-ai/core';
+import { createEntityContextItem, createElementContextItem, resolveEntityAdapterByType } from '@umbraco-ai/core';
 import { PromptsService } from '../../api/index.js';
 import { isPromptAllowed, type PropertyActionContext } from '../property-actions/prompt-scope-matcher.js';
 import { UAI_PROMPT_PREVIEW_MODAL } from '../property-actions/prompt-preview-modal.token.js';
@@ -64,6 +65,8 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
     #propertyEditorUiAlias: string | null = null;
     #contentTypeAliases: string[] = [];
     #workspaceContext?: WorkspaceContextLike;
+    #parentDocumentContext?: WorkspaceContextLike;
+    #isBlockWorkspace = false;
     #savedSelection?: { from: number; to: number; empty: boolean; text: string };
 
     constructor() {
@@ -97,6 +100,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
         this.consumeContext(UMB_BLOCK_WORKSPACE_CONTEXT, (context) => {
             if (!this.#workspaceContext) {
                 this.#workspaceContext = context;
+                this.#isBlockWorkspace = true;
                 // For blocks, get content type aliases from block's content structure
                 if (context) {
                     this.observe(context.content.structure.contentTypeAliases, (aliases) => {
@@ -108,6 +112,13 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
                 }
             }
         });
+
+        // Observe the parent document context for blocks.
+        // Uses passContextAliasMatches() to skip the block workspace alias match
+        // and find the document workspace higher in the DOM tree.
+        this.consumeContext(UMB_DOCUMENT_WORKSPACE_CONTEXT, (ctx) => {
+            this.#parentDocumentContext = ctx as unknown as WorkspaceContextLike;
+        }).passContextAliasMatches();
 
         this.#loadPrompts();
     }
@@ -232,13 +243,37 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             contextItems.push(...entityContext);
         }
 
+        // For blocks: entity = parent document, element = block
+        // For documents: entity = document, no element
         let entityId: string | null | undefined;
-        try {
-            entityId = this.#workspaceContext.getUnique();
-        } catch {
-            // getUnique() can throw in block workspaces if contentKey is not yet available
+        let entityType: string;
+        let elementId: string | undefined;
+        let elementType: string | undefined;
+
+        if (this.#isBlockWorkspace) {
+            try {
+                elementId = this.#workspaceContext.getUnique() ?? undefined;
+            } catch {
+                // getUnique() can throw for blocks if contentKey is not yet available
+            }
+            elementType = this.#workspaceContext.getEntityType();
+
+            if (this.#parentDocumentContext) {
+                entityId = this.#parentDocumentContext.getUnique();
+                entityType = this.#parentDocumentContext.getEntityType();
+            } else {
+                // Fallback: if parent document couldn't be resolved, use block as entity
+                entityId = elementId;
+                entityType = elementType;
+            }
+        } else {
+            try {
+                entityId = this.#workspaceContext.getUnique();
+            } catch {
+                // getUnique() can throw in block workspaces if contentKey is not yet available
+            }
+            entityType = this.#workspaceContext.getEntityType();
         }
-        const entityType = this.#workspaceContext.getEntityType();
 
         if (!entityId || !entityType || !this.#propertyAlias) return;
 
@@ -250,6 +285,8 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             entityType,
             propertyAlias: this.#propertyAlias,
             contentTypeAlias: this.#contentTypeAliases[0] ?? "",
+            elementId,
+            elementType,
             context: contextItems,
             optionCount: prompt.optionCount,
         };
@@ -285,15 +322,35 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
         const entityType = this.#workspaceContext.getEntityType();
         if (!entityType) return undefined;
 
+        const contextItems: UaiPromptContextItem[] = [];
+
         try {
             const adapter = await resolveEntityAdapterByType(entityType);
             if (!adapter?.canHandle(this.#workspaceContext)) return undefined;
 
-            const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
-            return [createEntityContextItem(serializedEntity)];
+            if (this.#isBlockWorkspace) {
+                // Block: serialize block as element context
+                const serializedElement = await adapter.serializeForLlm(this.#workspaceContext);
+                contextItems.push(createElementContextItem(serializedElement));
+
+                // Serialize parent document as entity context
+                if (this.#parentDocumentContext) {
+                    const docAdapter = await resolveEntityAdapterByType('document');
+                    if (docAdapter?.canHandle(this.#parentDocumentContext)) {
+                        const serializedEntity = await docAdapter.serializeForLlm(this.#parentDocumentContext);
+                        contextItems.push(createEntityContextItem(serializedEntity));
+                    }
+                }
+            } else {
+                // Document/media: serialize as entity context
+                const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
+                contextItems.push(createEntityContextItem(serializedEntity));
+            }
         } catch {
             return undefined;
         }
+
+        return contextItems.length > 0 ? contextItems : undefined;
     }
 
     override render() {

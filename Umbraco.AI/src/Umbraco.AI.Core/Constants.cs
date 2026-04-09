@@ -156,6 +156,24 @@ public static class Constants
         public const string SerializedEntity = "Umbraco.AI.SerializedEntity";
 
         /// <summary>
+        /// Key for serialized element data (e.g., a block within a document).
+        /// Stored as <see cref="EntityAdapter.AISerializedEntity"/>.
+        /// </summary>
+        public const string SerializedElement = "Umbraco.AI.SerializedElement";
+
+        /// <summary>
+        /// Key for element ID in metadata collections.
+        /// Set when editing a block element within an entity.
+        /// </summary>
+        public const string ElementId = "Umbraco.AI.ElementId";
+
+        /// <summary>
+        /// Key for element type in metadata collections.
+        /// Set when editing a block element within an entity. Example: "block".
+        /// </summary>
+        public const string ElementType = "Umbraco.AI.ElementType";
+
+        /// <summary>
         /// Key for the parent entity unique identifier (as Guid).
         /// Set when creating a new entity under a parent.
         /// </summary>

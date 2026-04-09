@@ -22,11 +22,51 @@ internal static class CmsEntityFormatHelper
 
         var sb = new StringBuilder();
 
-        sb.AppendLine("## Current Entity Context");
+        sb.AppendLine("## Entity Context");
         sb.AppendLine($"Key: `{entity.Unique}`");
         sb.AppendLine($"Name: `{entity.Name}`");
         sb.AppendLine($"Type: `{entity.EntityType}`");
         sb.AppendLine("**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
+
+        if (!string.IsNullOrEmpty(contentType))
+        {
+            sb.AppendLine($"Content type: {contentType}");
+        }
+
+        if (properties.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("### Properties");
+            sb.AppendLine();
+
+            foreach (var property in properties)
+            {
+                var valueDisplay = property.Value?.ToString() ?? "(empty)";
+                sb.AppendLine($"- **{property.Label}** (`{property.Alias}`): {valueDisplay}");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Formats a CMS element (e.g., a block within a document) with property-based structure.
+    /// Falls back to generic JSON formatting if the structure doesn't match.
+    /// </summary>
+    public static string FormatCmsElement(AISerializedEntity entity)
+    {
+        if (!TryExtractCmsStructure(entity.Data, out var contentType, out var properties))
+        {
+            return GenericEntityAdapter.FormatGeneric(entity);
+        }
+
+        var sb = new StringBuilder();
+
+        sb.AppendLine("## Current Element Context");
+        sb.AppendLine($"Key: `{entity.Unique}`");
+        sb.AppendLine($"Name: `{entity.Name}`");
+        sb.AppendLine($"Type: `{entity.EntityType}`");
+        sb.AppendLine("**IMPORTANT** When the user says 'this block', 'this element' or similar, you should use this context entry as the reference. This is the element currently being edited within the parent entity.");
 
         if (!string.IsNullOrEmpty(contentType))
         {

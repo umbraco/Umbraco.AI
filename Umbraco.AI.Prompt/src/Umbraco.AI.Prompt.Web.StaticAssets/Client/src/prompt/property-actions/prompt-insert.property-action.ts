@@ -3,9 +3,10 @@ import { UmbPropertyActionBase, type UmbPropertyActionArgs } from "@umbraco-cms/
 import { UMB_PROPERTY_CONTEXT } from "@umbraco-cms/backoffice/property";
 import { UMB_CONTENT_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/content";
 import { UMB_BLOCK_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/block";
+import { UMB_DOCUMENT_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/document";
 import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/content-type";
 import { umbOpenModal } from "@umbraco-cms/backoffice/modal";
-import { createEntityContextItem, resolveEntityAdapterByType, type UaiEntityAdapterApi } from "@umbraco-ai/core";
+import { createEntityContextItem, createElementContextItem, resolveEntityAdapterByType, type UaiEntityAdapterApi } from "@umbraco-ai/core";
 import { UAI_PROMPT_PREVIEW_MODAL, UAI_PROMPT_PREVIEW_SIDEBAR } from "./prompt-preview-modal.token.js";
 import type { UaiPromptPropertyActionMeta, UaiPromptContextItem, UaiPromptPreviewModalData } from "./types.js";
 
@@ -30,6 +31,8 @@ interface WorkspaceContextLike {
 export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiPromptPropertyActionMeta> {
     #propertyContext?: typeof UMB_PROPERTY_CONTEXT.TYPE;
     #workspaceContext?: WorkspaceContextLike;
+    #parentDocumentContext?: WorkspaceContextLike;
+    #isBlockWorkspace = false;
     #contentTypeAlias?: string;
     #init: Promise<unknown>;
     #workspaceAdapter?: UaiEntityAdapterApi;
@@ -49,6 +52,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             this.consumeContext(UMB_BLOCK_WORKSPACE_CONTEXT, (ctx) => {
                 if (!this.#workspaceContext) {
                     this.#workspaceContext = ctx;
+                    this.#isBlockWorkspace = true;
                     // For blocks, get content type alias from the content element manager's structure
                     if (ctx) {
                         this.observe(
@@ -62,6 +66,13 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
                 }
             });
         });
+
+        // Observe the parent document context for blocks.
+        // Uses passContextAliasMatches() to skip the block workspace alias match
+        // and find the document workspace higher in the DOM tree.
+        this.consumeContext(UMB_DOCUMENT_WORKSPACE_CONTEXT, (ctx) => {
+            this.#parentDocumentContext = ctx as unknown as WorkspaceContextLike;
+        }).passContextAliasMatches();
 
         this.#init = Promise.all([
             this.consumeContext(UMB_PROPERTY_CONTEXT, (context) => {
@@ -100,10 +111,39 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             throw new Error("Property action meta is not available");
         }
 
-        // Resolve required entity context for prompt execution
-        const entityId = this.#workspaceContext.getUnique();
-        const entityType = this.#workspaceContext.getEntityType();
+        // Resolve required context for prompt execution
         const propertyAlias = this.#propertyContext.getAlias();
+        if (!propertyAlias) {
+            throw new Error("Property alias is not available");
+        }
+
+        // For blocks: entity = parent document, element = block
+        // For documents: entity = document, no element
+        let entityId: string | null | undefined;
+        let entityType: string;
+        let elementId: string | undefined;
+        let elementType: string | undefined;
+
+        if (this.#isBlockWorkspace) {
+            try {
+                elementId = this.#workspaceContext.getUnique() ?? undefined;
+            } catch {
+                // getUnique() can throw for blocks if contentKey is not yet available
+            }
+            elementType = this.#workspaceContext.getEntityType();
+
+            if (this.#parentDocumentContext) {
+                entityId = this.#parentDocumentContext.getUnique();
+                entityType = this.#parentDocumentContext.getEntityType();
+            } else {
+                // Fallback: if parent document couldn't be resolved, use block as entity
+                entityId = elementId;
+                entityType = elementType;
+            }
+        } else {
+            entityId = this.#workspaceContext.getUnique();
+            entityType = this.#workspaceContext.getEntityType();
+        }
 
         if (!entityId) {
             throw new Error("Entity ID is not available");
@@ -113,11 +153,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             throw new Error("Entity type is not available");
         }
 
-        if (!propertyAlias) {
-            throw new Error("Property alias is not available");
-        }
-
-        // Serialize document context for AI operations
+        // Serialize entity and element context for AI operations
         const context = await this.#serializeEntityContext();
 
         // Get maxChars from property editor config (if available)
@@ -134,6 +170,8 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             entityType,
             propertyAlias,
             contentTypeAlias: this.#contentTypeAlias ?? "",
+            elementId,
+            elementType,
             culture: this.#propertyContext.getVariantId?.()?.culture ?? undefined,
             segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
             context,
@@ -187,8 +225,9 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
     }
 
     /**
-     * Serialize the current entity for AI context injection.
-     * Resolves the appropriate adapter based on the workspace entity type.
+     * Serialize the current entity (and element, if editing a block) for AI context injection.
+     * For blocks: sends both the parent document (entity context) and the block (element context).
+     * For documents: sends only the document (entity context).
      */
     async #serializeEntityContext(): Promise<UaiPromptContextItem[] | undefined> {
         if (!this.#workspaceContext) {
@@ -200,13 +239,33 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             return undefined;
         }
 
+        const contextItems: UaiPromptContextItem[] = [];
+
         try {
-            const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
-            return [createEntityContextItem(serializedEntity)];
+            if (this.#isBlockWorkspace) {
+                // Block: serialize block as element context
+                const serializedElement = await adapter.serializeForLlm(this.#workspaceContext);
+                contextItems.push(createElementContextItem(serializedElement));
+
+                // Serialize parent document as entity context
+                if (this.#parentDocumentContext) {
+                    const docAdapter = await resolveEntityAdapterByType("document");
+                    if (docAdapter?.canHandle(this.#parentDocumentContext)) {
+                        const serializedEntity = await docAdapter.serializeForLlm(this.#parentDocumentContext);
+                        contextItems.push(createEntityContextItem(serializedEntity));
+                    }
+                }
+            } else {
+                // Document/media: serialize as entity context (as before)
+                const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
+                contextItems.push(createEntityContextItem(serializedEntity));
+            }
         } catch {
             // Serialization failed - continue without context
             return undefined;
         }
+
+        return contextItems.length > 0 ? contextItems : undefined;
     }
 }
 

@@ -20,6 +20,10 @@ export interface UaiPromptExecuteOptions {
     propertyAlias: string;
     /** The content type alias for scope validation. For blocks, this is the element type alias. */
     contentTypeAlias: string;
+    /** The element ID when editing a block element within an entity. */
+    elementId?: string;
+    /** The element type when editing a block element (e.g., "block"). */
+    elementType?: string;
     /** The culture variant. */
     culture?: string;
     /** The segment variant. */
@@ -104,6 +108,8 @@ export class UaiPromptController extends UmbControllerBase {
                     entityType: options.entityType,
                     propertyAlias: options.propertyAlias,
                     contentTypeAlias: options.contentTypeAlias,
+                    elementId: options.elementId,
+                    elementType: options.elementType,
                     culture: options.culture,
                     segment: options.segment,
                     context: options.context,

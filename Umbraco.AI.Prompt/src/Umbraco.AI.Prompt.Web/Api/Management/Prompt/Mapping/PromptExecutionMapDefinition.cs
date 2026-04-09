@@ -38,6 +38,8 @@ internal class PromptExecutionMapDefinition : IMapDefinition
             EntityType = source.EntityType,
             PropertyAlias = source.PropertyAlias,
             ContentTypeAlias = source.ContentTypeAlias,
+            ElementId = source.ElementId,
+            ElementType = source.ElementType,
             Culture = source.Culture,
             Segment = source.Segment,
             Context = source.Context?.Select(item => new AIRequestContextItem

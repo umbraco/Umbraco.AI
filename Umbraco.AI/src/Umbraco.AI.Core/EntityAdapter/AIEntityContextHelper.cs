@@ -82,6 +82,16 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
         return adapter.FormatForLlm(entity);
     }
 
+    /// <inheritdoc />
+    public string FormatElementForLlm(AISerializedEntity entity)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+
+        // Elements (e.g., blocks) use a dedicated format that distinguishes them
+        // from the parent entity context
+        return Adapters.CmsEntityFormatHelper.FormatCmsElement(entity);
+    }
+
     private static object? ExtractValue(JsonElement element)
     {
         return element.ValueKind switch

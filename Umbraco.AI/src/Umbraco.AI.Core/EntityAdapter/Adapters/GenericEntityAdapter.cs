@@ -29,7 +29,7 @@ internal sealed class GenericEntityAdapter : AIEntityAdapterBase
     {
         var sb = new StringBuilder();
 
-        sb.AppendLine("## Current Entity Context");
+        sb.AppendLine("## Entity Context");
         sb.AppendLine($"Key: `{entity.Unique}`");
         sb.AppendLine($"Name: `{entity.Name}`");
         sb.AppendLine($"Type: `{entity.EntityType}`");

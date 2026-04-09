@@ -36,6 +36,12 @@ internal sealed class RunAISearchMigrationNotificationHandler
 
             var (connectionString, providerName) = AIConnectionStringResolver.Resolve(_configuration);
 
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                _logger.LogDebug("No database connection string available — skipping Umbraco.AI.Search migrations (Umbraco may still be installing).");
+                return;
+            }
+
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAISearchDbContext>();
             UmbracoAISearchDbContext.ConfigureProvider(optionsBuilder, connectionString, providerName);
 

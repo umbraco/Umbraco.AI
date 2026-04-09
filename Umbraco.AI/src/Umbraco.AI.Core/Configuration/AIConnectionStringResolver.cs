@@ -47,6 +47,12 @@ public static class AIConnectionStringResolver
         // Fall back to the standard Umbraco CMS connection string
         connectionString = configuration.GetUmbracoConnectionString(out providerName);
 
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            // Default provider to SQL Server if not specified (matching Umbraco convention)
+            providerName ??= Umbraco.Cms.Core.Constants.ProviderNames.SQLServer;
+        }
+
         return (connectionString, providerName);
     }
 }

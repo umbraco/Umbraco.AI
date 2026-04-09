@@ -104,7 +104,13 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
                 options,
                 cancellationToken);
 
-            var outputData = TryParseStructuredOutput(response.Text);
+            var responseText = response.Text;
+
+            _logger.LogDebug(
+                "Automation {AutomationId} / Run {RunId}: Agent {AgentId} responded with {MessageCount} message(s), text length {TextLength}",
+                context.AutomationId, context.RunId, settings.AgentId, response.Messages.Count, responseText.Length);
+
+            var outputData = TryParseStructuredOutput(responseText);
 
             return Success(outputData);
         }

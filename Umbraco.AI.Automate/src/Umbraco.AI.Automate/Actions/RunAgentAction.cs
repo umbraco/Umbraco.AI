@@ -45,16 +45,16 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
     public override bool HasDynamicOutputSchema => true;
 
     /// <inheritdoc />
-    protected override Task<JsonSchema?> GetOutputSchemaAsync(
+    protected override async Task<JsonSchema?> GetOutputSchemaAsync(
         RunAgentSettings? settings,
         CancellationToken cancellationToken = default)
     {
         if (settings is null || settings.AgentId == Guid.Empty)
         {
-            return Task.FromResult<JsonSchema?>(null);
+            return null;
         }
 
-        return AgentOutputSchemaHelper.GetOutputSchemaAsync(_agentService, settings.AgentId, cancellationToken);
+        return await AgentOutputSchemaHelper.GetOutputSchemaAsync(_agentService, settings.AgentId, cancellationToken);
     }
 
     /// <inheritdoc />

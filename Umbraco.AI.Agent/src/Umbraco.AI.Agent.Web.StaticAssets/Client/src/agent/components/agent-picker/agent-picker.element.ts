@@ -84,27 +84,17 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
 
         const { data, error } = await tryExecute(
             this,
-            AgentsService.getAllAgents({
-                query: {
-                    skip: 0,
-                    take: 100,
-                    surfaceId: this.surfaceId,
-                    isActive: true,
-                },
+            AgentsService.getAgentByIdOrAlias({
+                path: { agentIdOrAlias: this._selectedId },
             }),
         );
 
         if (!error && data) {
-            const agent = data.items.find(
-                (a) => a.id?.toLowerCase() === this._selectedId?.toLowerCase(),
-            );
-            if (agent) {
-                this._item = {
-                    id: agent.id!,
-                    name: agent.name,
-                    description: agent.description ?? "",
-                };
-            }
+            this._item = {
+                id: data.id!,
+                name: data.name,
+                description: data.description ?? "",
+            };
         }
 
         this._loading = false;

@@ -1,4 +1,3 @@
-using Umbraco.AI.Automate.Surface;
 using Umbraco.Automate.Core.Settings;
 
 namespace Umbraco.AI.Automate.Actions;

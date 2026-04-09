@@ -1,7 +1,6 @@
-using System.Text.Json;
 using Json.Schema;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Automate.Helpers;
 using Umbraco.Automate.Core.Triggers;
 
 namespace Umbraco.AI.Automate.Triggers;
@@ -32,24 +31,16 @@ public sealed class AgentExecutedTrigger
     public override bool HasDynamicOutputSchema => true;
 
     /// <inheritdoc />
-    protected override async Task<JsonSchema?> GetOutputSchemaAsync(
+    protected override Task<JsonSchema?> GetOutputSchemaAsync(
         AgentExecutedTriggerSettings? settings,
         CancellationToken cancellationToken = default)
     {
         if (settings?.AgentId is null || settings.AgentId == Guid.Empty)
         {
-            return null;
+            return Task.FromResult<JsonSchema?>(null);
         }
 
-        AIAgent? agent = await _agentService.GetAgentAsync(settings.AgentId.Value, cancellationToken);
-        JsonElement? outputSchema = agent?.GetStandardConfig()?.OutputSchema;
-
-        if (outputSchema is null)
-        {
-            return null;
-        }
-
-        return JsonSchema.FromText(outputSchema.Value.GetRawText());
+        return AgentOutputSchemaHelper.GetOutputSchemaAsync(_agentService, settings.AgentId.Value, cancellationToken);
     }
 
     /// <inheritdoc />

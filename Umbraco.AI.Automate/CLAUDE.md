@@ -49,21 +49,22 @@ Single-project structure (consistent with Deploy connector pattern):
 Actions and triggers use attribute-based discovery:
 
 ```csharp
-// Actions inherit from ActionBase<TSettings, TOutput>
+// Actions use dynamic output schemas resolved from agent configuration
 [Action("umbracoAI.runAgent", "Run AI Agent", Group = "AI", Icon = "icon-bot")]
-public sealed class RunAgentAction : ActionBase<RunAgentSettings, RunAgentOutput>
+public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
 
-// Triggers inherit from NotificationTriggerBase for CMS notification events
+// Triggers use NotificationTriggerBase with dynamic output
 [Trigger("umbracoAI.agentExecuted", "AI Agent Executed", Group = "AI", Icon = "icon-bot")]
 public sealed class AgentExecutedTrigger
-    : NotificationTriggerBase<AgentExecutedTriggerSettings, AgentExecutedTriggerOutput, AIAgentExecutedNotification>
+    : NotificationTriggerBase<AgentExecutedTriggerSettings, object, AIAgentExecutedNotification>
 ```
 
-Settings POCOs use `[Field]` attribute for auto-generated UI:
+Settings POCOs use `[Field]` attribute with property editor UI aliases:
 
 ```csharp
-[Field(Label = "Agent Alias", Description = "...", SupportsBindings = true)]
-public string AgentAlias { get; set; }
+[Field(Label = "Agent", Description = "The AI agent to execute.",
+    EditorUiAlias = "Uai.PropertyEditorUi.AgentPicker")]
+public Guid AgentId { get; set; }
 ```
 
 ### Alias Convention

@@ -1,11 +1,10 @@
-using System.Diagnostics;
 using System.Text.Json;
 using Json.Schema;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Automate.Helpers;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Cms.Core.Services;
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -21,7 +20,7 @@ namespace Umbraco.AI.Automate.Actions;
     Description = "Executes an AI agent and returns its response.",
     Group = "AI",
     Icon = "icon-bot")]
-public sealed class RunAgentAction : DynamicOutputActionBase<RunAgentSettings>
+public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
 {
     private readonly IAIAgentService _agentService;
     private readonly IUserService _userService;
@@ -43,24 +42,19 @@ public sealed class RunAgentAction : DynamicOutputActionBase<RunAgentSettings>
     }
 
     /// <inheritdoc />
-    protected override async Task<JsonSchema?> GetOutputSchemaAsync(
+    public override bool HasDynamicOutputSchema => true;
+
+    /// <inheritdoc />
+    protected override Task<JsonSchema?> GetOutputSchemaAsync(
         RunAgentSettings? settings,
         CancellationToken cancellationToken = default)
     {
         if (settings is null || settings.AgentId == Guid.Empty)
         {
-            return null;
+            return Task.FromResult<JsonSchema?>(null);
         }
 
-        AIAgent? agent = await _agentService.GetAgentAsync(settings.AgentId, cancellationToken);
-        JsonElement? outputSchema = agent?.GetStandardConfig()?.OutputSchema;
-
-        if (outputSchema is null)
-        {
-            return null;
-        }
-
-        return JsonSchema.FromText(outputSchema.Value.GetRawText());
+        return AgentOutputSchemaHelper.GetOutputSchemaAsync(_agentService, settings.AgentId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -78,8 +72,6 @@ public sealed class RunAgentAction : DynamicOutputActionBase<RunAgentSettings>
         _logger.LogInformation(
             "Automation {AutomationId} / Run {RunId}: Executing AI agent {AgentId}",
             context.AutomationId, context.RunId, settings.AgentId);
-
-        var stopwatch = Stopwatch.StartNew();
 
         try
         {
@@ -112,28 +104,20 @@ public sealed class RunAgentAction : DynamicOutputActionBase<RunAgentSettings>
                 options,
                 cancellationToken);
 
-            stopwatch.Stop();
-
-            // Return the response text as a dynamic object.
-            // If the agent has a structured output schema, the response will be JSON
-            // that matches the schema. Parse it so Automate can bind to individual fields.
             var outputData = TryParseStructuredOutput(response.Text);
 
             return Success(outputData);
         }
         catch (InvalidOperationException ex)
         {
-            stopwatch.Stop();
             return ActionResult.Failed(ex, StepRunErrorCategory.Validation);
         }
         catch (OperationCanceledException ex)
         {
-            stopwatch.Stop();
             return ActionResult.Failed(ex, StepRunErrorCategory.Cancelled);
         }
         catch (Exception ex)
         {
-            stopwatch.Stop();
             _logger.LogError(ex,
                 "Automation {AutomationId} / Run {RunId}: AI agent {AgentId} execution failed",
                 context.AutomationId, context.RunId, settings.AgentId);
@@ -150,8 +134,6 @@ public sealed class RunAgentAction : DynamicOutputActionBase<RunAgentSettings>
 
         try
         {
-            // If the agent has a structured output schema, the response is JSON.
-            // Parse it to a dictionary so Automate can bind to individual properties.
             var parsed = JsonSerializer.Deserialize<Dictionary<string, object?>>(responseText);
             if (parsed is not null)
             {

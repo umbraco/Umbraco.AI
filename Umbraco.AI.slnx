@@ -40,6 +40,10 @@
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search/Umbraco.AI.Search.csproj" />
     <Project Path="Umbraco.AI.Search/tests/Umbraco.AI.Search.Tests.Unit/Umbraco.AI.Search.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/AddOns/Automate/">
+    <Project Path="Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" />
+    <Project Path="Umbraco.AI.Automate/tests/Umbraco.AI.Automate.Tests.Unit/Umbraco.AI.Automate.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Core/">
     <Project Path="Umbraco.AI/src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
     <Project Path="Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj" />

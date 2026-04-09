@@ -86,10 +86,12 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
             PropertyAlias = request.PropertyAlias,
         };
 
-        // Resolve the property editor UI alias from the content type
+        // Resolve the property editor UI alias from the content type.
+        // Use ElementType when present (e.g., "block") for correct service routing,
+        // since ContentTypeAlias refers to the element type in that case.
         context.PropertyEditorUiAlias = await ResolvePropertyEditorUiAliasAsync(
             request.ContentTypeAlias,
-            request.EntityType,
+            request.ElementType ?? request.EntityType,
             request.PropertyAlias,
             cancellationToken);
 

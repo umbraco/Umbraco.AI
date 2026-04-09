@@ -20,4 +20,12 @@ public interface IAIEntityContextHelper
     /// <param name="entity">The serialized entity.</param>
     /// <returns>A formatted string describing the entity context.</returns>
     string FormatForLlm(AISerializedEntity entity);
+
+    /// <summary>
+    /// Formats a serialized element (e.g., a block within a document) as a system message for LLM context.
+    /// Uses element-specific formatting that distinguishes it from the parent entity context.
+    /// </summary>
+    /// <param name="entity">The serialized element.</param>
+    /// <returns>A formatted string describing the element context.</returns>
+    string FormatElementForLlm(AISerializedEntity entity);
 }

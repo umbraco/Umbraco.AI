@@ -93,10 +93,20 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             context.SetValue(Constants.ContextKeys.EntityType, entity.EntityType);
 
             // Build template variables from entity
+            // When an element is present (e.g., block), prefix entity variables with "entity."
+            // so they don't collide with element variables. When no element, keep unprefixed.
+            var hasElement = context.Data.ContainsKey(Constants.ContextKeys.SerializedElement);
             var variables = _contextHelper.BuildContextDictionary(entity);
             foreach (var (varKey, varValue) in variables)
             {
-                context.Variables[varKey] = varValue;
+                if (hasElement)
+                {
+                    context.Variables[$"entity.{varKey}"] = varValue;
+                }
+                else
+                {
+                    context.Variables[varKey] = varValue;
+                }
             }
 
             // Add system message with entity context

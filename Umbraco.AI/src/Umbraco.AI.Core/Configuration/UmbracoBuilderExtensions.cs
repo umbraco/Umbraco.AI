@@ -245,7 +245,8 @@ public static partial class UmbracoBuilderExtensions
         // Runtime context contributors - executed in order
         builder.AIRuntimeContextContributors()
             .Append<UserContextContributor>()           // Ambient: adds current user info
-            .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
+            .Append<SerializedElementContributor>()    // Item-based: processes serialized elements (blocks) — runs before entity to claim unprefixed variables
+            .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities — prefixes variables when element present
             .Append<SectionContextContributor>()        // Item-based: extracts section pathname for context filtering
             .Append<SelectionContextContributor>()     // Item-based: extracts selection text as template variable
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items

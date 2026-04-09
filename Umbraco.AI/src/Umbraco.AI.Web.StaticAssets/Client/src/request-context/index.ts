@@ -23,7 +23,7 @@
 export type { UaiRequestContextItem } from "./types.js";
 
 // Helpers
-export { createEntityContextItem, createSelectionContextItem } from "./helpers.js";
+export { createEntityContextItem, createElementContextItem, createSelectionContextItem } from "./helpers.js";
 
 // Contributor infrastructure
 export {

@@ -39,7 +39,7 @@ public class GenericEntityAdapterTests
         var result = _adapter.FormatForLlm(entity);
 
         // Assert
-        result.ShouldContain("## Current Entity Context");
+        result.ShouldContain("## Entity Context");
         result.ShouldContain("Key: `prod-123`");
         result.ShouldContain("Name: `Widget`");
         result.ShouldContain("Type: `product`");
@@ -101,7 +101,7 @@ public class GenericEntityAdapterTests
         var result = _adapter.FormatForLlm(entity);
 
         // Assert
-        result.ShouldContain("## Current Entity Context");
+        result.ShouldContain("## Entity Context");
         result.ShouldContain("```json");
         result.ShouldContain("{}");
     }

@@ -25,43 +25,40 @@ internal sealed class ContentContextResolver : IAIContextResolver
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIContextService _contextService;
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ContentContextResolver"/> class.
     /// </summary>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     /// <param name="contextService">The context service.</param>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
     public ContentContextResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIContextService contextService,
-        IUmbracoContextAccessor umbracoContextAccessor)
+        IUmbracoContextFactory umbracoContextFactory)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
-        _umbracoContextAccessor = umbracoContextAccessor;
+        _umbracoContextFactory = umbracoContextFactory;
     }
 
     /// <inheritdoc />
     public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
         // Get content ID from RuntimeContext (set by orchestrators like AGUIStreamingService)
-        var contentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ParentEntityId)
+        var contentId = _runtimeContextAccessor.Context?.GetValue<Guid?>(Constants.ContextKeys.ParentEntityId)
             ?? _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.EntityId);
         if (!contentId.HasValue)
         {
             return AIContextResolverResult.Empty;
         }
 
-        // Try to get the Umbraco context
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            return AIContextResolverResult.Empty;
-        }
+        // Ensure UmbracoContext exists (not automatically created for backoffice API requests)
+        using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
         // Get the published content
-        var content = umbracoContext.Content?.GetById(contentId.Value);
+        var content = contextReference.UmbracoContext.Content?.GetById(contentId.Value);
         if (content is null)
         {
             return AIContextResolverResult.Empty;
@@ -73,7 +70,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
         {
             return AIContextResolverResult.Empty;
         }
-        
+
         // Use the source content's key and name for tracking
         var contentKey = source?.Key ?? content.Key;
         var contentName = source?.Name ?? content.Name;
@@ -88,7 +85,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
     {
         // Check current node and ancestors (from closest to root)
         IPublishedContent? node = content;
-        
+
         while (node is not null)
         {
             // Find any property using the context picker editor

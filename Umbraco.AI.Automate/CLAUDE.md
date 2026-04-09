@@ -38,25 +38,16 @@ Single-project structure (consistent with Deploy connector pattern):
 **Actions** - Workflow steps that execute AI operations:
 - `RunAgentAction` - Executes an AI agent with a message and returns the response
 
-**Triggers** - Events that start automations:
-- `AgentExecutedTrigger` - Fires when an AI agent completes execution
-
 **Composer**:
-- `UmbracoAIAutomateComposer` - Minimal composer; actions/triggers are auto-discovered
+- `UmbracoAIAutomateComposer` - Minimal composer; actions are auto-discovered
 
 ### Automate Extension Model
 
-Actions and triggers use attribute-based discovery:
+Actions use attribute-based discovery with dynamic output schemas:
 
 ```csharp
-// Actions use dynamic output schemas resolved from agent configuration
 [Action("umbracoAI.runAgent", "Run AI Agent", Group = "AI", Icon = "icon-bot")]
 public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
-
-// Triggers use NotificationTriggerBase with dynamic output
-[Trigger("umbracoAI.agentExecuted", "AI Agent Executed", Group = "AI", Icon = "icon-bot")]
-public sealed class AgentExecutedTrigger
-    : NotificationTriggerBase<AgentExecutedTriggerSettings, object, AIAgentExecutedNotification>
 ```
 
 Settings POCOs use `[Field]` attribute with property editor UI aliases:
@@ -86,8 +77,7 @@ Aliases use `umbracoAI.*` prefix (matching how Automate uses `umbracoAutomate.*`
 ## Testing Focus
 
 Unit tests cover:
-- RunAgentAction: successful execution, agent not found, execution failure, cancellation
-- AgentExecutedTrigger: event mapping, output population
+- RunAgentAction: successful execution, structured JSON parsing, agent not found, execution failure, cancellation
 
 ## Related Documentation
 

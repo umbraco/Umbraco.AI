@@ -3,7 +3,7 @@ Umbraco.AI.Automate brings AI agent capabilities to Umbraco Automate workflows.
 ## Features
 
 - **Run AI Agent action** - Execute AI agents as workflow actions, passing messages and receiving structured responses
-- **Agent Executed trigger** - Start automations when AI agents complete execution, with optional filtering by agent
+- **Dynamic output schemas** - Agent's configured output schema drives binding autocomplete in the workflow designer
 
 ## Requirements
 

@@ -15,15 +15,4 @@ public static class UmbracoAIAutomateConstants
         /// </summary>
         public const string RunAgent = "umbracoAI.runAgent";
     }
-
-    /// <summary>
-    /// Automate trigger type aliases for AI events.
-    /// </summary>
-    public static class TriggerTypes
-    {
-        /// <summary>
-        /// Trigger alias for when an AI agent completes execution.
-        /// </summary>
-        public const string AgentExecuted = "umbracoAI.agentExecuted";
-    }
 }

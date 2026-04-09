@@ -28,5 +28,5 @@
             "Description": "Core AI capabilities for Umbraco"
         }
     ],
-    "Tags": ["umbraco", "ai", "automate", "agent", "workflow", "trigger", "action"]
+    "Tags": ["umbraco", "ai", "automate", "agent", "workflow", "action"]
 }

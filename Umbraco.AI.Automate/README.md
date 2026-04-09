@@ -1,13 +1,14 @@
 # Umbraco.AI.Automate
 
-Umbraco Automate integration for Umbraco.AI.Agent. Exposes AI agents as workflow actions and AI events as workflow triggers.
+Umbraco Automate integration for Umbraco.AI.Agent. Exposes AI agents as workflow actions.
 
 > **Note:** This package is part of the [Umbraco.AI](https://github.com/umbraco/Umbraco.AI) monorepo.
 
 ## Features
 
 - **Run AI Agent** action - Execute any configured AI agent as a step in an Automate workflow
-- **Agent Executed** trigger - Start automations when AI agents complete execution
+- Dynamic output schema - agent's configured output schema drives Automate binding autocomplete
+- Automations surface - scope which agents are available in Automate workflows
 
 ## Installation
 
@@ -27,18 +28,10 @@ dotnet add package Umbraco.AI.Automate
 
 Configure the "Run AI Agent" action in your Automate workflow:
 
-- **Agent** - Select the AI agent to run (by alias)
+- **Agent** - Select the AI agent to run (picker filtered to agents with the "Automations" surface)
 - **Message** - The message to send to the agent (supports `${ binding }` syntax)
 
-The action outputs the agent's response, success status, and execution duration for use in subsequent workflow steps.
-
-### Agent Executed Trigger
-
-Configure the "AI Agent Executed" trigger to start a workflow when an agent completes:
-
-- **Agent Alias** (optional) - Filter to only trigger for a specific agent
-
-The trigger outputs agent metadata (ID, alias, name, success status, duration) for use in workflow steps.
+The action outputs the agent's response for use in subsequent workflow steps. If the agent has a structured output schema, individual fields are available for binding.
 
 ## Related Packages
 

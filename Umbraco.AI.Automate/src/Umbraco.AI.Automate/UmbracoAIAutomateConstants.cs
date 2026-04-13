@@ -14,5 +14,10 @@ public static class UmbracoAIAutomateConstants
         /// Action alias for running an AI agent.
         /// </summary>
         public const string RunAgent = "umbracoAI.runAgent";
+
+        /// <summary>
+        /// Action alias for transcribing audio using an AI speech-to-text profile.
+        /// </summary>
+        public const string TranscribeAudio = "umbracoAI.transcribeAudio";
     }
 }

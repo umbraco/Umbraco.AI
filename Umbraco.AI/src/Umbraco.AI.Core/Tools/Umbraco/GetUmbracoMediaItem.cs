@@ -35,7 +35,7 @@ public class GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccesso
     /// <inheritdoc />
     protected override async Task<object> ExecuteAsync(GetUmbracoMediaItemArgs args, CancellationToken ct)
     {
-        var media = await mediaResolver.ResolveAsync(args.MediaKey, ct);
+        var media = await mediaResolver.ResolveAsync(args.MediaKey, cancellationToken: ct);
         if (media is null)
         {
             return new { success = false, message = "Media item could not be found or is not a valid media type" };

@@ -193,7 +193,7 @@ public class AIPromptTemplateServiceTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia.Object);
 
         _mockImageResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
@@ -224,7 +224,7 @@ public class AIPromptTemplateServiceTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia.Object);
 
         _mockImageResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIMediaContent?)null);
 
         // Act
@@ -457,7 +457,7 @@ public class AIPromptTemplateServiceTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia.Object);
 
         _mockImageResolver
-            .Setup(r => r.ResolveAsync(imagePath, It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(imagePath, It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = mediaType });
     }
 

@@ -13,6 +13,12 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         settings: {
             properties: [
                 {
+                    alias: "capability",
+                    label: "Capability",
+                    description: "Only show profiles supporting this capability (e.g. Chat, Embedding, SpeechToText).",
+                    propertyEditorUiAlias: "Umb.PropertyEditorUi.TextBox",
+                },
+                {
                     alias: "multiple",
                     label: "Allow Multiple",
                     description: "Allow selecting multiple AI profiles",

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Media;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Services;
 
@@ -22,15 +24,18 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 
     private readonly IMediaService _mediaService;
     private readonly MediaFileManager _mediaFileManager;
+    private readonly IOptionsMonitor<AIMediaOptions> _optionsMonitor;
     private readonly ILogger<AIUmbracoMediaResolver> _logger;
 
     public AIUmbracoMediaResolver(
         IMediaService mediaService,
         MediaFileManager mediaFileManager,
+        IOptionsMonitor<AIMediaOptions> optionsMonitor,
         ILogger<AIUmbracoMediaResolver> logger)
     {
         _mediaService = mediaService;
         _mediaFileManager = mediaFileManager;
+        _optionsMonitor = optionsMonitor;
         _logger = logger;
     }
 
@@ -248,10 +253,12 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
         using var memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
 
-        return new AIMediaContent
+        var content = new AIMediaContent
         {
             Data = memoryStream.ToArray(),
             MediaType = mediaType
         };
+
+        return AIImageDownscaler.DownscaleIfNeeded(content, _optionsMonitor.CurrentValue, _logger, relativePath);
     }
 }

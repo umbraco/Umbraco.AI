@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Services;
 
-namespace Umbraco.AI.Prompt.Core.Media;
+namespace Umbraco.AI.Core.Media;
 
 /// <summary>
 /// Resolves images from media references using Umbraco's media service and file storage.

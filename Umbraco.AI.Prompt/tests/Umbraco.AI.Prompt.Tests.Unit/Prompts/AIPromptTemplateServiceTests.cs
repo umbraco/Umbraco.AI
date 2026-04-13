@@ -2,7 +2,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
-using Umbraco.AI.Prompt.Core.Media;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.Models;

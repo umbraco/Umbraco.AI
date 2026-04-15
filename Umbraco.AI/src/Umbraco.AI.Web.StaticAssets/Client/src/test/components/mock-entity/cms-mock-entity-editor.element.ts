@@ -321,11 +321,21 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
             },
         }));
 
-        // Default route aliasing the first tab so the router lands on something on open.
+        // Default route: replaceState into the first tab's canonical path so the
+        // URL reflects the active tab and the tab pill picks up the active style.
+        // Mirrors document-workspace-editor.element.ts's default-route handling —
+        // without this, matching path "" keeps the URL at the parent route's base
+        // and absoluteActiveViewPath comes back without a tab segment, so
+        // href-based active-state comparison fails for the landed-on tab.
+        const firstTabPath = this.#pathForTab(this._tabs[0]);
         routes.push({
-            ...routes[0],
-            unique: "emptyPathFor_" + routes[0].path,
             path: "",
+            pathMatch: "full",
+            resolve: async () => {
+                if (this._routerPath) {
+                    history.replaceState({}, "", `${this._routerPath}/${firstTabPath}`);
+                }
+            },
         });
 
         routes.push({

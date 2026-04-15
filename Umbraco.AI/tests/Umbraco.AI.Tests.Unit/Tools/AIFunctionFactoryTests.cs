@@ -2,6 +2,7 @@ using Moq;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Tests.Common.Fakes;
+using MeaiAIFunctionArguments = Microsoft.Extensions.AI.AIFunctionArguments;
 
 namespace Umbraco.AI.Tests.Unit.Tools;
 
@@ -54,6 +55,60 @@ public class AIFunctionFactoryTests
         function.ShouldNotBeNull();
         function.Name.ShouldBe("typed-tool");
         function.Description.ShouldBe("Does something with args");
+    }
+
+    [Fact]
+    public void Create_WithTypedTool_ExposesTArgsPropertiesAsTopLevelSchemaParameters()
+    {
+        // Arrange
+        // Regression test: Google Gemini's function calling does not populate nested object
+        // parameters. Previously the factory wrapped TArgs under a single "args" property,
+        // causing Gemini to emit {"args": null} and every typed tool call to fail. The
+        // schema must expose TArgs properties at the top level for all providers.
+        var tool = new FakeTypedTool<FakeToolArgs>(id: "typed-tool");
+
+        // Act
+        var function = _factory.Create(tool);
+        var schema = function.JsonSchema;
+
+        // Assert
+        schema.ValueKind.ShouldBe(System.Text.Json.JsonValueKind.Object);
+
+        var properties = schema.GetProperty("properties");
+        properties.TryGetProperty("args", out _).ShouldBeFalse(
+            "Schema must not wrap TArgs under a nested 'args' property; Gemini does not populate nested objects.");
+
+        // TArgs properties (camelCased) must appear at the top level of the schema.
+        properties.TryGetProperty("message", out _).ShouldBeTrue();
+        properties.TryGetProperty("count", out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Create_WithTypedTool_BindsFlatArgumentsIntoTArgs()
+    {
+        // Arrange
+        FakeToolArgs? capturedArgs = null;
+        var tool = new FakeTypedTool<FakeToolArgs>(id: "typed-tool")
+            .WithExecuteHandler((args, _) =>
+            {
+                capturedArgs = args;
+                return Task.FromResult<object>(args);
+            });
+        var function = _factory.Create(tool);
+
+        // Act — invoke with args flattened at the top level, as any conforming provider
+        // (Gemini, OpenAI, Anthropic) would emit given the flattened schema.
+        var arguments = new MeaiAIFunctionArguments
+        {
+            ["message"] = "hello",
+            ["count"] = 3,
+        };
+        await function.InvokeAsync(arguments, CancellationToken.None);
+
+        // Assert
+        capturedArgs.ShouldNotBeNull();
+        capturedArgs!.Message.ShouldBe("hello");
+        capturedArgs.Count.ShouldBe(3);
     }
 
     [Fact]

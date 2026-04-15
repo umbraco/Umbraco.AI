@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Tools.Scopes;
 using MeaiAIFunctionFactory = Microsoft.Extensions.AI.AIFunctionFactory;
@@ -26,11 +25,11 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
         // Enrich description with scope metadata (ForEntityTypes)
         var enrichedDescription = EnrichDescription(tool);
 
-        // For typed tools, we need to create a delegate with the proper signature
-        // The interface's ExecuteAsync provides a common API
+        // For typed tools, build an AIFunction whose schema is TArgs at the top level,
+        // so that each TArgs property is a top-level function parameter. This avoids a
+        // nested "args" wrapper that Google Gemini's function-calling doesn't populate.
         if (tool.ArgsType is not null)
         {
-            // Create typed delegate using reflection to match TArgs
             return CreateTypedFunction(tool, enrichedDescription);
         }
 
@@ -47,21 +46,9 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
 
     private static AIFunction CreateTypedFunction(IAITool tool, string description)
     {
-        // Use the generic AIFunctionFactory.Create with typed delegate
-        // This allows MEAI to infer schema from TArgs [Description] attributes
-        var method = typeof(AIFunctionFactory)
-            .GetMethod(nameof(CreateTypedFunctionCore), BindingFlags.NonPublic | BindingFlags.Static)!
-            .MakeGenericMethod(tool.ArgsType!);
-
-        return (AIFunction)method.Invoke(null, [tool, description])!;
-    }
-
-    private static AIFunction CreateTypedFunctionCore<TArgs>(IAITool tool, string description) where TArgs : class
-    {
-        // Create a typed delegate that MEAI can use to infer schema from TArgs
-        Func<TArgs, CancellationToken, Task<object>> execute = tool.ExecuteAsync;
-
-        return MeaiAIFunctionFactory.Create(execute, name: tool.Id, description: description);
+        // Instantiate AIToolFunction<TArgs> via reflection to match the tool's argument type.
+        var functionType = typeof(AIToolFunction<>).MakeGenericType(tool.ArgsType!);
+        return (AIFunction)Activator.CreateInstance(functionType, tool, tool.Id, description)!;
     }
 
     /// <summary>

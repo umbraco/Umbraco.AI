@@ -31,6 +31,7 @@ export { resolveEntityAdapterByType, hasEntityAdapter } from "./helpers.js";
 
 // Adapters
 export { UaiDocumentAdapter } from "./adapters/document.adapter.js";
+export { UaiMediaAdapter } from "./adapters/media.adapter.js";
 
 // Types
 export type {

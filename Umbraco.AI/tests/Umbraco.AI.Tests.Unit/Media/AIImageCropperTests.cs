@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Umbraco.AI.Core.Media;
-using Umbraco.AI.Prompt.Core.Media;
 
 namespace Umbraco.AI.Tests.Unit.Media;
 

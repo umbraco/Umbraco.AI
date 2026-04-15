@@ -4,7 +4,6 @@ using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Umbraco.AI.Core.Media;
-using Umbraco.AI.Prompt.Core.Media;
 
 namespace Umbraco.AI.Tests.Unit.Media;
 

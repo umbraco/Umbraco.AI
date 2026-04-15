@@ -28,6 +28,11 @@
     <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
 
+  <!-- Umbraco Automate -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[0.1.0--preview.259.g1ec54c3, 0.999.999)" />
+  </ItemGroup>
+
   <!-- Umbraco Search -->
   <ItemGroup>
     <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0-beta.3, 1.999.999)" />
@@ -52,6 +57,7 @@
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[1.0.0-alpha2, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[1.0.0-alpha3, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Deploy" Version="[1.0.0-beta1, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Automate" Version="[1.0.0-alpha1, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[1.4.0, 1.999.999)" />
   </ItemGroup>
 

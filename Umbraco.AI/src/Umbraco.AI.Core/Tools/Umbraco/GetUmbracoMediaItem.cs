@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools.Scopes;
-using Umbraco.AI.Prompt.Core.Media;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 

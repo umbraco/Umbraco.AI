@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Umbraco.AI.Prompt.Core.Media;
+using Umbraco.AI.Core.Media;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 

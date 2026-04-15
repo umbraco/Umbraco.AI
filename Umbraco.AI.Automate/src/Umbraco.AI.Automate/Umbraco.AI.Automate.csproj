@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Title>Umbraco AI Automate</Title>
+    <Description>Umbraco Automate integration for Umbraco.AI.Agent</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAIAutomate</StaticWebAssetBasePath>
+    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <!-- Use project references for local dev, NuGet packages for CI -->
+  <PropertyGroup>
+    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+  </PropertyGroup>
+
+  <!-- Core Umbraco.AI packages -->
+  <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ProjectReference Include="..\..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Startup\Umbraco.AI.Agent.Startup.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+    <PackageReference Include="Umbraco.AI.Agent.Startup" />
+  </ItemGroup>
+
+  <!-- Umbraco Automate -->
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Automate.Core" />
+  </ItemGroup>
+</Project>

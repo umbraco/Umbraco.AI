@@ -33,7 +33,7 @@ public class AllAgentController : AgentControllerBase
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
-    /// <param name="scopeId">Optional scope ID filter. Only returns agents with this scope assigned.</param>
+    /// <param name="surfaceId">Optional surface ID filter. Only returns agents assigned to this surface.</param>
     /// <param name="isActive">Optional active status filter. If true, returns only active agents; if false, returns only inactive agents; if null, returns all agents.</param>
     /// <param name="agentType">Optional agent type filter ("standard" or "orchestrated").</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -46,7 +46,7 @@ public class AllAgentController : AgentControllerBase
         int take = 100,
         string? filter = null,
         Guid? profileId = null,
-        string? scopeId = null,
+        string? surfaceId = null,
         bool? isActive = null,
         string? agentType = null,
         CancellationToken cancellationToken = default)
@@ -59,7 +59,7 @@ public class AllAgentController : AgentControllerBase
             _ => null
         };
 
-        var result = await _AIAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, scopeId, isActive, parsedAgentType, cancellationToken);
+        var result = await _AIAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, surfaceId, isActive, parsedAgentType, cancellationToken);
 
         var viewModel = new PagedViewModel<AgentItemResponseModel>
         {

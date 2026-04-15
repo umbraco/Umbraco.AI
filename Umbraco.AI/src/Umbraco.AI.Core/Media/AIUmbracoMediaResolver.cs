@@ -1,25 +1,35 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.AI.Core.Media;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Services;
 
-namespace Umbraco.AI.Prompt.Core.Media;
+namespace Umbraco.AI.Core.Media;
 
 /// <summary>
-/// Resolves images from media references using Umbraco's media service and file storage.
+/// Resolves media (images, audio) from media references using Umbraco's media service and file storage.
 /// </summary>
 internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 {
     private static readonly Dictionary<string, string> ExtensionToMediaType = new(StringComparer.OrdinalIgnoreCase)
     {
+        // Images
         [".jpg"] = "image/jpeg",
         [".jpeg"] = "image/jpeg",
         [".png"] = "image/png",
         [".gif"] = "image/gif",
         [".webp"] = "image/webp",
-        [".bmp"] = "image/bmp"
+        [".bmp"] = "image/bmp",
+
+        // Audio
+        [".mp3"] = "audio/mpeg",
+        [".wav"] = "audio/wav",
+        [".m4a"] = "audio/mp4",
+        [".mp4"] = "audio/mp4",
+        [".ogg"] = "audio/ogg",
+        [".oga"] = "audio/ogg",
+        [".webm"] = "audio/webm",
+        [".flac"] = "audio/flac",
     };
 
     private readonly IMediaService _mediaService;
@@ -60,7 +70,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             {
                 if (filePath is null && !mediaKey.HasValue)
                 {
-                    _logger.LogWarning("Could not extract image path or media key from value: {ValueType}", value.GetType().Name);
+                    _logger.LogWarning("Could not extract media path or media key from value: {ValueType}", value.GetType().Name);
                 }
                 return Task.FromResult<AIMediaContent?>(null);
             }
@@ -83,7 +93,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
                 }
             }
 
-            // Step 3: enforce AI provider size/dimension limits
+            // Step 3: enforce AI provider size/dimension limits (no-op for non-images)
             var downscaled = AIImageDownscaler.DownscaleIfNeeded(
                 content,
                 _optionsMonitor.CurrentValue,
@@ -94,7 +104,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to resolve image from value: {ValueType}", value.GetType().Name);
+            _logger.LogWarning(ex, "Failed to resolve media from value: {ValueType}", value.GetType().Name);
             return Task.FromResult<AIMediaContent?>(null);
         }
     }
@@ -262,7 +272,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
         var extension = Path.GetExtension(filePath);
         if (!ExtensionToMediaType.TryGetValue(extension, out var mediaType))
         {
-            _logger.LogWarning("Unsupported image extension: {Extension}", extension);
+            _logger.LogWarning("Unsupported media extension: {Extension}", extension);
             return null;
         }
 

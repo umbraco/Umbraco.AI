@@ -1,9 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Prompt.Core.Context;
 using Umbraco.AI.Prompt.Core.Guardrails;
-using Umbraco.AI.Prompt.Core.Media;
 using Umbraco.AI.Prompt.Core.Models;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Core.Templates.Processors;

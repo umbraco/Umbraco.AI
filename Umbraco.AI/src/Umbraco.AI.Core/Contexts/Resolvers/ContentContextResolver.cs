@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
@@ -26,6 +27,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIContextService _contextService;
     private readonly IUmbracoContextFactory _umbracoContextFactory;
+    private readonly ILogger<ContentContextResolver> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ContentContextResolver"/> class.
@@ -33,14 +35,17 @@ internal sealed class ContentContextResolver : IAIContextResolver
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     /// <param name="contextService">The context service.</param>
     /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    /// <param name="logger">The logger.</param>
     public ContentContextResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIContextService contextService,
-        IUmbracoContextFactory umbracoContextFactory)
+        IUmbracoContextFactory umbracoContextFactory,
+        ILogger<ContentContextResolver> logger)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
         _umbracoContextFactory = umbracoContextFactory;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -54,11 +59,39 @@ internal sealed class ContentContextResolver : IAIContextResolver
             return AIContextResolverResult.Empty;
         }
 
+        // This resolver walks the document tree. If we know the entity being
+        // edited is a media or member, skip early — the document cache has no
+        // entry for those keys and Umbraco's HybridCache would throw a
+        // "content type not found" inside GetById trying to materialise them.
+        var entityType = _runtimeContextAccessor.Context?.GetValue<string>(Constants.ContextKeys.EntityType);
+        if (!string.IsNullOrEmpty(entityType)
+            && !string.Equals(entityType, "document", StringComparison.OrdinalIgnoreCase))
+        {
+            return AIContextResolverResult.Empty;
+        }
+
         // Ensure UmbracoContext exists (not automatically created for backoffice API requests)
         using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
-        // Get the published content
-        var content = contextReference.UmbracoContext.Content?.GetById(contentId.Value);
+        // Get the published content. GetById materialises the cached node and
+        // can throw when the node references a content type that can no longer
+        // be resolved (e.g. the type was deleted, or a caller unexpectedly
+        // passed a non-document key without setting EntityType). Treat those
+        // as "no document context available" rather than failing the prompt.
+        IPublishedContent? content;
+        try
+        {
+            content = contextReference.UmbracoContext.Content?.GetById(contentId.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to resolve content {ContentId} for context injection; skipping document context",
+                contentId.Value);
+            return AIContextResolverResult.Empty;
+        }
+
         if (content is null)
         {
             return AIContextResolverResult.Empty;

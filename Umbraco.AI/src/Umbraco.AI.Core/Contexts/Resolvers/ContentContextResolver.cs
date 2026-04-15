@@ -7,19 +7,24 @@ using Umbraco.Extensions;
 namespace Umbraco.AI.Core.Contexts.Resolvers;
 
 /// <summary>
-/// Resolves context from content nodes by finding the nearest context picker property value.
+/// Resolves context from document or media nodes by finding the nearest context picker property value.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This resolver reads the content ID from <see cref="IAIRuntimeContextAccessor"/>, preferring
+/// This resolver reads the entity ID from <see cref="IAIRuntimeContextAccessor"/>, preferring
 /// <see cref="AIRuntimeContextKeys.ParentEntityId"/> (for new entities) over
-/// <see cref="AIRuntimeContextKeys.EntityId"/>. It then walks up the content tree
-/// (current node + ancestors) to find the nearest property using the AI Context
-/// Picker editor (<c>Uai.ContextPicker</c>).
+/// <see cref="AIRuntimeContextKeys.EntityId"/>, dispatches to the document or media
+/// published cache based on <see cref="AIRuntimeContextKeys.EntityType"/>, then walks
+/// up the tree (current node + ancestors) to find the nearest property using the AI
+/// Context Picker editor (<c>Uai.ContextPicker</c>).
 /// </para>
 /// <para>
 /// The first non-empty context picker value found while walking up the tree is used.
-/// This allows content to inherit context from parent/ancestor nodes.
+/// This allows items to inherit context from parent/ancestor nodes.
+/// </para>
+/// <para>
+/// Members are skipped because members do not form a tree that can be walked for
+/// inherited context values.
 /// </para>
 /// </remarks>
 internal sealed class ContentContextResolver : IAIContextResolver
@@ -59,13 +64,10 @@ internal sealed class ContentContextResolver : IAIContextResolver
             return AIContextResolverResult.Empty;
         }
 
-        // This resolver walks the document tree. If we know the entity being
-        // edited is a media or member, skip early — the document cache has no
-        // entry for those keys and Umbraco's HybridCache would throw a
-        // "content type not found" inside GetById trying to materialise them.
+        // Members have no tree to walk for inherited context picker values, so
+        // there's nothing meaningful to resolve for them.
         var entityType = _runtimeContextAccessor.Context?.GetValue<string>(Constants.ContextKeys.EntityType);
-        if (!string.IsNullOrEmpty(entityType)
-            && !string.Equals(entityType, "document", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(entityType, "member", StringComparison.OrdinalIgnoreCase))
         {
             return AIContextResolverResult.Empty;
         }
@@ -73,21 +75,26 @@ internal sealed class ContentContextResolver : IAIContextResolver
         // Ensure UmbracoContext exists (not automatically created for backoffice API requests)
         using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
-        // Get the published content. GetById materialises the cached node and
-        // can throw when the node references a content type that can no longer
-        // be resolved (e.g. the type was deleted, or a caller unexpectedly
-        // passed a non-document key without setting EntityType). Treat those
-        // as "no document context available" rather than failing the prompt.
+        // Dispatch to the appropriate published cache based on the entity type.
+        // Both caches return IPublishedContent, so the tree-walking logic below
+        // is identical for documents and media. GetById materialises the cached
+        // node and can throw when the node's content type can no longer be
+        // resolved (e.g. type deleted, or a document key passed against the
+        // media cache); treat any such failure as "no context available"
+        // rather than aborting the whole prompt.
         IPublishedContent? content;
         try
         {
-            content = contextReference.UmbracoContext.Content?.GetById(contentId.Value);
+            content = string.Equals(entityType, "media", StringComparison.OrdinalIgnoreCase)
+                ? contextReference.UmbracoContext.Media?.GetById(contentId.Value)
+                : contextReference.UmbracoContext.Content?.GetById(contentId.Value);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(
                 ex,
-                "Failed to resolve content {ContentId} for context injection; skipping document context",
+                "Failed to resolve {EntityType} {ContentId} for context injection; skipping",
+                entityType ?? "document",
                 contentId.Value);
             return AIContextResolverResult.Empty;
         }

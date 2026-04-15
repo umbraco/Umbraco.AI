@@ -332,9 +332,16 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
             path: "",
             pathMatch: "full",
             resolve: async () => {
-                if (this._routerPath) {
-                    history.replaceState({}, "", `${this._routerPath}/${firstTabPath}`);
-                }
+                // Guard: when the modal is closing, UmbRouteContext._internal_removeModalPath
+                // pushes the URL back to the outer workspace path. That triggers one last
+                // pass through our inner router-slot on this empty-path route — if we
+                // replaceState unconditionally, we'd yank the URL back into our modal
+                // segment and undo the modal-manager's cleanup (the user sees the URL
+                // clear and then reappear). Only redirect while the URL is still inside
+                // our modal's registered route.
+                if (!this._routerPath) return;
+                if (!window.location.pathname.startsWith(this._routerPath)) return;
+                history.replaceState({}, "", `${this._routerPath}/${firstTabPath}`);
             },
         });
 

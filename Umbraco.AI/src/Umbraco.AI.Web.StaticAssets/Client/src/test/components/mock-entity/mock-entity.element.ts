@@ -70,7 +70,9 @@ export class UaiMockEntityElement extends UmbLitElement {
     /**
      * In-flight flow metadata for the current editor invocation. Tracks which picker
      * modals to close on submit and which entity type/sub-type to save the result
-     * against. Only lives between open-the-editor and submit/cancel.
+     * against. Only lives between open-the-editor and submit/cancel. URL cleanup
+     * on close is handled by UmbModalContext.reject/submit → UmbRouteContext
+     * _internal_removeModalPath, so we don't restore the URL ourselves.
      */
     #pendingEditorFlow?: {
         parentModals: UmbModalContext[];

@@ -36,20 +36,34 @@ jobs:
               with:
                   fetch-depth: 1
 
-            # Log review metrics for monitoring
+            # Log review metrics for monitoring.
+            # IMPORTANT: PR fields are passed via `env:` rather than interpolated
+            # directly into `run:`. Attacker-controlled values (e.g. PR title) that
+            # are substituted into a shell script at YAML-expansion time enable
+            # arbitrary command execution on the runner. Bash-level expansion of
+            # `$VAR` is safe. See:
+            # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
             - name: Log review metrics
+              env:
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
+                  PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+                  PR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+                  PR_TITLE: ${{ github.event.pull_request.title }}
               run: |
                   echo "📊 Review Metrics:"
-                  echo "  PR: #${{ github.event.pull_request.number }}"
-                  echo "  Author: ${{ github.event.pull_request.user.login }}"
-                  echo "  Association: ${{ github.event.pull_request.author_association }}"
-                  echo "  Title: ${{ github.event.pull_request.title }}"
+                  echo "  PR: #$PR_NUMBER"
+                  echo "  Author: $PR_AUTHOR"
+                  echo "  Association: $PR_ASSOCIATION"
+                  echo "  Title: $PR_TITLE"
 
             # Check PR size to prevent abuse from large PRs
             - name: Check PR size
               id: pr-size
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
               run: |
-                  FILES_CHANGED=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files | length')
+                  FILES_CHANGED=$(gh pr view "$PR_NUMBER" --json files --jq '.files | length')
                   echo "files_changed=$FILES_CHANGED"
                   echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
 
@@ -60,8 +74,6 @@ jobs:
                     echo "✅ PR has $FILES_CHANGED files. Proceeding with review."
                     echo "skip=false" >> $GITHUB_OUTPUT
                   fi
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Run Claude Code Review
               if: steps.pr-size.outputs.skip == 'false'

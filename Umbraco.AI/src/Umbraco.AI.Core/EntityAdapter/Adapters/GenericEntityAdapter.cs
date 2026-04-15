@@ -31,7 +31,10 @@ internal sealed class GenericEntityAdapter : AIEntityAdapterBase
 
         sb.AppendLine("## Entity Context");
         sb.AppendLine($"Key: `{entity.Unique}`");
-        sb.AppendLine($"Name: `{entity.Name}`");
+        if (!string.IsNullOrEmpty(entity.Name))
+        {
+            sb.AppendLine($"Name: `{entity.Name}`");
+        }
         sb.AppendLine($"Type: `{entity.EntityType}`");
         sb.AppendLine("**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
         sb.AppendLine();

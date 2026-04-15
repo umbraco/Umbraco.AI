@@ -254,8 +254,123 @@ public class SerializedEntityContributorTests
         // Act
         _contributor.Contribute(context);
 
-        // Assert - should not process entity with empty required fields
+        // Assert - should not process entity with empty required fields,
+        // and the item must remain unhandled so other contributors can pick it up
         context.SystemMessageParts.Count.ShouldBe(0);
+        context.RequestContextItems.IsHandled(contextItem).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Contribute_WithEmptyUnique_DoesNotProcess()
+    {
+        // Arrange
+        var entityJson = """
+            {
+                "entityType": "document",
+                "unique": "",
+                "name": "Test",
+                "data": {}
+            }
+            """;
+
+        var contextItem = new AIRequestContextItem
+        {
+            Description = "Test entity",
+            Value = entityJson
+        };
+
+        var context = new AIRuntimeContext([contextItem]);
+
+        // Act
+        _contributor.Contribute(context);
+
+        // Assert - empty unique fails IsSerializedEntity, item remains unhandled
+        context.SystemMessageParts.Count.ShouldBe(0);
+        context.RequestContextItems.IsHandled(contextItem).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Contribute_WithEmptyName_StillProcessesEntity()
+    {
+        // Arrange - mock entities (and other consumers) may submit without a name.
+        // The contributor must still process them.
+        var entityJson = """
+            {
+                "entityType": "document",
+                "unique": "mock-abc",
+                "name": "",
+                "data": {
+                    "contentType": "blogPost",
+                    "properties": []
+                }
+            }
+            """;
+
+        var contextItem = new AIRequestContextItem
+        {
+            Description = "Mock entity",
+            Value = entityJson
+        };
+
+        var context = new AIRuntimeContext([contextItem]);
+
+        _contextHelperMock
+            .Setup(x => x.BuildContextDictionary(It.IsAny<AISerializedEntity>()))
+            .Returns([]);
+
+        _contextHelperMock
+            .Setup(x => x.FormatForLlm(It.IsAny<AISerializedEntity>()))
+            .Returns("Formatted entity context");
+
+        // Act
+        _contributor.Contribute(context);
+
+        // Assert
+        context.SystemMessageParts.Count.ShouldBe(1);
+        _contextHelperMock.Verify(x => x.FormatForLlm(It.Is<AISerializedEntity>(e =>
+            e.EntityType == "document" &&
+            e.Unique == "mock-abc" &&
+            e.Name == string.Empty)), Times.Once);
+    }
+
+    [Fact]
+    public void Contribute_WithMissingName_StillProcessesEntity()
+    {
+        // Arrange - name field omitted entirely
+        var entityJson = """
+            {
+                "entityType": "document",
+                "unique": "mock-abc",
+                "data": {
+                    "contentType": "blogPost",
+                    "properties": []
+                }
+            }
+            """;
+
+        var contextItem = new AIRequestContextItem
+        {
+            Description = "Mock entity",
+            Value = entityJson
+        };
+
+        var context = new AIRuntimeContext([contextItem]);
+
+        _contextHelperMock
+            .Setup(x => x.BuildContextDictionary(It.IsAny<AISerializedEntity>()))
+            .Returns([]);
+
+        _contextHelperMock
+            .Setup(x => x.FormatForLlm(It.IsAny<AISerializedEntity>()))
+            .Returns("Formatted entity context");
+
+        // Act
+        _contributor.Contribute(context);
+
+        // Assert
+        context.SystemMessageParts.Count.ShouldBe(1);
+        _contextHelperMock.Verify(x => x.FormatForLlm(It.Is<AISerializedEntity>(e =>
+            e.Name == string.Empty)), Times.Once);
     }
 
     [Fact]

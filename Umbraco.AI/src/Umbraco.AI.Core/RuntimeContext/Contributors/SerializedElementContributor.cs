@@ -36,6 +36,10 @@ internal sealed class SerializedElementContributor : IAIRuntimeContextContributo
 
     private bool IsSerializedElement(AIRequestContextItem item)
     {
+        // Required: elementType (non-empty string), unique (non-empty string), data (object).
+        // name is optional. Validate values (not just presence) so mismatched items fall
+        // through to other contributors instead of being silently swallowed by Handle's
+        // eager-mark behavior.
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
             return false;
@@ -45,9 +49,8 @@ internal sealed class SerializedElementContributor : IAIRuntimeContextContributo
         {
             var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
             return value.ValueKind == JsonValueKind.Object
-                && value.TryGetProperty("elementType", out _)
-                && value.TryGetProperty("unique", out _)
-                && value.TryGetProperty("name", out _)
+                && HasNonEmptyString(value, "elementType")
+                && HasNonEmptyString(value, "unique")
                 && value.TryGetProperty("data", out var dataElement)
                 && dataElement.ValueKind == JsonValueKind.Object;
         }
@@ -56,6 +59,11 @@ internal sealed class SerializedElementContributor : IAIRuntimeContextContributo
             return false;
         }
     }
+
+    private static bool HasNonEmptyString(JsonElement obj, string propertyName)
+        => obj.TryGetProperty(propertyName, out var element)
+           && element.ValueKind == JsonValueKind.String
+           && !string.IsNullOrEmpty(element.GetString());
 
     private void ProcessSerializedElement(AIRequestContextItem item, AIRuntimeContext context)
     {
@@ -105,14 +113,14 @@ internal sealed class SerializedElementContributor : IAIRuntimeContextContributo
 
     private static AISerializedEntity? DeserializeElement(JsonElement element)
     {
+        // Required: elementType, unique, data. name is optional (empty string allowed).
         try
         {
             // Element context uses "elementType" instead of "entityType"
             var elementType = element.GetProperty("elementType").GetString();
             var unique = element.GetProperty("unique").GetString();
-            var name = element.GetProperty("name").GetString();
 
-            if (string.IsNullOrEmpty(elementType) || string.IsNullOrEmpty(unique) || string.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(elementType) || string.IsNullOrEmpty(unique))
             {
                 return null;
             }
@@ -120,6 +128,13 @@ internal sealed class SerializedElementContributor : IAIRuntimeContextContributo
             if (!element.TryGetProperty("data", out var dataElement) || dataElement.ValueKind != JsonValueKind.Object)
             {
                 return null;
+            }
+
+            // Extract name (optional — defaults to empty string)
+            string name = string.Empty;
+            if (element.TryGetProperty("name", out var nameElement) && nameElement.ValueKind == JsonValueKind.String)
+            {
+                name = nameElement.GetString() ?? string.Empty;
             }
 
             return new AISerializedEntity

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
 namespace Umbraco.AI.Core.Media;
@@ -81,14 +80,7 @@ internal static class AIImageCropper
                 image.Mutate(ctx => ctx.Resize(crop.Width, crop.Height));
             }
 
-            using var output = new MemoryStream();
-            image.SaveAsJpeg(output, new JpegEncoder { Quality = 90 });
-
-            return new AIMediaContent
-            {
-                Data = output.ToArray(),
-                MediaType = "image/jpeg"
-            };
+            return AIImageEncoder.Encode(image, jpegQuality: 90);
         }
     }
 }

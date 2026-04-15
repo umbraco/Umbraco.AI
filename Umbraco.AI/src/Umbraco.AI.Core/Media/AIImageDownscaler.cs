@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
 namespace Umbraco.AI.Core.Media;
@@ -85,20 +84,13 @@ internal static class AIImageDownscaler
                 image.Mutate(x => x.Resize(newWidth, newHeight));
             }
 
-            using var output = new MemoryStream();
-            image.SaveAsJpeg(output, new JpegEncoder { Quality = options.JpegQuality });
-
-            var resized = new AIMediaContent
-            {
-                Data = output.ToArray(),
-                MediaType = "image/jpeg"
-            };
+            var resized = AIImageEncoder.Encode(image, options.JpegQuality);
 
             logger.LogDebug(
-                "Downscaled image {Path}: {OldBytes} bytes ({OldDim}px) -> {NewBytes} bytes ({NewDim}px)",
+                "Downscaled image {Path}: {OldBytes} bytes ({OldDim}px) -> {NewBytes} bytes ({NewDim}px, {Format})",
                 pathForLogging,
                 content.Data.Length, longestEdge,
-                resized.Data.Length, Math.Max(image.Width, image.Height));
+                resized.Data.Length, Math.Max(image.Width, image.Height), resized.MediaType);
 
             return resized;
         }

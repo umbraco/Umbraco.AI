@@ -95,6 +95,28 @@ public class AIImageDownscalerTests
     }
 
     [Fact]
+    public void DownscaleIfNeeded_WhenPngHasAlpha_PreservesAsPngAndKeepsTransparency()
+    {
+        // 4000x3000 Rgba32 with semi-transparent fill — re-encoding to JPEG would
+        // silently flatten the alpha channel, so output must stay PNG and keep
+        // non-opaque pixels intact.
+        var content = CreatePngWithAlphaContent(width: 4000, height: 3000);
+        var options = new AIMediaOptions { MaxDimension = 2048, MaxSizeBytes = long.MaxValue };
+
+        var result = AIImageDownscaler.DownscaleIfNeeded(content, options, NullLogger.Instance);
+
+        result.ShouldNotBeSameAs(content);
+        result.MediaType.ShouldBe("image/png");
+
+        using var resultImage = Image.Load<Rgba32>(result.Data);
+        resultImage.Width.ShouldBe(2048);
+        resultImage.Height.ShouldBe(1536);
+        // Source fill was A=128; a centre pixel (well away from the single A=0 pixel)
+        // should still read as non-opaque after resize.
+        resultImage[1024, 768].A.ShouldBeLessThan((byte)255);
+    }
+
+    [Fact]
     public void DownscaleIfNeeded_WithCorruptBytes_ReturnsOriginal()
     {
         var content = new AIMediaContent
@@ -109,9 +131,37 @@ public class AIImageDownscalerTests
         result.ShouldBeSameAs(content);
     }
 
+    // Opaque PNG (Rgb24) — round-trips through Image.Load as no-alpha, so the
+    // downscaler is free to re-encode as JPEG.
     private static AIMediaContent CreatePngContent(int width, int height)
     {
+        using var image = new Image<Rgb24>(width, height);
+        using var stream = new MemoryStream();
+        image.SaveAsPng(stream);
+        return new AIMediaContent { Data = stream.ToArray(), MediaType = "image/png" };
+    }
+
+    // PNG with alpha (Rgba32). A uniform fully-transparent image gets optimised
+    // by the encoder into a palette/grayscale form without alpha; fill with a
+    // semi-transparent colour so the alpha channel survives the round-trip.
+    // Top-left pixel is made fully transparent so assertions have a concrete
+    // reference point.
+    private static AIMediaContent CreatePngWithAlphaContent(int width, int height)
+    {
         using var image = new Image<Rgba32>(width, height);
+        image.ProcessPixelRows(accessor =>
+        {
+            for (int y = 0; y < accessor.Height; y++)
+            {
+                var row = accessor.GetRowSpan(y);
+                for (int x = 0; x < row.Length; x++)
+                {
+                    row[x] = new Rgba32(255, 0, 0, 128);
+                }
+            }
+        });
+        image[0, 0] = new Rgba32(0, 0, 0, 0);
+
         using var stream = new MemoryStream();
         image.SaveAsPng(stream);
         return new AIMediaContent { Data = stream.ToArray(), MediaType = "image/png" };
@@ -119,7 +169,7 @@ public class AIImageDownscalerTests
 
     private static AIMediaContent CreateNoisePngContent(int width, int height)
     {
-        using var image = new Image<Rgba32>(width, height);
+        using var image = new Image<Rgb24>(width, height);
         var random = new Random(42);
         image.ProcessPixelRows(accessor =>
         {
@@ -128,11 +178,10 @@ public class AIImageDownscalerTests
                 var row = accessor.GetRowSpan(y);
                 for (int x = 0; x < row.Length; x++)
                 {
-                    row[x] = new Rgba32(
+                    row[x] = new Rgb24(
                         (byte)random.Next(256),
                         (byte)random.Next(256),
-                        (byte)random.Next(256),
-                        255);
+                        (byte)random.Next(256));
                 }
             }
         });

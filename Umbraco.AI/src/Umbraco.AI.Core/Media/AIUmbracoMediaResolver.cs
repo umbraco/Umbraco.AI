@@ -75,6 +75,20 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
                 return Task.FromResult<AIMediaContent?>(null);
             }
 
+            // Crop and downscale are image-only transforms; audio and other
+            // non-image payloads short-circuit here to avoid wasted decode attempts
+            // and misleading "failed to decode image" warnings.
+            if (!content.MediaType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(cropAlias))
+                {
+                    _logger.LogWarning(
+                        "Crop '{CropAlias}' requested on non-image media ({MediaType}); ignored",
+                        cropAlias, content.MediaType);
+                }
+                return Task.FromResult<AIMediaContent?>(content);
+            }
+
             // Step 2: if a crop was requested, try to pull the image cropper metadata
             // from the source value (either directly from the cropper JSON, or by
             // reading the umbracoFile property of the referenced media).
@@ -93,7 +107,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
                 }
             }
 
-            // Step 3: enforce AI provider size/dimension limits (no-op for non-images)
+            // Step 3: enforce AI provider size/dimension limits
             var downscaled = AIImageDownscaler.DownscaleIfNeeded(
                 content,
                 _optionsMonitor.CurrentValue,

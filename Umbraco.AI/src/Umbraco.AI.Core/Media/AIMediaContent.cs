@@ -1,4 +1,4 @@
-namespace Umbraco.AI.Prompt.Core.Media;
+namespace Umbraco.AI.Core.Media;
 
 /// <summary>
 /// Represents resolved media content with binary data and media type.
@@ -11,7 +11,7 @@ public sealed class AIMediaContent
     public required byte[] Data { get; init; }
 
     /// <summary>
-    /// Gets or sets the MIME type of the media (e.g., "image/jpeg", "image/png").
+    /// Gets or sets the MIME type of the media (e.g., "image/jpeg", "audio/mpeg").
     /// </summary>
     public required string MediaType { get; init; }
 }

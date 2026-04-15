@@ -37,8 +37,8 @@ using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Tools.Web;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Versioning;
-using Umbraco.AI.Prompt.Core.Media;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 

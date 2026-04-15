@@ -33,6 +33,13 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
     @property({ type: Boolean, reflect: true })
     public readonly = false;
 
+    /**
+     * Optional surface ID to filter available agents.
+     * When set, only agents assigned to this surface are shown.
+     */
+    @property({ type: String, attribute: "surface-id" })
+    public surfaceId?: string;
+
     override set value(val: string | undefined) {
         this.#setValue(val);
     }
@@ -77,20 +84,17 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
 
         const { data, error } = await tryExecute(
             this,
-            AgentsService.getAllAgents({ query: { skip: 0, take: 100 } }),
+            AgentsService.getAgentByIdOrAlias({
+                path: { agentIdOrAlias: this._selectedId },
+            }),
         );
 
         if (!error && data) {
-            const agent = data.items.find(
-                (a) => a.id?.toLowerCase() === this._selectedId?.toLowerCase(),
-            );
-            if (agent) {
-                this._item = {
-                    id: agent.id!,
-                    name: agent.name,
-                    description: agent.description ?? "",
-                };
-            }
+            this._item = {
+                id: data.id!,
+                name: data.name,
+                description: data.description ?? "",
+            };
         }
 
         this._loading = false;
@@ -128,7 +132,14 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
     async #fetchAvailableAgents(): Promise<UaiPickableItemModel[]> {
         const { data } = await tryExecute(
             this,
-            AgentsService.getAllAgents({ query: { skip: 0, take: 100 } }),
+            AgentsService.getAllAgents({
+                query: {
+                    skip: 0,
+                    take: 100,
+                    surfaceId: this.surfaceId,
+                    isActive: true,
+                },
+            }),
         );
 
         if (!data) return [];

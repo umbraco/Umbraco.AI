@@ -1,4 +1,4 @@
-namespace Umbraco.AI.Prompt.Core.Media;
+namespace Umbraco.AI.Core.Media;
 
 /// <summary>
 /// Interface for resolving Umbraco media from various value formats (GUIDs, paths, JSON).

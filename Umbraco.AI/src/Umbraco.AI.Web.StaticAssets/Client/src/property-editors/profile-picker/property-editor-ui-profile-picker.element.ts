@@ -20,6 +20,9 @@ export class UaiPropertyEditorUIProfilePickerElement
     public readonly = false;
 
     @state()
+    private _capability?: string;
+
+    @state()
     private _multiple = false;
 
     @state()
@@ -31,6 +34,7 @@ export class UaiPropertyEditorUIProfilePickerElement
     public set config(config: UmbPropertyEditorConfigCollection | undefined) {
         if (!config) return;
 
+        this._capability = config.getValueByAlias<string>("capability");
         this._multiple = config.getValueByAlias<boolean>("multiple") ?? false;
         this._min = config.getValueByAlias<number>("min");
         this._max = config.getValueByAlias<number>("max");
@@ -46,6 +50,7 @@ export class UaiPropertyEditorUIProfilePickerElement
         return html`
             <uai-profile-picker
                 .value=${this.value}
+                .capability=${this._capability}
                 ?multiple=${this._multiple}
                 ?readonly=${this.readonly}
                 .min=${this._min}

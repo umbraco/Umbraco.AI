@@ -60,11 +60,26 @@ internal static class AIImageCropper
         {
             var coords = crop.Coordinates;
 
-            // Coordinates are proportional (0..1) in the image cropper JSON format.
-            var x = (int)Math.Round((double)coords.X1 * image.Width);
-            var y = (int)Math.Round((double)coords.Y1 * image.Height);
-            var w = (int)Math.Round((double)(coords.X2 - coords.X1) * image.Width);
-            var h = (int)Math.Round((double)(coords.Y2 - coords.Y1) * image.Height);
+            // Umbraco's image cropper stores coordinates as 0..1 fractions but with
+            // an asymmetric meaning: X1/Y1 are offsets from the left/top edges, while
+            // X2/Y2 are offsets from the *right* and *bottom* edges — not absolute
+            // positions. So the real crop rectangle edges are:
+            //
+            //   left   = X1
+            //   top    = Y1
+            //   right  = 1 - X2
+            //   bottom = 1 - Y2
+            //
+            // Matches Umbraco.Cms.Imaging.ImageSharp.ImageProcessors.CropWebProcessor.
+            var left = Math.Clamp((double)coords.X1, 0, 1);
+            var top = Math.Clamp((double)coords.Y1, 0, 1);
+            var right = Math.Clamp(1 - (double)coords.X2, 0, 1);
+            var bottom = Math.Clamp(1 - (double)coords.Y2, 0, 1);
+
+            var x = (int)Math.Round(left * image.Width);
+            var y = (int)Math.Round(top * image.Height);
+            var w = (int)Math.Round((right - left) * image.Width);
+            var h = (int)Math.Round((bottom - top) * image.Height);
 
             // Clamp to image bounds defensively — malformed coordinates shouldn't crash.
             x = Math.Clamp(x, 0, Math.Max(0, image.Width - 1));

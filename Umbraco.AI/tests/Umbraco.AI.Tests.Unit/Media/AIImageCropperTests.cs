@@ -10,7 +10,12 @@ public class AIImageCropperTests
     [Fact]
     public void ApplyCrop_WithMatchingCropAlias_ReturnsCroppedAndResizedImage()
     {
-        // 2000x1000 red source, crop defines left half (0..0.5) at 400x400 target.
+        // Umbraco cropper coords for "left half, full height" on a 2000x1000 source:
+        //   X1 = 0.0 (crop starts at left edge)
+        //   Y1 = 0.0 (crop starts at top edge)
+        //   X2 = 0.5 (crop right edge sits 0.5 from the right, i.e. halfway across)
+        //   Y2 = 0.0 (crop bottom extends all the way to the bottom)
+        // Resized to 400x400 target.
         var content = CreatePngContent(2000, 1000);
         var crops = new List<ImageCropperCrop>
         {
@@ -19,7 +24,7 @@ public class AIImageCropperTests
                 Alias = "content3Col",
                 Width = 400,
                 Height = 400,
-                Coordinates = new ImageCropperCropCoordinates { X1 = 0m, Y1 = 0m, X2 = 0.5m, Y2 = 1m }
+                Coordinates = new ImageCropperCropCoordinates { X1 = 0m, Y1 = 0m, X2 = 0.5m, Y2 = 0m }
             }
         };
 
@@ -31,6 +36,41 @@ public class AIImageCropperTests
         using var resultImage = Image.Load(result.Data);
         resultImage.Width.ShouldBe(400);
         resultImage.Height.ShouldBe(400);
+    }
+
+    [Fact]
+    public void ApplyCrop_WithOffsetFromEdgeSemantics_ExtractsRightHalf()
+    {
+        // Regression test for crop-coordinate semantics.
+        //
+        // Umbraco stores X2/Y2 as distances from the *right* and *bottom* edges,
+        // not absolute positions. For a "right half" crop on a 2000-wide source
+        // the stored coordinates are therefore X1=0.5 (start halfway across),
+        // X2=0.0 (zero distance from the right edge, i.e. crop extends to the right).
+        //
+        // Treating X2 as an absolute end coordinate would compute the width as
+        // (X2 - X1) * sourceWidth = -1000, clamping to a 1-pixel sliver. This
+        // test asserts the crop rectangle is the full right half (1000px wide).
+        //
+        // No target dimensions are set so the output mirrors the natural crop
+        // rectangle size — isolates coordinate interpretation from resizing.
+        var content = CreatePngContent(2000, 1000);
+        var crops = new List<ImageCropperCrop>
+        {
+            new()
+            {
+                Alias = "rightHalf",
+                Width = 0,
+                Height = 0,
+                Coordinates = new ImageCropperCropCoordinates { X1 = 0.5m, Y1 = 0m, X2 = 0m, Y2 = 0m }
+            }
+        };
+
+        var result = AIImageCropper.ApplyCrop(content, crops, "rightHalf", NullLogger.Instance);
+
+        using var resultImage = Image.Load(result.Data);
+        resultImage.Width.ShouldBe(1000);
+        resultImage.Height.ShouldBe(1000);
     }
 
     [Fact]
@@ -134,20 +174,21 @@ public class AIImageCropperTests
     [Fact]
     public void ApplyCrop_WithoutTargetDimensions_CropsOnlyAtNaturalSize()
     {
-        // 1000x1000 source, crop takes the full image but declares no target dims
+        // 1000x1000 source, centre 500x500 crop. Umbraco offset-from-edge coords:
+        // 0.25 from every edge leaves a centred 500x500 rectangle.
         var content = CreatePngContent(1000, 1000);
         var crops = new List<ImageCropperCrop>
         {
             new()
             {
-                Alias = "full",
+                Alias = "centre",
                 Width = 0,
                 Height = 0,
-                Coordinates = new ImageCropperCropCoordinates { X1 = 0.25m, Y1 = 0.25m, X2 = 0.75m, Y2 = 0.75m }
+                Coordinates = new ImageCropperCropCoordinates { X1 = 0.25m, Y1 = 0.25m, X2 = 0.25m, Y2 = 0.25m }
             }
         };
 
-        var result = AIImageCropper.ApplyCrop(content, crops, "full", NullLogger.Instance);
+        var result = AIImageCropper.ApplyCrop(content, crops, "centre", NullLogger.Instance);
 
         using var resultImage = Image.Load(result.Data);
         resultImage.Width.ShouldBe(500);

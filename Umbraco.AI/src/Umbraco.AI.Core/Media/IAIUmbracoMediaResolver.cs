@@ -18,9 +18,15 @@ public interface IAIUmbracoMediaResolver
     ///         <item><description>File path string - read directly from storage</description></item>
     ///     </list>
     /// </param>
+    /// <param name="cropAlias">
+    ///     Optional image cropper crop alias. When supplied, the resolver will apply the
+    ///     matching crop defined on the image cropper payload before returning. Callers
+    ///     requesting a crop that does not exist, or values without an image cropper
+    ///     payload, fall back to the uncropped original.
+    /// </param>
     /// <param name="cancellationToken"></param>
     /// <returns>
     /// The resolved media content, or <c>null</c> if the value cannot be resolved to media.
     /// </returns>
-    Task<AIMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default);
+    Task<AIMediaContent?> ResolveAsync(object? value, string? cropAlias = null, CancellationToken cancellationToken = default);
 }

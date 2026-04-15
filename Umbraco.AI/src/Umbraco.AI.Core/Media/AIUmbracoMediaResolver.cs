@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Services;
 
@@ -33,50 +34,92 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 
     private readonly IMediaService _mediaService;
     private readonly MediaFileManager _mediaFileManager;
+    private readonly IOptionsMonitor<AIMediaOptions> _optionsMonitor;
     private readonly ILogger<AIUmbracoMediaResolver> _logger;
 
     public AIUmbracoMediaResolver(
         IMediaService mediaService,
         MediaFileManager mediaFileManager,
+        IOptionsMonitor<AIMediaOptions> optionsMonitor,
         ILogger<AIUmbracoMediaResolver> logger)
     {
         _mediaService = mediaService;
         _mediaFileManager = mediaFileManager;
+        _optionsMonitor = optionsMonitor;
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public async Task<AIMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default)
+    public Task<AIMediaContent?> ResolveAsync(object? value, string? cropAlias = null, CancellationToken cancellationToken = default)
     {
         if (value is null)
         {
-            return null;
+            return Task.FromResult<AIMediaContent?>(null);
         }
 
         try
         {
-            // Try to extract a file path or media key from the value
+            // Step 1: extract a raw file path or media key from the value
             var (filePath, mediaKey) = ExtractPathOrKey(value);
 
-            // If we have a media key, resolve via media service
-            if (mediaKey.HasValue)
+            AIMediaContent? content = mediaKey.HasValue
+                ? LoadFromMediaKey(mediaKey.Value)
+                : !string.IsNullOrEmpty(filePath) ? LoadFromPath(filePath) : null;
+
+            if (content is null)
             {
-                return ResolveFromMediaKey(mediaKey.Value);
+                if (filePath is null && !mediaKey.HasValue)
+                {
+                    _logger.LogWarning("Could not extract media path or media key from value: {ValueType}", value.GetType().Name);
+                }
+                return Task.FromResult<AIMediaContent?>(null);
             }
 
-            // If we have a file path, read directly from storage
-            if (!string.IsNullOrEmpty(filePath))
+            // Crop and downscale are image-only transforms; audio and other
+            // non-image payloads short-circuit here to avoid wasted decode attempts
+            // and misleading "failed to decode image" warnings.
+            if (!content.MediaType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
             {
-                return ResolveFromPath(filePath);
+                if (!string.IsNullOrWhiteSpace(cropAlias))
+                {
+                    _logger.LogWarning(
+                        "Crop '{CropAlias}' requested on non-image media ({MediaType}); ignored",
+                        cropAlias, content.MediaType);
+                }
+                return Task.FromResult<AIMediaContent?>(content);
             }
 
-            _logger.LogWarning("Could not extract media path or media key from value: {ValueType}", value.GetType().Name);
-            return null;
+            // Step 2: if a crop was requested, try to pull the image cropper metadata
+            // from the source value (either directly from the cropper JSON, or by
+            // reading the umbracoFile property of the referenced media).
+            if (!string.IsNullOrWhiteSpace(cropAlias))
+            {
+                var cropper = TryExtractCropperPayload(value, mediaKey);
+                if (cropper?.Crops is { Count: > 0 })
+                {
+                    content = AIImageCropper.ApplyCrop(content, cropper.Crops, cropAlias, _logger);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Crop '{CropAlias}' requested but no image cropper data is available on the source value; using original image",
+                        cropAlias);
+                }
+            }
+
+            // Step 3: enforce AI provider size/dimension limits
+            var downscaled = AIImageDownscaler.DownscaleIfNeeded(
+                content,
+                _optionsMonitor.CurrentValue,
+                _logger,
+                filePath ?? mediaKey?.ToString() ?? string.Empty);
+
+            return Task.FromResult<AIMediaContent?>(downscaled);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to resolve media from value: {ValueType}", value.GetType().Name);
-            return null;
+            return Task.FromResult<AIMediaContent?>(null);
         }
     }
 
@@ -182,7 +225,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
         return (null, null);
     }
 
-    private AIMediaContent? ResolveFromMediaKey(Guid mediaKey)
+    private AIMediaContent? LoadFromMediaKey(Guid mediaKey)
     {
         var media = _mediaService.GetById(mediaKey);
         if (media is null)
@@ -223,10 +266,10 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             return null;
         }
 
-        return ResolveFromPath(filePath);
+        return LoadFromPath(filePath);
     }
 
-    private AIMediaContent? ResolveFromPath(string filePath)
+    private AIMediaContent? LoadFromPath(string filePath)
     {
         // Normalize the path - remove leading /media/ if present since MediaFileManager works with relative paths
         var relativePath = filePath;
@@ -264,5 +307,50 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             Data = memoryStream.ToArray(),
             MediaType = mediaType
         };
+    }
+
+    private ImageCropperPayload? TryExtractCropperPayload(object value, Guid? mediaKey)
+    {
+        // Case 1: we resolved via a media key — read the umbracoFile property from
+        // the media and try to parse it as an image cropper payload.
+        if (mediaKey.HasValue)
+        {
+            var media = _mediaService.GetById(mediaKey.Value);
+            var umbracoFile = media?.GetValue<string>("umbracoFile");
+            return TryParseCropperJson(umbracoFile);
+        }
+
+        // Case 2: value is cropper JSON directly.
+        if (value is string str && str.StartsWith('{'))
+        {
+            return TryParseCropperJson(str);
+        }
+
+        if (value is JsonElement { ValueKind: JsonValueKind.Object } element)
+        {
+            return TryParseCropperJson(element.GetRawText());
+        }
+
+        return null;
+    }
+
+    private ImageCropperPayload? TryParseCropperJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || !json.TrimStart().StartsWith('{'))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<ImageCropperPayload>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogDebug(ex, "Failed to parse image cropper payload; crop selection will fall back to original image");
+            return null;
+        }
     }
 }

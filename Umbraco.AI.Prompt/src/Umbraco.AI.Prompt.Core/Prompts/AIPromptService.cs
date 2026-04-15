@@ -235,6 +235,15 @@ internal sealed class AIPromptService : IAIPromptService
             runtimeContext.SetValue(CoreConstants.ContextKeys.EntityId, request.EntityId);
         }
 
+        // If no EntityType was set by contributors, use request.EntityType as fallback.
+        // Downstream resolvers (e.g. ContentContextResolver) rely on this to route to
+        // the correct published cache — without it, media-scoped prompts would query
+        // the document cache with a media key and fail to materialise the node.
+        if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.EntityType) && !string.IsNullOrEmpty(request.EntityType))
+        {
+            runtimeContext.SetValue(CoreConstants.ContextKeys.EntityType, request.EntityType);
+        }
+
         // If no ElementId was set by contributors, use request.ElementId as fallback
         if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.ElementId) && request.ElementId.HasValue && request.ElementId.Value != Guid.Empty)
         {

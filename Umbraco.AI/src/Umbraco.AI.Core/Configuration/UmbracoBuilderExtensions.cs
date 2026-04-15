@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.FileProcessing;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -66,6 +67,9 @@ public static partial class UmbracoBuilderExtensions
 
         // Bind AIAnalyticsOptions from "Umbraco:AI:Analytics" section
         services.Configure<AIAnalyticsOptions>(config.GetSection("Umbraco:AI:Analytics"));
+
+        // Bind AIMediaOptions from "Umbraco:AI:Media" section
+        services.Configure<AIMediaOptions>(config.GetSection("Umbraco:AI:Media"));
 
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();

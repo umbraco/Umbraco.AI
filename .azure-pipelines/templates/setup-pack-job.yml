@@ -37,6 +37,13 @@ steps:
           artifact: build-outputs
           path: $(Build.SourcesDirectory)
 
+    # Ensure the local NuGet feed directory exists even when no upstream
+    # packages were rebuilt this run (NuGet.CI.config references it as a source
+    # and NuGet restore fails with NU1301 if the path does not exist).
+    - script: mkdir -p $(Build.SourcesDirectory)/artifacts/nupkg
+      displayName: Ensure local NuGet feed directory exists
+      condition: ${{ parameters.condition }}
+
     # Download Core packages as local feed (if Core was packed)
     - ${{ if eq(parameters.downloadCore, true) }}:
           - task: DownloadPipelineArtifact@2

@@ -17,6 +17,8 @@ export default {
         showWeatherDescription: "Display weather information",
         confirmActionLabel: "Confirm Action",
         confirmActionDescription: "Request user confirmation for an action",
+        setValueLabel: "Set Value",
+        setValueDescription: "Update a property value on the current entity in the workspace",
         searchUmbracoLabel: "Search Umbraco",
         searchUmbracoDescription: "Search for content in Umbraco",
     },

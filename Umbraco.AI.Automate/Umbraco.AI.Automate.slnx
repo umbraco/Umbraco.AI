@@ -1,10 +1,6 @@
 <Solution>
   <Folder Name="/Tests/" />
-  <Project Path="src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj">
-    <BuildType Project="?" />
-    <Platform Project="?" />
-    <Build Project="false" />
-  </Project>
+  <Project Path="src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" />
   <Project Path="tests/Umbraco.AI.Automate.Tests.Unit/Umbraco.AI.Automate.Tests.Unit.csproj">
     <BuildType Project="?" />
     <Platform Project="?" />

@@ -79,6 +79,14 @@ export default {
         // Web tools (web scope)
         fetchWebpageLabel: "Fetch Web Page",
         fetchWebpageDescription: "Fetch and extract text content from a web page",
+
+        // Automate tools (automate-read / automate-execute scopes)
+        listAutomationsLabel: "List Automations",
+        listAutomationsDescription: "List available automations that can be triggered",
+        runAutomationLabel: "Run Automation",
+        runAutomationDescription: "Trigger an automation to run in the background",
+        getAutomationRunLabel: "Get Automation Run",
+        getAutomationRunDescription: "Check the status and progress of an automation run",
     },
     uaiToolScopes: {
         selectAll: "Select All",

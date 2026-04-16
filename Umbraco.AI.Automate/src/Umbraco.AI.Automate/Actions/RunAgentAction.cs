@@ -57,6 +57,17 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
         return await AgentOutputSchemaHelper.GetOutputSchemaAsync(_agentService, settings.AgentId, cancellationToken);
     }
 
+    /// <summary>
+    /// The maximum allowed nesting depth for agent-triggered automations.
+    /// Prevents infinite recursion when an agent triggers an automation that runs another agent.
+    /// </summary>
+    public const int MaxAgentNestingDepth = 3;
+
+    /// <summary>
+    /// The key used in trigger output data to track agent nesting depth.
+    /// </summary>
+    public const string AgentNestingDepthKey = "_aiAgentDepth";
+
     /// <inheritdoc />
     public override async Task<ActionResult> ExecuteAsync(ActionContext context, CancellationToken cancellationToken)
     {
@@ -66,6 +77,23 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
         {
             return ActionResult.Failed(
                 new ArgumentException("Agent is required."),
+                StepRunErrorCategory.Validation);
+        }
+
+        // Recursion guard: check if this automation was triggered by an AI agent tool.
+        // If so, the trigger output data contains a nesting depth counter.
+        var currentDepth = GetAgentNestingDepth(context);
+        if (currentDepth >= MaxAgentNestingDepth)
+        {
+            _logger.LogWarning(
+                "Automation {AutomationId} / Run {RunId}: Refusing to execute AI agent {AgentId} — " +
+                "agent nesting depth {Depth} exceeds maximum {MaxDepth}",
+                context.AutomationId, context.RunId, settings.AgentId, currentDepth, MaxAgentNestingDepth);
+
+            return ActionResult.Failed(
+                new InvalidOperationException(
+                    $"Agent nesting depth {currentDepth} exceeds maximum {MaxAgentNestingDepth}. " +
+                    "This prevents infinite recursion when agents trigger automations that run agents."),
                 StepRunErrorCategory.Validation);
         }
 
@@ -164,5 +192,46 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
 
         var user = await _userService.GetAsync(serviceAccountKey.Value);
         return user?.Groups.Select(g => g.Key).ToList();
+    }
+
+    /// <summary>
+    /// Reads the agent nesting depth from the automation's binding data.
+    /// The depth is set by the <c>run_automation</c> AI tool when it triggers an automation.
+    /// </summary>
+    private static int GetAgentNestingDepth(ActionContext context)
+    {
+        if (context.BindingData is null)
+        {
+            return 0;
+        }
+
+        // The trigger output data is stored under the "trigger" key in binding data.
+        // Check for our depth marker in the trigger's output.
+        if (context.BindingData.TryGetValue("trigger", out var triggerData)
+            && triggerData is IDictionary<string, object?> triggerDict
+            && triggerDict.TryGetValue(AgentNestingDepthKey, out var depthValue))
+        {
+            return depthValue switch
+            {
+                int i => i,
+                long l => (int)l,
+                JsonElement { ValueKind: JsonValueKind.Number } je => je.GetInt32(),
+                _ => 0,
+            };
+        }
+
+        // Also check the top-level binding data in case the structure differs.
+        if (context.BindingData.TryGetValue(AgentNestingDepthKey, out var topLevelDepth))
+        {
+            return topLevelDepth switch
+            {
+                int i => i,
+                long l => (int)l,
+                JsonElement { ValueKind: JsonValueKind.Number } je => je.GetInt32(),
+                _ => 0,
+            };
+        }
+
+        return 0;
     }
 }

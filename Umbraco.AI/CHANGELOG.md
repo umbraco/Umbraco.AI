@@ -5,6 +5,23 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.8.0...Umbraco.AI@1.9.0) (2026-04-16)
+
+### feat
+
+* **core:** Route-register mock entity editor modal for block grid support (#125) ([232284a](https://github.com/umbraco/Umbraco.AI/commit/232284ab9a879a433a69ab0037d71a742a4829d4)), closes [#125](https://github.com/umbraco/Umbraco.AI/issues/125)
+* **core,prompt:** Add element context for blocks in prompt execution ([d7684bf](https://github.com/umbraco/Umbraco.AI/commit/d7684bf92a8ab3f5049d4aa9ffea8ace76580080))
+* **core,prompt:** Image crop syntax + auto-downscale for AI prompts (#123) ([4e6f8c3](https://github.com/umbraco/Umbraco.AI/commit/4e6f8c3f1138074904dbf17cbe4569118589280f)), closes [#123](https://github.com/umbraco/Umbraco.AI/issues/123) [umbraco/Umbraco.AI#122](https://github.com/umbraco/Umbraco.AI/issues/122)
+* **core:** Add frontend media entity adapter ([1bc2927](https://github.com/umbraco/Umbraco.AI/commit/1bc29277098c3f17a4c2e8494514a80b293b94d8))
+
+### fix
+
+* **core,prompt,agent,search:** Fix EF Core migrations failing on startup ([51069e9](https://github.com/umbraco/Umbraco.AI/commit/51069e955c96c4dba4b6cd43aa3634e7d5d5f930)), closes [#121](https://github.com/umbraco/Umbraco.AI/issues/121)
+* **core:** Fix ContentContextResolver not resolving in backoffice API requests ([d9a948c](https://github.com/umbraco/Umbraco.AI/commit/d9a948c9ad93885a9b33898cb572153776f58cdd))
+* **core:** Flatten typed tool args schema for Gemini compatibility ([c0407ab](https://github.com/umbraco/Umbraco.AI/commit/c0407ab8a1b9ab2cb46f26a564c10abf26a09b38))
+* **core:** Make entity name optional in serialized entity contributors ([70d016e](https://github.com/umbraco/Umbraco.AI/commit/70d016ea38cf832bb1dfa81a15c5ee8e4c4b0613))
+* **core:** Normalize legacy System.Data.SqlClient provider name ([f173790](https://github.com/umbraco/Umbraco.AI/commit/f1737901b8dd7d8abd6b65049b9acf3bc3150a05))
+
 ## [1.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.7.0...Umbraco.AI@1.8.0) (2026-04-08)
 
 * Add custom connection string and per-product migrations history table (#117) ([237e545](https://github.com/umbraco/Umbraco.AI/commit/237e54568f6297a62d9649732735cfd248d25ca9)), closes [#117](https://github.com/umbraco/Umbraco.AI/issues/117) [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)

@@ -56,7 +56,7 @@ public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, 
 
         try
         {
-            AIMediaContent? media = await _mediaResolver.ResolveAsync(settings.AudioPath, cancellationToken);
+            AIMediaContent? media = await _mediaResolver.ResolveAsync(settings.AudioPath, cancellationToken: cancellationToken);
             if (media is null)
             {
                 return ActionResult.Failed(

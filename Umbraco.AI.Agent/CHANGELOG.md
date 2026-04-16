@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.7.0...Umbraco.AI.Agent@1.8.0) (2026-04-16)
+
+### feat
+
+* **agent:** Add agent picker property editor and API endpoint for Automate integration ([2709a3d](https://github.com/umbraco/Umbraco.AI/commit/2709a3dd64a05bf627a0845796490f34be4c8e4b))
+
+### fix
+
+* **core,prompt,agent,search:** Fix EF Core migrations failing on startup ([51069e9](https://github.com/umbraco/Umbraco.AI/commit/51069e955c96c4dba4b6cd43aa3634e7d5d5f930)), closes [#121](https://github.com/umbraco/Umbraco.AI/issues/121)
+
 ## [1.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.6.0...Umbraco.AI.Agent@1.7.0) (2026-04-08)
 
 * Add custom connection string and per-product migrations history table (#117) ([237e545](https://github.com/umbraco/Umbraco.AI/commit/237e54568f6297a62d9649732735cfd248d25ca9)), closes [#117](https://github.com/umbraco/Umbraco.AI/issues/117) [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)

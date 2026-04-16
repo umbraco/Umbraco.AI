@@ -46,7 +46,7 @@ public class TranscribeAudioActionTests
     {
         // Arrange
         _mediaResolverMock
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIMediaContent?)null);
 
         var action = CreateAction();
@@ -65,7 +65,7 @@ public class TranscribeAudioActionTests
     {
         // Arrange — resolver returns an image, not audio
         _mediaResolverMock
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = [0x89, 0x50, 0x4E, 0x47], MediaType = "image/png" });
 
         var action = CreateAction();
@@ -92,7 +92,7 @@ public class TranscribeAudioActionTests
     {
         // Arrange
         _mediaResolverMock
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 0, 1, 2, 3 }, MediaType = "audio/mpeg" });
 
         _speechToTextServiceMock
@@ -126,7 +126,7 @@ public class TranscribeAudioActionTests
         var profileId = Guid.NewGuid();
 
         _mediaResolverMock
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 0, 1 }, MediaType = "audio/wav" });
 
         Action<AISpeechToTextBuilder>? capturedConfigure = null;
@@ -162,7 +162,7 @@ public class TranscribeAudioActionTests
     {
         // Arrange
         _mediaResolverMock
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 0, 1 }, MediaType = "audio/wav" });
 
         Action<AISpeechToTextBuilder>? capturedConfigure = null;
@@ -200,7 +200,7 @@ public class TranscribeAudioActionTests
     {
         // Arrange
         _mediaResolverMock
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 0, 1 }, MediaType = "audio/mpeg" });
 
         _speechToTextServiceMock

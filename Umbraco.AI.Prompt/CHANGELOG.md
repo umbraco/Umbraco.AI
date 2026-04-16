@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.7.0...Umbraco.AI.Prompt@1.8.0) (2026-04-16)
+
+### feat
+
+* **core,prompt:** Add element context for blocks in prompt execution ([d7684bf](https://github.com/umbraco/Umbraco.AI/commit/d7684bf92a8ab3f5049d4aa9ffea8ace76580080))
+* **core,prompt:** Image crop syntax + auto-downscale for AI prompts (#123) ([4e6f8c3](https://github.com/umbraco/Umbraco.AI/commit/4e6f8c3f1138074904dbf17cbe4569118589280f)), closes [#123](https://github.com/umbraco/Umbraco.AI/issues/123) [umbraco/Umbraco.AI#122](https://github.com/umbraco/Umbraco.AI/issues/122)
+
+### fix
+
+* **core,prompt,agent,search:** Fix EF Core migrations failing on startup ([51069e9](https://github.com/umbraco/Umbraco.AI/commit/51069e955c96c4dba4b6cd43aa3634e7d5d5f930)), closes [#121](https://github.com/umbraco/Umbraco.AI/issues/121)
+* **prompt:** Align tiptap dropdown style for description-less items ([b80ef58](https://github.com/umbraco/Umbraco.AI/commit/b80ef5864b7a6844bf805e184691f140a4faf3bc))
+
 ## [1.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.6.0...Umbraco.AI.Prompt@1.7.0) (2026-04-08)
 
 * Add custom connection string and per-product migrations history table (#117) ([237e545](https://github.com/umbraco/Umbraco.AI/commit/237e54568f6297a62d9649732735cfd248d25ca9)), closes [#117](https://github.com/umbraco/Umbraco.AI/issues/117) [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)

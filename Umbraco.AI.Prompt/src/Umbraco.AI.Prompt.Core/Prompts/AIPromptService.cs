@@ -235,6 +235,26 @@ internal sealed class AIPromptService : IAIPromptService
             runtimeContext.SetValue(CoreConstants.ContextKeys.EntityId, request.EntityId);
         }
 
+        // If no EntityType was set by contributors, use request.EntityType as fallback.
+        // Downstream resolvers (e.g. ContentContextResolver) rely on this to route to
+        // the correct published cache — without it, media-scoped prompts would query
+        // the document cache with a media key and fail to materialise the node.
+        if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.EntityType) && !string.IsNullOrEmpty(request.EntityType))
+        {
+            runtimeContext.SetValue(CoreConstants.ContextKeys.EntityType, request.EntityType);
+        }
+
+        // If no ElementId was set by contributors, use request.ElementId as fallback
+        if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.ElementId) && request.ElementId.HasValue && request.ElementId.Value != Guid.Empty)
+        {
+            runtimeContext.SetValue(CoreConstants.ContextKeys.ElementId, request.ElementId.Value);
+        }
+
+        if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.ElementType) && !string.IsNullOrEmpty(request.ElementType))
+        {
+            runtimeContext.SetValue(CoreConstants.ContextKeys.ElementType, request.ElementType);
+        }
+
         // Set prompt metadata in runtime context for auditing and telemetry
         runtimeContext.SetValue(Constants.MetadataKeys.PromptId, prompt.Id);
         runtimeContext.SetValue(Constants.MetadataKeys.PromptAlias, prompt.Alias);
@@ -447,6 +467,16 @@ internal sealed class AIPromptService : IAIPromptService
             ["entityType"] = request.EntityType,
             ["propertyAlias"] = request.PropertyAlias,
         };
+
+        if (request.ElementId.HasValue)
+        {
+            context["elementId"] = request.ElementId.Value.ToString();
+        }
+
+        if (!string.IsNullOrEmpty(request.ElementType))
+        {
+            context["elementType"] = request.ElementType;
+        }
 
         if (!string.IsNullOrEmpty(request.Culture))
         {

@@ -15,9 +15,9 @@ import type { UaiAgentItemModel } from "../../types.js";
  */
 export interface UaiAgentRepositoryOptions {
     /**
-     * Filter agents by scope ID (e.g., "copilot").
+     * Filter agents by surface ID (e.g., "copilot").
      */
-    scopeId?: string;
+    surfaceId?: string;
 
     /**
      * Maximum number of agents to return.
@@ -87,7 +87,7 @@ export class UaiAgentRepository extends UmbControllerBase {
                 query: {
                     skip: 0,
                     take: options?.take ?? 100,
-                    scopeId: options?.scopeId,
+                    surfaceId: options?.surfaceId,
                     isActive: true, // Always filter to active agents only
                 },
             }),

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
@@ -6,62 +7,98 @@ using Umbraco.Extensions;
 namespace Umbraco.AI.Core.Contexts.Resolvers;
 
 /// <summary>
-/// Resolves context from content nodes by finding the nearest context picker property value.
+/// Resolves context from document or media nodes by finding the nearest context picker property value.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This resolver reads the content ID from <see cref="IAIRuntimeContextAccessor"/>, preferring
+/// This resolver reads the entity ID from <see cref="IAIRuntimeContextAccessor"/>, preferring
 /// <see cref="AIRuntimeContextKeys.ParentEntityId"/> (for new entities) over
-/// <see cref="AIRuntimeContextKeys.EntityId"/>. It then walks up the content tree
-/// (current node + ancestors) to find the nearest property using the AI Context
-/// Picker editor (<c>Uai.ContextPicker</c>).
+/// <see cref="AIRuntimeContextKeys.EntityId"/>, dispatches to the document or media
+/// published cache based on <see cref="AIRuntimeContextKeys.EntityType"/>, then walks
+/// up the tree (current node + ancestors) to find the nearest property using the AI
+/// Context Picker editor (<c>Uai.ContextPicker</c>).
 /// </para>
 /// <para>
 /// The first non-empty context picker value found while walking up the tree is used.
-/// This allows content to inherit context from parent/ancestor nodes.
+/// This allows items to inherit context from parent/ancestor nodes.
+/// </para>
+/// <para>
+/// Members are skipped because members do not form a tree that can be walked for
+/// inherited context values.
 /// </para>
 /// </remarks>
 internal sealed class ContentContextResolver : IAIContextResolver
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIContextService _contextService;
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
+    private readonly ILogger<ContentContextResolver> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ContentContextResolver"/> class.
     /// </summary>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     /// <param name="contextService">The context service.</param>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    /// <param name="logger">The logger.</param>
     public ContentContextResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIContextService contextService,
-        IUmbracoContextAccessor umbracoContextAccessor)
+        IUmbracoContextFactory umbracoContextFactory,
+        ILogger<ContentContextResolver> logger)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
-        _umbracoContextAccessor = umbracoContextAccessor;
+        _umbracoContextFactory = umbracoContextFactory;
+        _logger = logger;
     }
 
     /// <inheritdoc />
     public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
         // Get content ID from RuntimeContext (set by orchestrators like AGUIStreamingService)
-        var contentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ParentEntityId)
+        var contentId = _runtimeContextAccessor.Context?.GetValue<Guid?>(Constants.ContextKeys.ParentEntityId)
             ?? _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.EntityId);
         if (!contentId.HasValue)
         {
             return AIContextResolverResult.Empty;
         }
 
-        // Try to get the Umbraco context
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
+        // Members have no tree to walk for inherited context picker values, so
+        // there's nothing meaningful to resolve for them.
+        var entityType = _runtimeContextAccessor.Context?.GetValue<string>(Constants.ContextKeys.EntityType);
+        if (string.Equals(entityType, "member", StringComparison.OrdinalIgnoreCase))
         {
             return AIContextResolverResult.Empty;
         }
 
-        // Get the published content
-        var content = umbracoContext.Content?.GetById(contentId.Value);
+        // Ensure UmbracoContext exists (not automatically created for backoffice API requests)
+        using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
+
+        // Dispatch to the appropriate published cache based on the entity type.
+        // Both caches return IPublishedContent, so the tree-walking logic below
+        // is identical for documents and media. GetById materialises the cached
+        // node and can throw when the node's content type can no longer be
+        // resolved (e.g. type deleted, or a document key passed against the
+        // media cache); treat any such failure as "no context available"
+        // rather than aborting the whole prompt.
+        IPublishedContent? content;
+        try
+        {
+            content = string.Equals(entityType, "media", StringComparison.OrdinalIgnoreCase)
+                ? contextReference.UmbracoContext.Media?.GetById(contentId.Value)
+                : contextReference.UmbracoContext.Content?.GetById(contentId.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to resolve {EntityType} {ContentId} for context injection; skipping",
+                entityType ?? "document",
+                contentId.Value);
+            return AIContextResolverResult.Empty;
+        }
+
         if (content is null)
         {
             return AIContextResolverResult.Empty;
@@ -73,7 +110,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
         {
             return AIContextResolverResult.Empty;
         }
-        
+
         // Use the source content's key and name for tracking
         var contentKey = source?.Key ?? content.Key;
         var contentName = source?.Name ?? content.Name;
@@ -88,7 +125,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
     {
         // Check current node and ancestors (from closest to root)
         IPublishedContent? node = content;
-        
+
         while (node is not null)
         {
             // Find any property using the context picker editor

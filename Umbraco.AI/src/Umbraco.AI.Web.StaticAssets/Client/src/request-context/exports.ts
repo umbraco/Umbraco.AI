@@ -4,7 +4,7 @@
  * Public API exports for the request context module.
  */
 
-export { type UaiRequestContextItem, createEntityContextItem, createSelectionContextItem } from "./index.js";
+export { type UaiRequestContextItem, createEntityContextItem, createElementContextItem, createSelectionContextItem } from "./index.js";
 export {
 	UaiRequestContext,
 	type UaiRequestContextContributorApi,

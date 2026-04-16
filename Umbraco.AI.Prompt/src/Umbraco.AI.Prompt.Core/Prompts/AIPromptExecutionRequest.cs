@@ -33,6 +33,21 @@ public class AIPromptExecutionRequest
     public required string ContentTypeAlias { get; init; }
 
     /// <summary>
+    /// The element ID when editing a block element within an entity.
+    /// Null when editing the entity directly (e.g., a document property).
+    /// When set, <see cref="EntityId"/> refers to the parent entity (document)
+    /// and this refers to the block content key.
+    /// </summary>
+    public Guid? ElementId { get; init; }
+
+    /// <summary>
+    /// The element type when editing a block element within an entity.
+    /// Null when editing the entity directly.
+    /// Example: "block" when editing a block element.
+    /// </summary>
+    public string? ElementType { get; init; }
+
+    /// <summary>
     /// The culture/language variant.
     /// </summary>
     public string? Culture { get; init; }

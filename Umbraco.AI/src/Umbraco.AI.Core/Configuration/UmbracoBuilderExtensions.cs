@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.FileProcessing;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -37,8 +38,8 @@ using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Tools.Web;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Versioning;
-using Umbraco.AI.Prompt.Core.Media;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 
@@ -66,6 +67,9 @@ public static partial class UmbracoBuilderExtensions
 
         // Bind AIAnalyticsOptions from "Umbraco:AI:Analytics" section
         services.Configure<AIAnalyticsOptions>(config.GetSection("Umbraco:AI:Analytics"));
+
+        // Bind AIMediaOptions from "Umbraco:AI:Media" section
+        services.Configure<AIMediaOptions>(config.GetSection("Umbraco:AI:Media"));
 
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();
@@ -245,7 +249,8 @@ public static partial class UmbracoBuilderExtensions
         // Runtime context contributors - executed in order
         builder.AIRuntimeContextContributors()
             .Append<UserContextContributor>()           // Ambient: adds current user info
-            .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
+            .Append<SerializedElementContributor>()    // Item-based: processes serialized elements (blocks) — runs before entity to claim unprefixed variables
+            .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities — prefixes variables when element present
             .Append<SectionContextContributor>()        // Item-based: extracts section pathname for context filtering
             .Append<SelectionContextContributor>()     // Item-based: extracts selection text as template variable
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items

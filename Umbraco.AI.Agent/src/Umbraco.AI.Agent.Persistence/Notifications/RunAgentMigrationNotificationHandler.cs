@@ -39,6 +39,12 @@ internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncH
             // See: https://github.com/umbraco/Umbraco-CMS/issues/22124
             var (connectionString, providerName) = AIConnectionStringResolver.Resolve(_configuration);
 
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                _logger.LogDebug("No database connection string available — skipping Umbraco.AI.Agent migrations (Umbraco may still be installing).");
+                return;
+            }
+
             var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIAgentDbContext>();
             UmbracoAIAgentDbContext.ConfigureProvider(optionsBuilder, connectionString, providerName);
 

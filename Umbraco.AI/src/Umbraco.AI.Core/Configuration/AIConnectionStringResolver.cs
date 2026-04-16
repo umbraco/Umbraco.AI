@@ -39,14 +39,36 @@ public static class AIConnectionStringResolver
 
         if (!string.IsNullOrEmpty(connectionString))
         {
-            // Default provider to SQL Server if not specified (matching Umbraco convention)
-            providerName ??= Umbraco.Cms.Core.Constants.ProviderNames.SQLServer;
+            providerName = NormalizeProviderName(providerName);
             return (connectionString, providerName);
         }
 
         // Fall back to the standard Umbraco CMS connection string
         connectionString = configuration.GetUmbracoConnectionString(out providerName);
 
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            providerName = NormalizeProviderName(providerName);
+        }
+
         return (connectionString, providerName);
+    }
+
+    /// <summary>
+    /// Normalizes the database provider name, handling legacy provider names
+    /// (e.g., <c>System.Data.SqlClient</c> on Umbraco Cloud) and defaulting
+    /// to SQL Server when not specified.
+    /// </summary>
+    private static string NormalizeProviderName(string? providerName)
+    {
+        // Migrate legacy System.Data.SqlClient to Microsoft.Data.SqlClient
+        // (Umbraco Cloud and Azure-configured connection strings use the legacy provider name)
+        if (string.Equals(providerName, "System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
+        {
+            return Umbraco.Cms.Core.Constants.ProviderNames.SQLServer;
+        }
+
+        // Default to SQL Server if not specified (matching Umbraco convention)
+        return providerName ?? Umbraco.Cms.Core.Constants.ProviderNames.SQLServer;
     }
 }

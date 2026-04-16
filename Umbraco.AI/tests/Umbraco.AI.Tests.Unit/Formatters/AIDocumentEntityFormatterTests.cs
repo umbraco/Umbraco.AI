@@ -42,7 +42,7 @@ public class CmsEntityFormatHelperTests
         var result = CmsEntityFormatHelper.FormatCmsEntity(entity);
 
         // Assert
-        result.ShouldContain("## Current Entity Context");
+        result.ShouldContain("## Entity Context");
         result.ShouldContain("Key: `doc-123`");
         result.ShouldContain("Name: `My Blog Post`");
         result.ShouldContain("Type: `document`");

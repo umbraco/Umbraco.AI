@@ -35,8 +35,11 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
 
     private bool IsSerializedEntity(AIRequestContextItem item)
     {
-        // Check if the value contains entity structure by looking for required fields
-        // Lightweight check: only verifies field presence, not values (performance optimization)
+        // Check if the value contains entity structure by looking for required fields.
+        // Required: entityType (non-empty string), unique (non-empty string), data (object).
+        // name is optional — mock entities may not have one.
+        // We validate values (not just presence) so mismatched items fall through to
+        // other contributors instead of being silently swallowed by Handle's eager-mark.
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
             return false;
@@ -46,9 +49,8 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
         {
             var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
             return value.ValueKind == JsonValueKind.Object
-                && value.TryGetProperty("entityType", out _)
-                && value.TryGetProperty("unique", out _)
-                && value.TryGetProperty("name", out _)
+                && HasNonEmptyString(value, "entityType")
+                && HasNonEmptyString(value, "unique")
                 && value.TryGetProperty("data", out var dataElement)
                 && dataElement.ValueKind == JsonValueKind.Object;
         }
@@ -57,6 +59,11 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             return false;
         }
     }
+
+    private static bool HasNonEmptyString(JsonElement obj, string propertyName)
+        => obj.TryGetProperty(propertyName, out var element)
+           && element.ValueKind == JsonValueKind.String
+           && !string.IsNullOrEmpty(element.GetString());
 
     private void ProcessSerializedEntity(AIRequestContextItem item, AIRuntimeContext context)
     {
@@ -93,10 +100,20 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             context.SetValue(Constants.ContextKeys.EntityType, entity.EntityType);
 
             // Build template variables from entity
+            // When an element is present (e.g., block), prefix entity variables with "entity."
+            // so they don't collide with element variables. When no element, keep unprefixed.
+            var hasElement = context.Data.ContainsKey(Constants.ContextKeys.SerializedElement);
             var variables = _contextHelper.BuildContextDictionary(entity);
             foreach (var (varKey, varValue) in variables)
             {
-                context.Variables[varKey] = varValue;
+                if (hasElement)
+                {
+                    context.Variables[$"entity.{varKey}"] = varValue;
+                }
+                else
+                {
+                    context.Variables[varKey] = varValue;
+                }
             }
 
             // Add system message with entity context
@@ -111,14 +128,14 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
 
     private static AISerializedEntity? DeserializeEntity(JsonElement element)
     {
-        // Thorough value validation (called after lightweight IsSerializedEntity check)
+        // Thorough value validation (called after lightweight IsSerializedEntity check).
+        // Required: entityType, unique, data. name is optional (empty string allowed).
         try
         {
             var entityType = element.GetProperty("entityType").GetString();
             var unique = element.GetProperty("unique").GetString();
-            var name = element.GetProperty("name").GetString();
 
-            if (string.IsNullOrEmpty(entityType) || string.IsNullOrEmpty(unique) || string.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(entityType) || string.IsNullOrEmpty(unique))
             {
                 return null;
             }
@@ -127,6 +144,13 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             if (!element.TryGetProperty("data", out var dataElement) || dataElement.ValueKind != JsonValueKind.Object)
             {
                 return null;
+            }
+
+            // Extract name (optional — defaults to empty string)
+            string name = string.Empty;
+            if (element.TryGetProperty("name", out var nameElement) && nameElement.ValueKind == JsonValueKind.String)
+            {
+                name = nameElement.GetString() ?? string.Empty;
             }
 
             // Extract parentUnique (optional)

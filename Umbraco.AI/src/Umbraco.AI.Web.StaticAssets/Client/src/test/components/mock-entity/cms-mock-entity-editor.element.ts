@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, repeat, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, nothing, property, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbDocumentTypeDetailRepository } from "@umbraco-cms/backoffice/document-type";
@@ -10,46 +10,35 @@ import type {
     UmbContentTypeModel,
 } from "@umbraco-cms/backoffice/content-type";
 import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";
+import type { UmbRoute, UmbRouterSlotChangeEvent, UmbRouterSlotInitEvent } from "@umbraco-cms/backoffice/router";
+import { encodeFolderName } from "@umbraco-cms/backoffice/router";
+import type { GroupViewModel, MergedContainer, TabViewModel } from "./types.js";
+import type { UaiCmsMockEntityEditorTabElement } from "./cms-mock-entity-editor-tab.element.js";
 
 const elementName = "uai-cms-mock-entity-editor";
 
-/**
- * A merged container that combines containers from the main type and compositions
- * that share the same name, type, and parent path.
- */
-interface MergedContainer {
-    key: string;
-    ids: Set<string>;
-    name: string;
-    type: "Tab" | "Group";
-    sortOrder: number;
-    parentKey: string | null;
-}
-
-interface TabViewModel {
-    key: string;
-    name: string;
-    sortOrder: number;
-    groups: GroupViewModel[];
-    rootProperties: UmbPropertyTypeModel[];
-}
-
-interface GroupViewModel {
-    key: string;
-    name: string;
-    sortOrder: number;
-    properties: UmbPropertyTypeModel[];
-}
+const ROOT_TAB_KEY = "__root__";
+const ROOT_TAB_NAME = "Content";
 
 /**
  * CMS Mock Entity Editor.
  * Registered for document/media/member entity types.
- * Fetches content type structure and renders properties in tabs and groups
- * using `umb-property-type-based-property` within `umb-property-dataset`,
- * matching the document blueprint editor layout.
  *
- * Renders its own sticky header (name input + tabs) so the host modal
- * only needs to provide the outer chrome and footer actions.
+ * Fetches content type structure and renders properties in tabs and groups
+ * via a routed sub-view, mirroring the CMS block-workspace-view-edit layout.
+ *
+ * The outer editor hosts an `<umb-router-slot>` inside an `<umb-property-dataset>`:
+ * the property dataset provides `UMB_PROPERTY_DATASET_CONTEXT` + an invariant
+ * `UMB_VARIANT_CONTEXT`, and the router slot publishes `UMB_ROUTE_CONTEXT` so
+ * nested block-based property editors (grid, list, rte, single) can register
+ * their catalogue/workspace modals via `UmbModalRouteRegistrationController`.
+ *
+ * The modal-route for this editor is registered by the owning `uai-mock-entity`
+ * element, so the tab sub-paths emitted by this router slot stay scoped under
+ * that registered URL segment and are cleaned up when the modal closes.
+ *
+ * Renders its own sticky header (name input + tabs) so the host modal only
+ * needs to provide the outer chrome and footer actions.
  *
  * @fires change - Fires UmbChangeEvent when value changes.
  */
@@ -80,16 +69,19 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
     private _tabs: TabViewModel[] = [];
 
     @state()
-    private _rootProperties: UmbPropertyTypeModel[] = [];
-
-    @state()
     private _allProperties: UmbPropertyTypeModel[] = [];
 
     @state()
     private _propertyValues: UmbPropertyValueData[] = [];
 
     @state()
-    private _activeTabKey?: string;
+    private _routes: UmbRoute[] = [];
+
+    @state()
+    private _routerPath?: string;
+
+    @state()
+    private _activePath = "";
 
     #documentTypeRepo?: UmbDocumentTypeDetailRepository;
     #mediaTypeRepo?: UmbMediaTypeDetailRepository;
@@ -297,24 +289,73 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map(buildGroup);
 
-        if (standaloneGroups.length > 0) {
+        // Prepend a synthetic root tab for root-level properties and standalone groups
+        // (the CMS blueprint calls this the "Generic" tab). We always promote to a tab
+        // so everything renders through the router-slot path.
+        const hasRootContent = rootProps.length > 0 || standaloneGroups.length > 0;
+        if (hasRootContent) {
             tabViewModels.unshift({
-                key: "__standalone__",
-                name: "Content",
+                key: ROOT_TAB_KEY,
+                name: ROOT_TAB_NAME,
                 sortOrder: -1,
                 groups: standaloneGroups,
                 rootProperties: rootProps,
             });
-            this._rootProperties = [];
-        } else {
-            this._rootProperties = rootProps;
         }
 
         this._tabs = tabViewModels;
+        this.#createRoutes();
+    }
 
-        if (tabViewModels.length > 0 && !this._activeTabKey) {
-            this._activeTabKey = tabViewModels[0].key;
+    #createRoutes() {
+        if (this._tabs.length === 0) {
+            this._routes = [];
+            return;
         }
+
+        const routes: UmbRoute[] = this._tabs.map((tab) => ({
+            path: this.#pathForTab(tab),
+            component: () => import("./cms-mock-entity-editor-tab.element.js"),
+            setup: (component) => {
+                (component as UaiCmsMockEntityEditorTabElement).tab = tab;
+            },
+        }));
+
+        // Default route: replaceState into the first tab's canonical path so the
+        // URL reflects the active tab and the tab pill picks up the active style.
+        // Mirrors document-workspace-editor.element.ts's default-route handling —
+        // without this, matching path "" keeps the URL at the parent route's base
+        // and absoluteActiveViewPath comes back without a tab segment, so
+        // href-based active-state comparison fails for the landed-on tab.
+        const firstTabPath = this.#pathForTab(this._tabs[0]);
+        routes.push({
+            path: "",
+            pathMatch: "full",
+            resolve: async () => {
+                // Guard: when the modal is closing, UmbRouteContext._internal_removeModalPath
+                // pushes the URL back to the outer workspace path. That triggers one last
+                // pass through our inner router-slot on this empty-path route — if we
+                // replaceState unconditionally, we'd yank the URL back into our modal
+                // segment and undo the modal-manager's cleanup (the user sees the URL
+                // clear and then reappear). Only redirect while the URL is still inside
+                // our modal's registered route.
+                if (!this._routerPath) return;
+                if (!window.location.pathname.startsWith(this._routerPath)) return;
+                history.replaceState({}, "", `${this._routerPath}/${firstTabPath}`);
+            },
+        });
+
+        routes.push({
+            path: "**",
+            component: async () => (await import("@umbraco-cms/backoffice/router")).UmbRouteNotFoundElement,
+        });
+
+        this._routes = routes;
+    }
+
+    #pathForTab(tab: TabViewModel): string {
+        if (tab.key === ROOT_TAB_KEY) return "root";
+        return `tab/${encodeFolderName(tab.name)}`;
     }
 
     #getTypeFetcher() {
@@ -381,10 +422,6 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
         this.#emitValue();
     }
 
-    #onTabClick(tabKey: string) {
-        this._activeTabKey = tabKey;
-    }
-
     override render() {
         if (this._loading) {
             return html`<uui-loader-bar></uui-loader-bar>`;
@@ -393,6 +430,8 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
         if (this._allProperties.length === 0 && this.#initialized) {
             return html`<uui-label><em>No properties found for this content type.</em></uui-label>`;
         }
+
+        const showTabs = !!this._routerPath && this._tabs.length > 1;
 
         return html`
             <div id="header">
@@ -405,18 +444,14 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
                         label="Name"
                     ></uui-input>
                 </div>
-                ${this._tabs.length > 0
+                ${showTabs
                     ? html`
                         <div id="tabs-container">
                             <uui-tab-group>
-                                ${this._tabs.map(
-                                    (tab) => html`
-                                        <uui-tab
-                                            label=${tab.name}
-                                            ?active=${this._activeTabKey === tab.key}
-                                            @click=${() => this.#onTabClick(tab.key)}
-                                        >${tab.name}</uui-tab>
-                                    `,
+                                ${repeat(
+                                    this._tabs,
+                                    (tab) => tab.key,
+                                    (tab) => this.#renderTab(tab),
                                 )}
                             </uui-tab-group>
                         </div>`
@@ -425,59 +460,32 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
 
             <div id="body">
                 <umb-property-dataset .value=${this._propertyValues} @change=${this.#onPropertyDatasetChange}>
-                    ${this._tabs.length > 0
-                        ? this._tabs.map(
-                            (tab) => html`
-                                <div class="tab-content" ?hidden=${this._activeTabKey !== tab.key}>
-                                    ${this.#renderTabContent(tab)}
-                                </div>
-                            `,
-                        )
-                        : this.#renderUngroupedProperties()}
+                    <umb-router-slot
+                        .routes=${this._routes}
+                        @init=${(e: UmbRouterSlotInitEvent) => {
+                            this._routerPath = e.target.absoluteRouterPath;
+                        }}
+                        @change=${(e: UmbRouterSlotChangeEvent) => {
+                            this._activePath = e.target.absoluteActiveViewPath || "";
+                        }}
+                    ></umb-router-slot>
                 </umb-property-dataset>
             </div>
         `;
     }
 
-    #renderTabContent(tab: TabViewModel) {
+    #renderTab(tab: TabViewModel) {
+        const basePath = (this._routerPath ?? "") + "/";
+        const path = this.#pathForTab(tab);
+        const fullPath = basePath + path;
+        const active = fullPath === this._activePath;
         return html`
-            ${tab.rootProperties.length > 0
-                ? html`
-                    <uui-box>
-                        ${this.#renderProperties(tab.rootProperties)}
-                    </uui-box>`
-                : nothing}
-            ${repeat(
-                tab.groups,
-                (group) => group.key,
-                (group) => html`
-                    <uui-box .headline=${group.name}>
-                        ${this.#renderProperties(group.properties)}
-                    </uui-box>
-                `,
-            )}
+            <uui-tab
+                label=${tab.name}
+                .active=${active}
+                href=${fullPath}
+            >${tab.name}</uui-tab>
         `;
-    }
-
-    #renderUngroupedProperties() {
-        if (this._rootProperties.length === 0) return nothing;
-        return html`
-            <uui-box>
-                ${this.#renderProperties(this._rootProperties)}
-            </uui-box>
-        `;
-    }
-
-    #renderProperties(properties: UmbPropertyTypeModel[]) {
-        return repeat(
-            properties,
-            (prop) => prop.alias,
-            (prop) => html`
-                <umb-property-type-based-property
-                    .property=${prop}
-                ></umb-property-type-based-property>
-            `,
-        );
     }
 
     static override styles = css`
@@ -514,19 +522,7 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
         #body {
             flex: 1;
             overflow-y: auto;
-            padding: var(--uui-size-layout-1);
             background-color: var(--uui-color-background);
-        }
-
-        uui-box {
-            --uui-box-default-padding: 0 var(--uui-size-space-5);
-        }
-        uui-box + uui-box {
-            margin-top: var(--uui-size-layout-1);
-        }
-
-        .tab-content[hidden] {
-            display: none;
         }
     `;
 }

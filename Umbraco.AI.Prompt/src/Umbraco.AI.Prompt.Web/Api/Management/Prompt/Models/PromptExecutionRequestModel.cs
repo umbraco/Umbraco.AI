@@ -37,6 +37,18 @@ public class PromptExecutionRequestModel
     public required string ContentTypeAlias { get; init; }
 
     /// <summary>
+    /// The element ID when editing a block element within an entity.
+    /// Null when editing the entity directly.
+    /// </summary>
+    public Guid? ElementId { get; init; }
+
+    /// <summary>
+    /// The element type when editing a block element within an entity.
+    /// Null when editing the entity directly.
+    /// </summary>
+    public string? ElementType { get; init; }
+
+    /// <summary>
     /// The culture variant.
     /// </summary>
     public string? Culture { get; init; }

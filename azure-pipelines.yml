@@ -55,6 +55,10 @@ parameters:
           - name: Umbraco.AI.Agent.Deploy
             changeVar: AgentDeployChanged
             hasNpm: false
+          # Automate (depends on Agent)
+          - name: Umbraco.AI.Automate
+            changeVar: AutomateChanged
+            hasNpm: false
     - name: level3Products
       type: object
       default:

@@ -62,6 +62,8 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             entityType: this.data.entityType,
             propertyAlias: this.data.propertyAlias,
             contentTypeAlias: this.data.contentTypeAlias,
+            elementId: this.data.elementId,
+            elementType: this.data.elementType,
             culture: this.data.culture,
             segment: this.data.segment,
             // Pass serialized entity context for AI processing

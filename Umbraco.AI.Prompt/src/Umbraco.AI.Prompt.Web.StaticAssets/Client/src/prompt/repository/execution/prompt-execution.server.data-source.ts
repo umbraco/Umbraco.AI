@@ -34,12 +34,16 @@ export interface UaiPromptValueChange {
 export interface UaiPromptExecutionRequest {
     /** The entity ID for context. Required for scope validation. */
     entityId: string;
-    /** The entity type (e.g., "document", "media", "block"). Required for scope validation. */
+    /** The entity type (e.g., "document", "media"). Required for scope validation. */
     entityType: string;
     /** The property alias being edited. Required for scope validation. */
     propertyAlias: string;
     /** The content type alias for scope validation. For blocks, this is the element type alias. */
     contentTypeAlias: string;
+    /** The element ID when editing a block element within an entity. */
+    elementId?: string;
+    /** The element type when editing a block element (e.g., "block"). */
+    elementType?: string;
     /** The culture variant. */
     culture?: string;
     /** The segment variant. */
@@ -106,6 +110,8 @@ export class UaiPromptExecutionServerDataSource {
             entityType: request.entityType,
             propertyAlias: request.propertyAlias,
             contentTypeAlias: request.contentTypeAlias,
+            elementId: request.elementId,
+            elementType: request.elementType,
             culture: request.culture,
             segment: request.segment,
             context: request.context,

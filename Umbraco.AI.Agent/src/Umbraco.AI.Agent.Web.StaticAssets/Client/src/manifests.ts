@@ -2,6 +2,7 @@ import { manifests as langManifests } from "./lang/manifests.js";
 import { coreManifests } from "./core/manifests.js";
 import { agentManifests } from "./agent/manifests.js";
 import { manifests as testManifests } from "./test/manifests.js";
+import { agentPickerPropertyEditorManifests } from "./property-editors/agent-picker/manifests.js";
 
 // Aggregate all manifests into a single bundle
 // Note: Copilot manifests are now in Umbraco.AI.Agent.Copilot package
@@ -11,4 +12,5 @@ export const manifests: UmbExtensionManifest[] = [
 	...coreManifests,
 	...agentManifests,
 	...testManifests,
+	...agentPickerPropertyEditorManifests,
 ];

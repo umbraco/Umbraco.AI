@@ -15,6 +15,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.Deploy | `Umbraco.AI.Deploy/` | Deploy |
 | Umbraco.AI.Prompt.Deploy | `Umbraco.AI.Prompt.Deploy/` | Deploy |
 | Umbraco.AI.Agent.Deploy | `Umbraco.AI.Agent.Deploy/` | Deploy |
+| Umbraco.AI.Automate | `Umbraco.AI.Automate/` | Automate |
 | Umbraco.AI.OpenAI | `Umbraco.AI.OpenAI/` | Provider |
 | Umbraco.AI.Anthropic | `Umbraco.AI.Anthropic/` | Provider |
 | Umbraco.AI.Amazon | `Umbraco.AI.Amazon/` | Provider |
@@ -29,6 +30,7 @@ Umbraco.AI (Core)
 ├── Umbraco.AI.Prompt → Prompt.Deploy (depends on Prompt + Deploy)
 ├── Umbraco.AI.Agent → Agent.UI → Agent.Copilot
 │                     → Agent.Deploy (depends on Agent + Deploy)
+│                     → Automate (depends on Agent + Automate.Core)
 ├── Umbraco.AI.Search
 └── Umbraco.AI.Deploy
 ```

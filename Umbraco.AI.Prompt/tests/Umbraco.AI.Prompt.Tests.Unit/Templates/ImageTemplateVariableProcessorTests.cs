@@ -2,7 +2,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
-using Umbraco.AI.Prompt.Core.Media;
+using Umbraco.AI.Core.Media;
 using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
@@ -53,7 +53,7 @@ public class ImageTemplateVariableProcessorTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync("/media/12345/image.png", It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync("/media/12345/image.png", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = imageData, MediaType = "image/png" });
 
         // Act
@@ -82,7 +82,7 @@ public class ImageTemplateVariableProcessorTests
         _mockContentService.Setup(s => s.GetById(entityId)).Returns(mockContent);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync("/media/uploads/photo.jpg", It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync("/media/uploads/photo.jpg", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = imageData, MediaType = "image/jpeg" });
 
         // Act
@@ -95,6 +95,53 @@ public class ImageTemplateVariableProcessorTests
         ((TextContent)result[1]).Text.ShouldBe(" [Image: Test Content]");
         _mockContentService.Verify(s => s.GetById(entityId), Times.Once);
         _mockMediaService.Verify(s => s.GetById(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithCropSuffix_ForwardsCropAliasAndAnnotatesReferenceName()
+    {
+        // Arrange
+        var entityId = Guid.NewGuid();
+        var imageData = new byte[] { 0xFF, 0xD8, 0xFF };
+        var context = CreateContext(entityId, "media");
+
+        var mockMedia = CreateMockMedia("/media/hero.png", "Hero Image");
+        _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
+
+        _mockResolver
+            .Setup(r => r.ResolveAsync("/media/hero.png", "content3Col", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIMediaContent { Data = imageData, MediaType = "image/jpeg" });
+
+        // Act
+        var result = (await _processor.ProcessAsync("umbracoFile#content3Col", context)).ToList();
+
+        // Assert
+        result.Count.ShouldBe(2);
+        ((TextContent)result[1]).Text.ShouldBe(" [Image: Hero Image (content3Col)]");
+        _mockResolver.Verify(
+            r => r.ResolveAsync("/media/hero.png", "content3Col", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithEmptyCropSuffix_TreatsAsNoCrop()
+    {
+        // {{image:umbracoFile#}} should be indistinguishable from {{image:umbracoFile}}
+        var entityId = Guid.NewGuid();
+        var imageData = new byte[] { 0xFF, 0xD8, 0xFF };
+        var context = CreateContext(entityId, "media");
+
+        var mockMedia = CreateMockMedia("/media/hero.png", "Hero");
+        _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
+
+        _mockResolver
+            .Setup(r => r.ResolveAsync("/media/hero.png", (string?)null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIMediaContent { Data = imageData, MediaType = "image/jpeg" });
+
+        var result = (await _processor.ProcessAsync("umbracoFile#", context)).ToList();
+
+        result.Count.ShouldBe(2);
+        ((TextContent)result[1]).Text.ShouldBe(" [Image: Hero]");
     }
 
     [Fact]
@@ -176,7 +223,7 @@ public class ImageTemplateVariableProcessorTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIMediaContent?)null);
 
         // Act
@@ -201,7 +248,7 @@ public class ImageTemplateVariableProcessorTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
@@ -227,7 +274,7 @@ public class ImageTemplateVariableProcessorTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
@@ -251,7 +298,7 @@ public class ImageTemplateVariableProcessorTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
@@ -290,7 +337,7 @@ public class ImageTemplateVariableProcessorTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia);
 
         _mockResolver
-            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act

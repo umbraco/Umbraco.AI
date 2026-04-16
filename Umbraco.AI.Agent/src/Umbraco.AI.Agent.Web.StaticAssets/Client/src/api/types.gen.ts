@@ -256,7 +256,7 @@ export type GetAllAgentsData = {
         take?: number;
         filter?: string;
         profileId?: string;
-        scopeId?: string;
+        surfaceId?: string;
         isActive?: boolean;
         agentType?: string;
     };

@@ -87,6 +87,8 @@ export default {
         // Search tools (search scope)
         searchUmbracoLabel: "Search Umbraco",
         searchUmbracoDescription: "Search Umbraco content and media using Examine",
+        semanticSearchLabel: "Semantic Search",
+        semanticSearchDescription: "Search for semantically similar content using AI embeddings",
 
         // Web tools (web scope)
         fetchWebpageLabel: "Fetch Web Page",

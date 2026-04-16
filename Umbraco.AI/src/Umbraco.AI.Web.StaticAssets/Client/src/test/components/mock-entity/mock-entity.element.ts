@@ -3,6 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import type { UmbModalManagerContext, UmbModalContext } from "@umbraco-cms/backoffice/modal";
+import { UmbModalRouteRegistrationController } from "@umbraco-cms/backoffice/router";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
@@ -10,6 +11,7 @@ import { UaiSelectedEvent } from "../../../core/events/selected.event.js";
 import { TestsService } from "../../../api/sdk.gen.js";
 import type { TestEntityTypeResponseModel, TestEntitySubTypeResponseModel } from "../../../api/types.gen.js";
 import { UAI_MOCK_ENTITY_EDITOR_MODAL } from "./mock-entity-editor-modal.token.js";
+import type { UaiMockEntityEditorModalData } from "./mock-entity-editor-modal.token.js";
 import {
     UAI_TEST_MOCK_ENTITY_EDITOR_EXTENSION_TYPE,
     type ManifestTestMockEntityEditor,
@@ -51,6 +53,71 @@ export class UaiMockEntityElement extends UmbLitElement {
     private _entityTypes: TestEntityTypeResponseModel[] = [];
 
     #entityTypesLoaded = false;
+
+    /**
+     * Route path for the editor modal, emitted by UmbModalRouteRegistrationController
+     * once the route is registered (ready shortly after construction).
+     */
+    #editorRoutePath?: string;
+
+    /**
+     * Pending modal data, captured when the user finishes the picker chain (or clicks
+     * Edit/Edit JSON) and handed to the route-registered modal via its onSetup callback.
+     * Cleared when the modal resolves or is cancelled.
+     */
+    #pendingEditorData?: UaiMockEntityEditorModalData;
+
+    /**
+     * In-flight flow metadata for the current editor invocation. Tracks which picker
+     * modals to close on submit and which entity type/sub-type to save the result
+     * against. Only lives between open-the-editor and submit/cancel. URL cleanup
+     * on close is handled by UmbModalContext.reject/submit → UmbRouteContext
+     * _internal_removeModalPath, so we don't restore the URL ourselves.
+     */
+    #pendingEditorFlow?: {
+        parentModals: UmbModalContext[];
+        entityType: string;
+        subTypeAlias?: string;
+    };
+
+    constructor() {
+        super();
+
+        // Register the mock entity editor modal as a route under this element.
+        // Opening the editor means navigating to this route via history.pushState,
+        // mirroring how CMS workspaces open their block/workspace modals. This gives
+        // the inner cms-mock-entity-editor's <umb-router-slot> a clean URL segment
+        // to extend (for tab sub-paths) and ensures the URL is tidied up when the
+        // modal closes.
+        new UmbModalRouteRegistrationController(this, UAI_MOCK_ENTITY_EDITOR_MODAL)
+            .addAdditionalPath("mock-entity-editor")
+            .onSetup(() => {
+                // Guard against stray navigation (e.g. URL replayed without going
+                // through the picker chain): refuse to open without pending data.
+                if (!this.#pendingEditorData) return false;
+                return { data: this.#pendingEditorData };
+            })
+            .onSubmit((value) => {
+                const flow = this.#pendingEditorFlow;
+                if (!flow || !value) {
+                    this.#resetEditorFlow();
+                    return;
+                }
+                // Close picker chain and persist the resolved value, matching the
+                // previous `await onSubmit(); for (m of parentModals) m.reject()` behaviour.
+                for (const modal of flow.parentModals) modal.reject();
+                this.#saveValue(flow.entityType, flow.subTypeAlias, value.mockEntityJson);
+                this.#resetEditorFlow();
+            })
+            .onReject(() => {
+                // Editor cancelled: leave any picker modals open so the user can
+                // pick a different type, matching the previous try/catch behaviour.
+                this.#resetEditorFlow();
+            })
+            .observeRouteBuilder((routeBuilder) => {
+                this.#editorRoutePath = routeBuilder({});
+            });
+    }
 
     connectedCallback() {
         super.connectedCallback();
@@ -105,7 +172,7 @@ export class UaiMockEntityElement extends UmbLitElement {
             if (entityTypeInfo?.hasSubTypes) {
                 this.#openSubTypePicker(modalManager, typeModal, selectedType.value, editorManifest);
             } else {
-                this.#openMockEditor(modalManager, [typeModal], selectedType.value, undefined, undefined, undefined, editorManifest);
+                this.#openMockEditor([typeModal], selectedType.value, undefined, undefined, undefined, editorManifest);
             }
         });
     }
@@ -127,7 +194,6 @@ export class UaiMockEntityElement extends UmbLitElement {
         subTypeModal.addEventListener(UaiSelectedEvent.TYPE, async (e: Event) => {
             const selectedSubType = (e as UaiSelectedEvent).item as UaiPickableItemModel;
             this.#openMockEditor(
-                modalManager,
                 [typeModal, subTypeModal],
                 entityType,
                 selectedSubType.value,
@@ -138,8 +204,7 @@ export class UaiMockEntityElement extends UmbLitElement {
         });
     }
 
-    async #openMockEditor(
-        modalManager: UmbModalManagerContext,
+    #openMockEditor(
         parentModals: UmbModalContext[],
         entityType: string,
         subTypeAlias?: string,
@@ -147,26 +212,15 @@ export class UaiMockEntityElement extends UmbLitElement {
         subTypeName?: string,
         editorManifest?: ManifestTestMockEntityEditor,
     ) {
-        const editorModal = modalManager.open(this, UAI_MOCK_ENTITY_EDITOR_MODAL, {
-            data: {
-                entityType,
-                subTypeAlias,
-                subTypeUnique,
-                subTypeName,
-                editorManifest,
-            },
-        });
-
-        try {
-            const result = await editorModal.onSubmit();
-            // Close all parent modals
-            for (const modal of parentModals) {
-                modal.reject();
-            }
-            this.#saveValue(entityType, subTypeAlias, result.mockEntityJson);
-        } catch {
-            // Editor cancelled - parent modals stay open
-        }
+        this.#pendingEditorFlow = { parentModals, entityType, subTypeAlias };
+        this.#pendingEditorData = {
+            entityType,
+            subTypeAlias,
+            subTypeUnique,
+            subTypeName,
+            editorManifest,
+        };
+        this.#navigateToEditorRoute();
     }
 
     async #onEdit() {
@@ -182,9 +236,6 @@ export class UaiMockEntityElement extends UmbLitElement {
 
     async #openExistingEditor(editorManifest?: ManifestTestMockEntityEditor) {
         if (!this.value) return;
-
-        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
-        if (!modalManager) return;
 
         // Resolve sub-type info if needed
         let subTypeUnique: string | undefined;
@@ -202,29 +253,39 @@ export class UaiMockEntityElement extends UmbLitElement {
             }
         }
 
-        const modal = modalManager.open(this, UAI_MOCK_ENTITY_EDITOR_MODAL, {
-            data: {
-                entityType: this.value.entityType,
-                subTypeAlias: this.value.entitySubType ?? undefined,
-                subTypeUnique,
-                subTypeName,
-                existingValue: this.value.mockEntity
-                    ? JSON.stringify(this.value.mockEntity, null, 2)
-                    : undefined,
-                editorManifest,
-            },
-        });
+        this.#pendingEditorFlow = {
+            parentModals: [],
+            entityType: this.value.entityType,
+            subTypeAlias: this.value.entitySubType ?? undefined,
+        };
+        this.#pendingEditorData = {
+            entityType: this.value.entityType,
+            subTypeAlias: this.value.entitySubType ?? undefined,
+            subTypeUnique,
+            subTypeName,
+            existingValue: this.value.mockEntity
+                ? JSON.stringify(this.value.mockEntity, null, 2)
+                : undefined,
+            editorManifest,
+        };
+        this.#navigateToEditorRoute();
+    }
 
-        try {
-            const result = await modal.onSubmit();
-            this.#saveValue(
-                this.value.entityType,
-                this.value.entitySubType ?? undefined,
-                result.mockEntityJson,
-            );
-        } catch {
-            // User cancelled
+    #navigateToEditorRoute() {
+        if (!this.#editorRoutePath) {
+            // Registration runs synchronously in the constructor, but the route
+            // builder observable can fire on the next microtask. If this ever
+            // happens in practice, surface it loudly so we can investigate.
+            console.error("Mock entity editor route path not yet registered.");
+            this.#resetEditorFlow();
+            return;
         }
+        window.history.pushState({}, "", this.#editorRoutePath);
+    }
+
+    #resetEditorFlow() {
+        this.#pendingEditorData = undefined;
+        this.#pendingEditorFlow = undefined;
     }
 
     #onDelete() {

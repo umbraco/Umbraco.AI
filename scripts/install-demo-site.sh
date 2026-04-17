@@ -68,6 +68,11 @@ fi
 # Step 1: Install Umbraco templates
 if [ "$SKIP_TEMPLATE_INSTALL" = false ]; then
     echo "Installing Umbraco templates..."
+    # Uninstall any existing version to avoid conflicts
+    echo "Removing any existing Umbraco.Templates installations..."
+    if dotnet new uninstall 2>&1 | grep -q "Umbraco\.Templates"; then
+        dotnet new uninstall Umbraco.Templates 2>/dev/null || true
+    fi
     dotnet new install Umbraco.Templates --force
 fi
 

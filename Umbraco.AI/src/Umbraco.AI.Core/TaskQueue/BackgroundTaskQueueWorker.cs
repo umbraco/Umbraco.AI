@@ -32,25 +32,48 @@ internal sealed class BackgroundTaskQueueWorker : BackgroundService
                 break;
             }
 
-            var sw = Stopwatch.StartNew();
+            await RunItemOnCleanContextAsync(item, stoppingToken);
+        }
+    }
 
-            try
-            {
-                using var scope = _scopeFactory.CreateScope();
-                await item.RunAsync(scope.ServiceProvider, stoppingToken);
+    // Dispatches the work item onto a fresh ThreadPool task with ExecutionContext
+    // flow suppressed. Without this, AsyncLocal state (e.g. Umbraco's ambient
+    // EF Core scope) from the producer thread can leak across the Channel when
+    // the reader's awaiter completes synchronously on the writer, causing
+    // "Scope being disposed is not the Ambient Scope" errors inside work items.
+    private Task RunItemOnCleanContextAsync(BackgroundWorkItem item, CancellationToken stoppingToken)
+    {
+        AsyncFlowControl flow = ExecutionContext.SuppressFlow();
+        try
+        {
+            return Task.Run(() => ExecuteItemAsync(item, stoppingToken), stoppingToken);
+        }
+        finally
+        {
+            flow.Undo();
+        }
+    }
 
-                _logger.LogInformation(
-                    "Background job '{JobName}' completed in {ElapsedMs}ms. CorrelationId={CorrelationId}",
-                    item.Name, sw.ElapsedMilliseconds, item.CorrelationId);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _logger.LogError(
-                    ex,
-                    "Background job '{JobName}' failed after {ElapsedMs}ms. CorrelationId={CorrelationId}",
-                    item.Name, sw.ElapsedMilliseconds, item.CorrelationId);
-                // swallow so caller + worker loop are not affected
-            }
+    private async Task ExecuteItemAsync(BackgroundWorkItem item, CancellationToken stoppingToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            await item.RunAsync(scope.ServiceProvider, stoppingToken);
+
+            _logger.LogInformation(
+                "Background job '{JobName}' completed in {ElapsedMs}ms. CorrelationId={CorrelationId}",
+                item.Name, sw.ElapsedMilliseconds, item.CorrelationId);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(
+                ex,
+                "Background job '{JobName}' failed after {ElapsedMs}ms. CorrelationId={CorrelationId}",
+                item.Name, sw.ElapsedMilliseconds, item.CorrelationId);
+            // swallow so caller + worker loop are not affected
         }
     }
 }

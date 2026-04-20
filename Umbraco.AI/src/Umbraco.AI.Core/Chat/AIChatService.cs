@@ -7,6 +7,7 @@ using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Events;
 
@@ -22,6 +23,8 @@ internal sealed class AIChatService : IAIChatService
     private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly AIToolCollection _toolCollection;
+    private readonly IAIFunctionFactory _functionFactory;
 
     public AIChatService(
         IAIChatClientFactory clientFactory,
@@ -31,7 +34,9 @@ internal sealed class AIChatService : IAIChatService
         IEventAggregator eventAggregator,
         IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors,
+        AIToolCollection toolCollection,
+        IAIFunctionFactory functionFactory)
     {
         _clientFactory = clientFactory;
         _profileService = profileService;
@@ -41,6 +46,8 @@ internal sealed class AIChatService : IAIChatService
         _contextAccessor = contextAccessor;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
+        _toolCollection = toolCollection;
+        _functionFactory = functionFactory;
     }
 
     #pragma warning disable CS0618 // Obsolete members - implementing the deprecated interface methods
@@ -224,6 +231,7 @@ internal sealed class AIChatService : IAIChatService
             var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, builder.ChatOptions);
             ApplyOutputSchema(mergedOptions, builder.OutputSchema);
+            ApplyBuilderTools(mergedOptions, builder);
 
             return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
         }
@@ -256,6 +264,7 @@ internal sealed class AIChatService : IAIChatService
             var chatClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, builder.ChatOptions);
             ApplyOutputSchema(mergedOptions, builder.OutputSchema);
+            ApplyBuilderTools(mergedOptions, builder);
 
             await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
             {
@@ -375,6 +384,41 @@ internal sealed class AIChatService : IAIChatService
         if (schema is not null)
         {
             options.ResponseFormat = schema.ResponseFormat;
+        }
+    }
+
+    /// <summary>
+    /// Resolves tool IDs configured on the builder against the registered <see cref="AIToolCollection"/>
+    /// and appends the resulting AIFunctions to <see cref="ChatOptions.Tools"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when a requested tool ID is not registered.</exception>
+    private void ApplyBuilderTools(ChatOptions options, AIChatBuilder builder)
+    {
+        if (builder.ToolIds.Count == 0)
+        {
+            return;
+        }
+
+        var tools = new List<IAITool>(builder.ToolIds.Count);
+        foreach (var id in builder.ToolIds)
+        {
+            var tool = _toolCollection.GetById(id)
+                ?? throw new InvalidOperationException(
+                    $"AI tool with ID '{id}' is not registered. Available tool IDs: {string.Join(", ", _toolCollection.Select(t => t.Id))}");
+            tools.Add(tool);
+        }
+
+        var aiFunctions = _functionFactory.Create(tools);
+        if (options.Tools is null)
+        {
+            options.Tools = [.. aiFunctions];
+        }
+        else
+        {
+            foreach (var fn in aiFunctions)
+            {
+                options.Tools.Add(fn);
+            }
         }
     }
 

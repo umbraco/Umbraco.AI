@@ -44,6 +44,7 @@ public sealed class AIChatBuilder
     private IReadOnlyList<string>? _guardrailAliases;
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private bool _isPassThrough;
+    private readonly List<string> _toolIds = [];
 
     /// <summary>
     /// Sets the alias for the inline chat. Required for auditing and telemetry.
@@ -180,6 +181,18 @@ public sealed class AIChatBuilder
     }
 
     /// <summary>
+    /// Includes registered AI tools in the chat request by their IDs.
+    /// Unknown IDs throw at execution time.
+    /// </summary>
+    /// <param name="toolIds">The tool IDs to include.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIChatBuilder WithTools(params string[] toolIds)
+    {
+        _toolIds.AddRange(toolIds);
+        return this;
+    }
+
+    /// <summary>
     /// Marks this inline chat as a pass-through execution within a parent feature.
     /// </summary>
     /// <remarks>
@@ -260,6 +273,11 @@ public sealed class AIChatBuilder
     /// Gets the additional properties configured on this builder.
     /// </summary>
     internal IReadOnlyDictionary<string, object?>? AdditionalProperties => _additionalProperties;
+
+    /// <summary>
+    /// Gets the tool IDs configured on this builder.
+    /// </summary>
+    internal IReadOnlyList<string> ToolIds => _toolIds;
 
     /// <summary>
     /// Gets whether this execution is a pass-through within a parent feature.

@@ -96,6 +96,24 @@ var response = await _chatService.GetChatResponseAsync(messages, options);
 
 {% endcode %}
 
+## Registered Tools via the Chat Builder
+
+When a tool is registered (via `[AITool]` + `IAITool`), you can reference it by ID from the inline chat builder instead of building `AIFunction`s by hand:
+
+{% code title="ChatBuilderWithTools.cs" %}
+
+```csharp
+var response = await _chatService.GetChatResponseAsync(chat => chat
+    .WithAlias("content-summariser")
+    .WithProfile("default-chat")
+    .WithTools("fetch_web_page", "get_umbraco_content"),
+    messages, cancellationToken);
+```
+
+{% endcode %}
+
+The service resolves each ID against the registered `AIToolCollection` and appends the resulting functions to `ChatOptions.Tools`. An unknown ID throws an `InvalidOperationException` at execution time, so typos fail loudly rather than producing a silently toolless response. Builder tools are merged with any `Tools` you set via `WithChatOptions(...)` — caller-supplied functions are preserved.
+
 ## Tools with Complex Parameters
 
 Tools can accept complex parameter types:

@@ -173,28 +173,35 @@ public class AISpeechToTextBuilderTests
     }
 
     [Fact]
-    public void WithGuardrails_ById_SetsGuardrailIds()
+    public void WithGuardrails_ById_StoresAdditionalIds()
     {
-        // Arrange
         var guardrailId = Guid.NewGuid();
         var builder = new AISpeechToTextBuilder();
         builder.WithGuardrails(guardrailId);
 
-        // Assert
-        builder.GuardrailIds.ShouldContain(guardrailId);
-        builder.GuardrailAliases.ShouldBeNull();
+        builder.AdditionalGuardrailIds.ShouldContain(guardrailId);
+        builder.AdditionalGuardrailAliases.ShouldBeNull();
     }
 
     [Fact]
-    public void WithGuardrails_ByAlias_SetsGuardrailAliases()
+    public void WithGuardrails_ByAlias_StoresAdditionalAliases()
     {
-        // Arrange
         var builder = new AISpeechToTextBuilder();
         builder.WithGuardrails("content-filter");
 
-        // Assert
-        builder.GuardrailAliases.ShouldContain("content-filter");
-        builder.GuardrailIds.ShouldBeEmpty();
+        builder.AdditionalGuardrailAliases.ShouldContain("content-filter");
+        builder.AdditionalGuardrailIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SetGuardrails_ById_StoresReplaceIds()
+    {
+        var guardrailId = Guid.NewGuid();
+        var builder = new AISpeechToTextBuilder();
+        builder.SetGuardrails(guardrailId);
+
+        builder.GuardrailIds.ShouldContain(guardrailId);
+        builder.GuardrailAliases.ShouldBeNull();
     }
 
     [Fact]

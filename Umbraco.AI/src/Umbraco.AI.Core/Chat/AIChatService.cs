@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Models;
@@ -18,6 +19,7 @@ internal sealed class AIChatService : IAIChatService
     private readonly IAIChatClientFactory _clientFactory;
     private readonly IAIProfileService _profileService;
     private readonly IAIGuardrailService _guardrailService;
+    private readonly IAIContextService _contextService;
     private readonly AIOptions _options;
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIRuntimeContextAccessor _contextAccessor;
@@ -30,6 +32,7 @@ internal sealed class AIChatService : IAIChatService
         IAIChatClientFactory clientFactory,
         IAIProfileService profileService,
         IAIGuardrailService guardrailService,
+        IAIContextService contextService,
         IOptionsMonitor<AIOptions> options,
         IEventAggregator eventAggregator,
         IAIRuntimeContextAccessor contextAccessor,
@@ -41,6 +44,7 @@ internal sealed class AIChatService : IAIChatService
         _clientFactory = clientFactory;
         _profileService = profileService;
         _guardrailService = guardrailService;
+        _contextService = contextService;
         _options = options.CurrentValue;
         _eventAggregator = eventAggregator;
         _contextAccessor = contextAccessor;
@@ -335,9 +339,25 @@ internal sealed class AIChatService : IAIChatService
             builder.SetResolvedGuardrailIds(
                 await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
         }
+
+        if (builder.AdditionalGuardrailAliases is { Count: > 0 } additionalGuardrailAliases)
+        {
+            builder.SetResolvedAdditionalGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(additionalGuardrailAliases, cancellationToken));
+        }
+
+        if (builder.ContextAliases is { Count: > 0 } contextAliases)
+        {
+            builder.SetResolvedContextIds(
+                await _contextService.GetContextIdsByAliasesAsync(contextAliases, cancellationToken));
+        }
+
+        if (builder.AdditionalContextAliases is { Count: > 0 } additionalContextAliases)
+        {
+            builder.SetResolvedAdditionalContextIds(
+                await _contextService.GetContextIdsByAliasesAsync(additionalContextAliases, cancellationToken));
+        }
     }
-
-
 
     private static ChatOptions MergeOptions(AIProfile profile, ChatOptions? callerOptions)
     {

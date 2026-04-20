@@ -187,11 +187,19 @@ public static class Constants
 
         /// <summary>
         /// Key for guardrail IDs override in runtime context.
-        /// When set, the guardrail resolution system uses these IDs instead of (or in addition to)
-        /// the guardrails configured on the profile, prompt, or agent.
-        /// Used by the test execution system to override guardrails for testing scenarios.
+        /// When set, the guardrail resolution system uses only these IDs, suppressing guardrails
+        /// configured on the profile, prompt, or agent.
+        /// Used by the inline chat/agent builders and by the test execution system.
         /// </summary>
         public const string GuardrailIdsOverride = "Umbraco.AI.GuardrailIdsOverride";
+
+        /// <summary>
+        /// Key for additional guardrail IDs in runtime context.
+        /// When set, these IDs are resolved and appended to guardrails configured on the profile, prompt,
+        /// or agent (order: sources first, then additional, deduplicated). Used by the inline chat/agent
+        /// builders to extend rather than replace the default guardrails.
+        /// </summary>
+        public const string AdditionalGuardrailIds = "Umbraco.AI.AdditionalGuardrailIds";
 
         /// <summary>
         /// Key for chat options override in runtime context.
@@ -200,5 +208,21 @@ public static class Constants
         /// Used by inline agent and inline chat builders to pass ChatOptions through the middleware pipeline.
         /// </summary>
         public const string ChatOptionsOverride = "Umbraco.AI.ChatOptionsOverride";
+
+        /// <summary>
+        /// Key for context IDs override in runtime context.
+        /// When set, <see cref="Contexts.Resolvers.ProfileContextResolver"/> uses these IDs instead of
+        /// the context IDs configured on the profile. Used by the inline chat builder to attach specific
+        /// <see cref="Models.AIContext"/> entries per-call.
+        /// </summary>
+        public const string ContextIdsOverride = "Umbraco.AI.ContextIdsOverride";
+
+        /// <summary>
+        /// Key for additional context IDs in runtime context.
+        /// When set, <see cref="Contexts.Resolvers.ProfileContextResolver"/> appends these IDs to the ones
+        /// configured on the profile (order: profile contexts first, then additional). Used by the inline
+        /// chat builder to extend rather than replace the profile's configured contexts.
+        /// </summary>
+        public const string AdditionalContextIds = "Umbraco.AI.AdditionalContextIds";
     }
 }

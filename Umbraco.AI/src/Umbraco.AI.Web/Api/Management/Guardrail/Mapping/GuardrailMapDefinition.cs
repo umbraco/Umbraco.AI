@@ -65,7 +65,7 @@ public class GuardrailMapDefinition : IMapDefinition
         target.Rules = source.Rules.Select(r => context.Map<AIGuardrailRule>(r)!).ToList();
     }
 
-    // Umbraco.Code.MapAll -EvaluatorId -GuardrailName
+    // Umbraco.Code.MapAll -EvaluatorId -GuardrailName -GuardrailId
     private static void MapRuleFromModel(GuardrailRuleModel source, AIGuardrailRule target, MapperContext context)
     {
         target.Id = source.Id;

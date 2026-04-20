@@ -8,7 +8,10 @@ namespace Umbraco.AI.Core.Contexts.Resolvers;
 /// </summary>
 /// <remarks>
 /// This resolver reads the profile ID from <see cref="Constants.ContextKeys.ProfileId"/> in the request properties,
-/// then resolves any context IDs configured on the profile's chat settings.
+/// then resolves any context IDs configured on the profile's chat settings. It also honors
+/// <see cref="Constants.ContextKeys.ContextIdsOverride"/> set by the inline chat builder (via
+/// <see cref="InlineChat.AIChatBuilder.WithContexts(Guid[])"/>), using the override list in place of
+/// the profile's configured context IDs.
 /// </remarks>
 internal sealed class ProfileContextResolver : IAIContextResolver
 {
@@ -35,19 +38,60 @@ internal sealed class ProfileContextResolver : IAIContextResolver
     /// <inheritdoc />
     public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
+        var contextIdsOverride = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.ContextKeys.ContextIdsOverride);
+        var additionalContextIds = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.ContextKeys.AdditionalContextIds);
+
+        // Short-circuit: when override is set we don't need the profile's configured contexts,
+        // and when neither override nor additional is set we need a profile to source any contexts.
         var profileId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ProfileId);
         if (!profileId.HasValue)
         {
             return AIContextResolverResult.Empty;
         }
 
-        var profile = await _profileService.GetProfileAsync(profileId.Value, cancellationToken);
-        if (profile?.Settings is not AIChatProfileSettings chatSettings || chatSettings.ContextIds.Count == 0)
+        IReadOnlyList<Guid> baseIds;
+        string? entityName;
+
+        if (contextIdsOverride is not null)
+        {
+            // Override replaces the profile's configured contexts; skip fetching the profile for its ContextIds.
+            baseIds = contextIdsOverride;
+            entityName = null;
+        }
+        else
+        {
+            var profile = await _profileService.GetProfileAsync(profileId.Value, cancellationToken);
+            baseIds = profile?.Settings is AIChatProfileSettings chatSettings ? chatSettings.ContextIds : [];
+            entityName = profile?.Name;
+        }
+
+        var combined = Combine(baseIds, additionalContextIds);
+        if (combined.Count == 0)
         {
             return AIContextResolverResult.Empty;
         }
 
-        return await ResolveContextIdsAsync(chatSettings.ContextIds, profile.Name, cancellationToken);
+        return await ResolveContextIdsAsync(combined, entityName, cancellationToken);
+    }
+
+    private static IReadOnlyList<Guid> Combine(IReadOnlyList<Guid> primary, IReadOnlyList<Guid>? additional)
+    {
+        if (additional is null || additional.Count == 0)
+        {
+            return primary;
+        }
+
+        var combined = new List<Guid>(primary.Count + additional.Count);
+        combined.AddRange(primary);
+        foreach (var id in additional)
+        {
+            if (!combined.Contains(id))
+            {
+                combined.Add(id);
+            }
+        }
+
+        return combined;
     }
 
     private async Task<AIContextResolverResult> ResolveContextIdsAsync(

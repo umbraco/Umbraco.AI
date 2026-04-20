@@ -128,7 +128,7 @@ public class AIChatBuilderTests
     }
 
     [Fact]
-    public void WithGuardrails_SetsGuardrailIds()
+    public void WithGuardrails_StoresAdditionalIds()
     {
         // Arrange
         var guardrailId = Guid.NewGuid();
@@ -136,7 +136,7 @@ public class AIChatBuilderTests
         builder.WithGuardrails(guardrailId);
 
         // Assert
-        builder.GuardrailIds.ShouldContain(guardrailId);
+        builder.AdditionalGuardrailIds.ShouldContain(guardrailId);
     }
 
     [Fact]
@@ -181,5 +181,222 @@ public class AIChatBuilderTests
 
         // Assert
         builder.AdditionalProperties.ShouldBe(properties);
+    }
+
+    [Fact]
+    public void WithContexts_ById_StoresAdditionalIds()
+    {
+        // Arrange
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+
+        // Act
+        builder.WithContexts(a, b);
+
+        // Assert
+        builder.AdditionalContextIds.ShouldBe([a, b]);
+        builder.AdditionalContextAliases.ShouldBeNull();
+        builder.ContextIds.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithContexts_ByAlias_StoresAdditionalAliases()
+    {
+        // Arrange
+        var builder = new AIChatBuilder();
+
+        // Act
+        builder.WithContexts("brand", "guidelines");
+
+        // Assert
+        builder.AdditionalContextAliases.ShouldBe(["brand", "guidelines"]);
+        builder.AdditionalContextIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SetContexts_ById_StoresReplaceContextIds()
+    {
+        // Arrange
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+
+        // Act
+        builder.SetContexts(a, b);
+
+        // Assert
+        builder.ContextIds.ShouldBe([a, b]);
+        builder.ContextAliases.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetContexts_EmptyArray_SignalsExplicitNoContexts()
+    {
+        // Arrange
+        var builder = new AIChatBuilder();
+
+        // Act
+        builder.SetContexts(Array.Empty<Guid>());
+
+        // Assert
+        builder.ContextIds.ShouldNotBeNull();
+        builder.ContextIds!.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SetContexts_ByAlias_ThenById_ClearsAliases()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.SetContexts("alias-one");
+
+        // Act
+        builder.SetContexts(id);
+
+        // Assert
+        builder.ContextIds.ShouldBe([id]);
+        builder.ContextAliases.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PopulateContext_SetContexts_WritesOverrideKey()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.WithAlias("test").SetContexts(id);
+        var runtimeContext = new AIRuntimeContext([]);
+
+        // Act
+        builder.PopulateContext(runtimeContext, setFeatureMetadata: true);
+
+        // Assert
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.ContextIdsOverride)
+            .ShouldBe([id]);
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.AdditionalContextIds).ShouldBeNull();
+    }
+
+    [Fact]
+    public void PopulateContext_WithContexts_WritesAdditionalKey()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.WithAlias("test").WithContexts(id);
+        var runtimeContext = new AIRuntimeContext([]);
+
+        // Act
+        builder.PopulateContext(runtimeContext, setFeatureMetadata: true);
+
+        // Assert
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.AdditionalContextIds)
+            .ShouldBe([id]);
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.ContextIdsOverride).ShouldBeNull();
+    }
+
+    [Fact]
+    public void PopulateContext_SetAndWithContexts_WritesBothKeys()
+    {
+        // Arrange
+        var replaceId = Guid.NewGuid();
+        var additionalId = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.WithAlias("test").SetContexts(replaceId).WithContexts(additionalId);
+        var runtimeContext = new AIRuntimeContext([]);
+
+        // Act
+        builder.PopulateContext(runtimeContext, setFeatureMetadata: true);
+
+        // Assert — both keys emitted; resolver combines them.
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.ContextIdsOverride)
+            .ShouldBe([replaceId]);
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.AdditionalContextIds)
+            .ShouldBe([additionalId]);
+    }
+
+    [Fact]
+    public void WithGuardrails_ById_StoresAdditionalIds()
+    {
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+
+        builder.WithGuardrails(id);
+
+        builder.AdditionalGuardrailIds.ShouldBe([id]);
+        builder.AdditionalGuardrailAliases.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithGuardrails_ByAlias_StoresAdditionalAliases()
+    {
+        var builder = new AIChatBuilder();
+
+        builder.WithGuardrails("safety");
+
+        builder.AdditionalGuardrailAliases.ShouldBe(["safety"]);
+        builder.AdditionalGuardrailIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SetGuardrails_ById_StoresReplaceGuardrailIds()
+    {
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+
+        builder.SetGuardrails(id);
+
+        builder.GuardrailIds.ShouldBe([id]);
+        builder.GuardrailAliases.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PopulateContext_WithGuardrails_WritesAdditionalKey()
+    {
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.WithAlias("test").WithGuardrails(id);
+        var runtimeContext = new AIRuntimeContext([]);
+
+        builder.PopulateContext(runtimeContext, setFeatureMetadata: true);
+
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.AdditionalGuardrailIds)
+            .ShouldBe([id]);
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.GuardrailIdsOverride)
+            .ShouldBeNull();
+    }
+
+    [Fact]
+    public void PopulateContext_SetGuardrails_WritesOverrideKey()
+    {
+        var id = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.WithAlias("test").SetGuardrails(id);
+        var runtimeContext = new AIRuntimeContext([]);
+
+        builder.PopulateContext(runtimeContext, setFeatureMetadata: true);
+
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.GuardrailIdsOverride)
+            .ShouldBe([id]);
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.AdditionalGuardrailIds)
+            .ShouldBeNull();
+    }
+
+    [Fact]
+    public void PopulateContext_SetAndWithGuardrails_WritesBothKeys()
+    {
+        var replaceId = Guid.NewGuid();
+        var additionalId = Guid.NewGuid();
+        var builder = new AIChatBuilder();
+        builder.WithAlias("test").SetGuardrails(replaceId).WithGuardrails(additionalId);
+        var runtimeContext = new AIRuntimeContext([]);
+
+        builder.PopulateContext(runtimeContext, setFeatureMetadata: true);
+
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.GuardrailIdsOverride)
+            .ShouldBe([replaceId]);
+        runtimeContext.GetValue<IReadOnlyList<Guid>>(Core.Constants.ContextKeys.AdditionalGuardrailIds)
+            .ShouldBe([additionalId]);
     }
 }

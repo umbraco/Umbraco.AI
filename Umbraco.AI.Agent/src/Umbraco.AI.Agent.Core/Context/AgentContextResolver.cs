@@ -3,6 +3,7 @@ using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Context;
 
@@ -10,7 +11,7 @@ namespace Umbraco.AI.Agent.Core.Context;
 /// Resolves context from agent-level context assignments.
 /// </summary>
 /// <remarks>
-/// This resolver reads the agent ID from <see cref="Constants.MetadataKeys.AgentId"/> in the request properties,
+/// This resolver reads the agent ID from <see cref="Constants.ContextKeys.AgentId"/> in the request properties,
 /// then resolves any context IDs configured on the agent.
 /// </remarks>
 internal sealed class AgentContextResolver : IAIContextResolver
@@ -38,6 +39,13 @@ internal sealed class AgentContextResolver : IAIContextResolver
     /// <inheritdoc />
     public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
+        // A full override (execution options or builder SetContexts) suppresses this resolver; the
+        // ProfileContextResolver surfaces the override ID set so it's emitted once.
+        if (_runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(CoreConstants.ContextKeys.ContextIdsOverride) is not null)
+        {
+            return AIContextResolverResult.Empty;
+        }
+
         var agentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.AgentId);
         if (!agentId.HasValue)
         {
@@ -45,19 +53,6 @@ internal sealed class AgentContextResolver : IAIContextResolver
         }
 
         var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
-
-
-        // Check for context IDs override (set by execution options for test scenarios)
-        var contextIdsOverride = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.ContextKeys.ContextIdsOverride);
-        if (contextIdsOverride is not null)
-        {
-            if (contextIdsOverride.Count == 0)
-            {
-                return AIContextResolverResult.Empty;
-            }
-
-            return await ResolveContextIdsAsync(contextIdsOverride, agent?.Name, cancellationToken);
-        }
 
         if (agent is null)
         {

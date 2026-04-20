@@ -29,6 +29,12 @@ internal sealed class ProfileGuardrailResolver : IAIGuardrailResolver
     /// <inheritdoc />
     public async Task<AIGuardrailResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
+        // Override suppresses source-level guardrails entirely.
+        if (_runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.ContextKeys.GuardrailIdsOverride) is not null)
+        {
+            return AIGuardrailResolverResult.Empty;
+        }
+
         var profileId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ProfileId);
         if (!profileId.HasValue)
         {
@@ -42,25 +48,6 @@ internal sealed class ProfileGuardrailResolver : IAIGuardrailResolver
         }
 
         var guardrails = await _guardrailService.GetGuardrailsByIdsAsync(chatSettings.GuardrailIds, cancellationToken);
-
-        var allRules = new List<AIGuardrailRule>();
-        var resolvedIds = new List<Guid>();
-
-        foreach (var guardrail in guardrails)
-        {
-            resolvedIds.Add(guardrail.Id);
-            foreach (var rule in guardrail.Rules.OrderBy(r => r.SortOrder))
-            {
-                rule.GuardrailName = guardrail.Name;
-                allRules.Add(rule);
-            }
-        }
-
-        return new AIGuardrailResolverResult
-        {
-            Rules = allRules,
-            GuardrailIds = resolvedIds,
-            Source = profile.Name
-        };
+        return AIGuardrailResolverResult.FromGuardrails(guardrails, source: profile.Name);
     }
 }

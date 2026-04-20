@@ -1,5 +1,7 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Utilities;
 
@@ -22,8 +24,10 @@ namespace Umbraco.AI.Core.InlineChat;
 ///     .WithAlias("my-summarizer")
 ///     .WithProfile(profileId)
 ///     .WithChatOptions(new ChatOptions { Temperature = 0.3f })
-///     .WithGuardrails(guardrailId),
+///     .WithGuardrails(guardrailId)   // additive on top of the profile's guardrails
+///     .WithContexts(contextId),      // additive on top of the profile's contexts
 ///     messages, cancellationToken);
+/// // Use SetGuardrails / SetContexts to replace the profile's configured values.
 /// </code>
 /// </remarks>
 public sealed class AIChatBuilder
@@ -40,8 +44,8 @@ public sealed class AIChatBuilder
     private ChatOptions? _chatOptions;
     private AIOutputSchema? _outputSchema;
     private IEnumerable<AIRequestContextItem>? _contextItems;
-    private IReadOnlyList<Guid> _guardrailIds = [];
-    private IReadOnlyList<string>? _guardrailAliases;
+    private readonly AIContextBuilderState _aiContexts = new();
+    private readonly AIGuardrailBuilderState _aiGuardrails = new();
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private bool _isPassThrough;
     private readonly List<string> _toolIds = [];
@@ -146,26 +150,81 @@ public sealed class AIChatBuilder
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by ID.
+    /// Adds stored <see cref="Models.AIContext"/> entries on top of the profile's configured contexts
+    /// (additive). Use <see cref="SetContexts(Guid[])"/> to fully replace.
     /// </summary>
-    /// <param name="guardrailIds">The guardrail IDs to apply.</param>
-    /// <returns>The builder for chaining.</returns>
-    public AIChatBuilder WithGuardrails(params Guid[] guardrailIds)
+    public AIChatBuilder WithContexts(params Guid[] contextIds)
     {
-        _guardrailIds = guardrailIds;
-        _guardrailAliases = null;
+        _aiContexts.With(contextIds);
         return this;
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by alias.
+    /// Adds stored <see cref="Models.AIContext"/> entries by alias on top of the profile's configured
+    /// contexts (additive). Aliases are resolved to IDs by the service layer.
     /// </summary>
-    /// <param name="guardrailAliases">The guardrail aliases to apply.</param>
-    /// <returns>The builder for chaining.</returns>
+    public AIChatBuilder WithContexts(params string[] contextAliases)
+    {
+        _aiContexts.WithByAlias(contextAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured contexts with this set (replace). Pass an empty array to
+    /// explicitly use no contexts.
+    /// </summary>
+    public AIChatBuilder SetContexts(params Guid[] contextIds)
+    {
+        _aiContexts.Set(contextIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured contexts with this set by alias (replace). Aliases are resolved
+    /// to IDs by the service layer.
+    /// </summary>
+    public AIChatBuilder SetContexts(params string[] contextAliases)
+    {
+        _aiContexts.SetByAlias(contextAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds guardrails on top of the profile's configured guardrails (additive). Use
+    /// <see cref="SetGuardrails(Guid[])"/> to fully replace.
+    /// </summary>
+    public AIChatBuilder WithGuardrails(params Guid[] guardrailIds)
+    {
+        _aiGuardrails.With(guardrailIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds guardrails by alias on top of the profile's configured guardrails (additive). Aliases are
+    /// resolved to IDs by the service layer.
+    /// </summary>
     public AIChatBuilder WithGuardrails(params string[] guardrailAliases)
     {
-        _guardrailAliases = guardrailAliases;
-        _guardrailIds = [];
+        _aiGuardrails.WithByAlias(guardrailAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set (replace).
+    /// </summary>
+    public AIChatBuilder SetGuardrails(params Guid[] guardrailIds)
+    {
+        _aiGuardrails.Set(guardrailIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set by alias (replace). Aliases are resolved
+    /// to IDs by the service layer.
+    /// </summary>
+    public AIChatBuilder SetGuardrails(params string[] guardrailAliases)
+    {
+        _aiGuardrails.SetByAlias(guardrailAliases);
         return this;
     }
 
@@ -259,15 +318,15 @@ public sealed class AIChatBuilder
     /// </summary>
     internal IEnumerable<AIRequestContextItem>? ContextItems => _contextItems;
 
-    /// <summary>
-    /// Gets the guardrail IDs configured on this builder.
-    /// </summary>
-    internal IReadOnlyList<Guid> GuardrailIds => _guardrailIds;
+    internal IReadOnlyList<Guid>? ContextIds => _aiContexts.Ids;
+    internal IReadOnlyList<string>? ContextAliases => _aiContexts.Aliases;
+    internal IReadOnlyList<Guid> AdditionalContextIds => _aiContexts.AdditionalIds;
+    internal IReadOnlyList<string>? AdditionalContextAliases => _aiContexts.AdditionalAliases;
 
-    /// <summary>
-    /// Gets the guardrail aliases configured on this builder, if any.
-    /// </summary>
-    internal IReadOnlyList<string>? GuardrailAliases => _guardrailAliases;
+    internal IReadOnlyList<Guid> GuardrailIds => _aiGuardrails.Ids;
+    internal IReadOnlyList<string>? GuardrailAliases => _aiGuardrails.Aliases;
+    internal IReadOnlyList<Guid> AdditionalGuardrailIds => _aiGuardrails.AdditionalIds;
+    internal IReadOnlyList<string>? AdditionalGuardrailAliases => _aiGuardrails.AdditionalAliases;
 
     /// <summary>
     /// Gets the additional properties configured on this builder.
@@ -285,10 +344,24 @@ public sealed class AIChatBuilder
     internal bool IsPassThrough => _isPassThrough;
 
     /// <summary>
-    /// Sets resolved guardrail IDs from alias lookup. Used by the service layer
-    /// to resolve aliases before execution.
+    /// Sets resolved guardrail IDs from alias lookup (replace mode). Used by the service layer.
     /// </summary>
-    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _guardrailIds = guardrailIds;
+    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedIds(guardrailIds);
+
+    /// <summary>
+    /// Sets resolved additional guardrail IDs from alias lookup (additive mode). Used by the service layer.
+    /// </summary>
+    internal void SetResolvedAdditionalGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedAdditionalIds(guardrailIds);
+
+    /// <summary>
+    /// Sets resolved context IDs from alias lookup (replace mode). Used by the service layer.
+    /// </summary>
+    internal void SetResolvedContextIds(IReadOnlyList<Guid> contextIds) => _aiContexts.SetResolvedIds(contextIds);
+
+    /// <summary>
+    /// Sets resolved additional context IDs from alias lookup (additive mode). Used by the service layer.
+    /// </summary>
+    internal void SetResolvedAdditionalContextIds(IReadOnlyList<Guid> contextIds) => _aiContexts.SetResolvedAdditionalIds(contextIds);
 
     /// <summary>
     /// Validates the builder configuration.
@@ -319,10 +392,8 @@ public sealed class AIChatBuilder
             context.SetValue(Constants.ContextKeys.FeatureAlias, Alias);
         }
 
-        if (_guardrailIds.Count > 0)
-        {
-            context.SetValue(Constants.ContextKeys.GuardrailIdsOverride, _guardrailIds);
-        }
+        _aiGuardrails.WriteToContext(context);
+        _aiContexts.WriteToContext(context);
 
         if (_chatOptions is not null)
         {

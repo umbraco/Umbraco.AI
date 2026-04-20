@@ -2,6 +2,7 @@ using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Prompt.Core.Prompts;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Guardrails;
 
@@ -31,6 +32,12 @@ internal sealed class PromptGuardrailResolver : IAIGuardrailResolver
     /// <inheritdoc />
     public async Task<AIGuardrailResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
+        // Override suppresses source-level guardrails entirely.
+        if (_runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(CoreConstants.ContextKeys.GuardrailIdsOverride) is not null)
+        {
+            return AIGuardrailResolverResult.Empty;
+        }
+
         var promptId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.PromptId);
         if (!promptId.HasValue)
         {
@@ -44,25 +51,6 @@ internal sealed class PromptGuardrailResolver : IAIGuardrailResolver
         }
 
         var guardrails = await _guardrailService.GetGuardrailsByIdsAsync(prompt.GuardrailIds, cancellationToken);
-
-        var allRules = new List<AIGuardrailRule>();
-        var resolvedIds = new List<Guid>();
-
-        foreach (var guardrail in guardrails)
-        {
-            resolvedIds.Add(guardrail.Id);
-            foreach (var rule in guardrail.Rules.OrderBy(r => r.SortOrder))
-            {
-                rule.GuardrailName = guardrail.Name;
-                allRules.Add(rule);
-            }
-        }
-
-        return new AIGuardrailResolverResult
-        {
-            Rules = allRules,
-            GuardrailIds = resolvedIds,
-            Source = prompt.Name
-        };
+        return AIGuardrailResolverResult.FromGuardrails(guardrails, source: prompt.Name);
     }
 }

@@ -15,12 +15,12 @@
         "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-management"
     },
     "dependencies": {
-      "chart.js": "^4.5.1",
-      "diff": "^8.0.3",
-      "@umbraco-cms/backoffice": "^17.1.0"
+        "@umbraco-cms/backoffice": "^17.1.0",
+        "chart.js": "^4.5.1",
+        "diff": "^8.0.3"
     },
     "devDependencies": {
-        "@hey-api/openapi-ts": "0.85.0",
+        "@hey-api/openapi-ts": "0.96.0",
         "@microsoft/api-extractor": "^7.55.1",
         "@types/diff": "^7.0.2",
         "chalk": "^5.6.0",

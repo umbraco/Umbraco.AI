@@ -2,9 +2,9 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetFileData, GetFileErrors, GetFileResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetFileData, GetFileErrors, GetFileResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponse, StreamAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
-export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
+export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
      * You can provide a client instance returned by `createClient()` instead of
      * individual options. This might be also useful if you want to implement a
@@ -21,12 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export class AgentsService {
     public static getAllAgents<ThrowOnError extends boolean = false>(options?: Options<GetAllAgentsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllAgentsResponses, GetAllAgentsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents',
             ...options
         });
@@ -34,12 +29,7 @@ export class AgentsService {
     
     public static createAgent<ThrowOnError extends boolean = false>(options?: Options<CreateAgentData, ThrowOnError>) {
         return (options?.client ?? client).post<CreateAgentResponses, CreateAgentErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents',
             ...options,
             headers: {
@@ -51,12 +41,7 @@ export class AgentsService {
     
     public static deleteAgent<ThrowOnError extends boolean = false>(options: Options<DeleteAgentData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteAgentResponses, DeleteAgentErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}',
             ...options
         });
@@ -64,12 +49,7 @@ export class AgentsService {
     
     public static getAgentByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetAgentByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetAgentByIdOrAliasResponses, GetAgentByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}',
             ...options
         });
@@ -77,12 +57,7 @@ export class AgentsService {
     
     public static updateAgent<ThrowOnError extends boolean = false>(options: Options<UpdateAgentData, ThrowOnError>) {
         return (options.client ?? client).put<UpdateAgentResponses, UpdateAgentErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}',
             ...options,
             headers: {
@@ -94,12 +69,7 @@ export class AgentsService {
     
     public static runAgent<ThrowOnError extends boolean = false>(options: Options<RunAgentData, ThrowOnError>) {
         return (options.client ?? client).post<RunAgentResponses, RunAgentErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/run',
             ...options,
             headers: {
@@ -109,14 +79,9 @@ export class AgentsService {
         });
     }
     
-    public static streamAgent<ThrowOnError extends boolean = false>(options: Options<StreamAgentData, ThrowOnError>) {
+    public static streamAgent<ThrowOnError extends boolean = false>(options: Options<StreamAgentData, ThrowOnError, StreamAgentResponse>) {
         return (options.client ?? client).sse.post<StreamAgentResponses, StreamAgentErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream',
             ...options,
             headers: {
@@ -126,14 +91,9 @@ export class AgentsService {
         });
     }
     
-    public static streamAgentAGUI<ThrowOnError extends boolean = false>(options: Options<StreamAgentAGUIData, ThrowOnError>) {
+    public static streamAgentAGUI<ThrowOnError extends boolean = false>(options: Options<StreamAgentAGUIData, ThrowOnError, StreamAgentAGUIResponse>) {
         return (options.client ?? client).sse.post<StreamAgentAGUIResponses, StreamAgentAGUIErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/stream-agui',
             ...options,
             headers: {
@@ -145,12 +105,7 @@ export class AgentsService {
     
     public static agentAliasExists<ThrowOnError extends boolean = false>(options: Options<AgentAliasExistsData, ThrowOnError>) {
         return (options.client ?? client).get<AgentAliasExistsResponses, AgentAliasExistsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/{alias}/exists',
             ...options
         });
@@ -158,12 +113,7 @@ export class AgentsService {
     
     public static getAgentSurfaces<ThrowOnError extends boolean = false>(options?: Options<GetAgentSurfacesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAgentSurfacesResponses, GetAgentSurfacesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/surfaces',
             ...options
         });
@@ -171,12 +121,7 @@ export class AgentsService {
     
     public static getAgentWorkflows<ThrowOnError extends boolean = false>(options?: Options<GetAgentWorkflowsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAgentWorkflowsResponses, GetAgentWorkflowsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents/workflows',
             ...options
         });
@@ -185,9 +130,6 @@ export class AgentsService {
 
 export class FilesService {
     public static getFile<ThrowOnError extends boolean = false>(options: Options<GetFileData, ThrowOnError>) {
-        return (options.client ?? client).get<GetFileResponses, GetFileErrors, ThrowOnError>({
-            url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}',
-            ...options
-        });
+        return (options.client ?? client).get<GetFileResponses, GetFileErrors, ThrowOnError>({ url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}', ...options });
     }
 }

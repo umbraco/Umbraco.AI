@@ -96,7 +96,7 @@ try {
     // Post-process generated files to fix AGUI casing
     // hey-api transforms AGUI -> Agui for PascalCase consistency
     // We need to preserve the all-caps AGUI naming from the OpenAPI spec
-    const filesToFix = ["types.gen.ts", "sdk.gen.ts"];
+    const filesToFix = ["types.gen.ts", "sdk.gen.ts", "index.ts"];
     let aguiFixed = false;
     for (const file of filesToFix) {
         const filePath = join(outputDir, file);

@@ -4,7 +4,7 @@ import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
 import type { CreatePromptData, CreatePromptErrors, CreatePromptResponses, DeletePromptData, DeletePromptErrors, DeletePromptResponses, ExecutePromptData, ExecutePromptErrors, ExecutePromptResponses, GetAllPromptsData, GetAllPromptsErrors, GetAllPromptsResponses, GetDocumentTypeAliasesData, GetDocumentTypeAliasesErrors, GetDocumentTypeAliasesResponses, GetPromptByIdOrAliasData, GetPromptByIdOrAliasErrors, GetPromptByIdOrAliasResponses, GetPropertyAliasesData, GetPropertyAliasesErrors, GetPropertyAliasesResponses, PromptAliasExistsData, PromptAliasExistsErrors, PromptAliasExistsResponses, UpdatePromptData, UpdatePromptErrors, UpdatePromptResponses } from './types.gen';
 
-export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
+export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
      * You can provide a client instance returned by `createClient()` instead of
      * individual options. This might be also useful if you want to implement a
@@ -21,12 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export class PromptsService {
     public static getAllPrompts<ThrowOnError extends boolean = false>(options?: Options<GetAllPromptsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllPromptsResponses, GetAllPromptsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts',
             ...options
         });
@@ -34,12 +29,7 @@ export class PromptsService {
     
     public static createPrompt<ThrowOnError extends boolean = false>(options?: Options<CreatePromptData, ThrowOnError>) {
         return (options?.client ?? client).post<CreatePromptResponses, CreatePromptErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts',
             ...options,
             headers: {
@@ -51,12 +41,7 @@ export class PromptsService {
     
     public static promptAliasExists<ThrowOnError extends boolean = false>(options: Options<PromptAliasExistsData, ThrowOnError>) {
         return (options.client ?? client).get<PromptAliasExistsResponses, PromptAliasExistsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts/{alias}/exists',
             ...options
         });
@@ -64,12 +49,7 @@ export class PromptsService {
     
     public static deletePrompt<ThrowOnError extends boolean = false>(options: Options<DeletePromptData, ThrowOnError>) {
         return (options.client ?? client).delete<DeletePromptResponses, DeletePromptErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts/{promptIdOrAlias}',
             ...options
         });
@@ -77,12 +57,7 @@ export class PromptsService {
     
     public static getPromptByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetPromptByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetPromptByIdOrAliasResponses, GetPromptByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts/{promptIdOrAlias}',
             ...options
         });
@@ -90,12 +65,7 @@ export class PromptsService {
     
     public static updatePrompt<ThrowOnError extends boolean = false>(options: Options<UpdatePromptData, ThrowOnError>) {
         return (options.client ?? client).put<UpdatePromptResponses, UpdatePromptErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts/{promptIdOrAlias}',
             ...options,
             headers: {
@@ -107,12 +77,7 @@ export class PromptsService {
     
     public static executePrompt<ThrowOnError extends boolean = false>(options: Options<ExecutePromptData, ThrowOnError>) {
         return (options.client ?? client).post<ExecutePromptResponses, ExecutePromptErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts/{promptIdOrAlias}/execute',
             ...options,
             headers: {
@@ -126,12 +91,7 @@ export class PromptsService {
 export class UtilsService {
     public static getDocumentTypeAliases<ThrowOnError extends boolean = false>(options?: Options<GetDocumentTypeAliasesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetDocumentTypeAliasesResponses, GetDocumentTypeAliasesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/utils/document-type-aliases',
             ...options
         });
@@ -139,12 +99,7 @@ export class UtilsService {
     
     public static getPropertyAliases<ThrowOnError extends boolean = false>(options?: Options<GetPropertyAliasesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetPropertyAliasesResponses, GetPropertyAliasesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/utils/property-aliases',
             ...options
         });

@@ -5,6 +5,8 @@ using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Events;
@@ -63,6 +65,8 @@ public class AIChatServiceTests
             });
 
         var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
+        var toolCollection = new AIToolCollection(() => []);
+        var functionFactory = new Umbraco.AI.Core.Tools.AIFunctionFactory(new AIToolScopeCollection(() => []));
 
         _service = new AIChatService(
             _clientFactoryMock.Object,
@@ -72,7 +76,9 @@ public class AIChatServiceTests
             _eventAggregatorMock.Object,
             _contextAccessorMock.Object,
             _scopeProviderMock.Object,
-            contributorCollection);
+            contributorCollection,
+            toolCollection,
+            functionFactory);
     }
 
     #region GetChatResponseAsync - Default profile
@@ -564,6 +570,137 @@ public class AIChatServiceTests
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("does not support chat capability");
+    }
+
+    #endregion
+
+    #region Builder WithTools
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithTools_AppendsResolvedFunctionsToChatOptions()
+    {
+        // Arrange
+        var tool = new FakeTool(id: "my-tool", name: "My Tool", scopeId: "test-scope");
+        var service = CreateServiceWithTools(tool);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("default-chat")
+            .WithCapability(AICapability.Chat)
+            .WithModel("openai", "gpt-4")
+            .Build();
+
+        var fakeChatClient = new FakeChatClient("ok");
+
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeChatClient);
+
+        var messages = new List<ChatMessage> { new(ChatRole.User, "hi") };
+
+        // Act
+        await service.GetChatResponseAsync(
+            chat => chat.WithAlias("inline").WithTools("my-tool"),
+            messages);
+
+        // Assert
+        var receivedOptions = fakeChatClient.ReceivedOptions.Single();
+        receivedOptions.ShouldNotBeNull();
+        receivedOptions!.Tools.ShouldNotBeNull();
+        receivedOptions.Tools!.Count.ShouldBe(1);
+        receivedOptions.Tools[0].Name.ShouldBe("my-tool");
+    }
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithTools_AppendsToExistingChatOptionsTools()
+    {
+        // Arrange
+        var builderTool = new FakeTool(id: "builder-tool", name: "Builder Tool", scopeId: "test-scope");
+        var service = CreateServiceWithTools(builderTool);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("default-chat")
+            .WithCapability(AICapability.Chat)
+            .WithModel("openai", "gpt-4")
+            .Build();
+
+        var fakeChatClient = new FakeChatClient("ok");
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeChatClient);
+
+        var preExisting = Microsoft.Extensions.AI.AIFunctionFactory.Create(
+            () => "preexisting", name: "preexisting-tool");
+        var callerOptions = new ChatOptions { Tools = [preExisting] };
+
+        var messages = new List<ChatMessage> { new(ChatRole.User, "hi") };
+
+        // Act
+        await service.GetChatResponseAsync(
+            chat => chat
+                .WithAlias("inline")
+                .WithChatOptions(callerOptions)
+                .WithTools("builder-tool"),
+            messages);
+
+        // Assert — both caller-supplied and builder-supplied tools are present
+        var receivedOptions = fakeChatClient.ReceivedOptions.Single();
+        receivedOptions!.Tools!.Select(t => t.Name).ShouldBe(["preexisting-tool", "builder-tool"]);
+    }
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithUnknownToolId_ThrowsInvalidOperationException()
+    {
+        // Arrange — service has no tools registered
+        var service = CreateServiceWithTools();
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("default-chat")
+            .WithCapability(AICapability.Chat)
+            .WithModel("openai", "gpt-4")
+            .Build();
+
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FakeChatClient("ok"));
+
+        var messages = new List<ChatMessage> { new(ChatRole.User, "hi") };
+
+        // Act
+        var act = () => service.GetChatResponseAsync(
+            chat => chat.WithAlias("inline").WithTools("does-not-exist"),
+            messages);
+
+        // Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("does-not-exist");
+    }
+
+    private AIChatService CreateServiceWithTools(params IAITool[] tools)
+    {
+        var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
+        var toolCollection = new AIToolCollection(() => tools);
+        var functionFactory = new Umbraco.AI.Core.Tools.AIFunctionFactory(new AIToolScopeCollection(() => []));
+
+        return new AIChatService(
+            _clientFactoryMock.Object,
+            _profileServiceMock.Object,
+            new Mock<IAIGuardrailService>().Object,
+            _optionsMock.Object,
+            _eventAggregatorMock.Object,
+            _contextAccessorMock.Object,
+            _scopeProviderMock.Object,
+            contributorCollection,
+            toolCollection,
+            functionFactory);
     }
 
     #endregion

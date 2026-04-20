@@ -11,6 +11,8 @@ using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
@@ -472,6 +474,11 @@ public class EndToEndServiceFlowTests : IDisposable
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
+
+        // Tool system (empty in end-to-end flow — tools are exercised via AIChatServiceTests)
+        services.AddSingleton(new AIToolScopeCollection(() => []));
+        services.AddSingleton(new AIToolCollection(() => []));
+        services.AddSingleton<IAIFunctionFactory, Umbraco.AI.Core.Tools.AIFunctionFactory>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();

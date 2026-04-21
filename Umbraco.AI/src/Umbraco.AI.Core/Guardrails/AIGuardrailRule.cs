@@ -48,6 +48,13 @@ public sealed class AIGuardrailRule
     public string? GuardrailName { get; set; }
 
     /// <summary>
+    /// The ID of the parent guardrail this rule belongs to. Populated during resolution so the
+    /// aggregator can dedupe rules whose guardrail was already contributed by an earlier resolver.
+    /// Distinct from <see cref="Id"/>, which is the rule's own identifier.
+    /// </summary>
+    public Guid? GuardrailId { get; set; }
+
+    /// <summary>
     /// Controls evaluation order within the guardrail.
     /// </summary>
     public int SortOrder { get; set; }

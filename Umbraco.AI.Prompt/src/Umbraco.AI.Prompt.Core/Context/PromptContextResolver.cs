@@ -2,6 +2,7 @@ using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Prompt.Core.Prompts;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Context;
 
@@ -37,6 +38,13 @@ internal sealed class PromptContextResolver : IAIContextResolver
     /// <inheritdoc />
     public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
+        // A full override (execution options or builder SetContexts) suppresses this resolver; the
+        // ProfileContextResolver surfaces the override ID set so it's emitted once.
+        if (_runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(CoreConstants.ContextKeys.ContextIdsOverride) is not null)
+        {
+            return AIContextResolverResult.Empty;
+        }
+
         var promptId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.PromptId);
         if (!promptId.HasValue)
         {
@@ -44,18 +52,6 @@ internal sealed class PromptContextResolver : IAIContextResolver
         }
 
         var prompt = await _promptService.GetPromptAsync(promptId.Value, cancellationToken);
-
-        // Check for context IDs override (set by execution options for test scenarios)
-        var contextIdsOverride = _runtimeContextAccessor.Context?.GetValue<IReadOnlyList<Guid>>(Constants.MetadataKeys.ContextIdsOverride);
-        if (contextIdsOverride is not null)
-        {
-            if (contextIdsOverride.Count == 0)
-            {
-                return AIContextResolverResult.Empty;
-            }
-
-            return await ResolveContextIdsAsync(contextIdsOverride, prompt?.Name, cancellationToken);
-        }
 
         if (prompt is null || prompt.ContextIds.Count == 0)
         {

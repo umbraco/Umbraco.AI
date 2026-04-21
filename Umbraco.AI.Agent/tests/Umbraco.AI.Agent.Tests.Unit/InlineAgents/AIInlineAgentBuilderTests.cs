@@ -245,4 +245,81 @@ public class AIInlineAgentBuilderTests
         // Assert
         builder.ChatOptions.ShouldBeNull();
     }
+
+    [Fact]
+    public void Build_WithContexts_ById_WritesToConfigContextIds_Additive()
+    {
+        // Arrange
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var builder = new AIInlineAgentBuilder();
+        builder.WithAlias("test-agent").WithContexts(a, b);
+
+        // Act
+        var agent = builder.Build();
+
+        // Assert — WithContexts is additive: contexts flow via agent.Config.ContextIds so
+        // AgentContextResolver emits them alongside the profile's contexts.
+        var config = (AIStandardAgentConfig)agent.Config!;
+        config.ContextIds.ShouldBe([a, b]);
+    }
+
+    [Fact]
+    public void WithContexts_ByAlias_ExposesAdditionalAliases()
+    {
+        // Arrange
+        var builder = new AIInlineAgentBuilder();
+        builder.WithAlias("test-agent").WithContexts("brand", "guidelines");
+
+        // Assert
+        builder.AdditionalContextAliases.ShouldBe(["brand", "guidelines"]);
+        builder.ContextAliases.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithContexts_ByAlias_ThenSetResolved_PopulatesConfig()
+    {
+        // Arrange
+        var resolvedId = Guid.NewGuid();
+        var builder = new AIInlineAgentBuilder();
+        builder.WithAlias("test-agent").WithContexts("brand");
+
+        // Act
+        builder.SetResolvedAdditionalContextIds([resolvedId]);
+        var agent = builder.Build();
+
+        // Assert
+        var config = (AIStandardAgentConfig)agent.Config!;
+        config.ContextIds.ShouldBe([resolvedId]);
+    }
+
+    [Fact]
+    public void SetContexts_ById_ExposesReplaceContextIds()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var builder = new AIInlineAgentBuilder();
+        builder.WithAlias("test-agent").SetContexts(id);
+
+        // Assert — SetContexts is replace: carried on the builder and emitted as a runtime override
+        // key; does not touch agent.Config.ContextIds.
+        builder.ContextIds.ShouldBe([id]);
+        var agent = builder.Build();
+        ((AIStandardAgentConfig)agent.Config!).ContextIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Build_WithoutContexts_HasEmptyContextIds()
+    {
+        // Arrange
+        var builder = new AIInlineAgentBuilder();
+        builder.WithAlias("test-agent");
+
+        // Act
+        var agent = builder.Build();
+
+        // Assert
+        var config = (AIStandardAgentConfig)agent.Config!;
+        config.ContextIds.ShouldBeEmpty();
+    }
 }

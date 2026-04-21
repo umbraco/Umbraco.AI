@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -72,6 +73,7 @@ public class AIChatServiceTests
             _clientFactoryMock.Object,
             _profileServiceMock.Object,
             new Mock<IAIGuardrailService>().Object,
+            new Mock<IAIContextService>().Object,
             _optionsMock.Object,
             _eventAggregatorMock.Object,
             _contextAccessorMock.Object,
@@ -694,6 +696,7 @@ public class AIChatServiceTests
             _clientFactoryMock.Object,
             _profileServiceMock.Object,
             new Mock<IAIGuardrailService>().Object,
+            new Mock<IAIContextService>().Object,
             _optionsMock.Object,
             _eventAggregatorMock.Object,
             _contextAccessorMock.Object,

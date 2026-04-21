@@ -82,3 +82,4 @@ After installation, create a connection in the Umbraco backoffice:
 ## License
 
 This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.
+

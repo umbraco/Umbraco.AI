@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -470,6 +471,10 @@ public class EndToEndServiceFlowTests : IDisposable
         // Guardrail system
         services.AddSingleton<IAIGuardrailRepository, InMemoryAIGuardrailRepository>();
         services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
+
+        // Context system
+        services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
+        services.AddSingleton<IAIContextService, AIContextService>();
 
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();

@@ -143,7 +143,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
                     </div>
                 </umb-property-layout>
 
-                <umb-property-layout label="Contexts" description="Knowledge contexts to include in test execution (optional)">
+                <umb-property-layout label="Contexts" description="Override the target's contexts for this test run (optional - leave empty to use the target's own contexts)">
                     <div slot="editor">
                         <uai-context-picker
                             multiple

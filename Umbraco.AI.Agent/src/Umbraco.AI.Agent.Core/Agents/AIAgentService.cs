@@ -534,6 +534,8 @@ internal sealed class AIAgentService : IAIAgentService
 
         var stopwatch = Stopwatch.StartNew();
         bool isSuccess = false;
+        string? responseText = null;
+        Exception? capturedException = null;
 
         try
         {
@@ -546,8 +548,14 @@ internal sealed class AIAgentService : IAIAgentService
                 cancellationToken);
 
             var response = await mafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            responseText = response.Text;
             isSuccess = true;
             return response;
+        }
+        catch (Exception ex)
+        {
+            capturedException = ex;
+            throw;
         }
         finally
         {
@@ -557,6 +565,10 @@ internal sealed class AIAgentService : IAIAgentService
                 stopwatch.Elapsed,
                 isSuccess,
                 eventMessages)
+                {
+                    ResponseText = responseText,
+                    Exception = capturedException,
+                }
                 .WithStateFrom(executingNotification);
 
             await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
@@ -762,15 +774,23 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         bool isSuccess = false;
+        string? responseText = null;
+        Exception? capturedException = null;
         try
         {
             var response = await context.MafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            responseText = response.Text;
             isSuccess = true;
             return response;
         }
+        catch (Exception ex)
+        {
+            capturedException = ex;
+            throw;
+        }
         finally
         {
-            await PublishExecutedNotificationAsync(context, isSuccess);
+            await PublishExecutedNotificationAsync(context, isSuccess, responseText, capturedException);
         }
     }
 
@@ -924,9 +944,14 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Publishes the executed notification with duration and success status.
+    /// Publishes the executed notification with duration, success status, and optional
+    /// response text / captured exception for non-streaming callers.
     /// </summary>
-    private async Task PublishExecutedNotificationAsync(AgentExecutionContext context, bool isSuccess)
+    private async Task PublishExecutedNotificationAsync(
+        AgentExecutionContext context,
+        bool isSuccess,
+        string? responseText = null,
+        Exception? exception = null)
     {
         var executedNotification = new AIAgentExecutedNotification(
             context.Agent,
@@ -934,6 +959,10 @@ internal sealed class AIAgentService : IAIAgentService
             context.Stopwatch.Elapsed,
             isSuccess,
             context.EventMessages)
+            {
+                ResponseText = responseText,
+                Exception = exception,
+            }
             .WithStateFrom(context.ExecutingNotification);
 
         await _eventAggregator.PublishAsync(executedNotification);

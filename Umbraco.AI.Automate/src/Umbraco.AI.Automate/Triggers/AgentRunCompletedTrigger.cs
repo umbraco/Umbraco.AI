@@ -1,5 +1,4 @@
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.Automate.Core.Execution;
 using Umbraco.Automate.Core.Triggers;
 
 namespace Umbraco.AI.Automate.Triggers;
@@ -15,17 +14,12 @@ namespace Umbraco.AI.Automate.Triggers;
 public sealed class AgentRunCompletedTrigger
     : NotificationTriggerBase<AgentRunCompletedTriggerSettings, AgentRunCompletedTriggerOutput, AIAgentExecutedNotification>
 {
-    private readonly IExecutionContextAccessor _executionContextAccessor;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentRunCompletedTrigger"/> class.
     /// </summary>
-    public AgentRunCompletedTrigger(
-        TriggerInfrastructure infrastructure,
-        IExecutionContextAccessor executionContextAccessor)
+    public AgentRunCompletedTrigger(TriggerInfrastructure infrastructure)
         : base(infrastructure)
     {
-        _executionContextAccessor = executionContextAccessor;
     }
 
     /// <inheritdoc />
@@ -49,9 +43,13 @@ public sealed class AgentRunCompletedTrigger
         // visible to that workflow's own steps, so there is no observability gap. If someone has
         // a legitimate need to chain workflows via agent runs, that should be a conscious opt-in.
         //
-        // If Umbraco.Automate later adds a first-class "skip self-triggered" mechanism, replace
-        // this with that mechanism.
-        if (_executionContextAccessor.ExecutionContext is not null)
+        // We can't use Umbraco.Automate's IExecutionContextAccessor here because that AsyncLocal
+        // is only populated for the duration of AutomationExecutor.StartWorkflow — once the
+        // workflow is enqueued and WorkflowCore picks up the step body on its own scheduler
+        // thread, the accessor returns null. AutomateAgentRunScope is our own AsyncLocal, set by
+        // RunAgentAction around the agent service call, which flows through the notification
+        // publish in the service's finally block.
+        if (AutomateAgentRunScope.IsActive)
         {
             yield break;
         }

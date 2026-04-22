@@ -5,6 +5,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Helpers;
+using Umbraco.AI.Automate.Triggers;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Cms.Core.Services;
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -125,6 +126,12 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             {
                 UserGroupIds = userGroupIds,
             };
+
+            // Mark the async flow as Automate-driven so the agent run triggers
+            // (AgentRunCompletedTrigger / AgentRunFailedTrigger) suppress themselves
+            // for this run and we don't recurse into an unbounded loop when an
+            // automation listens to the same trigger that its RunAgent step emits.
+            using var _ = AutomateAgentRunScope.Enter();
 
             AgentResponse response = await _agentService.RunAgentAsync(
                 agent.Id,

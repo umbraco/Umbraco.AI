@@ -4,7 +4,6 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Triggers;
-using Umbraco.Automate.Core.Execution;
 using Umbraco.Automate.Core.Settings;
 using Umbraco.Automate.Core.Triggers;
 using Umbraco.Cms.Core.Events;
@@ -87,32 +86,21 @@ public class AgentRunCompletedTriggerTests
     {
         // Loop prevention: runs that happen inside an active Automate workflow must not
         // re-fire the trigger, otherwise an agent action in a workflow would cause unbounded
-        // recursion. Covered by the IExecutionContextAccessor check in the trigger.
-        var trigger = CreateTrigger(insideWorkflow: true);
+        // recursion. Covered by the AutomateAgentRunScope check in the trigger.
+        var trigger = CreateTrigger();
         var notification = CreateNotification(isSuccess: true);
 
-        trigger.MapEvent(notification).ShouldBeEmpty();
+        using (AutomateAgentRunScope.Enter())
+        {
+            trigger.MapEvent(notification).ShouldBeEmpty();
+        }
     }
 
-    private static AgentRunCompletedTrigger CreateTrigger(bool insideWorkflow = false)
+    private static AgentRunCompletedTrigger CreateTrigger()
     {
         var infrastructure = new TriggerInfrastructure(new Mock<IEditableModelResolver>().Object);
-        var accessor = new Mock<IExecutionContextAccessor>();
-        accessor.Setup(a => a.ExecutionContext).Returns(insideWorkflow ? CreateFakeContext() : null);
-        return new AgentRunCompletedTrigger(infrastructure, accessor.Object);
+        return new AgentRunCompletedTrigger(infrastructure);
     }
-
-    private static AutomationExecutionContext CreateFakeContext() => new()
-    {
-        ServiceAccountKey = Guid.NewGuid(),
-        WorkspaceId = Guid.NewGuid(),
-        WorkspaceName = "Test Workspace",
-        AutomationId = Guid.NewGuid(),
-        AutomationName = "Test Automation",
-        RunId = Guid.NewGuid(),
-        InitiatorType = "user",
-        AllowedConnections = Array.Empty<Guid>(),
-    };
 
     private static AIAgentExecutedNotification CreateNotification(
         bool isSuccess,

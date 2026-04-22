@@ -4,7 +4,6 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Triggers;
-using Umbraco.Automate.Core.Execution;
 using Umbraco.Automate.Core.Settings;
 using Umbraco.Automate.Core.Triggers;
 using Umbraco.Cms.Core.Events;
@@ -89,31 +88,20 @@ public class AgentRunFailedTriggerTests
         // Otherwise a workflow that reacts to failures by running another agent (e.g. a
         // retry/remediation flow) would spiral on repeated failures. See the trigger for
         // full rationale.
-        var trigger = CreateTrigger(insideWorkflow: true);
+        var trigger = CreateTrigger();
         var notification = CreateNotification(isSuccess: false, exception: new InvalidOperationException("boom"));
 
-        trigger.MapEvent(notification).ShouldBeEmpty();
+        using (AutomateAgentRunScope.Enter())
+        {
+            trigger.MapEvent(notification).ShouldBeEmpty();
+        }
     }
 
-    private static AgentRunFailedTrigger CreateTrigger(bool insideWorkflow = false)
+    private static AgentRunFailedTrigger CreateTrigger()
     {
         var infrastructure = new TriggerInfrastructure(new Mock<IEditableModelResolver>().Object);
-        var accessor = new Mock<IExecutionContextAccessor>();
-        accessor.Setup(a => a.ExecutionContext).Returns(insideWorkflow ? CreateFakeContext() : null);
-        return new AgentRunFailedTrigger(infrastructure, accessor.Object);
+        return new AgentRunFailedTrigger(infrastructure);
     }
-
-    private static AutomationExecutionContext CreateFakeContext() => new()
-    {
-        ServiceAccountKey = Guid.NewGuid(),
-        WorkspaceId = Guid.NewGuid(),
-        WorkspaceName = "Test Workspace",
-        AutomationId = Guid.NewGuid(),
-        AutomationName = "Test Automation",
-        RunId = Guid.NewGuid(),
-        InitiatorType = "user",
-        AllowedConnections = Array.Empty<Guid>(),
-    };
 
     private static AIAgentExecutedNotification CreateNotification(
         bool isSuccess,

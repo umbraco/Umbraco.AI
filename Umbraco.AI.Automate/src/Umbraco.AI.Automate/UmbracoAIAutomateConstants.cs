@@ -30,6 +30,16 @@ public static class UmbracoAIAutomateConstants
         /// Trigger alias for the AI agent trigger.
         /// </summary>
         public const string AgentTrigger = "umbracoAI.agentTrigger";
+
+        /// <summary>
+        /// Trigger alias for the AI agent run completed trigger.
+        /// </summary>
+        public const string AgentRunCompleted = "umbracoAI.agentRunCompleted";
+
+        /// <summary>
+        /// Trigger alias for the AI agent run failed trigger.
+        /// </summary>
+        public const string AgentRunFailed = "umbracoAI.agentRunFailed";
     }
 
     /// <summary>

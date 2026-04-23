@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import chalk from "chalk";
 import { createClient, defaultPlugins } from "@hey-api/openapi-ts";
 

@@ -77,6 +77,7 @@
     <PackageVersion Include="Azure.Identity" Version="1.18.0" />
     <PackageVersion Include="Google.GenAI" Version="0.13.1" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.3.0" />
+    <PackageVersion Include="Mistral.SDK" Version="2.3.1" />
   </ItemGroup>
 
   <!-- Shared dependencies -->

@@ -27,6 +27,9 @@ parameters:
           - name: Umbraco.AI.MicrosoftFoundry
             changeVar: MicrosoftfoundryChanged
             hasNpm: false
+          - name: Umbraco.AI.Mistral
+            changeVar: MistralChanged
+            hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search
             changeVar: SearchChanged

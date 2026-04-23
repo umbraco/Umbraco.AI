@@ -75,6 +75,9 @@
   <Folder Name="/Providers/MicrosoftFoundry/">
     <Project Path="Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj" />
   </Folder>
+  <Folder Name="/Providers/Mistral/">
+    <Project Path="Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" />
+  </Folder>
   <Folder Name="/Providers/OpenAI/">
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
   </Folder>

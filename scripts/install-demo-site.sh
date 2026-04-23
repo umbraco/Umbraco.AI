@@ -170,6 +170,10 @@ add_product_projects "Umbraco.AI.Google" "Google"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Amazon"
 
+# Step 10.1.1: Add Mistral provider projects
+echo "Adding Umbraco.AI.Mistral projects..."
+add_product_projects "Umbraco.AI.Mistral" "Mistral"
+
 # Step 10.2: Add Search projects
 echo "Adding Umbraco.AI.Search projects..."
 add_product_projects "Umbraco.AI.Search" "Search"
@@ -209,6 +213,11 @@ fi
 # Amazon provider
 if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+fi
+
+# Mistral provider
+if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

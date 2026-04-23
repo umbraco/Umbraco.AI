@@ -45,7 +45,8 @@ export class UaiTestRunInlineButtonElement extends UmbLitElement {
         return html`
             <uui-button
                 compact
-                look="secondary"
+                look="default"
+                color="default"
                 label="Run"
                 .state=${this._state}
                 @click=${this.#onClick}

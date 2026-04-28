@@ -44,8 +44,7 @@ public class RunAutomationToolTests
                 "ai-agent",
                 It.IsAny<string?>(),
                 It.IsAny<Dictionary<string, object?>?>(),
-                It.IsAny<CancellationToken>(),
-                false))
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestRunId);
 
         var tool = CreateTool();
@@ -160,10 +159,9 @@ public class RunAutomationToolTests
                 It.IsAny<string>(),
                 It.IsAny<string?>(),
                 It.IsAny<Dictionary<string, object?>?>(),
-                It.IsAny<CancellationToken>(),
-                false))
-            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken, bool>(
-                (_, _, _, triggerData, _, _) => capturedTriggerData = triggerData)
+                It.IsAny<CancellationToken>()))
+            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken>(
+                (_, _, _, triggerData, _) => capturedTriggerData = triggerData)
             .ReturnsAsync(TestRunId);
 
         var tool = CreateTool();
@@ -198,10 +196,9 @@ public class RunAutomationToolTests
                 It.IsAny<string>(),
                 It.IsAny<string?>(),
                 It.IsAny<Dictionary<string, object?>?>(),
-                It.IsAny<CancellationToken>(),
-                false))
-            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken, bool>(
-                (_, _, _, triggerData, _, _) => capturedTriggerData = triggerData)
+                It.IsAny<CancellationToken>()))
+            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken>(
+                (_, _, _, triggerData, _) => capturedTriggerData = triggerData)
             .ReturnsAsync(TestRunId);
 
         var tool = CreateTool();

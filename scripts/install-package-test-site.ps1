@@ -166,6 +166,7 @@ Install-Package "Umbraco.AI.Amazon"
 Install-Package "Umbraco.AI.MicrosoftFoundry"
 Install-Package "Umbraco.AI.FireworksAI"
 Install-Package "Umbraco.AI.Mistral"
+Install-Package "Umbraco.AI.TogetherAI"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Install-Package "Umbraco.AI.Prompt"

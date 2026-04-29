@@ -1,0 +1,17 @@
+{
+  "name": "Umbraco AI Together AI Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.TogetherAI.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAITogetherAI/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -72,6 +72,9 @@
   <Folder Name="/Providers/DeepSeek/">
     <Project Path="Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" />
   </Folder>
+  <Folder Name="/Providers/FireworksAI/">
+    <Project Path="Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" />
+  </Folder>
   <Folder Name="/Providers/Google/">
     <Project Path="Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj" />
   </Folder>

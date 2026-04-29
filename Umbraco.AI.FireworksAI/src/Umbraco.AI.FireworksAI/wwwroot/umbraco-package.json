@@ -1,0 +1,17 @@
+{
+  "name": "Umbraco AI Fireworks AI Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.FireworksAI.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAIFireworksAI/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -169,11 +169,15 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 Write-Host "Adding Umbraco.AI.FireworksAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.FireworksAI" -SolutionFolder "FireworksAI"
 
-# Step 10.1.2: Add Mistral provider projects
+# Step 10.1.2: Add HuggingFace provider projects
+Write-Host "Adding Umbraco.AI.HuggingFace projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.HuggingFace" -SolutionFolder "HuggingFace"
+
+# Step 10.1.3: Add Mistral provider projects
 Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Mistral"
 
-# Step 10.1.3: Add TogetherAI provider projects
+# Step 10.1.4: Add TogetherAI provider projects
 Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "TogetherAI"
 
@@ -226,6 +230,11 @@ if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 # FireworksAI provider
 if (Test-Path "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
+}
+
+# HuggingFace provider
+if (Test-Path "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj"
 }
 
 # Mistral provider

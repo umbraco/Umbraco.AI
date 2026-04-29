@@ -220,6 +220,9 @@ dotnet add package Umbraco.AI.MicrosoftFoundry $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.FireworksAI..."
 dotnet add package Umbraco.AI.FireworksAI $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.HuggingFace..."
+dotnet add package Umbraco.AI.HuggingFace $PRERELEASE_FLAG
+
 echo "  Installing Umbraco.AI.Mistral..."
 dotnet add package Umbraco.AI.Mistral $PRERELEASE_FLAG
 

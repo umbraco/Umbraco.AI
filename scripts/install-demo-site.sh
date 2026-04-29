@@ -178,11 +178,15 @@ add_product_projects "Umbraco.AI.Amazon" "Amazon"
 echo "Adding Umbraco.AI.FireworksAI projects..."
 add_product_projects "Umbraco.AI.FireworksAI" "FireworksAI"
 
-# Step 10.1.2: Add Mistral provider projects
+# Step 10.1.2: Add HuggingFace provider projects
+echo "Adding Umbraco.AI.HuggingFace projects..."
+add_product_projects "Umbraco.AI.HuggingFace" "HuggingFace"
+
+# Step 10.1.3: Add Mistral provider projects
 echo "Adding Umbraco.AI.Mistral projects..."
 add_product_projects "Umbraco.AI.Mistral" "Mistral"
 
-# Step 10.1.3: Add TogetherAI provider projects
+# Step 10.1.4: Add TogetherAI provider projects
 echo "Adding Umbraco.AI.TogetherAI projects..."
 add_product_projects "Umbraco.AI.TogetherAI" "TogetherAI"
 
@@ -232,20 +236,24 @@ if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; th
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 fi
 
-<<<<<<< HEAD
 # FireworksAI provider
 if [ -f "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
 fi
 
+# HuggingFace provider
+if [ -f "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj"
+fi
+
 # Mistral provider
 if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
-=======
-# Together AI provider
+fi
+
+# TogetherAI provider
 if [ -f "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
->>>>>>> 3265a9a4 (feat(togetherai): Add Together AI provider with chat and embedding capabilities)
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

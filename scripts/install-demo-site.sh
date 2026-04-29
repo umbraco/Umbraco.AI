@@ -158,6 +158,10 @@ add_product_projects "Umbraco.AI.Agent.Copilot" "AgentCopilot"
 echo "Adding Umbraco.AI.Anthropic projects..."
 add_product_projects "Umbraco.AI.Anthropic" "Anthropic"
 
+# Step 9.05: Add DeepSeek provider projects
+echo "Adding Umbraco.AI.DeepSeek projects..."
+add_product_projects "Umbraco.AI.DeepSeek" "DeepSeek"
+
 # Step 9.1: Add Microsoft Foundry provider projects
 echo "Adding Umbraco.AI.MicrosoftFoundry projects..."
 add_product_projects "Umbraco.AI.MicrosoftFoundry" "MicrosoftFoundry"
@@ -198,6 +202,11 @@ fi
 # Anthropic provider
 if [ -f "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj"
+fi
+
+# DeepSeek provider
+if [ -f "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj"
 fi
 
 # Microsoft Foundry provider

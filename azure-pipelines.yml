@@ -18,6 +18,9 @@ parameters:
           - name: Umbraco.AI.Anthropic
             changeVar: AnthropicChanged
             hasNpm: false
+          - name: Umbraco.AI.DeepSeek
+            changeVar: DeepseekChanged
+            hasNpm: false
           - name: Umbraco.AI.Amazon
             changeVar: AmazonChanged
             hasNpm: false

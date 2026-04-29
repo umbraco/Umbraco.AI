@@ -160,6 +160,7 @@ Install-Package "Umbraco.AI"
 # Provider packages
 Install-Package "Umbraco.AI.OpenAI"
 Install-Package "Umbraco.AI.Anthropic"
+Install-Package "Umbraco.AI.DeepSeek"
 Install-Package "Umbraco.AI.Google"
 Install-Package "Umbraco.AI.Amazon"
 Install-Package "Umbraco.AI.MicrosoftFoundry"

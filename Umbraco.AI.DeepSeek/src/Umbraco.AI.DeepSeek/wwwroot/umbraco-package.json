@@ -1,0 +1,17 @@
+{
+  "name": "Umbraco AI DeepSeek Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.DeepSeek.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAIDeepSeek/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

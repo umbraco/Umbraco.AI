@@ -69,6 +69,9 @@
   <Folder Name="/Providers/Anthropic/">
     <Project Path="Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" />
   </Folder>
+  <Folder Name="/Providers/DeepSeek/">
+    <Project Path="Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" />
+  </Folder>
   <Folder Name="/Providers/Google/">
     <Project Path="Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj" />
   </Folder>

@@ -170,6 +170,10 @@ add_product_projects "Umbraco.AI.Google" "Google"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Amazon"
 
+# Step 10.3: Add Perplexity provider projects
+echo "Adding Umbraco.AI.Perplexity projects..."
+add_product_projects "Umbraco.AI.Perplexity" "Perplexity"
+
 # Step 10.2: Add Search projects
 echo "Adding Umbraco.AI.Search projects..."
 add_product_projects "Umbraco.AI.Search" "Search"
@@ -209,6 +213,11 @@ fi
 # Amazon provider
 if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+fi
+
+# Perplexity provider
+if [ -f "Umbraco.AI.Perplexity/src/Umbraco.AI.Perplexity/Umbraco.AI.Perplexity.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Perplexity/src/Umbraco.AI.Perplexity/Umbraco.AI.Perplexity.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

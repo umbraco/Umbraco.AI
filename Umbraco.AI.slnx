@@ -78,4 +78,7 @@
   <Folder Name="/Providers/OpenAI/">
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
   </Folder>
+  <Folder Name="/Providers/Perplexity/">
+    <Project Path="Umbraco.AI.Perplexity/src/Umbraco.AI.Perplexity/Umbraco.AI.Perplexity.csproj" />
+  </Folder>
 </Solution>

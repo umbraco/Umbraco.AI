@@ -161,6 +161,10 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 
+# Step 10.3: Add Perplexity provider projects
+Write-Host "Adding Umbraco.AI.Perplexity projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Perplexity" -SolutionFolder "Perplexity"
+
 # Step 10.2: Add Search projects
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Search"
@@ -200,6 +204,11 @@ if (Test-Path "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj"
 # Amazon provider
 if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+}
+
+# Perplexity provider
+if (Test-Path "Umbraco.AI.Perplexity/src/Umbraco.AI.Perplexity/Umbraco.AI.Perplexity.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Perplexity/src/Umbraco.AI.Perplexity/Umbraco.AI.Perplexity.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

@@ -15,7 +15,7 @@
         "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-management"
     },
     "dependencies": {
-        "@umbraco-cms/backoffice": "^17.1.0",
+        "@umbraco-cms/backoffice": "^17.3.0",
         "chart.js": "^4.5.1",
         "diff": "^8.0.3"
     },

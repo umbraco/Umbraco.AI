@@ -3,9 +3,14 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-// Import conventional-changelog (ES module with default export)
-const conventionalChangelogModule = require("conventional-changelog");
-const conventionalChangelog = conventionalChangelogModule.default || conventionalChangelogModule;
+// conventional-changelog v7 is ESM-only; load it via dynamic import.
+let _ConventionalChangelogPromise;
+function loadConventionalChangelog() {
+    if (!_ConventionalChangelogPromise) {
+        _ConventionalChangelogPromise = import("conventional-changelog").then((m) => m.ConventionalChangelog);
+    }
+    return _ConventionalChangelogPromise;
+}
 
 // Discover products by convention
 function discoverProducts(rootDir) {
@@ -154,33 +159,37 @@ async function generateChangelog(product, version, options = {}) {
     // Cache file paths for commits to avoid repeated git calls
     const commitFilesCache = new Map();
 
-    // conventional-changelog options
-    const changelogOptions = {
-        preset: {
-            name: "conventionalcommits",
-            types: [
-                { type: "feat", section: "Features" },
-                { type: "fix", section: "Bug Fixes" },
-                { type: "perf", section: "Performance Improvements" },
-                { type: "refactor", section: "Code Refactoring" },
-                { type: "docs", section: "Documentation", hidden: true },
-                { type: "style", section: "Styles", hidden: true },
-                { type: "chore", section: "Chores", hidden: true },
-                { type: "test", section: "Tests", hidden: true },
-                { type: "ci", section: "CI/CD", hidden: true },
-                { type: "build", section: "Build System" },
-                { type: "revert", section: "Reverts" },
-            ],
-        },
-        tagPrefix: tagPrefix,
+    // Preset (conventionalcommits)
+    const preset = {
+        name: "conventionalcommits",
+        types: [
+            { type: "feat", section: "Features" },
+            { type: "fix", section: "Bug Fixes" },
+            { type: "perf", section: "Performance Improvements" },
+            { type: "refactor", section: "Code Refactoring" },
+            { type: "docs", section: "Documentation", hidden: true },
+            { type: "style", section: "Styles", hidden: true },
+            { type: "chore", section: "Chores", hidden: true },
+            { type: "test", section: "Tests", hidden: true },
+            { type: "ci", section: "CI/CD", hidden: true },
+            { type: "build", section: "Build System" },
+            { type: "revert", section: "Reverts" },
+        ],
+    };
+
+    // Generator options
+    const generatorOptions = {
         // Always output unreleased when generating (we'll format the version header ourselves)
         releaseCount: 0,
         outputUnreleased: true,
     };
 
-    // Context for template
+    // Context for template. The writer renders `## [<version>](...)` and the
+    // post-processing regex below requires *something* between the brackets;
+    // fall back to a placeholder when version isn't set (unreleased mode) so
+    // the regex matches and rewrites the header to `## [Unreleased]`.
     const context = {
-        version: version,
+        version: version || "0.0.0",
         host: "https://github.com",
         owner: "umbraco",
         repository: "Umbraco.AI",
@@ -189,8 +198,8 @@ async function generateChangelog(product, version, options = {}) {
         packageName: product,
     };
 
-    // Git raw commits options - filter by commit range
-    const gitRawCommitsOpts = {
+    // Commit range
+    const commitsParams = {
         from: fromRef,
         to: toRef,
     };
@@ -335,114 +344,116 @@ async function generateChangelog(product, version, options = {}) {
         noteGroupsSort: "title",
     };
 
-    return new Promise((resolve, reject) => {
-        const stream = conventionalChangelog(changelogOptions, context, gitRawCommitsOpts, parserOpts, writerOpts);
-        let changelog = "";
+    const ConventionalChangelog = await loadConventionalChangelog();
 
-        stream.on("data", (chunk) => {
-            changelog += chunk.toString();
-        });
+    let changelog = "";
+    try {
+        const cc = new ConventionalChangelog(rootDir)
+            .loadPreset(preset)
+            .repository("https://github.com/umbraco/Umbraco.AI")
+            .package({ name: product, version: version || "0.0.0" })
+            .options(generatorOptions)
+            .context(context)
+            .tags({ prefix: tagPrefix })
+            .commits(commitsParams, parserOpts)
+            .writer(writerOpts);
 
-        stream.on("end", () => {
-            // Clear progress indicator
-            if (processedCommits > 0) {
-                process.stderr.write(`  Processed ${processedCommits} commits (${includedCommits} included)...done\n`);
-            }
+        for await (const chunk of cc.write()) {
+            changelog += chunk;
+        }
+    } catch (err) {
+        console.error(`❌ Error generating changelog:`, err.message);
+        throw err;
+    }
 
-            // Load existing changelog if it exists
-            let existingChangelog = "";
-            if (fs.existsSync(changelogPath) && !options.overwrite) {
-                existingChangelog = fs.readFileSync(changelogPath, "utf-8");
-            }
+    // Clear progress indicator
+    if (processedCommits > 0) {
+        process.stderr.write(`  Processed ${processedCommits} commits (${includedCommits} included)...done\n`);
+    }
 
-            // Build header
-            const header = `# Changelog - ${product}\n\nAll notable changes to ${product} will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n`;
+    // Load existing changelog if it exists
+    let existingChangelog = "";
+    if (fs.existsSync(changelogPath) && !options.overwrite) {
+        existingChangelog = fs.readFileSync(changelogPath, "utf-8");
+    }
 
-            // Format the changelog section
-            let formattedChangelog = "";
+    // Build header
+    const header = `# Changelog - ${product}\n\nAll notable changes to ${product} will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n`;
 
-            if (!changelog || changelog.trim() === "") {
-                // No changes found
-                if (options.unreleased) {
-                    formattedChangelog = "## [Unreleased]\n\nNo changes yet.\n\n";
-                } else if (version) {
-                    // Even with no changes, create the version section for tracking
-                    const date = new Date().toISOString().split("T")[0];
-                    const previousVersionTag = previousTag ? previousTag.replace(tagPrefix, "") : null;
-                    const compareUrl = previousVersionTag
-                        ? `https://github.com/umbraco/Umbraco.AI/compare/${tagPrefix}${previousVersionTag}...${tagPrefix}${version}`
-                        : `https://github.com/umbraco/Umbraco.AI/releases/tag/${tagPrefix}${version}`;
+    // Format the changelog section
+    let formattedChangelog = "";
 
-                    formattedChangelog = `## [${version}](${compareUrl}) (${date})\n\nNo changes.\n\n`;
-                }
+    if (!changelog || changelog.trim() === "") {
+        // No changes found
+        if (options.unreleased) {
+            formattedChangelog = "## [Unreleased]\n\nNo changes yet.\n\n";
+        } else if (version) {
+            // Even with no changes, create the version section for tracking
+            const date = new Date().toISOString().split("T")[0];
+            const previousVersionTag = previousTag ? previousTag.replace(tagPrefix, "") : null;
+            const compareUrl = previousVersionTag
+                ? `https://github.com/umbraco/Umbraco.AI/compare/${tagPrefix}${previousVersionTag}...${tagPrefix}${version}`
+                : `https://github.com/umbraco/Umbraco.AI/releases/tag/${tagPrefix}${version}`;
+
+            formattedChangelog = `## [${version}](${compareUrl}) (${date})\n\nNo changes.\n\n`;
+        }
+    } else {
+        // Format the changes with proper version header
+        if (options.unreleased) {
+            // Keep as [Unreleased] section
+            formattedChangelog = changelog.replace(/^##\s*\[[\d.a-z-]+\].*$/m, "## [Unreleased]");
+        } else if (version) {
+            // Replace the auto-generated header with proper version header
+            const date = new Date().toISOString().split("T")[0];
+            const previousVersionTag = previousTag ? previousTag.replace(tagPrefix, "") : null;
+            const compareUrl = previousVersionTag
+                ? `https://github.com/umbraco/Umbraco.AI/compare/${tagPrefix}${previousVersionTag}...${tagPrefix}${version}`
+                : `https://github.com/umbraco/Umbraco.AI/releases/tag/${tagPrefix}${version}`;
+
+            // Replace the header that conventional-changelog generates
+            formattedChangelog = changelog.replace(
+                /^##\s*\[[\d.a-z-]+\].*$/m,
+                `## [${version}](${compareUrl}) (${date})`,
+            );
+        } else {
+            formattedChangelog = changelog;
+        }
+    }
+
+    // If we have an existing changelog, handle version section replacement
+    let finalChangelog = "";
+    if (existingChangelog) {
+        // Extract all sections after header
+        const sectionsMatch = existingChangelog.match(/\n## .+[\s\S]*/);
+        const sections = sectionsMatch ? sectionsMatch[0] : "";
+
+        if (version && !options.unreleased) {
+            // Check if this version already exists in the changelog
+            const versionSectionRegex = new RegExp(
+                `\\n## \\[${version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\][\\s\\S]*?(?=\\n## |$)`,
+            );
+
+            if (versionSectionRegex.test(sections)) {
+                // Replace existing version section
+                console.log(`  Replacing existing [${version}] section`);
+                const updatedSections = sections.replace(versionSectionRegex, "\n" + formattedChangelog.trim());
+                finalChangelog = header + updatedSections;
             } else {
-                // Format the changes with proper version header
-                if (options.unreleased) {
-                    // Keep as [Unreleased] section
-                    formattedChangelog = changelog.replace(/^##\s*\[[\d.a-z-]+\].*$/m, "## [Unreleased]");
-                } else if (version) {
-                    // Replace the auto-generated header with proper version header
-                    const date = new Date().toISOString().split("T")[0];
-                    const previousVersionTag = previousTag ? previousTag.replace(tagPrefix, "") : null;
-                    const compareUrl = previousVersionTag
-                        ? `https://github.com/umbraco/Umbraco.AI/compare/${tagPrefix}${previousVersionTag}...${tagPrefix}${version}`
-                        : `https://github.com/umbraco/Umbraco.AI/releases/tag/${tagPrefix}${version}`;
-
-                    // Replace the header that conventional-changelog generates
-                    formattedChangelog = changelog.replace(
-                        /^##\s*\[[\d.a-z-]+\].*$/m,
-                        `## [${version}](${compareUrl}) (${date})`,
-                    );
-                } else {
-                    formattedChangelog = changelog;
-                }
+                // Add new version section at the top
+                finalChangelog = header + formattedChangelog + sections;
             }
+        } else {
+            // For unreleased, always prepend
+            finalChangelog = header + formattedChangelog + sections;
+        }
+    } else {
+        // No existing changelog, create new
+        finalChangelog = header + formattedChangelog;
+    }
 
-            // If we have an existing changelog, handle version section replacement
-            let finalChangelog = "";
-            if (existingChangelog) {
-                // Extract header
-                const headerMatch = existingChangelog.match(/^(# Changelog[\s\S]*?)(?=\n## )/);
-                const extractedHeader = headerMatch ? headerMatch[1] + "\n" : "";
-
-                // Extract all sections after header
-                const sectionsMatch = existingChangelog.match(/\n## .+[\s\S]*/);
-                const sections = sectionsMatch ? sectionsMatch[0] : "";
-
-                if (version && !options.unreleased) {
-                    // Check if this version already exists in the changelog
-                    const versionSectionRegex = new RegExp(
-                        `\\n## \\[${version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\][\\s\\S]*?(?=\\n## |$)`,
-                    );
-
-                    if (versionSectionRegex.test(sections)) {
-                        // Replace existing version section
-                        console.log(`  Replacing existing [${version}] section`);
-                        const updatedSections = sections.replace(versionSectionRegex, "\n" + formattedChangelog.trim());
-                        finalChangelog = header + updatedSections;
-                    } else {
-                        // Add new version section at the top
-                        finalChangelog = header + formattedChangelog + sections;
-                    }
-                } else {
-                    // For unreleased, always prepend
-                    finalChangelog = header + formattedChangelog + sections;
-                }
-            } else {
-                // No existing changelog, create new
-                finalChangelog = header + formattedChangelog;
-            }
-
-            fs.writeFileSync(changelogPath, finalChangelog);
-            console.log(`✅ Changelog generated at: ${changelogPath}`);
-            resolve(changelogPath);
-        });
-
-        stream.on("error", (err) => {
-            console.error(`❌ Error generating changelog:`, err.message);
-            reject(err);
-        });
-    });
+    fs.writeFileSync(changelogPath, finalChangelog);
+    console.log(`✅ Changelog generated at: ${changelogPath}`);
+    return changelogPath;
 }
 
 // CLI interface

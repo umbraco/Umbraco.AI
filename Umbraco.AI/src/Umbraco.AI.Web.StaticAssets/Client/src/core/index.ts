@@ -1,3 +1,4 @@
+export * from "./client/index.js";
 export * from "./command/index.js";
 export * from "./components/index.js";
 export * from "./entity-action/delete/index.js";

@@ -28,6 +28,14 @@ export interface UaiSerializedEntity {
     /** Parent unique when creating a new entity. Undefined for existing entities. */
     parentUnique?: string | null;
     /**
+     * Active culture the editor was on when the entity was serialized.
+     * Null/undefined for invariant entities. Used by the server to pick the
+     * matching property entry from `data.properties` on multi-variant content.
+     */
+    culture?: string | null;
+    /** Active segment when the entity was serialized. */
+    segment?: string | null;
+    /**
      * Free-form entity data as JSON object.
      * Adapters decide the structure based on entity type.
      *
@@ -36,7 +44,7 @@ export interface UaiSerializedEntity {
      * {
      *   contentType: "blogPost",
      *   properties: [
-     *     { alias: "title", label: "Title", editorAlias: "Umbraco.TextBox", value: "Hello" }
+     *     { alias: "title", label: "Title", editorAlias: "Umbraco.TextBox", value: "Hello", culture: "en-US", segment: null }
      *   ]
      * }
      * ```
@@ -55,15 +63,18 @@ export interface UaiSerializedEntity {
 
 /**
  * Serialized property for LLM context.
- * @deprecated Entity data is now stored in UaiSerializedEntity.data as free-form JSON.
- * For CMS entities, properties are nested inside the data field.
- * This interface is kept for reference only.
+ * Used as the element type of `UaiSerializedEntity.data.properties` for CMS entities.
+ *
+ * `culture` and `segment` describe which variant this property value belongs to:
+ * `null` means invariant (no culture/segment dimension on the property).
  */
 export interface UaiSerializedProperty {
     alias: string;
     label: string;
     editorAlias: string;
     value: unknown;
+    culture: string | null;
+    segment: string | null;
 }
 
 /**

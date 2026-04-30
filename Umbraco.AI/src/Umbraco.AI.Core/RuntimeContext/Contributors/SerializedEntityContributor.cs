@@ -160,12 +160,29 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
                 parentUnique = parentUniqueElement.GetString();
             }
 
+            // Extract active culture/segment (optional). Frontend adapters emit
+            // these on multi-variant entities so the helper can pick matching
+            // property values.
+            string? culture = null;
+            if (element.TryGetProperty("culture", out var cultureElement) && cultureElement.ValueKind == JsonValueKind.String)
+            {
+                culture = cultureElement.GetString();
+            }
+
+            string? segment = null;
+            if (element.TryGetProperty("segment", out var segmentElement) && segmentElement.ValueKind == JsonValueKind.String)
+            {
+                segment = segmentElement.GetString();
+            }
+
             return new AISerializedEntity
             {
                 EntityType = entityType,
                 Unique = unique,
                 Name = name,
                 ParentUnique = parentUnique,
+                Culture = culture,
+                Segment = segment,
                 Data = dataElement.Clone() // Clone to avoid referencing original document
             };
         }

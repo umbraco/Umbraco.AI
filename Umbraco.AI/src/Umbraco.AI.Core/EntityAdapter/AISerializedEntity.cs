@@ -31,6 +31,21 @@ public sealed class AISerializedEntity
     public string? ParentUnique { get; init; }
 
     /// <summary>
+    /// The culture the editor was on when this entity was serialized.
+    /// Null for invariant entities. Used to pick the matching property entry
+    /// from <see cref="Data"/>'s <c>properties</c> array on multi-variant
+    /// content so prompt template variables resolve to the active culture's
+    /// value.
+    /// </summary>
+    public string? Culture { get; init; }
+
+    /// <summary>
+    /// The segment the editor was on when this entity was serialized.
+    /// Null when the content is not segmented.
+    /// </summary>
+    public string? Segment { get; init; }
+
+    /// <summary>
     /// The entity data as a JSON object.
     /// Adapters decide the structure based on entity type.
     /// For CMS entities, this typically contains { contentType, properties }.

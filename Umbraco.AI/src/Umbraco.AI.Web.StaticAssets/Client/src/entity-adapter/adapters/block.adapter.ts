@@ -28,6 +28,15 @@ interface PropertyStructure {
 }
 
 /**
+ * Active variant info — culture/segment of the variant the block is being
+ * edited for (inherited from the parent document workspace).
+ */
+interface ActiveVariantInfo {
+    culture: string | null;
+    segment: string | null;
+}
+
+/**
  * Interface matching the essential methods/properties of UmbBlockWorkspaceContext.
  * We use duck-typing with IS_BLOCK_WORKSPACE_CONTEXT as a reliable marker.
  */
@@ -36,6 +45,8 @@ interface BlockWorkspaceContextLike {
     getUnique(): string;
     getEntityType(): string;
     getName(): string;
+    /** The variant the block is being edited in (inherited from parent doc). */
+    getVariantId?(): { culture: string | null; segment: string | null } | undefined;
     content: {
         getValues():
             | Array<{
@@ -56,6 +67,38 @@ interface BlockWorkspaceContextLike {
             getContentTypeProperties?(): Promise<PropertyStructure[]>;
         };
     };
+}
+
+/**
+ * Read the variant the block is being edited in. Returns null when the block
+ * lives on an invariant document (or when the API isn't exposed on the mock
+ * workspace).
+ */
+function getActiveVariant(ctx: BlockWorkspaceContextLike): ActiveVariantInfo | null {
+    const variantId = ctx.getVariantId?.();
+    if (!variantId) return null;
+    return { culture: variantId.culture ?? null, segment: variantId.segment ?? null };
+}
+
+/**
+ * Pick the property value entry matching the active variant, falling back to
+ * the invariant entry for properties that don't vary on this content type.
+ */
+function pickValueForVariant<T extends { culture: string | null; segment: string | null }>(
+    entries: T[],
+    active: ActiveVariantInfo | null,
+): T | undefined {
+    if (entries.length === 0) return undefined;
+
+    if (active) {
+        const exact = entries.find((e) => e.culture === active.culture && e.segment === active.segment);
+        if (exact) return exact;
+    }
+
+    const invariant = entries.find((e) => e.culture === null && e.segment === null);
+    if (invariant) return invariant;
+
+    return entries[0];
 }
 
 /**
@@ -133,6 +176,10 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
     /**
      * Serialize block for LLM context.
      * Uses the content element manager's structure to get properties and values.
+     *
+     * Inherits variant context from the parent document so prompt template
+     * variables resolve to the active culture's value when the block lives in
+     * a multi-variant document.
      */
     async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
         const ctx = workspaceContext as BlockWorkspaceContextLike;
@@ -147,9 +194,19 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const contentData = ctx.content.getData();
         const contentTypeKey = contentData?.contentTypeKey;
         const values = ctx.content.getValues() ?? [];
+        const active = getActiveVariant(ctx);
 
-        // Build map for quick lookup: alias -> value entry
-        const valuesByAlias = new Map(values.map((v) => [v.alias, v]));
+        // Group values by alias so we can pick the active-variant entry per property.
+        const valuesByAlias = new Map<string, typeof values>();
+        for (const v of values) {
+            const bucket = valuesByAlias.get(v.alias);
+            if (bucket) {
+                bucket.push(v);
+            } else {
+                valuesByAlias.set(v.alias, [v]);
+            }
+        }
+
         // Map: dataType.unique -> editorAlias (for properties without values)
         const editorAliasByDataType = new Map<string, string>();
         for (const v of values) {
@@ -165,7 +222,7 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const properties: UaiSerializedProperty[] = [];
 
         for (const prop of propertyStructures) {
-            const valueEntry = valuesByAlias.get(prop.alias);
+            const valueEntry = pickValueForVariant(valuesByAlias.get(prop.alias) ?? [], active);
             const editorAlias = valueEntry?.editorAlias ?? editorAliasByDataType.get(prop.dataType.unique);
 
             if (editorAlias) {
@@ -174,18 +231,25 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
                     label: prop.name,
                     editorAlias,
                     value: valueEntry?.value ?? null,
+                    culture: valueEntry?.culture ?? null,
+                    segment: valueEntry?.segment ?? null,
                 });
             }
         }
 
-        // Fallback: if we couldn't get properties from structure, use values directly
+        // Fallback: if we couldn't get properties from structure, use the
+        // active-variant entries so the fallback path also respects culture.
         if (propertyStructures.length === 0 && values.length > 0) {
-            for (const v of values) {
+            for (const [alias, entries] of valuesByAlias) {
+                const v = pickValueForVariant(entries, active);
+                if (!v) continue;
                 properties.push({
-                    alias: v.alias,
-                    label: v.alias,
+                    alias,
+                    label: alias,
                     editorAlias: v.editorAlias,
                     value: v.value,
+                    culture: v.culture,
+                    segment: v.segment,
                 });
             }
         }
@@ -194,6 +258,8 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
             entityType: "block",
             unique: unique ?? "new",
             name,
+            culture: active?.culture ?? null,
+            segment: active?.segment ?? null,
             data: {
                 contentType: contentTypeKey ?? undefined,
                 properties,

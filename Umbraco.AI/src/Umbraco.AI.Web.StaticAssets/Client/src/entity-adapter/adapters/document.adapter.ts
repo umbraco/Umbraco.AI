@@ -31,6 +31,15 @@ interface PropertyStructure {
 }
 
 /**
+ * Active variant entry on UmbWorkspaceSplitViewManagerContext.
+ * Identifies which culture/segment the editor currently has focused.
+ */
+interface ActiveVariantInfo {
+    culture: string | null;
+    segment: string | null;
+}
+
+/**
  * Interface matching the essential methods of UmbDocumentWorkspaceContext.
  * We use duck-typing rather than importing the actual type to avoid tight coupling.
  */
@@ -52,6 +61,12 @@ interface DocumentWorkspaceContextLike {
     name?(variantId?: unknown): Observable<string>;
     // variants observable - contains name for each variant
     variants?: Observable<Array<{ name?: string; culture?: string | null }>>;
+    // Split-view manager exposing the variants currently focused in the editor.
+    // For a single-pane edit there is one entry; in split view there can be more.
+    splitView?: {
+        getActiveVariants?(): ActiveVariantInfo[] | undefined;
+        activeVariantsInfo?: Observable<ActiveVariantInfo[] | undefined>;
+    };
     // Structure manager for content type info including icon and property structure
     structure?: {
         ownerContentType?: Observable<{ icon?: string } | undefined>;
@@ -66,6 +81,43 @@ interface DocumentWorkspaceContextLike {
     // Note: Uses internal API as UMB_PARENT_ENTITY_CONTEXT is not reliably available
     // See: https://github.com/umbraco/Umbraco-CMS/issues/21368
     _internal_getCreateUnderParent?(): { entityType: string; unique: string | null } | undefined;
+}
+
+/**
+ * Resolve the active variant from the workspace's split-view manager.
+ * Returns null when none can be determined (invariant document, missing API,
+ * mocked context). When multiple variants are focused (split view), the first
+ * is used since the AI prompt is triggered against a single editing context.
+ */
+function getActiveVariant(ctx: DocumentWorkspaceContextLike): ActiveVariantInfo | null {
+    const active = ctx.splitView?.getActiveVariants?.();
+    if (active && active.length > 0) {
+        return { culture: active[0].culture ?? null, segment: active[0].segment ?? null };
+    }
+    return null;
+}
+
+/**
+ * Pick the property value entry that matches the active variant.
+ * Falls back to the invariant entry (`culture: null, segment: null`) when no
+ * culture-specific entry exists for that alias — this keeps invariant
+ * properties on a variant document resolving correctly.
+ */
+function pickValueForVariant<T extends { culture: string | null; segment: string | null }>(
+    entries: T[],
+    active: ActiveVariantInfo | null,
+): T | undefined {
+    if (entries.length === 0) return undefined;
+
+    if (active) {
+        const exact = entries.find((e) => e.culture === active.culture && e.segment === active.segment);
+        if (exact) return exact;
+    }
+
+    const invariant = entries.find((e) => e.culture === null && e.segment === null);
+    if (invariant) return invariant;
+
+    return entries[0];
 }
 
 /**
@@ -109,18 +161,25 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 
     /**
      * Get an observable for the document name for reactive updates.
-     * Uses the variants observable which properly tracks name changes.
+     * Uses the variants observable which properly tracks name changes, and
+     * picks the variant whose culture matches what the editor currently has
+     * focused so the AI context selector shows the right name on multi-
+     * variant documents.
      */
     getNameObservable(workspaceContext: unknown): Observable<string | undefined> | undefined {
         const ctx = workspaceContext as DocumentWorkspaceContextLike;
 
-        // Use variants observable - this properly tracks name changes
-        // The variants array contains all variant data including names
+        // Use variants observable - this properly tracks name changes.
+        // Read the active variant fresh on every emission so name updates
+        // reflect both edit-time changes and split-view focus changes.
         if (ctx.variants) {
             return ctx.variants.pipe(
                 map((variants) => {
-                    // For invariant documents, there's one variant with culture: null
-                    // For variant documents, pick the first one (or we could expose selection later)
+                    const active = getActiveVariant(ctx);
+                    if (active) {
+                        const match = variants.find((v) => (v.culture ?? null) === active.culture);
+                        if (match?.name) return match.name;
+                    }
                     const invariantVariant = variants.find((v) => v.culture === null);
                     return invariantVariant?.name ?? variants[0]?.name;
                 }),
@@ -173,27 +232,43 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
     /**
      * Serialize document for LLM context.
      * Uses structure to get all properties, then merges with values.
-     * Only includes TextBox and TextArea properties for now.
+     *
+     * Multi-variant content: `getValues()` returns one entry per
+     * (alias, culture, segment). We pick the entry that matches the variant
+     * the editor currently has focused, falling back to the invariant entry
+     * for properties that don't vary, so prompt template variables like
+     * `{{header}}` resolve to the active culture's value.
      */
     async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
         const ctx = workspaceContext as DocumentWorkspaceContextLike;
 
         const unique = ctx.getUnique();
-        const name = ctx.getName() ?? "Untitled";
         const contentType = ctx.getContentTypeUnique();
         const values = ctx.getValues() ?? [];
+        const active = getActiveVariant(ctx);
+
+        // Pick the active variant's name when available so the LLM sees the
+        // name from the variant the editor is on, matching the property values.
+        const name = ctx.getName(active ? new UmbVariantId(active.culture, active.segment) : undefined) ?? "Untitled";
 
         // Get parent unique for new documents
         const isNew = ctx.getIsNew?.();
         const parentUnique = isNew ? ctx._internal_getCreateUnderParent?.()?.unique : undefined;
 
-        // Build maps for quick lookup
-        // Map: alias -> value entry (for getting current value and editorAlias)
-        const valuesByAlias = new Map(values.map((v) => [v.alias, v]));
+        // Group values by alias so we can pick the active-variant entry per property.
+        const valuesByAlias = new Map<string, typeof values>();
+        for (const v of values) {
+            const bucket = valuesByAlias.get(v.alias);
+            if (bucket) {
+                bucket.push(v);
+            } else {
+                valuesByAlias.set(v.alias, [v]);
+            }
+        }
+
         // Map: dataType.unique -> editorAlias (for properties without values)
         const editorAliasByDataType = new Map<string, string>();
         for (const v of values) {
-            // Get the property structure to find its dataType.unique
             const structure = await ctx.structure?.getPropertyStructureByAlias?.(v.alias);
             if (structure?.dataType.unique) {
                 editorAliasByDataType.set(structure.dataType.unique, v.editorAlias);
@@ -206,31 +281,38 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         const properties: UaiSerializedProperty[] = [];
 
         for (const prop of propertyStructures) {
-            const valueEntry = valuesByAlias.get(prop.alias);
+            const valueEntry = pickValueForVariant(valuesByAlias.get(prop.alias) ?? [], active);
 
             // Determine editor alias: from value entry, or from dataType mapping
             const editorAlias = valueEntry?.editorAlias ?? editorAliasByDataType.get(prop.dataType.unique);
 
             // Only include if we know it's a supported editor
             if (editorAlias) {
-                // && SUPPORTED_EDITOR_ALIASES.includes(editorAlias)) {
                 properties.push({
                     alias: prop.alias,
                     label: prop.name,
                     editorAlias,
                     value: valueEntry?.value ?? null,
+                    culture: valueEntry?.culture ?? null,
+                    segment: valueEntry?.segment ?? null,
                 });
             }
         }
 
-        // Fallback: if we couldn't get properties from structure, use values directly
+        // Fallback: if we couldn't get properties from structure, use the
+        // already-filtered active-variant entries so the fallback path also
+        // respects the active culture.
         if (propertyStructures.length === 0 && values.length > 0) {
-            for (const v of values) {
+            for (const [alias, entries] of valuesByAlias) {
+                const v = pickValueForVariant(entries, active);
+                if (!v) continue;
                 properties.push({
-                    alias: v.alias,
-                    label: v.alias,
+                    alias,
+                    label: alias,
                     editorAlias: v.editorAlias,
                     value: v.value,
+                    culture: v.culture,
+                    segment: v.segment,
                 });
             }
         }
@@ -240,6 +322,8 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             unique: unique ?? "new",
             name,
             parentUnique,
+            culture: active?.culture ?? null,
+            segment: active?.segment ?? null,
             data: {
                 contentType: contentType ?? undefined,
                 properties,

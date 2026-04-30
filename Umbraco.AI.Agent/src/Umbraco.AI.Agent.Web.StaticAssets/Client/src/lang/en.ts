@@ -56,11 +56,18 @@ export default {
         entityReadDescription: "Read entity operations - get and serialize entities",
         entityWriteLabel: "Entity (Write)",
         entityWriteDescription: "Modify entity operations - set properties and save entities",
+
+        // Automate scopes
+        automateReadLabel: "Automations (Read)",
+        automateReadDescription: "List available automations and check run status",
+        automateExecuteLabel: "Automations (Execute)",
+        automateExecuteDescription: "Trigger automations to run",
     },
     uaiToolScopeDomain: {
         content: "Content",
         media: "Media",
         general: "General",
         entity: "Entity",
+        automations: "Automations",
     },
 } as UmbLocalizationDictionary;

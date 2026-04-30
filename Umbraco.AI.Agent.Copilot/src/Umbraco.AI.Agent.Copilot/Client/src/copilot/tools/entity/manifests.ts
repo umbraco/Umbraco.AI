@@ -49,6 +49,7 @@ const setValueFrontendManifest: ManifestUaiAgentFrontendTool = {
             required: ["path", "value"],
         },
         scope: "entity-write",
+        isDestructive: true,
     },
 };
 

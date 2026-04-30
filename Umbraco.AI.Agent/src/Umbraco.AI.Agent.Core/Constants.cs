@@ -42,12 +42,6 @@ public static class Constants
         /// Identifies which UI surface the request originated from (e.g., "copilot", "workspace").
         /// </summary>
         public const string Surface = "Umbraco.AI.Agent.Surface";
-
-        /// <summary>
-        /// Key for context IDs override in runtime context.
-        /// When set, context resolvers use these IDs instead of the agent's configured <see cref="Agents.AIAgent.ContextIds"/>.
-        /// </summary>
-        public const string ContextIdsOverride = "Umbraco.AI.Agent.ContextIdsOverride";
     }
 
     /// <summary>

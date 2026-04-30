@@ -230,6 +230,12 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
             builder.SetResolvedGuardrailIds(
                 await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
         }
+
+        if (builder.AdditionalGuardrailAliases is { Count: > 0 } additionalAliases)
+        {
+            builder.SetResolvedAdditionalGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(additionalAliases, cancellationToken));
+        }
     }
 
     private static EmbeddingGenerationOptions? MergeOptions(AIProfile profile, EmbeddingGenerationOptions? callerOptions)

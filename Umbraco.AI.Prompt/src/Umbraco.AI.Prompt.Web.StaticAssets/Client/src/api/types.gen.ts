@@ -40,7 +40,7 @@ export type ProblemDetails = {
     status?: number | null;
     detail?: string | null;
     instance?: string | null;
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
+    [key: string]: unknown;
 };
 
 export type PromptExecutionRequestModel = {
@@ -48,6 +48,8 @@ export type PromptExecutionRequestModel = {
     entityType: string;
     propertyAlias: string;
     contentTypeAlias: string;
+    elementId?: string | null;
+    elementType?: string | null;
     culture?: string | null;
     segment?: string | null;
     context?: Array<RequestContextItemModel> | null;
@@ -144,9 +146,7 @@ export type ValidationProblemDetails = {
     errors: {
         [key: string]: Array<string>;
     };
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | {
-        [key: string]: Array<string>;
-    } | undefined;
+    [key: string]: unknown;
 };
 
 export type ValueChangeModel = {

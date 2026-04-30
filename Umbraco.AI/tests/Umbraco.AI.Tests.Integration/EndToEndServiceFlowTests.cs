@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -11,6 +12,8 @@ using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
@@ -469,9 +472,18 @@ public class EndToEndServiceFlowTests : IDisposable
         services.AddSingleton<IAIGuardrailRepository, InMemoryAIGuardrailRepository>();
         services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
 
+        // Context system
+        services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
+        services.AddSingleton<IAIContextService, AIContextService>();
+
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
+
+        // Tool system (empty in end-to-end flow — tools are exercised via AIChatServiceTests)
+        services.AddSingleton(new AIToolScopeCollection(() => []));
+        services.AddSingleton(new AIToolCollection(() => []));
+        services.AddSingleton<IAIFunctionFactory, Umbraco.AI.Core.Tools.AIFunctionFactory>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();

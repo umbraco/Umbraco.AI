@@ -83,3 +83,4 @@ This package calls `builder.AddSearchCore()` during its Composer if no other pac
 ## License
 
 This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.
+

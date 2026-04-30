@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.0-alpha6...Umbraco.AI.Agent.Copilot@1.0.0-alpha7) (2026-04-30)
+
+### fix
+
+* **copilot:** Bump Umbraco CMS peer dependency minimum to 17.3.0 ([342d3e1](https://github.com/umbraco/Umbraco.AI/commit/342d3e1ff10bf9e22be17b5c441a030e0327d4ab))
+* **ui,copilot:** Add missing localization keys for semantic search and set value tools ([b7a527d](https://github.com/umbraco/Umbraco.AI/commit/b7a527defa243059802b4b6e309081a6e29b1a28))
+
 ## [1.0.0-alpha6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.0-alpha5...Umbraco.AI.Agent.Copilot@1.0.0-alpha6) (2026-04-08)
 
 ### fix

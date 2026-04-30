@@ -15,6 +15,7 @@ import { formatDateTime } from "../../../../core/index.js";
 import type { UaiTestItemModel } from "../../../types.js";
 import { UAI_TEST_ICON } from "../../../constants.js";
 import { UAI_EDIT_TEST_WORKSPACE_PATH_PATTERN } from "../../../workspace/paths.js";
+import "./test-run-inline-button.element.js";
 
 /**
  * Table view for the Test collection.
@@ -100,9 +101,12 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
                 },
                 {
                     columnAlias: "entityActions",
-                    value: html`<umb-entity-actions-table-column-view
-                        .value=${{ entityType: item.entityType, unique: item.unique }}
-                    ></umb-entity-actions-table-column-view>`,
+                    value: html`<div class="row-actions">
+                        <uai-test-run-inline-button .unique=${item.unique}></uai-test-run-inline-button>
+                        <umb-entity-actions-table-column-view
+                            .value=${{ entityType: item.entityType, unique: item.unique }}
+                        ></umb-entity-actions-table-column-view>
+                    </div>`,
                 },
             ],
         }));
@@ -131,7 +135,21 @@ export class UaiTestTableCollectionViewElement extends UmbLitElement {
         ></umb-table>`;
     }
 
-    static styles = [UmbTextStyles, css`uui-tag { white-space: nowrap; }`];
+    static styles = [
+        UmbTextStyles,
+        css`
+            uui-tag {
+                white-space: nowrap;
+            }
+
+            .row-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--uui-size-space-2);
+                justify-content: flex-end;
+            }
+        `,
+    ];
 }
 
 export default UaiTestTableCollectionViewElement;

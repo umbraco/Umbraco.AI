@@ -78,10 +78,15 @@ demo/
 # Claude Code
 .claude/settings.local.json
 .claude/worktrees
+.claude/scheduled_tasks.lock
+.claude-scratch/
 nul
 tmpclaude*
 .auto-claude/
 *.local.md
+
+# Playwright MCP
+.playwright-mcp/
 
 # References
 refs/

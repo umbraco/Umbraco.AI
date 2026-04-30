@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.8.0...Umbraco.AI.Agent@1.9.0) (2026-04-30)
+
+### feat
+
+* **agent,automate:** Add agent run completed/failed triggers ([88194e7](https://github.com/umbraco/Umbraco.AI/commit/88194e70e2ffcbd2bd5605d66215f59909cf71eb))
+* **chat,agent,core:** Add With/Set Contexts and Guardrails on inline builders ([2e0c446](https://github.com/umbraco/Umbraco.AI/commit/2e0c446eacbb0bb14c836792322e10abdf152b87))
+
+### fix
+
+* **core,agent,prompt:** Bind default response interceptors with silent 401 refresh on generated clients ([dd529ab](https://github.com/umbraco/Umbraco.AI/commit/dd529abae106c813ce8fe41c9b93792571e80517))
+
 ## [1.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.7.0...Umbraco.AI.Agent@1.8.0) (2026-04-16)
 
 ### feat

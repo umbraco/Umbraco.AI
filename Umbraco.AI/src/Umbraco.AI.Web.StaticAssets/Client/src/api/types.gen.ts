@@ -58,7 +58,7 @@ export type AuditLogItemResponseModel = {
 };
 
 export type BinaryChatContentPartModel = ChatContentPartModel & {
-    $type: string;
+    $type: 'binary';
     mimeType: string;
     data: string;
     filename?: string | null;
@@ -78,7 +78,7 @@ export type ChatMessageModel = {
 };
 
 export type ChatProfileSettingsModel = ProfileSettingsModel & {
-    $type: string;
+    $type: 'chat';
     temperature?: number | null;
     maxTokens?: number | null;
     systemPromptTemplate?: string | null;
@@ -240,7 +240,7 @@ export type EmbeddingItemModel = {
 };
 
 export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
-    $type: string;
+    $type: 'embedding';
     dimensions?: number | null;
 };
 
@@ -380,7 +380,7 @@ export type ProblemDetails = {
     status?: number | null;
     detail?: string | null;
     instance?: string | null;
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
+    [key: string]: unknown;
 };
 
 export type ProfileItemResponseModel = {
@@ -452,7 +452,7 @@ export type SettingsResponseModel = {
 };
 
 export type SpeechToTextProfileSettingsModel = ProfileSettingsModel & {
-    $type: string;
+    $type: 'speechToText';
     language?: string | null;
 };
 
@@ -686,7 +686,7 @@ export type TestVariationModel = {
 };
 
 export type TextChatContentPartModel = ChatContentPartModel & {
-    $type: string;
+    $type: 'text';
     text: string;
 };
 

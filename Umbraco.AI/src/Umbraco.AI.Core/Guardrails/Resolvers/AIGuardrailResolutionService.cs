@@ -23,19 +23,16 @@ internal sealed class AIGuardrailResolutionService : IAIGuardrailResolutionServi
         {
             var result = await resolver.ResolveAsync(cancellationToken);
 
-            // Deduplicate by guardrail ID (later resolvers don't duplicate earlier ones)
-            foreach (var guardrailId in result.GuardrailIds)
+            // Group rules by parent guardrail so we can skip duplicates at rule granularity — a resolver
+            // may return rules whose guardrail was already contributed by an earlier resolver.
+            foreach (var group in result.Rules.GroupBy(r => r.GuardrailId))
             {
-                if (!seenGuardrailIds.Add(guardrailId))
+                if (group.Key is Guid guardrailId && !seenGuardrailIds.Add(guardrailId))
                 {
                     continue;
                 }
-            }
 
-            // Add rules from guardrails we haven't seen before
-            foreach (var rule in result.Rules)
-            {
-                allRules.Add(rule);
+                allRules.AddRange(group);
             }
         }
 

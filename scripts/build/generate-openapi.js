@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { createClient, defaultPlugins } from "@hey-api/openapi-ts";
+import { createClient } from "@hey-api/openapi-ts";
 import http from "http";
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
@@ -81,12 +81,14 @@ try {
         input: spec,
         output: outputDir,
         plugins: [
-            ...defaultPlugins,
+            "@hey-api/typescript",
             "@hey-api/client-fetch",
             {
                 name: "@hey-api/sdk",
-                asClass: true,
-                classNameBuilder: "{{name}}Service",
+                operations: {
+                    strategy: "byTags",
+                    containerName: "{{name}}Service",
+                },
             },
         ],
     });
@@ -96,7 +98,7 @@ try {
     // Post-process generated files to fix AGUI casing
     // hey-api transforms AGUI -> Agui for PascalCase consistency
     // We need to preserve the all-caps AGUI naming from the OpenAPI spec
-    const filesToFix = ["types.gen.ts", "sdk.gen.ts"];
+    const filesToFix = ["types.gen.ts", "sdk.gen.ts", "index.ts"];
     let aguiFixed = false;
     for (const file of filesToFix) {
         const filePath = join(outputDir, file);

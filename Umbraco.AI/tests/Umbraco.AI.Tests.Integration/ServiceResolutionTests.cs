@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -11,6 +12,8 @@ using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.SpeechToText;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Cache;
@@ -285,10 +288,19 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<IAIGuardrailRepository, InMemoryAIGuardrailRepository>();
         services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
 
+        // Context system
+        services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
+        services.AddSingleton<IAIContextService, AIContextService>();
+
         // Client factories
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
         services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
+
+        // Tool system (empty collection / no scopes for the integration DI smoke test)
+        services.AddSingleton(new AIToolScopeCollection(() => []));
+        services.AddSingleton(new AIToolCollection(() => []));
+        services.AddSingleton<IAIFunctionFactory, Umbraco.AI.Core.Tools.AIFunctionFactory>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();

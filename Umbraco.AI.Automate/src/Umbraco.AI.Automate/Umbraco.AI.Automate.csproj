@@ -26,4 +26,8 @@
   <ItemGroup>
     <PackageReference Include="Umbraco.Automate.Core" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.AI.Automate.Tests.Unit" />
+  </ItemGroup>
 </Project>

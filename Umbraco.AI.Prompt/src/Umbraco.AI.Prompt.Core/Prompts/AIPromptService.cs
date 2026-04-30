@@ -263,10 +263,11 @@ internal sealed class AIPromptService : IAIPromptService
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureAlias, prompt.Alias);
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureVersion, prompt.Version);
 
-        // Set context IDs override in runtime context for PromptContextResolver to pick up
+        // Set context IDs override in runtime context — full replace (all context resolvers suppress
+        // themselves when this core key is set; ProfileContextResolver then surfaces the override set).
         if (options.ContextIdsOverride is not null)
         {
-            runtimeContext.SetValue(Constants.MetadataKeys.ContextIdsOverride, options.ContextIdsOverride);
+            runtimeContext.SetValue(CoreConstants.ContextKeys.ContextIdsOverride, options.ContextIdsOverride);
         }
 
         // Set guardrail IDs override in runtime context for guardrail resolvers to pick up

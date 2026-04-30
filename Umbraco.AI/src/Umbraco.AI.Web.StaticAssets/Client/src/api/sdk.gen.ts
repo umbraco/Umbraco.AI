@@ -4,7 +4,7 @@ import { type Client, formDataBodySerializer, type Options as Options2, type TDa
 import { client } from './client.gen';
 import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareTestRunsData, CompareTestRunsErrors, CompareTestRunsResponses, CompareVariationsData, CompareVariationsErrors, CompareVariationsResponses, CompareVersionsData, CompareVersionsErrors, CompareVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, ConnectionAliasExistsData, ConnectionAliasExistsErrors, ConnectionAliasExistsResponses, ContextAliasExistsData, ContextAliasExistsErrors, ContextAliasExistsResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateGuardrailData, CreateGuardrailErrors, CreateGuardrailResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, CreateTestData, CreateTestErrors, CreateTestResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteGuardrailData, DeleteGuardrailErrors, DeleteGuardrailResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, DeleteTestData, DeleteTestErrors, DeleteTestResponses, DeleteTestRunData, DeleteTestRunErrors, DeleteTestRunResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllEntityTypesData, GetAllEntityTypesErrors, GetAllEntityTypesResponses, GetAllGuardrailEvaluatorsData, GetAllGuardrailEvaluatorsErrors, GetAllGuardrailEvaluatorsResponses, GetAllGuardrailsData, GetAllGuardrailsErrors, GetAllGuardrailsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAllTestFeaturesData, GetAllTestFeaturesErrors, GetAllTestFeaturesResponses, GetAllTestGradersData, GetAllTestGradersErrors, GetAllTestGradersResponses, GetAllTestRunsData, GetAllTestRunsErrors, GetAllTestRunsResponses, GetAllTestsData, GetAllTestsErrors, GetAllTestsResponses, GetAllToolScopesData, GetAllToolScopesErrors, GetAllToolScopesResponses, GetAllToolsData, GetAllToolsErrors, GetAllToolsResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetEntitySubTypesData, GetEntitySubTypesErrors, GetEntitySubTypesResponses, GetExecutionResultData, GetExecutionResultErrors, GetExecutionResultResponses, GetGuardrailByIdOrAliasData, GetGuardrailByIdOrAliasErrors, GetGuardrailByIdOrAliasResponses, GetLatestTestRunData, GetLatestTestRunErrors, GetLatestTestRunResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSupportedEntityTypesData, GetSupportedEntityTypesErrors, GetSupportedEntityTypesResponses, GetTestByIdOrAliasData, GetTestByIdOrAliasErrors, GetTestByIdOrAliasResponses, GetTestFeatureByIdData, GetTestFeatureByIdErrors, GetTestFeatureByIdResponses, GetTestGraderByIdData, GetTestGraderByIdErrors, GetTestGraderByIdResponses, GetTestRunByIdData, GetTestRunByIdErrors, GetTestRunByIdResponses, GetTestRunTranscriptData, GetTestRunTranscriptErrors, GetTestRunTranscriptResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, GetVersionData, GetVersionErrors, GetVersionHistoryData, GetVersionHistoryErrors, GetVersionHistoryResponses, GetVersionResponses, GuardrailAliasExistsData, GuardrailAliasExistsErrors, GuardrailAliasExistsResponses, ProfileAliasExistsData, ProfileAliasExistsErrors, ProfileAliasExistsResponses, RollbackToVersionData, RollbackToVersionErrors, RollbackToVersionResponses, RunTestBatchData, RunTestBatchErrors, RunTestBatchResponses, RunTestData, RunTestErrors, RunTestResponses, RunTestsByTagsData, RunTestsByTagsErrors, RunTestsByTagsResponses, SetBaselineTestRunData, SetBaselineTestRunErrors, SetBaselineTestRunResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, TranscribeAudioData, TranscribeAudioErrors, TranscribeAudioResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateGuardrailData, UpdateGuardrailErrors, UpdateGuardrailResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses, UpdateSettingsData, UpdateSettingsErrors, UpdateSettingsResponses, UpdateTestData, UpdateTestErrors, UpdateTestResponses } from './types.gen';
 
-export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
+export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
      * You can provide a client instance returned by `createClient()` instead of
      * individual options. This might be also useful if you want to implement a
@@ -21,12 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export class AnalyticsService {
     public static getUsageBreakdownByModel<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByModelData, ThrowOnError>) {
         return (options?.client ?? client).get<GetUsageBreakdownByModelResponses, GetUsageBreakdownByModelErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/analytics/usage-by-model',
             ...options
         });
@@ -34,12 +29,7 @@ export class AnalyticsService {
     
     public static getUsageBreakdownByProfile<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByProfileData, ThrowOnError>) {
         return (options?.client ?? client).get<GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProfileErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/analytics/usage-by-profile',
             ...options
         });
@@ -47,12 +37,7 @@ export class AnalyticsService {
     
     public static getUsageBreakdownByProvider<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByProviderData, ThrowOnError>) {
         return (options?.client ?? client).get<GetUsageBreakdownByProviderResponses, GetUsageBreakdownByProviderErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/analytics/usage-by-provider',
             ...options
         });
@@ -60,12 +45,7 @@ export class AnalyticsService {
     
     public static getUsageBreakdownByUser<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByUserData, ThrowOnError>) {
         return (options?.client ?? client).get<GetUsageBreakdownByUserResponses, GetUsageBreakdownByUserErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/analytics/usage-by-user',
             ...options
         });
@@ -73,12 +53,7 @@ export class AnalyticsService {
     
     public static getUsageSummary<ThrowOnError extends boolean = false>(options?: Options<GetUsageSummaryData, ThrowOnError>) {
         return (options?.client ?? client).get<GetUsageSummaryResponses, GetUsageSummaryErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/analytics/usage-summary',
             ...options
         });
@@ -86,12 +61,7 @@ export class AnalyticsService {
     
     public static getUsageTimeSeries<ThrowOnError extends boolean = false>(options?: Options<GetUsageTimeSeriesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetUsageTimeSeriesResponses, GetUsageTimeSeriesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/analytics/usage-time-series',
             ...options
         });
@@ -101,12 +71,7 @@ export class AnalyticsService {
 export class AuditLogsService {
     public static getAuditLogs<ThrowOnError extends boolean = false>(options?: Options<GetAuditLogsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAuditLogsResponses, GetAuditLogsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/audit-logs',
             ...options
         });
@@ -114,12 +79,7 @@ export class AuditLogsService {
     
     public static deleteAuditLog<ThrowOnError extends boolean = false>(options: Options<DeleteAuditLogData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteAuditLogResponses, DeleteAuditLogErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/audit-logs/{auditLogId}',
             ...options
         });
@@ -127,12 +87,7 @@ export class AuditLogsService {
     
     public static getAuditLogByIdentifier<ThrowOnError extends boolean = false>(options: Options<GetAuditLogByIdentifierData, ThrowOnError>) {
         return (options.client ?? client).get<GetAuditLogByIdentifierResponses, GetAuditLogByIdentifierErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/audit-logs/{auditLogId}',
             ...options
         });
@@ -140,12 +95,7 @@ export class AuditLogsService {
     
     public static cleanupAuditLogs<ThrowOnError extends boolean = false>(options?: Options<CleanupAuditLogsData, ThrowOnError>) {
         return (options?.client ?? client).post<CleanupAuditLogsResponses, CleanupAuditLogsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/audit-logs/cleanup',
             ...options
         });
@@ -155,12 +105,7 @@ export class AuditLogsService {
 export class ChatService {
     public static completeChat<ThrowOnError extends boolean = false>(options?: Options<CompleteChatData, ThrowOnError>) {
         return (options?.client ?? client).post<CompleteChatResponses, CompleteChatErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/chat/complete',
             ...options,
             headers: {
@@ -174,12 +119,7 @@ export class ChatService {
 export class ConnectionsService {
     public static getAllConnections<ThrowOnError extends boolean = false>(options?: Options<GetAllConnectionsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllConnectionsResponses, GetAllConnectionsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections',
             ...options
         });
@@ -187,12 +127,7 @@ export class ConnectionsService {
     
     public static createConnection<ThrowOnError extends boolean = false>(options?: Options<CreateConnectionData, ThrowOnError>) {
         return (options?.client ?? client).post<CreateConnectionResponses, CreateConnectionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections',
             ...options,
             headers: {
@@ -204,12 +139,7 @@ export class ConnectionsService {
     
     public static connectionAliasExists<ThrowOnError extends boolean = false>(options: Options<ConnectionAliasExistsData, ThrowOnError>) {
         return (options.client ?? client).get<ConnectionAliasExistsResponses, ConnectionAliasExistsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{alias}/exists',
             ...options
         });
@@ -217,12 +147,7 @@ export class ConnectionsService {
     
     public static deleteConnection<ThrowOnError extends boolean = false>(options: Options<DeleteConnectionData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteConnectionResponses, DeleteConnectionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}',
             ...options
         });
@@ -230,12 +155,7 @@ export class ConnectionsService {
     
     public static getConnectionByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetConnectionByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetConnectionByIdOrAliasResponses, GetConnectionByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}',
             ...options
         });
@@ -243,12 +163,7 @@ export class ConnectionsService {
     
     public static updateConnection<ThrowOnError extends boolean = false>(options: Options<UpdateConnectionData, ThrowOnError>) {
         return (options.client ?? client).put<UpdateConnectionResponses, UpdateConnectionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}',
             ...options,
             headers: {
@@ -260,12 +175,7 @@ export class ConnectionsService {
     
     public static getCapabilities<ThrowOnError extends boolean = false>(options: Options<GetCapabilitiesData, ThrowOnError>) {
         return (options.client ?? client).get<GetCapabilitiesResponses, GetCapabilitiesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/capabilities',
             ...options
         });
@@ -273,12 +183,7 @@ export class ConnectionsService {
     
     public static getModels<ThrowOnError extends boolean = false>(options: Options<GetModelsData, ThrowOnError>) {
         return (options.client ?? client).get<GetModelsResponses, GetModelsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/models',
             ...options
         });
@@ -286,12 +191,7 @@ export class ConnectionsService {
     
     public static testConnection<ThrowOnError extends boolean = false>(options: Options<TestConnectionData, ThrowOnError>) {
         return (options.client ?? client).post<TestConnectionResponses, TestConnectionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/test',
             ...options
         });
@@ -299,12 +199,7 @@ export class ConnectionsService {
     
     public static getAllCapabilities<ThrowOnError extends boolean = false>(options?: Options<GetAllCapabilitiesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllCapabilitiesResponses, GetAllCapabilitiesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections/capabilities',
             ...options
         });
@@ -314,12 +209,7 @@ export class ConnectionsService {
 export class ContextResourceTypesService {
     public static getAllContextResourceTypes<ThrowOnError extends boolean = false>(options?: Options<GetAllContextResourceTypesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllContextResourceTypesResponses, GetAllContextResourceTypesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/context-resource-types',
             ...options
         });
@@ -327,12 +217,7 @@ export class ContextResourceTypesService {
     
     public static getContextResourceTypeById<ThrowOnError extends boolean = false>(options: Options<GetContextResourceTypeByIdData, ThrowOnError>) {
         return (options.client ?? client).get<GetContextResourceTypeByIdResponses, GetContextResourceTypeByIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/context-resource-types/{id}',
             ...options
         });
@@ -342,12 +227,7 @@ export class ContextResourceTypesService {
 export class ContextsService {
     public static getAllContexts<ThrowOnError extends boolean = false>(options?: Options<GetAllContextsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllContextsResponses, GetAllContextsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts',
             ...options
         });
@@ -355,12 +235,7 @@ export class ContextsService {
     
     public static createContext<ThrowOnError extends boolean = false>(options?: Options<CreateContextData, ThrowOnError>) {
         return (options?.client ?? client).post<CreateContextResponses, CreateContextErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts',
             ...options,
             headers: {
@@ -372,12 +247,7 @@ export class ContextsService {
     
     public static contextAliasExists<ThrowOnError extends boolean = false>(options: Options<ContextAliasExistsData, ThrowOnError>) {
         return (options.client ?? client).get<ContextAliasExistsResponses, ContextAliasExistsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts/{alias}/exists',
             ...options
         });
@@ -385,12 +255,7 @@ export class ContextsService {
     
     public static deleteContext<ThrowOnError extends boolean = false>(options: Options<DeleteContextData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteContextResponses, DeleteContextErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}',
             ...options
         });
@@ -398,12 +263,7 @@ export class ContextsService {
     
     public static getContextByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetContextByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetContextByIdOrAliasResponses, GetContextByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}',
             ...options
         });
@@ -411,12 +271,7 @@ export class ContextsService {
     
     public static updateContext<ThrowOnError extends boolean = false>(options: Options<UpdateContextData, ThrowOnError>) {
         return (options.client ?? client).put<UpdateContextResponses, UpdateContextErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}',
             ...options,
             headers: {
@@ -430,12 +285,7 @@ export class ContextsService {
 export class EmbeddingsService {
     public static generateEmbeddings<ThrowOnError extends boolean = false>(options?: Options<GenerateEmbeddingsData, ThrowOnError>) {
         return (options?.client ?? client).post<GenerateEmbeddingsResponses, GenerateEmbeddingsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/embeddings/generate',
             ...options,
             headers: {
@@ -449,12 +299,7 @@ export class EmbeddingsService {
 export class GuardrailsService {
     public static getAllGuardrailEvaluators<ThrowOnError extends boolean = false>(options?: Options<GetAllGuardrailEvaluatorsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllGuardrailEvaluatorsResponses, GetAllGuardrailEvaluatorsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrail-evaluators',
             ...options
         });
@@ -462,12 +307,7 @@ export class GuardrailsService {
     
     public static getAllGuardrails<ThrowOnError extends boolean = false>(options?: Options<GetAllGuardrailsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllGuardrailsResponses, GetAllGuardrailsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails',
             ...options
         });
@@ -475,12 +315,7 @@ export class GuardrailsService {
     
     public static createGuardrail<ThrowOnError extends boolean = false>(options?: Options<CreateGuardrailData, ThrowOnError>) {
         return (options?.client ?? client).post<CreateGuardrailResponses, CreateGuardrailErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails',
             ...options,
             headers: {
@@ -492,12 +327,7 @@ export class GuardrailsService {
     
     public static guardrailAliasExists<ThrowOnError extends boolean = false>(options: Options<GuardrailAliasExistsData, ThrowOnError>) {
         return (options.client ?? client).get<GuardrailAliasExistsResponses, GuardrailAliasExistsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails/{alias}/exists',
             ...options
         });
@@ -505,12 +335,7 @@ export class GuardrailsService {
     
     public static deleteGuardrail<ThrowOnError extends boolean = false>(options: Options<DeleteGuardrailData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteGuardrailResponses, DeleteGuardrailErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}',
             ...options
         });
@@ -518,12 +343,7 @@ export class GuardrailsService {
     
     public static getGuardrailByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetGuardrailByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetGuardrailByIdOrAliasResponses, GetGuardrailByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}',
             ...options
         });
@@ -531,12 +351,7 @@ export class GuardrailsService {
     
     public static updateGuardrail<ThrowOnError extends boolean = false>(options: Options<UpdateGuardrailData, ThrowOnError>) {
         return (options.client ?? client).put<UpdateGuardrailResponses, UpdateGuardrailErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails/{guardrailIdOrAlias}',
             ...options,
             headers: {
@@ -550,12 +365,7 @@ export class GuardrailsService {
 export class ProfilesService {
     public static getAllProfiles<ThrowOnError extends boolean = false>(options?: Options<GetAllProfilesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllProfilesResponses, GetAllProfilesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles',
             ...options
         });
@@ -563,12 +373,7 @@ export class ProfilesService {
     
     public static createProfile<ThrowOnError extends boolean = false>(options?: Options<CreateProfileData, ThrowOnError>) {
         return (options?.client ?? client).post<CreateProfileResponses, CreateProfileErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles',
             ...options,
             headers: {
@@ -580,12 +385,7 @@ export class ProfilesService {
     
     public static profileAliasExists<ThrowOnError extends boolean = false>(options: Options<ProfileAliasExistsData, ThrowOnError>) {
         return (options.client ?? client).get<ProfileAliasExistsResponses, ProfileAliasExistsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles/{alias}/exists',
             ...options
         });
@@ -593,12 +393,7 @@ export class ProfilesService {
     
     public static deleteProfile<ThrowOnError extends boolean = false>(options: Options<DeleteProfileData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteProfileResponses, DeleteProfileErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}',
             ...options
         });
@@ -606,12 +401,7 @@ export class ProfilesService {
     
     public static getProfileByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetProfileByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetProfileByIdOrAliasResponses, GetProfileByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}',
             ...options
         });
@@ -619,12 +409,7 @@ export class ProfilesService {
     
     public static updateProfile<ThrowOnError extends boolean = false>(options: Options<UpdateProfileData, ThrowOnError>) {
         return (options.client ?? client).put<UpdateProfileResponses, UpdateProfileErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}',
             ...options,
             headers: {
@@ -638,12 +423,7 @@ export class ProfilesService {
 export class ProvidersService {
     public static getAllProviders<ThrowOnError extends boolean = false>(options?: Options<GetAllProvidersData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllProvidersResponses, GetAllProvidersErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/providers',
             ...options
         });
@@ -651,12 +431,7 @@ export class ProvidersService {
     
     public static getProviderById<ThrowOnError extends boolean = false>(options: Options<GetProviderByIdData, ThrowOnError>) {
         return (options.client ?? client).get<GetProviderByIdResponses, GetProviderByIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/providers/{id}',
             ...options
         });
@@ -666,12 +441,7 @@ export class ProvidersService {
 export class SettingsService {
     public static getSettings<ThrowOnError extends boolean = false>(options?: Options<GetSettingsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetSettingsResponses, GetSettingsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/settings',
             ...options
         });
@@ -679,12 +449,7 @@ export class SettingsService {
     
     public static updateSettings<ThrowOnError extends boolean = false>(options?: Options<UpdateSettingsData, ThrowOnError>) {
         return (options?.client ?? client).put<UpdateSettingsResponses, UpdateSettingsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/settings',
             ...options,
             headers: {
@@ -699,12 +464,7 @@ export class SpeechToTextService {
     public static transcribeAudio<ThrowOnError extends boolean = false>(options?: Options<TranscribeAudioData, ThrowOnError>) {
         return (options?.client ?? client).post<TranscribeAudioResponses, TranscribeAudioErrors, ThrowOnError>({
             ...formDataBodySerializer,
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/speech-to-text/transcribe',
             ...options,
             headers: {
@@ -718,12 +478,7 @@ export class SpeechToTextService {
 export class TestsService {
     public static getAllTestFeatures<ThrowOnError extends boolean = false>(options?: Options<GetAllTestFeaturesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllTestFeaturesResponses, GetAllTestFeaturesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-features',
             ...options
         });
@@ -731,12 +486,7 @@ export class TestsService {
     
     public static getTestFeatureById<ThrowOnError extends boolean = false>(options: Options<GetTestFeatureByIdData, ThrowOnError>) {
         return (options.client ?? client).get<GetTestFeatureByIdResponses, GetTestFeatureByIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-features/{id}',
             ...options
         });
@@ -744,12 +494,7 @@ export class TestsService {
     
     public static getAllTestGraders<ThrowOnError extends boolean = false>(options?: Options<GetAllTestGradersData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllTestGradersResponses, GetAllTestGradersErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-graders',
             ...options
         });
@@ -757,12 +502,7 @@ export class TestsService {
     
     public static getTestGraderById<ThrowOnError extends boolean = false>(options: Options<GetTestGraderByIdData, ThrowOnError>) {
         return (options.client ?? client).get<GetTestGraderByIdResponses, GetTestGraderByIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-graders/{id}',
             ...options
         });
@@ -770,12 +510,7 @@ export class TestsService {
     
     public static getAllTestRuns<ThrowOnError extends boolean = false>(options?: Options<GetAllTestRunsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllTestRunsResponses, GetAllTestRunsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs',
             ...options
         });
@@ -783,12 +518,7 @@ export class TestsService {
     
     public static deleteTestRun<ThrowOnError extends boolean = false>(options: Options<DeleteTestRunData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteTestRunResponses, DeleteTestRunErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/{id}',
             ...options
         });
@@ -796,12 +526,7 @@ export class TestsService {
     
     public static getTestRunById<ThrowOnError extends boolean = false>(options: Options<GetTestRunByIdData, ThrowOnError>) {
         return (options.client ?? client).get<GetTestRunByIdResponses, GetTestRunByIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/{id}',
             ...options
         });
@@ -809,12 +534,7 @@ export class TestsService {
     
     public static getTestRunTranscript<ThrowOnError extends boolean = false>(options: Options<GetTestRunTranscriptData, ThrowOnError>) {
         return (options.client ?? client).get<GetTestRunTranscriptResponses, GetTestRunTranscriptErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/{id}/transcript',
             ...options
         });
@@ -822,12 +542,7 @@ export class TestsService {
     
     public static setBaselineTestRun<ThrowOnError extends boolean = false>(options: Options<SetBaselineTestRunData, ThrowOnError>) {
         return (options.client ?? client).post<SetBaselineTestRunResponses, SetBaselineTestRunErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{testRunId}',
             ...options
         });
@@ -835,12 +550,7 @@ export class TestsService {
     
     public static compareTestRuns<ThrowOnError extends boolean = false>(options?: Options<CompareTestRunsData, ThrowOnError>) {
         return (options?.client ?? client).post<CompareTestRunsResponses, CompareTestRunsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/compare',
             ...options,
             headers: {
@@ -852,12 +562,7 @@ export class TestsService {
     
     public static compareVariations<ThrowOnError extends boolean = false>(options?: Options<CompareVariationsData, ThrowOnError>) {
         return (options?.client ?? client).post<CompareVariationsResponses, CompareVariationsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/compare-variations',
             ...options,
             headers: {
@@ -869,12 +574,7 @@ export class TestsService {
     
     public static getExecutionResult<ThrowOnError extends boolean = false>(options: Options<GetExecutionResultData, ThrowOnError>) {
         return (options.client ?? client).get<GetExecutionResultResponses, GetExecutionResultErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/executions/{executionId}',
             ...options
         });
@@ -882,12 +582,7 @@ export class TestsService {
     
     public static getLatestTestRun<ThrowOnError extends boolean = false>(options: Options<GetLatestTestRunData, ThrowOnError>) {
         return (options.client ?? client).get<GetLatestTestRunResponses, GetLatestTestRunErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/latest/{testId}',
             ...options
         });
@@ -895,12 +590,7 @@ export class TestsService {
     
     public static getAllTests<ThrowOnError extends boolean = false>(options?: Options<GetAllTestsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllTestsResponses, GetAllTestsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests',
             ...options
         });
@@ -908,12 +598,7 @@ export class TestsService {
     
     public static createTest<ThrowOnError extends boolean = false>(options?: Options<CreateTestData, ThrowOnError>) {
         return (options?.client ?? client).post<CreateTestResponses, CreateTestErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests',
             ...options,
             headers: {
@@ -925,12 +610,7 @@ export class TestsService {
     
     public static deleteTest<ThrowOnError extends boolean = false>(options: Options<DeleteTestData, ThrowOnError>) {
         return (options.client ?? client).delete<DeleteTestResponses, DeleteTestErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}',
             ...options
         });
@@ -938,12 +618,7 @@ export class TestsService {
     
     public static getTestByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetTestByIdOrAliasData, ThrowOnError>) {
         return (options.client ?? client).get<GetTestByIdOrAliasResponses, GetTestByIdOrAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}',
             ...options
         });
@@ -951,12 +626,7 @@ export class TestsService {
     
     public static updateTest<ThrowOnError extends boolean = false>(options: Options<UpdateTestData, ThrowOnError>) {
         return (options.client ?? client).put<UpdateTestResponses, UpdateTestErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}',
             ...options,
             headers: {
@@ -968,12 +638,7 @@ export class TestsService {
     
     public static runTest<ThrowOnError extends boolean = false>(options: Options<RunTestData, ThrowOnError>) {
         return (options.client ?? client).post<RunTestResponses, RunTestErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/{idOrAlias}/run',
             ...options,
             headers: {
@@ -985,12 +650,7 @@ export class TestsService {
     
     public static getAllEntityTypes<ThrowOnError extends boolean = false>(options?: Options<GetAllEntityTypesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllEntityTypesResponses, GetAllEntityTypesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/entity-types',
             ...options
         });
@@ -998,12 +658,7 @@ export class TestsService {
     
     public static getEntitySubTypes<ThrowOnError extends boolean = false>(options: Options<GetEntitySubTypesData, ThrowOnError>) {
         return (options.client ?? client).get<GetEntitySubTypesResponses, GetEntitySubTypesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/entity-types/{entityType}/sub-types',
             ...options
         });
@@ -1011,12 +666,7 @@ export class TestsService {
     
     public static runTestBatch<ThrowOnError extends boolean = false>(options?: Options<RunTestBatchData, ThrowOnError>) {
         return (options?.client ?? client).post<RunTestBatchResponses, RunTestBatchErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/run-batch',
             ...options,
             headers: {
@@ -1028,12 +678,7 @@ export class TestsService {
     
     public static runTestsByTags<ThrowOnError extends boolean = false>(options?: Options<RunTestsByTagsData, ThrowOnError>) {
         return (options?.client ?? client).post<RunTestsByTagsResponses, RunTestsByTagsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/run-by-tags',
             ...options,
             headers: {
@@ -1047,12 +692,7 @@ export class TestsService {
 export class ToolsService {
     public static getAllTools<ThrowOnError extends boolean = false>(options?: Options<GetAllToolsData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllToolsResponses, GetAllToolsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tools',
             ...options
         });
@@ -1060,12 +700,7 @@ export class ToolsService {
     
     public static getAllToolScopes<ThrowOnError extends boolean = false>(options?: Options<GetAllToolScopesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllToolScopesResponses, GetAllToolScopesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tools/scopes',
             ...options
         });
@@ -1075,12 +710,7 @@ export class ToolsService {
 export class VersionsService {
     public static getVersionHistory<ThrowOnError extends boolean = false>(options: Options<GetVersionHistoryData, ThrowOnError>) {
         return (options.client ?? client).get<GetVersionHistoryResponses, GetVersionHistoryErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}',
             ...options
         });
@@ -1088,12 +718,7 @@ export class VersionsService {
     
     public static getVersion<ThrowOnError extends boolean = false>(options: Options<GetVersionData, ThrowOnError>) {
         return (options.client ?? client).get<GetVersionResponses, GetVersionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{entityVersion}',
             ...options
         });
@@ -1101,12 +726,7 @@ export class VersionsService {
     
     public static rollbackToVersion<ThrowOnError extends boolean = false>(options: Options<RollbackToVersionData, ThrowOnError>) {
         return (options.client ?? client).post<RollbackToVersionResponses, RollbackToVersionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{entityVersion}/rollback',
             ...options
         });
@@ -1114,12 +734,7 @@ export class VersionsService {
     
     public static compareVersions<ThrowOnError extends boolean = false>(options: Options<CompareVersionsData, ThrowOnError>) {
         return (options.client ?? client).get<CompareVersionsResponses, CompareVersionsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{fromEntityVersion}/compare/{toEntityVersion}',
             ...options
         });
@@ -1127,12 +742,7 @@ export class VersionsService {
     
     public static getSupportedEntityTypes<ThrowOnError extends boolean = false>(options?: Options<GetSupportedEntityTypesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetSupportedEntityTypesResponses, GetSupportedEntityTypesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
+            security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/versions/supported-types',
             ...options
         });

@@ -16,7 +16,7 @@ namespace Umbraco.AI.Core.Embeddings;
 /// var embeddings = await embeddingService.GenerateEmbeddingsAsync(emb => emb
 ///     .WithAlias("content-search")
 ///     .WithProfile("ada-embedding")
-///     .WithGuardrails(guardrailId),
+///     .WithGuardrails(guardrailId),   // additive on top of the profile's guardrails
 ///     values, cancellationToken);
 /// </code>
 /// </remarks>
@@ -33,8 +33,7 @@ public sealed class AIEmbeddingBuilder
     private string? _profileAlias;
     private EmbeddingGenerationOptions? _embeddingOptions;
     private IEnumerable<AIRequestContextItem>? _contextItems;
-    private IReadOnlyList<Guid> _guardrailIds = [];
-    private IReadOnlyList<string>? _guardrailAliases;
+    private readonly Guardrails.AIGuardrailBuilderState _aiGuardrails = new();
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private bool _isPassThrough;
 
@@ -122,26 +121,41 @@ public sealed class AIEmbeddingBuilder
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by ID.
+    /// Adds guardrails on top of the profile's configured guardrails (additive). Use
+    /// <see cref="SetGuardrails(Guid[])"/> to fully replace.
     /// </summary>
-    /// <param name="guardrailIds">The guardrail IDs to apply.</param>
-    /// <returns>The builder for chaining.</returns>
     public AIEmbeddingBuilder WithGuardrails(params Guid[] guardrailIds)
     {
-        _guardrailIds = guardrailIds;
-        _guardrailAliases = null;
+        _aiGuardrails.With(guardrailIds);
         return this;
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by alias.
+    /// Adds guardrails by alias on top of the profile's configured guardrails (additive). Aliases are
+    /// resolved to IDs by the service layer.
     /// </summary>
-    /// <param name="guardrailAliases">The guardrail aliases to apply.</param>
-    /// <returns>The builder for chaining.</returns>
     public AIEmbeddingBuilder WithGuardrails(params string[] guardrailAliases)
     {
-        _guardrailAliases = guardrailAliases;
-        _guardrailIds = [];
+        _aiGuardrails.WithByAlias(guardrailAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set (replace).
+    /// </summary>
+    public AIEmbeddingBuilder SetGuardrails(params Guid[] guardrailIds)
+    {
+        _aiGuardrails.Set(guardrailIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set by alias (replace). Aliases are resolved
+    /// to IDs by the service layer.
+    /// </summary>
+    public AIEmbeddingBuilder SetGuardrails(params string[] guardrailAliases)
+    {
+        _aiGuardrails.SetByAlias(guardrailAliases);
         return this;
     }
 
@@ -175,12 +189,15 @@ public sealed class AIEmbeddingBuilder
     internal string? ProfileAlias => _profileAlias;
     internal EmbeddingGenerationOptions? EmbeddingOptions => _embeddingOptions;
     internal IEnumerable<AIRequestContextItem>? ContextItems => _contextItems;
-    internal IReadOnlyList<Guid> GuardrailIds => _guardrailIds;
-    internal IReadOnlyList<string>? GuardrailAliases => _guardrailAliases;
+    internal IReadOnlyList<Guid> GuardrailIds => _aiGuardrails.Ids;
+    internal IReadOnlyList<string>? GuardrailAliases => _aiGuardrails.Aliases;
+    internal IReadOnlyList<Guid> AdditionalGuardrailIds => _aiGuardrails.AdditionalIds;
+    internal IReadOnlyList<string>? AdditionalGuardrailAliases => _aiGuardrails.AdditionalAliases;
     internal IReadOnlyDictionary<string, object?>? AdditionalProperties => _additionalProperties;
     internal bool IsPassThrough => _isPassThrough;
 
-    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _guardrailIds = guardrailIds;
+    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedIds(guardrailIds);
+    internal void SetResolvedAdditionalGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedAdditionalIds(guardrailIds);
 
     internal void Validate()
     {
@@ -199,10 +216,7 @@ public sealed class AIEmbeddingBuilder
             context.SetValue(Constants.ContextKeys.FeatureAlias, Alias);
         }
 
-        if (_guardrailIds.Count > 0)
-        {
-            context.SetValue(Constants.ContextKeys.GuardrailIdsOverride, _guardrailIds);
-        }
+        _aiGuardrails.WriteToContext(context);
 
         if (_additionalProperties is not null)
         {

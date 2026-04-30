@@ -304,6 +304,12 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
             builder.SetResolvedGuardrailIds(
                 await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
         }
+
+        if (builder.AdditionalGuardrailAliases is { Count: > 0 } additionalAliases)
+        {
+            builder.SetResolvedAdditionalGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(additionalAliases, cancellationToken));
+        }
     }
 
     private static SpeechToTextOptions? MergeOptions(AIProfile profile, SpeechToTextOptions? callerOptions)

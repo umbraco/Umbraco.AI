@@ -13,6 +13,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -45,6 +46,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly AIToolCollection _toolCollection;
     private readonly IAIProfileService _profileService;
     private readonly IAIGuardrailService _guardrailService;
+    private readonly IAIContextService _contextService;
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
@@ -60,6 +62,7 @@ internal sealed class AIAgentService : IAIAgentService
         AIToolCollection toolCollection,
         IAIProfileService profileService,
         IAIGuardrailService guardrailService,
+        IAIContextService contextService,
         IAIChatClientFactory chatClientFactory,
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
@@ -75,6 +78,7 @@ internal sealed class AIAgentService : IAIAgentService
         _toolCollection = toolCollection;
         _profileService = profileService;
         _guardrailService = guardrailService;
+        _contextService = contextService;
         _chatClientFactory = chatClientFactory;
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
@@ -530,6 +534,8 @@ internal sealed class AIAgentService : IAIAgentService
 
         var stopwatch = Stopwatch.StartNew();
         bool isSuccess = false;
+        string? responseText = null;
+        Exception? capturedException = null;
 
         try
         {
@@ -542,8 +548,14 @@ internal sealed class AIAgentService : IAIAgentService
                 cancellationToken);
 
             var response = await mafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            responseText = response.Text;
             isSuccess = true;
             return response;
+        }
+        catch (Exception ex)
+        {
+            capturedException = ex;
+            throw;
         }
         finally
         {
@@ -553,6 +565,10 @@ internal sealed class AIAgentService : IAIAgentService
                 stopwatch.Elapsed,
                 isSuccess,
                 eventMessages)
+                {
+                    ResponseText = responseText,
+                    Exception = capturedException,
+                }
                 .WithStateFrom(executingNotification);
 
             await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
@@ -647,6 +663,27 @@ internal sealed class AIAgentService : IAIAgentService
                 await _guardrailService.GetGuardrailIdsByAliasesAsync(aliases, cancellationToken));
         }
 
+        // Resolve additional guardrail aliases to IDs if needed
+        if (builder.AdditionalGuardrailAliases is { Count: > 0 } additionalGuardrailAliases)
+        {
+            builder.SetResolvedAdditionalGuardrailIds(
+                await _guardrailService.GetGuardrailIdsByAliasesAsync(additionalGuardrailAliases, cancellationToken));
+        }
+
+        // Resolve context aliases to IDs if needed (replace)
+        if (builder.ContextAliases is { Count: > 0 } contextAliases)
+        {
+            builder.SetResolvedContextIds(
+                await _contextService.GetContextIdsByAliasesAsync(contextAliases, cancellationToken));
+        }
+
+        // Resolve additional context aliases to IDs if needed (additive)
+        if (builder.AdditionalContextAliases is { Count: > 0 } additionalContextAliases)
+        {
+            builder.SetResolvedAdditionalContextIds(
+                await _contextService.GetContextIdsByAliasesAsync(additionalContextAliases, cancellationToken));
+        }
+
         var agent = builder.Build();
         return (agent, builder);
     }
@@ -666,6 +703,20 @@ internal sealed class AIAgentService : IAIAgentService
         if (builder.ChatOptions is not null)
         {
             properties[CoreConstants.ContextKeys.ChatOptionsOverride] = builder.ChatOptions;
+        }
+
+        // SetGuardrails → replace: the override key suppresses both agent and profile guardrail
+        // resolvers; only the override list applies. Additive (WithGuardrails) lives on agent.GuardrailIds.
+        if (builder.GuardrailIds.Count > 0)
+        {
+            properties[CoreConstants.ContextKeys.GuardrailIdsOverride] = builder.GuardrailIds;
+        }
+
+        // SetContexts → replace: the override key suppresses both agent and profile context resolvers;
+        // only the override list applies. Additive (WithContexts) lives on AIStandardAgentConfig.ContextIds.
+        if (builder.ContextIds is not null)
+        {
+            properties[CoreConstants.ContextKeys.ContextIdsOverride] = builder.ContextIds;
         }
 
         // Merge any additional properties from the builder
@@ -723,15 +774,23 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         bool isSuccess = false;
+        string? responseText = null;
+        Exception? capturedException = null;
         try
         {
             var response = await context.MafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            responseText = response.Text;
             isSuccess = true;
             return response;
         }
+        catch (Exception ex)
+        {
+            capturedException = ex;
+            throw;
+        }
         finally
         {
-            await PublishExecutedNotificationAsync(context, isSuccess);
+            await PublishExecutedNotificationAsync(context, isSuccess, responseText, capturedException);
         }
     }
 
@@ -858,7 +917,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         if (options.ContextIdsOverride is not null)
         {
-            additionalProperties[Constants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
+            additionalProperties[CoreConstants.ContextKeys.ContextIdsOverride] = options.ContextIdsOverride;
         }
 
         if (options.GuardrailIdsOverride is not null)
@@ -885,9 +944,14 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Publishes the executed notification with duration and success status.
+    /// Publishes the executed notification with duration, success status, and optional
+    /// response text / captured exception for non-streaming callers.
     /// </summary>
-    private async Task PublishExecutedNotificationAsync(AgentExecutionContext context, bool isSuccess)
+    private async Task PublishExecutedNotificationAsync(
+        AgentExecutionContext context,
+        bool isSuccess,
+        string? responseText = null,
+        Exception? exception = null)
     {
         var executedNotification = new AIAgentExecutedNotification(
             context.Agent,
@@ -895,6 +959,10 @@ internal sealed class AIAgentService : IAIAgentService
             context.Stopwatch.Elapsed,
             isSuccess,
             context.EventMessages)
+            {
+                ResponseText = responseText,
+                Exception = exception,
+            }
             .WithStateFrom(context.ExecutingNotification);
 
         await _eventAggregator.PublishAsync(executedNotification);

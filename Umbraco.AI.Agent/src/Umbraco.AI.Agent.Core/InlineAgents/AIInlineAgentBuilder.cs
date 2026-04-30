@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Utilities;
 
@@ -26,8 +28,9 @@ namespace Umbraco.AI.Agent.Core.InlineAgents;
 ///     .WithInstructions("Summarize the provided content concisely.")
 ///     .WithToolScopes("content-read")
 ///     .WithProfile("my-chat-profile")
-///     .WithGuardrails("safety-check", "pii-filter"),
+///     .WithGuardrails("safety-check", "pii-filter"), // additive on top of the profile's guardrails
 ///     messages, cancellationToken);
+/// // Use SetGuardrails / SetContexts to replace the profile's configured values.
 /// </code>
 /// <para>
 /// <strong>Orchestrated agent example:</strong>
@@ -55,8 +58,8 @@ public sealed class AIInlineAgentBuilder
     private string? _workflowId;
     private JsonElement? _workflowSettings;
     private IEnumerable<AIRequestContextItem>? _contextItems;
-    private IReadOnlyList<Guid> _guardrailIds = [];
-    private IReadOnlyList<string>? _guardrailAliases;
+    private readonly AIContextBuilderState _aiContexts = new();
+    private readonly AIGuardrailBuilderState _aiGuardrails = new();
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private ChatOptions? _chatOptions;
     private JsonElement? _outputSchema;
@@ -195,26 +198,81 @@ public sealed class AIInlineAgentBuilder
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by ID.
+    /// Adds stored AI context entries on top of the profile's configured contexts (additive). Use
+    /// <see cref="SetContexts(Guid[])"/> to fully replace.
     /// </summary>
-    /// <param name="guardrailIds">The guardrail IDs to apply.</param>
-    /// <returns>The builder for chaining.</returns>
-    public AIInlineAgentBuilder WithGuardrails(params Guid[] guardrailIds)
+    public AIInlineAgentBuilder WithContexts(params Guid[] contextIds)
     {
-        _guardrailIds = guardrailIds;
-        _guardrailAliases = null;
+        _aiContexts.With(contextIds);
         return this;
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by alias.
+    /// Adds stored AI context entries by alias on top of the profile's configured contexts (additive).
+    /// Aliases are resolved to IDs by the service layer.
     /// </summary>
-    /// <param name="guardrailAliases">The guardrail aliases to apply.</param>
-    /// <returns>The builder for chaining.</returns>
+    public AIInlineAgentBuilder WithContexts(params string[] contextAliases)
+    {
+        _aiContexts.WithByAlias(contextAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured contexts with this set (replace). Pass an empty array to
+    /// explicitly use no contexts.
+    /// </summary>
+    public AIInlineAgentBuilder SetContexts(params Guid[] contextIds)
+    {
+        _aiContexts.Set(contextIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured contexts with this set by alias (replace). Aliases are resolved
+    /// to IDs by the service layer.
+    /// </summary>
+    public AIInlineAgentBuilder SetContexts(params string[] contextAliases)
+    {
+        _aiContexts.SetByAlias(contextAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds guardrails on top of the profile's configured guardrails (additive). Use
+    /// <see cref="SetGuardrails(Guid[])"/> to fully replace.
+    /// </summary>
+    public AIInlineAgentBuilder WithGuardrails(params Guid[] guardrailIds)
+    {
+        _aiGuardrails.With(guardrailIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Adds guardrails by alias on top of the profile's configured guardrails (additive). Aliases are
+    /// resolved to IDs by the service layer.
+    /// </summary>
     public AIInlineAgentBuilder WithGuardrails(params string[] guardrailAliases)
     {
-        _guardrailAliases = guardrailAliases;
-        _guardrailIds = [];
+        _aiGuardrails.WithByAlias(guardrailAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set (replace).
+    /// </summary>
+    public AIInlineAgentBuilder SetGuardrails(params Guid[] guardrailIds)
+    {
+        _aiGuardrails.Set(guardrailIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set by alias (replace). Aliases are
+    /// resolved to IDs by the service layer.
+    /// </summary>
+    public AIInlineAgentBuilder SetGuardrails(params string[] guardrailAliases)
+    {
+        _aiGuardrails.SetByAlias(guardrailAliases);
         return this;
     }
 
@@ -257,10 +315,15 @@ public sealed class AIInlineAgentBuilder
     /// </summary>
     internal string? ProfileAlias => _profileAlias;
 
-    /// <summary>
-    /// Gets the guardrail aliases configured on this builder, if any.
-    /// </summary>
-    internal IReadOnlyList<string>? GuardrailAliases => _guardrailAliases;
+    internal IReadOnlyList<Guid> GuardrailIds => _aiGuardrails.Ids;
+    internal IReadOnlyList<string>? GuardrailAliases => _aiGuardrails.Aliases;
+    internal IReadOnlyList<Guid> AdditionalGuardrailIds => _aiGuardrails.AdditionalIds;
+    internal IReadOnlyList<string>? AdditionalGuardrailAliases => _aiGuardrails.AdditionalAliases;
+
+    internal IReadOnlyList<Guid>? ContextIds => _aiContexts.Ids;
+    internal IReadOnlyList<string>? ContextAliases => _aiContexts.Aliases;
+    internal IReadOnlyList<Guid> AdditionalContextIds => _aiContexts.AdditionalIds;
+    internal IReadOnlyList<string>? AdditionalContextAliases => _aiContexts.AdditionalAliases;
 
     /// <summary>
     /// Gets whether all tools should be included.
@@ -294,10 +357,24 @@ public sealed class AIInlineAgentBuilder
     internal void SetResolvedProfileId(Guid profileId) => _profileId = profileId;
 
     /// <summary>
-    /// Sets resolved guardrail IDs from alias lookup. Used by the service layer
-    /// to resolve aliases before building the agent entity.
+    /// Sets resolved guardrail IDs from alias lookup (replace mode). Used by the service layer.
     /// </summary>
-    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _guardrailIds = guardrailIds;
+    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedIds(guardrailIds);
+
+    /// <summary>
+    /// Sets resolved additional guardrail IDs from alias lookup (additive mode). Used by the service layer.
+    /// </summary>
+    internal void SetResolvedAdditionalGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedAdditionalIds(guardrailIds);
+
+    /// <summary>
+    /// Sets resolved context IDs from alias lookup (replace mode). Used by the service layer.
+    /// </summary>
+    internal void SetResolvedContextIds(IReadOnlyList<Guid> contextIds) => _aiContexts.SetResolvedIds(contextIds);
+
+    /// <summary>
+    /// Sets resolved additional context IDs from alias lookup (additive mode). Used by the service layer.
+    /// </summary>
+    internal void SetResolvedAdditionalContextIds(IReadOnlyList<Guid> contextIds) => _aiContexts.SetResolvedAdditionalIds(contextIds);
 
     /// <summary>
     /// Builds a transient <see cref="AIAgent"/> entity from the builder configuration.
@@ -320,6 +397,9 @@ public sealed class AIInlineAgentBuilder
 
         var isOrchestrated = _workflowId is not null;
 
+        // Additive lists (WithGuardrails / WithContexts) are written onto the agent entity so they flow
+        // through the agent-level resolvers (additive-with-profile). Replace lists (SetGuardrails /
+        // SetContexts) are emitted as runtime-context override keys by BuildAgentProperties.
         var agent = new AIAgent
         {
             Alias = _alias,
@@ -327,7 +407,7 @@ public sealed class AIInlineAgentBuilder
             Description = _description,
             AgentType = isOrchestrated ? AIAgentType.Orchestrated : AIAgentType.Standard,
             ProfileId = _profileId,
-            GuardrailIds = _guardrailIds,
+            GuardrailIds = _aiGuardrails.AdditionalIds,
             IsActive = true,
             SurfaceIds = [],
         };
@@ -350,6 +430,7 @@ public sealed class AIInlineAgentBuilder
                 Instructions = _instructions,
                 AllowedToolIds = _toolIds,
                 AllowedToolScopeIds = _toolScopeIds,
+                ContextIds = _aiContexts.AdditionalIds,
                 OutputSchema = _outputSchema,
             };
         }

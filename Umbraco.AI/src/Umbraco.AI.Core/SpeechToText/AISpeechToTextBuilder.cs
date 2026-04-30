@@ -22,7 +22,7 @@ namespace Umbraco.AI.Core.SpeechToText;
 /// var response = await speechToTextService.TranscribeAsync(stt => stt
 ///     .WithAlias("voice-notes")
 ///     .WithProfile("whisper-profile")
-///     .WithGuardrails("content-filter"),
+///     .WithGuardrails("content-filter"),   // additive on top of the profile's guardrails
 ///     audioStream, cancellationToken);
 /// </code>
 /// </remarks>
@@ -39,8 +39,7 @@ public sealed class AISpeechToTextBuilder
     private string? _profileAlias;
     private SpeechToTextOptions? _speechToTextOptions;
     private IEnumerable<AIRequestContextItem>? _contextItems;
-    private IReadOnlyList<Guid> _guardrailIds = [];
-    private IReadOnlyList<string>? _guardrailAliases;
+    private readonly Guardrails.AIGuardrailBuilderState _aiGuardrails = new();
     private IReadOnlyDictionary<string, object?>? _additionalProperties;
     private bool _isPassThrough;
 
@@ -132,26 +131,41 @@ public sealed class AISpeechToTextBuilder
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by ID.
+    /// Adds guardrails on top of the profile's configured guardrails (additive). Use
+    /// <see cref="SetGuardrails(Guid[])"/> to fully replace.
     /// </summary>
-    /// <param name="guardrailIds">The guardrail IDs to apply.</param>
-    /// <returns>The builder for chaining.</returns>
     public AISpeechToTextBuilder WithGuardrails(params Guid[] guardrailIds)
     {
-        _guardrailIds = guardrailIds;
-        _guardrailAliases = null;
+        _aiGuardrails.With(guardrailIds);
         return this;
     }
 
     /// <summary>
-    /// Sets guardrails for safety and compliance checks by alias.
+    /// Adds guardrails by alias on top of the profile's configured guardrails (additive). Aliases are
+    /// resolved to IDs by the service layer.
     /// </summary>
-    /// <param name="guardrailAliases">The guardrail aliases to apply.</param>
-    /// <returns>The builder for chaining.</returns>
     public AISpeechToTextBuilder WithGuardrails(params string[] guardrailAliases)
     {
-        _guardrailAliases = guardrailAliases;
-        _guardrailIds = [];
+        _aiGuardrails.WithByAlias(guardrailAliases);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set (replace).
+    /// </summary>
+    public AISpeechToTextBuilder SetGuardrails(params Guid[] guardrailIds)
+    {
+        _aiGuardrails.Set(guardrailIds);
+        return this;
+    }
+
+    /// <summary>
+    /// Replaces the profile's configured guardrails with this set by alias (replace). Aliases are resolved
+    /// to IDs by the service layer.
+    /// </summary>
+    public AISpeechToTextBuilder SetGuardrails(params string[] guardrailAliases)
+    {
+        _aiGuardrails.SetByAlias(guardrailAliases);
         return this;
     }
 
@@ -227,15 +241,10 @@ public sealed class AISpeechToTextBuilder
     /// </summary>
     internal IEnumerable<AIRequestContextItem>? ContextItems => _contextItems;
 
-    /// <summary>
-    /// Gets the guardrail IDs configured on this builder.
-    /// </summary>
-    internal IReadOnlyList<Guid> GuardrailIds => _guardrailIds;
-
-    /// <summary>
-    /// Gets the guardrail aliases configured on this builder, if any.
-    /// </summary>
-    internal IReadOnlyList<string>? GuardrailAliases => _guardrailAliases;
+    internal IReadOnlyList<Guid> GuardrailIds => _aiGuardrails.Ids;
+    internal IReadOnlyList<string>? GuardrailAliases => _aiGuardrails.Aliases;
+    internal IReadOnlyList<Guid> AdditionalGuardrailIds => _aiGuardrails.AdditionalIds;
+    internal IReadOnlyList<string>? AdditionalGuardrailAliases => _aiGuardrails.AdditionalAliases;
 
     /// <summary>
     /// Gets the additional properties configured on this builder.
@@ -251,7 +260,12 @@ public sealed class AISpeechToTextBuilder
     /// Sets resolved guardrail IDs from alias lookup. Used by the service layer
     /// to resolve aliases before execution.
     /// </summary>
-    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _guardrailIds = guardrailIds;
+    internal void SetResolvedGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedIds(guardrailIds);
+
+    /// <summary>
+    /// Sets resolved additional guardrail IDs from alias lookup (additive mode).
+    /// </summary>
+    internal void SetResolvedAdditionalGuardrailIds(IReadOnlyList<Guid> guardrailIds) => _aiGuardrails.SetResolvedAdditionalIds(guardrailIds);
 
     /// <summary>
     /// Validates the builder configuration.
@@ -282,10 +296,7 @@ public sealed class AISpeechToTextBuilder
             context.SetValue(Constants.ContextKeys.FeatureAlias, Alias);
         }
 
-        if (_guardrailIds.Count > 0)
-        {
-            context.SetValue(Constants.ContextKeys.GuardrailIdsOverride, _guardrailIds);
-        }
+        _aiGuardrails.WriteToContext(context);
 
         if (_additionalProperties is not null)
         {

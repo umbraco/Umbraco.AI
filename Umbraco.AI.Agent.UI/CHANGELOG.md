@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha6...Umbraco.AI.Agent.UI@1.0.0-alpha7) (2026-04-30)
+
+### fix
+
+* **agent-ui:** Bump Umbraco CMS peer dependency minimum to 17.3.0 ([342d3e1](https://github.com/umbraco/Umbraco.AI/commit/342d3e1ff10bf9e22be17b5c441a030e0327d4ab))
+
 ## [1.0.0-alpha6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha5...Umbraco.AI.Agent.UI@1.0.0-alpha6) (2026-04-08)
 
 ### feat

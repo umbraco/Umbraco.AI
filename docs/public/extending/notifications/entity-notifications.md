@@ -501,11 +501,12 @@ Published **after** an agent execution completes (not cancelable).
 
 **Properties:**
 - `Agent` (AIAgent) - The agent that was executed
-- `Request` (AGUIRunRequest) - The execution run request
-- `FrontendTools` (IEnumerable\<AIFrontendTool\>?) - The frontend tools provided
+- `ChatMessages` (IReadOnlyList\<ChatMessage\>) - The input messages for this execution
 - `Duration` (TimeSpan) - The execution duration (measured with high-resolution Stopwatch)
 - `IsSuccess` (bool) - Whether the execution completed successfully
 - `Messages` (EventMessages) - Event messages from the operation
+- `ResponseText` (string?) - The final response text (non-streaming only; null for streaming)
+- `Exception` (Exception?) - The exception that caused failure, if any (null on success or streaming)
 
 **Use Cases:**
 - Usage tracking and billing
@@ -525,11 +526,9 @@ public class AgentExecutedHandler : INotificationAsyncHandler<AIAgentExecutedNot
         {
             AgentId = notification.Agent.Id,
             AgentAlias = notification.Agent.Alias,
-            ThreadId = notification.Request.ThreadId,
-            RunId = notification.Request.RunId,
             Duration = notification.Duration,
             IsSuccess = notification.IsSuccess,
-            FrontendToolCount = notification.FrontendTools?.Count() ?? 0,
+            ResponseLength = notification.ResponseText?.Length ?? 0,
             Timestamp = DateTime.UtcNow
         });
 
@@ -537,9 +536,9 @@ public class AgentExecutedHandler : INotificationAsyncHandler<AIAgentExecutedNot
         if (!notification.IsSuccess)
         {
             _logger.LogError(
-                "Agent execution failed: {AgentAlias} (RunId: {RunId})",
-                notification.Agent.Alias,
-                notification.Request.RunId);
+                notification.Exception,
+                "Agent execution failed: {AgentAlias}",
+                notification.Agent.Alias);
 
             await _alertService.SendAsync(
                 "Agent Execution Failure",

@@ -125,7 +125,7 @@ export type AgentWorkflowItemResponseModel = {
 };
 
 export type BinaryChatContentPartModel = ChatContentPartModel & {
-    $type: string;
+    $type: 'binary';
     mimeType: string;
     data: string;
     filename?: string | null;
@@ -182,7 +182,7 @@ export type NotificationHeaderModel = {
 };
 
 export type OrchestratedAgentConfigModel = AgentConfigModel & {
-    $type: string;
+    $type: 'orchestrated';
     workflowId?: string | null;
     settings?: unknown;
 };
@@ -198,7 +198,7 @@ export type ProblemDetails = {
     status?: number | null;
     detail?: string | null;
     instance?: string | null;
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
+    [key: string]: unknown;
 };
 
 export type RunAgentRequestModel = {
@@ -206,7 +206,7 @@ export type RunAgentRequestModel = {
 };
 
 export type StandardAgentConfigModel = AgentConfigModel & {
-    $type: string;
+    $type: 'standard';
     contextIds?: Array<string> | null;
     instructions?: string | null;
     allowedToolIds?: Array<string> | null;
@@ -218,7 +218,7 @@ export type StandardAgentConfigModel = AgentConfigModel & {
 };
 
 export type TextChatContentPartModel = ChatContentPartModel & {
-    $type: string;
+    $type: 'text';
     text: string;
 };
 
@@ -243,9 +243,7 @@ export type ValidationProblemDetails = {
     errors: {
         [key: string]: Array<string>;
     };
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | {
-        [key: string]: Array<string>;
-    } | undefined;
+    [key: string]: unknown;
 };
 
 export type GetAllAgentsData = {

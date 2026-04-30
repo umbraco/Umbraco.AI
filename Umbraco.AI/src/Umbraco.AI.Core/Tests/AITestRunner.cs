@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Utilities;
 
 namespace Umbraco.AI.Core.Tests;
 
@@ -45,8 +46,11 @@ internal sealed class AITestRunner : IAITestRunner
         var effectiveBatchId = batchId ?? Guid.NewGuid();
 
         // 1. Execute default configuration runs
+        // Only treat ContextIds as an override when something was actually requested:
+        // a caller-supplied list, or a non-empty test-level list. An empty list would otherwise
+        // reach the resolvers as "replace profile contexts with nothing" and suppress them.
         var effectiveProfile = profileIdOverride ?? test.ProfileId;
-        var effectiveContextIds = contextIdsOverride?.ToList() ?? test.ContextIds.ToList();
+        var effectiveContextIds = (IReadOnlyList<Guid>?)contextIdsOverride?.ToList() ?? test.ContextIds.NullIfEmpty();
 
         var defaultRuns = await ExecuteRunsAsync(
             test,
@@ -68,7 +72,9 @@ internal sealed class AITestRunner : IAITestRunner
         foreach (var variation in test.Variations)
         {
             var varProfile = variation.ProfileId ?? test.ProfileId;
-            var varContextIds = variation.ContextIds ?? test.ContextIds;
+            // variation.ContextIds is nullable: null = no variation-level override, list = explicit override
+            // (including []). When falling back to the test's stored ContextIds, treat empty as "no override".
+            var varContextIds = (IReadOnlyList<Guid>?)variation.ContextIds?.ToList() ?? test.ContextIds.NullIfEmpty();
             var varRunCount = variation.RunCount ?? test.RunCount;
 
             // Deep merge feature config if variation provides overrides
@@ -81,7 +87,7 @@ internal sealed class AITestRunner : IAITestRunner
                 testFeature,
                 varRunCount,
                 varProfile,
-                varContextIds.ToList(),
+                varContextIds,
                 guardrailIdsOverride,
                 effectiveBatchId,
                 executionId,
@@ -153,7 +159,7 @@ internal sealed class AITestRunner : IAITestRunner
         IAITestFeature testFeature,
         int runCount,
         Guid? profileId,
-        IReadOnlyList<Guid> contextIds,
+        IReadOnlyList<Guid>? contextIds,
         IEnumerable<Guid>? guardrailIdsOverride,
         Guid batchId,
         Guid executionId,
@@ -226,7 +232,7 @@ internal sealed class AITestRunner : IAITestRunner
         IAITestFeature testFeature,
         int runNumber,
         Guid? profileId,
-        IReadOnlyList<Guid> contextIds,
+        IReadOnlyList<Guid>? contextIds,
         IEnumerable<Guid>? guardrailIdsOverride,
         Guid batchId,
         Guid executionId,
@@ -236,7 +242,7 @@ internal sealed class AITestRunner : IAITestRunner
     {
         var startTime = DateTime.UtcNow;
 
-        // Create test run
+        // Create test run — store [] on the run when no override was applied, matching the existing shape
         var testRun = new AITestRun
         {
             Id = Guid.NewGuid(),
@@ -244,7 +250,7 @@ internal sealed class AITestRunner : IAITestRunner
             TestVersion = test.Version,
             RunNumber = runNumber,
             ProfileId = profileId,
-            ContextIds = contextIds.ToList(),
+            ContextIds = contextIds?.ToList() ?? [],
             ExecutedAt = startTime,
             Status = AITestRunStatus.Running,
             BatchId = batchId,
@@ -255,12 +261,12 @@ internal sealed class AITestRunner : IAITestRunner
 
         try
         {
-            // Execute the test feature
+            // Pass the nullable slot to the feature so null ("no override") stays null all the way to the resolver.
             var transcript = await testFeature.ExecuteAsync(
                 test,
                 runNumber,
                 testRun.ProfileId,
-                testRun.ContextIds,
+                contextIds,
                 guardrailIdsOverride,
                 cancellationToken);
 

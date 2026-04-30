@@ -1,7 +1,7 @@
 import { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/backoffice/extension-api";
+import { configureAiClient } from "@umbraco-ai/core";
 import { client } from "./api/client.gen.ts";
 import { UmbPromptRegistrarController } from "./prompt/controllers";
-import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 
 // Re-export everything from the main index
 export * from "./index.js";
@@ -16,18 +16,10 @@ export const promptClientReady = new Promise<void>((resolve) => {
 let promptRegistrar: UmbPromptRegistrarController | null = null;
 
 // Initialize the entry point
-export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
+export const onInit: UmbEntryPointOnInit = (host, _extensionRegistry) => {
     console.log("Umbraco AI Prompt Entrypoint initialized");
-    _host.consumeContext(UMB_AUTH_CONTEXT, async (authContext) => {
-        if (!authContext) return;
-        const config = authContext?.getOpenApiConfiguration();
-        client.setConfig({
-            auth: config?.token ?? undefined,
-            baseUrl: config?.base ?? "",
-            credentials: config?.credentials ?? "same-origin",
-        });
 
-        // Resolve the ready promise once auth is configured
+    configureAiClient(host, client).then(async () => {
         if (promptClientReadyResolve) {
             promptClientReadyResolve();
             promptClientReadyResolve = undefined;
@@ -35,7 +27,7 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
 
         // Register prompt property actions after authentication is established
         // Store in module variable to prevent garbage collection
-        promptRegistrar = new UmbPromptRegistrarController(_host);
+        promptRegistrar = new UmbPromptRegistrarController(host);
         await promptRegistrar.registerPrompts();
     });
 };

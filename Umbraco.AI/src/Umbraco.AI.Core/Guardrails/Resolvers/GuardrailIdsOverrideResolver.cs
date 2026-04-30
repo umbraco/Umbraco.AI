@@ -38,25 +38,6 @@ internal sealed class GuardrailIdsOverrideResolver : IAIGuardrailResolver
         }
 
         var guardrails = await _guardrailService.GetGuardrailsByIdsAsync(guardrailIds, cancellationToken);
-
-        var allRules = new List<AIGuardrailRule>();
-        var resolvedIds = new List<Guid>();
-
-        foreach (var guardrail in guardrails)
-        {
-            resolvedIds.Add(guardrail.Id);
-            foreach (var rule in guardrail.Rules.OrderBy(r => r.SortOrder))
-            {
-                rule.GuardrailName = guardrail.Name;
-                allRules.Add(rule);
-            }
-        }
-
-        return new AIGuardrailResolverResult
-        {
-            Rules = allRules,
-            GuardrailIds = resolvedIds,
-            Source = "Override"
-        };
+        return AIGuardrailResolverResult.FromGuardrails(guardrails, source: "Override");
     }
 }

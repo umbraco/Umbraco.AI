@@ -111,3 +111,4 @@ For detailed documentation, see the [Umbraco.AI documentation](../docs/public/ad
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
+

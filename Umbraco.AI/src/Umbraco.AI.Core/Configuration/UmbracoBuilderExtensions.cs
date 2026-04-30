@@ -224,10 +224,13 @@ public static partial class UmbracoBuilderExtensions
         builder.AIGuardrailEvaluators()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIGuardrailEvaluator, AIGuardrailEvaluatorAttribute>(cache: true));
 
-        // Guardrail resolution - pluggable resolver system
+        // Guardrail resolution - pluggable resolver system.
+        // Order: override first (only runs if set; source resolvers suppress themselves when override is set),
+        // then source resolvers (profile/agent/prompt), then additional (always additive on top).
         builder.AIGuardrailResolvers()
             .Append<GuardrailIdsOverrideResolver>()
-            .Append<ProfileGuardrailResolver>();
+            .Append<ProfileGuardrailResolver>()
+            .Append<AdditionalGuardrailIdsResolver>();
         services.AddSingleton<IAIGuardrailResolutionService, AIGuardrailResolutionService>();
 
         // Entity adapter infrastructure

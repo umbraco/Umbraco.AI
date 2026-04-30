@@ -55,4 +55,16 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     /// Gets the event messages.
     /// </summary>
     public EventMessages Messages { get; }
+
+    /// <summary>
+    /// Gets the final response text produced by the agent, if available.
+    /// Populated for non-streaming executions; streaming executions leave this null.
+    /// </summary>
+    public string? ResponseText { get; init; }
+
+    /// <summary>
+    /// Gets the exception that caused the execution to fail, if any.
+    /// Null when <see cref="IsSuccess"/> is true or when the failure did not surface as an exception.
+    /// </summary>
+    public Exception? Exception { get; init; }
 }

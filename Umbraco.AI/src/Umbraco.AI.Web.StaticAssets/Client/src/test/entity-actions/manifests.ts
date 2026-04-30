@@ -18,19 +18,6 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
-		alias: "UmbracoAI.EntityAction.Test.Run",
-		name: "Run Test Entity Action",
-		weight: 1100,
-		api: () => import("./test-run.action.js"),
-		forEntityTypes: [UAI_TEST_ENTITY_TYPE],
-		meta: {
-			icon: "icon-play",
-			label: "Run",
-		},
-	},
-	{
-		type: "entityAction",
-		kind: "default",
 		alias: "UmbracoAI.EntityAction.Test.Delete",
 		name: "Delete Test Entity Action",
 		weight: 100,

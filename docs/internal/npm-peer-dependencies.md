@@ -36,7 +36,7 @@ Defines default peer dependency version ranges for all products:
     "@umbraco-ai/core": "^1.2.0",
     "@umbraco-ai/agent": "^1.2.0",
     "@umbraco-ai/agent-ui": "^1.0.0",
-    "@umbraco-cms/backoffice": "^17.1.0"
+    "@umbraco-cms/backoffice": "^17.3.0"
   },
   "_comment_peerDependencyVersions": "Default peer dependency version ranges..."
 }
@@ -68,7 +68,7 @@ Packages reference each other using workspace protocol in `package.json`:
 {
   "dependencies": {
     "@umbraco-ai/core": "*",
-    "@umbraco-cms/backoffice": "^17.1.0"
+    "@umbraco-cms/backoffice": "^17.3.0"
   },
   "peerDependencies": {
     "@umbraco-ai/core": "^1.3.0"  // Optional: Override root default for this product
@@ -99,7 +99,7 @@ When creating npm packages (`.azure-pipelines/templates/pack-product.yml`):
      "version": "1.2.0",
      "peerDependencies": {
        "@umbraco-ai/core": "^1.3.0",       // From package's own peerDependencies
-       "@umbraco-cms/backoffice": "^17.1.0", // Resolved from root config
+       "@umbraco-cms/backoffice": "^17.3.0", // Resolved from root config
        "chart.js": "^4.5.1"                 // Not in config, kept as-is
      }
    }
@@ -136,7 +136,7 @@ Both express "minimum 1.2.0, accept all 1.x".
 |-------------------------------|-----------|------------------------------------|
 | `[1.0.0, 1.999.999)`         | `^1.0.0`  | 1.0.0 ≤ version < 2.0.0            |
 | `[1.2.0, 1.999.999)`         | `^1.2.0`  | 1.2.0 ≤ version < 2.0.0            |
-| `[17.1.0, 17.999.999)`       | `^17.1.0` | 17.1.0 ≤ version < 18.0.0          |
+| `[17.3.0, 17.999.999)`       | `^17.3.0` | 17.3.0 ≤ version < 18.0.0          |
 
 ## Maintenance
 

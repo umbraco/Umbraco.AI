@@ -1,6 +1,7 @@
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { customElement, html, property, state, when } from '@umbraco-cms/backoffice/external/lit';
 import { UMB_SECTION_CONTEXT } from '@umbraco-cms/backoffice/section';
+import { UmbEntityContext } from '@umbraco-cms/backoffice/entity';
 import { debounce } from '@umbraco-cms/backoffice/utils';
 import type { UaiEntityContainerMenuItemManifest } from './types.js';
 
@@ -26,6 +27,7 @@ export class UaiEntityContainerMenuItemElement extends UmbLitElement {
 
 	#pathname?: string;
 	#childEntityTypes: string[] = [];
+	#entityContext = new UmbEntityContext(this);
 
 	constructor() {
 		super();
@@ -59,6 +61,10 @@ export class UaiEntityContainerMenuItemElement extends UmbLitElement {
 
 		// Store child entity types from manifest
 		this.#childEntityTypes = this.manifest.meta.childEntityTypes || [];
+
+		// Provide entity type/unique via context for <umb-entity-actions-bundle>
+		this.#entityContext.setEntityType(this.manifest.meta.entityType);
+		this.#entityContext.setUnique(null);
 
 		// Construct href to root entity workspace
 		this._href = `section/${this.#pathname}/workspace/${this.manifest.meta.entityType}`;
@@ -112,8 +118,6 @@ export class UaiEntityContainerMenuItemElement extends UmbLitElement {
 					() => html`
 						<umb-entity-actions-bundle
 							slot="actions"
-							.entityType=${this.manifest.meta.entityType}
-							.unique=${null}
 							.label=${this.localize.string(this.manifest.meta.label ?? this.manifest.name)}>
 						</umb-entity-actions-bundle>
 					`,

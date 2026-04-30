@@ -171,7 +171,7 @@ export class UaiFrontendToolRepository {
         "@umbraco-ai/core": "^1.0.0",
         "@umbraco-ai/agent": "^1.0.0",
         "@umbraco-ai/agent-ui": "^1.0.0",
-        "@umbraco-cms/backoffice": "^17.1.0"
+        "@umbraco-cms/backoffice": "^17.3.0"
     },
     "dependencies": {
         "@ag-ui/client": "^0.0.42"

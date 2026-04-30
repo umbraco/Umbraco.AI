@@ -5,6 +5,22 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.9.0...Umbraco.AI@1.10.0) (2026-04-30)
+
+### feat
+
+* **chat:** Add WithTools to AIChatBuilder for registered tool IDs ([6c2fe0e](https://github.com/umbraco/Umbraco.AI/commit/6c2fe0e7028f059162c57996f1f959d77a49f33b))
+* **chat,agent,core:** Add With/Set Contexts and Guardrails on inline builders ([2e0c446](https://github.com/umbraco/Umbraco.AI/commit/2e0c446eacbb0bb14c836792322e10abdf152b87))
+
+### fix
+
+* **core:** Match Run button look to row actions ([d7d3445](https://github.com/umbraco/Umbraco.AI/commit/d7d3445d9ddbb4dd5e96f3ea01bbe0119a9b2913))
+* **core:** Preserve null context overrides in test runs so profile contexts aren't suppressed ([c120f19](https://github.com/umbraco/Umbraco.AI/commit/c120f19942a036a2fe1c1e31633b361393480289))
+* **core:** Prevent ambient scope leak from producer thread into background task queue worker ([52a2354](https://github.com/umbraco/Umbraco.AI/commit/52a2354436ca9f3b5dfa874ea68bef4b0dcedb3a))
+* **core:** Show progress on test run button in collection view ([64a6f84](https://github.com/umbraco/Umbraco.AI/commit/64a6f841bf6d6ea9b7471f12efd1f5fc0916ad94))
+* **core,agent,prompt:** Bind default response interceptors with silent 401 refresh on generated clients ([dd529ab](https://github.com/umbraco/Umbraco.AI/commit/dd529abae106c813ce8fe41c9b93792571e80517))
+* **core,deps:** Provide entity context for actions bundle and bump CMS minimum to 17.3.0 ([342d3e1](https://github.com/umbraco/Umbraco.AI/commit/342d3e1ff10bf9e22be17b5c441a030e0327d4ab))
+
 ## [1.9.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.8.0...Umbraco.AI@1.9.0) (2026-04-16)
 
 ### feat

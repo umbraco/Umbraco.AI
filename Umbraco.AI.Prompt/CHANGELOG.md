@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.0...Umbraco.AI.Prompt@1.8.1) (2026-04-30)
+
+### fix
+
+* **core,agent,prompt:** Bind default response interceptors with silent 401 refresh on generated clients ([dd529ab](https://github.com/umbraco/Umbraco.AI/commit/dd529abae106c813ce8fe41c9b93792571e80517))
+
 ## [1.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.7.0...Umbraco.AI.Prompt@1.8.0) (2026-04-16)
 
 ### feat

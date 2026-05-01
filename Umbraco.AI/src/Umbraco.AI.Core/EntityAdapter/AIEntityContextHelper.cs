@@ -51,8 +51,9 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
         {
             // Group property entries by alias preserving array order so the
             // last-write-wins fallback below matches the previous behaviour
-            // when no culture/segment metadata is present.
-            var entriesByAlias = new Dictionary<string, List<JsonElement>>(StringComparer.Ordinal);
+            // when no culture/segment metadata is present. Aliases are
+            // case-insensitive in Umbraco's property model.
+            var entriesByAlias = new Dictionary<string, List<JsonElement>>(StringComparer.OrdinalIgnoreCase);
             foreach (var propElement in propertiesElement.EnumerateArray())
             {
                 if (propElement.ValueKind != JsonValueKind.Object)
@@ -76,7 +77,7 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
 
             foreach (var (alias, entries) in entriesByAlias)
             {
-                var picked = PickEntryForVariant(entries, entity.Culture, entity.Segment);
+                var picked = PickValueForVariant(entries, entity.Culture, entity.Segment);
                 if (picked is null)
                     continue;
 
@@ -95,11 +96,13 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
 
     /// <summary>
     /// Pick the property entry that matches the active culture/segment, falling
-    /// back to the invariant entry, then the last entry. Mirrors the
-    /// frontend's <c>pickValueForVariant</c> so client and server agree on
-    /// which value resolves for a given alias.
+    /// back to the invariant entry, then the last entry. Mirrors the frontend's
+    /// <c>pickValueForVariant</c> in <c>variant-selection.ts</c> so client and
+    /// server agree on which value resolves for a given alias. The "last entry"
+    /// fallback preserves the pre-fix Map-based last-write-wins behaviour for
+    /// payloads without culture metadata.
     /// </summary>
-    private static JsonElement? PickEntryForVariant(List<JsonElement> entries, string? activeCulture, string? activeSegment)
+    private static JsonElement? PickValueForVariant(List<JsonElement> entries, string? activeCulture, string? activeSegment)
     {
         if (entries.Count == 0)
             return null;
@@ -107,8 +110,8 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
         // Prefer exact match on (culture, segment).
         foreach (var entry in entries)
         {
-            if (StringEquals(GetStringOrNull(entry, "culture"), activeCulture) &&
-                StringEquals(GetStringOrNull(entry, "segment"), activeSegment))
+            if (GetStringOrNull(entry, "culture") == activeCulture &&
+                GetStringOrNull(entry, "segment") == activeSegment)
             {
                 return entry;
             }
@@ -140,8 +143,6 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
             return null;
         return element.ValueKind == JsonValueKind.String ? element.GetString() : null;
     }
-
-    private static bool StringEquals(string? a, string? b) => string.Equals(a, b, StringComparison.Ordinal);
 
     /// <inheritdoc />
     public string FormatForLlm(AISerializedEntity entity)

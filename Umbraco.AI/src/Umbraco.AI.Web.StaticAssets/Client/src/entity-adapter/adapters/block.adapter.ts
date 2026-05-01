@@ -16,6 +16,7 @@ import type {
     UaiSerializedProperty,
 } from "../types.js";
 import { prepareValueForEditor } from "./value-preparation.js";
+import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 /**
  * Property structure from content type.
@@ -25,15 +26,6 @@ interface PropertyStructure {
     name: string;
     description?: string | null;
     dataType: { unique: string };
-}
-
-/**
- * Active variant info — culture/segment of the variant the block is being
- * edited for (inherited from the parent document workspace).
- */
-interface ActiveVariantInfo {
-    culture: string | null;
-    segment: string | null;
 }
 
 /**
@@ -78,27 +70,6 @@ function getActiveVariant(ctx: BlockWorkspaceContextLike): ActiveVariantInfo | n
     const variantId = ctx.getVariantId?.();
     if (!variantId) return null;
     return { culture: variantId.culture ?? null, segment: variantId.segment ?? null };
-}
-
-/**
- * Pick the property value entry matching the active variant, falling back to
- * the invariant entry for properties that don't vary on this content type.
- */
-function pickValueForVariant<T extends { culture: string | null; segment: string | null }>(
-    entries: T[],
-    active: ActiveVariantInfo | null,
-): T | undefined {
-    if (entries.length === 0) return undefined;
-
-    if (active) {
-        const exact = entries.find((e) => e.culture === active.culture && e.segment === active.segment);
-        if (exact) return exact;
-    }
-
-    const invariant = entries.find((e) => e.culture === null && e.segment === null);
-    if (invariant) return invariant;
-
-    return entries[0];
 }
 
 /**
@@ -197,6 +168,9 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const active = getActiveVariant(ctx);
 
         // Group values by alias so we can pick the active-variant entry per property.
+        // On multi-variant content `values` has N×M entries (cultures × properties);
+        // grouping by alias also lets us look up each property's structure once
+        // instead of per-culture.
         const valuesByAlias = new Map<string, typeof values>();
         for (const v of values) {
             const bucket = valuesByAlias.get(v.alias);
@@ -207,12 +181,13 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
             }
         }
 
-        // Map: dataType.unique -> editorAlias (for properties without values)
+        // Map: dataType.unique -> editorAlias (for properties without values).
+        // One structure lookup per unique alias, not per (alias × culture).
         const editorAliasByDataType = new Map<string, string>();
-        for (const v of values) {
-            const structure = await ctx.content.structure?.getPropertyStructureByAlias?.(v.alias);
+        for (const [alias, entries] of valuesByAlias) {
+            const structure = await ctx.content.structure?.getPropertyStructureByAlias?.(alias);
             if (structure?.dataType.unique) {
-                editorAliasByDataType.set(structure.dataType.unique, v.editorAlias);
+                editorAliasByDataType.set(structure.dataType.unique, entries[0].editorAlias);
             }
         }
 

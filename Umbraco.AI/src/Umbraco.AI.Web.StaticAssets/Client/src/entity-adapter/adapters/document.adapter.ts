@@ -16,6 +16,7 @@ import type {
     UaiSerializedProperty,
 } from "../types.js";
 import { prepareValueForEditor } from "./value-preparation.js";
+import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 // Supported text-based property editors for initial implementation
 // const SUPPORTED_EDITOR_ALIASES = ["Umbraco.TextBox", "Umbraco.TextArea"];
@@ -28,15 +29,6 @@ interface PropertyStructure {
     name: string;
     description?: string | null;
     dataType: { unique: string };
-}
-
-/**
- * Active variant entry on UmbWorkspaceSplitViewManagerContext.
- * Identifies which culture/segment the editor currently has focused.
- */
-interface ActiveVariantInfo {
-    culture: string | null;
-    segment: string | null;
 }
 
 /**
@@ -88,6 +80,9 @@ interface DocumentWorkspaceContextLike {
  * Returns null when none can be determined (invariant document, missing API,
  * mocked context). When multiple variants are focused (split view), the first
  * is used since the AI prompt is triggered against a single editing context.
+ *
+ * TODO: revisit when invoking from the second pane of a split view —
+ * `getActiveVariants()[0]` always picks the leftmost pane today.
  */
 function getActiveVariant(ctx: DocumentWorkspaceContextLike): ActiveVariantInfo | null {
     const active = ctx.splitView?.getActiveVariants?.();
@@ -95,29 +90,6 @@ function getActiveVariant(ctx: DocumentWorkspaceContextLike): ActiveVariantInfo 
         return { culture: active[0].culture ?? null, segment: active[0].segment ?? null };
     }
     return null;
-}
-
-/**
- * Pick the property value entry that matches the active variant.
- * Falls back to the invariant entry (`culture: null, segment: null`) when no
- * culture-specific entry exists for that alias — this keeps invariant
- * properties on a variant document resolving correctly.
- */
-function pickValueForVariant<T extends { culture: string | null; segment: string | null }>(
-    entries: T[],
-    active: ActiveVariantInfo | null,
-): T | undefined {
-    if (entries.length === 0) return undefined;
-
-    if (active) {
-        const exact = entries.find((e) => e.culture === active.culture && e.segment === active.segment);
-        if (exact) return exact;
-    }
-
-    const invariant = entries.find((e) => e.culture === null && e.segment === null);
-    if (invariant) return invariant;
-
-    return entries[0];
 }
 
 /**
@@ -256,6 +228,9 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         const parentUnique = isNew ? ctx._internal_getCreateUnderParent?.()?.unique : undefined;
 
         // Group values by alias so we can pick the active-variant entry per property.
+        // On multi-variant content `values` has N×M entries (cultures × properties);
+        // grouping by alias also lets us look up each property's structure once
+        // instead of per-culture.
         const valuesByAlias = new Map<string, typeof values>();
         for (const v of values) {
             const bucket = valuesByAlias.get(v.alias);
@@ -266,12 +241,13 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             }
         }
 
-        // Map: dataType.unique -> editorAlias (for properties without values)
+        // Map: dataType.unique -> editorAlias (for properties without values).
+        // One structure lookup per unique alias, not per (alias × culture).
         const editorAliasByDataType = new Map<string, string>();
-        for (const v of values) {
-            const structure = await ctx.structure?.getPropertyStructureByAlias?.(v.alias);
+        for (const [alias, entries] of valuesByAlias) {
+            const structure = await ctx.structure?.getPropertyStructureByAlias?.(alias);
             if (structure?.dataType.unique) {
-                editorAliasByDataType.set(structure.dataType.unique, v.editorAlias);
+                editorAliasByDataType.set(structure.dataType.unique, entries[0].editorAlias);
             }
         }
 

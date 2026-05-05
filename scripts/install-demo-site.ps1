@@ -149,6 +149,10 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "A
 Write-Host "Adding Umbraco.AI.Anthropic projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Anthropic"
 
+# Step 9.05: Add DeepSeek provider projects
+Write-Host "Adding Umbraco.AI.DeepSeek projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.DeepSeek" -SolutionFolder "DeepSeek"
+
 # Step 9.1: Add Microsoft Foundry provider projects
 Write-Host "Adding Umbraco.AI.MicrosoftFoundry projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
@@ -189,6 +193,11 @@ if (Test-Path "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj"
 # Anthropic provider
 if (Test-Path "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj"
+}
+
+# DeepSeek provider
+if (Test-Path "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj"
 }
 
 # Microsoft Foundry provider

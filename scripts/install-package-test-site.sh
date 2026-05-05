@@ -205,6 +205,9 @@ dotnet add package Umbraco.AI.OpenAI $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Anthropic..."
 dotnet add package Umbraco.AI.Anthropic $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.DeepSeek..."
+dotnet add package Umbraco.AI.DeepSeek $PRERELEASE_FLAG
+
 echo "  Installing Umbraco.AI.Google..."
 dotnet add package Umbraco.AI.Google $PRERELEASE_FLAG
 

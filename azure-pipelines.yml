@@ -30,6 +30,9 @@ parameters:
           - name: Umbraco.AI.MicrosoftFoundry
             changeVar: MicrosoftfoundryChanged
             hasNpm: false
+          - name: Umbraco.AI.FireworksAI
+            changeVar: FireworksaiChanged
+            hasNpm: false
           - name: Umbraco.AI.Mistral
             changeVar: MistralChanged
             hasNpm: false

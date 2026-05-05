@@ -165,7 +165,11 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 
-# Step 10.1.1: Add Mistral provider projects
+# Step 10.1.1: Add FireworksAI provider projects
+Write-Host "Adding Umbraco.AI.FireworksAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.FireworksAI" -SolutionFolder "FireworksAI"
+
+# Step 10.1.2: Add Mistral provider projects
 Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Mistral"
 
@@ -213,6 +217,11 @@ if (Test-Path "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj"
 # Amazon provider
 if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+}
+
+# FireworksAI provider
+if (Test-Path "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
 }
 
 # Mistral provider

@@ -164,6 +164,7 @@ Install-Package "Umbraco.AI.DeepSeek"
 Install-Package "Umbraco.AI.Google"
 Install-Package "Umbraco.AI.Amazon"
 Install-Package "Umbraco.AI.MicrosoftFoundry"
+Install-Package "Umbraco.AI.FireworksAI"
 Install-Package "Umbraco.AI.Mistral"
 
 # Add-on packages (includes Startup + Web.StaticAssets)

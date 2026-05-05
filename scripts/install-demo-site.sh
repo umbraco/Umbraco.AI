@@ -174,7 +174,11 @@ add_product_projects "Umbraco.AI.Google" "Google"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Amazon"
 
-# Step 10.1.1: Add Mistral provider projects
+# Step 10.1.1: Add FireworksAI provider projects
+echo "Adding Umbraco.AI.FireworksAI projects..."
+add_product_projects "Umbraco.AI.FireworksAI" "FireworksAI"
+
+# Step 10.1.2: Add Mistral provider projects
 echo "Adding Umbraco.AI.Mistral projects..."
 add_product_projects "Umbraco.AI.Mistral" "Mistral"
 
@@ -222,6 +226,11 @@ fi
 # Amazon provider
 if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+fi
+
+# FireworksAI provider
+if [ -f "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
 fi
 
 # Mistral provider

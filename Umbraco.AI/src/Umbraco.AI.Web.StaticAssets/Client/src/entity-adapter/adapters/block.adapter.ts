@@ -16,6 +16,7 @@ import type {
     UaiSerializedProperty,
 } from "../types.js";
 import { prepareValueForEditor } from "./value-preparation.js";
+import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 /**
  * Property structure from content type.
@@ -36,6 +37,8 @@ interface BlockWorkspaceContextLike {
     getUnique(): string;
     getEntityType(): string;
     getName(): string;
+    /** The variant the block is being edited in (inherited from parent doc). */
+    getVariantId?(): { culture: string | null; segment: string | null } | undefined;
     content: {
         getValues():
             | Array<{
@@ -56,6 +59,17 @@ interface BlockWorkspaceContextLike {
             getContentTypeProperties?(): Promise<PropertyStructure[]>;
         };
     };
+}
+
+/**
+ * Read the variant the block is being edited in. Returns null when the block
+ * lives on an invariant document (or when the API isn't exposed on the mock
+ * workspace).
+ */
+function getActiveVariant(ctx: BlockWorkspaceContextLike): ActiveVariantInfo | null {
+    const variantId = ctx.getVariantId?.();
+    if (!variantId) return null;
+    return { culture: variantId.culture ?? null, segment: variantId.segment ?? null };
 }
 
 /**
@@ -133,6 +147,10 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
     /**
      * Serialize block for LLM context.
      * Uses the content element manager's structure to get properties and values.
+     *
+     * Inherits variant context from the parent document so prompt template
+     * variables resolve to the active culture's value when the block lives in
+     * a multi-variant document.
      */
     async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
         const ctx = workspaceContext as BlockWorkspaceContextLike;
@@ -147,15 +165,29 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const contentData = ctx.content.getData();
         const contentTypeKey = contentData?.contentTypeKey;
         const values = ctx.content.getValues() ?? [];
+        const active = getActiveVariant(ctx);
 
-        // Build map for quick lookup: alias -> value entry
-        const valuesByAlias = new Map(values.map((v) => [v.alias, v]));
-        // Map: dataType.unique -> editorAlias (for properties without values)
-        const editorAliasByDataType = new Map<string, string>();
+        // Group values by alias so we can pick the active-variant entry per property.
+        // On multi-variant content `values` has N×M entries (cultures × properties);
+        // grouping by alias also lets us look up each property's structure once
+        // instead of per-culture.
+        const valuesByAlias = new Map<string, typeof values>();
         for (const v of values) {
-            const structure = await ctx.content.structure?.getPropertyStructureByAlias?.(v.alias);
+            const bucket = valuesByAlias.get(v.alias);
+            if (bucket) {
+                bucket.push(v);
+            } else {
+                valuesByAlias.set(v.alias, [v]);
+            }
+        }
+
+        // Map: dataType.unique -> editorAlias (for properties without values).
+        // One structure lookup per unique alias, not per (alias × culture).
+        const editorAliasByDataType = new Map<string, string>();
+        for (const [alias, entries] of valuesByAlias) {
+            const structure = await ctx.content.structure?.getPropertyStructureByAlias?.(alias);
             if (structure?.dataType.unique) {
-                editorAliasByDataType.set(structure.dataType.unique, v.editorAlias);
+                editorAliasByDataType.set(structure.dataType.unique, entries[0].editorAlias);
             }
         }
 
@@ -165,7 +197,7 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const properties: UaiSerializedProperty[] = [];
 
         for (const prop of propertyStructures) {
-            const valueEntry = valuesByAlias.get(prop.alias);
+            const valueEntry = pickValueForVariant(valuesByAlias.get(prop.alias) ?? [], active);
             const editorAlias = valueEntry?.editorAlias ?? editorAliasByDataType.get(prop.dataType.unique);
 
             if (editorAlias) {
@@ -174,18 +206,25 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
                     label: prop.name,
                     editorAlias,
                     value: valueEntry?.value ?? null,
+                    culture: valueEntry?.culture ?? null,
+                    segment: valueEntry?.segment ?? null,
                 });
             }
         }
 
-        // Fallback: if we couldn't get properties from structure, use values directly
+        // Fallback: if we couldn't get properties from structure, use the
+        // active-variant entries so the fallback path also respects culture.
         if (propertyStructures.length === 0 && values.length > 0) {
-            for (const v of values) {
+            for (const [alias, entries] of valuesByAlias) {
+                const v = pickValueForVariant(entries, active);
+                if (!v) continue;
                 properties.push({
-                    alias: v.alias,
-                    label: v.alias,
+                    alias,
+                    label: alias,
                     editorAlias: v.editorAlias,
                     value: v.value,
+                    culture: v.culture,
+                    segment: v.segment,
                 });
             }
         }
@@ -194,6 +233,8 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
             entityType: "block",
             unique: unique ?? "new",
             name,
+            culture: active?.culture ?? null,
+            segment: active?.segment ?? null,
             data: {
                 contentType: contentTypeKey ?? undefined,
                 properties,

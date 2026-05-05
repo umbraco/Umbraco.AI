@@ -37,6 +37,9 @@ project.fragment.lock.json
 artifacts/
 !**/src/**/Artifacts/
 
+# Local NuGet feed for ad-hoc package builds
+local-feed/
+
 # ASP.NET
 ScaffoldingReadMe.txt
 

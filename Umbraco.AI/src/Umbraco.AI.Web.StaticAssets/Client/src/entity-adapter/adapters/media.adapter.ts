@@ -220,6 +220,11 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
                     label: prop.name,
                     editorAlias,
                     value: valueEntry?.value ?? null,
+                    // Media is invariant by design — emit null culture/segment
+                    // so the server-side culture-aware selector treats every
+                    // media property as invariant uniformly.
+                    culture: null,
+                    segment: null,
                 });
             }
         }
@@ -232,6 +237,8 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
                     label: v.alias,
                     editorAlias: v.editorAlias,
                     value: v.value,
+                    culture: null,
+                    segment: null,
                 });
             }
         }
@@ -241,6 +248,8 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
             unique: unique ?? "new",
             name,
             parentUnique,
+            culture: null,
+            segment: null,
             data: {
                 contentType: contentType ?? undefined,
                 properties,

@@ -137,11 +137,27 @@ internal sealed class SerializedElementContributor : IAIRuntimeContextContributo
                 name = nameElement.GetString() ?? string.Empty;
             }
 
+            // Extract active culture/segment (optional) so blocks inside multi-
+            // variant documents resolve their property variables correctly.
+            string? culture = null;
+            if (element.TryGetProperty("culture", out var cultureElement) && cultureElement.ValueKind == JsonValueKind.String)
+            {
+                culture = cultureElement.GetString();
+            }
+
+            string? segment = null;
+            if (element.TryGetProperty("segment", out var segmentElement) && segmentElement.ValueKind == JsonValueKind.String)
+            {
+                segment = segmentElement.GetString();
+            }
+
             return new AISerializedEntity
             {
                 EntityType = elementType,
                 Unique = unique,
                 Name = name,
+                Culture = culture,
+                Segment = segment,
                 Data = dataElement.Clone()
             };
         }

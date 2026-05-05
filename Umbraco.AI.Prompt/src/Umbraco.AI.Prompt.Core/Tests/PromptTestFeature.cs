@@ -32,6 +32,39 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// For prompts with a result type of Single Option / Multiple Options, the underlying
+    /// chat response is a structured-output JSON envelope (e.g. <c>{"value": "..."}</c>).
+    /// The unwrapped text lives on <c>resultOptions[].displayValue</c>. Graders should
+    /// evaluate the unwrapped text, not the JSON envelope, so prefer that when present.
+    /// </remarks>
+    public override string ExtractOutputValue(AITestTranscript transcript)
+    {
+        var output = transcript.FinalOutput;
+
+        if (output.ValueKind == JsonValueKind.Object
+            && output.TryGetProperty("resultOptions", out var resultOptions)
+            && resultOptions.ValueKind == JsonValueKind.Array
+            && resultOptions.GetArrayLength() > 0)
+        {
+            var displayValues = resultOptions.EnumerateArray()
+                .Where(o => o.ValueKind == JsonValueKind.Object
+                    && o.TryGetProperty("displayValue", out _))
+                .Select(o => o.GetProperty("displayValue").GetString() ?? string.Empty)
+                .ToList();
+
+            if (displayValues.Count > 0)
+            {
+                return displayValues.Count == 1
+                    ? displayValues[0]
+                    : string.Join(Environment.NewLine, displayValues);
+            }
+        }
+
+        return base.ExtractOutputValue(transcript);
+    }
+
+    /// <inheritdoc />
     public override async Task<AITestTranscript> ExecuteAsync(
         AITest test,
         int runNumber,

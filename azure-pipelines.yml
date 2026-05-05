@@ -33,6 +33,9 @@ parameters:
           - name: Umbraco.AI.FireworksAI
             changeVar: FireworksaiChanged
             hasNpm: false
+          - name: Umbraco.AI.HuggingFace
+            changeVar: HuggingfaceChanged
+            hasNpm: false
           - name: Umbraco.AI.Mistral
             changeVar: MistralChanged
             hasNpm: false

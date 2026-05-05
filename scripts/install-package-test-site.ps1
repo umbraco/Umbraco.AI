@@ -165,6 +165,7 @@ Install-Package "Umbraco.AI.Google"
 Install-Package "Umbraco.AI.Amazon"
 Install-Package "Umbraco.AI.MicrosoftFoundry"
 Install-Package "Umbraco.AI.FireworksAI"
+Install-Package "Umbraco.AI.HuggingFace"
 Install-Package "Umbraco.AI.Mistral"
 Install-Package "Umbraco.AI.TogetherAI"
 

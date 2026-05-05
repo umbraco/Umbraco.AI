@@ -177,14 +177,14 @@ The `uaiFields.<providerId><PropertyName>Label` / `Description` convention is wh
 ### Other top-level files
 
 Copy Anthropic's versions and adjust:
-- **`Directory.Build.props`** — change `<Product>` and `<PackageProjectUrl>`. Shared logo reference (`../assets/logo-128.png`) and LICENSE stay as-is.
+- **`Directory.Build.props`** — change `<Product>` and `<PackageProjectUrl>`. Shared logo reference (`../assets/logo-128.png`) and LICENSE stay as-is. The `..` path resolves only because every provider sits one level under the repo root — keep the provider folder at the top level, don't nest it.
 - **`Umbraco.AI.<ProviderName>.slnx`** — single project reference
 - **`version.json`** — start at `"1.0.0"`, copy rest verbatim
 - **`changelog.config.json`** — `{ "scopes": ["<provider-id>"] }` — this is what makes the scope valid for commitlint
 - **`CHANGELOG.md`** — Initial release entry with today's date
 - **`README.md`** — describe features, models, requirements
 - **`CLAUDE.md`** — per-package dev guide. Note: the Anthropic/OpenAI CLAUDE.mds have slightly stale examples — always read actual source for current conventions.
-- **`umbraco-marketplace.json`** — `Category: "Artificial Intelligence"`, list provider-appropriate tags. Update `RelatedPackages` to point to two or three other providers.
+- **`umbraco-marketplace.json`** — `Category: "Artificial Intelligence"`, list provider-appropriate tags. Update `DocumentationUrl` to `https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.<ProviderName>` and `RelatedPackages` to point to two or three other providers.
 - **`umbraco-marketplace-readme.md`** — short marketplace description
 
 ## 5. Register across the monorepo
@@ -193,13 +193,13 @@ These edits are mandatory. Missing any one means CI or the demo site won't pick 
 
 | File | Change |
 |---|---|
-| `Directory.Packages.props` (root) | Add `<PackageVersion Include="<VendorSdkPackage>" Version="x.y.z" />` under the "Provider packages" group |
+| `Directory.Packages.props` (root) | **Only when introducing a new SDK package** not already in central package management. Add `<PackageVersion Include="<VendorSdkPackage>" Version="x.y.z" />` under the "Provider packages" group. Skip this if you're reusing an existing package (e.g., `Microsoft.Extensions.AI.OpenAI` for OpenAI-compatible vendors). |
 | `Umbraco.AI.slnx` (root) | Add `<Folder Name="/Providers/<ProviderName>/">` with the csproj — keep alphabetical order |
 | `scripts/install-demo-site.sh` | Two places: `add_product_projects "Umbraco.AI.<ProviderName>" "<ProviderName>"` and `dotnet add "$DEMO_PROJECT" reference …` |
 | `scripts/install-demo-site.ps1` | Same, PS1 syntax |
 | `scripts/install-package-test-site.sh` | `dotnet add package Umbraco.AI.<ProviderName> $PRERELEASE_FLAG` in the provider section |
 | `scripts/install-package-test-site.ps1` | `Install-Package "Umbraco.AI.<ProviderName>"` in the provider section |
-| `azure-pipelines.yml` | Add entry to `level1Products` matrix with `name`, `changeVar: <ProperCase>Changed`, `hasNpm: false` |
+| `azure-pipelines.yml` | Add entry to `level1Products` matrix with `name`, `changeVar`, `hasNpm: false`. The `changeVar` convention is **first letter capitalized, rest lowercase, then `Changed`** — multi-word names get squashed (no internal capitals). Examples: `MicrosoftFoundry → MicrosoftfoundryChanged`, `HuggingFace → HuggingfaceChanged`, `OpenAI → OpenaiChanged`, `Anthropic → AnthropicChanged`. |
 
 ### Do NOT touch these (I've verified — adding your provider here would be inconsistent with the established pattern)
 
@@ -237,7 +237,7 @@ Log in (admin@example.com / password1234) → AI section → Connections → New
 
 ## 7. Commit + push + PR
 
-Two-commit layout works well:
+A two-commit layout is suggested but not required — a single squash-style commit is also fine. Pick whichever reads cleaner for the change:
 
 ```bash
 # Commit 1 — core provider package

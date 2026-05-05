@@ -223,6 +223,9 @@ dotnet add package Umbraco.AI.FireworksAI $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Mistral..."
 dotnet add package Umbraco.AI.Mistral $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.TogetherAI..."
+dotnet add package Umbraco.AI.TogetherAI $PRERELEASE_FLAG
+
 # Add-on packages (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI.Prompt..."
 dotnet add package Umbraco.AI.Prompt $PRERELEASE_FLAG

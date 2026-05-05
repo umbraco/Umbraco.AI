@@ -173,6 +173,10 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.FireworksAI" -SolutionFolder "Fir
 Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Mistral"
 
+# Step 10.1.3: Add TogetherAI provider projects
+Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "TogetherAI"
+
 # Step 10.2: Add Search projects
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Search"
@@ -227,6 +231,11 @@ if (Test-Path "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.Fire
 # Mistral provider
 if (Test-Path "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+}
+
+# TogetherAI provider
+if (Test-Path "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

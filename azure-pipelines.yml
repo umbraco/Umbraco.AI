@@ -36,6 +36,9 @@ parameters:
           - name: Umbraco.AI.Mistral
             changeVar: MistralChanged
             hasNpm: false
+          - name: Umbraco.AI.TogetherAI
+            changeVar: TogetheraiChanged
+            hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search
             changeVar: SearchChanged

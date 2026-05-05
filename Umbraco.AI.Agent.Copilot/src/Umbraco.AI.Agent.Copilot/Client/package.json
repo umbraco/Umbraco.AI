@@ -17,7 +17,7 @@
       "@umbraco-ai/agent": "*",
       "@umbraco-ai/agent-ui": "*",
       "@umbraco-ai/core": "*",
-      "@umbraco-cms/backoffice": "^17.3.0"
+      "@umbraco-cms/backoffice": "^17.4.0-rc2"
     },
     "devDependencies": {
         "@microsoft/api-extractor": "^7.55.1",

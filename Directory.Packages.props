@@ -14,13 +14,13 @@
 
   <!-- Umbraco CMS -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.3.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.3.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.3.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.3.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.3.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.3.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.3.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.4.0-rc2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.4.0-rc2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.4.0-rc2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.4.0-rc2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.4.0-rc2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.4.0-rc2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.4.0-rc2, 17.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Deploy -->
@@ -41,8 +41,8 @@
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.2.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.4, 10.999.999)" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.4, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.6, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.6, 10.999.999)" />
   </ItemGroup>
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->

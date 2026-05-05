@@ -21,20 +21,32 @@ const setValueFrontendManifest: ManifestUaiAgentFrontendTool = {
     meta: {
         toolName: "set_value",
         description:
-            "Update a value on the currently selected entity (document, media, etc.). " +
+            "REQUIRED WORKFLOW: Unless the target property is a plain text editor (Umbraco.TextBox, Umbraco.TextArea), " +
+            "you MUST first call get_content_type_schema for the entity (or get_property_value_schema for a single data type) " +
+            "and construct the value to match the returned JSON Schema exactly. " +
+            "Skipping this step for media pickers, block lists, block grids, multi-node tree pickers, multi-url pickers, " +
+            "image croppers, sliders, color pickers, rich text or any non-string editor will produce malformed values " +
+            "that Umbraco rejects when the user saves. " +
+            "Do NOT guess the value shape from the property values shown in the Entity Context system prompt - those are " +
+            "human-readable formatted values, NOT the input shape. The same property may be displayed as `[]`, `null`, or " +
+            "a summarised string while actually accepting a complex object/array on write. " +
+            "" +
+            "Updates a value on the currently selected entity (document, media, etc.). " +
             "Changes are staged in the workspace - the user must click Save to persist. " +
-            "Only supports TextBox and TextArea properties. " +
-            "Use the entity context to see available properties and their current values.",
+            "For Umbraco.TextBox / Umbraco.TextArea pass a plain string. " +
+            "For all other editors pass the JSON value as a real object or array (do NOT stringify it).",
         parameters: {
             type: "object",
             properties: {
                 path: {
                     type: "string",
-                    description: "The path to the property to update (e.g., 'title', 'description')",
+                    description: "The path to the property to update (e.g., 'title', 'description', 'mainContent')",
                 },
                 value: {
-                    type: "string",
-                    description: "The new value to set for the property",
+                    description:
+                        "The new value to set. Use the JSON Schema from get_content_type_schema or " +
+                        "get_property_value_schema to determine the exact shape. May be a string, number, " +
+                        "boolean, object, or array depending on the property editor.",
                 },
                 culture: {
                     type: "string",

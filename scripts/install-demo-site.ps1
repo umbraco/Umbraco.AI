@@ -161,6 +161,10 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 
+# Step 10.1.1: Add Mistral provider projects
+Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Mistral"
+
 # Step 10.2: Add Search projects
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Search"
@@ -200,6 +204,11 @@ if (Test-Path "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj"
 # Amazon provider
 if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+}
+
+# Mistral provider
+if (Test-Path "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

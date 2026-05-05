@@ -1,7 +1,9 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.Core.Tests.Graders;
 
@@ -38,8 +40,9 @@ public class LLMJudgeGraderConfig
         Label = "Pass Threshold",
         Description = "Minimum score to pass (0-1)",
         EditorUiAlias = "Umb.PropertyEditorUi.Slider",
-        EditorConfig = "[{\"alias\":\"minValue\",\"value\":0},{\"alias\":\"maxValue\",\"value\":1},{\"alias\":\"step\",\"value\":0.1}]",
+        EditorConfig = "[{\"alias\":\"minVal\",\"value\":0},{\"alias\":\"maxVal\",\"value\":1},{\"alias\":\"step\",\"value\":0.1},{\"alias\":\"initVal1\",\"value\":0.7}]",
         SortOrder = 3)]
+    [JsonConverter(typeof(SliderDoubleJsonConverter))]
     public double PassThreshold { get; set; } = 0.7;
 }
 

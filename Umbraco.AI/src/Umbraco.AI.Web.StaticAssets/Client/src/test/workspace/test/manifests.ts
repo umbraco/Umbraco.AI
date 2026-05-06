@@ -1,5 +1,11 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
-import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE, UAI_TEST_RUN_COLLECTION_ALIAS, UAI_TEST_RUN_ICON } from "../../constants.js";
+import {
+    UAI_TEST_WORKSPACE_ALIAS,
+    UAI_TEST_ENTITY_TYPE,
+    UAI_TEST_RUN_COLLECTION_ALIAS,
+    UAI_TEST_RUN_ICON,
+    UAI_TEST_WORKSPACE_VIEW_GRADING_ALIAS,
+} from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 
 export const manifests: Array<UmbExtensionManifest> = [
@@ -51,7 +57,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAI.Workspace.Test.View.Grading",
+        alias: UAI_TEST_WORKSPACE_VIEW_GRADING_ALIAS,
         name: "Test Grading Workspace View",
         js: () => import("./views/test-grading-workspace-view.element.js"),
         weight: 200,

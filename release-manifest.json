@@ -11,6 +11,7 @@
         "Umbraco.AI.TogetherAI"
     ],
     "exclude": [
+        "Umbraco.AI.Agent",
         "Umbraco.AI.Agent.Copilot",
         "Umbraco.AI.Agent.Deploy",
         "Umbraco.AI.Amazon",

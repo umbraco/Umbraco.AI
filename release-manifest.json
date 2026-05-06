@@ -2,8 +2,13 @@
     "include": [
         "Umbraco.AI",
         "Umbraco.AI.Agent.UI",
+        "Umbraco.AI.DeepSeek",
+        "Umbraco.AI.FireworksAI",
+        "Umbraco.AI.HuggingFace",
+        "Umbraco.AI.Mistral",
         "Umbraco.AI.Prompt",
-        "Umbraco.AI.Search"
+        "Umbraco.AI.Search",
+        "Umbraco.AI.TogetherAI"
     ],
     "exclude": [
         "Umbraco.AI.Agent.Copilot",
@@ -11,15 +16,10 @@
         "Umbraco.AI.Amazon",
         "Umbraco.AI.Anthropic",
         "Umbraco.AI.Automate",
-        "Umbraco.AI.DeepSeek",
         "Umbraco.AI.Deploy",
-        "Umbraco.AI.FireworksAI",
         "Umbraco.AI.Google",
-        "Umbraco.AI.HuggingFace",
         "Umbraco.AI.MicrosoftFoundry",
-        "Umbraco.AI.Mistral",
         "Umbraco.AI.OpenAI",
-        "Umbraco.AI.Prompt.Deploy",
-        "Umbraco.AI.TogetherAI"
+        "Umbraco.AI.Prompt.Deploy"
     ]
 }

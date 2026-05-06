@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
@@ -51,6 +52,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
     private readonly IEventAggregator _eventAggregator;
+    private readonly ILoggerFactory? _loggerFactory;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -67,7 +69,8 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
         IEventAggregator eventAggregator,
-        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null,
+        ILoggerFactory? loggerFactory = null)
     {
         _repository = repository;
         _versionService = versionService;
@@ -84,6 +87,7 @@ internal sealed class AIAgentService : IAIAgentService
         _surfaceCollection = surfaceCollection;
         _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
+        _loggerFactory = loggerFactory;
     }
 
     /// <inheritdoc />
@@ -897,7 +901,8 @@ internal sealed class AIAgentService : IAIAgentService
                 var toolFunction = new Chat.AIFrontendToolFunction(
                     frontendTool.Tool,
                     frontendTool.Scope,
-                    frontendTool.IsDestructive);
+                    frontendTool.IsDestructive,
+                    _loggerFactory);
 
                 bool isPermitted = allowedToolIdSet.Contains(frontendTool.Tool.Name)
                     || (frontendTool.Scope is not null

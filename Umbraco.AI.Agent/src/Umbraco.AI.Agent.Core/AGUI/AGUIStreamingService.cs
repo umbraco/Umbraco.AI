@@ -160,6 +160,18 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                     switch (content)
                     {
                         case FunctionCallContent functionCall:
+                            // Diagnostic: this log line is the smoking gun for "model
+                            // generated a tool_use but no TOOL_CALL_CHUNK reached the
+                            // frontend". If the upstream AIToolReorderingChatClient
+                            // logged the buffered call but this line never fires, the
+                            // FunctionInvokingChatClient is consuming the call without
+                            // forwarding it.
+                            _logger.LogInformation(
+                                "AGUIStreamingService received FunctionCallContent for tool '{ToolName}' (callId={CallId}, isFrontend={IsFrontend}) on run {RunId}.",
+                                functionCall.Name,
+                                functionCall.CallId,
+                                frontendToolNames.Contains(functionCall.Name),
+                                request.RunId);
                             var toolCallEvent = ProcessFunctionCall(emitter, functionCall, frontendToolNames);
                             if (toolCallEvent != null)
                             {

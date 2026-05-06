@@ -14,10 +14,13 @@ namespace Umbraco.AI.Core.Tools.Umbraco;
 /// <summary>
 /// Arguments for the GetContentTypeSchema tool.
 /// </summary>
-/// <param name="ContentTypeAlias">The content type alias to look up (e.g., 'blogPost', 'article').</param>
+/// <param name="ContentTypeAliasOrKey">
+/// The content type alias (e.g., 'blogPost', 'article') OR its GUID key
+/// (e.g., 'e667d852-1e35-41d1-b0eb-46db0ec2342c').
+/// </param>
 public record GetContentTypeSchemaArgs(
-    [property: Description("The content type alias (e.g., 'blogPost', 'article'). Use the ContentType value from search_umbraco or get_umbraco_content results.")]
-    string ContentTypeAlias);
+    [property: Description("The content type alias (e.g., 'blogPost', 'article') OR the content type GUID key. Use the ContentType value from search_umbraco / get_umbraco_content results, or the 'Content type' GUID from the Entity Context.")]
+    string ContentTypeAliasOrKey);
 
 /// <summary>
 /// Tool that retrieves the schema of a content type by its alias,
@@ -61,20 +64,28 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
     /// <inheritdoc />
     protected override async Task<object> ExecuteAsync(GetContentTypeSchemaArgs args, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(args.ContentTypeAlias))
+        if (string.IsNullOrWhiteSpace(args.ContentTypeAliasOrKey))
         {
-            return new GetContentTypeSchemaResult(false, null, "Content type alias cannot be empty.");
+            return new GetContentTypeSchemaResult(false, null, "Content type alias or key cannot be empty.");
         }
 
-        // Try content types first, then element types, then media types
-        var contentType = _publishedContentTypeCache.Get(PublishedItemType.Content, args.ContentTypeAlias)
-            ?? _publishedContentTypeCache.Get(PublishedItemType.Element, args.ContentTypeAlias)
-            ?? _publishedContentTypeCache.Get(PublishedItemType.Media, args.ContentTypeAlias);
+        // The Get overloads on IPublishedContentTypeCache throw when the alias/key is
+        // not registered for the requested item type, so each lookup must be wrapped
+        // in try/catch and we fall through Content -> Element -> Media to find a hit.
+        IPublishedContentType? contentType = null;
+        if (Guid.TryParse(args.ContentTypeAliasOrKey, out var contentTypeKey))
+        {
+            contentType = TryGetByKey(contentTypeKey);
+        }
+        else
+        {
+            contentType = TryGetByAlias(args.ContentTypeAliasOrKey);
+        }
 
         if (contentType is null)
         {
             return new GetContentTypeSchemaResult(
-                false, null, $"Content type with alias '{args.ContentTypeAlias}' was not found.");
+                false, null, $"Content type '{args.ContentTypeAliasOrKey}' was not found.");
         }
 
         var properties = await Task.WhenAll(
@@ -89,6 +100,49 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
             properties);
 
         return new GetContentTypeSchemaResult(true, schema, null);
+    }
+
+    private IPublishedContentType? TryGetByAlias(string alias)
+    {
+        foreach (var itemType in new[] { PublishedItemType.Content, PublishedItemType.Element, PublishedItemType.Media, PublishedItemType.Member })
+        {
+            try
+            {
+                var ct = _publishedContentTypeCache.Get(itemType, alias);
+                if (ct is not null)
+                {
+                    return ct;
+                }
+            }
+            catch
+            {
+                // The cache throws when the alias isn't registered for the item type;
+                // swallow and try the next bucket.
+            }
+        }
+
+        return null;
+    }
+
+    private IPublishedContentType? TryGetByKey(Guid key)
+    {
+        foreach (var itemType in new[] { PublishedItemType.Content, PublishedItemType.Element, PublishedItemType.Media, PublishedItemType.Member })
+        {
+            try
+            {
+                var ct = _publishedContentTypeCache.Get(itemType, key);
+                if (ct is not null)
+                {
+                    return ct;
+                }
+            }
+            catch
+            {
+                // Same swallow-and-try-next behaviour as the alias path.
+            }
+        }
+
+        return null;
     }
 
     private async Task<ContentTypePropertySchema> BuildPropertySchemaAsync(

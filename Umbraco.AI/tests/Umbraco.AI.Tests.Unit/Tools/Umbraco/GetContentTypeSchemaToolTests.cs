@@ -74,6 +74,67 @@ public class GetContentTypeSchemaToolTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WithGuidKey_ResolvesViaKeyOverload()
+    {
+        // Arrange — agents call this tool with the GUID surfaced in the
+        // Entity Context block, not the alias.
+        var key = Guid.NewGuid();
+        var contentType = new Mock<IPublishedContentType>();
+        contentType.SetupGet(x => x.Alias).Returns("blogPost");
+        contentType.SetupGet(x => x.IsElement).Returns(false);
+        contentType.SetupGet(x => x.PropertyTypes).Returns(Array.Empty<IPublishedPropertyType>());
+        contentType.SetupGet(x => x.CompositionAliases).Returns(new HashSet<string>());
+
+        _publishedContentTypeCacheMock
+            .Setup(x => x.Get(PublishedItemType.Content, key))
+            .Returns(contentType.Object);
+
+        // Act
+        var result = await _tool.ExecuteAsync(
+            new GetContentTypeSchemaArgs(key.ToString()),
+            CancellationToken.None);
+
+        // Assert
+        var schemaResult = result.ShouldBeOfType<GetContentTypeSchemaResult>();
+        schemaResult.Success.ShouldBeTrue();
+        schemaResult.Schema!.Alias.ShouldBe("blogPost");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenCacheThrows_FallsThroughBucketsAndReturnsNotFound()
+    {
+        // Arrange — IPublishedContentTypeCache.Get throws (rather than returning null)
+        // when a key/alias isn't registered for the requested item type. The tool
+        // must swallow each throw and try the next bucket, then return a clean
+        // not-found result rather than bubbling the exception.
+        _publishedContentTypeCacheMock
+            .Setup(x => x.Get(It.IsAny<PublishedItemType>(), It.IsAny<string>()))
+            .Throws(new Exception("ContentTypeService failed to find a content type"));
+        _publishedContentTypeCacheMock
+            .Setup(x => x.Get(It.IsAny<PublishedItemType>(), It.IsAny<Guid>()))
+            .Throws(new Exception("ContentTypeService failed to find a content type"));
+
+        // Act — try both an alias and a GUID; both should land softly.
+        var aliasResult = await _tool.ExecuteAsync(
+            new GetContentTypeSchemaArgs("ghost"),
+            CancellationToken.None);
+        var guidResult = await _tool.ExecuteAsync(
+            new GetContentTypeSchemaArgs(Guid.NewGuid().ToString()),
+            CancellationToken.None);
+
+        // Assert
+        var typedAlias = aliasResult.ShouldBeOfType<GetContentTypeSchemaResult>();
+        typedAlias.Success.ShouldBeFalse();
+        typedAlias.Message.ShouldNotBeNull();
+        typedAlias.Message.ShouldContain("not found");
+
+        var typedGuid = guidResult.ShouldBeOfType<GetContentTypeSchemaResult>();
+        typedGuid.Success.ShouldBeFalse();
+        typedGuid.Message.ShouldNotBeNull();
+        typedGuid.Message.ShouldContain("not found");
+    }
+
+    [Fact]
     public async Task ExecuteAsync_PropertyWithSchemaSupport_EmbedsValueSchemaAndDataTypeKey()
     {
         // Arrange

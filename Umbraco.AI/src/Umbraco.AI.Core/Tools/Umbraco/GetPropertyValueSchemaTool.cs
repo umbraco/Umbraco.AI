@@ -46,9 +46,11 @@ public class GetPropertyValueSchemaTool : AIToolBase<GetPropertyValueSchemaArgs>
     public override string Description =>
         "Returns the JSON Schema (draft 2020-12) for the value a property data type accepts on write. " +
         "REQUIRED before calling set_value when the matching property's ValueSchema was not embedded in a " +
-        "prior get_content_type_schema response, or when constructing a value for a nested element-type data type " +
-        "reached through a block editor (block list / block grid). " +
+        "prior get_content_type_schema response. " +
         "Do not guess the input shape from formatted values shown elsewhere — always confirm against the schema. " +
+        "For block list / block grid schemas, the response lists each allowed element type's key and alias " +
+        "under 'x-allowedElementTypes'; call get_content_type_schema with an element type's key to retrieve " +
+        "its property schemas before authoring a block of that type. " +
         "Provide the DataTypeKey (GUID) returned by get_content_type_schema.";
 
     /// <inheritdoc />
@@ -80,8 +82,7 @@ public class GetPropertyValueSchemaTool : AIToolBase<GetPropertyValueSchemaArgs>
 
         var enrichedSchema = BlockSchemaEnricher.Enrich(
             attempt.Result?.JsonSchema,
-            _publishedContentTypeCache,
-            _propertyEditorSchemaService);
+            _publishedContentTypeCache);
 
         return new GetPropertyValueSchemaResult(
             true,

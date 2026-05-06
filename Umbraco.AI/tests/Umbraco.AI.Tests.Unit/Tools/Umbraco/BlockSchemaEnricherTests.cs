@@ -6,18 +6,17 @@ using Shouldly;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PublishedCache;
-using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 
 public class BlockSchemaEnricherTests
 {
     [Fact]
-    public void Enrich_OnBlockListShape_AttachesAllowedElementTypesAlongsideEnum()
+    public void Enrich_OnBlockListShape_AttachesShallowAllowedElementTypesAndGuidanceNote()
     {
         // Arrange — synthesises the structural shape that BlockListPropertyEditorBase
         // emits in 17.4.0-rc2: a contentTypeKey property with an enum of element-type
-        // GUIDs and a values[] array typed as 'any'.
+        // GUIDs.
         var heroKey = Guid.NewGuid();
         var ctaKey = Guid.NewGuid();
 
@@ -37,16 +36,7 @@ public class BlockSchemaEnricherTests
                                     "format": "uuid",
                                     "enum": ["{{heroKey}}", "{{ctaKey}}"]
                                 },
-                                "values": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "alias": { "type": "string" },
-                                            "value": {}
-                                        }
-                                    }
-                                }
+                                "values": { "type": "array" }
                             }
                         }
                     }
@@ -54,39 +44,20 @@ public class BlockSchemaEnricherTests
             }
             """)!.AsObject();
 
-        var heroDataType = new PublishedDataType(1, "Umbraco.TextBox", "Umbraco.TextBox", new Lazy<object?>(() => null));
-        var ctaDataType = new PublishedDataType(2, "Umbraco.MediaPicker3", "Umbraco.MediaPicker3", new Lazy<object?>(() => null));
-
-        var heroProp = new Mock<IPublishedPropertyType>();
-        heroProp.SetupGet(p => p.Alias).Returns("title");
-        heroProp.SetupGet(p => p.DataType).Returns(heroDataType);
-
-        var ctaProp = new Mock<IPublishedPropertyType>();
-        ctaProp.SetupGet(p => p.Alias).Returns("image");
-        ctaProp.SetupGet(p => p.DataType).Returns(ctaDataType);
-
         var heroElement = new Mock<IPublishedContentType>();
         heroElement.SetupGet(c => c.Key).Returns(heroKey);
         heroElement.SetupGet(c => c.Alias).Returns("heroBlock");
-        heroElement.SetupGet(c => c.PropertyTypes).Returns([heroProp.Object]);
 
         var ctaElement = new Mock<IPublishedContentType>();
         ctaElement.SetupGet(c => c.Key).Returns(ctaKey);
         ctaElement.SetupGet(c => c.Alias).Returns("ctaBlock");
-        ctaElement.SetupGet(c => c.PropertyTypes).Returns([ctaProp.Object]);
 
         var typeCache = new Mock<IPublishedContentTypeCache>();
         typeCache.Setup(t => t.Get(PublishedItemType.Element, heroKey)).Returns(heroElement.Object);
         typeCache.Setup(t => t.Get(PublishedItemType.Element, ctaKey)).Returns(ctaElement.Object);
 
-        var schemaService = new Mock<IPropertyEditorSchemaService>();
-        schemaService.Setup(s => s.GetValueSchema("Umbraco.TextBox", It.IsAny<object?>()))
-            .Returns(JsonNode.Parse("""{ "type": ["string","null"], "maxLength": 250 }""")!.AsObject());
-        schemaService.Setup(s => s.GetValueSchema("Umbraco.MediaPicker3", It.IsAny<object?>()))
-            .Returns(JsonNode.Parse("""{ "type": "array", "items": { "type": "object" } }""")!.AsObject());
-
         // Act
-        var enriched = BlockSchemaEnricher.Enrich(blockListSchema, typeCache.Object, schemaService.Object);
+        var enriched = BlockSchemaEnricher.Enrich(blockListSchema, typeCache.Object);
 
         // Assert: the original is untouched (deep clone)
         blockListSchema["properties"]!["contentData"]!["items"]!["properties"]!["contentTypeKey"]!
@@ -97,101 +68,69 @@ public class BlockSchemaEnricherTests
             ["properties"]!["contentData"]!["items"]!["properties"]!["contentTypeKey"]!
             .AsObject();
         contentTypeKey["enum"].ShouldNotBeNull();
+
         var allowed = contentTypeKey["x-allowedElementTypes"]!.AsArray();
         allowed.Count.ShouldBe(2);
 
         var hero = allowed[0]!.AsObject();
         hero["key"]!.GetValue<string>().ShouldBe(heroKey.ToString());
         hero["alias"]!.GetValue<string>().ShouldBe("heroBlock");
-        var heroProps = hero["properties"]!.AsArray();
-        heroProps.Count.ShouldBe(1);
-        heroProps[0]!["alias"]!.GetValue<string>().ShouldBe("title");
-        heroProps[0]!["editorAlias"]!.GetValue<string>().ShouldBe("Umbraco.TextBox");
-        heroProps[0]!["valueSchema"]!["maxLength"]!.GetValue<int>().ShouldBe(250);
+        // Shallow only — no embedded property schemas
+        hero.ContainsKey("properties").ShouldBeFalse();
+        hero.ContainsKey("valueSchema").ShouldBeFalse();
 
         var cta = allowed[1]!.AsObject();
         cta["alias"]!.GetValue<string>().ShouldBe("ctaBlock");
-        cta["properties"]!.AsArray()[0]!["editorAlias"]!.GetValue<string>().ShouldBe("Umbraco.MediaPicker3");
+
+        // Assert: a guidance note is attached pointing at get_content_type_schema
+        var note = contentTypeKey["x-allowedElementTypesNote"]!.GetValue<string>();
+        note.ShouldContain("get_content_type_schema");
     }
 
     [Fact]
-    public void Enrich_StopsAtDepthBoundary()
+    public void Enrich_DoesNotRecurseIntoPropertyEditors()
     {
-        // Arrange — a hero element whose only property IS another block list. Default
-        // depth budget is 1, so the outer enum should be expanded but the inner
-        // (nested) block list's enum should remain bare GUIDs.
+        // Arrange — even when an element type's properties are themselves block
+        // editors, the enricher must NOT fetch their schemas. We assert this by
+        // not setting up IPropertyEditorSchemaService at all (the enricher no
+        // longer takes that dependency).
         var heroKey = Guid.NewGuid();
-        var nestedElementKey = Guid.NewGuid();
 
-        var nestedBlockSchema = JsonNode.Parse($$"""
+        var schema = JsonNode.Parse($$"""
             {
                 "properties": {
                     "contentData": {
                         "items": {
                             "properties": {
-                                "contentTypeKey": {
-                                    "enum": ["{{nestedElementKey}}"]
-                                }
+                                "contentTypeKey": { "enum": ["{{heroKey}}"] }
                             }
                         }
                     }
                 }
             }
             """)!.AsObject();
-
-        var outerBlockSchema = JsonNode.Parse($$"""
-            {
-                "properties": {
-                    "contentData": {
-                        "items": {
-                            "properties": {
-                                "contentTypeKey": {
-                                    "enum": ["{{heroKey}}"]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            """)!.AsObject();
-
-        var nestedBlockDataType = new PublishedDataType(7, "Umbraco.BlockList", "Umbraco.BlockList", new Lazy<object?>(() => null));
-        var heroProp = new Mock<IPublishedPropertyType>();
-        heroProp.SetupGet(p => p.Alias).Returns("nested");
-        heroProp.SetupGet(p => p.DataType).Returns(nestedBlockDataType);
 
         var heroElement = new Mock<IPublishedContentType>();
         heroElement.SetupGet(c => c.Key).Returns(heroKey);
         heroElement.SetupGet(c => c.Alias).Returns("heroBlock");
-        heroElement.SetupGet(c => c.PropertyTypes).Returns([heroProp.Object]);
 
         var typeCache = new Mock<IPublishedContentTypeCache>();
         typeCache.Setup(t => t.Get(PublishedItemType.Element, heroKey)).Returns(heroElement.Object);
-        typeCache.Setup(t => t.Get(PublishedItemType.Element, nestedElementKey))
-            .Throws(new Exception("should not be expanded under a depth=1 budget"));
 
-        var schemaService = new Mock<IPropertyEditorSchemaService>();
-        schemaService.Setup(s => s.GetValueSchema("Umbraco.BlockList", It.IsAny<object?>()))
-            .Returns(nestedBlockSchema);
+        // Act
+        var enriched = BlockSchemaEnricher.Enrich(schema, typeCache.Object);
 
-        // Act — default depth budget is 1
-        var enriched = BlockSchemaEnricher.Enrich(outerBlockSchema, typeCache.Object, schemaService.Object);
-
-        // Assert — outer expanded
-        var outerAllowed = enriched!
+        // Assert: hero entry exists with key + alias, no properties array
+        var allowed = enriched!
             ["properties"]!["contentData"]!["items"]!["properties"]!["contentTypeKey"]!
             ["x-allowedElementTypes"]!.AsArray();
-        outerAllowed.Count.ShouldBe(1);
-        var hero = outerAllowed[0]!.AsObject();
+        allowed.Count.ShouldBe(1);
+        var hero = allowed[0]!.AsObject();
         hero["alias"]!.GetValue<string>().ShouldBe("heroBlock");
+        hero.ContainsKey("properties").ShouldBeFalse();
 
-        // Assert — inner block list's contentTypeKey enum is preserved but NOT enriched.
-        // (The mock would throw if EnrichInPlace tried to resolve the nested key.)
-        var innerSchema = hero["properties"]!.AsArray()[0]!["valueSchema"]!.AsObject();
-        var innerContentTypeKey = innerSchema
-            ["properties"]!["contentData"]!["items"]!["properties"]!["contentTypeKey"]!.AsObject();
-        innerContentTypeKey["enum"].ShouldNotBeNull();
-        innerContentTypeKey.ContainsKey("x-allowedElementTypes").ShouldBeFalse();
+        // PropertyTypes never accessed — no recursion into element-type internals
+        heroElement.VerifyGet(c => c.PropertyTypes, Times.Never);
     }
 
     [Fact]
@@ -202,9 +141,8 @@ public class BlockSchemaEnricherTests
             """)!.AsObject();
 
         var typeCache = new Mock<IPublishedContentTypeCache>();
-        var schemaService = new Mock<IPropertyEditorSchemaService>();
 
-        var enriched = BlockSchemaEnricher.Enrich(schema, typeCache.Object, schemaService.Object);
+        var enriched = BlockSchemaEnricher.Enrich(schema, typeCache.Object);
 
         enriched.ShouldNotBeNull();
         enriched!["maxLength"]!.GetValue<int>().ShouldBe(250);
@@ -215,9 +153,8 @@ public class BlockSchemaEnricherTests
     public void Enrich_NullSchema_ReturnsNull()
     {
         var typeCache = new Mock<IPublishedContentTypeCache>();
-        var schemaService = new Mock<IPropertyEditorSchemaService>();
 
-        BlockSchemaEnricher.Enrich(null, typeCache.Object, schemaService.Object).ShouldBeNull();
+        BlockSchemaEnricher.Enrich(null, typeCache.Object).ShouldBeNull();
     }
 
     [Fact]
@@ -245,7 +182,6 @@ public class BlockSchemaEnricherTests
         var knownElement = new Mock<IPublishedContentType>();
         knownElement.SetupGet(c => c.Key).Returns(knownKey);
         knownElement.SetupGet(c => c.Alias).Returns("knownBlock");
-        knownElement.SetupGet(c => c.PropertyTypes).Returns(Array.Empty<IPublishedPropertyType>());
 
         var typeCache = new Mock<IPublishedContentTypeCache>();
         typeCache.Setup(t => t.Get(PublishedItemType.Element, knownKey)).Returns(knownElement.Object);
@@ -254,9 +190,7 @@ public class BlockSchemaEnricherTests
         typeCache.Setup(t => t.Get(PublishedItemType.Content, unknownKey))
             .Throws(new Exception("unknown"));
 
-        var schemaService = new Mock<IPropertyEditorSchemaService>();
-
-        var enriched = BlockSchemaEnricher.Enrich(schema, typeCache.Object, schemaService.Object);
+        var enriched = BlockSchemaEnricher.Enrich(schema, typeCache.Object);
 
         var allowed = enriched!
             ["properties"]!["contentData"]!["items"]!["properties"]!["contentTypeKey"]!

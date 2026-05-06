@@ -49,17 +49,20 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
 
     /// <inheritdoc />
     public override string Description =>
-        "Retrieves the content type schema by its alias. " +
+        "Retrieves a content type's schema by its alias OR its GUID key. " +
         "Returns each property's alias, editor type, value type, data type key, and (when available) " +
         "a JSON Schema describing the exact value shape the property accepts on write — including " +
-        "configuration-driven schemas for block list and block grid properties. " +
+        "configuration-driven schemas for block list, block grid, and rich-text-with-blocks properties. " +
         "REQUIRED before calling set_value for any non-string property (media picker, block list, block grid, " +
         "multi-node tree picker, multi-url picker, image cropper, slider, color picker, rich text, etc.). " +
         "The Entity Context system prompt only shows formatted values — it does NOT reveal the input shape, " +
         "so do not guess; always inspect ValueSchema first and produce a value that matches it. " +
+        "Block list / block grid schemas list each allowed element type's key and alias under " +
+        "'x-allowedElementTypes' alongside the GUID enum. To author a block of a given type, call this tool " +
+        "again with that element type's key to retrieve its property schemas before generating values. " +
         "If a property has no ValueSchema, call get_property_value_schema with its DataTypeKey for a focused lookup. " +
-        "Pass the ContentType alias from search_umbraco or get_umbraco_content results " +
-        "(or the contentType GUID from the Entity Context).";
+        "Pass the ContentType alias from search_umbraco or get_umbraco_content results, or the content type / " +
+        "element type GUID from the Entity Context or x-allowedElementTypes.";
 
     /// <inheritdoc />
     protected override async Task<object> ExecuteAsync(GetContentTypeSchemaArgs args, CancellationToken cancellationToken = default)
@@ -163,8 +166,7 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
             {
                 valueSchema = BlockSchemaEnricher.Enrich(
                     attempt.Result?.JsonSchema,
-                    _publishedContentTypeCache,
-                    _propertyEditorSchemaService);
+                    _publishedContentTypeCache);
             }
         }
 

@@ -2,65 +2,62 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PublishedCache;
-using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
 /// <summary>
 /// Walks a JSON Schema produced by <c>IPropertyEditorSchemaService</c> and adds
-/// an <c>x-allowedElementTypes</c> sibling annotation next to every
-/// <c>contentTypeKey.enum</c>. The annotation maps each allowed element-type GUID
-/// to its alias and the inline JSON Schema for each of its properties, so an LLM
-/// reading the schema knows the human-readable identifier of each block and the
-/// shape every block-property value must take.
+/// shallow allow-list metadata next to every <c>contentTypeKey.enum</c>.
 /// </summary>
 /// <remarks>
-/// The CMS 17.4.0 schema feature emits element-type GUIDs only in <c>contentTypeKey.enum</c>
-/// and types <c>values[].value</c> as <c>{}</c> (any). On its own that is not enough
-/// for an LLM to produce a correctly-shaped block list / block grid value: the model
-/// has no source of truth for which block aliases the GUIDs map to, nor what shape
-/// each block's properties accept. This enricher closes that gap by resolving each
-/// GUID through <see cref="IPublishedContentTypeCache"/> and recursively producing
-/// the property schemas via <see cref="IPropertyEditorSchemaService"/>.
+/// <para>
+/// CMS 17.4.0 emits element-type GUIDs only in <c>contentTypeKey.enum</c>. Without
+/// at least the alias of each GUID, an LLM listing "available block types" has no
+/// source of truth and hallucinates names from training-data priors. This enricher
+/// closes that gap minimally — for each enum entry it attaches a sibling
+/// <c>x-allowedElementTypes</c> array of <c>{ key, alias }</c> records and a
+/// <c>x-allowedElementTypesNote</c> string that tells the LLM to call
+/// <c>get_content_type_schema</c> with an element type's key when it needs the
+/// element type's property schemas to author a block of that type.
+/// </para>
+/// <para>
+/// We deliberately do NOT recursively inline each element type's full property
+/// schemas. The CMS chose a lazy / on-demand schema model (data-type endpoints
+/// pass-through, document-type endpoints use external <c>$ref</c> URIs); mirroring
+/// that keeps prompt size bounded — particularly important for the Entity Context
+/// block which is loaded into every chat turn — and lets the LLM only pay the
+/// token cost for element types it actually needs to author.
+/// </para>
 /// </remarks>
 internal static class BlockSchemaEnricher
 {
+    private const string AllowedElementTypesNote =
+        "Each entry above is an allowed element type for this block list/grid property. " +
+        "For an element type's full property schema, call get_content_type_schema with its key. " +
+        "Do not author a block of a given element type until you have its property schemas — guessing the values shape will produce malformed content.";
+
     /// <summary>
     /// Returns an enriched copy of the supplied schema. The original is left untouched.
     /// </summary>
     /// <param name="schema">The bare schema returned by the CMS schema service.</param>
-    /// <param name="typeCache">Published-content-type cache used to resolve element type GUIDs.</param>
-    /// <param name="schemaService">Schema service used to produce per-property schemas for each element type.</param>
-    /// <param name="elementTypeDepth">
-    /// Maximum number of element-type expansions to perform. Each block list / block grid
-    /// inside an element type's property schema counts as a new level. Default is 1, which
-    /// expands the immediately-allowed element types but leaves nested blocks as bare GUID
-    /// enums (the LLM can call <c>get_property_value_schema</c> to drill deeper).
-    /// </param>
-    public static JsonObject? Enrich(
-        JsonObject? schema,
-        IPublishedContentTypeCache typeCache,
-        IPropertyEditorSchemaService schemaService,
-        int elementTypeDepth = 1)
+    /// <param name="typeCache">Published-content-type cache used to resolve element-type GUIDs to aliases.</param>
+    public static JsonObject? Enrich(JsonObject? schema, IPublishedContentTypeCache typeCache)
     {
         if (schema is null)
         {
             return null;
         }
 
-        // Deep clone via a serialise-roundtrip so the cache's underlying schema instance
-        // is never mutated. JsonObject.DeepClone exists in .NET 9+, but a roundtrip is
-        // simple, robust, and the schemas are small enough that the overhead is irrelevant.
+        // Deep clone via a serialise-roundtrip so the schema service's underlying
+        // instance is never mutated. JsonObject.DeepClone exists in .NET 9+, but a
+        // roundtrip is simple, robust, and the schemas are small enough that the
+        // overhead is irrelevant.
         var clone = JsonNode.Parse(schema.ToJsonString())!.AsObject();
-        EnrichInPlace(clone, typeCache, schemaService, elementTypeDepth);
+        EnrichInPlace(clone, typeCache);
         return clone;
     }
 
-    private static void EnrichInPlace(
-        JsonNode? node,
-        IPublishedContentTypeCache typeCache,
-        IPropertyEditorSchemaService schemaService,
-        int elementTypeDepth)
+    private static void EnrichInPlace(JsonNode? node, IPublishedContentTypeCache typeCache)
     {
         switch (node)
         {
@@ -75,20 +72,16 @@ internal static class BlockSchemaEnricher
                         continue;
                     }
 
-                    // Block schemas describe element-type allow-lists by attaching an
-                    // `enum` of GUIDs to the `contentTypeKey` property of each
-                    // contentData / settingsData item. That is the only shape we
-                    // enrich — every other node is just walked recursively.
                     if (key == "contentTypeKey"
                         && child is JsonObject contentTypeKeyObj
                         && contentTypeKeyObj["enum"] is JsonArray enumArr
                         && enumArr.Count > 0)
                     {
-                        AttachAllowedElementTypes(contentTypeKeyObj, enumArr, typeCache, schemaService, elementTypeDepth);
+                        AttachAllowedElementTypes(contentTypeKeyObj, enumArr, typeCache);
                     }
                     else
                     {
-                        EnrichInPlace(child, typeCache, schemaService, elementTypeDepth);
+                        EnrichInPlace(child, typeCache);
                     }
                 }
                 break;
@@ -96,7 +89,7 @@ internal static class BlockSchemaEnricher
             case JsonArray arr:
                 foreach (var item in arr)
                 {
-                    EnrichInPlace(item, typeCache, schemaService, elementTypeDepth);
+                    EnrichInPlace(item, typeCache);
                 }
                 break;
         }
@@ -105,9 +98,7 @@ internal static class BlockSchemaEnricher
     private static void AttachAllowedElementTypes(
         JsonObject contentTypeKeyObj,
         JsonArray enumArr,
-        IPublishedContentTypeCache typeCache,
-        IPropertyEditorSchemaService schemaService,
-        int elementTypeDepth)
+        IPublishedContentTypeCache typeCache)
     {
         var allowed = new JsonArray();
 
@@ -139,20 +130,26 @@ internal static class BlockSchemaEnricher
                 continue;
             }
 
-            allowed.Add(BuildElementTypeInfo(elementType, typeCache, schemaService, elementTypeDepth));
+            allowed.Add(new JsonObject
+            {
+                ["key"] = elementType.Key.ToString(),
+                ["alias"] = elementType.Alias,
+            });
         }
 
         if (allowed.Count > 0)
         {
             contentTypeKeyObj["x-allowedElementTypes"] = allowed;
+            contentTypeKeyObj["x-allowedElementTypesNote"] = AllowedElementTypesNote;
         }
     }
 
     private static IPublishedContentType? TryGetElementType(IPublishedContentTypeCache typeCache, Guid key)
     {
-        // Block configurations reference element types, but legacy or shared content
-        // types may live under the Content bucket too. Try both with try/catch — the
-        // cache throws when an item type isn't registered for a given key.
+        // Block configurations reference element types, but legacy or shared
+        // content types may live under the Content bucket too. Try both with
+        // try/catch — the cache throws when an item type isn't registered for
+        // a given key.
         foreach (var itemType in new[] { PublishedItemType.Element, PublishedItemType.Content })
         {
             try
@@ -170,61 +167,5 @@ internal static class BlockSchemaEnricher
         }
 
         return null;
-    }
-
-    private static JsonObject BuildElementTypeInfo(
-        IPublishedContentType elementType,
-        IPublishedContentTypeCache typeCache,
-        IPropertyEditorSchemaService schemaService,
-        int elementTypeDepth)
-    {
-        var properties = new JsonArray();
-
-        foreach (var propertyType in elementType.PropertyTypes)
-        {
-            JsonObject? propertySchema = null;
-            try
-            {
-                var fresh = schemaService.GetValueSchema(
-                    propertyType.DataType.EditorAlias,
-                    propertyType.DataType.ConfigurationObject);
-
-                // Deep-clone the schema-service output before mutating or attaching.
-                // The CMS schema providers build fresh trees per call today, but a
-                // future cache or shared sub-tree would reparent on attach and
-                // surface as a serialisation error later in the chat pipeline.
-                // Cloning is cheap (these schemas are tiny) and keeps the enricher
-                // independent of the schema service's internal lifetime semantics.
-                propertySchema = fresh is null
-                    ? null
-                    : JsonNode.Parse(fresh.ToJsonString())!.AsObject();
-            }
-            catch
-            {
-                propertySchema = null;
-            }
-
-            // Recurse into nested blocks until we run out of depth budget. Bare
-            // GUID enums survive at the leaves — the LLM can call
-            // get_property_value_schema for deeper drilling if it needs to.
-            if (propertySchema is not null && elementTypeDepth > 0)
-            {
-                EnrichInPlace(propertySchema, typeCache, schemaService, elementTypeDepth - 1);
-            }
-
-            properties.Add(new JsonObject
-            {
-                ["alias"] = propertyType.Alias,
-                ["editorAlias"] = propertyType.DataType.EditorAlias,
-                ["valueSchema"] = propertySchema,
-            });
-        }
-
-        return new JsonObject
-        {
-            ["key"] = elementType.Key.ToString(),
-            ["alias"] = elementType.Alias,
-            ["properties"] = properties,
-        };
     }
 }

@@ -192,10 +192,10 @@ internal static class CmsEntityFormatHelper
                 schema = null;
             }
 
-            // Enrich block list / block grid schemas so the LLM sees element-type
-            // aliases and per-element-type property schemas next to the bare GUID
-            // enum the CMS emits.
-            var enriched = Tools.Umbraco.BlockSchemaEnricher.Enrich(schema, typeCache, schemaService);
+            // Enrich block list / block grid schemas with shallow {key, alias} entries
+            // for each allowed element type, plus a note pointing the LLM at
+            // get_content_type_schema for full per-element-type property schemas.
+            var enriched = Tools.Umbraco.BlockSchemaEnricher.Enrich(schema, typeCache);
 
             schemas[property.Alias] = new PropertySchemaInfo(pt.DataType.EditorAlias, enriched);
         }

@@ -32,6 +32,37 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// For prompts with a result type of Single Option / Multiple Options, the underlying
+    /// chat response is a structured-output JSON envelope (e.g. <c>{"value": "..."}</c>).
+    /// The unwrapped text lives on <c>resultOptions[].displayValue</c>. Graders should
+    /// evaluate the unwrapped text, not the JSON envelope, so prefer that when present.
+    /// </remarks>
+    public override string ExtractOutputValue(AITestTranscript transcript)
+    {
+        var envelope = transcript.FinalOutput.ValueKind == JsonValueKind.Object
+            ? transcript.FinalOutput.Deserialize<FinalOutputEnvelope>(AIConstants.DefaultJsonSerializerOptions)
+            : null;
+
+        if (envelope?.ResultOptions is { Count: > 0 } options)
+        {
+            var displayValues = options
+                .Select(o => o.DisplayValue)
+                .Where(v => v is not null)
+                .ToList();
+
+            if (displayValues.Count > 0)
+            {
+                return displayValues.Count == 1
+                    ? displayValues[0]!
+                    : string.Join(Environment.NewLine, displayValues);
+            }
+        }
+
+        return base.ExtractOutputValue(transcript);
+    }
+
+    /// <inheritdoc />
     public override async Task<AITestTranscript> ExecuteAsync(
         AITest test,
         int runNumber,
@@ -95,11 +126,9 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
                     new { role = "system", content = "Prompt execution failed" },
                     new { role = "error", content = ex.Message }
                 }, AIConstants.DefaultJsonSerializerOptions),
-                FinalOutput = JsonSerializer.SerializeToElement(new
-                {
-                    error = ex.Message,
-                    stackTrace = ex.StackTrace
-                }, AIConstants.DefaultJsonSerializerOptions),
+                FinalOutput = JsonSerializer.SerializeToElement(
+                    new FinalOutputEnvelope { Error = ex.Message, StackTrace = ex.StackTrace },
+                    AIConstants.DefaultJsonSerializerOptions),
                 Timing = JsonSerializer.SerializeToElement(new
                 {
                     totalMs = stopwatch.ElapsedMilliseconds,
@@ -135,17 +164,45 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
                 totalMs = stopwatch.ElapsedMilliseconds,
                 status = "success"
             }, AIConstants.DefaultJsonSerializerOptions),
-            FinalOutput = JsonSerializer.SerializeToElement(new
-            {
-                content = result.Content,
-                usage = result.Usage != null ? new
+            FinalOutput = JsonSerializer.SerializeToElement(
+                new FinalOutputEnvelope
                 {
-                    inputTokens = result.Usage.InputTokenCount,
-                    outputTokens = result.Usage.OutputTokenCount,
-                    totalTokens = result.Usage.TotalTokenCount
-                } : null,
-                resultOptions = result.ResultOptions
-            }, AIConstants.DefaultJsonSerializerOptions)
+                    Content = result.Content,
+                    Usage = result.Usage is null ? null : new FinalOutputUsage
+                    {
+                        InputTokens = result.Usage.InputTokenCount,
+                        OutputTokens = result.Usage.OutputTokenCount,
+                        TotalTokens = result.Usage.TotalTokenCount
+                    },
+                    ResultOptions = result.ResultOptions
+                },
+                AIConstants.DefaultJsonSerializerOptions)
         };
+    }
+
+    /// <summary>
+    /// Schema of the <see cref="AITestTranscript.FinalOutput"/> JSON for prompt tests.
+    /// Defined as a single type so write-time and read-time stay in sync.
+    /// </summary>
+    internal sealed class FinalOutputEnvelope
+    {
+        public string? Content { get; init; }
+
+        public FinalOutputUsage? Usage { get; init; }
+
+        public IReadOnlyList<AIPromptExecutionResult.AIPromptResultOption>? ResultOptions { get; init; }
+
+        public string? Error { get; init; }
+
+        public string? StackTrace { get; init; }
+    }
+
+    internal sealed class FinalOutputUsage
+    {
+        public long? InputTokens { get; init; }
+
+        public long? OutputTokens { get; init; }
+
+        public long? TotalTokens { get; init; }
     }
 }

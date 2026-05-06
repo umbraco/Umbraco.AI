@@ -374,6 +374,56 @@ public class SerializedEntityContributorTests
     }
 
     [Fact]
+    public void Contribute_WithCultureField_PassesCultureToHelper()
+    {
+        // Arrange — regression test for the multi-variant prompt bug. The
+        // frontend now emits culture/segment on the serialized entity; the
+        // contributor must propagate them to the helper so it can pick the
+        // matching property entry.
+        var entityJson = """
+            {
+                "entityType": "document",
+                "unique": "doc-multi-variant",
+                "name": "Article",
+                "culture": "sv-SE",
+                "segment": null,
+                "data": {
+                    "contentType": "article",
+                    "properties": [
+                        { "alias": "header", "value": "Svensk rubrik", "culture": "sv-SE", "segment": null },
+                        { "alias": "header", "value": "Deutsche Überschrift", "culture": "de-DE", "segment": null }
+                    ]
+                }
+            }
+            """;
+
+        var contextItem = new AIRequestContextItem
+        {
+            Description = "Multi-variant entity",
+            Value = entityJson
+        };
+
+        var context = new AIRuntimeContext([contextItem]);
+
+        _contextHelperMock
+            .Setup(x => x.BuildContextDictionary(It.IsAny<AISerializedEntity>()))
+            .Returns([]);
+
+        _contextHelperMock
+            .Setup(x => x.FormatForLlm(It.IsAny<AISerializedEntity>()))
+            .Returns("formatted");
+
+        // Act
+        _contributor.Contribute(context);
+
+        // Assert — entity passed to the helper carries Culture so it can pick
+        // the matching property entry rather than the last-iterated one.
+        _contextHelperMock.Verify(x => x.BuildContextDictionary(It.Is<AISerializedEntity>(e =>
+            e.Culture == "sv-SE" &&
+            e.Segment == null)), Times.Once);
+    }
+
+    [Fact]
     public void Contribute_CallsContextHelperMethods()
     {
         // Arrange

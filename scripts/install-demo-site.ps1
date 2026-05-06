@@ -149,6 +149,10 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "A
 Write-Host "Adding Umbraco.AI.Anthropic projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Anthropic"
 
+# Step 9.05: Add DeepSeek provider projects
+Write-Host "Adding Umbraco.AI.DeepSeek projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.DeepSeek" -SolutionFolder "DeepSeek"
+
 # Step 9.1: Add Microsoft Foundry provider projects
 Write-Host "Adding Umbraco.AI.MicrosoftFoundry projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
@@ -160,6 +164,22 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
 # Step 10.1: Add Amazon provider projects
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
+
+# Step 10.1.1: Add FireworksAI provider projects
+Write-Host "Adding Umbraco.AI.FireworksAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.FireworksAI" -SolutionFolder "FireworksAI"
+
+# Step 10.1.2: Add HuggingFace provider projects
+Write-Host "Adding Umbraco.AI.HuggingFace projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.HuggingFace" -SolutionFolder "HuggingFace"
+
+# Step 10.1.3: Add Mistral provider projects
+Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Mistral"
+
+# Step 10.1.4: Add TogetherAI provider projects
+Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "TogetherAI"
 
 # Step 10.2: Add Search projects
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
@@ -187,6 +207,11 @@ if (Test-Path "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropi
     dotnet add $demoProject reference "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj"
 }
 
+# DeepSeek provider
+if (Test-Path "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj"
+}
+
 # Microsoft Foundry provider
 if (Test-Path "Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj"
@@ -200,6 +225,26 @@ if (Test-Path "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj"
 # Amazon provider
 if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+}
+
+# FireworksAI provider
+if (Test-Path "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
+}
+
+# HuggingFace provider
+if (Test-Path "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj"
+}
+
+# Mistral provider
+if (Test-Path "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+}
+
+# TogetherAI provider
+if (Test-Path "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

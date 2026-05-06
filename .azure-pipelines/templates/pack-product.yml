@@ -36,7 +36,23 @@ steps:
       condition: ${{ parameters.condition }}
       workingDirectory: ${{ parameters.product }}
 
-    - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.slnx --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true
+    - script: |
+          attempt=1
+          max_attempts=3
+          delay=15
+          while true; do
+            if dotnet restore ${{ parameters.product }}/${{ parameters.product }}.slnx --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true; then
+              break
+            fi
+            if [ $attempt -ge $max_attempts ]; then
+              echo "##[error]dotnet restore failed after $attempt attempts"
+              exit 1
+            fi
+            echo "##[warning]dotnet restore failed (attempt $attempt/$max_attempts), retrying in ${delay}s..."
+            sleep $delay
+            attempt=$((attempt + 1))
+            delay=$((delay * 2))
+          done
       displayName: Restore packages
       condition: ${{ parameters.condition }}
 

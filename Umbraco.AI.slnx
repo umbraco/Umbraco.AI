@@ -69,13 +69,28 @@
   <Folder Name="/Providers/Anthropic/">
     <Project Path="Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" />
   </Folder>
+  <Folder Name="/Providers/DeepSeek/">
+    <Project Path="Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" />
+  </Folder>
+  <Folder Name="/Providers/FireworksAI/">
+    <Project Path="Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" />
+  </Folder>
   <Folder Name="/Providers/Google/">
     <Project Path="Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj" />
+  </Folder>
+  <Folder Name="/Providers/HuggingFace/">
+    <Project Path="Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj" />
   </Folder>
   <Folder Name="/Providers/MicrosoftFoundry/">
     <Project Path="Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj" />
   </Folder>
+  <Folder Name="/Providers/Mistral/">
+    <Project Path="Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" />
+  </Folder>
   <Folder Name="/Providers/OpenAI/">
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
+  </Folder>
+  <Folder Name="/Providers/TogetherAI/">
+    <Project Path="Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" />
   </Folder>
 </Solution>

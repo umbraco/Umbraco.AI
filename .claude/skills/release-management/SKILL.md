@@ -13,17 +13,18 @@ Guide users through the complete release preparation process:
 
 1. **Detect changed products** since their last release tags
 2. **Analyze commits** to recommend version bumps (major/minor/patch)
-3. **Confirm versions** with the user
-4. **Update Directory.Packages.props** inter-product dependency ranges (with user approval)
-5. **Update peerDependencyVersions in root package.json** npm peer dependency ranges (with user approval)
-6. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
-7. **Dependency validation** - Check for cross-product conflicts
-8. **Update version.json** files for each product
-9. **Generate release-manifest.json** via `/release-manifest-management`
-10. **Generate CHANGELOG.md** files via `/changelog-management`
-11. **Changelog review** - Review generated changelogs for quality and completeness
-12. **Validate** all files are consistent
-13. **Commit all changes** to the release branch
+3. **Cascade forced bumps** to every dependent of a product undergoing minor/major/downplayed-breaking changes
+4. **Confirm versions** with the user (including cascaded products)
+5. **Update Directory.Packages.props** inter-product dependency ranges (with user approval)
+6. **Update peerDependencyVersions in root package.json** npm peer dependency ranges (with user approval)
+7. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
+8. **Dependency validation** - Check for cross-product conflicts using the graph built in cascade analysis
+9. **Update version.json** files for each product
+10. **Generate release-manifest.json** via `/release-manifest-management`
+11. **Generate CHANGELOG.md** files via `/changelog-management`
+12. **Changelog review** - Review generated changelogs for quality and completeness
+13. **Validate** all files are consistent
+14. **Commit all changes** to the release branch
 
 ## Workflow
 
@@ -92,13 +93,162 @@ For each changed product:
     └─────────────────────┴──────────┴──────────┴─────────────────────────────┘
     ```
 
+### Phase 2.5: Dependency Cascade Analysis
+
+After computing direct version bumps in Phase 2, walk the inter-product dependency graph and **force-add** every product that depends on a product undergoing a `feat:` (minor), downplayed-breaking, or major bump. This guarantees the new lower-bound dep range in `Directory.Packages.props` propagates to all consumers in the same release, closing the gap where an old dependent already on NuGet has a stale range that can resolve to the new upstream.
+
+#### Why this matters
+
+NuGet does not surface "feature added in upstream minor" semantics. If `Umbraco.AI` 1.10.x → 1.11.0 adds a new API and `Umbraco.AI.Agent` starts using it, an Agent build that still declares `Umbraco.AI.Core [1.10.0, 1.999.999)` can resolve to Core 1.10.x and crash with `MissingMethodException`. Cascading a forced patch bump on every dependent ensures their new `.nuspec` minimum points at the new upstream, so any user upgrading through the dependent automatically gets the matching upstream.
+
+The downplayed-breaking option in Phase 3 only remains safe because of this cascade — without it, "downplayed breaking" silently breaks consumers stuck on old dependent versions.
+
+#### Step 1 — Build the package → product map (dynamically)
+
+Two-pass map: filesystem first (authoritative), longest-prefix as fallback for anything the filesystem pass missed.
+
+```bash
+# Discover products: all Umbraco.AI* folders at repo root.
+products=$(find . -maxdepth 1 -type d -name 'Umbraco.AI*' | sed 's|^\./||')
+
+# Inter-product packages: names from Directory.Packages.props
+# (the "Inter-product dependencies" ItemGroup).
+interProductPkgs=$(grep -Po 'PackageVersion Include="\K(Umbraco\.AI[^"]*)' Directory.Packages.props)
+```
+
+**Pass 1 — filesystem ground truth** (each product folder owns the csprojs inside it):
+
+```pseudo
+packageToProduct = {}
+for product in products:
+    for csproj in glob(f"{product}/src/**/*.csproj"):
+        pkgName = csproj.<PackageId> if set else basename(csproj).removesuffix(".csproj")
+        packageToProduct[pkgName] = product
+```
+
+**Pass 2 — longest-prefix fallback** for anything in the inter-product list that pass 1 didn't see:
+
+```pseudo
+products_sorted = sorted(products, key=len, reverse=True)
+
+mapByPrefix(pkg):
+    for p in products_sorted:                   # longest first wins
+        if pkg == p or pkg.startswith(p + "."):
+            return p
+    return None
+
+for pkg in interProductPkgs:
+    if pkg not in packageToProduct:
+        owner = mapByPrefix(pkg)
+        if owner is None:
+            warn(f"Cannot resolve {pkg} to a product")
+        else:
+            packageToProduct[pkg] = owner
+```
+
+**Drift sanity check** — log where pass 1 and pass 2 disagree (pass 1 wins, but the divergence is informative; e.g. `Umbraco.AI.AGUI` lives under `Umbraco.AI.Agent/` but its package name only carries the `Umbraco.AI` prefix, so pass 2 alone would mis-route it):
+
+```pseudo
+for pkg, product in packageToProduct.items():
+    prefixGuess = mapByPrefix(pkg)
+    if prefixGuess and prefixGuess != product:
+        info(f"{pkg} owned by {product} (filesystem); prefix would say {prefixGuess}")
+```
+
+#### Step 2 — Build the dependency graph
+
+```pseudo
+deps = {}                          # product -> set(products it depends on)
+for product in products:
+    deps[product] = set()
+    for csproj in glob(f"{product}/src/**/*.csproj"):
+        for ref in csproj.<PackageReference>:
+            owner = packageToProduct.get(ref.Include)
+            if owner and owner != product:
+                deps[product].add(owner)
+
+dependents = invert(deps)          # upstream -> set(downstream products)
+```
+
+#### Step 3 — Cascade forced patch bumps
+
+```pseudo
+TRIGGERS = {minor, major, downplayedBreaking}   # patch/none/fix do NOT cascade
+
+queue = [p for p in bumpSet if bumpSet[p].bumpKind in TRIGGERS]
+
+while queue not empty:
+    upstream = queue.pop()
+    for downstream in dependents.get(upstream, []):
+        if downstream in bumpSet:
+            continue          # already bumping; its own range update covers it
+        bumpSet[downstream] = {
+            currentVersion: read_version_json(downstream),
+            newVersion:     patchBump(currentVersion),
+            bumpKind:       "patch",
+            forced:         True,
+            forcedBy:       upstream,
+        }
+        # A forced patch does not change the downstream's API surface,
+        # so it does not itself trigger further cascade.
+```
+
+`patchBump` mirrors `/post-release-cleanup` Phase 4 — reuse the same helper:
+- `1.10.1` → `1.10.2`
+- `1.0.0-beta1` → `1.0.0-beta2`
+- `1.0.0-alpha` → `1.0.0-alpha.1`
+
+#### Step 4 — Edge cases
+
+1. **Forced product has no commits since its last tag.** Phase 10.5's "drop empty changelog" rule would otherwise remove it. Add an exception: forced bumps generate a stub entry like `### Internal\n- Bump to align with <upstream> <newVersion>` and stay in the release.
+
+2. **User excludes a forced product from the manifest.** Phase 10.5 lets the user move products into `exclude`. Excluding a *forced* product breaks the cascade guarantee — old dependents on NuGet remain vulnerable to the stale-range trap. Warn loudly and require explicit confirmation.
+
+3. **First-time products** (no prior release tag). Nothing on NuGet to be orphaned, so they can be skipped as upstreams in the cascade. As downstreams: standard handling.
+
+#### Step 5 — Compute the manifest-affected set (separate from bumpSet)
+
+CI's `detect-changes.ps1` flags any product whose csproj references a package whose range moved in `Directory.Packages.props` — including patch bumps. Cascade (Step 3) correctly does **not** add such products to `bumpSet` for patch upstreams (forward-compatible, no new release needed), but CI still requires those products to appear in either `include` or `exclude` of `release-manifest.json`. Without this acknowledgement, CI fails with `release-manifest.json is missing changed products: <Product>`.
+
+Compute the broader "affected" set so Phase 9 can put it straight into `exclude`:
+
+```pseudo
+manifestAffected = set()                  # products that need acknowledgement only
+for upstream in bumpSet:                  # every bump moves at least one range
+    for downstream in dependents.get(upstream, []):
+        if downstream not in bumpSet:
+            manifestAffected.add(downstream)
+```
+
+This is the *broader* counterpart to Step 3's cascade. Step 3 produces `bumpSet ⊇ direct + forced` (everything that needs a new version). Step 5 produces `manifestAffected = (consumers of bumpSet via dep graph) − bumpSet` (everything that needs acknowledgement only).
+
+Hand both sets to Phase 9.
+
+**Example from release 2026.05.1:** all four bumps were patch (`Umbraco.AI`, `Agent.UI`, `Prompt`, `Search`) → `bumpSet` size 4, no cascade. But `Umbraco.AI` patch-bumped `Core/Web/Startup` ranges, which `Umbraco.AI.Agent`'s csproj references. Agent had zero file changes since its tag, so Phase 1 didn't flag it; cascade didn't add it because patches don't trigger; but CI flagged it as affected and the manifest blew up at validation time. Step 5 catches this by walking `dependents[Umbraco.AI] = {Agent, Amazon, Anthropic, ...}` and queuing them all for `exclude`.
+
 ### Phase 3: Version Confirmation
 
-Use **AskUserQuestion** to confirm or adjust versions:
+Present the **final** version table including any forced cascade bumps from Phase 2.5:
+
+```
+Final version set (including cascaded forced patches):
+
+┌─────────────────────────┬──────────┬──────────┬──────────────────────────────────┐
+│ Product                 │ Current  │ Proposed │ Reason                           │
+├─────────────────────────┼──────────┼──────────┼──────────────────────────────────┤
+│ Umbraco.AI              │ 1.10.1   │ 1.11.0   │ 3 feat commits                   │
+│ Umbraco.AI.Agent        │ 1.9.1    │ 1.10.0   │ 2 feat commits                   │
+│ Umbraco.AI.Prompt       │ 1.8.1    │ 1.8.2    │ FORCED — depends on Umbraco.AI   │
+│ Umbraco.AI.OpenAI       │ 1.0.5    │ 1.0.6    │ FORCED — depends on Umbraco.AI   │
+└─────────────────────────┴──────────┴──────────┴──────────────────────────────────┘
+```
+
+Then use **AskUserQuestion** to confirm or adjust versions:
 
 - **Default option**: "Use recommended versions (above)"
 - **Alternative options**:
-    - "Downplay breaking changes to minor" - Treat breaking changes as minor bumps (X.Y.0 → X.Y+1.0 instead of X+1.0.0)
+    - "Downplay breaking changes to minor" - Treat breaking changes as minor bumps (X.Y.0 → X.Y+1.0 instead of X+1.0.0). Cascade still applies (in fact, this option is only safe *because* cascade applies).
+    - "Drop forced products" - Remove specific cascaded patches. Per Phase 2.5 Step 4, this requires explicit confirmation per product and breaks the cascade guarantee for those products.
     - "Adjust individual versions" - Manually specify version for each product
     - "Cancel release preparation"
 
@@ -114,79 +264,56 @@ Use **AskUserQuestion** to confirm or adjust versions:
 
 ### Phase 4: Update Inter-Product Dependency Ranges (.NET)
 
-After confirming versions, update the `Directory.Packages.props` file to reflect new minimum version requirements **only for products with breaking changes**.
+After confirming versions, update `Directory.Packages.props` so the dependency range for **every bumped product** reflects the new minimum (and, for major bumps, the new upper bound).
 
-**Important:** Only update dependency ranges when there's a breaking change that requires dependent packages to update. If dependent packages can continue working with the previous version, keep the existing range.
+**Cascade prerequisite:** Phase 2.5 has already added forced patch bumps for every dependent of any minor/major/downplayed-breaking change. With cascade in place, every consumer that needs the new minimum is being released alongside, so raising the lower bound is safe to apply for *all* bumps — not just breaking ones. The earlier "only update for breaking changes" rule has been removed because it created a stale-range runtime trap whenever an upstream minor added an API the dependent then used.
+
+**Rule (apply per bumped product P):**
+
+| `bumpKind` | New range entry |
+|---|---|
+| `major` | `[X+1.0.0, X+1.999.999)` — both bounds change |
+| `minor`, `downplayedBreaking`, `patch` (including forced) | `[newVersion, X.999.999)` — lower bound only |
+| `none` | leave entry unchanged |
 
 **Workflow:**
 
-1. **Read current Directory.Packages.props**:
-   ```bash
-   # Read the root Directory.Packages.props file
-   cat Directory.Packages.props
-   ```
+1. **Read current Directory.Packages.props** (the inter-product ItemGroup).
 
-2. **Identify products with breaking changes**:
-   - Look for products with BREAKING CHANGE in commit bodies
-   - Look for commits with `!` after scope (e.g., `feat!:`, `refactor!:`)
-   - Track whether breaking changes were downplayed to minor (still breaking!)
-   - **Only these products need dependency range updates**
+2. **Compute proposed updates** by applying the rule above to every entry in `bumpSet`.
 
-3. **Determine which ranges need updating**:
-   - Look for `<PackageVersion Include="Umbraco.AI.*" Version="[X.Y.Z, X.999.999)" />` entries
-   - **Only update ranges for products with breaking changes**:
-     - **Major bump** (X.Y.Z → X+1.0.0): Update both bounds: `[X+1.0.0, X+1.999.999)`
-     - **Minor bump from downplayed breaking change** (X.Y.Z → X.Y+1.0): Update lower bound only: `[X.Y+1.0, X.999.999)`
-   - **Do NOT update ranges for products without breaking changes** (feat/fix only bumps)
-
-4. **Present proposed changes** to user (if any breaking changes detected):
+3. **Present proposed changes** to user:
    ```
    Directory.Packages.props updates:
 
-   Breaking changes detected in:
-   - Umbraco.AI.Core (BREAKING CHANGE: DetailLevel removal)
-
-   The following dependency ranges will be updated:
-   - Umbraco.AI.Core: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
-   - Umbraco.AI.Web: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
-   - Umbraco.AI.AGUI: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
-   - Umbraco.AI.Startup: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
-
-   Products without breaking changes (Agent, Prompt) will keep existing ranges.
+   - Umbraco.AI.Core:           [1.10.0, 1.999.999) → [1.11.0, 1.999.999)   (minor)
+   - Umbraco.AI.Agent.Core:     [1.9.0,  1.999.999) → [1.10.0, 1.999.999)   (minor)
+   - Umbraco.AI.Prompt.Startup: [1.8.1,  1.999.999) → [1.8.2,  1.999.999)   (forced patch — depends on Umbraco.AI)
    ```
 
-5. **Ask for approval** using AskUserQuestion (only if breaking changes detected):
-   - **Default option**: "Update dependency ranges for breaking changes (recommended)"
+4. **Ask for approval** using AskUserQuestion:
+   - **Default option**: "Apply these range updates (recommended)"
    - **Alternative options**:
-     - "Skip dependency updates" - Continue without updating ranges
-     - "Adjust manually later" - Skip now, remind user to update manually
+     - "Skip range updates" — proceed without updating; warn that this will require manual fix-up before release
+     - "Adjust manually later"
 
-6. **If no breaking changes detected**:
-   ```
-   ✓ No breaking changes detected - dependency ranges remain unchanged
-   ```
+5. **If approved, update the file** with the Edit tool.
 
-7. **If approved, update the file**:
-   ```bash
-   # Use Edit tool to update Directory.Packages.props
+6. **Confirm updates**:
    ```
-
-8. **Confirm updates**:
-   ```
-   ✓ Updated 4 inter-product dependency ranges in Directory.Packages.props
+   ✓ Updated N inter-product dependency ranges in Directory.Packages.props
    ```
 
 **Important Notes:**
-- **Conservative approach**: Only update ranges when there are breaking changes
-- Products without breaking changes keep their existing ranges (allowing flexibility)
-- Only the lower bound changes for minor bumps from downplayed breaking changes
-- Both bounds change for true major bumps (X.0.0 → X+1.0.0)
-- These changes will be staged and committed with other release files
-- If unsure, err on the side of NOT updating (keeps more flexibility for consumers)
+- The rule deliberately does *not* exempt products without breaking changes. Phase 2.5's cascade ensures consumers are bumped alongside, so raising the lower bound is the safe default.
+- Major-bump updates only affect the entries for products being released. Products excluded from the release manifest retain their old `.nuspec` ranges from prior releases — that is correct SemVer behavior (consumers can't pull an incompatible new major while still pinned to an old provider).
+- Lower-bound bumps for `downplayedBreaking` are what make the downplay option safe: every dependent's new version requires the new upstream, so users upgrading through dependents always end up on a compatible pair.
 
 ### Phase 4.5: Update Inter-Product Peer Dependencies (npm)
 
 After updating `Directory.Packages.props`, update `peerDependencyVersions` in root `package.json` to keep npm peer dependencies in sync with .NET dependency ranges.
+
+This phase mirrors Phase 4: every product in `bumpSet` (direct or forced) gets its npm peer range updated. The set is identical to Phase 4's, so by construction the two stay in sync — closing the previous asymmetry where npm bumped on every release but .NET only bumped on breaking changes.
 
 **Important:** This phase uses the same version decisions from Phase 3. No need to re-analyze commits.
 
@@ -202,12 +329,12 @@ After updating `Directory.Packages.props`, update `peerDependencyVersions` in ro
    - Same information used in Phase 4 for `Directory.Packages.props`
 
 3. **Determine which npm ranges need updating**:
-   - For each product being released, check if it has an npm package (has `Client/package.json` with `types` field)
+   - For each product in `bumpSet` (direct + forced), check if it has an npm package (has `Client/package.json` with `types` field)
    - Map the new version to npm semver range:
      - New version 2.0.0 → `^2.0.0`
      - New version 1.3.0 → `^1.3.0`
      - New version 1.2.1 → `^1.2.1`
-   - Update ALL products being released (not just breaking changes) to ensure consistency
+   - Update every product being released — same set as Phase 4 — to keep the two sources of truth aligned
 
 4. **Present proposed changes** to user:
    ```
@@ -363,24 +490,58 @@ This is independent from product version numbers (which follow semantic versioni
 
 ### Phase 7: Dependency Validation
 
-Check for cross-product dependency issues:
+Reuse the dependency graph (`deps`, `dependents`, `packageToProduct`) built in Phase 2.5 to validate that the post-Phase-4 state is internally consistent. The validation covers **all** inter-product packages — not just `Umbraco.AI.Core`.
 
-1. **Find dependency ranges** in `Directory.Packages.props` files:
-    ```bash
-    grep -r "Umbraco.AI.Core" */Directory.Packages.props
-    ```
+```pseudo
+# 1. Each bumped product's newVersion satisfies its own (just-updated) range entry.
+for product in bumpSet:
+    range = parsed_range(Directory.Packages.props[product])
+    if not range.contains(bumpSet[product].newVersion):
+        error(f"{product} new version {bumpSet[product].newVersion} "
+              f"is outside its declared range {range}")
 
-2. **Warn about breaking changes**:
-    ```
-    ⚠️  Warning: Version conflict detected
+# 2. For every minor/major/downplayed-breaking upstream, every consumer must be in
+#    bumpSet (cascade should have ensured this — re-verify before committing).
+for upstream in bumpSet:
+    if bumpSet[upstream].bumpKind not in {major, minor, downplayedBreaking}:
+        continue
+    for downstream in dependents.get(upstream, []):
+        if downstream not in bumpSet:
+            error(f"Cascade gap: {downstream} depends on {upstream} "
+                  f"({bumpSet[upstream].bumpKind} bump) but is not in bumpSet. "
+                  f"Old {downstream} on NuGet may resolve to an incompatible "
+                  f"{upstream}.")
 
-    Umbraco.AI → 2.0.0 (major bump)
-    Umbraco.AI.Prompt requires [1.0.0, 1.999.999)
+# 3. Major-bump conflicts: any out-of-release product whose csproj references an
+#    upstream undergoing a new major must be addressed explicitly.
+for upstream in bumpSet:
+    if bumpSet[upstream].bumpKind != major:
+        continue
+    for downstream in all_products:
+        if downstream in bumpSet:
+            continue
+        for ref in csproj_refs(downstream):
+            if packageToProduct.get(ref) == upstream:
+                error(f"{downstream} (not in release) depends on {upstream}, "
+                      f"which is going to a new major. Either include "
+                      f"{downstream} with a compatible bump or hold {upstream} "
+                      f"at the current major for this release.")
+```
 
-    Recommendations:
-    - Include Umbraco.AI.Prompt in this release and update its dependency
-    - Or: Keep Umbraco.AI at 1.x for this release
-    ```
+Present results:
+
+```
+✅ All bumped products satisfy their declared ranges
+✅ Cascade closed: every consumer of a minor/major/downplayed upstream is in the release
+🔴 Umbraco.AI.OpenAI (not in release) depends on Umbraco.AI which is going to 2.0.0
+   → must be addressed before continuing
+```
+
+If hard errors exist, ask the user how to proceed — common resolutions:
+
+- Include the missing product (re-run Phase 2.5 cascade with it added)
+- Hold the upstream at its current major (revert that bump in Phase 3)
+- Abort and fix manually
 
 ### Phase 8: Update version.json Files
 
@@ -403,11 +564,42 @@ For each product with confirmed version:
 
 ### Phase 9: Generate Release Manifest
 
-Invoke `/release-manifest-management` skill with product list:
-- Build comma-separated list of all products being released
-- Pass via `--products="Product1,Product2,..."` parameter
-- Example: `--products="Umbraco.AI,Umbraco.AI.Agent,Umbraco.AI.OpenAI"`
-- Skill will generate manifest automatically without prompting
+Build the manifest from three sources so CI's `detect-changes.ps1` accepts it:
+
+```pseudo
+include = sorted(bumpSet keys)
+
+exclude = sorted(union of:
+    - Phase 1 changed products you chose NOT to release  (file changes, dropped)
+    - Phase 2.5 Step 5 manifestAffected                  (range-delta consumers)
+    - First-time products with commits since main not in include
+)
+```
+
+Every product CI considers "changed" by either mechanism (file diff or `Directory.Packages.props` range delta) **must** appear in one of the two lists.
+
+If `/release-manifest-management` is invoked without an explicit `--exclude=`, write `release-manifest.json` directly using the Write tool with the object format:
+
+```json
+{
+    "include": [...],
+    "exclude": [...]
+}
+```
+
+Or invoke the skill with the include list and patch the exclude list yourself afterwards.
+
+**Sanity check before moving on:**
+
+```pseudo
+for product in all_products:
+    isChanged = (product in Phase1Changed) or (product in manifestAffected) or (product in bumpSet)
+    if isChanged and product not in include and product not in exclude:
+        error(f"{product} will fail CI validation — add to include or exclude")
+```
+
+Run this check before Phase 13 commits. CI's failure message looks like:
+> `release-manifest.json is missing changed products (add to 'include' or 'exclude'): <Product>`
 
 ### Phase 10: Generate Changelogs
 
@@ -602,13 +794,20 @@ Priority (highest first):
 
 ## Cross-Product Dependency Check
 
-Read `Directory.Packages.props` files to detect version ranges:
+The dependency graph used for cascade (Phase 2.5) and validation (Phase 7) is built dynamically from:
+
+1. The "Inter-product dependencies" ItemGroup in root `Directory.Packages.props`
+2. Each `<Product>/src/**/*.csproj` file's `<PackageReference>` entries
+
+The `packageToProduct` map is built filesystem-first (each product folder owns the csprojs inside it) with a longest-prefix fallback for any inter-product package not represented by a csproj in the current checkout. This handles edge cases like `Umbraco.AI.AGUI` whose package name doesn't carry the owning product's full prefix.
+
+Range entries follow the form:
 
 ```xml
-<PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
+<PackageVersion Include="Umbraco.AI.Core" Version="[1.10.0, 1.999.999)" />
 ```
 
-If bumping Core to 2.0.0, warn about all products with `[1.x, 1.999.999)` ranges.
+Range updates follow the simplified Phase 4 rule (lower bound on every bump; both bounds on majors), with cascade ensuring no consumer is left behind.
 
 ## Example Flow
 
@@ -627,21 +826,38 @@ You show recommendations:
 - Umbraco.AI.OpenAI: 1.0.0 → 1.0.1 (patch - 1 fix)
 - Umbraco.AI.Prompt: 1.0.0 → 2.0.0 (major - BREAKING CHANGE)
 
+Phase 2.5: Cascade analysis
+You build the package→product map (filesystem ground truth + longest-prefix fallback)
+You build the dep graph from each csproj's PackageReferences
+TRIGGERS = {minor, major, downplayedBreaking}
+- Umbraco.AI is minor → cascade to its dependents
+- Umbraco.AI.Prompt is major → cascade to its dependents
+- Umbraco.AI.OpenAI is patch → no cascade
+Forced patches added (Step 3):
+- Umbraco.AI.Agent: 1.0.0 → 1.0.1 (depends on Umbraco.AI minor)
+- Umbraco.AI.Prompt.Deploy: 1.0.0 → 1.0.1 (depends on Umbraco.AI.Prompt major)
+manifestAffected computed (Step 5):
+- (in this minor/major scenario, all dep consumers are already in bumpSet → empty)
+- (in a patch-only release, this set captures every consumer of a bumped package
+  that doesn't need a new version but does need an `exclude` entry)
+
 Phase 3: Confirm versions
-You ask: Use these versions?
+You show the FINAL set including forced cascade entries.
 Options:
 - Use recommended versions (above)
-- Downplay breaking changes to minor (2.0.0 → 1.1.0)
+- Downplay breaking changes to minor (Prompt 2.0.0 → 1.1.0). Cascade still applies.
+- Drop forced products (per-product, with warning)
 - Adjust individual versions
 - Cancel
 User confirms with chosen option
 
 Phase 4: Update Directory.Packages.props
-You read Directory.Packages.props
-You identify products with BREAKING CHANGES (Core only)
-You present proposed dependency range updates for Core packages only
-User approves updates
-You update only the Core-related ranges (Agent, Prompt ranges remain unchanged)
+You apply the simplified rule per bumped product:
+- Major: both bounds change
+- Minor / downplayedBreaking / patch (incl. forced): lower bound only
+- none: leave alone
+User approves updates. All bumped products' ranges are updated; cascade ensures
+no consumer is left with a stale lower bound.
 
 Phase 4.5: Update peerDependencyVersions in root package.json
 You read peerDependencyVersions from root package.json
@@ -660,15 +876,19 @@ You create the branch and switch to it
 All subsequent work happens on this branch
 
 Phase 7: Check dependencies
-You check Directory.Packages.props
-You warn: Prompt requires Core 1.x, but Core is going to 1.1.0 - compatible!
+You re-use the dep graph from Phase 2.5 to validate the post-Phase-4 state.
+You verify: every consumer of a minor/major/downplayed upstream is in bumpSet.
+You verify: every bumped newVersion satisfies its just-updated range entry.
+No errors found.
 
 Phase 8: Update version.json
 You edit all three version.json files on the release branch
 
 Phase 9: Generate manifest
-You invoke /release-manifest-management --products="Umbraco.AI,Umbraco.AI.OpenAI,Umbraco.AI.Prompt"
-Manifest created with 3 products (no user prompt needed)
+You build include from bumpSet and exclude from
+(Phase 1 dropped) ∪ manifestAffected ∪ (first-time non-bumped)
+You sanity-check: every "changed" product is in one list or the other
+Manifest written directly (Write tool) using the object format
 
 Phase 10: Generate changelogs
 You invoke /changelog-management for each product

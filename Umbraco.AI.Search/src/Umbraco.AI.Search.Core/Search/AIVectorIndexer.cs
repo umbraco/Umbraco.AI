@@ -158,7 +158,7 @@ public sealed class AIVectorIndexer : IIndexer
     public async Task<IndexMetadata> GetMetadataAsync(string indexAlias)
     {
         var count = await _vectorStore.GetDocumentCountAsync(indexAlias);
-        return new IndexMetadata(count, HealthStatus.Healthy);
+        return new IndexMetadata(count, HealthStatus.Healthy, AISearchConstants.Provider.Name);
     }
 
     private static string ExtractTextFromFields(IEnumerable<IndexField> fields)

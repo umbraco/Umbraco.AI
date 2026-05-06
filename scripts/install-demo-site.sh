@@ -158,6 +158,10 @@ add_product_projects "Umbraco.AI.Agent.Copilot" "AgentCopilot"
 echo "Adding Umbraco.AI.Anthropic projects..."
 add_product_projects "Umbraco.AI.Anthropic" "Anthropic"
 
+# Step 9.05: Add DeepSeek provider projects
+echo "Adding Umbraco.AI.DeepSeek projects..."
+add_product_projects "Umbraco.AI.DeepSeek" "DeepSeek"
+
 # Step 9.1: Add Microsoft Foundry provider projects
 echo "Adding Umbraco.AI.MicrosoftFoundry projects..."
 add_product_projects "Umbraco.AI.MicrosoftFoundry" "MicrosoftFoundry"
@@ -169,6 +173,22 @@ add_product_projects "Umbraco.AI.Google" "Google"
 # Step 10.1: Add Amazon provider projects
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Amazon"
+
+# Step 10.1.1: Add FireworksAI provider projects
+echo "Adding Umbraco.AI.FireworksAI projects..."
+add_product_projects "Umbraco.AI.FireworksAI" "FireworksAI"
+
+# Step 10.1.2: Add HuggingFace provider projects
+echo "Adding Umbraco.AI.HuggingFace projects..."
+add_product_projects "Umbraco.AI.HuggingFace" "HuggingFace"
+
+# Step 10.1.3: Add Mistral provider projects
+echo "Adding Umbraco.AI.Mistral projects..."
+add_product_projects "Umbraco.AI.Mistral" "Mistral"
+
+# Step 10.1.4: Add TogetherAI provider projects
+echo "Adding Umbraco.AI.TogetherAI projects..."
+add_product_projects "Umbraco.AI.TogetherAI" "TogetherAI"
 
 # Step 10.2: Add Search projects
 echo "Adding Umbraco.AI.Search projects..."
@@ -196,6 +216,11 @@ if [ -f "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.cspr
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj"
 fi
 
+# DeepSeek provider
+if [ -f "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj"
+fi
+
 # Microsoft Foundry provider
 if [ -f "Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj"
@@ -209,6 +234,26 @@ fi
 # Amazon provider
 if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+fi
+
+# FireworksAI provider
+if [ -f "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
+fi
+
+# HuggingFace provider
+if [ -f "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj"
+fi
+
+# Mistral provider
+if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+fi
+
+# TogetherAI provider
+if [ -f "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

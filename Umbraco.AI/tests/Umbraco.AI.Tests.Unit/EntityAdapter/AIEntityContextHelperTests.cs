@@ -293,6 +293,166 @@ public class AIEntityContextHelperTests
     }
 
     [Fact]
+    public void BuildContextDictionary_WithMultipleCultures_PicksActiveCultureValue()
+    {
+        // Arrange — same alias appears once per culture (the shape the frontend
+        // adapters now emit on multi-variant documents). Active culture is sv-SE,
+        // so the helper must pick the Swedish entry, not the German one.
+        var data = JsonDocument.Parse("""
+            {
+                "contentType": "article",
+                "properties": [
+                    { "alias": "header", "label": "Header", "value": "English header", "culture": "en-US", "segment": null },
+                    { "alias": "header", "label": "Header", "value": "Dansk overskrift", "culture": "da-DK", "segment": null },
+                    { "alias": "header", "label": "Header", "value": "Svensk rubrik", "culture": "sv-SE", "segment": null },
+                    { "alias": "header", "label": "Header", "value": "Deutsche Überschrift", "culture": "de-DE", "segment": null }
+                ]
+            }
+            """).RootElement;
+
+        var entity = new AISerializedEntity
+        {
+            EntityType = "document",
+            Unique = "doc-1",
+            Name = "Article",
+            Culture = "sv-SE",
+            Data = data
+        };
+
+        // Act
+        var result = _helper.BuildContextDictionary(entity);
+
+        // Assert
+        result["header"].ShouldBe("Svensk rubrik");
+    }
+
+    [Fact]
+    public void BuildContextDictionary_WithActiveCultureAndInvariantProperty_FallsBackToInvariantEntry()
+    {
+        // Arrange — `header` varies by culture, `slug` is invariant. Active
+        // culture is sv-SE; `slug` has no Swedish entry so the invariant value
+        // must be used.
+        var data = JsonDocument.Parse("""
+            {
+                "properties": [
+                    { "alias": "header", "label": "Header", "value": "Svensk rubrik", "culture": "sv-SE", "segment": null },
+                    { "alias": "header", "label": "Header", "value": "English header", "culture": "en-US", "segment": null },
+                    { "alias": "slug", "label": "Slug", "value": "my-article", "culture": null, "segment": null }
+                ]
+            }
+            """).RootElement;
+
+        var entity = new AISerializedEntity
+        {
+            EntityType = "document",
+            Unique = "doc-1",
+            Name = "Article",
+            Culture = "sv-SE",
+            Data = data
+        };
+
+        // Act
+        var result = _helper.BuildContextDictionary(entity);
+
+        // Assert
+        result["header"].ShouldBe("Svensk rubrik");
+        result["slug"].ShouldBe("my-article");
+    }
+
+    [Fact]
+    public void BuildContextDictionary_WithActiveCultureAndOnlyMismatchedEntries_FallsBackToLastEntry()
+    {
+        // Arrange — active culture has no matching entry AND no invariant entry
+        // exists. The helper falls back to the last entry to preserve the
+        // pre-fix "something always resolves" behaviour rather than dropping the
+        // variable. Documented contract.
+        var data = JsonDocument.Parse("""
+            {
+                "properties": [
+                    { "alias": "header", "label": "Header", "value": "English header", "culture": "en-US", "segment": null },
+                    { "alias": "header", "label": "Header", "value": "Deutsche Überschrift", "culture": "de-DE", "segment": null }
+                ]
+            }
+            """).RootElement;
+
+        var entity = new AISerializedEntity
+        {
+            EntityType = "document",
+            Unique = "doc-1",
+            Name = "Article",
+            Culture = "sv-SE",
+            Data = data
+        };
+
+        // Act
+        var result = _helper.BuildContextDictionary(entity);
+
+        // Assert — last entry wins (matches old behaviour for unmodelled cases)
+        result["header"].ShouldBe("Deutsche Überschrift");
+    }
+
+    [Fact]
+    public void BuildContextDictionary_WithoutActiveCulture_TreatsEntityAsInvariant()
+    {
+        // Arrange — no active culture on the entity. Existing single-value
+        // payloads (no culture metadata) must continue to resolve as before.
+        var data = JsonDocument.Parse("""
+            {
+                "properties": [
+                    { "alias": "header", "label": "Header", "value": "Hello" },
+                    { "alias": "body", "label": "Body", "value": "Content" }
+                ]
+            }
+            """).RootElement;
+
+        var entity = new AISerializedEntity
+        {
+            EntityType = "document",
+            Unique = "doc-1",
+            Name = "Article",
+            Data = data
+        };
+
+        // Act
+        var result = _helper.BuildContextDictionary(entity);
+
+        // Assert
+        result["header"].ShouldBe("Hello");
+        result["body"].ShouldBe("Content");
+    }
+
+    [Fact]
+    public void BuildContextDictionary_WithActiveSegment_PicksMatchingSegmentEntry()
+    {
+        // Arrange — segment dimension. Active is (en-US, mobile); the helper
+        // must pick the entry matching both culture and segment.
+        var data = JsonDocument.Parse("""
+            {
+                "properties": [
+                    { "alias": "headline", "value": "Desktop headline", "culture": "en-US", "segment": null },
+                    { "alias": "headline", "value": "Mobile headline", "culture": "en-US", "segment": "mobile" }
+                ]
+            }
+            """).RootElement;
+
+        var entity = new AISerializedEntity
+        {
+            EntityType = "document",
+            Unique = "doc-1",
+            Name = "Article",
+            Culture = "en-US",
+            Segment = "mobile",
+            Data = data
+        };
+
+        // Act
+        var result = _helper.BuildContextDictionary(entity);
+
+        // Assert
+        result["headline"].ShouldBe("Mobile headline");
+    }
+
+    [Fact]
     public void FormatForLlm_GetsAdapterForEntityType()
     {
         // Arrange

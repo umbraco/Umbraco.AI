@@ -174,6 +174,36 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                 yield return toolResultEvent;
                             }
                             break;
+
+                        case ErrorContent errorContent:
+                            // Providers stream ErrorContent for non-fatal errors that occur
+                            // mid-response (content filters, transient model errors, function-
+                            // call sanitisation when IncludeDetailedErrors is false, etc.). If
+                            // we drop them silently the chat trace renders a bare
+                            // '[unknown:ErrorContent]' with no body and the underlying cause
+                            // never reaches the logs. Log first, then surface inline so the
+                            // user sees what happened and the run can continue.
+                            _logger.LogError(
+                                "Provider streamed ErrorContent during run {RunId}. Code: {ErrorCode}, Message: {Message}, Details: {Details}",
+                                request.RunId,
+                                errorContent.ErrorCode ?? "(none)",
+                                errorContent.Message ?? "(empty)",
+                                errorContent.Details ?? "(none)");
+                            yield return emitter.EmitTextChunk(FormatProviderErrorForChat(errorContent));
+                            break;
+
+                        case TextContent:
+                            // Already aggregated below via update.Text — skip to avoid double-emit.
+                            break;
+
+                        default:
+                            // Future-proof: any AIContent subtype MEAI adds later gets logged at
+                            // debug level so it doesn't vanish silently.
+                            _logger.LogDebug(
+                                "Unhandled AIContent type '{ContentType}' in stream for run {RunId}",
+                                content.GetType().Name,
+                                request.RunId);
+                            break;
                     }
                 }
             }
@@ -184,6 +214,14 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
+    }
+
+    private static string FormatProviderErrorForChat(ErrorContent errorContent)
+    {
+        var message = string.IsNullOrEmpty(errorContent.Message) ? "(no message)" : errorContent.Message;
+        return string.IsNullOrEmpty(errorContent.ErrorCode)
+            ? $"\n\n[Provider error: {message}]\n\n"
+            : $"\n\n[Provider error {errorContent.ErrorCode}: {message}]\n\n";
     }
 
 

@@ -206,6 +206,26 @@ while queue not empty:
 
 3. **First-time products** (no prior release tag). Nothing on NuGet to be orphaned, so they can be skipped as upstreams in the cascade. As downstreams: standard handling.
 
+#### Step 5 — Compute the manifest-affected set (separate from bumpSet)
+
+CI's `detect-changes.ps1` flags any product whose csproj references a package whose range moved in `Directory.Packages.props` — including patch bumps. Cascade (Step 3) correctly does **not** add such products to `bumpSet` for patch upstreams (forward-compatible, no new release needed), but CI still requires those products to appear in either `include` or `exclude` of `release-manifest.json`. Without this acknowledgement, CI fails with `release-manifest.json is missing changed products: <Product>`.
+
+Compute the broader "affected" set so Phase 9 can put it straight into `exclude`:
+
+```pseudo
+manifestAffected = set()                  # products that need acknowledgement only
+for upstream in bumpSet:                  # every bump moves at least one range
+    for downstream in dependents.get(upstream, []):
+        if downstream not in bumpSet:
+            manifestAffected.add(downstream)
+```
+
+This is the *broader* counterpart to Step 3's cascade. Step 3 produces `bumpSet ⊇ direct + forced` (everything that needs a new version). Step 5 produces `manifestAffected = (consumers of bumpSet via dep graph) − bumpSet` (everything that needs acknowledgement only).
+
+Hand both sets to Phase 9.
+
+**Example from release 2026.05.1:** all four bumps were patch (`Umbraco.AI`, `Agent.UI`, `Prompt`, `Search`) → `bumpSet` size 4, no cascade. But `Umbraco.AI` patch-bumped `Core/Web/Startup` ranges, which `Umbraco.AI.Agent`'s csproj references. Agent had zero file changes since its tag, so Phase 1 didn't flag it; cascade didn't add it because patches don't trigger; but CI flagged it as affected and the manifest blew up at validation time. Step 5 catches this by walking `dependents[Umbraco.AI] = {Agent, Amazon, Anthropic, ...}` and queuing them all for `exclude`.
+
 ### Phase 3: Version Confirmation
 
 Present the **final** version table including any forced cascade bumps from Phase 2.5:
@@ -544,11 +564,42 @@ For each product with confirmed version:
 
 ### Phase 9: Generate Release Manifest
 
-Invoke `/release-manifest-management` skill with product list:
-- Build comma-separated list of all products being released
-- Pass via `--products="Product1,Product2,..."` parameter
-- Example: `--products="Umbraco.AI,Umbraco.AI.Agent,Umbraco.AI.OpenAI"`
-- Skill will generate manifest automatically without prompting
+Build the manifest from three sources so CI's `detect-changes.ps1` accepts it:
+
+```pseudo
+include = sorted(bumpSet keys)
+
+exclude = sorted(union of:
+    - Phase 1 changed products you chose NOT to release  (file changes, dropped)
+    - Phase 2.5 Step 5 manifestAffected                  (range-delta consumers)
+    - First-time products with commits since main not in include
+)
+```
+
+Every product CI considers "changed" by either mechanism (file diff or `Directory.Packages.props` range delta) **must** appear in one of the two lists.
+
+If `/release-manifest-management` is invoked without an explicit `--exclude=`, write `release-manifest.json` directly using the Write tool with the object format:
+
+```json
+{
+    "include": [...],
+    "exclude": [...]
+}
+```
+
+Or invoke the skill with the include list and patch the exclude list yourself afterwards.
+
+**Sanity check before moving on:**
+
+```pseudo
+for product in all_products:
+    isChanged = (product in Phase1Changed) or (product in manifestAffected) or (product in bumpSet)
+    if isChanged and product not in include and product not in exclude:
+        error(f"{product} will fail CI validation — add to include or exclude")
+```
+
+Run this check before Phase 13 commits. CI's failure message looks like:
+> `release-manifest.json is missing changed products (add to 'include' or 'exclude'): <Product>`
 
 ### Phase 10: Generate Changelogs
 
@@ -782,9 +833,13 @@ TRIGGERS = {minor, major, downplayedBreaking}
 - Umbraco.AI is minor → cascade to its dependents
 - Umbraco.AI.Prompt is major → cascade to its dependents
 - Umbraco.AI.OpenAI is patch → no cascade
-Forced patches added:
+Forced patches added (Step 3):
 - Umbraco.AI.Agent: 1.0.0 → 1.0.1 (depends on Umbraco.AI minor)
 - Umbraco.AI.Prompt.Deploy: 1.0.0 → 1.0.1 (depends on Umbraco.AI.Prompt major)
+manifestAffected computed (Step 5):
+- (in this minor/major scenario, all dep consumers are already in bumpSet → empty)
+- (in a patch-only release, this set captures every consumer of a bumped package
+  that doesn't need a new version but does need an `exclude` entry)
 
 Phase 3: Confirm versions
 You show the FINAL set including forced cascade entries.
@@ -830,8 +885,10 @@ Phase 8: Update version.json
 You edit all three version.json files on the release branch
 
 Phase 9: Generate manifest
-You invoke /release-manifest-management --products="Umbraco.AI,Umbraco.AI.OpenAI,Umbraco.AI.Prompt"
-Manifest created with 3 products (no user prompt needed)
+You build include from bumpSet and exclude from
+(Phase 1 dropped) ∪ manifestAffected ∪ (first-time non-bumped)
+You sanity-check: every "changed" product is in one list or the other
+Manifest written directly (Write tool) using the object format
 
 Phase 10: Generate changelogs
 You invoke /changelog-management for each product

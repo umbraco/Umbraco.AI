@@ -185,9 +185,6 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
                 <uui-icon name="icon-add"></uui-icon>
                 Add Grader
             </uui-button>
-            ${showInvalid
-                ? html`<div class="validation-message">${this.validationMessage}</div>`
-                : ""}
         `;
     }
 
@@ -195,11 +192,6 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
         css`
             .add-btn {
                 width: 100%;
-            }
-            .validation-message {
-                color: var(--uui-color-invalid-standalone);
-                font-size: var(--uui-type-small-size, 12px);
-                margin-top: var(--uui-size-space-2);
             }
         `,
     ];

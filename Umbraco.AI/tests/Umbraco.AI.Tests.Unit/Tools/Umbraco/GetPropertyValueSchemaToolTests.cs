@@ -6,6 +6,7 @@ using Shouldly;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
 
@@ -14,11 +15,14 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 public class GetPropertyValueSchemaToolTests
 {
     private readonly Mock<IPropertyEditorSchemaService> _propertyEditorSchemaServiceMock = new();
+    private readonly Mock<IPublishedContentTypeCache> _publishedContentTypeCacheMock = new();
     private readonly IAITool _tool;
 
     public GetPropertyValueSchemaToolTests()
     {
-        _tool = new GetPropertyValueSchemaTool(_propertyEditorSchemaServiceMock.Object);
+        _tool = new GetPropertyValueSchemaTool(
+            _propertyEditorSchemaServiceMock.Object,
+            _publishedContentTypeCacheMock.Object);
     }
 
     [Fact]

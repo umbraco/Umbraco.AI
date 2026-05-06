@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
 
@@ -28,13 +29,17 @@ public record GetPropertyValueSchemaArgs(
 public class GetPropertyValueSchemaTool : AIToolBase<GetPropertyValueSchemaArgs>
 {
     private readonly IPropertyEditorSchemaService _propertyEditorSchemaService;
+    private readonly IPublishedContentTypeCache _publishedContentTypeCache;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetPropertyValueSchemaTool"/>.
     /// </summary>
-    public GetPropertyValueSchemaTool(IPropertyEditorSchemaService propertyEditorSchemaService)
+    public GetPropertyValueSchemaTool(
+        IPropertyEditorSchemaService propertyEditorSchemaService,
+        IPublishedContentTypeCache publishedContentTypeCache)
     {
         _propertyEditorSchemaService = propertyEditorSchemaService;
+        _publishedContentTypeCache = publishedContentTypeCache;
     }
 
     /// <inheritdoc />
@@ -73,11 +78,16 @@ public class GetPropertyValueSchemaTool : AIToolBase<GetPropertyValueSchemaArgs>
                 false, args.DataTypeKey, null, null, message);
         }
 
+        var enrichedSchema = BlockSchemaEnricher.Enrich(
+            attempt.Result?.JsonSchema,
+            _publishedContentTypeCache,
+            _propertyEditorSchemaService);
+
         return new GetPropertyValueSchemaResult(
             true,
             args.DataTypeKey,
             attempt.Result?.ValueType?.FullName,
-            attempt.Result?.JsonSchema,
+            enrichedSchema,
             null);
     }
 }

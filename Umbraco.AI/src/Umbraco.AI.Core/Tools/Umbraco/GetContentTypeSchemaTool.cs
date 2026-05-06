@@ -161,7 +161,10 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
                 await _propertyEditorSchemaService.GetSchemaAsync(key);
             if (attempt.Success)
             {
-                valueSchema = attempt.Result?.JsonSchema;
+                valueSchema = BlockSchemaEnricher.Enrich(
+                    attempt.Result?.JsonSchema,
+                    _publishedContentTypeCache,
+                    _propertyEditorSchemaService);
             }
         }
 

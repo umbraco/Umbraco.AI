@@ -151,6 +151,7 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
     }
 
     override render() {
+        const showInvalid = this.pristine === false && this.validity.valid === false;
         return html`
             <uui-ref-list>
                 ${repeat(
@@ -174,10 +175,19 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
                     `
                 )}
             </uui-ref-list>
-            <uui-button class="add-btn" look="placeholder" label="Add Grader" @click=${this.#onAdd}>
+            <uui-button
+                class="add-btn"
+                look="placeholder"
+                color=${showInvalid ? "invalid" : "default"}
+                label="Add Grader"
+                @click=${this.#onAdd}
+            >
                 <uui-icon name="icon-add"></uui-icon>
                 Add Grader
             </uui-button>
+            ${showInvalid
+                ? html`<div class="validation-message">${this.validationMessage}</div>`
+                : ""}
         `;
     }
 
@@ -185,6 +195,11 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
         css`
             .add-btn {
                 width: 100%;
+            }
+            .validation-message {
+                color: var(--uui-color-invalid-standalone);
+                font-size: var(--uui-type-small-size, 12px);
+                margin-top: var(--uui-size-space-2);
             }
         `,
     ];

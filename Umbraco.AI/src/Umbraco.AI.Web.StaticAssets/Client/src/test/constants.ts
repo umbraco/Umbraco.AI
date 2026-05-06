@@ -18,6 +18,9 @@ export const UAI_TEST_COLLECTION_ALIAS = "UmbracoAI.Collection.Test";
 export const UAI_TEST_WORKSPACE_ALIAS = "UmbracoAI.Workspace.Test";
 export const UAI_TEST_ROOT_WORKSPACE_ALIAS = "UmbracoAI.Workspace.TestRoot";
 
+// Workspace view aliases
+export const UAI_TEST_WORKSPACE_VIEW_GRADING_ALIAS = "UmbracoAI.Workspace.Test.View.Grading";
+
 // Menu aliases
 export const UAI_TEST_MENU_ITEM_ALIAS = "UmbracoAI.MenuItem.Test";
 

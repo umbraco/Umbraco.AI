@@ -68,7 +68,7 @@ export class UaiTestWorkspaceContext
         this.#gradersValidator = new UmbValueValidator<unknown[]>(this, {
             dataPath: "$.graders",
             check: (value) => !value || value.length === 0,
-            message: () => "uaiValidation_gradersRequired",
+            message: () => "#uaiValidation_gradersRequired",
         });
         this.observe(this.model, (model) => {
             if (this.#gradersValidator) this.#gradersValidator.value = model?.graders ?? [];

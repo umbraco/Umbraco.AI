@@ -15,4 +15,15 @@ public static class AISearchConstants
         /// </summary>
         public const string Search = "UmbAI_Search";
     }
+
+    /// <summary>
+    /// Provider identification surfaced via <c>IndexMetadata.ProviderName</c>.
+    /// </summary>
+    public static class Provider
+    {
+        /// <summary>
+        /// The provider name reported for indexes managed by Umbraco AI Search.
+        /// </summary>
+        public const string Name = "ai-vector-search-provider";
+    }
 }

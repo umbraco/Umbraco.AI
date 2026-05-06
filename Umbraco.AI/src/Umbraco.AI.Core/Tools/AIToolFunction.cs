@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Umbraco.AI.Core.Tools;
 
@@ -27,6 +29,7 @@ internal sealed class AIToolFunction<TArgs> : AIFunction where TArgs : class
     private readonly string _name;
     private readonly string _description;
     private readonly JsonElement _schema;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new instance of <see cref="AIToolFunction{TArgs}"/>.
@@ -34,7 +37,8 @@ internal sealed class AIToolFunction<TArgs> : AIFunction where TArgs : class
     /// <param name="tool">The tool being wrapped.</param>
     /// <param name="name">The function name (tool id).</param>
     /// <param name="description">The function description.</param>
-    public AIToolFunction(IAITool tool, string name, string description)
+    /// <param name="loggerFactory">Optional logger factory for diagnostic logging of tool invocation failures.</param>
+    public AIToolFunction(IAITool tool, string name, string description, ILoggerFactory? loggerFactory = null)
     {
         _tool = tool;
         _name = name;
@@ -46,6 +50,7 @@ internal sealed class AIToolFunction<TArgs> : AIFunction where TArgs : class
             defaultValue: null,
             serializerOptions: _serializerOptions,
             inferenceOptions: null);
+        _logger = loggerFactory?.CreateLogger($"Umbraco.AI.Tools.{name}") ?? NullLogger.Instance;
     }
 
     /// <inheritdoc />
@@ -92,6 +97,42 @@ internal sealed class AIToolFunction<TArgs> : AIFunction where TArgs : class
                 $"JSON: {argsElement.GetRawText()}");
         }
 
-        return await _tool.ExecuteAsync(typedArgs, cancellationToken);
+        try
+        {
+            return await _tool.ExecuteAsync(typedArgs, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Don't swallow cancellation — let MEAI surface it.
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // MEAI's FunctionInvokingChatClient catches function exceptions and produces a
+            // sanitised ErrorContent that the AG-UI trace renders as '[unknown:ErrorContent]'
+            // with no message — by the time the user sees it, the actual cause has been lost.
+            // Log here so the underlying exception always lands in our trace, then return a
+            // structured error result so the LLM (and the rendered tool call) sees enough to
+            // diagnose or self-correct rather than a blind error.
+            _logger.LogError(
+                ex,
+                "Tool '{ToolName}' threw {ExceptionType} while executing. Args JSON: {ArgsJson}",
+                _name,
+                ex.GetType().Name,
+                argsElement.GetRawText());
+
+            return new ToolInvocationError(
+                Success: false,
+                ToolName: _name,
+                ErrorType: ex.GetType().Name,
+                Message: ex.Message);
+        }
     }
+
+    /// <summary>
+    /// Structured error payload returned in place of a thrown exception so the chat trace and
+    /// the LLM both see a diagnosable failure rather than the opaque '[unknown:ErrorContent]'
+    /// MEAI produces when a tool throws.
+    /// </summary>
+    internal sealed record ToolInvocationError(bool Success, string ToolName, string ErrorType, string Message);
 }

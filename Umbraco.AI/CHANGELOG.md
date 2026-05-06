@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.10.0...Umbraco.AI@1.10.1) (2026-05-06)
+
+### fix
+
+* **core:** Handle Umbraco slider {from,to} object shape in double config fields ([a368263](https://github.com/umbraco/Umbraco.AI/commit/a3682631e8b5ff36e57da07ce182bd91b8378ceb)), closes [#146](https://github.com/umbraco/Umbraco.AI/issues/146)
+* **core:** Honour active variant in prompt template variables on multi-variant documents ([d334c68](https://github.com/umbraco/Umbraco.AI/commit/d334c688c946bffe6db62dfe4920e2e0423a82ec))
+* **frontend:** Avoid duplicate grader message and run validation across tabs ([be4215c](https://github.com/umbraco/Umbraco.AI/commit/be4215c478e26edef610f6de41e717f74648fb3d))
+* **frontend:** Open variation editor modal via route registration ([38ef6f5](https://github.com/umbraco/Umbraco.AI/commit/38ef6f522b0d04bb0293e2c948fba051fbc8c566)), closes [#125](https://github.com/umbraco/Umbraco.AI/issues/125)
+* **frontend:** Surface grader validation errors in test workspace ([0abbb69](https://github.com/umbraco/Umbraco.AI/commit/0abbb69e993a5fb87f8042f128e9043a8dc965d3))
+* **frontend:** Use localization key prefix for grader validation message ([8329da5](https://github.com/umbraco/Umbraco.AI/commit/8329da53d48e7a117e9b136c8c79cd1377ae775a))
+
 ## [1.10.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.9.0...Umbraco.AI@1.10.0) (2026-04-30)
 
 ### feat

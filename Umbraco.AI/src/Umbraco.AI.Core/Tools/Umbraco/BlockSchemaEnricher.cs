@@ -185,9 +185,19 @@ internal static class BlockSchemaEnricher
             JsonObject? propertySchema = null;
             try
             {
-                propertySchema = schemaService.GetValueSchema(
+                var fresh = schemaService.GetValueSchema(
                     propertyType.DataType.EditorAlias,
                     propertyType.DataType.ConfigurationObject);
+
+                // Deep-clone the schema-service output before mutating or attaching.
+                // The CMS schema providers build fresh trees per call today, but a
+                // future cache or shared sub-tree would reparent on attach and
+                // surface as a serialisation error later in the chat pipeline.
+                // Cloning is cheap (these schemas are tiny) and keeps the enricher
+                // independent of the schema service's internal lifetime semantics.
+                propertySchema = fresh is null
+                    ? null
+                    : JsonNode.Parse(fresh.ToJsonString())!.AsObject();
             }
             catch
             {

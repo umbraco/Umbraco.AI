@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha8](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha7...Umbraco.AI.Agent.UI@1.0.0-alpha8) (2026-05-06)
+
+### fix
+
+* **agent-ui:** Constrain markdown images to chat message width ([5d7eb54](https://github.com/umbraco/Umbraco.AI/commit/5d7eb5480fd36dfca31a02cc09e9c1c7758cb001))
+
 ## [1.0.0-alpha7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0-alpha6...Umbraco.AI.Agent.UI@1.0.0-alpha7) (2026-04-30)
 
 ### fix

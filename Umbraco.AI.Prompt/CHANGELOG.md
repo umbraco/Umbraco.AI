@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.1...Umbraco.AI.Prompt@1.8.2) (2026-05-06)
+
+### fix
+
+* **prompt:** Extract display value from prompt result options for grading ([bc7046f](https://github.com/umbraco/Umbraco.AI/commit/bc7046ffb08fe7483e87ec54043768cd8b17a849)), closes [#142](https://github.com/umbraco/Umbraco.AI/issues/142)
+
 ## [1.8.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.0...Umbraco.AI.Prompt@1.8.1) (2026-04-30)
 
 ### fix

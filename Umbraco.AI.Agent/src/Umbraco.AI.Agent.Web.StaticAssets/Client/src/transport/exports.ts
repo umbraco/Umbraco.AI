@@ -17,8 +17,16 @@ export type {
     UaiFrontendTool,
     UaiInputContent,
     UaiTextInputContent,
-    UaiBinaryInputContent,
+    UaiImageInputContent,
+    UaiAudioInputContent,
+    UaiVideoInputContent,
+    UaiDocumentInputContent,
+    UaiInputContentSource,
+    UaiInputContentDataSource,
+    UaiInputContentUrlSource,
 } from "./types.js";
+
+export { classifyContentKind } from "./types.js";
 
 // Transport types
 export type { AgentTransport, AgentClientCallbacks, RunFinishedEvent } from "./types.js";

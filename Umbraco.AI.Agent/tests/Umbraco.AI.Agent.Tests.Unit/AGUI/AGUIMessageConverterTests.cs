@@ -282,10 +282,15 @@ public class AGUIMessageConverterTests
             ContentParts = new List<AGUIInputContent>
             {
                 new AGUITextInputContent { Text = "What's in this image?" },
-                new AGUIBinaryInputContent
+                // Resolved bytes attached the same way AGUIFileProcessor would after resolving a stored file.
+                new AGUIImageInputContent
                 {
-                    MimeType = "image/png",
-                    ResolvedData = imageBytes
+                    Source = new AGUIInputContentUrlSource { Value = "https://server/file/file-abc", MimeType = "image/png" },
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["fileId"] = "file-abc",
+                        ["__resolvedData"] = imageBytes
+                    }
                 }
             }
         };
@@ -317,10 +322,9 @@ public class AGUIMessageConverterTests
             Role = AGUIMessageRole.User,
             ContentParts = new List<AGUIInputContent>
             {
-                new AGUIBinaryInputContent
+                new AGUIDocumentInputContent
                 {
-                    MimeType = "application/pdf",
-                    Data = base64
+                    Source = new AGUIInputContentDataSource { Value = base64, MimeType = "application/pdf" }
                 }
             }
         };
@@ -374,9 +378,11 @@ public class AGUIMessageConverterTests
         var textPart = result.ContentParts[0].ShouldBeOfType<AGUITextInputContent>();
         textPart.Text.ShouldBe("Describe this");
 
-        var binaryPart = result.ContentParts[1].ShouldBeOfType<AGUIBinaryInputContent>();
-        binaryPart.MimeType.ShouldBe("image/jpeg");
-        binaryPart.Data.ShouldNotBeNull();
+        // image/jpeg is classified as Image variant via the factory.
+        var binaryPart = result.ContentParts[1].ShouldBeOfType<AGUIImageInputContent>();
+        var dataSource = binaryPart.Source.ShouldBeOfType<AGUIInputContentDataSource>();
+        dataSource.MimeType.ShouldBe("image/jpeg");
+        dataSource.Value.ShouldNotBeNull();
     }
 
     #endregion

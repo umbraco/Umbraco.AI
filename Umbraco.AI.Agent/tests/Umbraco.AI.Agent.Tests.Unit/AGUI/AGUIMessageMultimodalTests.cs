@@ -96,7 +96,7 @@ public class AGUIMessageMultimodalTests
             "role": "user",
             "content": [
                 {"type": "text", "text": "What's in this image?"},
-                {"type": "binary", "mimeType": "image/png", "data": "iVBORw0KGgo=", "filename": "screenshot.png"}
+                {"type": "image", "source": {"type": "data", "value": "iVBORw0KGgo=", "mimeType": "image/png"}, "metadata": {"filename": "screenshot.png"}}
             ]
         }
         """;
@@ -112,10 +112,12 @@ public class AGUIMessageMultimodalTests
         var textPart = message.ContentParts[0].ShouldBeOfType<AGUITextInputContent>();
         textPart.Text.ShouldBe("What's in this image?");
 
-        var binaryPart = message.ContentParts[1].ShouldBeOfType<AGUIBinaryInputContent>();
-        binaryPart.MimeType.ShouldBe("image/png");
-        binaryPart.Data.ShouldBe("iVBORw0KGgo=");
-        binaryPart.Filename.ShouldBe("screenshot.png");
+        var imagePart = message.ContentParts[1].ShouldBeOfType<AGUIImageInputContent>();
+        var dataSource = imagePart.Source.ShouldBeOfType<AGUIInputContentDataSource>();
+        dataSource.MimeType.ShouldBe("image/png");
+        dataSource.Value.ShouldBe("iVBORw0KGgo=");
+        imagePart.Metadata.ShouldNotBeNull();
+        imagePart.Metadata!["filename"]!.ToString().ShouldBe("screenshot.png");
     }
 
     [Fact]
@@ -128,7 +130,7 @@ public class AGUIMessageMultimodalTests
             "role": "user",
             "content": [
                 {"type": "text", "text": "Hello "},
-                {"type": "binary", "mimeType": "image/png", "data": "abc="},
+                {"type": "image", "source": {"type": "data", "value": "abc=", "mimeType": "image/png"}},
                 {"type": "text", "text": "world"}
             ]
         }
@@ -153,7 +155,15 @@ public class AGUIMessageMultimodalTests
             ContentParts = new List<AGUIInputContent>
             {
                 new AGUITextInputContent { Text = "Check this file" },
-                new AGUIBinaryInputContent { MimeType = "application/pdf", Id = "file-123", Filename = "report.pdf" }
+                new AGUIDocumentInputContent
+                {
+                    Source = new AGUIInputContentUrlSource { Value = "https://server/file/file-123", MimeType = "application/pdf" },
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["filename"] = "report.pdf",
+                        ["fileId"] = "file-123"
+                    }
+                }
             }
         };
 
@@ -179,7 +189,11 @@ public class AGUIMessageMultimodalTests
             ContentParts = new List<AGUIInputContent>
             {
                 new AGUITextInputContent { Text = "Check this" },
-                new AGUIBinaryInputContent { MimeType = "image/jpeg", Data = "base64data", Filename = "photo.jpg" }
+                new AGUIImageInputContent
+                {
+                    Source = new AGUIInputContentDataSource { Value = "base64data", MimeType = "image/jpeg" },
+                    Metadata = new Dictionary<string, object?> { ["filename"] = "photo.jpg" }
+                }
             }
         };
 
@@ -195,23 +209,26 @@ public class AGUIMessageMultimodalTests
         var textPart = deserialized.ContentParts[0].ShouldBeOfType<AGUITextInputContent>();
         textPart.Text.ShouldBe("Check this");
 
-        var binaryPart = deserialized.ContentParts[1].ShouldBeOfType<AGUIBinaryInputContent>();
-        binaryPart.MimeType.ShouldBe("image/jpeg");
-        binaryPart.Data.ShouldBe("base64data");
-        binaryPart.Filename.ShouldBe("photo.jpg");
+        var imagePart = deserialized.ContentParts[1].ShouldBeOfType<AGUIImageInputContent>();
+        var dataSource = imagePart.Source.ShouldBeOfType<AGUIInputContentDataSource>();
+        dataSource.MimeType.ShouldBe("image/jpeg");
+        dataSource.Value.ShouldBe("base64data");
+        imagePart.Metadata.ShouldNotBeNull();
+        imagePart.Metadata!["filename"]!.ToString().ShouldBe("photo.jpg");
     }
 
     [Fact]
     public void Deserialize_BinaryWithIdReference_PreservesId()
     {
-        // Arrange — represents a message from a snapshot where base64 has been replaced with id
+        // Arrange — represents a message from a snapshot where base64 has been replaced with a URL reference
+        // and the file id lives in metadata.
         var json = """
         {
             "id": "msg-1",
             "role": "user",
             "content": [
                 {"type": "text", "text": "Analyze this"},
-                {"type": "binary", "mimeType": "image/png", "id": "file-abc123", "filename": "chart.png"}
+                {"type": "image", "source": {"type": "url", "value": "https://server/file/file-abc123", "mimeType": "image/png"}, "metadata": {"filename": "chart.png", "fileId": "file-abc123"}}
             ]
         }
         """;
@@ -220,9 +237,10 @@ public class AGUIMessageMultimodalTests
         var message = JsonSerializer.Deserialize<AGUIMessage>(json, Options);
 
         // Assert
-        var binaryPart = message!.ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        binaryPart.Id.ShouldBe("file-abc123");
-        binaryPart.Data.ShouldBeNull();
+        var imagePart = message!.ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        imagePart.Source.ShouldBeOfType<AGUIInputContentUrlSource>();
+        imagePart.Metadata.ShouldNotBeNull();
+        imagePart.Metadata!["fileId"]!.ToString().ShouldBe("file-abc123");
     }
 
     #endregion

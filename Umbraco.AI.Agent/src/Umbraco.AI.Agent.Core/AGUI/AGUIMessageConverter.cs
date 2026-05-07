@@ -81,14 +81,21 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 }
             }
 
-            // Add binary content
+            // Add typed media content (AG-UI spec: image / audio / video / document by mime type)
             foreach (var dataContent in dataContents)
             {
-                contentParts.Add(new AGUIBinaryInputContent
+                var mimeType = dataContent.MediaType ?? "application/octet-stream";
+                var source = !dataContent.Data.IsEmpty
+                    ? new AGUIInputContentDataSource
+                    {
+                        Value = Convert.ToBase64String(dataContent.Data.Span),
+                        MimeType = mimeType,
+                    }
+                    : null;
+                if (source is not null)
                 {
-                    MimeType = dataContent.MediaType ?? "application/octet-stream",
-                    Data = !dataContent.Data.IsEmpty ? Convert.ToBase64String(dataContent.Data.Span) : null
-                });
+                    contentParts.Add(AGUIInputContentFactory.FromSource(source, mimeType));
+                }
             }
 
             message.ContentParts = contentParts;
@@ -130,41 +137,59 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
 
         foreach (var part in message.ContentParts!)
         {
-            switch (part)
+            if (part is AGUITextInputContent textPart)
             {
-                case AGUITextInputContent textPart:
-                    contents.Add(new TextContent(textPart.Text));
+                contents.Add(new TextContent(textPart.Text));
+                continue;
+            }
+
+            // Image / Audio / Video / Document — all share the same Source + Metadata shape.
+            var (source, mimeType) = ReadMediaSource(part);
+            if (source is null || mimeType is null)
+            {
+                continue;
+            }
+
+            // Prefer resolved bytes attached by AGUIFileProcessor.
+            var resolved = AGUIFileProcessor.GetResolvedBytes(part);
+            if (resolved is { Length: > 0 })
+            {
+                contents.Add(new DataContent(resolved, mimeType));
+                continue;
+            }
+
+            switch (source)
+            {
+                case AGUIInputContentDataSource dataSource:
+                    var bytes = Convert.FromBase64String(dataSource.Value);
+                    contents.Add(new DataContent(bytes, dataSource.MimeType));
                     break;
 
-                case AGUIBinaryInputContent binaryPart:
-                    if (binaryPart.ResolvedData is { Length: > 0 })
-                    {
-                        // Use resolved bytes from file processor
-                        contents.Add(new DataContent(binaryPart.ResolvedData, binaryPart.MimeType));
-                    }
-                    else if (!string.IsNullOrEmpty(binaryPart.Data))
-                    {
-                        // Fallback: decode inline base64
-                        var bytes = Convert.FromBase64String(binaryPart.Data);
-                        contents.Add(new DataContent(bytes, binaryPart.MimeType));
-                    }
-                    else if (!string.IsNullOrEmpty(binaryPart.Id))
-                    {
-                        // Has a file store ID but no resolved data — skip.
-                        // The file processor should have resolved this; if it didn't,
-                        // the file may have expired or been cleaned up.
-                    }
-                    else if (!string.IsNullOrEmpty(binaryPart.Url))
-                    {
-                        // External URL-based content (not from file store)
-                        contents.Add(new DataContent(new Uri(binaryPart.Url, UriKind.RelativeOrAbsolute), binaryPart.MimeType));
-                    }
+                case AGUIInputContentUrlSource urlSource:
+                    // External URL with no resolved bytes — pass through as a URL reference.
+                    contents.Add(new DataContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
                     break;
             }
         }
 
         return new ChatMessage(role, contents);
     }
+
+    private static (AGUIInputContentSource? Source, string? MimeType) ReadMediaSource(AGUIInputContent part) => part switch
+    {
+        AGUIImageInputContent img => (img.Source, MimeOf(img.Source)),
+        AGUIAudioInputContent aud => (aud.Source, MimeOf(aud.Source)),
+        AGUIVideoInputContent vid => (vid.Source, MimeOf(vid.Source)),
+        AGUIDocumentInputContent doc => (doc.Source, MimeOf(doc.Source)),
+        _ => (null, null),
+    };
+
+    private static string? MimeOf(AGUIInputContentSource source) => source switch
+    {
+        AGUIInputContentDataSource d => d.MimeType,
+        AGUIInputContentUrlSource u => u.MimeType,
+        _ => null,
+    };
 
     private static ChatMessage ConvertAssistantMessageWithToolCalls(AGUIMessage message)
     {

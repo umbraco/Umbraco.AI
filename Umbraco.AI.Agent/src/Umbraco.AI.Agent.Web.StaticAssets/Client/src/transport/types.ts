@@ -34,26 +34,80 @@ export interface UaiTextInputContent {
 }
 
 /**
- * Binary content part for multimodal messages (images, PDFs, etc.).
- * At least one of data, url, or id must be provided.
+ * Inline-data content source — base64 value with declared MIME type.
  */
-export interface UaiBinaryInputContent {
-    type: "binary";
+export interface UaiInputContentDataSource {
+    type: "data";
+    value: string;
     mimeType: string;
-    /** Base64-encoded binary data (initial upload) */
-    data?: string;
-    /** URL where the binary content can be retrieved */
-    url?: string;
-    /** Server-side reference ID (after snapshot, for subsequent turns) */
-    id?: string;
-    /** Original filename */
-    filename?: string;
+}
+
+/**
+ * URL-based content source — value is a URL the consumer can fetch.
+ */
+export interface UaiInputContentUrlSource {
+    type: "url";
+    value: string;
+    mimeType?: string;
+}
+
+/**
+ * Discriminated union of media content sources.
+ */
+export type UaiInputContentSource = UaiInputContentDataSource | UaiInputContentUrlSource;
+
+interface UaiMediaInputContentBase {
+    source: UaiInputContentSource;
+    /** Optional metadata bag (e.g., `filename`). */
+    metadata?: Record<string, unknown>;
+}
+
+/** Image content part (`image/*` mime types). */
+export interface UaiImageInputContent extends UaiMediaInputContentBase {
+    type: "image";
+}
+
+/** Audio content part (`audio/*` mime types). */
+export interface UaiAudioInputContent extends UaiMediaInputContentBase {
+    type: "audio";
+}
+
+/** Video content part (`video/*` mime types). */
+export interface UaiVideoInputContent extends UaiMediaInputContentBase {
+    type: "video";
+}
+
+/** Document content part — catch-all for non-media MIME types (PDF, ZIP, etc.). */
+export interface UaiDocumentInputContent extends UaiMediaInputContentBase {
+    type: "document";
 }
 
 /**
  * Union of all input content types for multimodal messages.
+ *
+ * AG-UI spec: https://docs.ag-ui.com/concepts. Spec defines five content types
+ * (text, image, audio, video, document). The legacy `binary` shape was removed
+ * in favour of the typed variants above; document is the catch-all for non-media.
  */
-export type UaiInputContent = UaiTextInputContent | UaiBinaryInputContent;
+export type UaiInputContent =
+    | UaiTextInputContent
+    | UaiImageInputContent
+    | UaiAudioInputContent
+    | UaiVideoInputContent
+    | UaiDocumentInputContent;
+
+/**
+ * Classify a MIME type into the matching AG-UI content variant. Mirrors the
+ * official SDK classifier (`@ag-ui/client` BackwardCompatibility_0_0_47):
+ * `image/*` → image, `audio/*` → audio, `video/*` → video, else document.
+ */
+export function classifyContentKind(mimeType: string | undefined): "image" | "audio" | "video" | "document" {
+    if (!mimeType) return "document";
+    if (mimeType.startsWith("image/")) return "image";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType.startsWith("video/")) return "video";
+    return "document";
+}
 
 // =============================================================================
 // Domain Types for Agent Communication

@@ -2,7 +2,12 @@ import { customElement, property, css, html } from "@umbraco-cms/backoffice/exte
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
-import type { UaiChatMessage, UaiBinaryInputContent } from "../types/index.js";
+import type {
+    UaiChatMessage,
+    UaiInputContent,
+    UaiInputContentSource,
+    UaiInputContentDataSource,
+} from "../types/index.js";
 
 /**
  * Chat message component.
@@ -36,13 +41,13 @@ export class UaiChatMessageElement extends UmbLitElement {
         // Render multimodal content parts if present
         if (isUser && this.message.contentParts?.length) {
             const textParts = this.message.contentParts.filter((p) => p.type === "text");
-            const binaryParts = this.message.contentParts.filter((p) => p.type === "binary");
+            const mediaParts = this.message.contentParts.filter((p) => p.type !== "text");
             const textContent = textParts.map((p) => (p as { text: string }).text).join("");
 
             return html`
                 ${textContent ? html`<p>${textContent}</p>` : ""}
-                ${binaryParts.length
-                    ? html`<div class="attachments">${binaryParts.map((part) => this.#renderBinaryPart(part as UaiBinaryInputContent))}</div>`
+                ${mediaParts.length
+                    ? html`<div class="attachments">${mediaParts.map((part) => this.#renderMediaPart(part))}</div>`
                     : ""}
             `;
         }
@@ -59,28 +64,39 @@ export class UaiChatMessageElement extends UmbLitElement {
         return html`<div class="markdown-content">${unsafeHTML(htmlContent)}</div>`;
     }
 
-    #renderBinaryPart(part: UaiBinaryInputContent) {
-        // Render inline image for image types
-        if (part.mimeType.startsWith("image/")) {
-            let src: string | undefined;
-            if (part.data) {
-                src = `data:${part.mimeType};base64,${part.data}`;
-            } else if (part.url) {
-                src = part.url;
-            }
+    #renderMediaPart(part: UaiInputContent) {
+        if (part.type === "text") {
+            return html``;
+        }
 
+        const source = (part as { source: UaiInputContentSource }).source;
+        const metadata = (part as { metadata?: Record<string, unknown> }).metadata;
+        const filename = typeof metadata?.filename === "string" ? metadata.filename : undefined;
+
+        if (part.type === "image") {
+            const src = this.#sourceToImageSrc(source);
             if (src) {
-                return html`<img class="inline-image" src=${src} alt=${part.filename ?? "Attached image"} />`;
+                return html`<img class="inline-image" src=${src} alt=${filename ?? "Attached image"} />`;
             }
         }
 
-        // Render file chip for non-image or unresolvable binary
         return html`
             <div class="file-chip">
                 <uui-icon name="icon-document"></uui-icon>
-                <span>${part.filename ?? "File"}</span>
+                <span>${filename ?? "File"}</span>
             </div>
         `;
+    }
+
+    #sourceToImageSrc(source: UaiInputContentSource): string | undefined {
+        if (source.type === "data") {
+            const data = source as UaiInputContentDataSource;
+            return `data:${data.mimeType};base64,${data.value}`;
+        }
+        if (source.type === "url") {
+            return source.value;
+        }
+        return undefined;
     }
 
     #renderToolCalls() {

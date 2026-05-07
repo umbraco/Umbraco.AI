@@ -87,7 +87,7 @@ public class AGUIEventEmitterTests
         // Assert
         evt.ShouldBeOfType<TextMessageChunkEvent>();
         evt.Delta.ShouldBe(delta);
-        evt.Role.ShouldBe(AGUIMessageRole.Assistant);
+        evt.Role.ShouldBe(AGUITextMessageRole.Assistant);
         evt.MessageId.ShouldBe(emitter.CurrentMessageId);
     }
 
@@ -222,7 +222,7 @@ public class AGUIEventEmitterTests
         evt.ShouldBeOfType<ToolCallResultEvent>();
         evt.ToolCallId.ShouldBe("call-backend");
         evt.Content.ShouldContain("search results");
-        evt.Role.ShouldBe(AGUIMessageRole.Tool);
+        evt.Role.ShouldBe("tool");
     }
 
     [Fact]

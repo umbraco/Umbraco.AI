@@ -90,7 +90,7 @@ public sealed class AGUIEventEmitter
     public TextMessageChunkEvent EmitTextChunk(string delta) => new()
     {
         MessageId = _currentMessageId,
-        Role = AGUIMessageRole.Assistant,
+        Role = AGUITextMessageRole.Assistant,
         Delta = delta,
         Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
     };
@@ -198,7 +198,7 @@ public sealed class AGUIEventEmitter
             MessageId = resultMessageId,
             ToolCallId = effectiveCallId,
             Content = resultJson,
-            Role = AGUIMessageRole.Tool,
+            Role = AGUIConstants.MessageRoles.Tool,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
     }

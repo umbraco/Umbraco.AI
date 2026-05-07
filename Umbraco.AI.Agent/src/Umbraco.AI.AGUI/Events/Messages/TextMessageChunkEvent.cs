@@ -17,11 +17,12 @@ public sealed record TextMessageChunkEvent : BaseAGUIEvent
     public string? MessageId { get; init; }
 
     /// <summary>
-    /// Gets or sets the optional message role.
+    /// Gets or sets the optional message role. Restricted by spec to a subset of roles
+    /// (no <c>tool</c>, <c>activity</c>, or <c>reasoning</c>).
     /// </summary>
     [JsonPropertyName("role")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public AGUIMessageRole? Role { get; init; }
+    public AGUITextMessageRole? Role { get; init; }
 
     /// <summary>
     /// Gets or sets the optional content delta.
@@ -29,4 +30,11 @@ public sealed record TextMessageChunkEvent : BaseAGUIEvent
     [JsonPropertyName("delta")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Delta { get; init; }
+
+    /// <summary>
+    /// Optional sender name (spec field).
+    /// </summary>
+    [JsonPropertyName("name")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Name { get; init; }
 }

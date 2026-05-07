@@ -15,8 +15,16 @@ public sealed record TextMessageStartEvent : BaseAGUIEvent
     public required string MessageId { get; init; }
 
     /// <summary>
-    /// Gets or sets the message role.
+    /// Gets or sets the message role. Restricted by spec to a subset of roles
+    /// (no <c>tool</c>, <c>activity</c>, or <c>reasoning</c>).
     /// </summary>
     [JsonPropertyName("role")]
-    public required AGUIMessageRole Role { get; init; }
+    public required AGUITextMessageRole Role { get; init; }
+
+    /// <summary>
+    /// Optional sender name (spec field).
+    /// </summary>
+    [JsonPropertyName("name")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Name { get; init; }
 }

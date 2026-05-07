@@ -17,7 +17,7 @@
     "dependencies": {
         "@umbraco-cms/backoffice": "^17.3.0",
         "chart.js": "^4.5.1",
-        "diff": "^8.0.3"
+        "diff": "^9.0.0"
     },
     "devDependencies": {
         "@hey-api/openapi-ts": "0.96.0",

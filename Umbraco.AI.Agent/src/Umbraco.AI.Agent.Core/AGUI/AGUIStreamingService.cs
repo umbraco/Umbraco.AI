@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -93,7 +92,6 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             await enumerator.DisposeAsync();
         }
 
-        // Per AG-UI spec the lifecycle terminates with EITHER RUN_FINISHED or RUN_ERROR — never both.
         if (streamError != null)
         {
             yield return emitter.EmitError(streamError.Message, "STREAMING_ERROR");

@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.AGUI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Models;
@@ -211,8 +211,8 @@ public class StreamAgentAGUIController : AgentControllerBase
         var frontendTools = new List<AIFrontendTool>();
         foreach (var tool in tools)
         {
-            var scope = ReadStringMetadata(tool.Metadata, "scope");
-            var isDestructive = ReadBoolMetadata(tool.Metadata, "isDestructive");
+            var scope = ReadStringMetadata(tool.Metadata, AGUIConstants.ToolMetadataKeys.Scope);
+            var isDestructive = ReadBoolMetadata(tool.Metadata, AGUIConstants.ToolMetadataKeys.IsDestructive);
             frontendTools.Add(new AIFrontendTool(tool, scope, isDestructive));
         }
 

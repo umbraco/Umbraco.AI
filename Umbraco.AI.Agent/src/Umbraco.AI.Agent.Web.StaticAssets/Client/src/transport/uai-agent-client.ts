@@ -152,10 +152,6 @@ export class UaiAgentClient {
             })
             .pipe(transformChunks(false))
             .subscribe({
-                // The transport delivers BaseEvent (Zod passthrough). Narrow to the
-                // AGUIEvent discriminated union so the switch in #handleEvent narrows
-                // by `type` literal. We trust the server side here; if stricter
-                // validation is needed, parse via EventSchemas at this boundary.
                 next: (event) => this.#handleEvent(event as AGUIEvent),
                 error: (error) => {
                     const err = error instanceof Error ? error : new Error(String(error));
@@ -224,9 +220,6 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.RUN_FINISHED:
-                // SDK 0.0.53's RunFinishedEvent doesn't model the spec's `outcome`
-                // discriminated union yet, so cast to our local extension type.
-                // See RunFinishedAGUIEvent in ./types.ts for removal conditions.
                 this.#handleRunFinished(event as RunFinishedAGUIEvent);
                 break;
 
@@ -239,12 +232,7 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.STATE_DELTA:
-                // AG-UI's StateDeltaEvent emits `delta` as RFC 6902 JSON Patch ops.
-                // Our consumer's onStateDelta callback currently expects a flat
-                // `Partial<UaiAgentState>`. Apply the patches to materialise that
-                // shape, or drop the patches when the consumer doesn't yet handle
-                // them. For now, pass through as-is and let the consumer deal —
-                // proper JSON Patch application is tracked separately.
+                // TODO: apply RFC 6902 JSON Patch ops instead of passing the raw array through.
                 this.#callbacks.onStateDelta?.(event.delta as unknown as Partial<UaiAgentState>);
                 break;
 
@@ -287,12 +275,10 @@ export class UaiAgentClient {
     }
 
     #handleRunFinished(event: RunFinishedAGUIEvent) {
-        // AG-UI spec: outcome is a discriminated union — `success` or `interrupt`.
-        // Errors are NEVER signalled here; they arrive as RUN_ERROR events.
         if (event.outcome.type === "interrupt") {
-            // Take the first interrupt entry — our UaiInterruptInfo callback shape
-            // currently models a single interrupt. If/when we support batched
-            // interrupts in the UI, the callback API can iterate the array.
+            // The callback shape currently surfaces a single interrupt; batched
+            // interrupts beyond the first are dropped here. TODO: extend the
+            // callback to iterate when batched HITL flows land.
             const first = event.outcome.interrupts[0];
             const interrupt = UaiAgentClient.#parseInterrupt(first);
             this.#callbacks.onRunFinished?.({

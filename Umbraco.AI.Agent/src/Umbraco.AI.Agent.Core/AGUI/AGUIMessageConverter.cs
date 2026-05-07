@@ -65,15 +65,40 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             Content = chatMessage.Text
         };
 
-        // Check for DataContent (binary data from LLM responses)
-        var dataContents = chatMessage.Contents?.OfType<DataContent>().ToList();
-        if (dataContents?.Count > 0)
-        {
-            var contentParts = new List<AGUIInputContent>();
+        // Single pass over Contents to bucket text / data / function-call / function-result.
+        List<TextContent>? textContents = null;
+        List<DataContent>? dataContents = null;
+        List<FunctionCallContent>? functionCalls = null;
+        FunctionResultContent? functionResult = null;
 
-            // Add text content if present
-            var textContents = chatMessage.Contents?.OfType<TextContent>().ToList();
-            if (textContents?.Count > 0)
+        if (chatMessage.Contents is not null)
+        {
+            foreach (var content in chatMessage.Contents)
+            {
+                switch (content)
+                {
+                    case TextContent t:
+                        (textContents ??= []).Add(t);
+                        break;
+                    case DataContent d:
+                        (dataContents ??= []).Add(d);
+                        break;
+                    case FunctionCallContent fc:
+                        (functionCalls ??= []).Add(fc);
+                        break;
+                    case FunctionResultContent fr when functionResult is null:
+                        functionResult = fr;
+                        break;
+                }
+            }
+        }
+
+        if (dataContents is { Count: > 0 })
+        {
+            var contentParts = new List<AGUIInputContent>(
+                (textContents?.Count ?? 0) + dataContents.Count);
+
+            if (textContents is { Count: > 0 })
             {
                 foreach (var textContent in textContents)
                 {
@@ -81,29 +106,26 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 }
             }
 
-            // Add typed media content (AG-UI spec: image / audio / video / document by mime type)
             foreach (var dataContent in dataContents)
             {
-                var mimeType = dataContent.MediaType ?? "application/octet-stream";
-                var source = !dataContent.Data.IsEmpty
-                    ? new AGUIInputContentDataSource
-                    {
-                        Value = Convert.ToBase64String(dataContent.Data.Span),
-                        MimeType = mimeType,
-                    }
-                    : null;
-                if (source is not null)
+                if (dataContent.Data.IsEmpty)
                 {
-                    contentParts.Add(AGUIInputContentFactory.FromSource(source, mimeType));
+                    continue;
                 }
+
+                var mimeType = dataContent.MediaType ?? "application/octet-stream";
+                var source = new AGUIInputContentDataSource
+                {
+                    Value = Convert.ToBase64String(dataContent.Data.Span),
+                    MimeType = mimeType,
+                };
+                contentParts.Add(AGUIInputContentFactory.FromSource(source, mimeType));
             }
 
             message.ContentParts = contentParts;
         }
 
-        // Check for function calls
-        var functionCalls = chatMessage.Contents?.OfType<FunctionCallContent>().ToList();
-        if (functionCalls?.Any() == true)
+        if (functionCalls is { Count: > 0 })
         {
             message.ToolCalls = functionCalls.Select(fc => new AGUIToolCall
             {
@@ -119,9 +141,7 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             }).ToList();
         }
 
-        // Check for function results
-        var functionResult = chatMessage.Contents?.OfType<FunctionResultContent>().FirstOrDefault();
-        if (functionResult != null)
+        if (functionResult is not null)
         {
             message.ToolCallId = functionResult.CallId;
             message.Content = functionResult.Result?.ToString() ?? string.Empty;
@@ -143,22 +163,26 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 continue;
             }
 
-            // Image / Audio / Video / Document — all share the same Source + Metadata shape.
-            var (source, mimeType) = ReadMediaSource(part);
-            if (source is null || mimeType is null)
+            if (part is not AGUIMediaInputContent media)
+            {
+                continue;
+            }
+
+            var mimeType = media.Source.GetMimeType();
+            if (mimeType is null)
             {
                 continue;
             }
 
             // Prefer resolved bytes attached by AGUIFileProcessor.
-            var resolved = AGUIFileProcessor.GetResolvedBytes(part);
+            var resolved = AGUIFileProcessor.GetResolvedBytes(media);
             if (resolved is { Length: > 0 })
             {
                 contents.Add(new DataContent(resolved, mimeType));
                 continue;
             }
 
-            switch (source)
+            switch (media.Source)
             {
                 case AGUIInputContentDataSource dataSource:
                     var bytes = Convert.FromBase64String(dataSource.Value);
@@ -166,7 +190,6 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                     break;
 
                 case AGUIInputContentUrlSource urlSource:
-                    // External URL with no resolved bytes — pass through as a URL reference.
                     contents.Add(new DataContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
                     break;
             }
@@ -174,22 +197,6 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
 
         return new ChatMessage(role, contents);
     }
-
-    private static (AGUIInputContentSource? Source, string? MimeType) ReadMediaSource(AGUIInputContent part) => part switch
-    {
-        AGUIImageInputContent img => (img.Source, MimeOf(img.Source)),
-        AGUIAudioInputContent aud => (aud.Source, MimeOf(aud.Source)),
-        AGUIVideoInputContent vid => (vid.Source, MimeOf(vid.Source)),
-        AGUIDocumentInputContent doc => (doc.Source, MimeOf(doc.Source)),
-        _ => (null, null),
-    };
-
-    private static string? MimeOf(AGUIInputContentSource source) => source switch
-    {
-        AGUIInputContentDataSource d => d.MimeType,
-        AGUIInputContentUrlSource u => u.MimeType,
-        _ => null,
-    };
 
     private static ChatMessage ConvertAssistantMessageWithToolCalls(AGUIMessage message)
     {

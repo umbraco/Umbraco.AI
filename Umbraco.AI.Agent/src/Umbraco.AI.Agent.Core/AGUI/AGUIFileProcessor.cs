@@ -17,9 +17,9 @@ namespace Umbraco.AI.Agent.Core.AGUI;
 /// </remarks>
 internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 {
-    private const string FileIdMetadataKey = "fileId";
-    private const string FilenameMetadataKey = "filename";
-    private const string ResolvedDataMetadataKey = "__resolvedData";
+    internal const string FileIdMetadataKey = "fileId";
+    internal const string FilenameMetadataKey = "filename";
+    internal const string ResolvedDataMetadataKey = "__resolvedData";
 
     private readonly IAIFileStore _fileStore;
     private readonly IAIFileUrlProvider? _fileUrlProvider;
@@ -60,7 +60,7 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 
         foreach (var message in messagesList)
         {
-            if (message.ContentParts is null || !message.ContentParts.Any(IsMediaPart))
+            if (message.ContentParts is null || !message.ContentParts.OfType<AGUIMediaInputContent>().Any())
             {
                 rewritten.Add(message);
                 resolved.Add(message);
@@ -73,9 +73,9 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 
             foreach (var part in message.ContentParts)
             {
-                if (IsMediaPart(part))
+                if (part is AGUIMediaInputContent media)
                 {
-                    var (rewrittenPart, resolvedPart) = await ProcessMediaPartAsync(part, threadId, cancellationToken);
+                    var (rewrittenPart, resolvedPart) = await ProcessMediaPartAsync(media, threadId, cancellationToken);
                     rewrittenParts.Add(rewrittenPart);
                     resolvedParts.Add(resolvedPart);
                 }
@@ -107,36 +107,17 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         };
     }
 
-    /// <summary>
-    /// Returns true for media/document content variants the file processor handles.
-    /// Text parts pass through untouched.
-    /// </summary>
-    private static bool IsMediaPart(AGUIInputContent part) => part is
-        AGUIImageInputContent or
-        AGUIAudioInputContent or
-        AGUIVideoInputContent or
-        AGUIDocumentInputContent;
-
     private async Task<(AGUIInputContent Rewritten, AGUIInputContent Resolved)> ProcessMediaPartAsync(
-        AGUIInputContent part,
+        AGUIMediaInputContent part,
         string threadId,
-        CancellationToken cancellationToken)
-    {
-        var (source, metadata) = ReadSourceAndMetadata(part);
-
-        switch (source)
+        CancellationToken cancellationToken) => part.Source switch
         {
-            case AGUIInputContentDataSource dataSource:
-                return await StoreAndRewriteAsync(part, dataSource, metadata, threadId, cancellationToken);
-
-            case AGUIInputContentUrlSource urlSource when TryGetFileId(metadata, out var fileId):
-                return await ResolveStoredUrlAsync(part, urlSource, metadata, fileId, threadId, cancellationToken);
-
-            default:
-                // External URL we can't resolve to bytes — pass through unchanged.
-                return (part, part);
-        }
-    }
+            AGUIInputContentDataSource dataSource => await StoreAndRewriteAsync(part, dataSource, part.Metadata, threadId, cancellationToken),
+            AGUIInputContentUrlSource urlSource when TryGetFileId(part.Metadata, out var fileId) =>
+                await ResolveStoredUrlAsync(part, urlSource, part.Metadata, fileId, threadId, cancellationToken),
+            // External URL we can't resolve to bytes — pass through unchanged.
+            _ => (part, part),
+        };
 
     private async Task<(AGUIInputContent Rewritten, AGUIInputContent Resolved)> StoreAndRewriteAsync(
         AGUIInputContent original,
@@ -162,12 +143,11 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 
         var serverUrl = _fileUrlProvider?.GetFileUrl(threadId, fileId);
         var rewrittenMetadata = WithMetadata(metadata, FileIdMetadataKey, fileId);
+        var resolvedMetadata = WithMetadata(metadata, FileIdMetadataKey, fileId, ResolvedDataMetadataKey, bytes);
 
         var rewrittenSource = serverUrl is not null
             ? (AGUIInputContentSource)new AGUIInputContentUrlSource { Value = serverUrl, MimeType = dataSource.MimeType }
             : new AGUIInputContentDataSource { Value = dataSource.Value, MimeType = dataSource.MimeType };
-
-        var resolvedMetadata = WithMetadata(rewrittenMetadata, ResolvedDataMetadataKey, bytes);
 
         return (
             AGUIInputContentFactory.FromSource(rewrittenSource, dataSource.MimeType, rewrittenMetadata),
@@ -195,15 +175,6 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
             AGUIInputContentFactory.FromSource(urlSource, urlSource.MimeType, resolvedMetadata));
     }
 
-    private static (AGUIInputContentSource? Source, IReadOnlyDictionary<string, object?>? Metadata) ReadSourceAndMetadata(AGUIInputContent part) => part switch
-    {
-        AGUIImageInputContent img => (img.Source, img.Metadata),
-        AGUIAudioInputContent aud => (aud.Source, aud.Metadata),
-        AGUIVideoInputContent vid => (vid.Source, vid.Metadata),
-        AGUIDocumentInputContent doc => (doc.Source, doc.Metadata),
-        _ => (null, null),
-    };
-
     private static bool TryGetFileId(IReadOnlyDictionary<string, object?>? metadata, out string fileId)
     {
         if (metadata is not null && metadata.TryGetValue(FileIdMetadataKey, out var raw) && raw is string s && !string.IsNullOrEmpty(s))
@@ -222,8 +193,10 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
     /// </summary>
     public static byte[]? GetResolvedBytes(AGUIInputContent part)
     {
-        var (_, metadata) = ReadSourceAndMetadata(part);
-        if (metadata is not null && metadata.TryGetValue(ResolvedDataMetadataKey, out var raw) && raw is byte[] bytes)
+        if (part is AGUIMediaInputContent media
+            && media.Metadata is { } metadata
+            && metadata.TryGetValue(ResolvedDataMetadataKey, out var raw)
+            && raw is byte[] bytes)
         {
             return bytes;
         }
@@ -235,18 +208,22 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         IReadOnlyDictionary<string, object?>? existing,
         string key,
         object? value)
-    {
-        var result = new Dictionary<string, object?>(StringComparer.Ordinal);
-        if (existing is not null)
+        => new Dictionary<string, object?>(existing ?? new Dictionary<string, object?>(0), StringComparer.Ordinal)
         {
-            foreach (var kvp in existing)
-            {
-                result[kvp.Key] = kvp.Value;
-            }
-        }
-        result[key] = value;
-        return result;
-    }
+            [key] = value
+        };
+
+    private static IReadOnlyDictionary<string, object?> WithMetadata(
+        IReadOnlyDictionary<string, object?>? existing,
+        string key1,
+        object? value1,
+        string key2,
+        object? value2)
+        => new Dictionary<string, object?>(existing ?? new Dictionary<string, object?>(0), StringComparer.Ordinal)
+        {
+            [key1] = value1,
+            [key2] = value2,
+        };
 
     private static AGUIMessage CloneMessageWithParts(AGUIMessage original, IList<AGUIInputContent> parts)
         => new()

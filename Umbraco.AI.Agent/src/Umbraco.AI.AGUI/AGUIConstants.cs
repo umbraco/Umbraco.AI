@@ -67,4 +67,15 @@ public static class AGUIConstants
         public const string Success = "success";
         public const string Interrupt = "interrupt";
     }
+
+    /// <summary>
+    /// Conventional keys we use inside <c>AGUITool.Metadata</c> for vendor-specific
+    /// tool data carried inline with each tool definition (replaces the legacy
+    /// <c>forwardedProps.toolMetadata</c> side-channel).
+    /// </summary>
+    public static class ToolMetadataKeys
+    {
+        public const string Scope = "scope";
+        public const string IsDestructive = "isDestructive";
+    }
 }

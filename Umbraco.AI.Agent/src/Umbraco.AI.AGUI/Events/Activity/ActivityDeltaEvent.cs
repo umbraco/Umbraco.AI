@@ -21,8 +21,9 @@ public sealed record ActivityDeltaEvent : BaseAGUIEvent
     public required string ActivityType { get; init; }
 
     /// <summary>
-    /// Gets or sets the JSON Patch operations to apply.
+    /// Gets or sets the JSON Patch operations to apply (RFC 6902).
+    /// AG-UI spec types this as an array — enforced here as <c>IReadOnlyList&lt;JsonElement&gt;</c>.
     /// </summary>
     [JsonPropertyName("patch")]
-    public required JsonElement Patch { get; init; }
+    public required IReadOnlyList<JsonElement> Patch { get; init; }
 }

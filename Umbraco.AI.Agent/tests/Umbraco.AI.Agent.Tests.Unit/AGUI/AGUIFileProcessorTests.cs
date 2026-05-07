@@ -41,8 +41,8 @@ public class AGUIFileProcessorTests
     {
         var messages = new List<AGUIMessage>
         {
-            new() { Role = AGUIMessageRole.User, Content = "Hello" },
-            new() { Role = AGUIMessageRole.Assistant, Content = "Hi" }
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" },
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.Assistant, Content = "Hi" }
         };
 
         var result = await _processor.ProcessInboundAsync(messages, "thread-1");
@@ -61,6 +61,7 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Check this image",
                 ContentParts = new List<AGUIInputContent>
@@ -101,6 +102,7 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Analyze this",
                 ContentParts = new List<AGUIInputContent>
@@ -138,6 +140,7 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Check this file",
                 ContentParts = new List<AGUIInputContent>
@@ -171,6 +174,7 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Check this image",
                 ContentParts = new List<AGUIInputContent>
@@ -200,9 +204,10 @@ public class AGUIFileProcessorTests
         var base64 = Convert.ToBase64String(new byte[] { 1 });
         var messages = new List<AGUIMessage>
         {
-            new() { Role = AGUIMessageRole.User, Content = "First message" },
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "First message" },
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "With image",
                 ContentParts = new List<AGUIInputContent>

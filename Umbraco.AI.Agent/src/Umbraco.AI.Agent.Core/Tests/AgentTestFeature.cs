@@ -111,7 +111,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         {
             ThreadId = config.ThreadId ?? test.Id.ToString(),
             RunId = $"{test.Id}-run-{runNumber}",
-            Messages = [new AGUIMessage { Role = AGUIMessageRole.User, Content = config.Message }],
+            Messages = [new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = config.Message }],
             Context = mergedContext
         };
 

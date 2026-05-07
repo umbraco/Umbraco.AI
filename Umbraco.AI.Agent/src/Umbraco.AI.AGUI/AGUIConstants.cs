@@ -55,6 +55,8 @@ public static class AGUIConstants
         public const string System = "system";
         public const string Tool = "tool";
         public const string Developer = "developer";
+        public const string Activity = "activity";
+        public const string Reasoning = "reasoning";
     }
 
     /// <summary>

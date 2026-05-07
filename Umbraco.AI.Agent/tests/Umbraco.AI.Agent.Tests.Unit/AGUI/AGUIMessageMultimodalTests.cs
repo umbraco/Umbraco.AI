@@ -15,7 +15,7 @@ public class AGUIMessageMultimodalTests
     public void Deserialize_StringContent_SetsContentProperty()
     {
         // Arrange
-        var json = """{"role":"user","content":"Hello world"}""";
+        var json = """{"id":"msg-1","role":"user","content":"Hello world"}""";
 
         // Act
         var message = JsonSerializer.Deserialize<AGUIMessage>(json, Options);
@@ -30,7 +30,7 @@ public class AGUIMessageMultimodalTests
     public void Deserialize_NullContent_SetsContentToNull()
     {
         // Arrange
-        var json = """{"role":"user","content":null}""";
+        var json = """{"id":"msg-1","role":"user","content":null}""";
 
         // Act
         var message = JsonSerializer.Deserialize<AGUIMessage>(json, Options);
@@ -47,6 +47,7 @@ public class AGUIMessageMultimodalTests
         // Arrange
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.User,
             Content = "Hello world"
         };
@@ -91,6 +92,7 @@ public class AGUIMessageMultimodalTests
         // Arrange
         var json = """
         {
+            "id": "msg-1",
             "role": "user",
             "content": [
                 {"type": "text", "text": "What's in this image?"},
@@ -122,6 +124,7 @@ public class AGUIMessageMultimodalTests
         // Arrange
         var json = """
         {
+            "id": "msg-1",
             "role": "user",
             "content": [
                 {"type": "text", "text": "Hello "},
@@ -145,6 +148,7 @@ public class AGUIMessageMultimodalTests
         // Arrange
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.User,
             ContentParts = new List<AGUIInputContent>
             {
@@ -203,6 +207,7 @@ public class AGUIMessageMultimodalTests
         // Arrange — represents a message from a snapshot where base64 has been replaced with id
         var json = """
         {
+            "id": "msg-1",
             "role": "user",
             "content": [
                 {"type": "text", "text": "Analyze this"},
@@ -228,7 +233,7 @@ public class AGUIMessageMultimodalTests
     public void Deserialize_EmptyContentArray_SetsEmptyContentParts()
     {
         // Arrange
-        var json = """{"role":"user","content":[]}""";
+        var json = """{"id":"msg-1","role":"user","content":[]}""";
 
         // Act
         var message = JsonSerializer.Deserialize<AGUIMessage>(json, Options);
@@ -245,6 +250,7 @@ public class AGUIMessageMultimodalTests
         // Arrange — verify multimodal doesn't break tool call handling
         var json = """
         {
+            "id": "msg-1",
             "role": "assistant",
             "content": "Let me search for that",
             "toolCalls": [{"id": "call-1", "type": "function", "function": {"name": "search", "arguments": "{}"}}]

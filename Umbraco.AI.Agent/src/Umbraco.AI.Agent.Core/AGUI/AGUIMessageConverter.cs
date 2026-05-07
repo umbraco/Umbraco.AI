@@ -59,6 +59,8 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
         var role = ConvertFromChatRole(chatMessage.Role);
         var message = new AGUIMessage
         {
+            // AG-UI requires id on every message — prefer the upstream MessageId, otherwise mint one.
+            Id = chatMessage.MessageId ?? Guid.NewGuid().ToString(),
             Role = role,
             Content = chatMessage.Text
         };

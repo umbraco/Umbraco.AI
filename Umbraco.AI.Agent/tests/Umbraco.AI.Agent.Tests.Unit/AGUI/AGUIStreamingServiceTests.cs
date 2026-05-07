@@ -326,7 +326,7 @@ public class AGUIStreamingServiceTests
             RunId = "run-1",
             Messages = new List<AGUIMessage>
             {
-                new() { Role = AGUIMessageRole.User, Content = "Hello" }
+                new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             },
             Resume = new AGUIResumeInfo
             {
@@ -369,7 +369,7 @@ public class AGUIStreamingServiceTests
             RunId = runId ?? "run-test",
             Messages = new List<AGUIMessage>
             {
-                new() { Role = AGUIMessageRole.User, Content = "Hello" }
+                new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             }
         };
     }

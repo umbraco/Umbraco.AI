@@ -29,8 +29,8 @@ public class AGUIMessageConverterTests
         // Arrange
         var messages = new List<AGUIMessage>
         {
-            new() { Role = AGUIMessageRole.User, Content = "Hello" },
-            new() { Role = AGUIMessageRole.Assistant, Content = "Hi there!" }
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" },
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.Assistant, Content = "Hi there!" }
         };
 
         // Act
@@ -55,7 +55,7 @@ public class AGUIMessageConverterTests
     public void ConvertToChatMessage_WithSimpleMessage_ConvertsRole(AGUIMessageRole role)
     {
         // Arrange
-        var message = new AGUIMessage { Role = role, Content = "Test content" };
+        var message = new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = role, Content = "Test content" };
 
         // Act
         var result = _converter.ConvertToChatMessage(message);
@@ -68,7 +68,7 @@ public class AGUIMessageConverterTests
     public void ConvertToChatMessage_UserRole_ConvertsToUserChatRole()
     {
         // Arrange
-        var message = new AGUIMessage { Role = AGUIMessageRole.User, Content = "Hello" };
+        var message = new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" };
 
         // Act
         var result = _converter.ConvertToChatMessage(message);
@@ -81,7 +81,7 @@ public class AGUIMessageConverterTests
     public void ConvertToChatMessage_AssistantRole_ConvertsToAssistantChatRole()
     {
         // Arrange
-        var message = new AGUIMessage { Role = AGUIMessageRole.Assistant, Content = "Hi" };
+        var message = new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.Assistant, Content = "Hi" };
 
         // Act
         var result = _converter.ConvertToChatMessage(message);
@@ -94,7 +94,7 @@ public class AGUIMessageConverterTests
     public void ConvertToChatMessage_DeveloperRole_MapsToSystemChatRole()
     {
         // Arrange
-        var message = new AGUIMessage { Role = AGUIMessageRole.Developer, Content = "Dev message" };
+        var message = new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.Developer, Content = "Dev message" };
 
         // Act
         var result = _converter.ConvertToChatMessage(message);
@@ -109,6 +109,7 @@ public class AGUIMessageConverterTests
         // Arrange
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.Assistant,
             Content = "Let me help with that",
             ToolCalls =
@@ -149,6 +150,7 @@ public class AGUIMessageConverterTests
         // Arrange
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.Tool,
             ToolCallId = "call-123",
             Content = "{\"temperature\": 20}"
@@ -168,7 +170,7 @@ public class AGUIMessageConverterTests
     public void ConvertToChatMessage_WithNullContent_SetsEmptyString()
     {
         // Arrange
-        var message = new AGUIMessage { Role = AGUIMessageRole.User, Content = null };
+        var message = new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = null };
 
         // Act
         var result = _converter.ConvertToChatMessage(message);
@@ -274,6 +276,7 @@ public class AGUIMessageConverterTests
         var imageBytes = new byte[] { 1, 2, 3, 4, 5 };
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.User,
             Content = "What's in this image?",
             ContentParts = new List<AGUIInputContent>
@@ -310,6 +313,7 @@ public class AGUIMessageConverterTests
         var base64 = Convert.ToBase64String(new byte[] { 10, 20, 30 });
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.User,
             ContentParts = new List<AGUIInputContent>
             {
@@ -336,6 +340,7 @@ public class AGUIMessageConverterTests
         // Arrange
         var message = new AGUIMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Role = AGUIMessageRole.User,
             Content = "Plain text",
             ContentParts = new List<AGUIInputContent>()

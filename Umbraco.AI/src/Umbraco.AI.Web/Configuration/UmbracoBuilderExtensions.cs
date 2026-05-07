@@ -8,6 +8,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Umbraco.AI.Web;
 using Umbraco.AI.Web.Api;
 using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Common.Mapping;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.Analytics.Usage.Mapping;
 using Umbraco.AI.Web.Api.Management.AuditLog.Mapping;
@@ -64,6 +65,7 @@ public static class UmbracoBuilderExtensions
     private static IUmbracoBuilder AddUmbracoAIMapDefinitions(this IUmbracoBuilder builder)
     {
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
+            .Add<UsageDetailsMapDefinition>()
             .Add<CommonMapDefinition>()
             .Add<ConnectionMapDefinition>()
             .Add<ProfileMapDefinition>()

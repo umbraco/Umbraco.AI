@@ -5,12 +5,12 @@ using Umbraco.Cms.Core.Mapping;
 namespace Umbraco.AI.Web.Api.Common.Mapping;
 
 /// <summary>
-/// Map definitions for common models shared across API features.
+/// Maps Microsoft.Extensions.AI <see cref="UsageDetails"/> to <see cref="UsageModel"/> for API responses.
 /// </summary>
-public class CommonMapDefinition : IMapDefinition
+public class UsageDetailsMapDefinition : IMapDefinition
 {
     /// <inheritdoc />
-    public void DefineMaps(IUmbracoMapper mapper) 
+    public void DefineMaps(IUmbracoMapper mapper)
     {
         mapper.Define<UsageDetails, UsageModel>((_, _) => new UsageModel(), Map);
     }

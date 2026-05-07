@@ -2,16 +2,11 @@ import { PropertyValueOperationToolBase } from "./internal/property-value-tool-b
 import { parsePath, readVariant } from "./add-item.api.js";
 
 /**
- * Frontend tool: set_value.
+ * Frontend tool: remove_item.
  *
- * Replaces the entire value of the property at the path. Best for simple scalar editors
- * (TextBox, TextArea, Numeric, Toggle, DatePicker). For block-list / block-grid / picker
- * collections the agent should prefer add_item / remove_item / move_item.
- *
- * This is a fresh implementation replacing the prior single-string-path version; the prior
- * argument shape is intentionally not preserved.
+ * Removes the item with the given blockKey from a collection-shaped property value.
  */
-export default class SetValueApi extends PropertyValueOperationToolBase {
+export default class RemoveItemApi extends PropertyValueOperationToolBase {
     protected buildOperation(args: Record<string, unknown>) {
         const path = parsePath(args.path);
         if (path === null) {
@@ -24,19 +19,19 @@ export default class SetValueApi extends PropertyValueOperationToolBase {
             };
         }
 
-        if (!("value" in args)) {
+        if (typeof args.blockKey !== "string" || args.blockKey.length === 0) {
             return {
                 error: {
-                    code: "missing-value",
-                    message: "'value' is required.",
+                    code: "missing-block-key",
+                    message: "'blockKey' (UUID string) is required.",
                 },
             };
         }
 
         return {
-            operation: "SetValue" as const,
+            operation: "RemoveItem" as const,
             path,
-            args: { value: args.value },
+            args: { blockKey: args.blockKey },
             variant: readVariant(args),
         };
     }

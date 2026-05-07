@@ -242,7 +242,10 @@ public sealed class AGUIEventEmitter
                 _frontendToolCallIds
                     .Select(toolCallId => new AGUIInterruptInfo
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        // Use toolCallId as the interrupt id so the server can recover
+                        // the corresponding tool call from a resume entry without
+                        // having to track an interruptId -> toolCallId mapping.
+                        Id = toolCallId,
                         Reason = "tool_call",
                         ToolCallId = toolCallId,
                     })

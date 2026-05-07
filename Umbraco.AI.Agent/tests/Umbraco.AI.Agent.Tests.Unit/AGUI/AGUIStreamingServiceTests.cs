@@ -313,13 +313,7 @@ public class AGUIStreamingServiceTests
     {
         // Arrange
         var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
-        var resumePayload = JsonSerializer.SerializeToElement(new
-        {
-            toolResults = new[]
-            {
-                new { toolCallId = "call-1", result = new { approved = true } }
-            }
-        });
+        var resumePayload = JsonSerializer.SerializeToElement(new { approved = true });
         var request = new AGUIRunRequest
         {
             ThreadId = "thread-1",
@@ -328,10 +322,14 @@ public class AGUIStreamingServiceTests
             {
                 new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             },
-            Resume = new AGUIResumeInfo
+            Resume = new List<AGUIResumeEntry>
             {
-                InterruptId = "int-123",
-                Payload = resumePayload
+                new()
+                {
+                    InterruptId = "call-1",
+                    Status = AGUIResumeStatus.Resolved,
+                    Payload = resumePayload
+                }
             }
         };
 

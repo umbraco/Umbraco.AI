@@ -133,15 +133,16 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // Convert resolved messages (with bytes) to M.E.AI chat messages
         var chatMessages = _messageConverter.ConvertToChatMessages(fileResult.ResolvedMessages);
 
-        // Handle resume - inject tool results from resume payload
-        if (request.Resume != null)
+        // Handle resume — inject tool results from each resolved resume entry.
+        // Per AG-UI spec the resume array contains one entry per open interrupt.
+        if (request.Resume is { Count: > 0 })
         {
             var resumeMessages = ExtractToolResultsFromResume(request.Resume);
             chatMessages.AddRange(resumeMessages);
 
             _logger.LogDebug(
-                "Resume from interrupt {InterruptId} with {ResultCount} tool results",
-                request.Resume.InterruptId,
+                "Resume with {EntryCount} entries produced {ResultCount} tool results",
+                request.Resume.Count,
                 resumeMessages.Count);
         }
 
@@ -214,52 +215,42 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     }
 
     /// <summary>
-    /// Extracts tool results from the resume payload and converts them to chat messages.
+    /// Converts AG-UI resume entries into M.E.AI tool-result chat messages.
     /// </summary>
     /// <remarks>
-    /// Expected payload format:
-    /// <code>
-    /// {
-    ///   "toolResults": [
-    ///     { "toolCallId": "call-1", "result": { ... } },
-    ///     { "toolCallId": "call-2", "result": { ... } }
-    ///   ]
-    /// }
-    /// </code>
+    /// <para>
+    /// Per AG-UI spec each resume entry maps 1:1 with an open interrupt the previous
+    /// run emitted. For frontend tool-call interrupts we set <c>InterruptInfo.Id</c>
+    /// equal to the <c>toolCallId</c> when emitting (see <c>AGUIEventEmitter</c>),
+    /// so the resume entry's <c>InterruptId</c> recovers the original tool call id.
+    /// </para>
+    /// <para>
+    /// Cancelled entries are skipped — we don't synthesise a tool result when the user
+    /// abandoned the interrupt without input.
+    /// </para>
     /// </remarks>
-    private List<ChatMessage> ExtractToolResultsFromResume(AGUIResumeInfo resume)
+    private List<ChatMessage> ExtractToolResultsFromResume(IReadOnlyList<AGUIResumeEntry> resume)
     {
         var results = new List<ChatMessage>();
 
-        if (!resume.Payload.HasValue)
-            return results;
-
-        try
+        foreach (var entry in resume)
         {
-            var payload = resume.Payload.Value;
-
-            // Try to get toolResults array from payload
-            if (payload.TryGetProperty("toolResults", out var toolResultsElement) &&
-                toolResultsElement.ValueKind == JsonValueKind.Array)
+            if (entry.Status != AGUIResumeStatus.Resolved)
             {
-                foreach (var toolResultElement in toolResultsElement.EnumerateArray())
-                {
-                    if (toolResultElement.TryGetProperty("toolCallId", out var toolCallIdElement) &&
-                        toolResultElement.TryGetProperty("result", out var resultElement))
-                    {
-                        var toolCallId = toolCallIdElement.GetString();
-                        if (!string.IsNullOrEmpty(toolCallId))
-                        {
-                            var resultContent = new FunctionResultContent(toolCallId, resultElement);
-                            results.Add(new ChatMessage(ChatRole.Tool, [resultContent]));
-                        }
-                    }
-                }
+                continue;
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to parse resume payload for interrupt {InterruptId}", resume.InterruptId);
+
+            if (string.IsNullOrEmpty(entry.InterruptId) || !entry.Payload.HasValue)
+            {
+                _logger.LogWarning(
+                    "Resume entry {InterruptId} resolved without a payload; skipping",
+                    entry.InterruptId);
+                continue;
+            }
+
+            // InterruptId is the toolCallId for tool_call interrupts (see AGUIEventEmitter).
+            var resultContent = new FunctionResultContent(entry.InterruptId, entry.Payload.Value);
+            results.Add(new ChatMessage(ChatRole.Tool, [resultContent]));
         }
 
         return results;

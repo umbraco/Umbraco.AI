@@ -176,8 +176,13 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                     // Flush any buffered message content before finishing
                     FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
 
-                    outcome = runFinished.Outcome.ToString().ToLowerInvariant();
-                    messages.Add(new { role = "system", content = $"Run finished: {runFinished.Outcome}" });
+                    outcome = runFinished.Outcome switch
+                    {
+                        AGUIRunOutcomeInterrupt => "interrupt",
+                        AGUIRunOutcomeSuccess => "success",
+                        _ => "unknown",
+                    };
+                    messages.Add(new { role = "system", content = $"Run finished: {outcome}" });
                 }
                 else if (evt is RunErrorEvent runError)
                 {

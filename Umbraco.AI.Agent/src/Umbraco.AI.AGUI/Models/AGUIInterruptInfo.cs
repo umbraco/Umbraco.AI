@@ -3,26 +3,58 @@ using System.Text.Json.Serialization;
 namespace Umbraco.AI.AGUI.Models;
 
 /// <summary>
-/// Information about a human-in-the-loop interrupt.
+/// Describes a human-in-the-loop interrupt that paused an agent run.
 /// </summary>
+/// <remarks>
+/// AG-UI spec: <see href="https://docs.ag-ui.com/concepts/interrupts"/>.
+/// </remarks>
 public sealed class AGUIInterruptInfo
 {
     /// <summary>
-    /// Gets or sets the interrupt identifier.
+    /// Correlation key across interrupt, resume, idempotency, and audit.
     /// </summary>
     [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
+    public required string Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the reason for the interrupt.
+    /// Categorical routing hint. AG-UI core values: <c>tool_call</c>, <c>input_required</c>,
+    /// <c>confirmation</c>, or a custom <c>&lt;framework&gt;:&lt;name&gt;</c> namespaced reason.
     /// </summary>
     [JsonPropertyName("reason")]
-    public string Reason { get; set; } = string.Empty;
+    public required string Reason { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional payload data for the interrupt.
+    /// Human-readable prompt — the universal fallback UI content.
     /// </summary>
-    [JsonPropertyName("payload")]
+    [JsonPropertyName("message")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public object? Payload { get; set; }
+    public string? Message { get; set; }
+
+    /// <summary>
+    /// Binds the interrupt to a prior tool call proposal when applicable.
+    /// </summary>
+    [JsonPropertyName("toolCallId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ToolCallId { get; set; }
+
+    /// <summary>
+    /// JSON Schema validating the resume payload structure.
+    /// </summary>
+    [JsonPropertyName("responseSchema")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public object? ResponseSchema { get; set; }
+
+    /// <summary>
+    /// Optional ISO-8601 expiry — stale resumes trigger errors.
+    /// </summary>
+    [JsonPropertyName("expiresAt")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ExpiresAt { get; set; }
+
+    /// <summary>
+    /// Framework-specific extension data.
+    /// </summary>
+    [JsonPropertyName("metadata")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyDictionary<string, object?>? Metadata { get; set; }
 }

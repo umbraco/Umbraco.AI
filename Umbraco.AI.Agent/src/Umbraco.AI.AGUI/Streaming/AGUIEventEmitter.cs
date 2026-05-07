@@ -219,41 +219,41 @@ public sealed class AGUIEventEmitter
     /// <summary>
     /// Emits a <see cref="RunFinishedEvent"/> with the appropriate outcome.
     /// </summary>
-    /// <param name="error">Optional exception if an error occurred.</param>
     /// <returns>The run finished event.</returns>
     /// <remarks>
+    /// <para>
     /// The outcome is determined as follows:
     /// <list type="bullet">
-    ///   <item>If <paramref name="error"/> is provided: <see cref="AGUIRunOutcome.Error"/></item>
-    ///   <item>If frontend tools were called: <see cref="AGUIRunOutcome.Interrupt"/></item>
-    ///   <item>Otherwise: <see cref="AGUIRunOutcome.Success"/></item>
+    ///   <item>If frontend tools were called: <see cref="AGUIRunOutcomeInterrupt"/>
+    ///   with one entry per pending frontend tool call (<c>reason="tool_call"</c>).</item>
+    ///   <item>Otherwise: <see cref="AGUIRunOutcomeSuccess"/>.</item>
     /// </list>
+    /// </para>
+    /// <para>
+    /// Errors are NOT a valid outcome of <c>RUN_FINISHED</c> per AG-UI spec — emit a
+    /// <see cref="RunErrorEvent"/> via <see cref="EmitError"/> and terminate the stream
+    /// without a subsequent <c>RUN_FINISHED</c>.
+    /// </para>
     /// </remarks>
-    public RunFinishedEvent EmitRunFinished(Exception? error = null)
+    public RunFinishedEvent EmitRunFinished()
     {
-        var outcome = error != null
-            ? AGUIRunOutcome.Error
-            : HasFrontendToolCalls
-                ? AGUIRunOutcome.Interrupt
-                : AGUIRunOutcome.Success;
-
-        AGUIInterruptInfo? interrupt = null;
-        if (outcome == AGUIRunOutcome.Interrupt)
-        {
-            interrupt = new AGUIInterruptInfo
-            {
-                Id = Guid.NewGuid().ToString(),
-                Reason = "tool_execution"
-            };
-        }
+        AGUIRunOutcome outcome = HasFrontendToolCalls
+            ? new AGUIRunOutcomeInterrupt(
+                _frontendToolCallIds
+                    .Select(toolCallId => new AGUIInterruptInfo
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Reason = "tool_call",
+                        ToolCallId = toolCallId,
+                    })
+                    .ToList())
+            : new AGUIRunOutcomeSuccess();
 
         return new RunFinishedEvent
         {
             ThreadId = _threadId,
             RunId = _runId,
             Outcome = outcome,
-            Interrupt = interrupt,
-            Error = error?.Message,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
     }

@@ -969,7 +969,8 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Emits a complete AG-UI error sequence: run started, error, run finished.
+    /// Emits an AG-UI error sequence: run started, then run error.
+    /// Per spec a run terminates with either RUN_FINISHED or RUN_ERROR — never both.
     /// </summary>
     private static async IAsyncEnumerable<IAGUIEvent> EmitAGUIError(
         AGUIRunRequest request,
@@ -979,7 +980,6 @@ internal sealed class AIAgentService : IAIAgentService
         var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
         yield return emitter.EmitRunStarted();
         yield return emitter.EmitError(message, code);
-        yield return emitter.EmitRunFinished(new InvalidOperationException(message));
         await Task.CompletedTask; // Satisfy async enumerable contract
     }
 

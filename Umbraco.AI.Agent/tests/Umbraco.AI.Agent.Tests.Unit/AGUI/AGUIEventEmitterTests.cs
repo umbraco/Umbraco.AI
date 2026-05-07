@@ -319,7 +319,7 @@ public class AGUIEventEmitterTests
     #region EmitRunFinished Tests
 
     [Fact]
-    public void EmitRunFinished_NoError_NoFrontendTools_ReturnsSuccess()
+    public void EmitRunFinished_NoFrontendTools_ReturnsSuccessOutcome()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
@@ -331,12 +331,11 @@ public class AGUIEventEmitterTests
         evt.ShouldBeOfType<RunFinishedEvent>();
         evt.ThreadId.ShouldBe(TestThreadId);
         evt.RunId.ShouldBe(TestRunId);
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Success);
-        evt.Interrupt.ShouldBeNull();
+        evt.Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
     [Fact]
-    public void EmitRunFinished_WithFrontendTools_ReturnsInterrupt()
+    public void EmitRunFinished_WithFrontendTools_ReturnsInterruptOutcome()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
@@ -346,40 +345,12 @@ public class AGUIEventEmitterTests
         var evt = emitter.EmitRunFinished();
 
         // Assert
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
-        evt.Interrupt.ShouldNotBeNull();
-        evt.Interrupt.Reason.ShouldBe("tool_execution");
-        evt.Interrupt.Id.ShouldNotBeNullOrEmpty();
-    }
-
-    [Fact]
-    public void EmitRunFinished_WithError_ReturnsError()
-    {
-        // Arrange
-        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
-        var error = new Exception("Test error");
-
-        // Act
-        var evt = emitter.EmitRunFinished(error);
-
-        // Assert
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Error);
-        evt.Interrupt.ShouldBeNull();
-    }
-
-    [Fact]
-    public void EmitRunFinished_WithErrorAndFrontendTools_ErrorTakesPrecedence()
-    {
-        // Arrange
-        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
-        emitter.EmitToolCall("call-frontend", "confirm", null, isFrontendTool: true);
-        var error = new Exception("Test error");
-
-        // Act
-        var evt = emitter.EmitRunFinished(error);
-
-        // Assert
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        var interruptOutcome = evt.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.ShouldNotBeEmpty();
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Reason.ShouldBe("tool_call");
+        interrupt.ToolCallId.ShouldBe("call-frontend");
+        interrupt.Id.ShouldNotBeNullOrEmpty();
     }
 
     #endregion

@@ -93,14 +93,15 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             await enumerator.DisposeAsync();
         }
 
-        // Emit error event if streaming failed
+        // Per AG-UI spec the lifecycle terminates with EITHER RUN_FINISHED or RUN_ERROR — never both.
         if (streamError != null)
         {
             yield return emitter.EmitError(streamError.Message, "STREAMING_ERROR");
         }
-
-        // Emit RunFinished with appropriate outcome
-        yield return emitter.EmitRunFinished(streamError);
+        else
+        {
+            yield return emitter.EmitRunFinished();
+        }
     }
 
     /// <summary>

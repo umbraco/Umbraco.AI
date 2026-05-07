@@ -176,8 +176,8 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
-        finishedEvent.Interrupt.ShouldNotBeNull();
+        var interruptOutcome = finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Success);
+        finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
     [Fact]
@@ -260,7 +260,7 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
+        finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
     }
 
     #endregion
@@ -268,7 +268,7 @@ public class AGUIStreamingServiceTests
     #region Error Handling Tests
 
     [Fact]
-    public async Task StreamAgentAsync_OnError_EmitsErrorAndFinished()
+    public async Task StreamAgentAsync_OnError_EmitsRunErrorAndNoRunFinished()
     {
         // Arrange
         var agent = CreateThrowingAgent(new InvalidOperationException("Test error"));
@@ -278,13 +278,13 @@ public class AGUIStreamingServiceTests
         var events = await CollectEvents(agent, request);
 
         // Assert
+        // Per AG-UI spec a run terminates with EITHER RunFinished OR RunError — never both.
         var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
         errorEvent.ShouldNotBeNull();
         errorEvent.Message.ShouldBe("Test error");
         errorEvent.Code.ShouldBe("STREAMING_ERROR");
 
-        var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }
 
     [Fact]

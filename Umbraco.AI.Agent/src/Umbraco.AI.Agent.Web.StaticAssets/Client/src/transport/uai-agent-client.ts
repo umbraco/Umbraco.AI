@@ -8,11 +8,11 @@ import {
     UaiFrontendTool,
     AgentTransport,
     type AGUIEvent,
+    type AGUIInterrupt,
     type ToolCallStartEvent,
     type ToolCallArgsEvent,
     type ToolCallEndEvent,
     type RunFinishedAGUIEvent,
-    type StateSnapshotEvent,
     type MessagesSnapshotEvent,
     type UaiAgentState,
     type UaiInputContent,
@@ -230,7 +230,9 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.RUN_FINISHED:
-                // Cast to our server-extended type (adds outcome / interrupt / error).
+                // SDK 0.0.53's RunFinishedEvent doesn't model the spec's `outcome`
+                // discriminated union yet, so cast to our local extension type.
+                // See RunFinishedAGUIEvent in ./types.ts for removal conditions.
                 this.#handleRunFinished(event as RunFinishedAGUIEvent);
                 break;
 
@@ -238,16 +240,17 @@ export class UaiAgentClient {
                 this.#callbacks.onError?.(new Error(event.message));
                 break;
 
-            case AGUIEventType.STATE_SNAPSHOT: {
-                // Server emits `state`; AG-UI spec uses `snapshot`. Accept either.
-                const snapshot = (event as StateSnapshotEvent).state ?? event.snapshot;
-                this.#callbacks.onStateSnapshot?.(snapshot);
+            case AGUIEventType.STATE_SNAPSHOT:
+                this.#callbacks.onStateSnapshot?.(event.snapshot as UaiAgentState);
                 break;
-            }
 
             case AGUIEventType.STATE_DELTA:
-                // AG-UI's StateDeltaEvent types `delta` as `any[]` (JSON patch ops);
-                // our server sends an object delta. Treat as Partial<UaiAgentState>.
+                // AG-UI's StateDeltaEvent emits `delta` as RFC 6902 JSON Patch ops.
+                // Our consumer's onStateDelta callback currently expects a flat
+                // `Partial<UaiAgentState>`. Apply the patches to materialise that
+                // shape, or drop the patches when the consumer doesn't yet handle
+                // them. For now, pass through as-is and let the consumer deal —
+                // proper JSON Patch application is tracked separately.
                 this.#callbacks.onStateDelta?.(event.delta as unknown as Partial<UaiAgentState>);
                 break;
 
@@ -290,20 +293,17 @@ export class UaiAgentClient {
     }
 
     #handleRunFinished(event: RunFinishedAGUIEvent) {
-        // Normalize outcome to lowercase for case-insensitive comparison
-        // Backend sends PascalCase (e.g., "Interrupt") but we use lowercase
-        const outcome = (event.outcome ?? "").toLowerCase();
-
-        if (outcome === "interrupt") {
-            const interrupt = UaiAgentClient.#parseInterrupt(event.interrupt);
+        // AG-UI spec: outcome is a discriminated union — `success` or `interrupt`.
+        // Errors are NEVER signalled here; they arrive as RUN_ERROR events.
+        if (event.outcome.type === "interrupt") {
+            // Take the first interrupt entry — our UaiInterruptInfo callback shape
+            // currently models a single interrupt. If/when we support batched
+            // interrupts in the UI, the callback API can iterate the array.
+            const first = event.outcome.interrupts[0];
+            const interrupt = UaiAgentClient.#parseInterrupt(first);
             this.#callbacks.onRunFinished?.({
                 outcome: "interrupt",
                 interrupt,
-            });
-        } else if (outcome === "error") {
-            this.#callbacks.onRunFinished?.({
-                outcome: "error",
-                error: event.error as string,
             });
         } else {
             this.#callbacks.onRunFinished?.({
@@ -351,19 +351,24 @@ export class UaiAgentClient {
         this.#callbacks.onMessagesSnapshot?.(messages);
     }
 
-    static #parseInterrupt(raw: unknown): UaiInterruptInfo {
-        const data = raw as Record<string, unknown>;
-
+    /**
+     * Map an AG-UI Interrupt object onto our UI-shaped UaiInterruptInfo.
+     * Spec fields (id / reason / message / toolCallId / metadata) come from
+     * the AGUIInterrupt directly; UI-render hints (type / title / options /
+     * inputConfig) are read from `metadata` if the server attached them there.
+     */
+    static #parseInterrupt(raw: AGUIInterrupt): UaiInterruptInfo {
+        const metadata = raw.metadata ?? {};
         return {
-            id: (data.id as string) ?? crypto.randomUUID(),
-            reason: data.reason as string | undefined,
-            type: (data.type as UaiInterruptInfo["type"]) ?? "custom",
-            title: (data.title as string) ?? "Action Required",
-            message: (data.message as string) ?? "",
-            options: data.options as UaiInterruptInfo["options"],
-            inputConfig: data.inputConfig as UaiInterruptInfo["inputConfig"],
-            payload: data.payload as Record<string, unknown>,
-            metadata: data.metadata as Record<string, unknown>,
+            id: raw.id ?? crypto.randomUUID(),
+            reason: raw.reason,
+            type: (metadata.type as UaiInterruptInfo["type"]) ?? "custom",
+            title: (metadata.title as string) ?? "Action Required",
+            message: raw.message ?? "",
+            options: metadata.options as UaiInterruptInfo["options"],
+            inputConfig: metadata.inputConfig as UaiInterruptInfo["inputConfig"],
+            payload: raw.toolCallId ? { toolCallId: raw.toolCallId } : undefined,
+            metadata: raw.metadata,
         };
     }
 

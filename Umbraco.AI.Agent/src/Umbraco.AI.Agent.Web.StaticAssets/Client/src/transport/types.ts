@@ -215,37 +215,54 @@ export {
     type ToolCallEndEvent,
     type ToolCallResultEvent,
     type RunErrorEvent,
+    type StateSnapshotEvent,
     type StateDeltaEvent,
     type MessagesSnapshotEvent,
     type CustomEvent,
     type AGUIEvent,
 } from "@ag-ui/client";
 
-import type {
-    RunFinishedEvent as AGUIRunFinishedEvent,
-    StateSnapshotEvent as AGUIStateSnapshotEvent,
-} from "@ag-ui/client";
+import type { RunFinishedEvent as AGUIRunFinishedEvent } from "@ag-ui/client";
 
 /**
- * Server-extended RUN_FINISHED event.
+ * AG-UI interrupt object — see https://docs.ag-ui.com/concepts/interrupts.
  *
- * The Umbraco AI agent server adds outcome / interrupt / error fields on top of
- * AG-UI's RunFinishedEvent (which spec-wise only has threadId / runId / result).
- * These extensions are passed through Zod's `passthrough` schema and are how the
- * server signals interrupt vs success vs error to the client.
+ * The server emits one entry per pending interrupt inside
+ * `RunFinishedEvent.outcome.interrupts` when the run pauses for human input.
+ *
+ * REMOVE WHEN: `@ag-ui/client` updates its Zod schema to model the
+ * `outcome` discriminated union (currently the SDK has not caught up to the
+ * published spec — see RunFinishedAGUIEvent below).
  */
-export interface RunFinishedAGUIEvent extends AGUIRunFinishedEvent {
-    outcome?: string;
-    interrupt?: unknown;
-    error?: string;
+export interface AGUIInterrupt {
+    id: string;
+    reason: string;
+    message?: string;
+    toolCallId?: string;
+    responseSchema?: unknown;
+    expiresAt?: string;
+    metadata?: Record<string, unknown>;
 }
 
 /**
- * Server-extended STATE_SNAPSHOT event.
+ * Discriminated union for the `outcome` field on a RUN_FINISHED event.
  *
- * AG-UI's spec uses a `snapshot` field; our server emits `state` instead (legacy).
- * Allow both during the transition.
+ * REMOVE WHEN: `@ag-ui/client` updates its Zod `RunFinishedEventSchema` to
+ * model `outcome`. As of 0.0.53 the SDK schema only exposes
+ * `result?: any`; the `outcome` field still rides on the wire via Zod's
+ * `passthrough`, but typing it requires this local extension.
  */
-export interface StateSnapshotEvent extends AGUIStateSnapshotEvent {
-    state?: UaiAgentState;
+export type AGUIRunOutcome =
+    | { type: "success" }
+    | { type: "interrupt"; interrupts: AGUIInterrupt[] };
+
+/**
+ * Spec-shaped extension of AG-UI's RunFinishedEvent that adds `outcome`.
+ *
+ * REMOVE WHEN: `@ag-ui/client` updates its Zod schema to include the
+ * `outcome` field (then `outcome` will be inferred natively and downstream
+ * consumers can import the SDK's RunFinishedEvent directly).
+ */
+export interface RunFinishedAGUIEvent extends AGUIRunFinishedEvent {
+    outcome: AGUIRunOutcome;
 }

@@ -6,6 +6,18 @@
  */
 
 /**
+ * Editors whose values are pre-built object envelopes when supplied by the backend property
+ * value operation dispatcher. These must NOT be re-processed by `prepareValueForEditor` — the
+ * dispatcher returns the canonical envelope shape already, and feeding it through the
+ * `JSON.parse` / RichText-wrap branches below silently corrupts it.
+ */
+const PRE_BUILT_ENVELOPE_EDITORS = new Set([
+    "Umbraco.BlockList",
+    "Umbraco.BlockGrid",
+    "Umbraco.RichText",
+]);
+
+/**
  * Prepare a value for setting on a property, handling editor-specific formats.
  *
  * @param value - The raw value to prepare
@@ -14,6 +26,20 @@
  * @returns The prepared value ready to be set on the property
  */
 export function prepareValueForEditor(value: unknown, editorAlias?: string, currentValue?: unknown): unknown {
+    // Pre-built envelope guard: when the backend dispatcher returns a structured value for a
+    // block-shaped editor, accept it verbatim. The `JSON.parse` branch below would either throw
+    // (caught and ignored, leaving the object intact, then incorrectly re-stringified by the
+    // RichText branch) or pass through (with a key-rewrite for MediaPicker3 that mutates an
+    // already-correct envelope). Either path is a silent corruption — short-circuit instead.
+    if (
+        value !== null &&
+        typeof value === "object" &&
+        editorAlias !== undefined &&
+        PRE_BUILT_ENVELOPE_EDITORS.has(editorAlias)
+    ) {
+        return value;
+    }
+
     let valueToSet: unknown = value;
 
     // Try to parse JSON values

@@ -25,6 +25,7 @@ using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.SpeechToText;
@@ -118,6 +119,12 @@ public static partial class UmbracoBuilderExtensions
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITool, AIToolAttribute>(cache: true));
+
+        // Property value operation infrastructure - dispatcher + handler discovery
+        services.AddSingleton<IAIPropertyDefaultValueProvider, AIPropertyDefaultValueProvider>();
+        services.AddSingleton<IAIPropertyValueDispatcher, AIPropertyValueDispatcher>();
+        builder.AIPropertyValueHandlers()
+            .Add(() => builder.TypeLoader.GetTypes<IAIPropertyValueHandler>());
 
         // Tool scope infrastructure - auto-discover scopes via [AIToolScope] attribute
         builder.AIToolScopes()

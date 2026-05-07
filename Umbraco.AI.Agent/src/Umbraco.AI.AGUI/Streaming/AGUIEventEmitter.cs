@@ -198,7 +198,7 @@ public sealed class AGUIEventEmitter
             MessageId = resultMessageId,
             ToolCallId = effectiveCallId,
             Content = resultJson,
-            Role = AGUIConstants.MessageRoles.Tool,
+            Role = AGUIToolCallRole.Tool,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
     }

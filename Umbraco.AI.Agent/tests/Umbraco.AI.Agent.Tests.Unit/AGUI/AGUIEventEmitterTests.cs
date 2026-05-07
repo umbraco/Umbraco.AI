@@ -222,7 +222,7 @@ public class AGUIEventEmitterTests
         evt.ShouldBeOfType<ToolCallResultEvent>();
         evt.ToolCallId.ShouldBe("call-backend");
         evt.Content.ShouldContain("search results");
-        evt.Role.ShouldBe("tool");
+        evt.Role.ShouldBe(AGUIToolCallRole.Tool);
     }
 
     [Fact]

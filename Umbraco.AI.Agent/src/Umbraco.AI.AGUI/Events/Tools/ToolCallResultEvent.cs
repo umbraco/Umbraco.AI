@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Umbraco.AI.AGUI.Models;
 
 namespace Umbraco.AI.AGUI.Events.Tools;
 
@@ -26,9 +27,10 @@ public sealed record ToolCallResultEvent : BaseAGUIEvent
     public required string Content { get; init; }
 
     /// <summary>
-    /// Gets or sets the optional role. AG-UI spec restricts this to the literal <c>"tool"</c>.
+    /// Gets or sets the optional role. AG-UI spec restricts this to the literal <c>"tool"</c>;
+    /// modelled here as a single-value enum so the type system enforces the constraint.
     /// </summary>
     [JsonPropertyName("role")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Role { get; init; } = AGUIConstants.MessageRoles.Tool;
+    public AGUIToolCallRole? Role { get; init; } = AGUIToolCallRole.Tool;
 }

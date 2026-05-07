@@ -147,8 +147,8 @@ public class StreamAgentAGUIController : AgentControllerBase
             }
         }
 
-        // Extract tool metadata from ForwardedProps and rejoin with tools
-        var frontendTools = CombineToolsWithMetadata(request.Tools, request.ForwardedProps);
+        // Tool metadata travels inline via AGUITool.Metadata per AG-UI spec — no rejoin needed.
+        var frontendTools = BuildFrontendTools(request.Tools);
 
         // Delegate to service - handles tool creation, permission filtering, and streaming
         var events = _agentService.StreamAgentAGUIAsync(
@@ -197,69 +197,58 @@ public class StreamAgentAGUIController : AgentControllerBase
     }
 
     /// <summary>
-    /// Combines AG-UI tools with their metadata from ForwardedProps.
-    /// Extracts tool metadata (scope, isDestructive) from forwardedProps and rejoins with tool definitions.
+    /// Wraps each AG-UI tool with the metadata it carries inline (<see cref="AGUITool.Metadata"/>).
+    /// Per AG-UI spec, vendor-specific tool data such as <c>scope</c> and <c>isDestructive</c>
+    /// travels in <c>tool.metadata</c> alongside the tool definition.
     /// </summary>
-    /// <param name="tools">AG-UI tool definitions from the request.</param>
-    /// <param name="forwardedProps">Forwarded properties containing tool metadata.</param>
-    /// <returns>List of frontend tools with metadata attached, or null if no tools provided.</returns>
-    private IEnumerable<AIFrontendTool>? CombineToolsWithMetadata(
-        IEnumerable<AGUITool>? tools,
-        JsonElement? forwardedProps)
+    private static IEnumerable<AIFrontendTool>? BuildFrontendTools(IEnumerable<AGUITool>? tools)
     {
         if (tools is null)
         {
             return null;
         }
 
-        // Extract metadata lookup
-        var metadataLookup = ExtractToolMetadataLookup(forwardedProps);
-
-        // Combine tools with their metadata
         var frontendTools = new List<AIFrontendTool>();
         foreach (var tool in tools)
         {
-            // Get metadata for this tool (if available)
-            string? scope = null;
-            bool isDestructive = false;
-
-            if (metadataLookup.TryGetValue(tool.Name, out var metadata))
-            {
-                scope = metadata.Scope;
-                isDestructive = metadata.IsDestructive;
-            }
-
+            var scope = ReadStringMetadata(tool.Metadata, "scope");
+            var isDestructive = ReadBoolMetadata(tool.Metadata, "isDestructive");
             frontendTools.Add(new AIFrontendTool(tool, scope, isDestructive));
         }
 
         return frontendTools;
     }
 
-    /// <summary>
-    /// Extracts tool metadata from ForwardedProps into a lookup dictionary.
-    /// </summary>
-    private Dictionary<string, ToolMetadataDto> ExtractToolMetadataLookup(JsonElement? forwardedProps)
+    private static string? ReadStringMetadata(IReadOnlyDictionary<string, object?>? metadata, string key)
     {
-        if (forwardedProps is null ||
-            !forwardedProps.Value.TryGetProperty("toolMetadata", out var metadataElement))
+        if (metadata is null || !metadata.TryGetValue(key, out var raw) || raw is null)
         {
-            return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
+            return null;
         }
 
-        try
+        return raw switch
         {
-            var metadataList = JsonSerializer.Deserialize<List<ToolMetadataDto>>(
-                metadataElement.GetRawText(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions) ?? [];
+            string s => s,
+            JsonElement je when je.ValueKind == JsonValueKind.String => je.GetString(),
+            _ => raw.ToString(),
+        };
+    }
 
-            return metadataList.ToDictionary(
-                m => m.ToolName,
-                m => m,
-                StringComparer.OrdinalIgnoreCase);
-        }
-        catch
+    private static bool ReadBoolMetadata(IReadOnlyDictionary<string, object?>? metadata, string key)
+    {
+        if (metadata is null || !metadata.TryGetValue(key, out var raw) || raw is null)
         {
-            return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
+            return false;
         }
+
+        return raw switch
+        {
+            bool b => b,
+            JsonElement je when je.ValueKind == JsonValueKind.True => true,
+            JsonElement je when je.ValueKind == JsonValueKind.False => false,
+            string s => bool.TryParse(s, out var parsed) && parsed,
+            _ => false,
+        };
     }
 
     /// <summary>
@@ -307,15 +296,4 @@ public class StreamAgentAGUIController : AgentControllerBase
         };
     }
 
-    private class ToolMetadataDto
-    {
-        [JsonPropertyName("toolName")]
-        public string ToolName { get; set; } = string.Empty;
-
-        [JsonPropertyName("scope")]
-        public string? Scope { get; set; }
-
-        [JsonPropertyName("isDestructive")]
-        public bool IsDestructive { get; set; }
-    }
 }

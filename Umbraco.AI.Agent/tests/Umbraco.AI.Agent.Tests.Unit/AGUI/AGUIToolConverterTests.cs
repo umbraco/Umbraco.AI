@@ -46,11 +46,11 @@ public class AGUIToolConverterTests
             {
                 Name = "test-tool",
                 Description = "A test tool",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { name = new { type = "string" } })
-                }
+                    type = "object",
+                    properties = new { name = new { type = "string" } }
+                })
             }
         };
 
@@ -73,31 +73,31 @@ public class AGUIToolConverterTests
             {
                 Name = "tool-1",
                 Description = "First tool",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
+                    type = "object",
+                    properties = new { }
+                })
             },
             new()
             {
                 Name = "tool-2",
                 Description = "Second tool",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
+                    type = "object",
+                    properties = new { }
+                })
             },
             new()
             {
                 Name = "tool-3",
                 Description = "Third tool",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
+                    type = "object",
+                    properties = new { }
+                })
             }
         };
 
@@ -119,21 +119,21 @@ public class AGUIToolConverterTests
             {
                 Name = "confirm_action",
                 Description = "Confirms an action",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
+                    type = "object",
+                    properties = new { }
+                })
             },
             new()
             {
                 Name = "request_approval",
                 Description = "Requests approval",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
+                    type = "object",
+                    properties = new { }
+                })
             }
         };
 
@@ -157,11 +157,11 @@ public class AGUIToolConverterTests
             {
                 Name = "frontend-tool",
                 Description = "A frontend tool",
-                Parameters = new AGUIToolParameters
+                Parameters = JsonSerializer.SerializeToElement(new
                 {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { param = new { type = "string" } })
-                }
+                    type = "object",
+                    properties = new { param = new { type = "string" } }
+                })
             }
         };
 

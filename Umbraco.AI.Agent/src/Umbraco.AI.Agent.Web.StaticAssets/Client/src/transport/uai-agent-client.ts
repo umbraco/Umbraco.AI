@@ -135,8 +135,10 @@ export class UaiAgentClient {
         const convertedMessages = messages.map((m) => UaiAgentClient.#toAGUIMessage(m));
         this.#transport.setMessages(convertedMessages);
 
-        // Split UaiFrontendTool into AGUITool[] and tool metadata
-        const { aguiTools, toolMetadata } = this.#splitFrontendTools(tools ?? []);
+        // Map UaiFrontendTool[] -> AG-UI Tool[] with metadata inline (per AG-UI spec
+        // Tool.metadata field). Replaces the previous forwardedProps.toolMetadata
+        // side-channel where metadata was sent in a parallel array and rejoined by name.
+        const aguiTools = (tools ?? []).map((tool) => UaiAgentClient.#toAGUITool(tool));
 
         // Subscribe to the transport's event stream
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
@@ -147,7 +149,6 @@ export class UaiAgentClient {
                 messages: convertedMessages,
                 tools: aguiTools,
                 context: context ?? [],
-                forwardedProps: toolMetadata.length > 0 ? { toolMetadata } : undefined,
             })
             .pipe(transformChunks(false))
             .subscribe({
@@ -164,34 +165,27 @@ export class UaiAgentClient {
     }
 
     /**
-     * Split UaiFrontendTool[] into AGUITool[] and tool metadata for forwardedProps.
-     * @param tools Array of UaiFrontendTool objects with metadata
-     * @returns Object with aguiTools (for LLM) and toolMetadata (for backend permission filtering)
+     * Convert a UaiFrontendTool to an AG-UI Tool. Vendor-specific fields (scope,
+     * isDestructive) travel inline via the spec's Tool.metadata field.
      */
-    #splitFrontendTools(tools: UaiFrontendTool[]): {
-        aguiTools: Tool[];
-        toolMetadata: Array<{ toolName: string; scope?: string; isDestructive: boolean }>;
-    } {
-        const aguiTools: Tool[] = [];
-        const toolMetadata: Array<{ toolName: string; scope?: string; isDestructive: boolean }> = [];
-
-        for (const tool of tools) {
-            // AG-UI tool (for LLM)
-            aguiTools.push({
-                name: tool.name,
-                description: tool.description,
-                parameters: tool.parameters,
-            });
-
-            // Tool metadata (for backend permission filtering)
-            toolMetadata.push({
-                toolName: tool.name,
-                scope: tool.scope,
-                isDestructive: tool.isDestructive ?? false,
-            });
+    static #toAGUITool(tool: UaiFrontendTool): Tool {
+        const metadata: Record<string, unknown> = {};
+        if (tool.scope !== undefined) {
+            metadata.scope = tool.scope;
+        }
+        if (tool.isDestructive !== undefined) {
+            metadata.isDestructive = tool.isDestructive;
         }
 
-        return { aguiTools, toolMetadata };
+        const result: Tool = {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters,
+        };
+        if (Object.keys(metadata).length > 0) {
+            (result as Tool & { metadata?: Record<string, unknown> }).metadata = metadata;
+        }
+        return result;
     }
 
     /**

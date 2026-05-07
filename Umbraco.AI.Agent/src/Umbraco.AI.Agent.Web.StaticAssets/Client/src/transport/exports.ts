@@ -26,9 +26,9 @@ export type { AgentTransport, AgentClientCallbacks, RunFinishedEvent } from "./t
 // AG-UI re-exports
 export { EventType, type AGUITool, type ToolMessage } from "./types.js";
 
-// AG-UI typed events
+// AG-UI typed events (re-exports of @ag-ui/client's discriminated union members)
 export type {
-    AGUITypedEvent,
+    AGUIEvent,
     TextMessageStartEvent,
     TextMessageContentEvent,
     TextMessageEndEvent,
@@ -41,4 +41,5 @@ export type {
     StateSnapshotEvent,
     StateDeltaEvent,
     MessagesSnapshotEvent,
+    CustomEvent,
 } from "./types.js";

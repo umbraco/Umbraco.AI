@@ -1,4 +1,4 @@
-import { type Message, type BaseEvent, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
+import { type Message, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import {
     UaiChatMessage,
@@ -7,17 +7,14 @@ import {
     AgentClientCallbacks,
     UaiFrontendTool,
     AgentTransport,
-    TextMessageStartEvent,
-    TextMessageContentEvent,
-    ToolCallStartEvent,
-    ToolCallArgsEvent,
-    ToolCallEndEvent,
-    ToolCallResultEvent,
-    RunFinishedAGUIEvent,
-    RunErrorEvent,
-    StateSnapshotEvent,
-    StateDeltaEvent,
-    MessagesSnapshotEvent, CustomEvent,
+    type AGUIEvent,
+    type ToolCallStartEvent,
+    type ToolCallArgsEvent,
+    type ToolCallEndEvent,
+    type RunFinishedAGUIEvent,
+    type StateSnapshotEvent,
+    type MessagesSnapshotEvent,
+    type UaiAgentState,
     type UaiInputContent,
 } from "./types.js";
 
@@ -154,7 +151,11 @@ export class UaiAgentClient {
             })
             .pipe(transformChunks(false))
             .subscribe({
-                next: (event) => this.#handleEvent(event),
+                // The transport delivers BaseEvent (Zod passthrough). Narrow to the
+                // AGUIEvent discriminated union so the switch in #handleEvent narrows
+                // by `type` literal. We trust the server side here; if stricter
+                // validation is needed, parse via EventSchemas at this boundary.
+                next: (event) => this.#handleEvent(event as AGUIEvent),
                 error: (error) => {
                     const err = error instanceof Error ? error : new Error(String(error));
                     this.#callbacks.onError?.(err);
@@ -196,18 +197,16 @@ export class UaiAgentClient {
     /**
      * Handle incoming AG-UI events.
      */
-    #handleEvent(event: BaseEvent) {
+    #handleEvent(event: AGUIEvent) {
         switch (event.type) {
-            case AGUIEventType.TEXT_MESSAGE_START: {
-                const messageId = (event as TextMessageStartEvent).messageId;
-                if (messageId) {
-                    this.#callbacks.onTextStart?.(messageId);
+            case AGUIEventType.TEXT_MESSAGE_START:
+                if (event.messageId) {
+                    this.#callbacks.onTextStart?.(event.messageId);
                 }
                 break;
-            }
 
             case AGUIEventType.TEXT_MESSAGE_CONTENT:
-                this.#callbacks.onTextDelta?.((event as TextMessageContentEvent).delta);
+                this.#callbacks.onTextDelta?.(event.delta);
                 break;
 
             case AGUIEventType.TEXT_MESSAGE_END:
@@ -215,47 +214,49 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.TOOL_CALL_START:
-                this.#handleToolCallStart(event as ToolCallStartEvent);
+                this.#handleToolCallStart(event);
                 break;
 
             case AGUIEventType.TOOL_CALL_ARGS:
-                this.#handleToolCallArgs(event as ToolCallArgsEvent);
+                this.#handleToolCallArgs(event);
                 break;
 
             case AGUIEventType.TOOL_CALL_END:
-                this.#handleToolCallEnd(event as ToolCallEndEvent);
+                this.#handleToolCallEnd(event);
                 break;
 
             case AGUIEventType.TOOL_CALL_RESULT:
-                this.#callbacks.onToolCallResult?.(
-                    (event as ToolCallResultEvent).toolCallId,
-                    (event as ToolCallResultEvent).content,
-                );
+                this.#callbacks.onToolCallResult?.(event.toolCallId, event.content);
                 break;
 
             case AGUIEventType.RUN_FINISHED:
+                // Cast to our server-extended type (adds outcome / interrupt / error).
                 this.#handleRunFinished(event as RunFinishedAGUIEvent);
                 break;
 
             case AGUIEventType.RUN_ERROR:
-                this.#callbacks.onError?.(new Error((event as RunErrorEvent).message));
+                this.#callbacks.onError?.(new Error(event.message));
                 break;
 
-            case AGUIEventType.STATE_SNAPSHOT:
-                this.#callbacks.onStateSnapshot?.((event as StateSnapshotEvent).state);
+            case AGUIEventType.STATE_SNAPSHOT: {
+                // Server emits `state`; AG-UI spec uses `snapshot`. Accept either.
+                const snapshot = (event as StateSnapshotEvent).state ?? event.snapshot;
+                this.#callbacks.onStateSnapshot?.(snapshot);
                 break;
+            }
 
             case AGUIEventType.STATE_DELTA:
-                this.#callbacks.onStateDelta?.((event as StateDeltaEvent).delta);
+                // AG-UI's StateDeltaEvent types `delta` as `any[]` (JSON patch ops);
+                // our server sends an object delta. Treat as Partial<UaiAgentState>.
+                this.#callbacks.onStateDelta?.(event.delta as unknown as Partial<UaiAgentState>);
                 break;
 
             case AGUIEventType.MESSAGES_SNAPSHOT:
-                this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
+                this.#handleMessagesSnapshot(event);
                 break;
 
             case AGUIEventType.CUSTOM:
-                const customEvent = event as CustomEvent;
-                this.#callbacks.onCustomEvent?.(customEvent.name, customEvent.value);
+                this.#callbacks.onCustomEvent?.(event.name, event.value);
                 break;
 
             default:

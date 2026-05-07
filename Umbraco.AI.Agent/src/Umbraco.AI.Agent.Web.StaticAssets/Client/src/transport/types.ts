@@ -203,112 +203,49 @@ export interface RunFinishedEvent {
 }
 
 // =============================================================================
-// AG-UI Event Types (for type-safe event handling)
+// AG-UI Event Types (re-exported from @ag-ui/client for downstream consumers)
 // =============================================================================
 
-import { EventType as AGUIEventType } from "@ag-ui/client";
+export {
+    type TextMessageStartEvent,
+    type TextMessageContentEvent,
+    type TextMessageEndEvent,
+    type ToolCallStartEvent,
+    type ToolCallArgsEvent,
+    type ToolCallEndEvent,
+    type ToolCallResultEvent,
+    type RunErrorEvent,
+    type StateDeltaEvent,
+    type MessagesSnapshotEvent,
+    type CustomEvent,
+    type AGUIEvent,
+} from "@ag-ui/client";
 
-/** Base event type with common fields */
-interface TypedBaseEvent {
-    type: AGUIEventType;
-    rawEvent?: unknown;
-}
+import type {
+    RunFinishedEvent as AGUIRunFinishedEvent,
+    StateSnapshotEvent as AGUIStateSnapshotEvent,
+} from "@ag-ui/client";
 
-/** TEXT_MESSAGE_START event */
-export interface TextMessageStartEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TEXT_MESSAGE_START;
-    messageId?: string;
-}
-
-/** TEXT_MESSAGE_CONTENT event - text delta */
-export interface TextMessageContentEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TEXT_MESSAGE_CONTENT;
-    delta: string;
-}
-
-/** TEXT_MESSAGE_END event */
-export interface TextMessageEndEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TEXT_MESSAGE_END;
-}
-
-/** TOOL_CALL_START event */
-export interface ToolCallStartEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_START;
-    toolCallId: string;
-    toolCallName: string;
-}
-
-/** TOOL_CALL_ARGS event - argument delta */
-export interface ToolCallArgsEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_ARGS;
-    toolCallId: string;
-    delta: string;
-}
-
-/** TOOL_CALL_END event */
-export interface ToolCallEndEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_END;
-    toolCallId: string;
-}
-
-/** TOOL_CALL_RESULT event - backend tool execution result */
-export interface ToolCallResultEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_RESULT;
-    toolCallId: string;
-    content: string;
-}
-
-/** RUN_FINISHED event */
-export interface RunFinishedAGUIEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.RUN_FINISHED;
-    outcome: string;
+/**
+ * Server-extended RUN_FINISHED event.
+ *
+ * The Umbraco AI agent server adds outcome / interrupt / error fields on top of
+ * AG-UI's RunFinishedEvent (which spec-wise only has threadId / runId / result).
+ * These extensions are passed through Zod's `passthrough` schema and are how the
+ * server signals interrupt vs success vs error to the client.
+ */
+export interface RunFinishedAGUIEvent extends AGUIRunFinishedEvent {
+    outcome?: string;
     interrupt?: unknown;
     error?: string;
 }
 
-/** RUN_ERROR event */
-export interface RunErrorEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.RUN_ERROR;
-    message: string;
+/**
+ * Server-extended STATE_SNAPSHOT event.
+ *
+ * AG-UI's spec uses a `snapshot` field; our server emits `state` instead (legacy).
+ * Allow both during the transition.
+ */
+export interface StateSnapshotEvent extends AGUIStateSnapshotEvent {
+    state?: UaiAgentState;
 }
-
-/** STATE_SNAPSHOT event */
-export interface StateSnapshotEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.STATE_SNAPSHOT;
-    state: UaiAgentState;
-}
-
-/** STATE_DELTA event */
-export interface StateDeltaEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.STATE_DELTA;
-    delta: Partial<UaiAgentState>;
-}
-
-/** MESSAGES_SNAPSHOT event */
-export interface MessagesSnapshotEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.MESSAGES_SNAPSHOT;
-    messages: unknown[];
-}
-
-/** CUSTOM event */
-export interface CustomEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.CUSTOM;
-    name: string;
-    value: unknown;
-}
-
-/** Union of all typed AG-UI events */
-export type AGUITypedEvent =
-    | TextMessageStartEvent
-    | TextMessageContentEvent
-    | TextMessageEndEvent
-    | ToolCallStartEvent
-    | ToolCallArgsEvent
-    | ToolCallEndEvent
-    | ToolCallResultEvent
-    | RunFinishedAGUIEvent
-    | RunErrorEvent
-    | StateSnapshotEvent
-    | StateDeltaEvent
-    | MessagesSnapshotEvent
-    | CustomEvent;

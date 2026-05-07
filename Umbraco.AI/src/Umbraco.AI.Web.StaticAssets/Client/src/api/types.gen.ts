@@ -4,6 +4,34 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type AiDocumentMetadataModel = {
+    contentTypeKey: string;
+    variants: Array<AiVariantIdModel>;
+    isVariant: boolean;
+    isSegmented: boolean;
+    name?: string | null;
+};
+
+export type AiPropertyOperationModel = 'AddItem' | 'RemoveItem' | 'MoveItem' | 'SetValue' | 'ClearValue';
+
+export type AiPropertyPathSegmentModel = {
+    [key: string]: never;
+};
+
+export type AiPropertyValueOperationErrorModel = {
+    code: string;
+    message: string;
+    details?: {
+        [key: string]: JsonNode;
+    } | null;
+};
+
+export type AiVariantIdModel = {
+    culture?: string | null;
+    segment?: string | null;
+    readonly isInvariant: boolean;
+};
+
 export type AuditLogDetailResponseModel = {
     id: string;
     startTime: string;
@@ -270,8 +298,6 @@ export type EntityVersionResponseModel = {
     changeDescription?: string | null;
 };
 
-export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
-
 export type GenerateEmbeddingRequestModel = {
     profileIdOrAlias?: string | null;
     values: Array<string>;
@@ -315,6 +341,16 @@ export type GuardrailRuleModel = {
     sortOrder: number;
 };
 
+export type JsonNode = {
+    options?: JsonNodeOptions | null;
+    parent?: JsonNode | null;
+    root: JsonNode;
+};
+
+export type JsonNodeOptions = {
+    propertyNameCaseInsensitive: boolean;
+};
+
 export type KeyValuePair2 = {
     key?: string | null;
     value?: string | null;
@@ -331,12 +367,6 @@ export type ModelDescriptorResponseModel = {
 export type ModelRefModel = {
     providerId: string;
     modelId: string;
-};
-
-export type NotificationHeaderModel = {
-    message: string;
-    category: string;
-    type: EventMessageTypeModel;
 };
 
 export type PagedAuditLogItemResponseModel = {
@@ -409,6 +439,22 @@ export type ProfileResponseModel = {
 
 export type ProfileSettingsModel = {
     [key: string]: never;
+};
+
+export type PropertyValueOperationRequestModel = {
+    path: Array<AiPropertyPathSegmentModel>;
+    operation: AiPropertyOperationModel;
+    args?: JsonNode | null;
+    rootValue?: JsonNode | null;
+    rootEditorSchemaAlias: string;
+    documentMetadata: AiDocumentMetadataModel;
+};
+
+export type PropertyValueOperationResponseModel = {
+    success: boolean;
+    newRootValue?: JsonNode | null;
+    blockKey?: string | null;
+    error?: AiPropertyValueOperationErrorModel | null;
 };
 
 export type ProviderItemResponseModel = {
@@ -794,6 +840,47 @@ export type ValueChangeModel = {
     path: string;
     oldValue?: string | null;
     newValue?: string | null;
+};
+
+export type AiDocumentMetadataModelWritable = {
+    contentTypeKey: string;
+    variants: Array<AiVariantIdModelWritable>;
+    isVariant: boolean;
+    isSegmented: boolean;
+    name?: string | null;
+};
+
+export type AiPropertyValueOperationErrorModelWritable = {
+    code: string;
+    message: string;
+    details?: {
+        [key: string]: JsonNodeWritable;
+    } | null;
+};
+
+export type AiVariantIdModelWritable = {
+    culture?: string | null;
+    segment?: string | null;
+};
+
+export type JsonNodeWritable = {
+    [key: string]: never;
+};
+
+export type PropertyValueOperationRequestModelWritable = {
+    path: Array<AiPropertyPathSegmentModel>;
+    operation: AiPropertyOperationModel;
+    args?: JsonNodeWritable | null;
+    rootValue?: JsonNodeWritable | null;
+    rootEditorSchemaAlias: string;
+    documentMetadata: AiDocumentMetadataModelWritable;
+};
+
+export type PropertyValueOperationResponseModelWritable = {
+    success: boolean;
+    newRootValue?: JsonNodeWritable | null;
+    blockKey?: string | null;
+    error?: AiPropertyValueOperationErrorModelWritable | null;
 };
 
 export type GetUsageBreakdownByModelData = {
@@ -2079,6 +2166,33 @@ export type UpdateProfileResponses = {
      */
     200: unknown;
 };
+
+export type InvokeData = {
+    body?: PropertyValueOperationRequestModelWritable;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/property-value-operation';
+};
+
+export type InvokeErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type InvokeResponses = {
+    /**
+     * OK
+     */
+    200: PropertyValueOperationResponseModel;
+};
+
+export type InvokeResponse = InvokeResponses[keyof InvokeResponses];
 
 export type GetAllProvidersData = {
     body?: never;

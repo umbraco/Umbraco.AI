@@ -45,11 +45,42 @@ export function prepareValueForEditor(value: unknown, editorAlias?: string, curr
     // Try to parse JSON values
     try {
         valueToSet = JSON.parse(valueToSet as string);
-        if (editorAlias === "Umbraco.MediaPicker3") {
-            (valueToSet as Array<{ key: string }>)[0].key = crypto.randomUUID();
-        }
     } catch {
         // Not JSON, use as-is
+    }
+
+    // MediaPicker3: re-mint the entry's `key` when its content changed against the staged value.
+    // The picker's thumbnail subcomponent fetches the resolved media on mount and doesn't re-fetch
+    // when only `mediaKey` changes within the same entry; replacing the entry's `key` forces lit to
+    // unmount and re-mount, which re-fetches the thumbnail. We only regen when the entry's
+    // non-key content actually changed — that way add_item's handler-minted fresh keys stay stable
+    // (so the LLM's subsequent remove_item({blockKey}) still resolves), and unchanged entries
+    // don't churn their per-entry settings (focal point, crops, …).
+    if (editorAlias === "Umbraco.MediaPicker3" && Array.isArray(valueToSet)) {
+        const oldByKey = new Map<string, Record<string, unknown>>();
+        if (Array.isArray(currentValue)) {
+            for (const entry of currentValue as Array<Record<string, unknown>>) {
+                const k = entry?.key;
+                if (typeof k === "string") {
+                    oldByKey.set(k, entry);
+                }
+            }
+        }
+
+        valueToSet = (valueToSet as Array<Record<string, unknown>>).map((entry) => {
+            const key = typeof entry?.key === "string" ? entry.key : undefined;
+            if (!key) {
+                return { ...entry, key: crypto.randomUUID() };
+            }
+            const old = oldByKey.get(key);
+            if (!old) {
+                return entry;
+            }
+            if (JSON.stringify(omitKey(old)) === JSON.stringify(omitKey(entry))) {
+                return entry;
+            }
+            return { ...entry, key: crypto.randomUUID() };
+        });
     }
 
     // Wrap in TipTap's expected format for RichText properties
@@ -62,4 +93,9 @@ export function prepareValueForEditor(value: unknown, editorAlias?: string, curr
     }
 
     return valueToSet;
+}
+
+function omitKey(entry: Record<string, unknown>): Record<string, unknown> {
+    const { key: _key, ...rest } = entry;
+    return rest;
 }

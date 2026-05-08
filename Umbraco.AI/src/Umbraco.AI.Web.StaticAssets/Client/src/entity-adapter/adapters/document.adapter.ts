@@ -15,7 +15,7 @@ import type {
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
-import { prepareValueForEditor } from "./value-preparation.js";
+import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
 import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 // Supported text-based property editors for initial implementation
@@ -344,7 +344,7 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
         // Prepare value for the target editor type
-        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
+        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);

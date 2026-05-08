@@ -136,7 +136,23 @@ stages:
                       npm run build
                   displayName: Build frontend
 
-                - script: dotnet restore Umbraco.AI.slnx
+                - script: |
+                      attempt=1
+                      max_attempts=3
+                      delay=15
+                      while true; do
+                        if dotnet restore Umbraco.AI.slnx; then
+                          break
+                        fi
+                        if [ $attempt -ge $max_attempts ]; then
+                          echo "##[error]dotnet restore failed after $attempt attempts"
+                          exit 1
+                        fi
+                        echo "##[warning]dotnet restore failed (attempt $attempt/$max_attempts), retrying in ${delay}s..."
+                        sleep $delay
+                        attempt=$((attempt + 1))
+                        delay=$((delay * 2))
+                      done
                   displayName: Restore
 
                 - script: dotnet build Umbraco.AI.slnx --configuration Release --no-restore -p:DisableCloudBuildNumber=true

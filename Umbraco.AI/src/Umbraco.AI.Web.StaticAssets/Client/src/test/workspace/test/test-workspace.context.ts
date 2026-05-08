@@ -8,8 +8,12 @@ import {
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
-import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
-import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
+import { UmbValidationContext, UmbValueValidator } from "@umbraco-cms/backoffice/validation";
+import {
+    UAI_TEST_WORKSPACE_ALIAS,
+    UAI_TEST_ENTITY_TYPE,
+    UAI_TEST_WORKSPACE_VIEW_GRADING_ALIAS,
+} from "../../constants.js";
 import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../test-root/paths.js";
 import { UaiTestDetailRepository } from "../../repository/detail/test-detail.repository.js";
 import { UmbracoAITestWorkspaceEditorElement } from "./test-workspace-editor.element.js";
@@ -48,6 +52,9 @@ export class UaiTestWorkspaceContext
         return this.#validationContext;
     }
 
+    #gradingHintKeys = new Set<string>();
+    #gradersValidator?: UmbValueValidator<unknown[]>;
+
     constructor(host: UmbControllerHost) {
         super(host, UAI_TEST_WORKSPACE_ALIAS);
 
@@ -56,6 +63,40 @@ export class UaiTestWorkspaceContext
 
         this.#entityContext.setEntityType(UAI_TEST_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
+
+        // Workspace-level required validator for graders so submit fails regardless of which tab is open.
+        this.#gradersValidator = new UmbValueValidator<unknown[]>(this, {
+            dataPath: "$.graders",
+            check: (value) => !value || value.length === 0,
+            message: () => "#uaiValidation_gradersRequired",
+        });
+        this.observe(this.model, (model) => {
+            if (this.#gradersValidator) this.#gradersValidator.value = model?.graders ?? [];
+        });
+
+        // Surface validation errors on the Grading workspace tab as a hint badge.
+        this.observe(
+            this.#validationContext.messages.messagesOfTypeAndPath("custom", "$.graders"),
+            (messages) => {
+                messages.forEach((message) => {
+                    if (this.#gradingHintKeys.has(message.key)) return;
+                    this.view.hints.addOne({
+                        unique: message.key,
+                        path: [UAI_TEST_WORKSPACE_VIEW_GRADING_ALIAS],
+                        text: "!",
+                        color: "invalid",
+                        weight: 1000,
+                    });
+                    this.#gradingHintKeys.add(message.key);
+                });
+                this.#gradingHintKeys.forEach((key) => {
+                    if (!messages.some((msg) => msg.key === key)) {
+                        this.#gradingHintKeys.delete(key);
+                        this.view.hints.removeOne(key);
+                    }
+                });
+            },
+        );
 
         this.routes.setRoutes([
             {

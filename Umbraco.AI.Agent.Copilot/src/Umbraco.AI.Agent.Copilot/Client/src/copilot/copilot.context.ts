@@ -136,8 +136,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.observe(this.#agentRepository.agentItems$, (agents) => {
             let displayAgents = [...agents];
 
-            // Add "Auto" option when agents are available
-            if (agents.length > 0) {
+            // Add "Auto" option only when multiple agents are available
+            if (agents.length > 1) {
                 displayAgents = [
                     { id: "auto", name: "Auto", alias: "auto" },
                     ...agents,
@@ -146,7 +146,6 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
             this.#agents.setValue(displayAgents);
 
-            // Default to "Auto" when agents are available
             if (!this.#selectedAgent.getValue() && displayAgents.length > 0) {
                 this.#selectedAgent.setValue(displayAgents[0]);
             }

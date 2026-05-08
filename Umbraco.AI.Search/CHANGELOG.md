@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Search will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@1.0.0-beta3...Umbraco.AI.Search@1.0.0-beta4) (2026-05-06)
+
+### fix
+
+* **search:** Update Umbraco.Cms.Search to 1.0.0-beta.5 ([f18ca81](https://github.com/umbraco/Umbraco.AI/commit/f18ca81eeb2ca4156ed5a0df0c1af921d1c389ff)), closes [#117](https://github.com/umbraco/Umbraco.AI/issues/117)
+
 ## [1.0.0-beta3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@1.0.0-beta2...Umbraco.AI.Search@1.0.0-beta3) (2026-04-16)
 
 ### fix

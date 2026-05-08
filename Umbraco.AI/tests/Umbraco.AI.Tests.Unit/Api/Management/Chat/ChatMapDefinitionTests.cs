@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
+using Umbraco.AI.Web.Api.Common.Mapping;
 using Umbraco.AI.Web.Api.Management.Chat.Mapping;
 using Umbraco.AI.Web.Api.Management.Chat.Models;
 using Umbraco.Cms.Core.Mapping;
@@ -16,9 +17,12 @@ public class ChatMapDefinitionTests
 
     public ChatMapDefinitionTests()
     {
-        var definition = new ChatMapDefinition();
         _mapper = new UmbracoMapper(
-            new MapDefinitionCollection(() => new IMapDefinition[] { definition }),
+            new MapDefinitionCollection(() => new IMapDefinition[]
+            {
+                new ChatMapDefinition(),
+                new UsageDetailsMapDefinition()
+            }),
             Mock.Of<ICoreScopeProvider>(),
             NullLogger<UmbracoMapper>.Instance);
     }
@@ -185,4 +189,29 @@ public class ChatMapDefinitionTests
     }
 
 #pragma warning restore CS0618
+
+    // Regression test for issue #155: chat completion failed with
+    // "Don't know how to map UsageDetails to UsageModel" because the
+    // UsageDetailsMapDefinition was not registered alongside ChatMapDefinition.
+    [Fact]
+    public void Map_ChatResponseWithUsage_PopulatesUsageModel()
+    {
+        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, "hi"))
+        {
+            Usage = new UsageDetails
+            {
+                InputTokenCount = 12,
+                OutputTokenCount = 7,
+                TotalTokenCount = 19
+            }
+        };
+
+        var result = _mapper.Map<ChatResponseModel>(response);
+
+        result.ShouldNotBeNull();
+        result!.Usage.ShouldNotBeNull();
+        result.Usage!.InputTokens.ShouldBe(12);
+        result.Usage.OutputTokens.ShouldBe(7);
+        result.Usage.TotalTokens.ShouldBe(19);
+    }
 }

@@ -180,6 +180,11 @@ export class UaiChatMessageElement extends UmbLitElement {
             margin-bottom: 0;
         }
 
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
+        }
+
         .markdown-content pre {
             background: var(--uui-color-surface-emphasis);
             padding: var(--uui-size-space-3);

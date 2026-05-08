@@ -226,22 +226,5 @@ public sealed class MultiUrlPickerPropertyValueHandler : IAIPropertyValueHandler
         => value is JsonArray arr ? arr : new JsonArray();
 
     private static Guid? TryGetGuid(JsonNode? node, string propertyName)
-    {
-        if (node is not JsonObject obj || obj[propertyName] is not JsonValue jv)
-        {
-            return null;
-        }
-
-        if (jv.TryGetValue<Guid>(out var guid))
-        {
-            return guid;
-        }
-
-        if (jv.TryGetValue<string>(out var s) && Guid.TryParse(s, out guid))
-        {
-            return guid;
-        }
-
-        return null;
-    }
+        => BlockEnvelopeOps.GetGuid(node, propertyName);
 }

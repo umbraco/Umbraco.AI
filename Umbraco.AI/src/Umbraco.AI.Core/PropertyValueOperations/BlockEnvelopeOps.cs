@@ -154,28 +154,24 @@ internal static class BlockEnvelopeOps
     /// <summary>Removes all references to the given content key from layout, contentData, settingsData, and expose.</summary>
     public static void RemoveByContentKey(JsonObject envelope, string layoutKey, Guid contentKey)
     {
-        // Resolve the matching settings key (if any) before we lose the reference.
+        // Resolve the matching settings key before we drop the layout entry that links the two.
         var settingsKeyToRemove = ResolveSettingsKey(envelope, layoutKey, contentKey);
 
-        // Remove from layout.
         if (envelope[LayoutPropertyName] is JsonObject layoutObj && layoutObj[layoutKey] is JsonArray layoutArray)
         {
             layoutObj[layoutKey] = FilterArray(layoutArray, e => GetGuid(e, ContentKeyPropertyName) != contentKey);
         }
 
-        // Remove from contentData.
         if (envelope[ContentDataPropertyName] is JsonArray contentArray)
         {
             envelope[ContentDataPropertyName] = FilterArray(contentArray, e => GetGuid(e, "key") != contentKey);
         }
 
-        // Remove from settingsData (only if there was a matching settingsKey).
         if (settingsKeyToRemove is not null && envelope[SettingsDataPropertyName] is JsonArray settingsArray)
         {
             envelope[SettingsDataPropertyName] = FilterArray(settingsArray, e => GetGuid(e, "key") != settingsKeyToRemove);
         }
 
-        // Remove from expose.
         if (envelope[ExposePropertyName] is JsonArray exposeArray)
         {
             envelope[ExposePropertyName] = FilterArray(exposeArray, e => GetGuid(e, ContentKeyPropertyName) != contentKey);
@@ -385,14 +381,18 @@ internal static class BlockEnvelopeOps
         return rebuilt;
     }
 
-    private static Guid? GetGuid(JsonNode? node, string propertyName)
+    /// <summary>
+    /// Reads a GUID property from a JSON object. Handles both in-memory <c>JsonValue&lt;Guid&gt;</c>
+    /// nodes (built directly in code) and string-serialised JSON GUIDs (deserialised from the wire),
+    /// since both shapes appear in the same envelopes during a single dispatch.
+    /// </summary>
+    internal static Guid? GetGuid(JsonNode? node, string propertyName)
     {
         if (node is not JsonObject obj || obj[propertyName] is not JsonValue value)
         {
             return null;
         }
 
-        // In-memory JsonValue<Guid> values vs string-serialised values both need to round-trip.
         if (value.TryGetValue<Guid>(out var guid))
         {
             return guid;

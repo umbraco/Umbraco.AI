@@ -1,5 +1,5 @@
 import { PropertyValueOperationToolBase } from "./internal/property-value-tool-base.js";
-import type { PropertyPathSegment } from "./internal/property-value-operation.client.js";
+import { parsePath, readVariant } from "./internal/path-args.js";
 
 /**
  * Frontend tool: add_item.
@@ -41,41 +41,3 @@ export default class AddItemApi extends PropertyValueOperationToolBase {
     }
 }
 
-function parsePath(input: unknown): PropertyPathSegment[] | null {
-    if (!Array.isArray(input) || input.length === 0) {
-        return null;
-    }
-
-    const result: PropertyPathSegment[] = [];
-    for (let i = 0; i < input.length; i++) {
-        const segment = input[i];
-        if (i % 2 === 0) {
-            if (typeof segment !== "string" || segment.length === 0) {
-                return null;
-            }
-            result.push(segment);
-        } else {
-            if (
-                typeof segment !== "object" ||
-                segment === null ||
-                typeof (segment as { blockKey?: unknown }).blockKey !== "string"
-            ) {
-                return null;
-            }
-            result.push({ blockKey: (segment as { blockKey: string }).blockKey });
-        }
-    }
-
-    return result;
-}
-
-function readVariant(args: Record<string, unknown>) {
-    const culture = typeof args.culture === "string" ? args.culture : null;
-    const segment = typeof args.segment === "string" ? args.segment : null;
-    if (culture === null && segment === null) {
-        return undefined;
-    }
-    return { culture, segment };
-}
-
-export { parsePath, readVariant };

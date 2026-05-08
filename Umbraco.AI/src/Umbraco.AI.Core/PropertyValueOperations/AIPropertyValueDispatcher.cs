@@ -112,49 +112,21 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
         AIPropertyValueOperationContext context,
         CancellationToken cancellationToken)
     {
-        // Build the descent stack. Each frame represents a level we walked into via a
-        // block-key selector; on the way back up we ascend by reversing them.
-        var path = request.Path;
-        var frames = new List<DescentFrame>();
-
-        var currentEditorSchemaAlias = request.RootEditorSchemaAlias;
-        var currentValue = request.RootValue;
-
         // Path layout: [propAlias, {blockKey}, propAlias, {blockKey}, ..., propAlias]
-        // - Even indices: property alias segments (root, then each property nested in the previous block)
-        // - Odd indices: block key selectors
-
-        // Walk each (propertyAlias, blockKey) pair. The last propertyAlias is the leaf.
-        for (var i = 0; i < path.Count; i++)
+        // — even indices are property aliases, odd indices are block selectors. Per-segment type
+        // is validated at JSON deserialization; here we only enforce the leaf must be a property
+        // alias (the JSON converter alone can't express that constraint). Casts during the walk
+        // surface any other shape mismatches as a structured InvalidPath error.
+        var path = request.Path;
+        if ((path.Count & 1) == 0)
         {
-            var segment = path[i];
-
-            if ((i & 1) == 0)
-            {
-                if (segment is not AIPropertyPathSegment.PropertyAliasSegment)
-                {
-                    return Fail(AIPropertyValueOperationError.Codes.InvalidPath,
-                        $"Expected property alias at path index {i}.");
-                }
-            }
-            else
-            {
-                if (segment is not AIPropertyPathSegment.BlockKeySegment)
-                {
-                    return Fail(AIPropertyValueOperationError.Codes.InvalidPath,
-                        $"Expected block selector at path index {i}.");
-                }
-            }
-        }
-
-        // Walk: each iteration consumes a (propAlias, blockSelector) pair and descends one level.
-        var leafPropertyAliasIndex = path.Count - 1;
-        if ((leafPropertyAliasIndex & 1) != 0)
-        {
-            // Last segment is a block selector, which is invalid: paths must end on a property alias.
             return Fail(AIPropertyValueOperationError.Codes.InvalidPath,
                 "Path must end with a property alias segment.");
         }
+
+        var frames = new List<DescentFrame>();
+        var currentEditorSchemaAlias = request.RootEditorSchemaAlias;
+        var currentValue = request.RootValue;
 
         for (var i = 0; i + 1 < path.Count; i += 2)
         {
@@ -163,7 +135,6 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
             var propertyAlias = ((AIPropertyPathSegment.PropertyAliasSegment)path[i]).Alias;
             var blockKey = ((AIPropertyPathSegment.BlockKeySegment)path[i + 1]).BlockKey;
 
-            // Resolve handler for the current frame (the editor we're descending out of).
             var handler = _handlers.GetByEditorSchemaAlias(currentEditorSchemaAlias);
             if (handler is null)
             {
@@ -171,10 +142,8 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                     $"No property value handler is registered for editor '{currentEditorSchemaAlias}'.");
             }
 
-            // Snapshot the frame so we can ascend later.
             frames.Add(new DescentFrame(handler, currentValue, blockKey, propertyAlias));
 
-            // Descend: find the block's content type, then read the inner property's value.
             var innerContentTypeKey = handler.GetItemContentTypeKey(currentValue, blockKey, context);
             if (innerContentTypeKey is null)
             {
@@ -182,7 +151,6 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                     $"Block '{blockKey}' was not found inside property '{propertyAlias}', or this editor does not support nested items.");
             }
 
-            // Look up the next-level property's editor schema alias from its content type.
             var nextPropertyAlias = ((AIPropertyPathSegment.PropertyAliasSegment)path[i + 2]).Alias;
 
             var nextEditorSchemaAlias = TryResolvePropertyEditorAlias(innerContentTypeKey.Value, nextPropertyAlias);
@@ -192,15 +160,12 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                     $"Property '{nextPropertyAlias}' was not found on content type '{innerContentTypeKey}'.");
             }
 
-            // Read the next-level value.
             currentValue = handler.GetItemPropertyValue(
                 currentValue, blockKey, nextPropertyAlias, variantId: null, context);
 
             currentEditorSchemaAlias = nextEditorSchemaAlias;
         }
 
-        // currentValue is the leaf value; currentEditorSchemaAlias is the leaf's editor.
-        // Apply the leaf operation.
         var leafResult = await ApplyLeafOperationAsync(
             request, currentEditorSchemaAlias, currentValue, context, cancellationToken)
             .ConfigureAwait(false);
@@ -210,10 +175,8 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
             return leafResult;
         }
 
-        // Ascend: rebuild each frame's value with the mutated child.
         var ascendingValue = leafResult.NewRootValue;
-        var leafPropertyAlias = ((AIPropertyPathSegment.PropertyAliasSegment)path[leafPropertyAliasIndex]).Alias;
-        var ascendingPropertyAlias = leafPropertyAlias;
+        var ascendingPropertyAlias = ((AIPropertyPathSegment.PropertyAliasSegment)path[^1]).Alias;
 
         for (var i = frames.Count - 1; i >= 0; i--)
         {

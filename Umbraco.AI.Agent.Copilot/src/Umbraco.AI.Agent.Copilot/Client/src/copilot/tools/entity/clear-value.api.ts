@@ -1,5 +1,5 @@
 import { PropertyValueOperationToolBase } from "./internal/property-value-tool-base.js";
-import { parsePath, readVariant } from "./add-item.api.js";
+import { parsePath, readVariant } from "./internal/path-args.js";
 
 /**
  * Frontend tool: clear_value.

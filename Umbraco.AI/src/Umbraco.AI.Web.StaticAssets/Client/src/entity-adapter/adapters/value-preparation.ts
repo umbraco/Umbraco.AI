@@ -46,7 +46,7 @@ export function prepareValueForEditor(value: unknown, editorAlias?: string, curr
     try {
         valueToSet = JSON.parse(valueToSet as string);
         if (editorAlias === "Umbraco.MediaPicker3") {
-            (valueToSet as Array<{ key: string }>)[0].key = uuidv4();
+            (valueToSet as Array<{ key: string }>)[0].key = crypto.randomUUID();
         }
     } catch {
         // Not JSON, use as-is
@@ -62,10 +62,4 @@ export function prepareValueForEditor(value: unknown, editorAlias?: string, curr
     }
 
     return valueToSet;
-}
-
-function uuidv4(): string {
-    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
-        (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16),
-    );
 }

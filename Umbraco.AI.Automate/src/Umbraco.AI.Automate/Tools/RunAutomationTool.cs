@@ -85,14 +85,14 @@ public class RunAutomationTool : AIToolBase<RunAutomationArgs>
             return new RunAutomationResult(false, null, automation.Name, "You do not have access to this automation's workspace.");
         }
 
+        if (automation.Status == AutomationStatus.Inactive)
+        {
+            return new RunAutomationResult(false, null, automation.Name, "Automation is not enabled.");
+        }
+
         if (automation.Status != AutomationStatus.Published)
         {
             return new RunAutomationResult(false, null, automation.Name, "Automation is not published.");
-        }
-
-        if (!automation.IsEnabled)
-        {
-            return new RunAutomationResult(false, null, automation.Name, "Automation is not enabled.");
         }
 
         if (automation.Trigger is null || !UmbracoAIAutomateConstants.AgentInvokableTriggerAliases.Contains(

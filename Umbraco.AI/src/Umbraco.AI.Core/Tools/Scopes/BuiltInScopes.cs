@@ -119,3 +119,33 @@ public sealed class EntityWriteScope : AIToolScopeBase
     /// </summary>
     public const string ScopeId = "entity-write";
 }
+
+/// <summary>
+/// The entity save scope. Tools that persist staged workspace changes to the database (without
+/// publishing) should use this scope. Separated from <see cref="EntityWriteScope"/> so an agent
+/// can be granted permission to mutate values without also gaining permission to commit them.
+/// </summary>
+[AIToolScope(ScopeId, Icon = "icon-save", IsDestructive = true, Domain = "Entity")]
+public sealed class EntitySaveScope : AIToolScopeBase
+{
+    /// <summary>
+    /// The unique identifier for the entity save scope. Tools that persist staged workspace
+    /// changes (saving without publishing) should use this scope.
+    /// </summary>
+    public const string ScopeId = "entity-save";
+}
+
+/// <summary>
+/// The entity publish scope. Tools that persist staged workspace changes AND publish them to
+/// the public site should use this scope. Separated from <see cref="EntitySaveScope"/> so an
+/// agent can be allowed to save drafts without also being allowed to push live.
+/// </summary>
+[AIToolScope(ScopeId, Icon = "icon-globe", IsDestructive = true, Domain = "Entity")]
+public sealed class EntityPublishScope : AIToolScopeBase
+{
+    /// <summary>
+    /// The unique identifier for the entity publish scope. Tools that publish content to the
+    /// public site should use this scope.
+    /// </summary>
+    public const string ScopeId = "entity-publish";
+}

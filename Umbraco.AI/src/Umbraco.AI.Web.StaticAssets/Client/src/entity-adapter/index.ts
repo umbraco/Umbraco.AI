@@ -46,6 +46,7 @@ export type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
     UaiEntityContext,
+    UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,

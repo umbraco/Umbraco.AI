@@ -22,6 +22,7 @@ import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from ".
 import type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
+    UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,
@@ -169,6 +170,53 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
         }
 
         return selected.adapter.applyValueChange(selected.workspaceContext, change);
+    }
+
+    /**
+     * Persist the currently selected entity's staged changes (equivalent of the user clicking
+     * Save). Returns a structured "not supported" error when the entity type doesn't own a save
+     * action — most commonly when the user has a block workspace selected, since block changes
+     * save with the parent document.
+     */
+    async saveSelectedEntity(): Promise<UaiPersistResult> {
+        await this.#initialized;
+
+        const selected = this.getSelectedEntity();
+        if (!selected) {
+            return { success: false, error: "No entity is currently selected." };
+        }
+
+        if (!selected.adapter.save) {
+            return {
+                success: false,
+                error: `Entity type "${selected.entityContext.entityType}" cannot be saved directly. If this is a block, switch to the parent document and save from there.`,
+            };
+        }
+
+        return selected.adapter.save(selected.workspaceContext);
+    }
+
+    /**
+     * Persist and publish the currently selected entity. Returns a structured "not supported"
+     * error for entity types without a publish concept (media, blocks) — publishing only applies
+     * to documents.
+     */
+    async publishSelectedEntity(): Promise<UaiPersistResult> {
+        await this.#initialized;
+
+        const selected = this.getSelectedEntity();
+        if (!selected) {
+            return { success: false, error: "No entity is currently selected." };
+        }
+
+        if (!selected.adapter.publish) {
+            return {
+                success: false,
+                error: `Entity type "${selected.entityContext.entityType}" does not support publish. Try save instead.`,
+            };
+        }
+
+        return selected.adapter.publish(selected.workspaceContext);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────

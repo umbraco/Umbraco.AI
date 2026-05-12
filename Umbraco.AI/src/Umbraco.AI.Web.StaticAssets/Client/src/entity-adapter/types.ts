@@ -103,6 +103,18 @@ export interface UaiValueChangeResult {
 }
 
 /**
+ * Result of a save (or save-and-publish) operation triggered by an AI tool. Adapters convert
+ * exceptions thrown by the underlying workspace into a structured payload so the LLM can read the
+ * error message rather than treat the call as silently successful.
+ */
+export interface UaiPersistResult {
+    /** Whether persistence completed successfully. */
+    success: boolean;
+    /** Human-readable error message if persistence failed. */
+    error?: string;
+}
+
+/**
  * Entity adapter API interface.
  * Adapters are responsible for:
  * - Detecting if they can handle a workspace context
@@ -164,6 +176,21 @@ export interface UaiEntityAdapterApi extends UmbApi {
      * @returns Result indicating success or failure with error message
      */
     applyValueChange?(workspaceContext: unknown, change: UaiValueChange): Promise<UaiValueChangeResult>;
+
+    /**
+     * Persist the workspace's staged changes (the equivalent of clicking the workspace's Save
+     * button). Optional — entity types that don't own their own save (e.g. blocks, whose changes
+     * save with the parent document) should omit this so the caller can return a clear "not
+     * supported" error.
+     */
+    save?(workspaceContext: unknown): Promise<UaiPersistResult>;
+
+    /**
+     * Persist the workspace's staged changes and publish them. Optional — only entity types with
+     * a publish concept (documents) implement this; media and other always-live entities should
+     * omit it.
+     */
+    publish?(workspaceContext: unknown): Promise<UaiPersistResult>;
 }
 
 /**

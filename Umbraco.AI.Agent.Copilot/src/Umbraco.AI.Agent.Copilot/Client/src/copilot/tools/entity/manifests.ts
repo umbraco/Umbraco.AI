@@ -240,6 +240,69 @@ const clearValueTool: ManifestUaiAgentFrontendTool = {
     },
 };
 
+// ─── save ──────────────────────────────────────────────────────────────────────
+
+const saveRenderer: ManifestUaiAgentToolRenderer = {
+    type: "uaiAgentToolRenderer",
+    kind: "default",
+    alias: "Uai.AgentToolRenderer.Save",
+    name: "Save Tool Renderer",
+    meta: { toolName: "save", label: "Save", icon: "icon-save", approval: true },
+};
+
+const saveTool: ManifestUaiAgentFrontendTool = {
+    type: "uaiAgentFrontendTool",
+    alias: "Uai.AgentFrontendTool.Save",
+    name: "Save Frontend Tool",
+    api: () => import("./save.api.ts"),
+    meta: {
+        toolName: "save",
+        description:
+            "Persist the selected entity's staged changes (the workspace's Save action). " +
+            "Use this after add_item / set_value / etc. to commit changes the user has approved. " +
+            "Documents stay as drafts; media is saved (media is always live). " +
+            "Block workspaces cannot be saved directly — their changes save with the parent document. " +
+            "If you need the changes to go live on the public site, use save_and_publish instead.",
+        parameters: {
+            type: "object",
+            properties: {},
+        },
+        scope: "entity-save",
+        isDestructive: true,
+    },
+};
+
+// ─── save_and_publish ──────────────────────────────────────────────────────────
+
+const saveAndPublishRenderer: ManifestUaiAgentToolRenderer = {
+    type: "uaiAgentToolRenderer",
+    kind: "default",
+    alias: "Uai.AgentToolRenderer.SaveAndPublish",
+    name: "Save and Publish Tool Renderer",
+    meta: { toolName: "save_and_publish", label: "Save and Publish", icon: "icon-globe", approval: true },
+};
+
+const saveAndPublishTool: ManifestUaiAgentFrontendTool = {
+    type: "uaiAgentFrontendTool",
+    alias: "Uai.AgentFrontendTool.SaveAndPublish",
+    name: "Save and Publish Frontend Tool",
+    api: () => import("./save-and-publish.api.ts"),
+    meta: {
+        toolName: "save_and_publish",
+        description:
+            "Persist the selected document's staged changes AND publish them to the public site. " +
+            "Only documents support publish; media is always live (use save) and block workspaces save " +
+            "with their parent document. On multi-variant documents the workspace may surface a " +
+            "variant-picker modal — this is the same flow a human gets and cannot be bypassed.",
+        parameters: {
+            type: "object",
+            properties: {},
+        },
+        scope: "entity-publish",
+        isDestructive: true,
+    },
+};
+
 export const manifests = [
     setValueRenderer,
     setValueTool,
@@ -251,4 +314,8 @@ export const manifests = [
     moveItemTool,
     clearValueRenderer,
     clearValueTool,
+    saveRenderer,
+    saveTool,
+    saveAndPublishRenderer,
+    saveAndPublishTool,
 ];

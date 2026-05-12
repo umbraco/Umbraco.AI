@@ -61,7 +61,6 @@ public sealed class InvokePropertyValueOperationController : PropertyValueOperat
             Operation: request.Operation,
             Args: request.Args,
             RootValue: request.RootValue,
-            RootEditorSchemaAlias: request.RootEditorSchemaAlias,
             DocumentMetadata: request.DocumentMetadata);
 
         var result = await _dispatcher.DispatchAsync(dispatchRequest, cancellationToken).ConfigureAwait(false);

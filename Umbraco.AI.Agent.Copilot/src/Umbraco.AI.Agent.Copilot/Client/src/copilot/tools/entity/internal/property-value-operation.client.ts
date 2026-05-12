@@ -47,7 +47,6 @@ export interface PropertyValueOperationRequest {
     operation: PropertyOperation;
     args?: unknown;
     rootValue?: unknown;
-    rootEditorSchemaAlias: string;
     documentMetadata: DocumentMetadata;
 }
 

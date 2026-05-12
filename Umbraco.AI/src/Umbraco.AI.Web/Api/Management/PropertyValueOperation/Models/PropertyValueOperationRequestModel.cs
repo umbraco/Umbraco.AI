@@ -36,12 +36,6 @@ public sealed class PropertyValueOperationRequestModel
     public JsonNode? RootValue { get; set; }
 
     /// <summary>
-    /// The editor schema alias of the root property.
-    /// </summary>
-    [Required]
-    public string RootEditorSchemaAlias { get; set; } = string.Empty;
-
-    /// <summary>
     /// Document-level metadata required by the dispatcher.
     /// </summary>
     [Required]

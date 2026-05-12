@@ -119,8 +119,11 @@ export abstract class PropertyValueOperationToolBase
 
         const variantHint = built.variant ?? this.#resolveActiveVariant(workspace);
 
+        // The workspace's getValues() only lists properties with staged values; properties the
+        // user hasn't touched are absent. The dispatcher canonicalises root editor alias resolution
+        // server-side from documentMetadata.contentTypeKey + path[0], so we only need to send the
+        // staged root value (or undefined for never-touched properties).
         const rootEntry = this.#findValueEntry(values, rootProperty, variantHint);
-        const rootEditorSchemaAlias = rootEntry?.editorAlias ?? "";
         const rootValue = rootEntry?.value;
 
         const documentMetadata: DocumentMetadata = {
@@ -136,7 +139,6 @@ export abstract class PropertyValueOperationToolBase
             operation: built.operation,
             args: built.args,
             rootValue,
-            rootEditorSchemaAlias,
             documentMetadata,
         });
 

@@ -26,15 +26,10 @@ namespace Umbraco.AI.Core.PropertyValueOperations;
 /// </list>
 /// </param>
 /// <param name="RootValue">The current value of the root property the path begins in.</param>
-/// <param name="RootEditorSchemaAlias">
-/// Editor schema alias of the root property (e.g. <c>Umbraco.BlockList</c>). Determines which
-/// handler the dispatcher uses for the first descent step.
-/// </param>
 /// <param name="DocumentMetadata">Document-level metadata supplied by the caller.</param>
 public sealed record AIPropertyValueDispatchRequest(
     IReadOnlyList<AIPropertyPathSegment> Path,
     AIPropertyOperation Operation,
     JsonNode? Args,
     JsonNode? RootValue,
-    string RootEditorSchemaAlias,
     AIDocumentMetadata DocumentMetadata);

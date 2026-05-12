@@ -33,7 +33,6 @@ public class InvokePropertyValueOperationControllerTests
         {
             Path = new List<AIPropertyPathSegment> { AIPropertyPathSegment.ForProperty("contentBlocks") },
             Operation = AIPropertyOperation.AddItem,
-            RootEditorSchemaAlias = "Umbraco.BlockList",
             DocumentMetadata = new AIDocumentMetadata(
                 ContentTypeKey: Guid.NewGuid(),
                 Variants: [new AIVariantId(null, null)],
@@ -69,7 +68,6 @@ public class InvokePropertyValueOperationControllerTests
         {
             Path = new List<AIPropertyPathSegment> { AIPropertyPathSegment.ForProperty("foo") },
             Operation = AIPropertyOperation.AddItem,
-            RootEditorSchemaAlias = "Foo.Editor",
             DocumentMetadata = new AIDocumentMetadata(
                 ContentTypeKey: Guid.NewGuid(),
                 Variants: [new AIVariantId(null, null)],
@@ -117,7 +115,6 @@ public class InvokePropertyValueOperationControllerTests
             Path = new List<AIPropertyPathSegment> { AIPropertyPathSegment.ForProperty("rows") },
             Operation = AIPropertyOperation.AddItem,
             RootValue = stagedValue,
-            RootEditorSchemaAlias = "Umbraco.BlockList",
             DocumentMetadata = new AIDocumentMetadata(
                 ContentTypeKey: Guid.NewGuid(),
                 Variants: [new AIVariantId(null, null)],

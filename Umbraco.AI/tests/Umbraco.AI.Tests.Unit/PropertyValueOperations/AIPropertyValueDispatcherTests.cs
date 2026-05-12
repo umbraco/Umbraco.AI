@@ -16,8 +16,10 @@ public class AIPropertyValueDispatcherTests
     private const string OuterEditor = "Test.Outer";
     private const string InnerEditor = "Test.Inner";
 
+    private static readonly Guid RootContentTypeKey = Guid.NewGuid();
+
     private static readonly AIDocumentMetadata Metadata = new(
-        ContentTypeKey: Guid.NewGuid(),
+        ContentTypeKey: RootContentTypeKey,
         Variants: [new AIVariantId(null, null)],
         IsVariant: false,
         IsSegmented: false,
@@ -28,7 +30,9 @@ public class AIPropertyValueDispatcherTests
     {
         // Arrange
         var handler = new FakePropertyValueHandler(TestEditor);
-        var dispatcher = BuildDispatcher(handlers: [handler]);
+        var dispatcher = BuildDispatcher(
+            handlers: [handler],
+            rootProperties: new Dictionary<string, string> { ["contentBlocks"] = TestEditor });
 
         var request = new AIPropertyValueDispatchRequest(
             Path: [AIPropertyPathSegment.ForProperty("contentBlocks")],
@@ -38,7 +42,6 @@ public class AIPropertyValueDispatcherTests
                 ["values"] = new JsonObject { ["title"] = "Hello" },
             },
             RootValue: new JsonObject { ["items"] = new JsonArray() },
-            RootEditorSchemaAlias: TestEditor,
             DocumentMetadata: Metadata);
 
         // Act
@@ -59,28 +62,22 @@ public class AIPropertyValueDispatcherTests
     public async Task DispatchAsync_AddItem_NestedDepth2_DescendsAndAscendsCorrectly()
     {
         // Arrange
-        var outerContentTypeKey = Guid.NewGuid();
+        var innerContentTypeKey = Guid.NewGuid();
         var existingBlockKey = Guid.NewGuid();
 
         var outerHandler = new FakePropertyValueHandler(OuterEditor);
         var innerHandler = new FakePropertyValueHandler(InnerEditor);
 
-        // Set up the inner content type so the dispatcher can resolve "innerBlocks" → InnerEditor.
-        var innerProperty = new Mock<IPropertyType>();
-        innerProperty.Setup(p => p.Alias).Returns("innerBlocks");
-        innerProperty.Setup(p => p.PropertyEditorAlias).Returns(InnerEditor);
-
-        var contentType = new Mock<IContentType>();
-        contentType.As<IContentTypeComposition>()
-            .Setup(c => c.CompositionPropertyTypes)
-            .Returns(new[] { innerProperty.Object });
-
-        var contentTypeService = new Mock<IContentTypeService>();
-        contentTypeService.Setup(s => s.Get(outerContentTypeKey)).Returns(contentType.Object);
+        // Two content types: the document's root maps "rows" → OuterEditor, and the block's
+        // element type maps "innerBlocks" → InnerEditor (the second resolution happens during
+        // descent via the block handler's GetItemContentTypeKey).
+        var contentTypeService = BuildContentTypeServiceWithTypes(
+            (RootContentTypeKey, new Dictionary<string, string> { ["rows"] = OuterEditor }),
+            (innerContentTypeKey, new Dictionary<string, string> { ["innerBlocks"] = InnerEditor }));
 
         var dispatcher = BuildDispatcher(
             handlers: [outerHandler, innerHandler],
-            contentTypeService: contentTypeService.Object);
+            contentTypeService: contentTypeService);
 
         // Existing outer envelope: one block whose innerBlocks property holds an empty inner envelope.
         var rootValue = new JsonObject
@@ -90,7 +87,7 @@ public class AIPropertyValueDispatcherTests
                 new JsonObject
                 {
                     ["blockKey"] = existingBlockKey,
-                    ["contentTypeKey"] = outerContentTypeKey,
+                    ["contentTypeKey"] = innerContentTypeKey,
                     ["values"] = new JsonObject
                     {
                         ["innerBlocks"] = new JsonObject { ["items"] = new JsonArray() },
@@ -112,7 +109,6 @@ public class AIPropertyValueDispatcherTests
                 ["values"] = new JsonObject { ["title"] = "Nested" },
             },
             RootValue: rootValue,
-            RootEditorSchemaAlias: OuterEditor,
             DocumentMetadata: Metadata);
 
         // Act
@@ -140,7 +136,9 @@ public class AIPropertyValueDispatcherTests
         var keep = Guid.NewGuid();
         var remove = Guid.NewGuid();
         var handler = new FakePropertyValueHandler(TestEditor);
-        var dispatcher = BuildDispatcher(handlers: [handler]);
+        var dispatcher = BuildDispatcher(
+            handlers: [handler],
+            rootProperties: new Dictionary<string, string> { ["contentBlocks"] = TestEditor });
 
         var rootValue = new JsonObject
         {
@@ -156,7 +154,6 @@ public class AIPropertyValueDispatcherTests
             Operation: AIPropertyOperation.RemoveItem,
             Args: new JsonObject { ["blockKey"] = remove.ToString() },
             RootValue: rootValue,
-            RootEditorSchemaAlias: TestEditor,
             DocumentMetadata: Metadata);
 
         // Act
@@ -174,14 +171,15 @@ public class AIPropertyValueDispatcherTests
     public async Task DispatchAsync_SetValue_AtRoot_ReplacesValue()
     {
         // Arrange
-        var dispatcher = BuildDispatcher(handlers: []);
+        var dispatcher = BuildDispatcher(
+            handlers: [],
+            rootProperties: new Dictionary<string, string> { ["title"] = "Umbraco.TextBox" });
 
         var request = new AIPropertyValueDispatchRequest(
             Path: [AIPropertyPathSegment.ForProperty("title")],
             Operation: AIPropertyOperation.SetValue,
             Args: new JsonObject { ["value"] = "Replaced" },
             RootValue: JsonValue.Create("Original"),
-            RootEditorSchemaAlias: "Umbraco.TextBox",
             DocumentMetadata: Metadata);
 
         // Act
@@ -197,7 +195,9 @@ public class AIPropertyValueDispatcherTests
     {
         // Arrange
         var handler = new FakePropertyValueHandler(TestEditor);
-        var dispatcher = BuildDispatcher(handlers: [handler]);
+        var dispatcher = BuildDispatcher(
+            handlers: [handler],
+            rootProperties: new Dictionary<string, string> { ["contentBlocks"] = TestEditor });
 
         var rootValue = new JsonObject
         {
@@ -212,7 +212,6 @@ public class AIPropertyValueDispatcherTests
             Operation: AIPropertyOperation.ClearValue,
             Args: null,
             RootValue: rootValue,
-            RootEditorSchemaAlias: TestEditor,
             DocumentMetadata: Metadata);
 
         // Act
@@ -229,14 +228,16 @@ public class AIPropertyValueDispatcherTests
     public async Task DispatchAsync_AddItem_NoHandler_ReturnsNoHandlerError()
     {
         // Arrange
-        var dispatcher = BuildDispatcher(handlers: []);
+        // The property resolves to "Unknown.Editor" but no handler is registered for that alias.
+        var dispatcher = BuildDispatcher(
+            handlers: [],
+            rootProperties: new Dictionary<string, string> { ["p"] = "Unknown.Editor" });
 
         var request = new AIPropertyValueDispatchRequest(
             Path: [AIPropertyPathSegment.ForProperty("p")],
             Operation: AIPropertyOperation.AddItem,
             Args: null,
             RootValue: null,
-            RootEditorSchemaAlias: "Unknown.Editor",
             DocumentMetadata: Metadata);
 
         // Act
@@ -246,6 +247,31 @@ public class AIPropertyValueDispatcherTests
         result.Success.ShouldBeFalse();
         result.Error.ShouldNotBeNull();
         result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.NoHandler);
+    }
+
+    [Fact]
+    public async Task DispatchAsync_RootPropertyNotOnContentType_ReturnsPropertyNotFoundError()
+    {
+        // Arrange
+        // The path references a property that doesn't exist on the document's content type, so
+        // the dispatcher's editor-alias resolution fails before any handler is consulted.
+        var dispatcher = BuildDispatcher(
+            handlers: [],
+            rootProperties: new Dictionary<string, string>());
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("doesNotExist")],
+            Operation: AIPropertyOperation.SetValue,
+            Args: new JsonObject { ["value"] = "x" },
+            RootValue: null,
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.PropertyNotFound);
     }
 
     [Fact]
@@ -259,7 +285,6 @@ public class AIPropertyValueDispatcherTests
             Operation: AIPropertyOperation.SetValue,
             Args: new JsonObject { ["value"] = "x" },
             RootValue: null,
-            RootEditorSchemaAlias: "Umbraco.TextBox",
             DocumentMetadata: Metadata);
 
         // Act
@@ -281,7 +306,6 @@ public class AIPropertyValueDispatcherTests
             Operation: AIPropertyOperation.SetValue,
             Args: new JsonObject { ["value"] = "x" },
             RootValue: null,
-            RootEditorSchemaAlias: "Umbraco.TextBox",
             DocumentMetadata: Metadata);
 
         // Act
@@ -300,14 +324,15 @@ public class AIPropertyValueDispatcherTests
             AIPropertyValueOperationError.Codes.SchemaMismatch,
             "missing required property: foo");
         var handler = new FakePropertyValueHandler(TestEditor, AIValidationResult.Invalid(validationError));
-        var dispatcher = BuildDispatcher(handlers: [handler]);
+        var dispatcher = BuildDispatcher(
+            handlers: [handler],
+            rootProperties: new Dictionary<string, string> { ["contentBlocks"] = TestEditor });
 
         var request = new AIPropertyValueDispatchRequest(
             Path: [AIPropertyPathSegment.ForProperty("contentBlocks")],
             Operation: AIPropertyOperation.AddItem,
             Args: null,
             RootValue: new JsonObject { ["items"] = new JsonArray() },
-            RootEditorSchemaAlias: TestEditor,
             DocumentMetadata: Metadata);
 
         // Act
@@ -320,6 +345,7 @@ public class AIPropertyValueDispatcherTests
 
     private static AIPropertyValueDispatcher BuildDispatcher(
         IEnumerable<IAIPropertyValueHandler> handlers,
+        IReadOnlyDictionary<string, string>? rootProperties = null,
         IContentTypeService? contentTypeService = null)
     {
         var collection = new AIPropertyValueHandlerCollection(() => handlers);
@@ -330,7 +356,10 @@ public class AIPropertyValueDispatcherTests
                 PropertyEditorSchemaOperationStatus.SchemaNotSupported,
                 new PropertyValueSchema(null, null)));
 
-        contentTypeService ??= new Mock<IContentTypeService>().Object;
+        contentTypeService ??= rootProperties is null
+            ? new Mock<IContentTypeService>().Object
+            : BuildContentTypeServiceWithTypes((RootContentTypeKey, rootProperties));
+
         var mediaTypeService = new Mock<IMediaTypeService>().Object;
 
         var defaultValueProvider = new Mock<IAIPropertyDefaultValueProvider>();
@@ -346,5 +375,37 @@ public class AIPropertyValueDispatcherTests
             mediaTypeService,
             defaultValueProvider.Object,
             NullLogger<AIPropertyValueDispatcher>.Instance);
+    }
+
+    /// <summary>
+    /// Builds a stub <see cref="IContentTypeService"/> that returns content types whose
+    /// <c>CompositionPropertyTypes</c> match the supplied (alias → editor alias) mappings.
+    /// Used to drive both root editor-alias resolution and nested property resolution during the
+    /// dispatcher's descent walk.
+    /// </summary>
+    private static IContentTypeService BuildContentTypeServiceWithTypes(
+        params (Guid ContentTypeKey, IReadOnlyDictionary<string, string> Properties)[] types)
+    {
+        var service = new Mock<IContentTypeService>();
+
+        foreach (var (key, properties) in types)
+        {
+            var propertyTypes = properties.Select(p =>
+            {
+                var pt = new Mock<IPropertyType>();
+                pt.Setup(x => x.Alias).Returns(p.Key);
+                pt.Setup(x => x.PropertyEditorAlias).Returns(p.Value);
+                return pt.Object;
+            }).ToArray();
+
+            var contentType = new Mock<IContentType>();
+            contentType.As<IContentTypeComposition>()
+                .Setup(c => c.CompositionPropertyTypes)
+                .Returns(propertyTypes);
+
+            service.Setup(s => s.Get(key)).Returns(contentType.Object);
+        }
+
+        return service.Object;
     }
 }

@@ -66,20 +66,28 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                 "Path must contain at least one segment."));
         }
 
-        if (string.IsNullOrWhiteSpace(request.RootEditorSchemaAlias))
-        {
-            return AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
-                AIPropertyValueOperationError.Codes.InvalidRootValue,
-                "RootEditorSchemaAlias must be supplied."));
-        }
-
         // The first segment is always a property alias identifying the root property. We do not
         // descend through it — the root value is already supplied directly.
-        if (request.Path[0] is not AIPropertyPathSegment.PropertyAliasSegment)
+        if (request.Path[0] is not AIPropertyPathSegment.PropertyAliasSegment rootSegment)
         {
             return AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.InvalidPath,
                 "Path must begin with a property alias segment."));
+        }
+
+        // The dispatcher canonicalises root editor alias resolution: callers supply (contentTypeKey,
+        // path[0]) and we look up the editor alias the same way we already do for nested properties
+        // during the descent walk. Frontend tools can't always read the alias from the workspace
+        // (untouched properties aren't in `getValues()`), and future server-side tools would only
+        // duplicate this lookup themselves. One source of truth.
+        var rootEditorSchemaAlias = TryResolvePropertyEditorAlias(
+            request.DocumentMetadata.ContentTypeKey, rootSegment.Alias);
+
+        if (string.IsNullOrWhiteSpace(rootEditorSchemaAlias))
+        {
+            return AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.PropertyNotFound,
+                $"Could not resolve the editor schema alias for property '{rootSegment.Alias}' on content type '{request.DocumentMetadata.ContentTypeKey}'. Verify the property exists on this content type."));
         }
 
         try
@@ -90,7 +98,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                 request.DocumentMetadata,
                 this);
 
-            return await DispatchInternalAsync(request, context, cancellationToken).ConfigureAwait(false);
+            return await DispatchInternalAsync(request, rootEditorSchemaAlias, context, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -99,7 +107,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
         catch (Exception ex)
         {
             _logger.LogError(ex, "Property value dispatch failed for editor '{Editor}' op '{Op}'.",
-                request.RootEditorSchemaAlias, request.Operation);
+                rootEditorSchemaAlias, request.Operation);
 
             return AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.Internal,
@@ -109,6 +117,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
 
     private async Task<AIPropertyValueDispatchResult> DispatchInternalAsync(
         AIPropertyValueDispatchRequest request,
+        string rootEditorSchemaAlias,
         AIPropertyValueOperationContext context,
         CancellationToken cancellationToken)
     {
@@ -125,7 +134,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
         }
 
         var frames = new List<DescentFrame>();
-        var currentEditorSchemaAlias = request.RootEditorSchemaAlias;
+        var currentEditorSchemaAlias = rootEditorSchemaAlias;
         var currentValue = request.RootValue;
 
         for (var i = 0; i + 1 < path.Count; i += 2)

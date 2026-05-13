@@ -26,7 +26,7 @@ const setValueRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.SetValue",
     name: "Set Value Tool Renderer",
-    meta: { toolName: "set_value", label: "Set Value", icon: "icon-edit", approval: true },
+    meta: { toolName: "set_value", label: "Set Value", icon: "icon-edit" },
 };
 
 const setValueTool: ManifestUaiAgentFrontendTool = {
@@ -72,7 +72,7 @@ const addItemRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.AddItem",
     name: "Add Item Tool Renderer",
-    meta: { toolName: "add_item", label: "Add Item", icon: "icon-add", approval: true },
+    meta: { toolName: "add_item", label: "Add Item", icon: "icon-add" },
 };
 
 const addItemTool: ManifestUaiAgentFrontendTool = {
@@ -133,7 +133,7 @@ const removeItemRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.RemoveItem",
     name: "Remove Item Tool Renderer",
-    meta: { toolName: "remove_item", label: "Remove Item", icon: "icon-trash", approval: true },
+    meta: { toolName: "remove_item", label: "Remove Item", icon: "icon-trash" },
 };
 
 const removeItemTool: ManifestUaiAgentFrontendTool = {
@@ -171,7 +171,7 @@ const moveItemRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.MoveItem",
     name: "Move Item Tool Renderer",
-    meta: { toolName: "move_item", label: "Move Item", icon: "icon-navigation", approval: true },
+    meta: { toolName: "move_item", label: "Move Item", icon: "icon-navigation" },
 };
 
 const moveItemTool: ManifestUaiAgentFrontendTool = {
@@ -214,7 +214,7 @@ const clearValueRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.ClearValue",
     name: "Clear Value Tool Renderer",
-    meta: { toolName: "clear_value", label: "Clear Value", icon: "icon-delete", approval: true },
+    meta: { toolName: "clear_value", label: "Clear Value", icon: "icon-delete" },
 };
 
 const clearValueTool: ManifestUaiAgentFrontendTool = {

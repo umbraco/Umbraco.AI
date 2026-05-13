@@ -14,10 +14,10 @@ type UaiToolElementConstructor = new () => UaiAgentToolElement;
  *
  * Responsibilities:
  * - Observing `uaiAgentToolRenderer` manifests from the extension registry
- * - Providing manifest lookup by tool name (for approval config, icon, label)
+ * - Providing manifest lookup by tool name (for icon and label)
  * - Loading and caching tool UI elements (Generative UI)
  *
- * This manager handles ONLY rendering. For execution, see UaiFrontendToolManager.
+ * This manager handles ONLY rendering. For execution and HITL approval, see UaiFrontendToolManager.
  */
 export class UaiToolRendererManager extends UmbControllerBase {
     #toolManifests = new BehaviorSubject<Map<string, ManifestUaiAgentToolRenderer>>(new Map());

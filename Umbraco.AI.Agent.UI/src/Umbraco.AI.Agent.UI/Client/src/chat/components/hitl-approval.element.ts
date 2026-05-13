@@ -1,7 +1,7 @@
 import { customElement, property, state, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import type { ManifestUaiAgentToolRenderer } from "../extensions/uai-agent-tool-renderer.extension.js";
+import type { ManifestUaiAgentFrontendTool } from "../extensions/uai-agent-frontend-tool.extension.js";
 import type { UaiInterruptInfo } from "../types/index.js";
 import type { UaiApprovalBaseConfig } from "./approval-base.element.js";
 
@@ -40,22 +40,21 @@ export class UaiHitlApprovalElement extends UmbLitElement {
             options: this.interrupt.options,
         };
 
-        // Check if interrupt payload has a toolName - look up renderer manifest for approval config
+        // Check if interrupt payload has a toolName - look up frontend tool manifest for approval config.
+        // Custom approval elements are not currently supported via the manifest registry; if a backend
+        // tool needs a custom approval UI, the server should embed the config inline in the interrupt
+        // payload (and may add a dedicated approval-binding manifest in future).
         const toolName = this.interrupt.payload?.toolName as string | undefined;
         if (toolName) {
             const toolManifests = umbExtensionsRegistry.getByTypeAndFilter<
-                "uaiAgentToolRenderer",
-                ManifestUaiAgentToolRenderer
-            >("uaiAgentToolRenderer", (m) => m.meta.toolName === toolName);
+                "uaiAgentFrontendTool",
+                ManifestUaiAgentFrontendTool
+            >("uaiAgentFrontendTool", (m) => m.meta.toolName === toolName);
 
             if (toolManifests.length > 0 && toolManifests[0].meta.approval) {
                 const approval = toolManifests[0].meta.approval;
-                const isSimple = approval === true;
                 const approvalObj = typeof approval === "object" ? approval : null;
-                elementAlias = isSimple
-                    ? "Uai.AgentApprovalElement.Default"
-                    : (approvalObj?.elementAlias ?? "Uai.AgentApprovalElement.Default");
-                config = isSimple ? {} : (approvalObj?.config ?? {});
+                config = approvalObj?.config ?? {};
             }
         } else {
             elementAlias = "Uai.AgentApprovalElement.Default";

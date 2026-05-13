@@ -1,5 +1,5 @@
 import type { ManifestElement } from "@umbraco-cms/backoffice/extension-api";
-import type { UaiAgentToolElement, UaiAgentToolApprovalConfig } from "../types/tool.types.js";
+import type { UaiAgentToolElement } from "../types/tool.types.js";
 import { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension-registry";
 
 /**
@@ -7,11 +7,10 @@ import { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension-regi
  *
  * This manifest type handles the visual representation of tool calls:
  * - Custom UI elements for tool-specific rendering (Generative UI)
- * - Approval configuration for HITL (Human-in-the-Loop) interactions
  * - Icon and label for default status indicators
  *
- * Rendering concerns only -- does NOT handle tool execution.
- * For browser-executable tools, see ManifestUaiAgentFrontendTool.
+ * Rendering concerns only -- does NOT handle tool execution or HITL approval.
+ * For browser-executable tools (including approval config), see ManifestUaiAgentFrontendTool.
  *
  * @example
  * ```typescript
@@ -23,16 +22,12 @@ import { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension-regi
  *     element: () => import("./search-results.element.js"),
  * };
  *
- * // Tool with HITL approval
+ * // Default-kind renderer (status indicator only -- no custom UI)
  * const renderer: ManifestUaiAgentToolRenderer = {
  *     type: "uaiAgentToolRenderer",
+ *     kind: "default",
  *     alias: "My.AgentToolRenderer.SetProperty",
- *     meta: {
- *         toolName: "set_property_value",
- *         label: "Set Property Value",
- *         icon: "icon-edit",
- *         approval: true,
- *     },
+ *     meta: { toolName: "set_property_value", label: "Set Property Value", icon: "icon-edit" },
  * };
  * ```
  */
@@ -46,13 +41,6 @@ export interface ManifestUaiAgentToolRenderer extends ManifestElement<UaiAgentTo
         label?: string;
         /** Icon to display with the tool */
         icon?: string;
-        /**
-         * HITL approval configuration.
-         * When specified, tool pauses for user approval before execution.
-         * - `true` - Use default approval element with localized defaults
-         * - `{ elementAlias?, config? }` - Custom approval element and/or config
-         */
-        approval?: UaiAgentToolApprovalConfig;
     };
 }
 

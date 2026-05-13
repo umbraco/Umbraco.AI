@@ -247,7 +247,7 @@ const saveRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.Save",
     name: "Save Tool Renderer",
-    meta: { toolName: "save", label: "Save", icon: "icon-save", approval: true },
+    meta: { toolName: "save", label: "Save", icon: "icon-save" },
 };
 
 const saveTool: ManifestUaiAgentFrontendTool = {
@@ -269,6 +269,7 @@ const saveTool: ManifestUaiAgentFrontendTool = {
         },
         scope: "entity-save",
         isDestructive: true,
+        approval: true,
     },
 };
 
@@ -279,7 +280,7 @@ const saveAndPublishRenderer: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.SaveAndPublish",
     name: "Save and Publish Tool Renderer",
-    meta: { toolName: "save_and_publish", label: "Save and Publish", icon: "icon-globe", approval: true },
+    meta: { toolName: "save_and_publish", label: "Save and Publish", icon: "icon-globe" },
 };
 
 const saveAndPublishTool: ManifestUaiAgentFrontendTool = {
@@ -300,6 +301,7 @@ const saveAndPublishTool: ManifestUaiAgentFrontendTool = {
         },
         scope: "entity-publish",
         isDestructive: true,
+        approval: true,
     },
 };
 

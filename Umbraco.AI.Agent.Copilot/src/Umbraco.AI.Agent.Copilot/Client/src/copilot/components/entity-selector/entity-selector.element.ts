@@ -87,7 +87,7 @@ export class UaiEntitySelectorElement extends UmbLitElement {
             const entity = this._detectedEntities[0];
             return html`
                 <div class="entity-selector single">
-                    <uui-icon name=${this.#getEntityIcon(entity)}></uui-icon>
+                    <umb-icon name=${this.#getEntityIcon(entity)}></umb-icon>
                     <span class="entity-name">${entity.name}</span>
                 </div>
             `;
@@ -105,7 +105,7 @@ export class UaiEntitySelectorElement extends UmbLitElement {
                                 @click=${() => this.#handleSelect(entity.key)}
                                 title=${entity.entityContext.entityType}
                             >
-                                <uui-icon name=${this.#getEntityIcon(entity)}></uui-icon>
+                                <umb-icon name=${this.#getEntityIcon(entity)}></umb-icon>
                                 <span>${entity.name}</span>
                             </button>
                         `,
@@ -134,7 +134,7 @@ export class UaiEntitySelectorElement extends UmbLitElement {
             color: var(--uui-color-text-alt);
         }
 
-        .entity-selector.single uui-icon {
+        .entity-selector.single umb-icon {
             font-size: 14px;
         }
 
@@ -181,7 +181,7 @@ export class UaiEntitySelectorElement extends UmbLitElement {
             color: var(--uui-color-selected-contrast);
         }
 
-        .entity-chip uui-icon {
+        .entity-chip umb-icon {
             font-size: 12px;
         }
     `;

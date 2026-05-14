@@ -53,7 +53,23 @@ runs:
 
         - name: Restore NuGet packages
           shell: bash
-          run: dotnet restore ${{ inputs.path }}/${{ inputs.name }}.slnx
+          run: |
+              attempt=1
+              max_attempts=3
+              delay=15
+              while true; do
+                if dotnet restore ${{ inputs.path }}/${{ inputs.name }}.slnx; then
+                  break
+                fi
+                if [ $attempt -ge $max_attempts ]; then
+                  echo "::error::dotnet restore failed after $attempt attempts"
+                  exit 1
+                fi
+                echo "::warning::dotnet restore failed (attempt $attempt/$max_attempts), retrying in ${delay}s..."
+                sleep $delay
+                attempt=$((attempt + 1))
+                delay=$((delay * 2))
+              done
 
         - name: Build solution
           shell: bash

@@ -14,12 +14,14 @@
   </PropertyGroup>
 
   <!-- Core Umbraco.AI packages -->
+  <!-- Reference the Agent meta-package so the Web.StaticAssets bundle (which registers
+       the Uai.PropertyEditorUi.AgentPicker manifest) is delivered to consumers. -->
   <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-    <ProjectReference Include="..\..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Startup\Umbraco.AI.Agent.Startup.csproj" />
+    <ProjectReference Include="..\..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent\Umbraco.AI.Agent.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-    <PackageReference Include="Umbraco.AI.Agent.Startup" />
+    <PackageReference Include="Umbraco.AI.Agent" />
   </ItemGroup>
 
   <!-- Umbraco Automate -->

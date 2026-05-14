@@ -736,22 +736,38 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Builds additional properties dict with OutputSchema override if present in execution options.
+    /// Builds the additional-properties dictionary forwarded to <see cref="PrepareAgentExecutionAsync"/>
+    /// from execution options: <see cref="AIAgentExecutionOptions.OutputSchema"/> becomes a
+    /// <see cref="CoreConstants.ContextKeys.ChatOptionsOverride"/> entry, and any caller-supplied
+    /// <see cref="AIAgentExecutionOptions.AdditionalProperties"/> entries are copied through.
+    /// Returns null when both inputs are null so the existing "no extra props" path is preserved.
     /// </summary>
-    private static Dictionary<string, object?>? BuildOutputSchemaOverride(AIAgentExecutionOptions options)
+    private static Dictionary<string, object?>? BuildAdditionalPropertiesFromOptions(AIAgentExecutionOptions options)
     {
-        if (options.OutputSchema is null)
+        if (options.OutputSchema is null && options.AdditionalProperties is null)
         {
             return null;
         }
 
-        return new Dictionary<string, object?>
+        var properties = new Dictionary<string, object?>();
+
+        if (options.OutputSchema is not null)
         {
-            [CoreConstants.ContextKeys.ChatOptionsOverride] = new ChatOptions
+            properties[CoreConstants.ContextKeys.ChatOptionsOverride] = new ChatOptions
             {
-                ResponseFormat = options.OutputSchema.ResponseFormat
+                ResponseFormat = options.OutputSchema.ResponseFormat,
+            };
+        }
+
+        if (options.AdditionalProperties is not null)
+        {
+            foreach (var kvp in options.AdditionalProperties)
+            {
+                properties[kvp.Key] = kvp.Value;
             }
-        };
+        }
+
+        return properties;
     }
 
     /// <summary>
@@ -769,7 +785,7 @@ internal sealed class AIAgentService : IAIAgentService
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
             contextItems: options.ContextItems,
-            additionalProperties: BuildOutputSchemaOverride(options),
+            additionalProperties: BuildAdditionalPropertiesFromOptions(options),
             cancellationToken);
 
         if (context is null)
@@ -813,7 +829,7 @@ internal sealed class AIAgentService : IAIAgentService
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
             contextItems: options.ContextItems,
-            additionalProperties: null,
+            additionalProperties: BuildAdditionalPropertiesFromOptions(options),
             cancellationToken);
 
         if (context is null)

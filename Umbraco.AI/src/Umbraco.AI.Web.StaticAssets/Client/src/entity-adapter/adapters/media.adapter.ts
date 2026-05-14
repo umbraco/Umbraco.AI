@@ -16,12 +16,13 @@ import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
     UaiEntityAdapterApi,
     UaiEntityContext,
+    UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
-import { prepareValueForEditor } from "./value-preparation.js";
+import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
 
 /**
  * Property editor aliases that represent the binary payload of a media item.
@@ -86,6 +87,8 @@ interface MediaWorkspaceContextLike {
     // Media is always invariant but the method still accepts a variantId for
     // consistency with the shared UmbContentDetailWorkspaceContextBase.
     setPropertyValue?<T>(alias: string, value: T, variantId?: UmbVariantId): Promise<void>;
+    // Persists staged changes (clicking the workspace Save button).
+    requestSubmit?(): Promise<void>;
     // Check if entity is new (being created)
     getIsNew?(): boolean | undefined;
     // Internal method for parent access when creating new entities.
@@ -300,7 +303,7 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
         // surfaces the right variant id without changes here.
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
-        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
+        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);
@@ -309,6 +312,29 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : "Unknown error applying value change",
+            };
+        }
+    }
+
+    /**
+     * Persist staged changes to the media item (equivalent to clicking Save). Media has no
+     * publish concept — always-live — so only `save` is implemented; the absence of `publish`
+     * on this adapter lets the caller return a clear "not supported" error.
+     */
+    async save(workspaceContext: unknown): Promise<UaiPersistResult> {
+        const ctx = workspaceContext as MediaWorkspaceContextLike;
+
+        if (typeof ctx.requestSubmit !== "function") {
+            return { success: false, error: "Workspace does not support save (no requestSubmit on context)." };
+        }
+
+        try {
+            await ctx.requestSubmit();
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Save failed (workspace rejected the request).",
             };
         }
     }

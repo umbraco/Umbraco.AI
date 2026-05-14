@@ -3,12 +3,14 @@ using Json.Schema;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Umbraco.AI.Agent.Core;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Helpers;
 using Umbraco.AI.Automate.Triggers;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Cms.Core.Services;
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Automate.Actions;
 
@@ -122,9 +124,20 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
                 new(ChatRole.User, settings.Message),
             };
 
+            // Populate metadata context keys so AIAuditingChatClient can persist RunId/ThreadId
+            // onto the resulting AIAuditLog.Metadata column. Mirrors the AG-UI streaming path.
+            // TryAdd preserves caller-supplied values if this surface ever accepts pre-populated entries.
+            var additionalProperties = new Dictionary<string, object?>();
+            additionalProperties.TryAdd(Constants.ContextKeys.RunId, Guid.NewGuid().ToString());
+            additionalProperties.TryAdd(Constants.ContextKeys.ThreadId, context.RunId.ToString());
+            additionalProperties.TryAdd(
+                CoreConstants.ContextKeys.LogKeys,
+                new[] { Constants.ContextKeys.RunId, Constants.ContextKeys.ThreadId });
+
             var options = new AIAgentExecutionOptions
             {
                 UserGroupIds = userGroupIds,
+                AdditionalProperties = additionalProperties,
             };
 
             // Mark the async flow as Automate-driven so the agent run triggers

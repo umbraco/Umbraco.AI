@@ -120,6 +120,43 @@ public class AGUIStreamingServiceTests
     }
 
     [Fact]
+    public async Task StreamAgentAsync_WithErrorContent_SurfacesAsTextChunkAndKeepsRunGoing()
+    {
+        // Arrange — a stream that emits ErrorContent mid-response (e.g. content
+        // filter, transient provider error). MEAI documents ErrorContent as
+        // non-fatal, so the run should continue and the user should see the
+        // error inline rather than the bare '[unknown:ErrorContent]' the chat
+        // trace renders for unrecognised AIContent.
+        var errorContent = new ErrorContent("Content was filtered.")
+        {
+            ErrorCode = "content_filter",
+            Details = "Detected restricted material.",
+        };
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, "Before. "),
+            new ChatResponseUpdate(ChatRole.Assistant, new List<AIContent> { errorContent }),
+            new ChatResponseUpdate(ChatRole.Assistant, "After."),
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+        var request = CreateRequest();
+
+        // Act
+        var events = await CollectEvents(agent, request);
+
+        // Assert: text chunks include the surrounding text and a marker for the error
+        var textChunks = events.OfType<TextMessageChunkEvent>().Select(e => e.Delta).ToList();
+        textChunks.ShouldContain(d => d == "Before. ");
+        textChunks.ShouldContain(d => d == "After.");
+        textChunks.ShouldContain(d => d.Contains("content_filter") && d.Contains("Content was filtered."));
+
+        // Run completes normally (no RunErrorEvent — ErrorContent is non-fatal)
+        events.OfType<RunErrorEvent>().ShouldBeEmpty();
+        events.Last().ShouldBeOfType<RunFinishedEvent>();
+    }
+
+    [Fact]
     public async Task StreamAgentAsync_EmptyText_DoesNotEmitTextChunk()
     {
         // Arrange

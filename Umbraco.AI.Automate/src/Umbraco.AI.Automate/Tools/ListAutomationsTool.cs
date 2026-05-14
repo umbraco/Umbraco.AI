@@ -72,7 +72,6 @@ public class ListAutomationsTool : AIToolBase<ListAutomationsArgs>
 
         var items = automations
             .Where(a => a.Status == AutomationStatus.Published
-                        && a.IsEnabled
                         && a.Trigger is not null
                         && UmbracoAIAutomateConstants.AgentInvokableTriggerAliases.Contains(
                             a.Trigger.TriggerAlias, StringComparer.OrdinalIgnoreCase))

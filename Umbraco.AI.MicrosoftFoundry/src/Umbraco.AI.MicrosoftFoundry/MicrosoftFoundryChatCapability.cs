@@ -43,8 +43,8 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider, I
         if (settings.UseResponsesApi)
         {
             return MicrosoftFoundryProvider.CreateOpenAIClient(settings, logger)
-                .GetResponsesClient(model)
-                .AsIChatClient();
+                .GetResponsesClient()
+                .AsIChatClient(model);
         }
 
         return MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)

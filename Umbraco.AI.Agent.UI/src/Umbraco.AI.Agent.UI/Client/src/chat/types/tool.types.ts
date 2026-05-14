@@ -28,37 +28,29 @@ export type UaiAgentToolStatus =
     | "error"; // Error occurred
 
 /**
- * HITL approval configuration for tools.
+ * HITL approval configuration for frontend tools.
  *
- * When `approval` is specified, the tool will pause before execution
- * to show an approval UI and wait for user response.
+ * When `approval` is specified on a frontend tool manifest, the tool will pause
+ * before execution to show the default approval UI and wait for user response.
  *
  * @example
  * ```typescript
  * // Simplest - use default approval with localized defaults
  * approval: true
  *
- * // With custom config
+ * // With custom config passed to the default approval element
  * approval: {
  *   config: {
  *     title: "Confirm Deletion",
  *     message: "Are you sure you want to delete this content?"
  *   }
  * }
- *
- * // With custom approval element
- * approval: {
- *   elementAlias: "MyProject.AgentApprovalElement.CustomPreview",
- *   config: { showPreview: true }
- * }
  * ```
  */
 export type UaiAgentToolApprovalConfig =
     | true
     | {
-          /** Alias of approval element (defaults to 'Uai.AgentApprovalElement.Default') */
-          elementAlias?: string;
-          /** Static config passed to the approval element */
+          /** Static config passed to the default approval element */
           config?: Record<string, unknown>;
       };
 

@@ -4,7 +4,7 @@ import type { UaiFrontendToolManager } from "./frontend-tool.manager.js";
 import type { UaiInterruptInfo, UaiToolCallInfo, UaiToolCallStatus } from "../types/index.js";
 import type { UaiInterruptContext } from "./interrupt.types.js";
 import type UaiHitlContext from "./hitl.context.js";
-import type { ManifestUaiAgentToolRenderer } from "../extensions/uai-agent-tool-renderer.extension.js";
+import type { ManifestUaiAgentFrontendTool } from "../extensions/uai-agent-frontend-tool.extension.js";
 
 /**
  * Result of a frontend tool execution.
@@ -78,7 +78,8 @@ export class UaiFrontendToolExecutor {
 
     async #executeSingle(toolCall: UaiToolCallInfo): Promise<void> {
         try {
-            // Get renderer manifest for approval config
+            // Get manifests: tool manifest gates HITL approval; renderer manifest provides display label
+            const toolManifest = this.#frontendToolManager.getManifest(toolCall.name);
             const rendererManifest = this.#toolRendererManager.getManifest(toolCall.name);
 
             // Get API from frontend tool manager
@@ -87,11 +88,12 @@ export class UaiFrontendToolExecutor {
             // Parse arguments
             const args = this.#parseArgs(toolCall.arguments);
 
-            // Check for HITL approval requirement (from renderer manifest)
-            if (rendererManifest?.meta.approval && this.#hitlContext) {
+            // Check for HITL approval requirement (from frontend tool manifest)
+            if (toolManifest?.meta.approval && this.#hitlContext) {
                 this.#statusUpdates.next({ toolCallId: toolCall.id, status: "awaiting_approval" });
 
-                const approvalResponse = await this.#requestApproval(toolCall, rendererManifest, args);
+                const label = rendererManifest?.meta.label ?? toolCall.name;
+                const approvalResponse = await this.#requestApproval(toolCall, toolManifest, label, args);
 
                 if (approvalResponse === null) {
                     this.#results.next({
@@ -127,23 +129,23 @@ export class UaiFrontendToolExecutor {
 
     async #requestApproval(
         toolCall: UaiToolCallInfo,
-        rendererManifest: ManifestUaiAgentToolRenderer,
+        toolManifest: ManifestUaiAgentFrontendTool,
+        label: string,
         args: Record<string, unknown>,
     ): Promise<unknown> {
         if (!this.#hitlContext) {
             return undefined;
         }
 
-        const approval = rendererManifest.meta.approval;
-        const isSimple = approval === true;
+        const approval = toolManifest.meta.approval;
         const approvalObj = typeof approval === "object" ? approval : null;
 
         const interrupt: UaiInterruptInfo = {
             id: `approval-${toolCall.id}`,
             reason: "tool_approval",
             type: "approval",
-            title: `Approve ${rendererManifest.meta.label ?? toolCall.name}`,
-            message: `The tool "${rendererManifest.meta.label ?? toolCall.name}" requires your approval to proceed.`,
+            title: `Approve ${label}`,
+            message: `The tool "${label}" requires your approval to proceed.`,
             options: [
                 { value: "approve", label: "Approve", variant: "positive" },
                 { value: "deny", label: "Deny", variant: "danger" },
@@ -152,7 +154,7 @@ export class UaiFrontendToolExecutor {
                 toolCallId: toolCall.id,
                 toolName: toolCall.name,
                 args,
-                config: isSimple ? {} : (approvalObj?.config ?? {}),
+                config: approvalObj?.config ?? {},
             },
         };
 

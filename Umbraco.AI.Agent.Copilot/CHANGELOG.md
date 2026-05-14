@@ -5,6 +5,25 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.0-alpha7...Umbraco.AI.Agent.Copilot@1.0.0) (2026-05-14)
+
+### feat
+
+* **copilot:** Add property value operation tools ([310194b](https://github.com/umbraco/Umbraco.AI/commit/310194be876ca9658638cd7814a22ed07db75ac7))
+* **copilot:** Add save and save_and_publish frontend tools ([2226c70](https://github.com/umbraco/Umbraco.AI/commit/2226c70a95d14a1b1940d0d12b28848026fac99f))
+* **copilot:** Provide entity adapter context to copilot tools ([ece257f](https://github.com/umbraco/Umbraco.AI/commit/ece257f1ca2e2bcf9f5ec6f18327f4bd3700940e))
+* **core,copilot,deps:** Add schema-aware property tooling for agents ([418847a](https://github.com/umbraco/Umbraco.AI/commit/418847a118dbd15a290906f4cc6dd95d7a95a61a))
+
+### fix
+
+* **copilot:** Hide Auto agent option when only one agent is available ([e4bad2a](https://github.com/umbraco/Umbraco.AI/commit/e4bad2a574c13594aa06dd985d1203f7567274be))
+* **copilot:** Spell out replace semantics + read-merge requirement on set_value ([26afa7c](https://github.com/umbraco/Umbraco.AI/commit/26afa7c2d8511938cf3ca38f6b4d2e8e52e251f2))
+* **copilot:** Tighten set_value description so Sonnet 4.6 invokes instead of narrating ([10eca8c](https://github.com/umbraco/Umbraco.AI/commit/10eca8c1235e0382b95fcebe6f752d81a7fae8a4))
+
+### Notes
+
+First stable 1.0.0 release.
+
 ## [1.0.0-alpha7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.0-alpha6...Umbraco.AI.Agent.Copilot@1.0.0-alpha7) (2026-04-30)
 
 ### fix

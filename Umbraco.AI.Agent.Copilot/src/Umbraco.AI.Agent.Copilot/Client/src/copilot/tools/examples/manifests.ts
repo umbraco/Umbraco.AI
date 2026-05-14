@@ -86,12 +86,7 @@ const confirmActionRendererManifest: ManifestUaiAgentToolRenderer = {
     kind: "default",
     alias: "Uai.AgentToolRenderer.ConfirmAction",
     name: "Confirm Action Tool Renderer",
-    meta: {
-        toolName: "confirm_action",
-        label: "Confirm Action",
-        icon: "icon-check",
-        approval: { config: { title: "#uaiChat_approvalDefaultTitle" } },
-    },
+    meta: { toolName: "confirm_action", label: "Confirm Action", icon: "icon-check" },
 };
 
 const confirmActionFrontendManifest: ManifestUaiAgentFrontendTool = {
@@ -110,6 +105,7 @@ const confirmActionFrontendManifest: ManifestUaiAgentFrontendTool = {
             },
             required: ["action"],
         },
+        approval: { config: { title: "#uaiChat_approvalDefaultTitle" } },
     },
 };
 

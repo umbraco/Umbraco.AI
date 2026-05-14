@@ -15,7 +15,7 @@ import type {
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
-import { prepareValueForEditor } from "./value-preparation.js";
+import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
 import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 /**
@@ -275,7 +275,7 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const existingValue = values.find((v) => v.alias === propertyAlias);
 
         // Prepare value for the target editor type
-        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
+        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.content.setPropertyValue(propertyAlias, valueToSet, variantId);

@@ -16,8 +16,14 @@ import {
     type UaiAgentItem,
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
-import { UaiEntityAdapterContext, UaiRequestContextCollector, type UaiValueChange, type UaiValueChangeResult } from "@umbraco-ai/core";
+import {
+    UaiEntityAdapterContext,
+    UaiRequestContextCollector,
+    type UaiValueChange,
+    type UaiValueChangeResult,
+} from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
+import { UAI_ENTITY_ADAPTER_CONTEXT } from "./contexts/entity-adapter.context-token.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -130,8 +136,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.observe(this.#agentRepository.agentItems$, (agents) => {
             let displayAgents = [...agents];
 
-            // Add "Auto" option when agents are available
-            if (agents.length > 0) {
+            // Add "Auto" option only when multiple agents are available
+            if (agents.length > 1) {
                 displayAgents = [
                     { id: "auto", name: "Auto", alias: "auto" },
                     ...agents,
@@ -140,7 +146,6 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
             this.#agents.setValue(displayAgents);
 
-            // Default to "Auto" when agents are available
             if (!this.#selectedAgent.getValue() && displayAgents.length > 0) {
                 this.#selectedAgent.setValue(displayAgents[0]);
             }
@@ -161,6 +166,11 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.provideContext(UAI_CHAT_CONTEXT, this);
         this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
         this.provideContext(UAI_ENTITY_CONTEXT, this.#entityContext);
+        // Provide the rich entity adapter context so tools (e.g. property value operation tools)
+        // can read full envelopes and apply value changes through the same staging path the user's
+        // typing uses. The shared `UAI_ENTITY_CONTEXT` (above) stays as a thin facade for
+        // surfaces in `Umbraco.AI.Agent.UI` that don't need the structured operations.
+        this.provideContext(UAI_ENTITY_ADAPTER_CONTEXT, this.#entityAdapterContext);
     }
 
     // ─── Agent Catalog Actions ─────────────────────────────────────────────────

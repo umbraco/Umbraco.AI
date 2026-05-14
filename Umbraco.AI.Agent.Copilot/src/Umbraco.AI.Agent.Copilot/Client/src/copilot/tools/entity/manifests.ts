@@ -21,20 +21,24 @@ const setValueFrontendManifest: ManifestUaiAgentFrontendTool = {
     meta: {
         toolName: "set_value",
         description:
-            "Update a value on the currently selected entity (document, media, etc.). " +
-            "Changes are staged in the workspace - the user must click Save to persist. " +
-            "Only supports TextBox and TextArea properties. " +
-            "Use the entity context to see available properties and their current values.",
+            "Stages a replacement value on a property of the currently selected entity. " +
+            "The user must click Save to persist. " +
+            "Pass a string for TextBox/TextArea; pass a JSON object or array (not stringified) for everything else. " +
+            "Notes: " +
+            "the value is REPLACED, not merged - to add/remove/reorder items in a collection (block list, block grid, multi-node tree picker, multi-url picker, multi-image picker, tags), read the current value (Entity Context or get_umbraco_content) and send the full updated array; " +
+            "for any non-string property, fetch the JSON Schema from get_content_type_schema first and match it - the Entity Context only shows formatted values, not the input shape.",
         parameters: {
             type: "object",
             properties: {
                 path: {
                     type: "string",
-                    description: "The path to the property to update (e.g., 'title', 'description')",
+                    description: "The path to the property to update (e.g., 'title', 'description', 'mainContent')",
                 },
                 value: {
-                    type: "string",
-                    description: "The new value to set for the property",
+                    description:
+                        "The new value to set. Use the JSON Schema from get_content_type_schema or " +
+                        "get_property_value_schema to determine the exact shape. May be a string, number, " +
+                        "boolean, object, or array depending on the property editor.",
                 },
                 culture: {
                     type: "string",

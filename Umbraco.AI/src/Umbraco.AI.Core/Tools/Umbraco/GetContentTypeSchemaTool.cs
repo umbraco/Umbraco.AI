@@ -1,71 +1,98 @@
 using System.ComponentModel;
+using System.Text.Json.Nodes;
 
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PublishedCache;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Services.OperationStatus;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
 /// <summary>
 /// Arguments for the GetContentTypeSchema tool.
 /// </summary>
-/// <param name="ContentTypeAlias">The content type alias to look up (e.g., 'blogPost', 'article').</param>
+/// <param name="ContentTypeAliasOrKey">
+/// The content type alias (e.g., 'blogPost', 'article') OR its GUID key
+/// (e.g., 'e667d852-1e35-41d1-b0eb-46db0ec2342c').
+/// </param>
 public record GetContentTypeSchemaArgs(
-    [property: Description("The content type alias (e.g., 'blogPost', 'article'). Use the ContentType value from search_umbraco or get_umbraco_content results.")]
-    string ContentTypeAlias);
+    [property: Description("The content type alias (e.g., 'blogPost', 'article') OR the content type GUID key. Use the ContentType value from search_umbraco / get_umbraco_content results, or the 'Content type' GUID from the Entity Context.")]
+    string ContentTypeAliasOrKey);
 
 /// <summary>
 /// Tool that retrieves the schema of a content type by its alias,
-/// including property definitions and their editor types.
+/// including property definitions, editor types, and JSON Schema for each property's
+/// expected input value (when the property editor supports schema generation).
 /// </summary>
 [AITool("get_content_type_schema", "Get Content Type Schema", ScopeId = ContentReadScope.ScopeId)]
 public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
 {
     private readonly IPublishedContentTypeCache _publishedContentTypeCache;
+    private readonly IPropertyEditorSchemaService _propertyEditorSchemaService;
+    private readonly IIdKeyMap _idKeyMap;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContentTypeSchemaTool"/>.
     /// </summary>
-    /// <param name="publishedContentTypeCache">The published content type cache for alias-based lookups.</param>
-    public GetContentTypeSchemaTool(IPublishedContentTypeCache publishedContentTypeCache)
+    public GetContentTypeSchemaTool(
+        IPublishedContentTypeCache publishedContentTypeCache,
+        IPropertyEditorSchemaService propertyEditorSchemaService,
+        IIdKeyMap idKeyMap)
     {
         _publishedContentTypeCache = publishedContentTypeCache;
+        _propertyEditorSchemaService = propertyEditorSchemaService;
+        _idKeyMap = idKeyMap;
     }
 
     /// <inheritdoc />
     public override string Description =>
-        "Retrieves the content type schema by its alias. " +
-        "Returns the property definitions including alias, editor type, and value type. " +
-        "Use this to understand what properties a document type has and what editors they use. " +
-        "Useful for knowing what fields to fill in or what content structure to expect. " +
-        "Use the ContentType alias from search_umbraco or get_umbraco_content results.";
+        "Retrieves a content type's schema by its alias OR its GUID key. " +
+        "Returns each property's alias, editor type, value type, data type key, and (when available) " +
+        "a JSON Schema describing the exact value shape the property accepts on write — including " +
+        "configuration-driven schemas for block list, block grid, and rich-text-with-blocks properties. " +
+        "REQUIRED before calling set_value for any non-string property (media picker, block list, block grid, " +
+        "multi-node tree picker, multi-url picker, image cropper, slider, color picker, rich text, etc.). " +
+        "The Entity Context system prompt only shows formatted values — it does NOT reveal the input shape, " +
+        "so do not guess; always inspect ValueSchema first and produce a value that matches it. " +
+        "Block list / block grid schemas list each allowed element type's key and alias under " +
+        "'x-allowedElementTypes' alongside the GUID enum. To author a block of a given type, call this tool " +
+        "again with that element type's key to retrieve its property schemas before generating values. " +
+        "If a property has no ValueSchema, call get_property_value_schema with its DataTypeKey for a focused lookup. " +
+        "Pass the ContentType alias from search_umbraco or get_umbraco_content results, or the content type / " +
+        "element type GUID from the Entity Context or x-allowedElementTypes.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(GetContentTypeSchemaArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(GetContentTypeSchemaArgs args, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(args.ContentTypeAlias))
+        if (string.IsNullOrWhiteSpace(args.ContentTypeAliasOrKey))
         {
-            return Task.FromResult<object>(new GetContentTypeSchemaResult(
-                false, null, "Content type alias cannot be empty."));
+            return new GetContentTypeSchemaResult(false, null, "Content type alias or key cannot be empty.");
         }
 
-        // Try content types first, then element types, then media types
-        var contentType = _publishedContentTypeCache.Get(PublishedItemType.Content, args.ContentTypeAlias)
-            ?? _publishedContentTypeCache.Get(PublishedItemType.Element, args.ContentTypeAlias)
-            ?? _publishedContentTypeCache.Get(PublishedItemType.Media, args.ContentTypeAlias);
+        // The Get overloads on IPublishedContentTypeCache throw when the alias/key is
+        // not registered for the requested item type, so each lookup must be wrapped
+        // in try/catch and we fall through Content -> Element -> Media to find a hit.
+        IPublishedContentType? contentType = null;
+        if (Guid.TryParse(args.ContentTypeAliasOrKey, out var contentTypeKey))
+        {
+            contentType = TryGetByKey(contentTypeKey);
+        }
+        else
+        {
+            contentType = TryGetByAlias(args.ContentTypeAliasOrKey);
+        }
 
         if (contentType is null)
         {
-            return Task.FromResult<object>(new GetContentTypeSchemaResult(
-                false, null, $"Content type with alias '{args.ContentTypeAlias}' was not found."));
+            return new GetContentTypeSchemaResult(
+                false, null, $"Content type '{args.ContentTypeAliasOrKey}' was not found.");
         }
 
-        var properties = contentType.PropertyTypes
-            .Select(pt => new ContentTypePropertySchema(
-                pt.Alias,
-                pt.DataType.EditorAlias,
-                pt.ModelClrType?.Name ?? "unknown"))
-            .ToList();
+        var properties = await Task.WhenAll(
+            contentType.PropertyTypes.Select(pt => BuildPropertySchemaAsync(pt, cancellationToken)));
 
         var compositions = contentType.CompositionAliases?.ToList() ?? [];
 
@@ -75,7 +102,80 @@ public class GetContentTypeSchemaTool : AIToolBase<GetContentTypeSchemaArgs>
             compositions,
             properties);
 
-        return Task.FromResult<object>(new GetContentTypeSchemaResult(true, schema, null));
+        return new GetContentTypeSchemaResult(true, schema, null);
+    }
+
+    private IPublishedContentType? TryGetByAlias(string alias)
+    {
+        foreach (var itemType in new[] { PublishedItemType.Content, PublishedItemType.Element, PublishedItemType.Media, PublishedItemType.Member })
+        {
+            try
+            {
+                var ct = _publishedContentTypeCache.Get(itemType, alias);
+                if (ct is not null)
+                {
+                    return ct;
+                }
+            }
+            catch
+            {
+                // The cache throws when the alias isn't registered for the item type;
+                // swallow and try the next bucket.
+            }
+        }
+
+        return null;
+    }
+
+    private IPublishedContentType? TryGetByKey(Guid key)
+    {
+        foreach (var itemType in new[] { PublishedItemType.Content, PublishedItemType.Element, PublishedItemType.Media, PublishedItemType.Member })
+        {
+            try
+            {
+                var ct = _publishedContentTypeCache.Get(itemType, key);
+                if (ct is not null)
+                {
+                    return ct;
+                }
+            }
+            catch
+            {
+                // Same swallow-and-try-next behaviour as the alias path.
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<ContentTypePropertySchema> BuildPropertySchemaAsync(
+        IPublishedPropertyType pt,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var keyAttempt = _idKeyMap.GetKeyForId(pt.DataType.Id, UmbracoObjectTypes.DataType);
+        Guid? dataTypeKey = keyAttempt.Success ? keyAttempt.Result : null;
+
+        JsonObject? valueSchema = null;
+        if (dataTypeKey is { } key)
+        {
+            Attempt<PropertyValueSchema, PropertyEditorSchemaOperationStatus> attempt =
+                await _propertyEditorSchemaService.GetSchemaAsync(key);
+            if (attempt.Success)
+            {
+                valueSchema = BlockSchemaEnricher.Enrich(
+                    attempt.Result?.JsonSchema,
+                    _publishedContentTypeCache);
+            }
+        }
+
+        return new ContentTypePropertySchema(
+            pt.Alias,
+            pt.DataType.EditorAlias,
+            pt.ModelClrType?.Name ?? "unknown",
+            dataTypeKey,
+            valueSchema);
     }
 }
 
@@ -109,7 +209,17 @@ public record ContentTypeSchemaItem(
 /// <param name="Alias">The property alias.</param>
 /// <param name="EditorAlias">The property editor alias (e.g., "Umbraco.TextBox", "Umbraco.RichText").</param>
 /// <param name="ValueType">The CLR value type name.</param>
+/// <param name="DataTypeKey">
+/// The data type's GUID key. Pass to get_property_value_schema for a focused schema lookup
+/// (useful for nested element-type properties when a richer schema is needed).
+/// </param>
+/// <param name="ValueSchema">
+/// JSON Schema (draft 2020-12) describing the value shape this property accepts on write.
+/// <c>null</c> when the property editor does not implement <c>IValueSchemaProvider</c>.
+/// </param>
 public record ContentTypePropertySchema(
     string Alias,
     string EditorAlias,
-    string ValueType);
+    string ValueType,
+    Guid? DataTypeKey,
+    JsonObject? ValueSchema);

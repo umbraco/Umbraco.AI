@@ -1,3 +1,5 @@
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -10,13 +12,20 @@ namespace Umbraco.AI.Core.EntityAdapter.Adapters;
 internal sealed class MediaEntityAdapter : AIEntityAdapterBase
 {
     private readonly IMediaTypeService _mediaTypeService;
+    private readonly IPublishedContentTypeCache _publishedContentTypeCache;
+    private readonly IPropertyEditorSchemaService _propertyEditorSchemaService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MediaEntityAdapter"/> class.
     /// </summary>
-    public MediaEntityAdapter(IMediaTypeService mediaTypeService)
+    public MediaEntityAdapter(
+        IMediaTypeService mediaTypeService,
+        IPublishedContentTypeCache publishedContentTypeCache,
+        IPropertyEditorSchemaService propertyEditorSchemaService)
     {
         _mediaTypeService = mediaTypeService;
+        _publishedContentTypeCache = publishedContentTypeCache;
+        _propertyEditorSchemaService = propertyEditorSchemaService;
     }
 
     /// <inheritdoc />
@@ -35,7 +44,11 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
     public override string FormatForLlm(AISerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        return CmsEntityFormatHelper.FormatCmsEntity(entity);
+        return CmsEntityFormatHelper.FormatCmsEntity(
+            entity,
+            _publishedContentTypeCache,
+            _propertyEditorSchemaService,
+            PublishedItemType.Media);
     }
 
     /// <inheritdoc />

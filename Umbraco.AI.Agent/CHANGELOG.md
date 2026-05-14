@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.9.0...Umbraco.AI.Agent@1.10.0) (2026-05-14)
+
+### fix
+
+* **agent:** Surface ErrorContent in AG-UI stream instead of dropping silently ([ffc2548](https://github.com/umbraco/Umbraco.AI/commit/ffc2548fdbdd6ce93f21bd5020cb51db5f6befd4))
+* **automate, agent:** Persist RunId/ThreadId in Automate audit logs ([ad0117f](https://github.com/umbraco/Umbraco.AI/commit/ad0117fec6daf37a446f2805611f1c948368cd5a)), closes [#168](https://github.com/umbraco/Umbraco.AI/issues/168)
+
 ## [1.9.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.8.0...Umbraco.AI.Agent@1.9.0) (2026-04-30)
 
 ### feat

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Internal
 
 * Bump to align with Umbraco.AI 1.11.0.
+* Bump `Anthropic` SDK minimum to 12.20.1.
 
 ## [1.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@1.2.2...Umbraco.AI.Anthropic@1.3.0) (2026-04-08)
 

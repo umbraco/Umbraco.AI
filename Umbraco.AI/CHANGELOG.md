@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **core:** Surface tool exceptions instead of opaque '[unknown:ErrorContent]' ([35489ce](https://github.com/umbraco/Umbraco.AI/commit/35489ceab0e0a93ec395a2f3f77761ac0c02fbce))
 * **core:** Walk block items safely in published-value tool formatter ([e200e58](https://github.com/umbraco/Umbraco.AI/commit/e200e58a7e7ea739ede9208372a0e8224c3f545b))
 
+### Internal
+
+* Bump `Microsoft.Extensions.AI` minimum to 10.6.0.
+
 ## [1.10.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.10.0...Umbraco.AI@1.10.1) (2026-05-06)
 
 ### fix

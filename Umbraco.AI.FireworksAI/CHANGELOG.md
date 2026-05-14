@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Internal
 
 * Bump to align with Umbraco.AI 1.11.0.
+* Bump `Microsoft.Extensions.AI.OpenAI` minimum to 10.6.0.
 
 ## [1.0.0](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.FireworksAI@1.0.0) (2026-05-06)
 

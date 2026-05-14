@@ -21,7 +21,7 @@ import type {
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
-import { prepareValueForEditor } from "./value-preparation.js";
+import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
 
 /**
  * Property editor aliases that represent the binary payload of a media item.
@@ -300,7 +300,7 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
         // surfaces the right variant id without changes here.
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
-        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
+        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);

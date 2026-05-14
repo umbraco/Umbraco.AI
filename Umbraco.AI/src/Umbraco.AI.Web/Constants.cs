@@ -280,6 +280,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Tools";
             }
+
+            /// <summary>
+            /// Defines constants for Property Value Operation features.
+            /// </summary>
+            public static class PropertyValueOperation
+            {
+                /// <summary>
+                /// The route segment for Property Value Operation features.
+                /// </summary>
+                public const string RouteSegment = "property-value-operation";
+
+                /// <summary>
+                /// The Swagger group name for Property Value Operation features.
+                /// </summary>
+                public const string GroupName = "Property Value Operations";
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.FileProcessing;
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.SpeechToText;
 using Umbraco.AI.Core.Tools;
@@ -146,4 +147,22 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AIFileProcessingHandlerCollectionBuilder AIFileProcessingHandlers(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIFileProcessingHandlerCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI property value handler collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI property value handler collection builder.</returns>
+    /// <remarks>
+    /// Use this to add or exclude AI property value handlers. Handlers are auto-discovered via
+    /// <see cref="Umbraco.Cms.Core.Composing.IDiscoverable"/> and registered against an editor
+    /// schema alias (e.g. <c>Umbraco.BlockList</c>).
+    /// <code>
+    /// builder.AIPropertyValueHandlers()
+    ///     .Add&lt;CustomEditorPropertyValueHandler&gt;()
+    ///     .Exclude&lt;BlockGridPropertyValueHandler&gt;();
+    /// </code>
+    /// </remarks>
+    public static AIPropertyValueHandlerCollectionBuilder AIPropertyValueHandlers(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIPropertyValueHandlerCollectionBuilder>();
 }

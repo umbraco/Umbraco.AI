@@ -43,4 +43,20 @@ public class AIAgentExecutionOptions
     /// When set, the agent's response will be constrained to this schema.
     /// </summary>
     public AIOutputSchema? OutputSchema { get; init; }
+
+    /// <summary>
+    /// Optional additional properties to inject into the agent's runtime context for the duration
+    /// of this execution. Keys placed here flow into <see cref="Umbraco.AI.Core.RuntimeContext.AIRuntimeContext"/>
+    /// via <see cref="Chat.ScopedAIAgent"/> and are visible to chat middleware (including the audit-log
+    /// middleware) at LLM-invocation time.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// To have a key persisted onto the resulting <c>AIAuditLog.Metadata</c> column, also include
+    /// <see cref="Umbraco.AI.Core.Constants.ContextKeys.LogKeys"/> in this dictionary with a
+    /// <c>string[]</c> value listing the keys to persist. This mirrors the contract used by the
+    /// AG-UI streaming path on <see cref="IAIAgentService"/>.
+    /// </para>
+    /// </remarks>
+    public IReadOnlyDictionary<string, object?>? AdditionalProperties { get; init; }
 }

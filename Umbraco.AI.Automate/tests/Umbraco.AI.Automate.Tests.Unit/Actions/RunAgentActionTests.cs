@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
+using Umbraco.AI.Agent.Core;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.Automate.Core.Actions;
@@ -10,6 +11,7 @@ using Umbraco.Automate.Core.Settings;
 using Umbraco.Cms.Core.Services;
 using Xunit;
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Automate.Tests.Unit.Actions;
 
@@ -66,6 +68,64 @@ public class RunAgentActionTests
         // Assert
         result.Status.ShouldBe(ActionResultStatus.Success);
         result.OutputData.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PopulatesAuditMetadataKeysOnExecutionOptions()
+    {
+        // Arrange
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+        };
+
+        var responseMessage = new ChatMessage(ChatRole.Assistant, "ok");
+        var agentResponse = new AgentResponse(responseMessage);
+        var automationRunId = Guid.NewGuid();
+
+        _agentServiceMock
+            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+
+        AIAgentExecutionOptions? capturedOptions = null;
+        _agentServiceMock
+            .Setup(s => s.RunAgentAsync(
+                agent.Id,
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<AIAgentExecutionOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Guid, IEnumerable<ChatMessage>, AIAgentExecutionOptions?, CancellationToken>(
+                (_, _, opts, _) => capturedOptions = opts)
+            .ReturnsAsync(agentResponse);
+
+        var action = CreateAction();
+        var context = CreateContext(
+            new RunAgentSettings { AgentId = TestAgentId, Message = "Hi" },
+            runId: automationRunId);
+
+        // Act
+        var result = await action.ExecuteAsync(context, CancellationToken.None);
+
+        // Assert
+        result.Status.ShouldBe(ActionResultStatus.Success);
+        capturedOptions.ShouldNotBeNull();
+        capturedOptions!.AdditionalProperties.ShouldNotBeNull();
+
+        var props = capturedOptions.AdditionalProperties!;
+        props.Keys.ShouldContain(Constants.ContextKeys.RunId);
+        props.Keys.ShouldContain(Constants.ContextKeys.ThreadId);
+        props.Keys.ShouldContain(CoreConstants.ContextKeys.LogKeys);
+
+        Guid.TryParse(props[Constants.ContextKeys.RunId]?.ToString(), out _)
+            .ShouldBeTrue();
+        props[Constants.ContextKeys.ThreadId]
+            .ShouldBe(automationRunId.ToString());
+
+        var logKeys = props[CoreConstants.ContextKeys.LogKeys].ShouldBeOfType<string[]>();
+        logKeys.ShouldBe(
+            new[] { Constants.ContextKeys.RunId, Constants.ContextKeys.ThreadId },
+            ignoreOrder: true);
     }
 
     [Fact]
@@ -194,11 +254,11 @@ public class RunAgentActionTests
     private RunAgentAction CreateAction()
         => new(_infrastructure, _agentServiceMock.Object, _userServiceMock.Object, _loggerMock.Object);
 
-    private static ActionContext CreateContext(RunAgentSettings settings)
+    private static ActionContext CreateContext(RunAgentSettings settings, Guid? runId = null)
         => new()
         {
             AutomationId = Guid.NewGuid(),
-            RunId = Guid.NewGuid(),
+            RunId = runId ?? Guid.NewGuid(),
             StepId = Guid.NewGuid(),
             ActionAlias = UmbracoAIAutomateConstants.ActionTypes.RunAgent,
             Settings = settings,

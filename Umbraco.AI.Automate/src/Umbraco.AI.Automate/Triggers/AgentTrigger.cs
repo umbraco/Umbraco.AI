@@ -1,4 +1,5 @@
 using Umbraco.Automate.Core.Triggers;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Automate.Triggers;
 
@@ -9,7 +10,8 @@ namespace Umbraco.AI.Automate.Triggers;
 [Trigger(UmbracoAIAutomateConstants.TriggerTypes.AgentTrigger, "AI Agent Request",
     Description = "Fires when requested by an AI agent during a conversation.",
     Group = "AI",
-    Icon = "icon-bot")]
+    Icon = "icon-bot",
+    RequiredSections = [CoreConstants.Sections.AI])]
 public sealed class AgentTrigger : TriggerBase<object, AgentTriggerOutput>
 {
     /// <summary>

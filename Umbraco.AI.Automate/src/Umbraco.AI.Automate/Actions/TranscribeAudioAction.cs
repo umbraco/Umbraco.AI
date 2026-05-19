@@ -5,7 +5,6 @@ using Umbraco.AI.Core.SpeechToText;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Automate.Core.Security;
 using Umbraco.Cms.Core;
-using AIConstants = Umbraco.AI.Core.Constants;
 
 #pragma warning disable MEAI001 // SpeechToTextOptions / ISpeechToTextClient are experimental in M.E.AI
 
@@ -20,7 +19,7 @@ namespace Umbraco.AI.Automate.Actions;
     Description = "Transcribes an audio file from an Umbraco media reference using an AI speech-to-text profile.",
     Group = "AI",
     Icon = "icon-mic",
-    RequiredSections = [AIConstants.Sections.AI, Constants.Applications.Media])]
+    RequiredSections = [Constants.Applications.Media])]
 public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, object>
 {
     private readonly IAISpeechToTextService _speechToTextService;

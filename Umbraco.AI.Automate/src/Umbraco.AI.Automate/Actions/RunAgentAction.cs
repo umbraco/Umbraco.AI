@@ -22,8 +22,7 @@ namespace Umbraco.AI.Automate.Actions;
 [Action(UmbracoAIAutomateConstants.ActionTypes.RunAgent, "Run AI Agent",
     Description = "Executes an AI agent and returns its response.",
     Group = "AI",
-    Icon = "icon-bot",
-    RequiredSections = [CoreConstants.Sections.AI])]
+    Icon = "icon-bot")]
 public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
 {
     private readonly IAIAgentService _agentService;

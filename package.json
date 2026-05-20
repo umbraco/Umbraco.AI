@@ -46,8 +46,8 @@
         "rxjs": "^7.8.2"
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^1.11.0",
-        "@umbraco-ai/agent": "^1.10.0",
+        "@umbraco-ai/core": "^1.12.0",
+        "@umbraco-ai/agent": "^1.10.2",
         "@umbraco-ai/agent-ui": "^1.0.0",
         "@umbraco-ai/agent-copilot": "^1.0.0",
         "@umbraco-cms/backoffice": "^17.4.0"

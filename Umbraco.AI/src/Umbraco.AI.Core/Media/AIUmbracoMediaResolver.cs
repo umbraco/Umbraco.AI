@@ -266,7 +266,13 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             return null;
         }
 
-        return LoadFromPath(filePath);
+        var content = LoadFromPath(filePath);
+        return content is null ? null : new AIMediaContent
+        {
+            Data = content.Data,
+            MediaType = content.MediaType,
+            MediaKey = mediaKey,
+        };
     }
 
     private AIMediaContent? LoadFromPath(string filePath)

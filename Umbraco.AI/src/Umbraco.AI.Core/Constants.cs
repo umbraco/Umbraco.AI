@@ -28,7 +28,7 @@ public static class Constants
     /// <summary>
     /// Section constants for Umbraco.AI. These can be used for checking the current section in Umbraco backoffice or for storing section information in metadata, etc.
     /// </summary>
-    internal static class Sections
+    public static class Sections
     {
         /// <summary>
         /// Section alias for Umbraco.AI.

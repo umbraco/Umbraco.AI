@@ -1,5 +1,6 @@
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.Automate.Core.Triggers;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Automate.Triggers;
 
@@ -10,7 +11,8 @@ namespace Umbraco.AI.Automate.Triggers;
 [Trigger(UmbracoAIAutomateConstants.TriggerTypes.AgentRunCompleted, "AI Agent Run Completed",
     Description = "Fires when an AI agent run completes successfully.",
     Group = "AI",
-    Icon = "icon-bot")]
+    Icon = "icon-bot",
+    RequiredSections = [CoreConstants.Sections.AI])]
 public sealed class AgentRunCompletedTrigger
     : NotificationTriggerBase<AgentRunCompletedTriggerSettings, AgentRunCompletedTriggerOutput, AIAgentExecutedNotification>
 {

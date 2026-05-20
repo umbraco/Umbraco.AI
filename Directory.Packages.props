@@ -63,8 +63,8 @@
 
   <!-- Microsoft AI Agent packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Agents.AI" Version="[1.6.0, 1.999.999)" />
-    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.6.0, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="[1.6.1, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.6.1, 1.999.999)" />
   </ItemGroup>
 
   <!-- Provider packages -->

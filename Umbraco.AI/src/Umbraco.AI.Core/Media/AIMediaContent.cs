@@ -14,4 +14,11 @@ public sealed class AIMediaContent
     /// Gets or sets the MIME type of the media (e.g., "image/jpeg", "audio/mpeg").
     /// </summary>
     public required string MediaType { get; init; }
+
+    /// <summary>
+    /// Gets the Umbraco media node key when the content was resolved from a media reference
+    /// (GUID or media picker value). Null when the content was resolved from a raw file path —
+    /// in that case the source is not a CMS media node and no per-node authorisation applies.
+    /// </summary>
+    public Guid? MediaKey { get; init; }
 }

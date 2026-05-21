@@ -17,6 +17,7 @@
         "Umbraco.AI.TogetherAI"
     ],
     "exclude": [
+        "Umbraco.AI.Agent.Copilot",
         "Umbraco.AI.Agent.Deploy",
         "Umbraco.AI.Agent.UI",
         "Umbraco.AI.Automate",

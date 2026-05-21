@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.0...Umbraco.AI.Agent@1.10.2) (2026-05-20)
+
+### Internal
+
+* Bump `Microsoft.Agents.AI` and `Microsoft.Agents.AI.Workflows` to 1.6.1 to pick up patched `OpenTelemetry.Api` 1.15.3 (clears advisory on 1.13.x).
+* Bump to align with Umbraco.AI 1.12.0.
+
 ## [1.10.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.9.0...Umbraco.AI.Agent@1.10.0) (2026-05-14)
 
 ### fix

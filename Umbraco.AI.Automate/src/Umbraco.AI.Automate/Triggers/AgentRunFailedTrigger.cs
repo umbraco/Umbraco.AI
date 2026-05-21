@@ -1,6 +1,7 @@
 using System.Linq;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.Automate.Core.Triggers;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Automate.Triggers;
 
@@ -11,7 +12,8 @@ namespace Umbraco.AI.Automate.Triggers;
 [Trigger(UmbracoAIAutomateConstants.TriggerTypes.AgentRunFailed, "AI Agent Run Failed",
     Description = "Fires when an AI agent run fails.",
     Group = "AI",
-    Icon = "icon-alert")]
+    Icon = "icon-alert",
+    RequiredSections = [CoreConstants.Sections.AI])]
 public sealed class AgentRunFailedTrigger
     : NotificationTriggerBase<AgentRunFailedTriggerSettings, AgentRunFailedTriggerOutput, AIAgentExecutedNotification>
 {

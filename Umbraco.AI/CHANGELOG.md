@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.11.0...Umbraco.AI@1.12.0) (2026-05-20)
+
+### feat
+
+* **core:** Expose AI section alias via public `Constants.Sections.AI` for cross-package consumers ([3378338](https://github.com/umbraco/Umbraco.AI/commit/3378338c818699ca6d919b14fe36ad636498f48f))
+* **core:** Add `MediaKey` to `AIMediaContent` to enable per-node authorization of resolved media references ([3378338](https://github.com/umbraco/Umbraco.AI/commit/3378338c818699ca6d919b14fe36ad636498f48f))
+
 ## [1.11.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.10.1...Umbraco.AI@1.11.0) (2026-05-14)
 
 ### feat

@@ -30,7 +30,7 @@
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[0.1.0--preview.369.g5cabf66, 0.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[0.1.0--preview.422.g8a1061d, 0.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->
@@ -47,24 +47,24 @@
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[1.11.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[1.11.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.12.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[1.12.0, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.AGUI" Version="[1.10.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[1.11.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[1.10.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[1.10.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[1.10.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[1.12.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[1.10.2, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[1.10.2, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[1.10.2, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[1.0.0, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Deploy" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Deploy" Version="[1.0.2, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Automate" Version="[1.0.0-alpha1, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[1.8.4, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[1.8.6, 1.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Agents.AI" Version="[1.6.0, 1.999.999)" />
-    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.6.0, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="[1.6.1, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.6.1, 1.999.999)" />
   </ItemGroup>
 
   <!-- Provider packages -->

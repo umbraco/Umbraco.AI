@@ -27,6 +27,7 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.SpeechToText;
 using Umbraco.AI.Core.RuntimeContext;
@@ -80,6 +81,15 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIEditableModelSchemaBuilder, AIEditableModelSchemaBuilder>();
         services.AddSingleton<IAIEditableModelSerializer, AIEditableModelSerializer>();
         services.AddSingleton<IAIProviderInfrastructure, AIProviderInfrastructure>();
+
+        // Provider error classification — provider packages contribute IAIProviderErrorClassifier
+        // implementations via the collection builder; consumers inject AIProviderErrorClassifier
+        // (the composite) to translate SDK exceptions into user-friendly categories.
+        // Provider-specific classifiers should be inserted before these fallbacks so they win.
+        builder.AIProviderErrorClassifiers()
+            .Append<ClientModelProviderErrorClassifier>()  // ClientResultException (OpenAI SDK family)
+            .Append<DefaultProviderErrorClassifier>();      // BCL: HttpRequestException, cancellation, timeout
+        services.AddSingleton<AIProviderErrorClassifier>();
 
         // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)
         builder.AIProviders()

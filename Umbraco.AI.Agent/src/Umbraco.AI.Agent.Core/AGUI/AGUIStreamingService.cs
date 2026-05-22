@@ -7,6 +7,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -24,6 +25,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 {
     private readonly IAGUIMessageConverter _messageConverter;
     private readonly IAGUIFileProcessor _fileProcessor;
+    private readonly AIProviderErrorClassifier _errorClassifier;
     private readonly ILogger<AGUIStreamingService> _logger;
 
     /// <summary>
@@ -32,10 +34,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     public AGUIStreamingService(
         IAGUIMessageConverter messageConverter,
         IAGUIFileProcessor fileProcessor,
+        AIProviderErrorClassifier errorClassifier,
         ILogger<AGUIStreamingService> logger)
     {
         _messageConverter = messageConverter;
         _fileProcessor = fileProcessor;
+        _errorClassifier = errorClassifier;
         _logger = logger;
     }
 
@@ -93,10 +97,16 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             await enumerator.DisposeAsync();
         }
 
-        // Emit error event if streaming failed
+        // Emit error event if streaming failed.
+        // Classify so the frontend can render a user-friendly message and decide whether
+        // to surface retry affordances based on the category (transient, rate-limited, etc.).
         if (streamError != null)
         {
-            yield return emitter.EmitError(streamError.Message, "STREAMING_ERROR");
+            var errorInfo = _errorClassifier.Classify(streamError);
+            _logger.LogError(streamError,
+                "Agent run {RunId} failed. Category={Category}, ProviderCode={ProviderCode}",
+                request.RunId, errorInfo.Category, errorInfo.ProviderCode);
+            yield return emitter.EmitError(errorInfo.UserMessage, errorInfo.Category.ToString());
         }
 
         // Emit RunFinished with appropriate outcome

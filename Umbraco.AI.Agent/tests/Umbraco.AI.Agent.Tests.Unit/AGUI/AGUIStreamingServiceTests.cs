@@ -13,6 +13,7 @@ using Umbraco.AI.AGUI.Events.Messages;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Core.Providers.Errors;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.AGUI;
@@ -32,6 +33,7 @@ public class AGUIStreamingServiceTests
         _service = new AGUIStreamingService(
             _mockConverter.Object,
             _mockFileProcessor.Object,
+            new AIProviderErrorClassifier(new AIProviderErrorClassifierCollection(() => [])),
             _logger);
 
         // Default converter setup
@@ -305,10 +307,10 @@ public class AGUIStreamingServiceTests
     #region Error Handling Tests
 
     [Fact]
-    public async Task StreamAgentAsync_OnError_EmitsErrorAndFinished()
+    public async Task StreamAgentAsync_OnError_EmitsClassifiedErrorAndFinished()
     {
-        // Arrange
-        var agent = CreateThrowingAgent(new InvalidOperationException("Test error"));
+        // Arrange — unrecognised exception type falls through to the Unknown category.
+        var agent = CreateThrowingAgent(new InvalidOperationException("internal-only: Test error"));
         var request = CreateRequest();
 
         // Act
@@ -317,8 +319,10 @@ public class AGUIStreamingServiceTests
         // Assert
         var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
         errorEvent.ShouldNotBeNull();
-        errorEvent.Message.ShouldBe("Test error");
-        errorEvent.Code.ShouldBe("STREAMING_ERROR");
+        // Raw exception text must not be surfaced to users.
+        errorEvent.Message.ShouldNotContain("internal-only");
+        // Code is the AIProviderErrorCategory name.
+        errorEvent.Code.ShouldBe("Unknown");
 
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
         finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);

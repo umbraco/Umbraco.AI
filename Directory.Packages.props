@@ -43,6 +43,10 @@
     <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.6.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.7, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.7, 10.999.999)" />
+    <!-- Base library for typed SDK exceptions (ClientResultException). Used by Core's provider
+         error classifier and brought in transitively by the OpenAI SDK. Floor matches the
+         minimum version that exposes ClientResultException publicly. -->
+    <PackageVersion Include="System.ClientModel" Version="[1.5.0, 1.999.999)" />
   </ItemGroup>
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->

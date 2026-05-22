@@ -1,6 +1,7 @@
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.FileProcessing;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.SpeechToText;
@@ -165,4 +166,21 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AIPropertyValueHandlerCollectionBuilder AIPropertyValueHandlers(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIPropertyValueHandlerCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI provider error classifier collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI provider error classifier collection builder.</returns>
+    /// <remarks>
+    /// Use this to register provider-specific error classifiers. Classifiers run in collection
+    /// order; the first one to return a non-null result wins. Provider packages should insert
+    /// their classifier before the built-in fallbacks:
+    /// <code>
+    /// builder.AIProviderErrorClassifiers()
+    ///     .InsertBefore&lt;ClientModelProviderErrorClassifier, AnthropicProviderErrorClassifier&gt;();
+    /// </code>
+    /// </remarks>
+    public static AIProviderErrorClassifierCollectionBuilder AIProviderErrorClassifiers(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIProviderErrorClassifierCollectionBuilder>();
 }

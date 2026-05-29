@@ -50,7 +50,7 @@
         "@umbraco-ai/agent": "^1.10.2",
         "@umbraco-ai/agent-ui": "^1.0.0",
         "@umbraco-ai/agent-copilot": "^1.0.0",
-        "@umbraco-cms/backoffice": "^17.4.0"
+        "@umbraco-cms/backoffice": "^18.0.0-rc2"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."
 }

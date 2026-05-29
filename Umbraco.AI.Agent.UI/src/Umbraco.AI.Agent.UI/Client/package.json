@@ -16,13 +16,13 @@
     },
     "dependencies": {
         "@umbraco-ai/agent": "^1.0.0",
-        "@umbraco-cms/backoffice": "^17.4.0",
+        "@umbraco-cms/backoffice": "^18.0.0-rc2",
         "rxjs": "^7.8.2"
     },
     "devDependencies": {
         "@microsoft/api-extractor": "^7.55.1",
         "@umbraco-ai/agent": "*",
-        "@umbraco-cms/backoffice": "^17.4.0",
+        "@umbraco-cms/backoffice": "^18.0.0-rc2",
         "typescript": "^5.9.2",
         "vite": "^7.3.2"
     }

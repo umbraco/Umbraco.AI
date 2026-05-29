@@ -19,7 +19,7 @@ npm run build
 npm run watch
 
 # Generate API client from OpenAPI spec (requires running server)
-npm run generate-client https://localhost:44331/umbraco/swagger/umbraco-ai/swagger.json
+npm run generate-client https://localhost:44331/umbraco/openapi/ai-management.json
 
 # Set up demo site for local development (run from monorepo root)
 cd ..

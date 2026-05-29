@@ -29,7 +29,8 @@ internal sealed class OpenXmlFileProcessingHandler : IAIFileProcessingHandler
     };
 
     /// <inheritdoc />
-    public bool CanHandle(string mimeType) => SupportedMimeTypes.Contains(mimeType);
+    public Task<bool> CanHandleAsync(string mimeType, CancellationToken cancellationToken = default)
+        => Task.FromResult(SupportedMimeTypes.Contains(mimeType));
 
     /// <inheritdoc />
     public Task<AIFileProcessingResult> ProcessAsync(

@@ -13,9 +13,14 @@ public interface IAIFileProcessingHandler
     /// <summary>
     /// Determines whether this handler can process files of the specified MIME type.
     /// </summary>
+    /// <remarks>
+    /// This is asynchronous because a handler's eligibility can depend on runtime state
+    /// (e.g., whether a default AI profile is configured), not just the MIME type alone.
+    /// </remarks>
     /// <param name="mimeType">The MIME type to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns><c>true</c> if this handler can process the MIME type; otherwise, <c>false</c>.</returns>
-    bool CanHandle(string mimeType);
+    Task<bool> CanHandleAsync(string mimeType, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Extracts text content from the given file data.

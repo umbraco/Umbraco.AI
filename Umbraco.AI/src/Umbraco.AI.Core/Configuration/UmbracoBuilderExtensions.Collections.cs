@@ -138,7 +138,7 @@ public static partial class UmbracoBuilderExtensions
     /// <returns>The AI file processing handler collection builder.</returns>
     /// <remarks>
     /// Use this to add, remove, or reorder file processing handlers. The first handler
-    /// where <see cref="IAIFileProcessingHandler.CanHandle"/> returns <c>true</c> wins.
+    /// where <see cref="IAIFileProcessingHandler.CanHandleAsync"/> returns <c>true</c> wins.
     /// <code>
     /// builder.AIFileProcessingHandlers()
     ///     .Append&lt;CsvFileProcessingHandler&gt;()

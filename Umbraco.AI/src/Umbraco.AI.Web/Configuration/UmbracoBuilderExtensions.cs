@@ -87,7 +87,7 @@ public static class UmbracoBuilderExtensions
             $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user.");
 
     /// <summary>
-    /// Registers the Umbraco AI Management API OpenAPI document.
+    /// Registers an Umbraco AI Management API OpenAPI document.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <param name="apiName">The API name. Matches the <c>[MapToApi]</c> value on controllers (also used as the OpenAPI document name).</param>
@@ -97,8 +97,8 @@ public static class UmbracoBuilderExtensions
     /// <param name="configureJson">Optional callback to customise the named JSON serializer options for this API.</param>
     /// <returns>The same Umbraco builder for chaining.</returns>
     /// <remarks>
-    /// Called once per AI product (Core, Prompt, Agent) — all use the same <paramref name="apiName"/> so the document
-    /// is shared. A service marker ensures the document is registered only once even when called multiple times.
+    /// Each AI product (Core, Prompt, Agent, add-ons) registers its own document with its own unique
+    /// <paramref name="apiName"/>; controllers are scoped to their document via <c>[MapToApi(apiName)]</c>.
     /// </remarks>
     public static IUmbracoBuilder WithUmbracoAIManagementApi(
         this IUmbracoBuilder builder,
@@ -109,15 +109,6 @@ public static class UmbracoBuilderExtensions
         Action<JsonSerializerOptions>? configureJson = null)
     {
         builder.AddJsonOptions(apiName, configureJson);
-
-        if (builder.Services.Any(s => s.ServiceType == typeof(UmbracoAIManagementApiMarker)))
-        {
-            // Document already registered by an earlier caller. Subsequent products only need their JSON
-            // options applied (above) — controllers are picked up via [MapToApi(apiName)] automatically.
-            return builder;
-        }
-
-        builder.Services.AddSingleton(new UmbracoAIManagementApiMarker(apiName));
 
         builder.AddBackOfficeOpenApiDocument(apiName, document => document
             .WithTitle(apiTitle)
@@ -163,10 +154,4 @@ public static class UmbracoBuilderExtensions
         Type targetType = Nullable.GetUnderlyingType(jsonTypeInfo.Type) ?? jsonTypeInfo.Type;
         return targetType.Namespace?.StartsWith(Constants.AppNamespaceRoot) is true;
     }
-
-    /// <summary>
-    /// Marker registered when WithUmbracoAIManagementApi has wired up the OpenAPI document so
-    /// subsequent calls (from add-on products sharing the same document name) become idempotent.
-    /// </summary>
-    private sealed record UmbracoAIManagementApiMarker(string ApiName);
 }

@@ -119,11 +119,8 @@ public class TranscribeAudioActionTests
         result.Status.ShouldBe(ActionResultStatus.Success);
         result.OutputData.ShouldNotBeNull();
 
-        var textValue = result.OutputData!
-            .GetType()
-            .GetProperty("text")!
-            .GetValue(result.OutputData);
-        textValue.ShouldBe("Hello world.");
+        var output = result.OutputData.ShouldBeOfType<TranscribeAudioOutput>();
+        output.Text.ShouldBe("Hello world.");
     }
 
     [Fact]

@@ -70,8 +70,8 @@ Aliases use `umbracoAI.*` prefix (matching how Automate uses `umbracoAutomate.*`
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI.Agent 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI.Agent 18.x
 - Umbraco.Automate.Core 0.1.x
 
 ## Testing Focus

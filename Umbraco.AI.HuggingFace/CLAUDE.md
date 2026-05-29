@@ -81,8 +81,8 @@ Neither is in scope for the initial release.
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Microsoft.Extensions.AI.OpenAI
 
 ## Provider Discovery

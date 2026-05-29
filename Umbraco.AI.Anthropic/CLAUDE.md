@@ -103,8 +103,8 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Anthropic:
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Anthropic SDK
 
 ## Target Framework

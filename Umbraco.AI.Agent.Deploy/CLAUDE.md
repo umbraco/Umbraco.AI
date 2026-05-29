@@ -151,11 +151,11 @@ public class AIAgentScopeRule
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
-- Umbraco.AI.Agent 1.x
-- Umbraco.AI.Deploy 1.x
-- Umbraco Deploy 17.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
+- Umbraco.AI.Agent 18.x
+- Umbraco.AI.Deploy 18.x
+- Umbraco Deploy 18.x
 
 ## Testing Focus
 

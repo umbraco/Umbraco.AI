@@ -55,8 +55,8 @@ Values prefixed with `$` are resolved from `IConfiguration`.
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Microsoft.Extensions.AI.OpenAI (transitively pulls OpenAI 2.x)
 
 ## Provider Discovery

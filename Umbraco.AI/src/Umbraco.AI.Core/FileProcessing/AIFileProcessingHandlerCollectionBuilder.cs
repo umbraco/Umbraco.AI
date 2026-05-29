@@ -12,7 +12,7 @@ namespace Umbraco.AI.Core.FileProcessing;
 ///     .Append&lt;OpenXmlFileProcessingHandler&gt;()
 ///     .InsertBefore&lt;OpenXmlFileProcessingHandler, CsvFileProcessingHandler&gt;();
 /// </code>
-/// The first handler where <see cref="IAIFileProcessingHandler.CanHandle"/> returns <c>true</c> wins.
+/// The first handler where <see cref="IAIFileProcessingHandler.CanHandleAsync"/> returns <c>true</c> wins.
 /// </remarks>
 public class AIFileProcessingHandlerCollectionBuilder
     : OrderedCollectionBuilderBase<AIFileProcessingHandlerCollectionBuilder, AIFileProcessingHandlerCollection, IAIFileProcessingHandler>

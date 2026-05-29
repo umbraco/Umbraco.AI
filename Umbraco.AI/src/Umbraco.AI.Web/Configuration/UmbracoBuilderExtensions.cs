@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 
@@ -48,14 +49,13 @@ public static class UmbracoBuilderExtensions
         builder.AddUmbracoAIMapDefinitions();
 
         // Security
+        builder.Services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
         builder.Services.AddAuthorization(o =>
         {
             o.AddPolicy(AIAuthorizationPolicies.SectionAccessAI, policy =>
             {
                 policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
-#pragma warning disable CS0618 // Type or member is obsolete
-                policy.RequireClaim(Umbraco.Cms.Core.Constants.Security.AllowedApplicationsClaimType, Core.Constants.Sections.AI);
-#pragma warning restore CS0618 // Type or member is obsolete
+                policy.Requirements.Add(new AISectionRequirement());
             });
         });
 

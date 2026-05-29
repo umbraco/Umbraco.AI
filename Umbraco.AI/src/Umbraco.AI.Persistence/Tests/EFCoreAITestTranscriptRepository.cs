@@ -19,7 +19,7 @@ internal class EFCoreAITestTranscriptRepository : IAITestTranscriptRepository
     /// <inheritdoc />
     public async Task<AITestTranscript?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AITestTranscriptEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.TestTranscripts.FirstOrDefaultAsync(t => t.Id == id, cancellationToken));
@@ -31,7 +31,7 @@ internal class EFCoreAITestTranscriptRepository : IAITestTranscriptRepository
     /// <inheritdoc />
     public async Task<AITestTranscript> SaveAsync(AITestTranscript transcript, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedTranscript = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -58,7 +58,7 @@ internal class EFCoreAITestTranscriptRepository : IAITestTranscriptRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {

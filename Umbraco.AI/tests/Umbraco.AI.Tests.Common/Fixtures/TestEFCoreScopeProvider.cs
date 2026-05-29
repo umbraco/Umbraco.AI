@@ -23,7 +23,7 @@ public class TestEFCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
     }
 
     /// <inheritdoc />
-    public IEfCoreScope<UmbracoAIDbContext> CreateScope(
+    public IEFCoreScope<UmbracoAIDbContext> CreateScope(
         RepositoryCacheMode repositoryCacheMode = RepositoryCacheMode.Unspecified,
         bool? scopeFileSystems = null)
     {
@@ -31,7 +31,7 @@ public class TestEFCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
     }
 
     /// <inheritdoc />
-    public IEfCoreScope<UmbracoAIDbContext> CreateDetachedScope(
+    public IEFCoreScope<UmbracoAIDbContext> CreateDetachedScope(
         RepositoryCacheMode repositoryCacheMode = RepositoryCacheMode.Unspecified,
         bool? scopeFileSystems = null)
     {
@@ -39,13 +39,13 @@ public class TestEFCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
     }
 
     /// <inheritdoc />
-    public void AttachScope(IEfCoreScope<UmbracoAIDbContext> other)
+    public void AttachScope(IEFCoreScope<UmbracoAIDbContext> other)
     {
         // No-op for tests
     }
 
     /// <inheritdoc />
-    public IEfCoreScope<UmbracoAIDbContext> DetachScope()
+    public IEFCoreScope<UmbracoAIDbContext> DetachScope()
     {
         throw new NotSupportedException("DetachScope is not supported in test scope provider.");
     }
@@ -55,9 +55,9 @@ public class TestEFCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
 }
 
 /// <summary>
-/// Test implementation of <see cref="IEfCoreScope{TDbContext}"/> for unit testing.
+/// Test implementation of <see cref="IEFCoreScope{TDbContext}"/> for unit testing.
 /// </summary>
-public class TestEFCoreScope : IEfCoreScope<UmbracoAIDbContext>
+public class TestEFCoreScope : IEFCoreScope<UmbracoAIDbContext>
 {
     private readonly UmbracoAIDbContext _context;
     private bool _completed;

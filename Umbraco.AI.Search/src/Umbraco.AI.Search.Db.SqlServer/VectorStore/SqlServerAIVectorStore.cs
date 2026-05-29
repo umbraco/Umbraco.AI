@@ -68,7 +68,7 @@ internal sealed class SqlServerAIVectorStore : EFCoreAIVectorStore
             return await base.SearchAsync(indexName, queryVector, culture, topK, cancellationToken);
         }
 
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = ScopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = ScopeProvider.CreateScope();
 
         IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync(
             db => SearchNativeAsync(db, indexName, queryVector, culture, topK, cancellationToken));
@@ -139,7 +139,7 @@ internal sealed class SqlServerAIVectorStore : EFCoreAIVectorStore
 
         try
         {
-            using IEfCoreScope<UmbracoAISearchDbContext> scope = ScopeProvider.CreateScope();
+            using IEFCoreScope<UmbracoAISearchDbContext> scope = ScopeProvider.CreateScope();
 
             await scope.ExecuteWithContextAsync(async db =>
             {

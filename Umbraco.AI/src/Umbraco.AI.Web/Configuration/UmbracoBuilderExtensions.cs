@@ -132,6 +132,13 @@ public static class UmbracoBuilderExtensions
                 // Replaces the v17 SseResponseOperationFilter (text/event-stream 200 response).
                 options.AddOperationTransformer<SseResponseOperationTransformer>();
 
+                // Microsoft.AspNetCore.OpenApi names derived polymorphic schemas as
+                // {baseSchemaId}{derivedTypeName} (see dotnet/aspnetcore#58332).
+                // CreateSchemaReferenceId can't intercept derived names, so this transformer
+                // walks the finished document and shortens them back to {derivedTypeName} —
+                // preserving v17 TypeScript client type names across the migration.
+                options.AddDocumentTransformer<PreservePolymorphicSchemaNamesTransformer>();
+
                 // Replaces the v17 UmbracoAIApiSchemaIdHandler. The default delegate (set above by
                 // AddBackOfficeOpenApiDocument) only applies Umbraco's naming convention to Umbraco.Cms.*
                 // types — types in our namespaces fall through to the framework default, which produces

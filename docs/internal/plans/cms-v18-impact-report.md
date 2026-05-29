@@ -156,17 +156,34 @@ Files to touch:
 
 Without this, calls to `AddOpenApi(documentName)` silently produce empty documents.
 
-### 1.4 Test plan for "definition stays the same"
+### 1.4 Verification (executed against demo on 2026-05-29 with v18-rc2)
 
-Before merging:
+Documents are served at:
+- `/umbraco/openapi/ai-management.json` — 61 paths, 79 operations
+- `/umbraco/openapi/ai-prompt-management.json` — 6 paths, 9 operations
+- `/umbraco/openapi/ai-agent-management.json` — 9 paths, 12 operations
 
-1. Stand up the demo site on v18-rc1 with the migrated `WithUmbracoAIManagementApi`.
-2. Capture the new `/umbraco/openapi/{api-name}.json` for each of: `ai-management` (Core), the Prompt API document, the Agent API document.
-3. Compare against the v17 baseline captured from `dev` (golden file). Use a structural diff (e.g. `openapi-diff` or `jq` + `git diff --no-index`) and:
-   - Identify every difference.
-   - For each one, decide whether it's *expected* (OpenAPI 3.0 → 3.1, nullable syntax, polymorphic naming) or *behavioural drift* (operation ID change, schema name change for non-polymorphic types, missing tags, missing security requirements).
-   - Land config changes until *only* the expected differences remain.
-4. Regenerate the TypeScript client (`npm run generate-client`) and `git diff` the output. Anything beyond import paths, generator-version comments, and the documented polymorphic naming caveat is a regression.
+Three separate documents, one per AI product (each has its own `Constants.ManagementApi.ApiName`). Controllers are scoped via `[MapToApi(ApiName)]` on each product's controller base.
+
+**Verified preservation points:**
+
+| Check | Result |
+|---|---|
+| Operation IDs | Lowercase-first action name preserved (e.g. `completeChat`, `createPrompt`, `agentAliasExists`) — matches v17 convention via `UmbracoAIOperationIdTransformer`. |
+| Schema reference IDs (non-polymorphic) | Preserved via `UmbracoSchemaIdGenerator.Generate` for any type under `Umbraco.AI.*`. |
+| Polymorphic derived type schema names | Preserved via `PreservePolymorphicSchemaNamesTransformer`. Microsoft.AspNetCore.OpenApi names derived schemas as `{baseSchemaId}{derivedTypeName}` (e.g. `ChatContentPartModelTextChatContentPartModel`); `CreateSchemaReferenceId` only governs the base, not derived. The transformer auto-discovers polymorphic groups via `discriminator.mapping` and shortens the keys back to the v17 short names (e.g. `TextChatContentPartModel`), updating `anyOf` / `oneOf` / `allOf` and discriminator-mapping refs accordingly. |
+| SSE responses | 200 + `text/event-stream` preserved on `agents/{idOrAlias}/stream` and `stream-agui` via `SseResponseOperationTransformer`. |
+| `IdOrAlias` / `System.Type` schemas | Render as `type: string` automatically (the framework resolves the existing `IdOrAliasJsonConverter` and `JsonStringTypeConverter` from `JsonOptions`; no explicit `IOpenApiSchemaTransformer` needed). |
+| Document title and description | Set via the fluent builder + a document transformer for `Info.Description` and `Info.Version`. |
+
+**Known accepted differences from v17:**
+
+- OpenAPI version: `3.0.4` → `3.1.1`
+- Nullable representation: `"nullable": true` → `"type": ["null", "string"]`
+- `oneOf` wrappers around single `$ref`: removed (this is the framework default)
+- The CMS `MimeTypesTransformer` strips redundant `text/json`, `application/*+json`, `text/plain` from responses where `application/json` is present — these were not in our v17 output either (Swashbuckle didn't generate them), so this is a no-op for our documents.
+
+**Step still to do as cross-check:** regenerate the TypeScript client (Phase D) and diff against the dev branch's generated client. Anything beyond import paths, generator-version banner, and the OpenAPI 3.1 representation changes above counts as a regression.
 
 ### 1.5 Files touched
 

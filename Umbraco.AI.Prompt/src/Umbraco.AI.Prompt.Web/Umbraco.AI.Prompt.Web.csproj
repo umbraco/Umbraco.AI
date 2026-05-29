@@ -2,6 +2,8 @@
     <PropertyGroup>
         <Title>Umbraco AI Prompt Web</Title>
         <Description>Management API for Umbraco AI Prompt</Description>
+        <!-- Required for Microsoft.AspNetCore.OpenApi source-generated interceptors (AddOpenApi) in v18. -->
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -17,6 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
 

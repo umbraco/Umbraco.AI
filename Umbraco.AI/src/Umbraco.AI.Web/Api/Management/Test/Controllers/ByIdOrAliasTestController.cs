@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Tests;
-using Umbraco.AI.Web.Api.Common.Configuration;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Test.Models;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;

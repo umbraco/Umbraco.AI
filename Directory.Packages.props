@@ -40,6 +40,7 @@
 
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="[10.0.7, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.6.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.7, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.7, 10.999.999)" />

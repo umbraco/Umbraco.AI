@@ -4,9 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Contexts;
-using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Context.Models;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;

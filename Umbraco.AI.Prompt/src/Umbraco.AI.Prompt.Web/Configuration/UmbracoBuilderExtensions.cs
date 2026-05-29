@@ -1,9 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi;
+using Umbraco.AI.Extensions;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Prompt.Web.Configuration;
 
@@ -22,21 +20,15 @@ public static class UmbracoBuilderExtensions
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<PromptMapDefinition>()
-            .Add<PromptExecutionMapDefinition>(); 
+            .Add<PromptExecutionMapDefinition>();
 
-        // Configure Management API
-        builder.WithUmbracoAIManagementApi(Constants.ManagementApi.ApiName, options =>
-        {
-            options.SwaggerDoc(
-                Constants.ManagementApi.ApiName,
-                new OpenApiInfo
-                {
-                    Title = Constants.ManagementApi.ApiTitle,
-                    Version = "Latest",
-                    Description = $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user."
-                });
-        });
-        
+        // Participate in the shared Umbraco AI Management API document. The core Umbraco.AI.Web caller
+        // registers the document; this call ensures named JSON options are applied for our controllers.
+        builder.WithUmbracoAIManagementApi(
+            Constants.ManagementApi.ApiName,
+            Constants.ManagementApi.ApiTitle,
+            $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user.");
+
         return builder;
     }
 }

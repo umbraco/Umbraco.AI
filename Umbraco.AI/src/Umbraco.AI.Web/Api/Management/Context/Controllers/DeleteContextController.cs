@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Extensions;
-using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Common.Models;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Context.Controllers;

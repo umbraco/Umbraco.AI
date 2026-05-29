@@ -7,10 +7,8 @@ using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
-using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.Chat.Models;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Web.Api.Management.Chat.Controllers;

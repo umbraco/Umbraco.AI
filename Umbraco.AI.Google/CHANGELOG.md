@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Google will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.10](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Google@1.1.9...Umbraco.AI.Google@1.1.10) (2026-06-01)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.13.0.
+
 ## [1.1.9](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Google@1.1.7...Umbraco.AI.Google@1.1.9) (2026-05-20)
 
 ### Internal

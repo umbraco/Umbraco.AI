@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.12.0...Umbraco.AI@1.13.0) (2026-06-01)
+
+### ⚠ BREAKING CHANGE
+
+* **speechtotext:** IAIFileProcessingHandler.CanHandle(string) is now
+CanHandleAsync(string, CancellationToken) so handler eligibility can depend on runtime
+state (e.g. whether a default profile is configured), not just the MIME type.
+
+### feat
+
+* **speechtotext:** Transcribe uploaded audio files via the file-processing pipeline ([e3bccff](https://github.com/umbraco/Umbraco.AI/commit/e3bccff9a3392f5b002f4930967240f3c8417b2d))
+
 ## [1.12.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.11.0...Umbraco.AI@1.12.0) (2026-05-20)
 
 ### feat

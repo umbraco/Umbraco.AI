@@ -85,7 +85,7 @@ public class RunAutomationTool : AIToolBase<RunAutomationArgs>
             return new RunAutomationResult(false, null, automation.Name, "You do not have access to this automation's workspace.");
         }
 
-        if (automation.Status == AutomationStatus.Inactive)
+        if (automation.Status == AutomationStatus.Unpublished)
         {
             return new RunAutomationResult(false, null, automation.Name, "Automation is not enabled.");
         }

@@ -75,7 +75,7 @@
     <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="[4.0.8, 4.999.999)" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="[2.1.0, 2.999.999)" />
     <PackageVersion Include="Azure.Identity" Version="[1.21.0, 1.999.999)" />
-    <PackageVersion Include="Google.GenAI" Version="[1.6.1, 1.999.999)" />
+    <PackageVersion Include="Google.GenAI" Version="[1.8.0, 1.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="[10.6.0, 10.999.999)" />
     <PackageVersion Include="Mistral.SDK" Version="[2.3.1, 2.999.999)" />
   </ItemGroup>

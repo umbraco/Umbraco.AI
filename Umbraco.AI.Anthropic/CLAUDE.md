@@ -68,7 +68,7 @@ public class AnthropicSettings
 }
 ```
 
-Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Anthropic:ApiKey"`).
+Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Umbraco:AI:Secrets:AnthropicApiKey"`). Resolution is default-deny — only keys under `AIOptions.AllowedConfigurationKeyPrefixes` (default `Umbraco:AI:Secrets` / `Umbraco:AI:Variables`) resolve, and secret keys only into `IsSensitive` fields. See the core docs for the rationale.
 
 ### Supported Models
 

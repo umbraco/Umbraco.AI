@@ -3,6 +3,8 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.Core.EditableModels;
@@ -10,15 +12,34 @@ namespace Umbraco.AI.Core.EditableModels;
 /// <summary>
 /// Service for resolving editable models from various storage formats.
 /// </summary>
+/// <remarks>
+/// Configuration substitution (<c>$Key:Path</c>) is default-deny: a key is only resolved
+/// when it falls under one of <see cref="AIOptions.AllowedConfigurationKeyPrefixes"/>, so a
+/// settings author can only reference the configuration sections an administrator has opted
+/// in — not arbitrary application configuration.
+/// </remarks>
 internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 {
     private const string ConfigPrefix = "$";
 
     private readonly IConfiguration _configuration;
+    private readonly IReadOnlyList<string> _allowedConfigKeyPrefixes;
+    private readonly IReadOnlyList<string> _secretConfigKeyPrefixes;
 
-    public AIEditableModelResolver(IConfiguration configuration)
+    public AIEditableModelResolver(IConfiguration configuration, IOptions<AIOptions>? options = null)
     {
         _configuration = configuration;
+
+        // Fall back to defaults (the Secrets/Variables allow-list) when constructed without
+        // options. Production always supplies them via DI; this keeps the default secure
+        // rather than permissive.
+        var aiOptions = options?.Value ?? new AIOptions();
+        _allowedConfigKeyPrefixes = aiOptions.AllowedConfigurationKeyPrefixes
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToArray();
+        _secretConfigKeyPrefixes = aiOptions.SecretConfigurationKeyPrefixes
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToArray();
     }
 
     /// <inheritdoc />
@@ -87,8 +108,14 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             if (!property.CanRead || !property.CanWrite)
                 continue;
 
+            // Read the field's sensitivity from its attribute, so secret config keys can be
+            // restricted to sensitive fields. A property with no field attribute is treated
+            // as non-sensitive (the secure default).
+            var isSensitiveField = property
+                .GetCustomAttribute<AIEditableModelFieldAttribute>()?.IsSensitive ?? false;
+
             var value = property.GetValue(obj);
-            var resolvedValue = ResolveConfigurationVariable(value, property.PropertyType);
+            var resolvedValue = ResolveConfigurationVariable(value, property.PropertyType, isSensitiveField);
 
             if (!Equals(value, resolvedValue))
             {
@@ -97,7 +124,7 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
         }
     }
 
-    private object? ResolveConfigurationVariable(object? value, Type targetType)
+    private object? ResolveConfigurationVariable(object? value, Type targetType, bool isSensitiveField)
     {
         // Only handle string values with the $ prefix
         if (value is not string strValue || !strValue.StartsWith(ConfigPrefix))
@@ -107,6 +134,31 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 
         // Extract configuration key
         var configKey = strValue.Substring(ConfigPrefix.Length);
+
+        // Default-deny: only keys under an allowed prefix may be dereferenced. Checked
+        // before the lookup so the rejection does not depend on whether the key exists.
+        // See AIOptions.AllowedConfigurationKeyPrefixes.
+        if (!MatchesPrefix(configKey, _allowedConfigKeyPrefixes))
+        {
+            throw new InvalidOperationException(
+                $"Configuration key '{configKey}' is not permitted in settings. " +
+                $"Only keys under an allowed prefix may be referenced with the $ syntax " +
+                $"(by default '{string.Join("', '", _allowedConfigKeyPrefixes)}'). " +
+                $"An administrator can place the value under an allowed section or extend " +
+                $"Umbraco:AI:AllowedConfigurationKeyPrefixes in app settings.");
+        }
+
+        // Secret keys may only land in sensitive fields, so a resolved secret stays in a
+        // field the system treats as credential-bearing. See SecretConfigurationKeyPrefixes.
+        if (!isSensitiveField && MatchesPrefix(configKey, _secretConfigKeyPrefixes))
+        {
+            throw new InvalidOperationException(
+                $"Configuration key '{configKey}' is a secret and may only be referenced from " +
+                $"a sensitive field (one marked [AIField(IsSensitive = true)]). Move the value " +
+                $"to a non-secret section (e.g. Umbraco:AI:Variables) if it is safe to expose " +
+                $"in this field, or reference it from a sensitive field instead.");
+        }
+
         var configValue = _configuration[configKey];
 
         if (configValue is null)
@@ -118,6 +170,30 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 
         // Convert to target type if needed (supports string, int, bool, etc.)
         return ConvertToTargetType(configValue, targetType);
+    }
+
+    /// <summary>
+    /// Determines whether <paramref name="configKey"/> falls under one of <paramref name="prefixes"/>.
+    /// Matching is segment-aware (a prefix matches the whole key or a key whose next character
+    /// is the <c>:</c> section separator) and case-insensitive, so <c>Umbraco:AI:Secrets</c>
+    /// permits <c>Umbraco:AI:Secrets:ApiKey</c> but not <c>Umbraco:AI:SecretsBackup:ApiKey</c>.
+    /// </summary>
+    private static bool MatchesPrefix(string configKey, IReadOnlyList<string> prefixes)
+    {
+        foreach (var prefix in prefixes)
+        {
+            if (!configKey.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (configKey.Length == prefix.Length || configKey[prefix.Length] == ':')
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private object ConvertToTargetType(string value, Type targetType)

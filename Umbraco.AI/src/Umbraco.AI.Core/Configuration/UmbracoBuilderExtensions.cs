@@ -90,7 +90,8 @@ public static partial class UmbracoBuilderExtensions
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
         // File processing handlers (extensible - add custom handlers via AIFileProcessingHandlers())
         builder.AIFileProcessingHandlers()
-            .Append<OpenXmlFileProcessingHandler>();
+            .Append<OpenXmlFileProcessingHandler>()
+            .Append<AudioTranscriptionFileProcessingHandler>();
 
         builder.AIChatMiddleware()
             .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)

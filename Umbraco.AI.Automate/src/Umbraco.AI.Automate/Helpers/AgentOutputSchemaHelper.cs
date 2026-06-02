@@ -15,7 +15,7 @@ internal static class AgentOutputSchemaHelper
 {
     /// <summary>
     /// Schema returned when the agent has no structured output configured.
-    /// Matches the <c>{ response: "..." }</c> shape produced by <c>BuildOutputData</c>.
+    /// Matches the <c>{ rawResponse: "..." }</c> shape produced by <c>BuildOutputData</c>.
     /// </summary>
     private static readonly JsonSchema FallbackSchema = new JsonSchemaBuilder()
         .Type(SchemaValueType.Object)
@@ -24,10 +24,10 @@ internal static class AgentOutputSchemaHelper
         .Build();
 
     /// <summary>
-    /// Gets the output JSON Schema for an agent. The raw <c>response</c> string property is always
+    /// Gets the output JSON Schema for an agent. The raw <c>rawResponse</c> string property is always
     /// included so a bindable property is available even when the agent has no structured output
     /// (or returns text that doesn't match its schema). When the agent has a structured output
-    /// schema, its properties are merged alongside the raw <c>response</c> property.
+    /// schema, its properties are merged alongside the raw <c>rawResponse</c> property.
     /// </summary>
     internal static async Task<JsonSchema> GetOutputSchemaAsync(
         IAIAgentService agentService,
@@ -55,7 +55,7 @@ internal static class AgentOutputSchemaHelper
         }
 
         // The reserved raw response is always a string and always takes this slot, so downstream
-        // steps can rely on `response` regardless of what the structured schema declares.
+        // steps can rely on `rawResponse` regardless of what the structured schema declares.
         properties[RunAgentAction.RawResponseKey] = new JsonObject { ["type"] = "string" };
 
         return JsonSchema.FromText(schemaObject.ToJsonString());

@@ -184,7 +184,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
     /// regardless of whether the agent uses a structured output schema. This guarantees
     /// a bindable property is always available to downstream automation steps.
     /// </summary>
-    public const string RawResponseKey = "response";
+    public const string RawResponseKey = "rawResponse";
 
     /// <summary>
     /// Builds the action output data from the agent's raw response text.

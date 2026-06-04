@@ -6,8 +6,10 @@ using Umbraco.AI.Prompt.Core.Context;
 using Umbraco.AI.Prompt.Core.Guardrails;
 using Umbraco.AI.Prompt.Core.Models;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Telemetry;
 using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
 namespace Umbraco.AI.Prompt.Core.Configuration;
 
@@ -60,6 +62,9 @@ public static class UmbracoBuilderExtensions
 
         // Register versionable entity adapter for prompts
         builder.AIVersionableEntityAdapters().Add<AIPromptVersionableEntityAdapter>();
+
+        // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
+        builder.Services.AddTransient<IDetailedTelemetryProvider, AIPromptUsageTelemetryProvider>();
 
         return builder;
     }

@@ -27,11 +27,14 @@ public class AIGuardrailChatClientTests
     }
 
     /// <summary>
-    /// Creates a real editable model resolver backed by empty configuration so evaluator
-    /// configuration is deserialized (and $Config references resolved) through the supported path.
+    /// Creates evaluator infrastructure with a real editable model resolver backed by empty
+    /// configuration so evaluator configuration is deserialized (and $Config references resolved)
+    /// through the supported path.
     /// </summary>
-    private static IAIEditableModelResolver CreateResolver()
-        => new AIEditableModelResolver(new ConfigurationBuilder().Build());
+    private static IAIGuardrailEvaluatorInfrastructure CreateEvaluatorInfrastructure()
+        => new AIGuardrailEvaluatorInfrastructure(
+            new Mock<IAIEditableModelSchemaBuilder>().Object,
+            new AIEditableModelResolver(new ConfigurationBuilder().Build()));
 
     #region Pre-Generate Redaction
 
@@ -47,7 +50,7 @@ public class AIGuardrailChatClientTests
             .WithConfig(new { pattern = @"\d{3}-\d{2}-\d{4}", ignoreCase = false })
             .Build();
 
-        var evaluator = new RegexGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
+        var evaluator = new RegexGuardrailEvaluator(CreateEvaluatorInfrastructure());
 
         var resolved = new AIResolvedGuardrails
         {
@@ -96,7 +99,7 @@ public class AIGuardrailChatClientTests
             .WithConfig(new { searchPattern = "secret-value", ignoreCase = true })
             .Build();
 
-        var evaluator = new ContainsGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
+        var evaluator = new ContainsGuardrailEvaluator(CreateEvaluatorInfrastructure());
 
         var resolved = new AIResolvedGuardrails
         {
@@ -151,8 +154,8 @@ public class AIGuardrailChatClientTests
             .WithConfig(new { pattern = @"\d+", ignoreCase = false })
             .Build();
 
-        var containsEvaluator = new ContainsGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
-        var regexEvaluator = new RegexGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
+        var containsEvaluator = new ContainsGuardrailEvaluator(CreateEvaluatorInfrastructure());
+        var regexEvaluator = new RegexGuardrailEvaluator(CreateEvaluatorInfrastructure());
 
         var resolved = new AIResolvedGuardrails
         {
@@ -205,8 +208,8 @@ public class AIGuardrailChatClientTests
             .WithConfig(new { searchPattern = "data here", ignoreCase = true })
             .Build();
 
-        var regexEvaluator = new RegexGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
-        var containsEvaluator = new ContainsGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
+        var regexEvaluator = new RegexGuardrailEvaluator(CreateEvaluatorInfrastructure());
+        var containsEvaluator = new ContainsGuardrailEvaluator(CreateEvaluatorInfrastructure());
 
         var resolved = new AIResolvedGuardrails
         {
@@ -255,7 +258,7 @@ public class AIGuardrailChatClientTests
             .WithConfig(new { searchPattern = "secret", ignoreCase = false })
             .Build();
 
-        var evaluator = new ContainsGuardrailEvaluator(new Mock<IAIEditableModelSchemaBuilder>().Object, CreateResolver());
+        var evaluator = new ContainsGuardrailEvaluator(CreateEvaluatorInfrastructure());
 
         var resolved = new AIResolvedGuardrails
         {

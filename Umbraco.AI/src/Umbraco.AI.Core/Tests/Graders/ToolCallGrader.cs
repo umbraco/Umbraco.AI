@@ -52,17 +52,11 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="ToolCallGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public ToolCallGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ToolCallGrader"/> class.
     /// </summary>
-    public ToolCallGrader(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+    public ToolCallGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 

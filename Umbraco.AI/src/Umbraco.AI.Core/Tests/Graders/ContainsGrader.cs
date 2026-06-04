@@ -41,16 +41,11 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="ContainsGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public ContainsGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    { }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ContainsGrader"/> class.
     /// </summary>
-    public ContainsGrader(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+    public ContainsGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     { }
 
     /// <inheritdoc />

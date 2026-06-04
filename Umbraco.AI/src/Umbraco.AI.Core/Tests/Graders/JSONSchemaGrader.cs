@@ -43,17 +43,11 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="JSONSchemaGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public JSONSchemaGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="JSONSchemaGrader"/> class.
     /// </summary>
-    public JSONSchemaGrader(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+    public JSONSchemaGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 

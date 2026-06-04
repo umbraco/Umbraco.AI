@@ -61,23 +61,13 @@ public class LLMJudgeGrader : AITestGraderBase<LLMJudgeGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="LLMJudgeGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public LLMJudgeGrader(
-        IAIChatService chatService,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-        _chatService = chatService;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="LLMJudgeGrader"/> class.
     /// </summary>
     public LLMJudgeGrader(
         IAIChatService chatService,
-        IAIEditableModelSchemaBuilder schemaBuilder,
-        IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+        IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _chatService = chatService;
     }

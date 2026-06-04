@@ -61,26 +61,14 @@ public class LLMGuardrailEvaluator : AIGuardrailEvaluatorBase<LLMGuardrailEvalua
     /// <inheritdoc />
     public override string Description => "Uses an LLM to evaluate content for safety, misinformation, and compliance";
 
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public LLMGuardrailEvaluator(
-        IAIChatService chatService,
-        IAIRuntimeContextAccessor runtimeContextAccessor,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-        _chatService = chatService;
-        _runtimeContextAccessor = runtimeContextAccessor;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="LLMGuardrailEvaluator"/> class.
     /// </summary>
     public LLMGuardrailEvaluator(
         IAIChatService chatService,
         IAIRuntimeContextAccessor runtimeContextAccessor,
-        IAIEditableModelSchemaBuilder schemaBuilder,
-        IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+        IAIGuardrailEvaluatorInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _chatService = chatService;
         _runtimeContextAccessor = runtimeContextAccessor;

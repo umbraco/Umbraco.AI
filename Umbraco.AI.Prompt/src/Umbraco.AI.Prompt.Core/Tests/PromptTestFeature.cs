@@ -22,25 +22,13 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public PromptTestFeature(
-        IAIPromptService promptService,
-        AITestContextResolver contextResolver,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(contextResolver, schemaBuilder)
-    {
-        _promptService = promptService;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
     /// </summary>
     public PromptTestFeature(
         IAIPromptService promptService,
-        AITestContextResolver contextResolver,
-        IAIEditableModelSchemaBuilder schemaBuilder,
-        IAIEditableModelResolver resolver)
-        : base(contextResolver, schemaBuilder, resolver)
+        IAITestFeatureInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _promptService = promptService;
     }

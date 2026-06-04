@@ -1,7 +1,8 @@
 using System.Reflection;
-using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Core.Guardrails.Evaluators;
 
@@ -13,7 +14,7 @@ namespace Umbraco.AI.Core.Guardrails.Evaluators;
 public abstract class AIGuardrailEvaluatorBase<TConfig> : IAIGuardrailEvaluator
 {
     private readonly Lazy<AIEditableModelSchema?> _configSchema;
-    private readonly IAIEditableModelResolver? _resolver;
+    private readonly IAIEditableModelResolver _resolver;
 
     /// <inheritdoc />
     public string Id { get; }
@@ -40,19 +41,23 @@ public abstract class AIGuardrailEvaluatorBase<TConfig> : IAIGuardrailEvaluator
     /// </summary>
     /// <param name="schemaBuilder">The schema builder.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver so that evaluator configuration supports app-settings ($Config) resolution and validation. This constructor will be removed in a future version.")]
+    [Obsolete("Use the constructor that accepts an IAIGuardrailEvaluatorInfrastructure so that evaluator configuration supports app-settings ($Config) resolution and validation. This constructor will be removed in a future version.")]
     protected AIGuardrailEvaluatorBase(IAIEditableModelSchemaBuilder schemaBuilder)
-        : this(schemaBuilder, resolver: null!)
+        : this(schemaBuilder, StaticServiceProvider.Instance.GetRequiredService<IAIEditableModelResolver>())
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIGuardrailEvaluatorBase{TConfig}"/> class.
     /// </summary>
-    /// <param name="schemaBuilder">The schema builder.</param>
-    /// <param name="resolver">The editable model resolver used to resolve configuration values.</param>
+    /// <param name="infrastructure">The evaluator infrastructure dependencies.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
-    protected AIGuardrailEvaluatorBase(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
+    protected AIGuardrailEvaluatorBase(IAIGuardrailEvaluatorInfrastructure infrastructure)
+        : this(infrastructure.SchemaBuilder, infrastructure.ModelResolver)
+    {
+    }
+
+    private AIGuardrailEvaluatorBase(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
     {
         SchemaBuilder = schemaBuilder;
         _resolver = resolver;
@@ -89,13 +94,7 @@ public abstract class AIGuardrailEvaluatorBase<TConfig> : IAIGuardrailEvaluator
             return default;
         }
 
-        if (_resolver is not null && ConfigType is not null)
-        {
-            return (TConfig?)_resolver.ResolveModel(ConfigType, configElement, GetConfigSchema());
-        }
-
-        // Fallback for evaluators constructed via the obsolete constructor (no resolver available).
-        return configElement.Deserialize<TConfig>(Constants.DefaultJsonSerializerOptions);
+        return (TConfig?)_resolver.ResolveModel(typeof(TConfig), configElement, GetConfigSchema());
     }
 
     /// <inheritdoc />

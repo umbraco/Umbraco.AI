@@ -41,17 +41,11 @@ public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="ExactMatchGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public ExactMatchGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ExactMatchGrader"/> class.
     /// </summary>
-    public ExactMatchGrader(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+    public ExactMatchGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 

@@ -33,22 +33,6 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public AgentTestFeature(
-        IAIAgentService agentService,
-        IAGUIContextConverter contextConverter,
-        IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors,
-        AITestContextResolver contextResolver,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(contextResolver, schemaBuilder)
-    {
-        _agentService = agentService;
-        _contextConverter = contextConverter;
-        _scopeProvider = scopeProvider;
-        _contributors = contributors;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
     /// </summary>
@@ -57,10 +41,8 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         IAGUIContextConverter contextConverter,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors,
-        AITestContextResolver contextResolver,
-        IAIEditableModelSchemaBuilder schemaBuilder,
-        IAIEditableModelResolver resolver)
-        : base(contextResolver, schemaBuilder, resolver)
+        IAITestFeatureInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _agentService = agentService;
         _contextConverter = contextConverter;

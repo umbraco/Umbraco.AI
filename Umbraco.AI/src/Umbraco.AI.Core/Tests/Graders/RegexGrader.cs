@@ -51,17 +51,11 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="RegexGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public RegexGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="RegexGrader"/> class.
     /// </summary>
-    public RegexGrader(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+    public RegexGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 

@@ -49,23 +49,13 @@ public class GuardrailGrader : AITestGraderBase<GuardrailGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="GuardrailGrader"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public GuardrailGrader(
-        AIGuardrailEvaluatorCollection evaluators,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    {
-        _evaluators = evaluators;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="GuardrailGrader"/> class.
     /// </summary>
     public GuardrailGrader(
         AIGuardrailEvaluatorCollection evaluators,
-        IAIEditableModelSchemaBuilder schemaBuilder,
-        IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+        IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _evaluators = evaluators;
     }

@@ -50,16 +50,11 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
     /// <inheritdoc />
     public override string Description => "Flags content that matches a regular expression pattern";
 
-    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
-    public RegexGuardrailEvaluator(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
-    { }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="RegexGuardrailEvaluator"/> class.
     /// </summary>
-    public RegexGuardrailEvaluator(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
-        : base(schemaBuilder, resolver)
+    public RegexGuardrailEvaluator(IAIGuardrailEvaluatorInfrastructure infrastructure)
+        : base(infrastructure)
     { }
 
     /// <inheritdoc />

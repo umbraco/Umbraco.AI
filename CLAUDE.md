@@ -21,12 +21,18 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.Amazon | `Umbraco.AI.Amazon/` | Provider |
 | Umbraco.AI.Google | `Umbraco.AI.Google/` | Provider |
 | Umbraco.AI.MicrosoftFoundry | `Umbraco.AI.MicrosoftFoundry/` | Provider |
+| Umbraco.AI.Mistral | `Umbraco.AI.Mistral/` | Provider |
+| Umbraco.AI.DeepSeek | `Umbraco.AI.DeepSeek/` | Provider |
+| Umbraco.AI.HuggingFace | `Umbraco.AI.HuggingFace/` | Provider |
+| Umbraco.AI.FireworksAI | `Umbraco.AI.FireworksAI/` | Provider |
+| Umbraco.AI.TogetherAI | `Umbraco.AI.TogetherAI/` | Provider |
 
 ### Dependency Tree
 
 ```
 Umbraco.AI (Core)
-├── Providers: OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry
+├── Providers: OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry,
+│              Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI
 ├── Umbraco.AI.Prompt → Prompt.Deploy (depends on Prompt + Deploy)
 ├── Umbraco.AI.Agent → Agent.UI → Agent.Copilot
 │                     → Agent.Deploy (depends on Agent + Deploy)

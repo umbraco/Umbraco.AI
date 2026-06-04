@@ -384,6 +384,51 @@ public class AIEditableModelResolverTests
 
     #endregion
 
+    #region ResolveModel<TModel> - Literal $ escaping ($$)
+
+    [Fact]
+    public void ResolveModel_LeadingDoubleDollar_ResolvesToLiteralSingleDollar()
+    {
+        // A value that must start with a literal '$' (e.g. a guardrail regex/contains pattern)
+        // is escaped with a leading '$$'. It is returned verbatim minus one '$' — never treated
+        // as a config reference, so the allow-list is not consulted.
+        var settings = new FakeProviderSettings { BaseUrl = "$$ConnectionStrings:umbracoDbDSN" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe("$ConnectionStrings:umbracoDbDSN");
+    }
+
+    [Fact]
+    public void ResolveModel_LoneDoubleDollar_ResolvesToSingleDollar()
+    {
+        var settings = new FakeProviderSettings { BaseUrl = "$$" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe("$");
+    }
+
+    [Fact]
+    public void ResolveModel_TrailingDollar_IsLeftUnchanged()
+    {
+        // A trailing '$' (e.g. a regex end-of-line anchor) does not start with '$', so it is
+        // never treated as a reference and needs no escaping — the common, important case.
+        var settings = new FakeProviderSettings { BaseUrl = @"^\d+$" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe(@"^\d+$");
+    }
+
+    #endregion
+
     #region ResolveModel<TModel> - Validation
 
     [Fact]

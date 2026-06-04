@@ -35,13 +35,6 @@ public static class AIUsageTelemetryConstants
     /// </summary>
     public const string ProfileCountPrefix = "UmbracoAIProfileCount";
 
-    /// <summary>
-    /// The set of normalized model families in use across profiles, in the form
-    /// "{providerId}/{family}" (e.g., "openai/gpt-4o"). User-authored model or deployment
-    /// names that don't match a known public model family are reported as "{providerId}/other".
-    /// </summary>
-    public const string ModelFamilies = "UmbracoAIModelFamilies";
-
     /// <summary>The total number of contexts.</summary>
     public const string ContextCount = "UmbracoAIContextCount";
 

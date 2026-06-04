@@ -164,10 +164,6 @@ public class AIUsageTelemetryProviderTests
         var providers = GetData(result, AIUsageTelemetryConstants.Providers).ShouldBeAssignableTo<IEnumerable<string>>();
         providers.ShouldContain("openai");
         providers.ShouldContain("anthropic");
-
-        var modelFamilies = GetData(result, AIUsageTelemetryConstants.ModelFamilies).ShouldBeAssignableTo<IEnumerable<string>>();
-        modelFamilies.ShouldContain("openai/gpt-4o");
-        modelFamilies.ShouldContain("openai/other"); // sensitive model ID normalized away
     }
 
     [Fact]

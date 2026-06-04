@@ -149,12 +149,6 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
                 AIUsageTelemetryConstants.ProfileCountPrefix + capabilityGroup.Key,
                 capabilityGroup.Count()));
         }
-
-        var modelFamilies = profiles
-            .Select(p => AIModelFamilyNormalizer.Normalize(p.Model.ProviderId, p.Model.ModelId))
-            .ToHashSet();
-
-        result.Add(new UsageInformation(AIUsageTelemetryConstants.ModelFamilies, modelFamilies));
     }
 
     private void CollectContextsAndGuardrails(List<UsageInformation> result)

@@ -47,9 +47,8 @@ The complete key list lives in code — one constants class per product, which u
 enforce as a whitelist (`Umbraco.AI.Tests.Unit/Telemetry/`):
 
 - `AIUsageTelemetryConstants` (Core) — installed/connected provider IDs, connection count,
-  profile counts (total + per capability), normalized model families, context/guardrail
-  counts, default-profile configuration, audit/analytics enablement, 30-day request count
-  and success rate.
+  profile counts (total + per capability), context/guardrail counts, default-profile
+  configuration, audit/analytics enablement, 30-day request count and success rate.
 - `AIPromptUsageTelemetryConstants` — prompt counts (total/active/linkage) and display modes.
 - `AIAgentUsageTelemetryConstants` — agent counts (total/active/per-type/linkage) and
   code-authored surface IDs.
@@ -63,10 +62,14 @@ detail:
 - **No token totals** — they are a proxy for customer spend.
 - **No user-authored names or aliases** — profile/prompt/agent/connection aliases can encode
   business information. Counts only.
-- **No raw model IDs** — model IDs can be user-authored (Azure AI Foundry deployment names,
-  self-hosted models). `AIModelFamilyNormalizer` maps them to known public family names
-  (`openai/gpt-4o`, `anthropic/claude-sonnet`, …); anything unmatched reports as
-  `{provider}/other`.
+- **No model IDs** — model IDs can be user-authored (Azure AI Foundry deployment names,
+  OpenAI fine-tune names, self-hosted models), so they are not reported at all. Provider
+  IDs and per-capability profile counts carry the demand signal instead. (A hardcoded
+  model-family normalization map was considered and rejected as unscalable; validating
+  against provider catalogs was rejected because catalogs can contain user-authored
+  deployment names and fetching them makes vendor API calls with customer credentials.
+  If model-level data is ever needed, the right mechanism is a provider-owned hook so
+  each provider package declares its own public-catalog knowledge.)
 - **No content** — no prompt instructions, system messages, snapshots, context resources, or
   indexed documents.
 - **No identities** — no user IDs/names, no entity IDs, no per-user breakdowns.

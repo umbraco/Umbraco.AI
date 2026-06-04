@@ -20,7 +20,6 @@ identifier — never content, names, or identities.
 | Provider IDs with at least one connection | `openai` |
 | Connection count | `3` |
 | Profile counts (total and per capability) | `5` total, `3` Chat, `2` Embedding |
-| Model families in use (normalized to public model names) | `openai/gpt-4o`, `anthropic/claude-sonnet` |
 | Context and guardrail counts | `4`, `2` |
 | Which capabilities have a default profile configured | `Chat`, `Embedding` |
 | Whether audit logging / usage analytics are enabled | `true` |
@@ -39,8 +38,8 @@ identifier — never content, names, or identities.
 - Prompt instructions, system messages, chat content, or AI responses
 - API keys, endpoints, or any connection settings
 - Names or aliases of profiles, prompts, agents, connections, contexts, or guardrails
-- Custom model or deployment names — model IDs are normalized to well-known public model
-  families (e.g. `gpt-4o`); anything custom is reported only as `other`
+- Model or deployment names — model IDs are not reported at all, as they can be
+  user-authored (e.g. Azure AI Foundry deployment names)
 - Token usage totals
 - User identities, entity IDs, or content references
 - Error messages

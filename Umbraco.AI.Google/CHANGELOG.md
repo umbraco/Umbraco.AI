@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Google will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.11](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Google@1.1.10...Umbraco.AI.Google@1.1.11) (2026-06-04)
+
+### fix
+
+* **google:** Bump Google.GenAI minimum to 1.8.0 to resolve M.E.AI breaking change ([c13b876](https://github.com/umbraco/Umbraco.AI/commit/c13b876cbaa094772e839b1943c0e3614a5b73c1)), closes [#183](https://github.com/umbraco/Umbraco.AI/issues/183)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.14.0.
+
 ## [1.1.10](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Google@1.1.9...Umbraco.AI.Google@1.1.10) (2026-06-01)
 
 ### Internal

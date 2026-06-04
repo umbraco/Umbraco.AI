@@ -43,7 +43,10 @@
         "prettier": "^3.8.1"
     },
     "overrides": {
-        "rxjs": "^7.8.2"
+        "rxjs": "^7.8.2",
+        "monaco-editor": {
+            "dompurify": "^3.4.0"
+        }
     },
     "peerDependencyVersions": {
         "@umbraco-ai/core": "^1.14.0",

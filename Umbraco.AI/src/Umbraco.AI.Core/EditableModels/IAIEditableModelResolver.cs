@@ -8,7 +8,8 @@ public interface IAIEditableModelResolver
 {
     /// <summary>
     /// Resolves a model from storage format (JsonElement, Dictionary, etc.) to a typed instance.
-    /// Supports configuration variable substitution using the pattern: $ConfigKey
+    /// Supports configuration variable substitution using the pattern <c>$Key:Path</c>, restricted
+    /// to keys under an allowed prefix (see <c>AIOptions.AllowedConfigurationKeyPrefixes</c>).
     /// Validates the resolved model using the schema's validation rules when a schema is provided.
     /// </summary>
     /// <typeparam name="TModel">The type of model to resolve to.</typeparam>

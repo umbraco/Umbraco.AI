@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.3...Umbraco.AI.Agent@1.10.4) (2026-06-04)
+
+### Internal
+
+* Rebuilt against the Umbraco.AI 1.14.0 editable-model service refactor.
+
 ## [1.10.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.2...Umbraco.AI.Agent@1.10.3) (2026-06-01)
 
 ### Internal

@@ -13,6 +13,7 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     where TConfig : AITestFeatureConfigBase
 {
     private readonly Lazy<AIEditableModelSchema?> _configSchema;
+    private readonly IAIEditableModelResolver? _resolver;
 
     /// <inheritdoc />
     public string Id { get; }
@@ -45,10 +46,24 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     /// <param name="contextResolver">The context resolver.</param>
     /// <param name="schemaBuilder">The schema builder.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
+    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver so that test feature configuration supports app-settings ($Config) resolution and validation. This constructor will be removed in a future version.")]
     protected AITestFeatureBase(AITestContextResolver contextResolver, IAIEditableModelSchemaBuilder schemaBuilder)
+        : this(contextResolver, schemaBuilder, resolver: null!)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AITestFeatureBase{TConfig}"/> class.
+    /// </summary>
+    /// <param name="contextResolver">The context resolver.</param>
+    /// <param name="schemaBuilder">The schema builder.</param>
+    /// <param name="resolver">The editable model resolver used to resolve configuration values.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
+    protected AITestFeatureBase(AITestContextResolver contextResolver, IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
     {
         ContextResolver = contextResolver;
         SchemaBuilder = schemaBuilder;
+        _resolver = resolver;
 
         var attribute = GetType().GetCustomAttribute<AITestFeatureAttribute>(inherit: false);
         if (attribute == null)
@@ -66,6 +81,29 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     /// <inheritdoc />
     public AIEditableModelSchema? GetConfigSchema()
         => _configSchema.Value;
+
+    /// <summary>
+    /// Resolves the strongly-typed test feature configuration from the test's stored
+    /// <see cref="AITest.TestFeatureConfig"/>, applying app-settings ($Config) resolution and schema
+    /// validation through the editable model resolver.
+    /// </summary>
+    /// <param name="test">The test whose feature configuration should be resolved.</param>
+    /// <returns>The resolved configuration, or <c>null</c> if no configuration is stored.</returns>
+    protected TConfig? ResolveTestFeatureConfig(AITest test)
+    {
+        if (test.TestFeatureConfig is not { } configElement)
+        {
+            return null;
+        }
+
+        if (_resolver is not null && ConfigType is not null)
+        {
+            return (TConfig?)_resolver.ResolveModel(ConfigType, configElement, GetConfigSchema());
+        }
+
+        // Fallback for features constructed via the obsolete constructor (no resolver available).
+        return configElement.Deserialize<TConfig>(Constants.DefaultJsonSerializerOptions);
+    }
 
     /// <inheritdoc />
     /// <remarks>

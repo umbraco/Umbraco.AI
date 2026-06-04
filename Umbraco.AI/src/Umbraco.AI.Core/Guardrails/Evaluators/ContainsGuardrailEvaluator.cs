@@ -39,8 +39,16 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
     /// <inheritdoc />
     public override string Description => "Flags content that contains a specific substring";
 
+    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
     public ContainsGuardrailEvaluator(IAIEditableModelSchemaBuilder schemaBuilder)
         : base(schemaBuilder)
+    { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContainsGuardrailEvaluator"/> class.
+    /// </summary>
+    public ContainsGuardrailEvaluator(IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
+        : base(schemaBuilder, resolver)
     { }
 
     /// <inheritdoc />
@@ -50,7 +58,7 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
     {
-        var evalConfig = config.Deserialize<ContainsGuardrailEvaluatorConfig>() ?? new ContainsGuardrailEvaluatorConfig();
+        var evalConfig = ResolveConfig(config) ?? new ContainsGuardrailEvaluatorConfig();
 
         var comparison = evalConfig.IgnoreCase
             ? StringComparison.OrdinalIgnoreCase
@@ -77,7 +85,7 @@ public class ContainsGuardrailEvaluator : AIGuardrailEvaluatorBase<ContainsGuard
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
     {
-        var evalConfig = config.Deserialize<ContainsGuardrailEvaluatorConfig>() ?? new ContainsGuardrailEvaluatorConfig();
+        var evalConfig = ResolveConfig(config) ?? new ContainsGuardrailEvaluatorConfig();
 
         if (string.IsNullOrEmpty(evalConfig.SearchPattern))
         {

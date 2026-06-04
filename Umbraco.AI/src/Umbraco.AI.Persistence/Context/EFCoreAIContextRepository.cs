@@ -11,13 +11,15 @@ namespace Umbraco.AI.Persistence.Context;
 internal class EFCoreAIContextRepository : IAIContextRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
+    private readonly IAIContextFactory _factory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EFCoreAIContextRepository"/>.
     /// </summary>
-    public EFCoreAIContextRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIContextRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider, IAIContextFactory factory)
     {
         _scopeProvider = scopeProvider;
+        _factory = factory;
     }
 
     /// <inheritdoc />
@@ -31,7 +33,7 @@ internal class EFCoreAIContextRepository : IAIContextRepository
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AIContextFactory.BuildDomain(entity);
+        return entity is null ? null : _factory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -45,7 +47,7 @@ internal class EFCoreAIContextRepository : IAIContextRepository
                 .FirstOrDefaultAsync(c => c.Alias.ToLower() == alias.ToLower(), cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AIContextFactory.BuildDomain(entity);
+        return entity is null ? null : _factory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -59,7 +61,7 @@ internal class EFCoreAIContextRepository : IAIContextRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AIContextFactory.BuildDomain);
+        return entities.Select(_factory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -94,7 +96,7 @@ internal class EFCoreAIContextRepository : IAIContextRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AIContextFactory.BuildDomain), result.total);
+        return (result.items.Select(_factory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
@@ -116,7 +118,7 @@ internal class EFCoreAIContextRepository : IAIContextRepository
                 context.CreatedByUserId = userId;
                 context.ModifiedByUserId = userId;
 
-                AIContextEntity newEntity = AIContextFactory.BuildEntity(context);
+                AIContextEntity newEntity = _factory.BuildEntity(context);
                 db.Contexts.Add(newEntity);
             }
             else
@@ -127,7 +129,7 @@ internal class EFCoreAIContextRepository : IAIContextRepository
                 context.DateModified = DateTime.UtcNow;
                 context.ModifiedByUserId = userId;
 
-                AIContextFactory.UpdateEntity(existing, context);
+                _factory.UpdateEntity(existing, context);
 
                 // Handle resources: remove deleted, update existing, add new
                 var existingResourceIds = existing.Resources.Select(r => r.Id).ToHashSet();
@@ -146,11 +148,11 @@ internal class EFCoreAIContextRepository : IAIContextRepository
                     if (existingResourceIds.Contains(resource.Id))
                     {
                         var existingResource = existing.Resources.First(r => r.Id == resource.Id);
-                        AIContextFactory.UpdateResourceEntity(existingResource, resource);
+                        _factory.UpdateResourceEntity(existingResource, resource);
                     }
                     else
                     {
-                        var newResource = AIContextFactory.BuildResourceEntity(resource, context.Id);
+                        var newResource = _factory.BuildResourceEntity(resource, context.Id);
                         db.ContextResources.Add(newResource);
                     }
                 }

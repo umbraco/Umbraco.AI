@@ -22,11 +22,25 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
     /// </summary>
+    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
     public PromptTestFeature(
         IAIPromptService promptService,
         AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
         : base(contextResolver, schemaBuilder)
+    {
+        _promptService = promptService;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
+    /// </summary>
+    public PromptTestFeature(
+        IAIPromptService promptService,
+        AITestContextResolver contextResolver,
+        IAIEditableModelSchemaBuilder schemaBuilder,
+        IAIEditableModelResolver resolver)
+        : base(contextResolver, schemaBuilder, resolver)
     {
         _promptService = promptService;
     }
@@ -71,8 +85,8 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
         IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken)
     {
-        // Deserialize test feature config
-        var config = test.GetTestFeatureConfig<PromptTestFeatureConfig>();
+        // Resolve test feature config (resolves $Config app-settings references and validates)
+        var config = ResolveTestFeatureConfig(test);
         if (config == null)
         {
             throw new InvalidOperationException("Failed to deserialize test feature config");

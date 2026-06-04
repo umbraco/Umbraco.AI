@@ -10,10 +10,12 @@ namespace Umbraco.AI.Persistence.Guardrails;
 internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
+    private readonly IAIGuardrailFactory _factory;
 
-    public EFCoreAIGuardrailRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIGuardrailRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider, IAIGuardrailFactory factory)
     {
         _scopeProvider = scopeProvider;
+        _factory = factory;
     }
 
     /// <inheritdoc />
@@ -27,7 +29,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                 .FirstOrDefaultAsync(g => g.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AIGuardrailFactory.BuildDomain(entity);
+        return entity is null ? null : _factory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -41,7 +43,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                 .FirstOrDefaultAsync(g => g.Alias.ToLower() == alias.ToLower(), cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AIGuardrailFactory.BuildDomain(entity);
+        return entity is null ? null : _factory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -55,7 +57,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AIGuardrailFactory.BuildDomain);
+        return entities.Select(_factory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -90,7 +92,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AIGuardrailFactory.BuildDomain), result.total);
+        return (result.items.Select(_factory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
@@ -106,7 +108,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AIGuardrailFactory.BuildDomain);
+        return entities.Select(_factory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -128,7 +130,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                 guardrail.CreatedByUserId = userId;
                 guardrail.ModifiedByUserId = userId;
 
-                AIGuardrailEntity newEntity = AIGuardrailFactory.BuildEntity(guardrail);
+                AIGuardrailEntity newEntity = _factory.BuildEntity(guardrail);
                 db.Guardrails.Add(newEntity);
             }
             else
@@ -138,7 +140,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                 guardrail.DateModified = DateTime.UtcNow;
                 guardrail.ModifiedByUserId = userId;
 
-                AIGuardrailFactory.UpdateEntity(existing, guardrail);
+                _factory.UpdateEntity(existing, guardrail);
 
                 // Handle rules: remove deleted, update existing, add new
                 var existingRuleIds = existing.Rules.Select(r => r.Id).ToHashSet();
@@ -157,11 +159,11 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
                     if (existingRuleIds.Contains(rule.Id))
                     {
                         var existingRule = existing.Rules.First(r => r.Id == rule.Id);
-                        AIGuardrailFactory.UpdateRuleEntity(existingRule, rule);
+                        _factory.UpdateRuleEntity(existingRule, rule);
                     }
                     else
                     {
-                        var newRule = AIGuardrailFactory.BuildRuleEntity(rule, guardrail.Id);
+                        var newRule = _factory.BuildRuleEntity(rule, guardrail.Id);
                         db.GuardrailRules.Add(newRule);
                     }
                 }

@@ -24,57 +24,54 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
     /// <inheritdoc />
     public TModel? ResolveModel<TModel>(object? data, AIEditableModelSchema? schema = null)
         where TModel : class, new()
+        => (TModel?)ResolveModel(typeof(TModel), data, schema);
+
+    /// <inheritdoc />
+    public object? ResolveModel(Type modelType, object? data, AIEditableModelSchema? schema = null)
     {
-        // If data is null, return null (or new instance if required by validation)
+        // If data is null, return null
         if (data is null)
         {
             return null;
         }
 
-        // If already correct type, clone via JSON round-trip to avoid mutating the original object,
-        // then resolve configuration variables and validate on the copy
-        if (data is TModel)
-        {
-            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
-            var deserialized = JsonSerializer.Deserialize<TModel>(json, Constants.DefaultJsonSerializerOptions);
-            if (deserialized is not null)
-            {
-                ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(deserialized, schema);
-            }
-            return deserialized;
-        }
+        object? deserialized;
 
         // Handle JsonElement deserialization
         if (data is JsonElement jsonElement)
         {
-            var deserialized = jsonElement.Deserialize<TModel>(Constants.DefaultJsonSerializerOptions);
-            if (deserialized is not null)
+            deserialized = jsonElement.Deserialize(modelType, Constants.DefaultJsonSerializerOptions);
+        }
+        else if (modelType.IsInstanceOfType(data))
+        {
+            // Already correct type, clone via JSON round-trip to avoid mutating the original object,
+            // then resolve configuration variables and validate on the copy
+            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
+            deserialized = JsonSerializer.Deserialize(json, modelType, Constants.DefaultJsonSerializerOptions);
+        }
+        else
+        {
+            // Try to serialize/deserialize through JSON as fallback
+            try
             {
-                ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(deserialized, schema);
+                var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
+                deserialized = JsonSerializer.Deserialize(json, modelType, Constants.DefaultJsonSerializerOptions);
             }
-            return deserialized;
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to resolve model to type {modelType.Name}",
+                    ex);
+            }
         }
 
-        // Try to serialize/deserialize through JSON as fallback
-        try
+        if (deserialized is not null)
         {
-            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
-            var deserialized = JsonSerializer.Deserialize<TModel>(json, Constants.DefaultJsonSerializerOptions);
-            if (deserialized is not null)
-            {
-                ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(deserialized, schema);
-            }
-            return deserialized;
+            ResolveConfigurationVariablesInObject(deserialized);
+            ValidateModel(deserialized, schema);
         }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Failed to resolve model to type {typeof(TModel).Name}",
-                ex);
-        }
+
+        return deserialized;
     }
 
     private void ResolveConfigurationVariablesInObject(object obj)

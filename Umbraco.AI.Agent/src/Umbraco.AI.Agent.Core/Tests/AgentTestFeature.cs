@@ -33,6 +33,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
     /// </summary>
+    [Obsolete("Use the constructor that also accepts an IAIEditableModelResolver. This constructor will be removed in a future version.")]
     public AgentTestFeature(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,
@@ -41,6 +42,25 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         AITestContextResolver contextResolver,
         IAIEditableModelSchemaBuilder schemaBuilder)
         : base(contextResolver, schemaBuilder)
+    {
+        _agentService = agentService;
+        _contextConverter = contextConverter;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
+    /// </summary>
+    public AgentTestFeature(
+        IAIAgentService agentService,
+        IAGUIContextConverter contextConverter,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors,
+        AITestContextResolver contextResolver,
+        IAIEditableModelSchemaBuilder schemaBuilder,
+        IAIEditableModelResolver resolver)
+        : base(contextResolver, schemaBuilder, resolver)
     {
         _agentService = agentService;
         _contextConverter = contextConverter;
@@ -78,8 +98,8 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken)
     {
-        // Get strongly-typed config
-        var config = test.GetTestFeatureConfig<AgentTestFeatureConfig>();
+        // Get strongly-typed config (resolves $Config app-settings references and validates)
+        var config = ResolveTestFeatureConfig(test);
         if (config == null)
         {
             throw new InvalidOperationException("Failed to deserialize test feature config");

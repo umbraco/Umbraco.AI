@@ -3,6 +3,12 @@ namespace Umbraco.AI.Core.Telemetry;
 /// <summary>
 /// Constants for configuring OpenTelemetry to capture Umbraco.AI telemetry.
 /// </summary>
+/// <remarks>
+/// This is observability tooling for the host application's own infrastructure (APM, tracing,
+/// metrics) — data never leaves the customer's environment. Not to be confused with
+/// <see cref="AIUsageTelemetryProvider"/>, which contributes anonymous aggregate usage counts
+/// to the CMS telemetry report sent to Umbraco HQ.
+/// </remarks>
 /// <example>
 /// <code>
 /// builder.Services.AddOpenTelemetry()

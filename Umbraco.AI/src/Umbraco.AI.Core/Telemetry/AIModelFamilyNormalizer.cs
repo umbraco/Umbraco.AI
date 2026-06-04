@@ -12,29 +12,33 @@ namespace Umbraco.AI.Core.Telemetry;
 internal static class AIModelFamilyNormalizer
 {
     /// <summary>
-    /// Known public model family tokens, ordered most-specific first.
-    /// Matching is token-boundary aware, so "gpt-4" will not match inside "gpt-4o".
+    /// Known public model family tokens mapped to the reported family name, ordered
+    /// most-specific first. Matching is token-boundary aware, so "gpt-4" will not match
+    /// inside "gpt-4o".
     /// </summary>
-    private static readonly string[] _familyTokens =
+    private static readonly (string Token, string Family)[] _familyTokens =
     [
         // OpenAI
-        "gpt-5", "gpt-4.1", "gpt-4o", "gpt-4", "gpt-3.5",
-        "o1", "o3", "o4",
-        "dall-e", "whisper", "sora",
-        "text-embedding-3", "text-embedding-ada",
-        // Anthropic
-        "claude-opus", "claude-sonnet", "claude-haiku", "claude",
+        ("gpt-5", "gpt-5"), ("gpt-4.1", "gpt-4.1"), ("gpt-4o", "gpt-4o"), ("gpt-4", "gpt-4"), ("gpt-3.5", "gpt-3.5"),
+        ("o1", "o1"), ("o3", "o3"), ("o4", "o4"),
+        ("dall-e", "dall-e"), ("whisper", "whisper"), ("sora", "sora"),
+        ("text-embedding-3", "text-embedding-3"), ("text-embedding-ada", "text-embedding-ada"),
+        // Anthropic - tier tokens match standalone so both "claude-sonnet-4-5" and the older
+        // "claude-3-5-sonnet" naming normalize to the same family
+        ("opus", "claude-opus"), ("sonnet", "claude-sonnet"), ("haiku", "claude-haiku"), ("claude", "claude"),
         // Google
-        "gemini", "gemma", "imagen", "veo",
+        ("gemini", "gemini"), ("gemma", "gemma"), ("imagen", "imagen"), ("veo", "veo"),
         // Mistral
-        "magistral", "ministral", "mixtral", "mistral", "codestral", "pixtral", "devstral", "voxtral",
+        ("magistral", "magistral"), ("ministral", "ministral"), ("mixtral", "mixtral"), ("mistral", "mistral"),
+        ("codestral", "codestral"), ("pixtral", "pixtral"), ("devstral", "devstral"), ("voxtral", "voxtral"),
         // DeepSeek
-        "deepseek",
+        ("deepseek", "deepseek"),
         // Amazon
-        "nova", "titan",
+        ("nova", "nova"), ("titan", "titan"),
         // Open-weight families (TogetherAI, FireworksAI, HuggingFace hosts)
-        "llama", "qwen", "phi", "kimi", "glm", "grok", "command", "jamba",
-        "stable-diffusion", "flux",
+        ("llama", "llama"), ("qwen", "qwen"), ("phi", "phi"), ("kimi", "kimi"), ("glm", "glm"),
+        ("grok", "grok"), ("command", "command"), ("jamba", "jamba"),
+        ("stable-diffusion", "stable-diffusion"), ("flux", "flux"),
     ];
 
     /// <summary>
@@ -46,11 +50,11 @@ internal static class AIModelFamilyNormalizer
         var normalizedProvider = providerId.ToLowerInvariant();
         var normalizedModel = modelId.ToLowerInvariant();
 
-        foreach (var token in _familyTokens)
+        foreach ((var token, var family) in _familyTokens)
         {
             if (ContainsToken(normalizedModel, token))
             {
-                return $"{normalizedProvider}/{token}";
+                return $"{normalizedProvider}/{family}";
             }
         }
 

@@ -41,8 +41,11 @@ public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="ExactMatchGrader"/> class.
     /// </summary>
-    public ExactMatchGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExactMatchGrader"/> class.
+    /// </summary>
+    public ExactMatchGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 
@@ -53,11 +56,8 @@ public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        // Deserialize configuration
-        var config = graderConfig.Config is not { } configElement
-            ? new ExactMatchGraderConfig()
-            : configElement.Deserialize<ExactMatchGraderConfig>(Constants.DefaultJsonSerializerOptions)
-              ?? new ExactMatchGraderConfig();
+        // Deserialize configuration (resolves $Config app-settings references and validates)
+        var config = ResolveConfig(graderConfig) ?? new ExactMatchGraderConfig();
 
         // Output value is already extracted by the test feature
         var actualValue = outcome.OutputValue ?? string.Empty;

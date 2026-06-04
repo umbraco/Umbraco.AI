@@ -51,8 +51,11 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="RegexGrader"/> class.
     /// </summary>
-    public RegexGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RegexGrader"/> class.
+    /// </summary>
+    public RegexGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 
@@ -63,11 +66,8 @@ public class RegexGrader : AITestGraderBase<RegexGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        // Deserialize configuration
-        var config = graderConfig.Config is not { } configElement
-            ? new RegexGraderConfig()
-            : configElement.Deserialize<RegexGraderConfig>(Constants.DefaultJsonSerializerOptions)
-                ?? new RegexGraderConfig();
+        // Deserialize configuration (resolves $Config app-settings references and validates)
+        var config = ResolveConfig(graderConfig) ?? new RegexGraderConfig();
 
         // Output value is already extracted by the test feature
         var actualValue = outcome.OutputValue ?? string.Empty;

@@ -43,8 +43,11 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="JSONSchemaGrader"/> class.
     /// </summary>
-    public JSONSchemaGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JSONSchemaGrader"/> class.
+    /// </summary>
+    public JSONSchemaGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 
@@ -55,11 +58,8 @@ public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        // Deserialize configuration
-        var config = graderConfig.Config is not { } configElement
-            ? new JSONSchemaGraderConfig()
-            : configElement.Deserialize<JSONSchemaGraderConfig>(Constants.DefaultJsonSerializerOptions)
-                ?? new JSONSchemaGraderConfig();
+        // Deserialize configuration (resolves $Config app-settings references and validates)
+        var config = ResolveConfig(graderConfig) ?? new JSONSchemaGraderConfig();
 
         // Output value is already extracted by the test feature
         var actualValue = outcome.OutputValue ?? string.Empty;

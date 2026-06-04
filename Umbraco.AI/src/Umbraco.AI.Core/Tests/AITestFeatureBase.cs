@@ -1,7 +1,9 @@
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Core.Tests;
 
@@ -13,6 +15,7 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     where TConfig : AITestFeatureConfigBase
 {
     private readonly Lazy<AIEditableModelSchema?> _configSchema;
+    private readonly IAIEditableModelResolver _resolver;
 
     /// <inheritdoc />
     public string Id { get; }
@@ -45,10 +48,27 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     /// <param name="contextResolver">The context resolver.</param>
     /// <param name="schemaBuilder">The schema builder.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
+    [Obsolete("Use the constructor that accepts an IAITestFeatureInfrastructure so that test feature configuration supports app-settings ($Config) resolution and validation. This constructor will be removed in a future version.")]
     protected AITestFeatureBase(AITestContextResolver contextResolver, IAIEditableModelSchemaBuilder schemaBuilder)
+        : this(contextResolver, schemaBuilder, StaticServiceProvider.Instance.GetRequiredService<IAIEditableModelResolver>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AITestFeatureBase{TConfig}"/> class.
+    /// </summary>
+    /// <param name="infrastructure">The test feature infrastructure dependencies.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
+    protected AITestFeatureBase(IAITestFeatureInfrastructure infrastructure)
+        : this(infrastructure.ContextResolver, infrastructure.SchemaBuilder, infrastructure.ModelResolver)
+    {
+    }
+
+    private AITestFeatureBase(AITestContextResolver contextResolver, IAIEditableModelSchemaBuilder schemaBuilder, IAIEditableModelResolver resolver)
     {
         ContextResolver = contextResolver;
         SchemaBuilder = schemaBuilder;
+        _resolver = resolver;
 
         var attribute = GetType().GetCustomAttribute<AITestFeatureAttribute>(inherit: false);
         if (attribute == null)
@@ -66,6 +86,23 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     /// <inheritdoc />
     public AIEditableModelSchema? GetConfigSchema()
         => _configSchema.Value;
+
+    /// <summary>
+    /// Resolves the strongly-typed test feature configuration from the test's stored
+    /// <see cref="AITest.TestFeatureConfig"/>, applying app-settings ($Config) resolution and schema
+    /// validation through the editable model resolver.
+    /// </summary>
+    /// <param name="test">The test whose feature configuration should be resolved.</param>
+    /// <returns>The resolved configuration, or <c>null</c> if no configuration is stored.</returns>
+    protected TConfig? ResolveTestFeatureConfig(AITest test)
+    {
+        if (test.TestFeatureConfig is not { } configElement)
+        {
+            return null;
+        }
+
+        return (TConfig?)_resolver.ResolveModel(typeof(TConfig), configElement, GetConfigSchema());
+    }
 
     /// <inheritdoc />
     /// <remarks>

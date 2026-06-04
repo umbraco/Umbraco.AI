@@ -16,7 +16,8 @@ namespace Umbraco.AI.Core.EditableModels;
 /// Configuration substitution (<c>$Key:Path</c>) is default-deny: a key is only resolved
 /// when it falls under one of <see cref="AIOptions.AllowedConfigurationKeyPrefixes"/>, so a
 /// settings author can only reference the configuration sections an administrator has opted
-/// in — not arbitrary application configuration.
+/// in — not arbitrary application configuration. A value that needs to start with a literal
+/// <c>$</c> (rather than be treated as a reference) is written with a leading <c>$$</c>.
 /// </remarks>
 internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 {
@@ -127,6 +128,16 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
         if (value is not string strValue || !strValue.StartsWith(ConfigPrefix))
         {
             return value;
+        }
+
+        // Escape hatch: a leading "$$" denotes a literal value that happens to start with
+        // "$" (e.g. a guardrail regex or contains-pattern), not a configuration reference.
+        // Strip one '$' and return the remainder verbatim — no allow-list or lookup applied.
+        // Note this only concerns values that START with '$'; a trailing '$' (e.g. a regex
+        // end-of-line anchor) is never treated as a reference and needs no escaping.
+        if (strValue.StartsWith("$$", StringComparison.Ordinal))
+        {
+            return strValue.Substring(1);
         }
 
         // Extract configuration key

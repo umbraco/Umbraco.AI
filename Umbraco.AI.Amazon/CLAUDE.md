@@ -81,7 +81,7 @@ public class AmazonProviderSettings
 }
 ```
 
-Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$AWS:AccessKeyId"`).
+Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Umbraco:AI:Secrets:AwsAccessKeyId"`). Resolution is default-deny — only keys under `AIOptions.AllowedConfigurationKeyPrefixes` (default `Umbraco:AI:Secrets` / `Umbraco:AI:Variables`) resolve, and secret keys only into `IsSensitive` fields. See the core docs for the rationale.
 
 ### Supported Models
 

@@ -20,8 +20,10 @@ public class PromptTestFeatureTests
 {
     private readonly PromptTestFeature _feature = new(
         Mock.Of<IAIPromptService>(),
-        new AITestContextResolver(),
-        Mock.Of<IAIEditableModelSchemaBuilder>());
+        Mock.Of<IAITestFeatureInfrastructure>(x =>
+            x.ContextResolver == new AITestContextResolver() &&
+            x.SchemaBuilder == Mock.Of<IAIEditableModelSchemaBuilder>() &&
+            x.ModelResolver == Mock.Of<IAIEditableModelResolver>()));
 
     [Fact]
     public void ExtractOutputValue_SingleOption_ReturnsDisplayValue()

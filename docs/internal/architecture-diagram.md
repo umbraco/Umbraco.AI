@@ -108,7 +108,7 @@ The core architecture follows a clear hierarchy:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                             CONNECTION                                      │
 │  Stores API credentials and provider configuration                         │
-│  • API key (can reference config via $ConfigPath)                          │
+│  • API key (can reference allow-listed config via $Umbraco:AI:Secrets:Key) │
 │  • Endpoint URL                                                            │
 │  • Provider-specific settings                                              │
 │  • Identifies alias for easy reference                                     │

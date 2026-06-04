@@ -229,6 +229,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
 
         // Guardrail evaluator infrastructure - auto-discover via [AIGuardrailEvaluator] attribute
+        services.AddSingleton<IAIGuardrailEvaluatorInfrastructure, AIGuardrailEvaluatorInfrastructure>();
         builder.AIGuardrailEvaluators()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIGuardrailEvaluator, AIGuardrailEvaluatorAttribute>(cache: true));
 
@@ -290,10 +291,12 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
 
         // Auto-discover test features via [AITestFeature] attribute
+        services.AddSingleton<IAITestFeatureInfrastructure, AITestFeatureInfrastructure>();
         builder.AITestFeatures()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestFeature, AITestFeatureAttribute>(cache: true));
 
         // Auto-discover test graders via [AITestGrader] attribute
+        services.AddSingleton<IAITestGraderInfrastructure, AITestGraderInfrastructure>();
         builder.AITestGraders()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestGrader, AITestGraderAttribute>(cache: true));
 

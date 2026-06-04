@@ -41,8 +41,11 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="ContainsGrader"/> class.
     /// </summary>
-    public ContainsGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContainsGrader"/> class.
+    /// </summary>
+    public ContainsGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     { }
 
     /// <inheritdoc />
@@ -52,11 +55,8 @@ public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        // Deserialize configuration
-        var config = graderConfig.Config is not { } configElement
-            ? new ContainsGraderConfig()
-            : configElement.Deserialize<ContainsGraderConfig>(Constants.DefaultJsonSerializerOptions)
-                ?? new ContainsGraderConfig();
+        // Deserialize configuration (resolves $Config app-settings references and validates)
+        var config = ResolveConfig(graderConfig) ?? new ContainsGraderConfig();
 
         // Output value is already extracted by the test feature
         var actualValue = outcome.OutputValue ?? string.Empty;

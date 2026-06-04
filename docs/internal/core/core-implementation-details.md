@@ -799,18 +799,27 @@ The `IAIEditableModelResolver` supports resolving values from configuration:
 ```json
 // Connection settings in database
 {
-  "ApiKey": "$OpenAI:ApiKey"
+  "ApiKey": "$Umbraco:AI:Secrets:OpenAIApiKey"
 }
 
 // appsettings.json
 {
-  "OpenAI": {
-    "ApiKey": "sk-actual-key-here"
+  "Umbraco": {
+    "AI": {
+      "Secrets": { "OpenAIApiKey": "sk-actual-key-here" }
+    }
   }
 }
 ```
 
 Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to be stored in environment variables or secure configuration providers.
+
+**Security — default-deny allow-list.** Configuration references resolve server-side, so without a restriction a settings author could reference any configuration value, not just AI-related ones. Two layered controls in `AIEditableModelResolver` keep references confined to sanctioned values:
+
+1. **Allow-list (`AIOptions.AllowedConfigurationKeyPrefixes`, default `Umbraco:AI:Secrets` + `Umbraco:AI:Variables`).** A `$` key resolves only when it falls under an allowed prefix. The check runs *before* the lookup, so probing an off-limits key never reveals whether it exists. The allow-list lives in app settings by design and is **not** backoffice-editable.
+2. **Secret-to-sensitive-field (`AIOptions.SecretConfigurationKeyPrefixes`, default `Umbraco:AI:Secrets`).** Keys under a secret prefix may only be referenced from fields marked `[AIField(IsSensitive = true)]`, so a resolved secret cannot land in a clear-text field that is echoed back or transmitted. `Variables` are unrestricted.
+
+Prefix matching is segment-aware and case-insensitive (`Umbraco:AI:Secrets` permits `…:Secrets:Token` but not `…:SecretsBackup:Token`). The two default sections mirror the GitHub Actions Secrets/Variables split. Sensitivity is read straight from the property's `AIEditableModelFieldAttribute`, so it works even when no schema is supplied at resolution time.
 
 ---
 

@@ -71,6 +71,47 @@ public class RunAgentActionTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WithPlainTextResponse_ExposesRawResponseProperty()
+    {
+        // Arrange
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+        };
+
+        var responseMessage = new ChatMessage(ChatRole.Assistant, "Hello from agent!");
+        var agentResponse = new AgentResponse(responseMessage);
+
+        _agentServiceMock
+            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+
+        _agentServiceMock
+            .Setup(s => s.RunAgentAsync(
+                agent.Id,
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<AIAgentExecutionOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agentResponse);
+
+        var action = CreateAction();
+        var context = CreateContext(new RunAgentSettings
+        {
+            AgentId = TestAgentId,
+            Message = "Hello",
+        });
+
+        // Act
+        var result = await action.ExecuteAsync(context, CancellationToken.None);
+
+        // Assert
+        result.Status.ShouldBe(ActionResultStatus.Success);
+        var output = result.OutputData.ShouldBeOfType<Dictionary<string, object?>>();
+        output[RunAgentAction.RawResponseKey]?.ToString().ShouldBe("Hello from agent!");
+    }
+
+    [Fact]
     public async Task ExecuteAsync_PopulatesAuditMetadataKeysOnExecutionOptions()
     {
         // Arrange
@@ -168,6 +209,10 @@ public class RunAgentActionTests
         result.Status.ShouldBe(ActionResultStatus.Success);
         var output = result.OutputData.ShouldBeOfType<Dictionary<string, object?>>();
         output["summary"]?.ToString().ShouldBe("A test summary");
+
+        // The raw response is always exposed alongside the parsed structured properties.
+        output.ShouldContainKey(RunAgentAction.RawResponseKey);
+        output[RunAgentAction.RawResponseKey]?.ToString().ShouldBe(jsonResponse);
     }
 
     [Fact]

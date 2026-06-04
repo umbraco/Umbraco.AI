@@ -1,3 +1,4 @@
+using System.Linq;
 using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.Core.EditableModels;
@@ -25,9 +26,11 @@ public static class AIEditableModelResolverExtensions
         {
             var schema = provider.GetSettingsSchema();
 
-            // Use reflection to call ResolveModel<TModel>
-            var method = resolver.GetType()
-                .GetMethod(nameof(resolver.ResolveModel))!
+            // Invoke the generic ResolveModel<TModel> overload. Selecting the generic method
+            // definition explicitly avoids an ambiguous match with the non-generic overload.
+            var method = typeof(IAIEditableModelResolver)
+                .GetMethods()
+                .Single(m => m.Name == nameof(IAIEditableModelResolver.ResolveModel) && m.IsGenericMethodDefinition)
                 .MakeGenericMethod(settingsType);
 
             return method.Invoke(resolver, [settings, schema]);

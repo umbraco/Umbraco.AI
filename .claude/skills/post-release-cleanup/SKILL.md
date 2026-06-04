@@ -121,8 +121,9 @@ For each released product detected in Phase 1:
 
 2. **Compute the patch bump:**
    - Stable version: `1.5.0` → `1.5.1`
-   - Pre-release with numeric suffix: `1.0.0-beta2` → `1.0.0-beta3`
-   - Pre-release without numeric suffix: `1.0.0-alpha` → `1.0.0-alpha.1`
+   - Dotted pre-release: `1.0.0-beta.2` → `1.0.0-beta.3` (increment the numeric segment)
+   - Pre-release without numeric segment: `1.0.0-alpha` → `1.0.0-alpha.1`
+   - **Legacy non-dotted pre-release** (`1.0.0-beta2` → `1.0.0-beta3`): increment in place to preserve ordering within that already-published line — do **not** convert it to dotted (`-beta.3` sorts *below* `-beta2`). Only `Umbraco.AI.Search`/`Umbraco.AI.Automate` are on this grandfathered scheme; all new lines are dotted (see root CLAUDE.md → Prerelease versioning).
 
 3. **Update** the `"version"` field in `version.json` using the Edit tool
 
@@ -192,10 +193,13 @@ Simply increment the patch version:
 
 ### Pre-release Versions
 
+New prerelease lines use the **dotted** form `-{stage}.N` (`-alpha.1`, `-beta.1`, `-rc.1`) — never non-dotted `-beta1`, which sorts incorrectly past 9 (`beta10 < beta9`). See root CLAUDE.md → "Prerelease versioning".
+
 Increment the numeric portion of the pre-release identifier:
-- `1.0.0-beta2` → `1.0.0-beta3`
+- `1.0.0-beta.2` → `1.0.0-beta.3`
 - `1.0.0-rc.1` → `1.0.0-rc.2`
-- `1.0.0-alpha` → `1.0.0-alpha.1` (append `.1` if no numeric suffix)
+- `1.0.0-alpha` → `1.0.0-alpha.1` (append `.1` if no numeric segment)
+- `1.0.0-beta2` → `1.0.0-beta3` (legacy non-dotted, e.g. Search/Automate — increment in place, never dotify; dotifying would sort the result *below* the existing version)
 
 ## Important Notes
 

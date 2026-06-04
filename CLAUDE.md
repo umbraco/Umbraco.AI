@@ -181,6 +181,14 @@ BREAKING CHANGE or feat!: -> Major | feat: -> Minor | fix:/perf: -> Patch | docs
 
 When bumping Core to new major, the skill checks `Directory.Packages.props` for dependent add-ons and warns.
 
+#### Prerelease versioning — always use dotted `-{stage}.N`
+
+Prerelease identifiers **must** be dot-separated with a numeric segment: `-alpha.1`, `-beta.1`, `-rc.1` (→ `-beta.2`, `-beta.10`, …).
+
+**Never use the non-dotted form** (`-beta1`, `-alpha2`). NuGet/SemVer treats `beta10` as a single alphanumeric identifier and compares it as a *string*, so it sorts **below** `beta9` (`'1' < '9'`). The result: a published `1.0.0-beta10` is lower-precedence than `1.0.0-beta9`, so `--prerelease` installs and range resolution silently pick the *older* build. Dotted `-beta.10` compares the `10` numerically and sorts correctly.
+
+Note you cannot retrofit a broken line: `-beta.11` (dotted) sorts *below* an existing non-dotted `-beta9` (because identifier `beta` < `beta9`). So a line that already shipped non-dotted betas can only be escaped by advancing the stage (`-rc.1`) or the base version, not by dotifying. **`Umbraco.AI.Search` (`-beta*`) and `Umbraco.AI.Automate` (`-alpha*`) are grandfathered on the broken non-dotted scheme** — leave them as-is; apply the dotted rule to every *new* prerelease line. See [[project_release_tag_sort_prerelease_bug]].
+
 ### Release Manifest
 
 On `release/*` branches, CI **requires** `release-manifest.json`:

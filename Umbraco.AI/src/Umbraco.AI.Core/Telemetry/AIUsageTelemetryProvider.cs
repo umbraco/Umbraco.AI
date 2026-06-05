@@ -8,6 +8,7 @@ using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Tests;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
@@ -42,6 +43,8 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
     private readonly IAIProfileService _profileService;
     private readonly IAIContextService _contextService;
     private readonly IAIGuardrailService _guardrailService;
+    private readonly IAITestService _testService;
+    private readonly IAITestRunService _testRunService;
     private readonly IAIUsageAnalyticsService _usageAnalyticsService;
 
     /// <summary>
@@ -57,6 +60,8 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         IAIProfileService profileService,
         IAIContextService contextService,
         IAIGuardrailService guardrailService,
+        IAITestService testService,
+        IAITestRunService testRunService,
         IAIUsageAnalyticsService usageAnalyticsService)
     {
         _telemetryOptions = telemetryOptions;
@@ -68,6 +73,8 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         _profileService = profileService;
         _contextService = contextService;
         _guardrailService = guardrailService;
+        _testService = testService;
+        _testRunService = testRunService;
         _usageAnalyticsService = usageAnalyticsService;
     }
 
@@ -88,6 +95,7 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         TryCollect(result, CollectConnections);
         TryCollect(result, CollectProfiles);
         TryCollect(result, CollectContextsAndGuardrails);
+        TryCollect(result, CollectTests);
         TryCollect(result, CollectConfiguration);
         TryCollect(result, CollectUsage);
 
@@ -167,6 +175,30 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.ContextCount, contextCount));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailCount, guardrailCount));
+    }
+
+    private void CollectTests(List<UsageInformation> result)
+    {
+        AITest[] tests = _testService
+            .GetTestsAsync()
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult()
+            .ToArray();
+
+        (_, var testRunCount) = _testRunService
+            .GetRunsPagedAsync(take: 0)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+
+        var testFeatures = tests
+            .Select(t => t.TestFeatureId.ToLowerInvariant())
+            .ToHashSet();
+
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.TestCount, tests.Length));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.TestRunCount, testRunCount));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.TestFeatures, testFeatures));
     }
 
     private void CollectConfiguration(List<UsageInformation> result)

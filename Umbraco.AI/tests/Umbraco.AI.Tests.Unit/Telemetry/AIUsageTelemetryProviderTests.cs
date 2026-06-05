@@ -10,6 +10,7 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Telemetry;
+using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Models;
@@ -27,6 +28,8 @@ public class AIUsageTelemetryProviderTests
     private readonly Mock<IAIProfileService> _profileService = new();
     private readonly Mock<IAIContextService> _contextService = new();
     private readonly Mock<IAIGuardrailService> _guardrailService = new();
+    private readonly Mock<IAITestService> _testService = new();
+    private readonly Mock<IAITestRunService> _testRunService = new();
     private readonly Mock<IAIUsageAnalyticsService> _usageAnalyticsService = new();
 
     private AIUsageTelemetryOptions _telemetryOptions = new();
@@ -60,6 +63,23 @@ public class AIUsageTelemetryProviderTests
         _guardrailService.Setup(x => x.GetGuardrailsPagedAsync(It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(([], 2));
 
+        _testService.Setup(x => x.GetTestsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new AITest
+                {
+                    Alias = SensitiveAlias,
+                    Name = SensitiveAlias,
+                    TestFeatureId = "prompt",
+                    TestTargetId = Guid.NewGuid(),
+                },
+            ]);
+
+        _testRunService.Setup(x => x.GetRunsPagedAsync(
+                It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<AITestRunStatus?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(),
+                It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(([], 42));
+
         _usageAnalyticsService.Setup(x => x.GetSummaryAsync(
                 It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<AIUsagePeriod?>(), It.IsAny<AIUsageFilter?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIUsageSummary
@@ -91,6 +111,8 @@ public class AIUsageTelemetryProviderTests
             _profileService.Object,
             _contextService.Object,
             _guardrailService.Object,
+            _testService.Object,
+            _testRunService.Object,
             _usageAnalyticsService.Object);
     }
 
@@ -158,6 +180,11 @@ public class AIUsageTelemetryProviderTests
         GetData(result, AIUsageTelemetryConstants.ConnectionCount).ShouldBe(1);
         GetData(result, AIUsageTelemetryConstants.ContextCount).ShouldBe(5);
         GetData(result, AIUsageTelemetryConstants.GuardrailCount).ShouldBe(2);
+        GetData(result, AIUsageTelemetryConstants.TestCount).ShouldBe(1);
+        GetData(result, AIUsageTelemetryConstants.TestRunCount).ShouldBe(42);
+
+        var testFeatures = GetData(result, AIUsageTelemetryConstants.TestFeatures).ShouldBeAssignableTo<IEnumerable<string>>();
+        testFeatures.ShouldContain("prompt");
         GetData(result, AIUsageTelemetryConstants.UsageRequests30d).ShouldBe(100);
         GetData(result, AIUsageTelemetryConstants.UsageSuccessRate30d).ShouldBe(0.95);
 

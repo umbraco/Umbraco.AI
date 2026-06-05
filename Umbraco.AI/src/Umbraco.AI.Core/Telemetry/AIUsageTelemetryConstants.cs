@@ -41,6 +41,19 @@ public static class AIUsageTelemetryConstants
     /// <summary>The total number of guardrails.</summary>
     public const string GuardrailCount = "UmbracoAIGuardrailCount";
 
+    /// <summary>The total number of tests defined.</summary>
+    public const string TestCount = "UmbracoAITestCount";
+
+    /// <summary>The total number of test runs executed.</summary>
+    public const string TestRunCount = "UmbracoAITestRunCount";
+
+    /// <summary>
+    /// The set of test feature IDs in use across tests. Test feature IDs are code-authored
+    /// extension point identifiers (registered via [AITestFeature]), not
+    /// backoffice-user-authored values.
+    /// </summary>
+    public const string TestFeatures = "UmbracoAITestFeatures";
+
     /// <summary>The set of capability names that have a default profile alias configured.</summary>
     public const string DefaultProfileCapabilities = "UmbracoAIDefaultProfileCapabilities";
 

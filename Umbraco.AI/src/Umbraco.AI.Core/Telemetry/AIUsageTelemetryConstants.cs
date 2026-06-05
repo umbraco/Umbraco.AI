@@ -48,6 +48,15 @@ public static class AIUsageTelemetryConstants
     /// <summary>The total number of contexts.</summary>
     public const string ContextCount = "UmbracoAIContextCount";
 
+    /// <summary>The number of data types based on the AI Context Picker property editor.</summary>
+    public const string ContextPickerDataTypeCount = "UmbracoAIContextPickerDataTypeCount";
+
+    /// <summary>The number of content types referencing an AI Context Picker data type.</summary>
+    public const string ContextPickerContentTypeCount = "UmbracoAIContextPickerContentTypeCount";
+
+    /// <summary>Whether any content has saved AI Context Picker values (i.e. editors have actually assigned contexts to nodes).</summary>
+    public const string ContextPickerHasSavedValues = "UmbracoAIContextPickerHasSavedValues";
+
     /// <summary>The total number of guardrails.</summary>
     public const string GuardrailCount = "UmbracoAIGuardrailCount";
 

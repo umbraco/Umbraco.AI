@@ -21,6 +21,7 @@ identifier — never content, names, or identities.
 | Connection count | `3` |
 | Profile counts (total and per capability) | `5` total, `3` Chat, `2` Embedding |
 | Context and guardrail counts | `4`, `2` |
+| Context picker adoption (data type count, referencing content type count, whether any content has saved values) | `1`, `3`, `true` |
 | Guardrail evaluator IDs in use (built-in only; custom evaluators are counted, never named) | `regex`, `pii` + custom count |
 | Test count, test run count, and test feature/grader IDs in use (built-in only; custom ones are counted, never named) | `6`, `120`, `prompt`, `contains` + custom counts |
 | Registered tool counts (built-in and custom — tool names/IDs are never sent) | `12` total, `3` custom |

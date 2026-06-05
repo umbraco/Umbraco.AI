@@ -16,7 +16,10 @@ using Umbraco.AI.Core.Telemetry;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Services.OperationStatus;
 
 namespace Umbraco.AI.Tests.Unit.Telemetry;
 
@@ -34,6 +37,8 @@ public class AIUsageTelemetryProviderTests
     private readonly Mock<IAITestService> _testService = new();
     private readonly Mock<IAITestRunService> _testRunService = new();
     private readonly Mock<IAIUsageAnalyticsService> _usageAnalyticsService = new();
+    private readonly Mock<IDataTypeService> _dataTypeService = new();
+    private readonly Mock<IDataTypeUsageService> _dataTypeUsageService = new();
 
     private AIUsageTelemetryOptions _telemetryOptions = new();
     private AIOptions _aiOptions = new();
@@ -117,6 +122,17 @@ public class AIUsageTelemetryProviderTests
                 It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(([], 42));
 
+        var contextPickerDataTypeKey = Guid.NewGuid();
+        _dataTypeService.Setup(x => x.GetByEditorAliasAsync(Core.Constants.PropertyEditors.Aliases.ContextPicker))
+            .ReturnsAsync([Mock.Of<IDataType>(d => d.Key == contextPickerDataTypeKey)]);
+
+        // Two content types reference the picker data type, and content values exist
+        _dataTypeService.Setup(x => x.GetPagedRelationsAsync(contextPickerDataTypeKey, It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(new PagedModel<RelationItemModel> { Total = 2, Items = [] });
+
+        _dataTypeUsageService.Setup(x => x.HasSavedValuesAsync(contextPickerDataTypeKey))
+            .ReturnsAsync(Attempt.SucceedWithStatus(DataTypeOperationStatus.Success, true));
+
         _usageAnalyticsService.Setup(x => x.GetSummaryAsync(
                 It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<AIUsagePeriod?>(), It.IsAny<AIUsageFilter?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIUsageSummary
@@ -157,7 +173,9 @@ public class AIUsageTelemetryProviderTests
             _testRunService.Object,
             new AITestFeatureCollection(() => [new FakeTestFeature("prompt")]),
             new AITestGraderCollection(() => [new FakeTestGrader("contains")]),
-            _usageAnalyticsService.Object);
+            _usageAnalyticsService.Object,
+            _dataTypeService.Object,
+            _dataTypeUsageService.Object);
     }
 
     private static IOptionsMonitor<T> MonitorOf<T>(T value)
@@ -224,6 +242,9 @@ public class AIUsageTelemetryProviderTests
         GetData(result, AIUsageTelemetryConstants.ProfileCountPrefix + nameof(AICapability.Embedding)).ShouldBe(1);
         GetData(result, AIUsageTelemetryConstants.ConnectionCount).ShouldBe(1);
         GetData(result, AIUsageTelemetryConstants.ContextCount).ShouldBe(5);
+        GetData(result, AIUsageTelemetryConstants.ContextPickerDataTypeCount).ShouldBe(1);
+        GetData(result, AIUsageTelemetryConstants.ContextPickerContentTypeCount).ShouldBe(2);
+        GetData(result, AIUsageTelemetryConstants.ContextPickerHasSavedValues).ShouldBe(true);
         GetData(result, AIUsageTelemetryConstants.GuardrailCount).ShouldBe(2);
         GetData(result, AIUsageTelemetryConstants.TestCount).ShouldBe(2);
         GetData(result, AIUsageTelemetryConstants.TestRunCount).ShouldBe(42);

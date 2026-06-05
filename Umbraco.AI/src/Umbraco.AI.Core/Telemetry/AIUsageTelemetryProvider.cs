@@ -11,7 +11,10 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Tests;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Services.OperationStatus;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
 namespace Umbraco.AI.Core.Telemetry;
@@ -51,6 +54,8 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
     private readonly AITestFeatureCollection _testFeatures;
     private readonly AITestGraderCollection _testGraders;
     private readonly IAIUsageAnalyticsService _usageAnalyticsService;
+    private readonly IDataTypeService _dataTypeService;
+    private readonly IDataTypeUsageService _dataTypeUsageService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIUsageTelemetryProvider"/> class.
@@ -70,7 +75,9 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         IAITestRunService testRunService,
         AITestFeatureCollection testFeatures,
         AITestGraderCollection testGraders,
-        IAIUsageAnalyticsService usageAnalyticsService)
+        IAIUsageAnalyticsService usageAnalyticsService,
+        IDataTypeService dataTypeService,
+        IDataTypeUsageService dataTypeUsageService)
     {
         _telemetryOptions = telemetryOptions;
         _aiOptions = aiOptions;
@@ -87,6 +94,8 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         _testFeatures = testFeatures;
         _testGraders = testGraders;
         _usageAnalyticsService = usageAnalyticsService;
+        _dataTypeService = dataTypeService;
+        _dataTypeUsageService = dataTypeUsageService;
     }
 
     /// <inheritdoc />
@@ -106,6 +115,7 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         TryCollect(result, CollectConnections);
         TryCollect(result, CollectProfiles);
         TryCollect(result, CollectContextsAndGuardrails);
+        TryCollect(result, CollectContextPickerAdoption);
         TryCollect(result, CollectTests);
         TryCollect(result, CollectConfiguration);
         TryCollect(result, CollectUsage);
@@ -201,6 +211,50 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailCount, guardrails.Length));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailEvaluators, evaluators));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailEvaluatorCustomCount, customEvaluatorCount));
+    }
+
+    private void CollectContextPickerAdoption(List<UsageInformation> result)
+    {
+        // Adoption funnel for content-level context resolution ("different tone per site
+        // section"): data type created -> referenced by content types -> editors saved
+        // values on nodes. All targeted repository queries - no in-memory enumeration of
+        // content types. Runtime resolution counts are deliberately not collected (no
+        // recorded dimension) - see observability.md.
+        IDataType[] dataTypes = _dataTypeService
+            .GetByEditorAliasAsync(Constants.PropertyEditors.Aliases.ContextPicker)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult()
+            .ToArray();
+
+        var contentTypeReferenceCount = 0;
+        var hasSavedValues = false;
+
+        foreach (IDataType dataType in dataTypes)
+        {
+            PagedModel<RelationItemModel> relations = _dataTypeService
+                .GetPagedRelationsAsync(dataType.Key, 0, 0)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+
+            contentTypeReferenceCount += (int)relations.Total;
+
+            if (!hasSavedValues)
+            {
+                Attempt<bool, DataTypeOperationStatus> attempt = _dataTypeUsageService
+                    .HasSavedValuesAsync(dataType.Key)
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+
+                hasSavedValues = attempt.Success && attempt.Result;
+            }
+        }
+
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.ContextPickerDataTypeCount, dataTypes.Length));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.ContextPickerContentTypeCount, contentTypeReferenceCount));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.ContextPickerHasSavedValues, hasSavedValues));
     }
 
     private void CollectTests(List<UsageInformation> result)

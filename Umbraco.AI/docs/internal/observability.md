@@ -83,6 +83,15 @@ telemetry without code changes here.
   surface IDs + custom surface count, and 30-day agent execution count.
 - `AISearchUsageTelemetryConstants` — vector entry count.
 
+Context picker adoption (content-level context resolution, i.e. "different tone per site
+section") is reported as a funnel: data types based on `Uai.ContextPicker` → content types
+referencing them (`IDataTypeService.GetPagedRelationsAsync`, count only) → whether any
+content has saved picker values (`IDataTypeUsageService.HasSavedValuesAsync`). All targeted
+repository queries — no in-memory content type enumeration. Runtime resolution counts
+(how often `ContentContextResolver` actually injects a context into a request) were
+considered and deferred — there's no recorded dimension for context-resolution source; if
+needed, the right mechanism is a new dimension on usage records.
+
 In-use context resource types (which resource kinds contexts actually contain) were
 considered and deferred — they'd require full context fetches; the registered
 custom-resource-type count covers extension adoption coarsely. Add later if needed.

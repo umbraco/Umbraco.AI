@@ -21,7 +21,8 @@ identifier — never content, names, or identities.
 | Connection count | `3` |
 | Profile counts (total and per capability) | `5` total, `3` Chat, `2` Embedding |
 | Context and guardrail counts | `4`, `2` |
-| Test count, test run count, and test feature IDs in use | `6`, `120`, `prompt` |
+| Guardrail evaluator IDs in use | `regex`, `pii` |
+| Test count, test run count, and test feature/grader IDs in use | `6`, `120`, `prompt`, `contains` |
 | Which capabilities have a default profile configured | `Chat`, `Embedding` |
 | Whether audit logging / usage analytics are enabled | `true` |
 | Requests in the last 30 days and success rate | `1250`, `0.98` |

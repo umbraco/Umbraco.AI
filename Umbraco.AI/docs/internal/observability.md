@@ -47,9 +47,10 @@ The complete key list lives in code — one constants class per product, which u
 enforce as a whitelist (`Umbraco.AI.Tests.Unit/Telemetry/`):
 
 - `AIUsageTelemetryConstants` (Core) — installed/connected provider IDs, connection count,
-  profile counts (total + per capability), context/guardrail counts, test count, test run
-  count, test feature IDs in use, default-profile configuration, audit/analytics enablement,
-  30-day request count and success rate.
+  profile counts (total + per capability), context/guardrail counts, guardrail evaluator IDs
+  in use, test count, test run count, test feature and grader type IDs in use,
+  default-profile configuration, audit/analytics enablement, 30-day request count and
+  success rate.
 - `AIPromptUsageTelemetryConstants` — prompt counts (total/active/linkage) and display modes.
 - `AIAgentUsageTelemetryConstants` — agent counts (total/active/per-type/linkage) and
   code-authored surface IDs.

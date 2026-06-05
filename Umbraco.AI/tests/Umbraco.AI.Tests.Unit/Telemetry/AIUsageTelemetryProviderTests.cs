@@ -60,8 +60,18 @@ public class AIUsageTelemetryProviderTests
         _contextService.Setup(x => x.GetContextsPagedAsync(It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(([], 5));
 
-        _guardrailService.Setup(x => x.GetGuardrailsPagedAsync(It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(([], 2));
+        _guardrailService.Setup(x => x.GetGuardrailsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new AIGuardrailBuilder()
+                    .WithAlias(SensitiveAlias)
+                    .WithName(SensitiveAlias)
+                    .WithRules(
+                        new AIGuardrailRuleBuilder().WithEvaluatorId("regex").WithName(SensitiveAlias).Build(),
+                        new AIGuardrailRuleBuilder().WithEvaluatorId("pii").Build())
+                    .Build(),
+                new AIGuardrailBuilder().Build(),
+            ]);
 
         _testService.Setup(x => x.GetTestsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(
@@ -72,6 +82,14 @@ public class AIUsageTelemetryProviderTests
                     Name = SensitiveAlias,
                     TestFeatureId = "prompt",
                     TestTargetId = Guid.NewGuid(),
+                    Graders =
+                    [
+                        new AITestGraderConfig
+                        {
+                            GraderTypeId = "contains",
+                            Name = SensitiveAlias,
+                        },
+                    ],
                 },
             ]);
 
@@ -185,6 +203,13 @@ public class AIUsageTelemetryProviderTests
 
         var testFeatures = GetData(result, AIUsageTelemetryConstants.TestFeatures).ShouldBeAssignableTo<IEnumerable<string>>();
         testFeatures.ShouldContain("prompt");
+
+        var testGraders = GetData(result, AIUsageTelemetryConstants.TestGraders).ShouldBeAssignableTo<IEnumerable<string>>();
+        testGraders.ShouldContain("contains");
+
+        var evaluators = GetData(result, AIUsageTelemetryConstants.GuardrailEvaluators).ShouldBeAssignableTo<IEnumerable<string>>();
+        evaluators.ShouldContain("regex");
+        evaluators.ShouldContain("pii");
         GetData(result, AIUsageTelemetryConstants.UsageRequests30d).ShouldBe(100);
         GetData(result, AIUsageTelemetryConstants.UsageSuccessRate30d).ShouldBe(0.95);
 

@@ -41,6 +41,13 @@ public static class AIUsageTelemetryConstants
     /// <summary>The total number of guardrails.</summary>
     public const string GuardrailCount = "UmbracoAIGuardrailCount";
 
+    /// <summary>
+    /// The set of evaluator IDs in use across guardrail rules. Evaluator IDs are
+    /// code-authored extension point identifiers (registered via [AIGuardrailEvaluator]),
+    /// not backoffice-user-authored values.
+    /// </summary>
+    public const string GuardrailEvaluators = "UmbracoAIGuardrailEvaluators";
+
     /// <summary>The total number of tests defined.</summary>
     public const string TestCount = "UmbracoAITestCount";
 
@@ -53,6 +60,13 @@ public static class AIUsageTelemetryConstants
     /// backoffice-user-authored values.
     /// </summary>
     public const string TestFeatures = "UmbracoAITestFeatures";
+
+    /// <summary>
+    /// The set of grader type IDs in use across tests. Grader type IDs are code-authored
+    /// extension point identifiers (registered via [AITestGrader]), not
+    /// backoffice-user-authored values.
+    /// </summary>
+    public const string TestGraders = "UmbracoAITestGraders";
 
     /// <summary>The set of capability names that have a default profile alias configured.</summary>
     public const string DefaultProfileCapabilities = "UmbracoAIDefaultProfileCapabilities";

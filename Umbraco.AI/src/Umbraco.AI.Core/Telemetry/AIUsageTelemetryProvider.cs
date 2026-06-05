@@ -167,14 +167,22 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
             .GetAwaiter()
             .GetResult();
 
-        (_, var guardrailCount) = _guardrailService
-            .GetGuardrailsPagedAsync(take: 0)
+        // Full fetch (rather than a paged count) so evaluator IDs can be aggregated
+        AIGuardrail[] guardrails = _guardrailService
+            .GetGuardrailsAsync()
             .ConfigureAwait(false)
             .GetAwaiter()
-            .GetResult();
+            .GetResult()
+            .ToArray();
+
+        var evaluators = guardrails
+            .SelectMany(g => g.Rules)
+            .Select(r => r.EvaluatorId.ToLowerInvariant())
+            .ToHashSet();
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.ContextCount, contextCount));
-        result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailCount, guardrailCount));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailCount, guardrails.Length));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailEvaluators, evaluators));
     }
 
     private void CollectTests(List<UsageInformation> result)
@@ -196,9 +204,15 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
             .Select(t => t.TestFeatureId.ToLowerInvariant())
             .ToHashSet();
 
+        var testGraders = tests
+            .SelectMany(t => t.Graders)
+            .Select(g => g.GraderTypeId.ToLowerInvariant())
+            .ToHashSet();
+
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestCount, tests.Length));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestRunCount, testRunCount));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestFeatures, testFeatures));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.TestGraders, testGraders));
     }
 
     private void CollectConfiguration(List<UsageInformation> result)

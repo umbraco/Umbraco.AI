@@ -134,9 +134,13 @@ public class AIUsageTelemetryProviderTests
 
     private AIUsageTelemetryProvider CreateProvider(params IAIProvider[] providers)
     {
+        // Custom provider: a Moq proxy lives in DynamicProxyGenAssembly2 -> classified custom
+        var customProvider = new Mock<IAIProvider>();
+        customProvider.Setup(x => x.Id).Returns("acme-internal-llm");
+
         IAIProvider[] effectiveProviders = providers.Length > 0
             ? providers
-            : [new FakeAIProvider("openai"), new FakeAIProvider("anthropic")];
+            : [new FakeAIProvider("openai"), new FakeAIProvider("anthropic"), customProvider.Object];
 
         return new AIUsageTelemetryProvider(
             MonitorOf(_telemetryOptions),
@@ -174,25 +178,26 @@ public class AIUsageTelemetryProviderTests
     }
 
     [Fact]
-    public void GetInformation_EmitsOnlyWhitelistedKeys()
+    public void GetInformation_EmitsOnlySafelistedKeys()
     {
-        var whitelist = typeof(AIUsageTelemetryConstants)
+        var safelist = typeof(AIUsageTelemetryConstants)
             .GetFields()
             .Select(f => (string)f.GetValue(null)!)
             .ToHashSet();
 
-        // Per-capability profile counts use the documented dynamic prefix
-        var capabilityKeys = Enum.GetNames<AICapability>()
-            .Select(name => AIUsageTelemetryConstants.ProfileCountPrefix + name);
-
-        whitelist.UnionWith(capabilityKeys);
+        // Per-capability profile and usage counts use the documented dynamic prefixes
+        foreach (var name in Enum.GetNames<AICapability>())
+        {
+            safelist.Add(AIUsageTelemetryConstants.ProfileCountPrefix + name);
+            safelist.Add(AIUsageTelemetryConstants.UsageRequests30dPrefix + name);
+        }
 
         UsageInformation[] result = CreateProvider().GetInformation().ToArray();
 
         result.ShouldNotBeEmpty();
         foreach (UsageInformation info in result)
         {
-            whitelist.ShouldContain(info.Name);
+            safelist.ShouldContain(info.Name);
         }
     }
 
@@ -238,9 +243,14 @@ public class AIUsageTelemetryProviderTests
         GetData(result, AIUsageTelemetryConstants.UsageRequests30d).ShouldBe(100);
         GetData(result, AIUsageTelemetryConstants.UsageSuccessRate30d).ShouldBe(0.95);
 
-        var providers = GetData(result, AIUsageTelemetryConstants.Providers).ShouldBeAssignableTo<IEnumerable<string>>();
-        providers.ShouldContain("openai");
-        providers.ShouldContain("anthropic");
+        // System providers named; the custom Moq provider only counted
+        var providers = GetData(result, AIUsageTelemetryConstants.Providers).ShouldBeAssignableTo<IEnumerable<string>>()!.ToArray();
+        providers.ShouldBe(["openai", "anthropic"], ignoreOrder: true);
+        GetData(result, AIUsageTelemetryConstants.ProviderCustomCount).ShouldBe(1);
+        GetData(result, AIUsageTelemetryConstants.ConnectedProviderCustomCount).ShouldBe(0);
+
+        // Per-capability usage uses the dynamic prefix (mock returns the same summary per filter)
+        GetData(result, AIUsageTelemetryConstants.UsageRequests30dPrefix + nameof(AICapability.Chat)).ShouldBe(100);
     }
 
     [Fact]

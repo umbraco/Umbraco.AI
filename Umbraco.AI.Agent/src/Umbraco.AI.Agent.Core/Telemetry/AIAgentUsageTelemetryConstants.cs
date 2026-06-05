@@ -4,7 +4,7 @@ namespace Umbraco.AI.Agent.Core.Telemetry;
 /// Key names for the usage telemetry data Umbraco.AI.Agent contributes to the CMS telemetry report.
 /// </summary>
 /// <remarks>
-/// This is the complete whitelist of data Umbraco.AI.Agent reports. Values are always counts,
+/// This is the complete safelist of data Umbraco.AI.Agent reports. Values are always counts,
 /// enum names, or code-authored surface IDs — never agent instructions, names, aliases, or
 /// user identities.
 /// </remarks>
@@ -37,4 +37,7 @@ public static class AIAgentUsageTelemetryConstants
 
     /// <summary>The number of distinct custom (non-Umbraco.AI) surface IDs in use across agents.</summary>
     public const string AgentSurfaceCustomCount = "UmbracoAIAgentSurfaceCustomCount";
+
+    /// <summary>The number of agent executions in the last 30 days.</summary>
+    public const string AgentExecutions30d = "UmbracoAIAgentExecutions30d";
 }

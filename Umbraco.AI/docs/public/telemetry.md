@@ -16,8 +16,8 @@ identifier — never content, names, or identities.
 
 | Data | Example |
 | --- | --- |
-| Installed AI provider IDs | `openai`, `anthropic` |
-| Provider IDs with at least one connection | `openai` |
+| Installed AI provider IDs (official providers only; custom providers are counted, never named) | `openai`, `anthropic` + custom count |
+| Provider IDs with at least one connection (official only + custom count) | `openai` |
 | Connection count | `3` |
 | Profile counts (total and per capability) | `5` total, `3` Chat, `2` Embedding |
 | Context and guardrail counts | `4`, `2` |
@@ -25,17 +25,17 @@ identifier — never content, names, or identities.
 | Test count, test run count, and test feature/grader IDs in use (built-in only; custom ones are counted, never named) | `6`, `120`, `prompt`, `contains` + custom counts |
 | Registered tool counts (built-in and custom — tool names/IDs are never sent) | `12` total, `3` custom |
 | Registered context resource type counts (total and custom) | `4`, `1` |
-| Custom middleware counts per pipeline | `1` chat, `0` embedding |
+| Custom extension registration counts per extension point (middleware, tool scopes, entity adapters, resolvers, workflows, …) | `1` chat middleware, `0` workflows |
 | Which capabilities have a default profile configured | `Chat`, `Embedding` |
 | Whether audit logging / usage analytics are enabled | `true` |
-| Requests in the last 30 days and success rate | `1250`, `0.98` |
+| Requests in the last 30 days and success rate (total and per capability) | `1250`, `0.98`, `1100` Chat |
 
 ### Add-ons (when installed)
 
 | Package | Data |
 | --- | --- |
-| Umbraco.AI.Prompt | Prompt counts (total, active, with profile/context/guardrail), display modes in use |
-| Umbraco.AI.Agent | Agent counts (total, active, per type, with profile/guardrail), surface IDs in use |
+| Umbraco.AI.Prompt | Prompt counts (total, active, with profile/context/guardrail), display modes in use, prompt executions in the last 30 days |
+| Umbraco.AI.Agent | Agent counts (total, active, per type, with profile/guardrail), built-in surface IDs in use + custom surface count, agent executions in the last 30 days |
 | Umbraco.AI.Search | Vector entry count |
 
 ## What is never collected

@@ -12,7 +12,7 @@ namespace Umbraco.AI.Search.Core.Telemetry;
 /// <remarks>
 /// Data is only ever sent when the site's telemetry level is set to <c>Detailed</c>, and is
 /// suppressed entirely when <c>Umbraco:AI:Telemetry:Enabled</c> is <c>false</c>. Only counts
-/// are reported — see <see cref="AISearchUsageTelemetryConstants"/> for the complete whitelist.
+/// are reported — see <see cref="AISearchUsageTelemetryConstants"/> for the complete safelist.
 /// </remarks>
 public sealed class AISearchUsageTelemetryProvider : IDetailedTelemetryProvider
 {

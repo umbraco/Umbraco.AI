@@ -4,7 +4,7 @@ namespace Umbraco.AI.Prompt.Core.Telemetry;
 /// Key names for the usage telemetry data Umbraco.AI.Prompt contributes to the CMS telemetry report.
 /// </summary>
 /// <remarks>
-/// This is the complete whitelist of data Umbraco.AI.Prompt reports. Values are always counts
+/// This is the complete safelist of data Umbraco.AI.Prompt reports. Values are always counts
 /// or enum names — never prompt instructions, names, aliases, or user identities.
 /// </remarks>
 public static class AIPromptUsageTelemetryConstants
@@ -26,4 +26,7 @@ public static class AIPromptUsageTelemetryConstants
 
     /// <summary>The set of display mode names in use across prompts.</summary>
     public const string PromptDisplayModes = "UmbracoAIPromptDisplayModes";
+
+    /// <summary>The number of prompt executions in the last 30 days.</summary>
+    public const string PromptExecutions30d = "UmbracoAIPromptExecutions30d";
 }

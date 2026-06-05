@@ -29,7 +29,7 @@ namespace Umbraco.AI.Core.Telemetry;
 /// </para>
 /// <para>
 /// Only counts, booleans, and normalized identifiers are reported — see
-/// <see cref="AIUsageTelemetryConstants"/> for the complete whitelist. Not to be confused with
+/// <see cref="AIUsageTelemetryConstants"/> for the complete safelist. Not to be confused with
 /// <see cref="AITelemetry"/>, which configures OpenTelemetry tracing/metrics for the host
 /// application's own observability infrastructure and never leaves the customer's environment.
 /// </para>
@@ -127,11 +127,14 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
 
     private void CollectProviders(List<UsageInformation> result)
     {
-        var providerIds = _providers
-            .Select(p => p.Id.ToLowerInvariant())
-            .ToHashSet();
+        // Custom (non-Umbraco.AI) providers could carry business-meaningful IDs - name
+        // system providers only, count the rest
+        (var providerIds, var customProviderCount) = AIUsageTelemetryClassification.ClassifyInUse(
+            _providers.Select(p => p.Id),
+            GetSystemProviderIds());
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.Providers, providerIds));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.ProviderCustomCount, customProviderCount));
     }
 
     private void CollectConnections(List<UsageInformation> result)
@@ -143,13 +146,17 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
             .GetResult()
             .ToArray();
 
-        var connectedProviders = connections
-            .Select(c => c.ProviderId.ToLowerInvariant())
-            .ToHashSet();
+        (var connectedProviders, var customConnectedCount) = AIUsageTelemetryClassification.ClassifyInUse(
+            connections.Select(c => c.ProviderId),
+            GetSystemProviderIds());
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.ConnectionCount, connections.Length));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.ConnectedProviders, connectedProviders));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.ConnectedProviderCustomCount, customConnectedCount));
     }
+
+    private HashSet<string> GetSystemProviderIds()
+        => AIUsageTelemetryClassification.GetSystemIds(_providers, p => p.Id);
 
     private void CollectProfiles(List<UsageInformation> result)
     {
@@ -267,5 +274,20 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         // as they are a proxy for customer spend.
         result.Add(new UsageInformation(AIUsageTelemetryConstants.UsageRequests30d, summary.TotalRequests));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.UsageSuccessRate30d, Math.Round(summary.SuccessRate, 4)));
+
+        // Per-capability request counts - enum-driven so new capabilities are reported
+        // without changes here
+        foreach (AICapability capability in Enum.GetValues<AICapability>())
+        {
+            AIUsageSummary capabilitySummary = _usageAnalyticsService
+                .GetSummaryAsync(from, to, filter: new AIUsageFilter { Capability = capability })
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+
+            result.Add(new UsageInformation(
+                AIUsageTelemetryConstants.UsageRequests30dPrefix + capability,
+                capabilitySummary.TotalRequests));
+        }
     }
 }

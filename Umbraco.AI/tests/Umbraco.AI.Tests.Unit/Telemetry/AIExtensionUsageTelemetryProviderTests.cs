@@ -20,7 +20,7 @@ public class AIExtensionUsageTelemetryProviderTests
         var monitor = new Mock<IOptionsMonitor<AIUsageTelemetryOptions>>();
         monitor.Setup(x => x.CurrentValue).Returns(() => _telemetryOptions);
 
-        // FakeTool lives in the "Umbraco."-prefixed test assembly -> system.
+        // FakeTool lives in the "Umbraco.AI."-prefixed test assembly -> system.
         // Moq proxies live in DynamicProxyGenAssembly2 -> custom.
         var customTool = new Mock<IAITool>();
         customTool.Setup(x => x.Id).Returns("acme-erp-sync");
@@ -30,16 +30,16 @@ public class AIExtensionUsageTelemetryProviderTests
 
         var customChatMiddleware = new Mock<IAIChatMiddleware>();
 
+        // The provider sweeps loaded Umbraco.AI assemblies for AI{Name}Collection types and
+        // resolves them from this service provider; unregistered collections are skipped.
         var services = new ServiceCollection();
+        services.AddSingleton(new AIToolCollection(() => [new FakeTool(), customTool.Object]));
+        services.AddSingleton(new AIContextResourceTypeCollection(() => [customResourceType.Object]));
         services.AddSingleton(new AIChatMiddlewareCollection(() => [customChatMiddleware.Object]));
         services.AddSingleton(new AIEmbeddingMiddlewareCollection(() => []));
         services.AddSingleton(new AISpeechToTextMiddlewareCollection(() => []));
 
-        return new AIExtensionUsageTelemetryProvider(
-            monitor.Object,
-            new AIToolCollection(() => [new FakeTool(), customTool.Object]),
-            new AIContextResourceTypeCollection(() => [customResourceType.Object]),
-            services.BuildServiceProvider());
+        return new AIExtensionUsageTelemetryProvider(monitor.Object, services.BuildServiceProvider());
     }
 
     [Fact]
@@ -68,19 +68,32 @@ public class AIExtensionUsageTelemetryProviderTests
     }
 
     [Fact]
-    public void GetInformation_DiscoversMiddlewarePipelinesDynamically()
+    public void GetInformation_DiscoversExtensionCollectionsDynamically()
     {
         UsageInformation[] result = CreateProvider().GetInformation().ToArray();
 
-        GetData(result, AIUsageTelemetryConstants.MiddlewareCustomCount("Chat")).ShouldBe(1);
-        GetData(result, AIUsageTelemetryConstants.MiddlewareCustomCount("Embedding")).ShouldBe(0);
-        GetData(result, AIUsageTelemetryConstants.MiddlewareCustomCount("SpeechToText")).ShouldBe(0);
+        GetData(result, AIUsageTelemetryConstants.ExtensionCustomCount("ChatMiddleware")).ShouldBe(1);
+        GetData(result, AIUsageTelemetryConstants.ExtensionCustomCount("EmbeddingMiddleware")).ShouldBe(0);
+        GetData(result, AIUsageTelemetryConstants.ExtensionCustomCount("SpeechToTextMiddleware")).ShouldBe(0);
     }
 
     [Fact]
-    public void GetInformation_EmitsOnlyWhitelistedKeys()
+    public void GetInformation_SkipsCollectionsCoveredByEntityLevelProviders()
     {
-        var whitelist = typeof(AIUsageTelemetryConstants)
+        UsageInformation[] result = CreateProvider().GetInformation().ToArray();
+
+        // These are reported with in-use system/custom classification elsewhere
+        result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.ExtensionCustomCount("Provider"));
+        result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.ExtensionCustomCount("GuardrailEvaluator"));
+        result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.ExtensionCustomCount("TestFeature"));
+        result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.ExtensionCustomCount("TestGrader"));
+        result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.ExtensionCustomCount("AgentSurface"));
+    }
+
+    [Fact]
+    public void GetInformation_EmitsOnlySafelistedKeys()
+    {
+        var safelist = typeof(AIUsageTelemetryConstants)
             .GetFields()
             .Select(f => (string)f.GetValue(null)!)
             .ToHashSet();
@@ -90,12 +103,12 @@ public class AIExtensionUsageTelemetryProviderTests
         result.ShouldNotBeEmpty();
         foreach (UsageInformation info in result)
         {
-            // Middleware keys are dynamic per pipeline; everything else must be a constant
-            var isMiddlewareKey = info.Name.StartsWith("UmbracoAI", StringComparison.Ordinal)
-                && info.Name.EndsWith("MiddlewareCustomCount", StringComparison.Ordinal);
+            // Extension keys are dynamic per discovered collection; everything else must be a constant
+            var isExtensionKey = info.Name.StartsWith("UmbracoAI", StringComparison.Ordinal)
+                && info.Name.EndsWith("CustomCount", StringComparison.Ordinal);
 
-            (whitelist.Contains(info.Name) || isMiddlewareKey).ShouldBeTrue(
-                $"Key '{info.Name}' is not whitelisted");
+            (safelist.Contains(info.Name) || isExtensionKey).ShouldBeTrue(
+                $"Key '{info.Name}' is not safelisted");
         }
     }
 

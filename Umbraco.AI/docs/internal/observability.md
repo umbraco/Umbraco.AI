@@ -9,7 +9,7 @@ maps where each one lives, what it captures, and where the data goes.
 | **OpenTelemetry** | `Umbraco.AI.Core.Telemetry.AITelemetry`, `AIOpenTelemetry*Middleware` | The **host application's own** APM/tracing backend | Full operational detail: `gen_ai.*` spans, token metrics, profile/user/entity tags | Host opts in via `AddOpenTelemetry()`; zero-cost when unconfigured |
 | **Audit log** | `Umbraco.AI.Core.AuditLog`, `IAIAuditLogService`, `AIAuditing*Middleware` | Local database (`AIAuditLogEntity`) | Per-call forensic record: who/what/when, prompt & response snapshots, errors, trace ID | `Umbraco:AI:AuditLog:Enabled` (default true) |
 | **Usage analytics** | `Umbraco.AI.Core.Analytics.Usage`, `IAIUsageAnalyticsService`, hourly/daily rollup jobs | Local database (usage records + aggregated statistics) | Aggregate counts/tokens/durations broken down by provider, model, profile, user | `Umbraco:AI:Analytics:Enabled` (default true) |
-| **Usage telemetry** | `Umbraco.AI.Core.Telemetry.AIUsageTelemetryProvider` (+ per-add-on providers) | **Umbraco HQ** via the CMS telemetry pipeline | Anonymous aggregate counts and configuration shape only — see whitelist below | CMS `TelemetryLevel.Detailed` **and** `Umbraco:AI:Telemetry:Enabled` (default true) |
+| **Usage telemetry** | `Umbraco.AI.Core.Telemetry.AIUsageTelemetryProvider` (+ per-add-on providers) | **Umbraco HQ** via the CMS telemetry pipeline | Anonymous aggregate counts and configuration shape only — see safelist below | CMS `TelemetryLevel.Detailed` **and** `Umbraco:AI:Telemetry:Enabled` (default true) |
 
 The first three never leave the customer's environment. Only the last one reports externally,
 and it is built **on top of** usage analytics (it reads the 30-day daily rollups rather than
@@ -41,18 +41,20 @@ On top of the CMS level, `Umbraco:AI:Telemetry:Enabled` (bound to `AIUsageTeleme
 is an AI-specific kill switch checked by every provider. Setting it to `false` suppresses all
 Umbraco.AI usage telemetry regardless of the CMS telemetry level.
 
-## What is reported (whitelist)
+## What is reported (safelist)
 
 The complete key list lives in code — one constants class per product, which unit tests
-enforce as a whitelist (`Umbraco.AI.Tests.Unit/Telemetry/`):
+enforce as a safelist (`Umbraco.AI.Tests.Unit/Telemetry/`):
 
-- `AIUsageTelemetryConstants` (Core) — installed/connected provider IDs, connection count,
-  profile counts (total + per capability), context/guardrail counts, guardrail evaluator IDs
-  in use, test count, test run count, test feature and grader type IDs in use,
-  default-profile configuration, audit/analytics enablement, 30-day request count and
-  success rate. Plus extension registration counts via `AIExtensionUsageTelemetryProvider`:
-  tool counts (total + custom), context resource type counts (total + custom), and custom
-  middleware counts per pipeline.
+- `AIUsageTelemetryConstants` (Core) — system provider IDs (installed/connected) + custom
+  provider counts, connection count, profile counts (total + per capability),
+  context/guardrail counts, guardrail evaluator IDs in use, test count, test run count,
+  test feature and grader type IDs in use, default-profile configuration, audit/analytics
+  enablement, 30-day request counts (total + per capability) and success rate. Plus
+  extension registration counts via `AIExtensionUsageTelemetryProvider`: tool and context
+  resource type totals, and a custom-registration count per extension collection discovered
+  by sweeping `AI{Name}Collection` types across loaded Umbraco.AI assemblies (middleware,
+  tool scopes, entity adapters, resolvers, contributors, handlers, agent workflows, …).
 
 ### System vs custom extension IDs
 
@@ -69,14 +71,21 @@ unenforced convention (private code can use it), and a community package's prese
 reaches HQ via the Basic-level package list, so naming its extension IDs adds little. If
 demand for naming community extensions ever materialises, the right mechanism is author
 opt-in (e.g. a `ReportIdInTelemetry` flag on the registration attributes), not assembly-name
-inference. Tool IDs are never
-reported at all — only counts. Middleware pipelines and `Default{Capability}ProfileAlias`
-options are discovered by reflection, so new capabilities flow into telemetry without code
-changes here.
-- `AIPromptUsageTelemetryConstants` — prompt counts (total/active/linkage) and display modes.
-- `AIAgentUsageTelemetryConstants` — agent counts (total/active/per-type/linkage) and
-  code-authored surface IDs.
+inference.
+
+Tool IDs are never reported at all — only counts. Extension collections, middleware
+pipelines, per-capability usage keys, and `Default{Capability}ProfileAlias` options are all
+discovered by reflection/enum iteration, so new extension points and capabilities flow into
+telemetry without code changes here.
+- `AIPromptUsageTelemetryConstants` — prompt counts (total/active/linkage), display modes,
+  and 30-day prompt execution count.
+- `AIAgentUsageTelemetryConstants` — agent counts (total/active/per-type/linkage), system
+  surface IDs + custom surface count, and 30-day agent execution count.
 - `AISearchUsageTelemetryConstants` — vector entry count.
+
+In-use context resource types (which resource kinds contexts actually contain) were
+considered and deferred — they'd require full context fetches; the registered
+custom-resource-type count covers extension adoption coarsely. Add later if needed.
 
 ## What is never reported
 
@@ -103,7 +112,7 @@ detail:
 ## Adding a new metric
 
 1. Add the key to the product's `*UsageTelemetryConstants` class (this updates the test
-   whitelist automatically for Core; add-on tests should assert their own constants).
+   safelist automatically for Core; add-on tests should assert their own constants).
 2. Emit it from the product's provider. Wrap the collection in the existing best-effort
    pattern — providers must never throw into the CMS `ReportSiteJob`.
 3. Check the value against the "never reported" list above. If it's a string that a

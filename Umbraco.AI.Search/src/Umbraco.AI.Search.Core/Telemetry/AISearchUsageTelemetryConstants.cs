@@ -4,7 +4,7 @@ namespace Umbraco.AI.Search.Core.Telemetry;
 /// Key names for the usage telemetry data Umbraco.AI.Search contributes to the CMS telemetry report.
 /// </summary>
 /// <remarks>
-/// This is the complete whitelist of data Umbraco.AI.Search reports. Values are always counts —
+/// This is the complete safelist of data Umbraco.AI.Search reports. Values are always counts —
 /// never indexed content, document IDs, or user identities.
 /// </remarks>
 public static class AISearchUsageTelemetryConstants

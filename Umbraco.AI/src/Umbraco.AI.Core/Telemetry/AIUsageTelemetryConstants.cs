@@ -5,10 +5,10 @@ namespace Umbraco.AI.Core.Telemetry;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This is the complete whitelist of data Umbraco.AI core reports. Values are always counts,
+/// This is the complete safelist of data Umbraco.AI core reports. Values are always counts,
 /// booleans, or normalized identifiers — never user-authored content, names, aliases,
 /// connection settings, token totals, or user identities. Unit tests assert that emitted
-/// keys stay within this whitelist.
+/// keys stay within this safelist.
 /// </para>
 /// <para>
 /// Not to be confused with <see cref="AITelemetry.Tags"/>, which are OpenTelemetry span tags
@@ -17,14 +17,24 @@ namespace Umbraco.AI.Core.Telemetry;
 /// </remarks>
 public static class AIUsageTelemetryConstants
 {
-    /// <summary>The set of installed AI provider IDs (e.g., "openai", "anthropic").</summary>
+    /// <summary>
+    /// The set of installed system AI provider IDs (e.g., "openai", "anthropic" — providers
+    /// shipped in Umbraco.AI packages). Custom providers are counted in
+    /// <see cref="ProviderCustomCount"/>, never named.
+    /// </summary>
     public const string Providers = "UmbracoAIProviders";
+
+    /// <summary>The number of installed custom (non-Umbraco.AI) providers.</summary>
+    public const string ProviderCustomCount = "UmbracoAIProviderCustomCount";
 
     /// <summary>The total number of configured connections.</summary>
     public const string ConnectionCount = "UmbracoAIConnectionCount";
 
-    /// <summary>The set of provider IDs that have at least one connection configured.</summary>
+    /// <summary>The set of system provider IDs that have at least one connection configured.</summary>
     public const string ConnectedProviders = "UmbracoAIConnectedProviders";
+
+    /// <summary>The number of distinct custom (non-Umbraco.AI) provider IDs with at least one connection.</summary>
+    public const string ConnectedProviderCustomCount = "UmbracoAIConnectedProviderCustomCount";
 
     /// <summary>The total number of profiles.</summary>
     public const string ProfileCount = "UmbracoAIProfileCount";
@@ -90,12 +100,13 @@ public static class AIUsageTelemetryConstants
     public const string ContextResourceTypeCustomCount = "UmbracoAIContextResourceTypeCustomCount";
 
     /// <summary>
-    /// Builds the key for a per-pipeline custom (non-Umbraco.AI) middleware count, e.g.
-    /// "UmbracoAIChatMiddlewareCustomCount". Pipelines are discovered from the
-    /// <c>AI{Pipeline}MiddlewareCollection</c> types at runtime, so middleware for new
-    /// capabilities is reported without changes here.
+    /// Builds the key for a per-extension-point custom (non-Umbraco.AI) registration count,
+    /// e.g. "UmbracoAIChatMiddlewareCustomCount" or "UmbracoAIAgentWorkflowCustomCount".
+    /// Extension points are discovered from the <c>AI{Name}Collection</c> types across loaded
+    /// Umbraco.AI assemblies at runtime, so new extension points and capabilities are
+    /// reported without changes here.
     /// </summary>
-    public static string MiddlewareCustomCount(string pipeline) => $"UmbracoAI{pipeline}MiddlewareCustomCount";
+    public static string ExtensionCustomCount(string name) => $"UmbracoAI{name}CustomCount";
 
     /// <summary>The set of capability names that have a default profile alias configured.</summary>
     public const string DefaultProfileCapabilities = "UmbracoAIDefaultProfileCapabilities";
@@ -108,6 +119,12 @@ public static class AIUsageTelemetryConstants
 
     /// <summary>The total number of AI requests in the last 30 days.</summary>
     public const string UsageRequests30d = "UmbracoAIUsageRequests30d";
+
+    /// <summary>
+    /// Prefix for per-capability 30-day request counts. The <see cref="Models.AICapability"/>
+    /// enum member name is appended (e.g., "UmbracoAIUsageRequests30dChat").
+    /// </summary>
+    public const string UsageRequests30dPrefix = "UmbracoAIUsageRequests30d";
 
     /// <summary>The request success rate (0.0–1.0) over the last 30 days.</summary>
     public const string UsageSuccessRate30d = "UmbracoAIUsageSuccessRate30d";

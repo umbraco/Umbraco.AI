@@ -33,4 +33,13 @@ public class AIUsageTelemetryClassificationTests
         AIUsageTelemetryClassification.IsSystemType(proxy.GetType()).ShouldBeFalse();
         AIUsageTelemetryClassification.IsSystemType(typeof(string)).ShouldBeFalse();
     }
+
+    [Theory]
+    [InlineData("copilot", "Copilot")]
+    [InlineData("automations", "Automations")]
+    [InlineData("content-editing", "ContentEditing")]
+    public void ToKeySuffix_ConvertsKebabCaseToPascalCase(string id, string expected)
+    {
+        AIUsageTelemetryClassification.ToKeySuffix(id).ShouldBe(expected);
+    }
 }

@@ -38,6 +38,14 @@ public static class AIAgentUsageTelemetryConstants
     /// <summary>The number of distinct custom (non-Umbraco.AI) surface IDs in use across agents.</summary>
     public const string AgentSurfaceCustomCount = "UmbracoAIAgentSurfaceCustomCount";
 
+    /// <summary>
+    /// Prefix for per-surface agent counts. The PascalCased system surface ID is appended
+    /// (e.g. "UmbracoAIAgentCountSurfaceCopilot"). Emitted for every registered system
+    /// surface — a zero count signals the surface is installed but has no agents assigned.
+    /// Custom surfaces are never named.
+    /// </summary>
+    public const string AgentCountSurfacePrefix = "UmbracoAIAgentCountSurface";
+
     /// <summary>The number of agent executions in the last 30 days.</summary>
     public const string AgentExecutions30d = "UmbracoAIAgentExecutions30d";
 }

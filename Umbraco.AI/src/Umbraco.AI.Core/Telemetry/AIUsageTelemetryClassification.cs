@@ -39,6 +39,15 @@ internal static class AIUsageTelemetryClassification
             .ToHashSet();
 
     /// <summary>
+    /// Converts a kebab-case extension point ID to a telemetry key suffix
+    /// (e.g. "content-editing" → "ContentEditing"). Only use for system IDs.
+    /// </summary>
+    internal static string ToKeySuffix(string id)
+        => string.Concat(id
+            .Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => char.ToUpperInvariant(part[0]) + part[1..].ToLowerInvariant()));
+
+    /// <summary>
     /// Splits a set of in-use IDs into the system IDs (safe to report verbatim) and the
     /// number of distinct custom IDs (reported as a count only). IDs that aren't registered
     /// at all are treated as custom.

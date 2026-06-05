@@ -80,17 +80,22 @@ telemetry without code changes here.
 - `AIPromptUsageTelemetryConstants` — prompt counts (total/active/linkage), display modes,
   and 30-day prompt execution count.
 - `AIAgentUsageTelemetryConstants` — agent counts (total/active/per-type/linkage), system
-  surface IDs + custom surface count, and 30-day agent execution count.
+  surface IDs + custom surface count, per-system-surface agent counts (zero = surface
+  installed but unused, e.g. Copilot with no agents assigned), and 30-day agent execution
+  count.
 - `AISearchUsageTelemetryConstants` — vector entry count.
 
 Context picker adoption (content-level context resolution, i.e. "different tone per site
 section") is reported as a funnel: data types based on `Uai.ContextPicker` → content types
 referencing them (`IDataTypeService.GetPagedRelationsAsync`, count only) → whether any
 content has saved picker values (`IDataTypeUsageService.HasSavedValuesAsync`). All targeted
-repository queries — no in-memory content type enumeration. Runtime resolution counts
-(how often `ContentContextResolver` actually injects a context into a request) were
-considered and deferred — there's no recorded dimension for context-resolution source; if
-needed, the right mechanism is a new dimension on usage records.
+repository queries — no in-memory content type enumeration.
+
+Two runtime signals were considered and deferred because they need the same missing
+mechanism — additional dimensions on usage records (schema migration + aggregation
+changes): runtime context-resolution counts (how often `ContentContextResolver` injects a
+context into a request) and per-surface execution volumes (e.g. Copilot conversation
+volume vs other surfaces). If either is wanted, build the dimension once and report both.
 
 In-use context resource types (which resource kinds contexts actually contain) were
 considered and deferred — they'd require full context fetches; the registered

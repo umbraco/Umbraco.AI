@@ -81,6 +81,16 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
                     AIAgentUsageTelemetryConstants.AgentCountPrefix + typeGroup.Key,
                     typeGroup.Count()));
             }
+
+            // Per-surface agent counts for registered system surfaces (e.g. Copilot,
+            // Automations). A zero count signals the surface is installed but has no
+            // agents assigned to it.
+            foreach (IAIAgentSurface surface in _surfaces.Where(s => AIUsageTelemetryClassification.IsSystemType(s.GetType())))
+            {
+                result.Add(new UsageInformation(
+                    AIAgentUsageTelemetryConstants.AgentCountSurfacePrefix + AIUsageTelemetryClassification.ToKeySuffix(surface.Id),
+                    agents.Count(a => a.SurfaceIds.Contains(surface.Id, StringComparer.OrdinalIgnoreCase))));
+            }
         }
         catch
         {

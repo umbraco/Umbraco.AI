@@ -36,7 +36,7 @@ identifier — never content, names, or identities.
 | Package | Data |
 | --- | --- |
 | Umbraco.AI.Prompt | Prompt counts (total, active, with profile/context/guardrail), display modes in use, prompt executions in the last 30 days |
-| Umbraco.AI.Agent | Agent counts (total, active, per type, with profile/guardrail), built-in surface IDs in use + custom surface count, agent executions in the last 30 days |
+| Umbraco.AI.Agent | Agent counts (total, active, per type, per built-in surface, with profile/guardrail), built-in surface IDs in use + custom surface count, agent executions in the last 30 days |
 | Umbraco.AI.Search | Vector entry count |
 
 ## What is never collected

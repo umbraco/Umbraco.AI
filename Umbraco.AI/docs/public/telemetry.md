@@ -21,8 +21,11 @@ identifier — never content, names, or identities.
 | Connection count | `3` |
 | Profile counts (total and per capability) | `5` total, `3` Chat, `2` Embedding |
 | Context and guardrail counts | `4`, `2` |
-| Guardrail evaluator IDs in use | `regex`, `pii` |
-| Test count, test run count, and test feature/grader IDs in use | `6`, `120`, `prompt`, `contains` |
+| Guardrail evaluator IDs in use (built-in only; custom evaluators are counted, never named) | `regex`, `pii` + custom count |
+| Test count, test run count, and test feature/grader IDs in use (built-in only; custom ones are counted, never named) | `6`, `120`, `prompt`, `contains` + custom counts |
+| Registered tool counts (built-in and custom — tool names/IDs are never sent) | `12` total, `3` custom |
+| Registered context resource type counts (total and custom) | `4`, `1` |
+| Custom middleware counts per pipeline | `1` chat, `0` embedding |
 | Which capabilities have a default profile configured | `Chat`, `Embedding` |
 | Whether audit logging / usage analytics are enabled | `true` |
 | Requests in the last 30 days and success rate | `1250`, `0.98` |
@@ -40,6 +43,9 @@ identifier — never content, names, or identities.
 - Prompt instructions, system messages, chat content, or AI responses
 - API keys, endpoints, or any connection settings
 - Names or aliases of profiles, prompts, agents, connections, contexts, or guardrails
+- IDs of custom code extensions (tools, evaluators, graders, test features, surfaces,
+  resource types, middleware) — only extensions shipped in Umbraco packages are ever named;
+  custom ones appear solely as counts
 - Model or deployment names — model IDs are not reported at all, as they can be
   user-authored (e.g. Azure AI Foundry deployment names)
 - Token usage totals

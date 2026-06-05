@@ -80,6 +80,7 @@ public static partial class UmbracoBuilderExtensions
         // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
         // (only sent at CMS TelemetryLevel.Detailed; suppressed via Umbraco:AI:Telemetry:Enabled)
         services.AddTransient<IDetailedTelemetryProvider, AIUsageTelemetryProvider>();
+        services.AddTransient<IDetailedTelemetryProvider, AIExtensionUsageTelemetryProvider>();
 
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();

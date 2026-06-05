@@ -1,11 +1,14 @@
 using System.Text.Json;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
@@ -68,7 +71,9 @@ public class AIUsageTelemetryProviderTests
                     .WithName(SensitiveAlias)
                     .WithRules(
                         new AIGuardrailRuleBuilder().WithEvaluatorId("regex").WithName(SensitiveAlias).Build(),
-                        new AIGuardrailRuleBuilder().WithEvaluatorId("pii").Build())
+                        new AIGuardrailRuleBuilder().WithEvaluatorId("pii").Build(),
+                        // Custom evaluator (not in the system registry) - must be counted, never named
+                        new AIGuardrailRuleBuilder().WithEvaluatorId("acme-compliance-check").Build())
                     .Build(),
                 new AIGuardrailBuilder().Build(),
             ]);
@@ -89,7 +94,21 @@ public class AIUsageTelemetryProviderTests
                             GraderTypeId = "contains",
                             Name = SensitiveAlias,
                         },
+                        // Custom grader (not in the system registry) - must be counted, never named
+                        new AITestGraderConfig
+                        {
+                            GraderTypeId = "acme-scorer",
+                            Name = SensitiveAlias,
+                        },
                     ],
+                },
+                new AITest
+                {
+                    Alias = "second-test",
+                    Name = "Second Test",
+                    // Custom test feature (not in the system registry) - must be counted, never named
+                    TestFeatureId = "acme-workflow",
+                    TestTargetId = Guid.NewGuid(),
                 },
             ]);
 
@@ -129,8 +148,11 @@ public class AIUsageTelemetryProviderTests
             _profileService.Object,
             _contextService.Object,
             _guardrailService.Object,
+            new AIGuardrailEvaluatorCollection(() => [new FakeGuardrailEvaluator("regex"), new FakeGuardrailEvaluator("pii")]),
             _testService.Object,
             _testRunService.Object,
+            new AITestFeatureCollection(() => [new FakeTestFeature("prompt")]),
+            new AITestGraderCollection(() => [new FakeTestGrader("contains")]),
             _usageAnalyticsService.Object);
     }
 
@@ -198,18 +220,21 @@ public class AIUsageTelemetryProviderTests
         GetData(result, AIUsageTelemetryConstants.ConnectionCount).ShouldBe(1);
         GetData(result, AIUsageTelemetryConstants.ContextCount).ShouldBe(5);
         GetData(result, AIUsageTelemetryConstants.GuardrailCount).ShouldBe(2);
-        GetData(result, AIUsageTelemetryConstants.TestCount).ShouldBe(1);
+        GetData(result, AIUsageTelemetryConstants.TestCount).ShouldBe(2);
         GetData(result, AIUsageTelemetryConstants.TestRunCount).ShouldBe(42);
 
-        var testFeatures = GetData(result, AIUsageTelemetryConstants.TestFeatures).ShouldBeAssignableTo<IEnumerable<string>>();
-        testFeatures.ShouldContain("prompt");
+        // System-registered IDs are reported verbatim; custom IDs only as distinct counts
+        var testFeatures = GetData(result, AIUsageTelemetryConstants.TestFeatures).ShouldBeAssignableTo<IEnumerable<string>>()!.ToArray();
+        testFeatures.ShouldBe(["prompt"]);
+        GetData(result, AIUsageTelemetryConstants.TestFeatureCustomCount).ShouldBe(1);
 
-        var testGraders = GetData(result, AIUsageTelemetryConstants.TestGraders).ShouldBeAssignableTo<IEnumerable<string>>();
-        testGraders.ShouldContain("contains");
+        var testGraders = GetData(result, AIUsageTelemetryConstants.TestGraders).ShouldBeAssignableTo<IEnumerable<string>>()!.ToArray();
+        testGraders.ShouldBe(["contains"]);
+        GetData(result, AIUsageTelemetryConstants.TestGraderCustomCount).ShouldBe(1);
 
-        var evaluators = GetData(result, AIUsageTelemetryConstants.GuardrailEvaluators).ShouldBeAssignableTo<IEnumerable<string>>();
-        evaluators.ShouldContain("regex");
-        evaluators.ShouldContain("pii");
+        var evaluators = GetData(result, AIUsageTelemetryConstants.GuardrailEvaluators).ShouldBeAssignableTo<IEnumerable<string>>()!.ToArray();
+        evaluators.ShouldBe(["regex", "pii"], ignoreOrder: true);
+        GetData(result, AIUsageTelemetryConstants.GuardrailEvaluatorCustomCount).ShouldBe(1);
         GetData(result, AIUsageTelemetryConstants.UsageRequests30d).ShouldBe(100);
         GetData(result, AIUsageTelemetryConstants.UsageSuccessRate30d).ShouldBe(0.95);
 
@@ -253,4 +278,44 @@ public class AIUsageTelemetryProviderTests
 
     private static object GetData(UsageInformation[] result, string name)
         => result.Single(i => i.Name == name).Data;
+
+    // Concrete fakes (not Moq proxies) so AIUsageTelemetryClassification sees them in the
+    // "Umbraco."-prefixed test assembly and classifies them as system registrations.
+
+    private sealed class FakeGuardrailEvaluator(string id) : IAIGuardrailEvaluator
+    {
+        public string Id => id;
+        public string Name => id;
+        public string Description => string.Empty;
+        public AIGuardrailEvaluatorType Type => AIGuardrailEvaluatorType.CodeBased;
+        public Type? ConfigType => null;
+        public AIEditableModelSchema? GetConfigSchema() => null;
+        public Task<AIGuardrailResult> EvaluateAsync(string content, IReadOnlyList<ChatMessage> conversationHistory, AIGuardrailConfig config, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+    }
+
+    private sealed class FakeTestFeature(string id) : IAITestFeature
+    {
+        public string Id => id;
+        public string Name => id;
+        public string Description => string.Empty;
+        public string Category => "Built-in";
+        public Type? ConfigType => null;
+        public AIEditableModelSchema? GetConfigSchema() => null;
+        public string ExtractOutputValue(AITestTranscript transcript) => throw new NotImplementedException();
+        public Task<AITestTranscript> ExecuteAsync(AITest test, int runNumber, Guid? profileIdOverride, IEnumerable<Guid>? contextIdsOverride, IEnumerable<Guid>? guardrailIdsOverride, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+    }
+
+    private sealed class FakeTestGrader(string id) : IAITestGrader
+    {
+        public string Id => id;
+        public string Name => id;
+        public string Description => string.Empty;
+        public AIGraderType Type => AIGraderType.CodeBased;
+        public Type? ConfigType => null;
+        public AIEditableModelSchema? GetConfigSchema() => null;
+        public Task<AITestGraderResult> GradeAsync(AITestTranscript transcript, AITestOutcome outcome, AITestGraderConfig graderConfig, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
+    }
 }

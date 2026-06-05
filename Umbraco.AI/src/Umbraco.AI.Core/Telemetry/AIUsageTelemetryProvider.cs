@@ -2,9 +2,11 @@ using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.AuditLog;
+using System.Reflection;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
@@ -43,8 +45,11 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
     private readonly IAIProfileService _profileService;
     private readonly IAIContextService _contextService;
     private readonly IAIGuardrailService _guardrailService;
+    private readonly AIGuardrailEvaluatorCollection _guardrailEvaluators;
     private readonly IAITestService _testService;
     private readonly IAITestRunService _testRunService;
+    private readonly AITestFeatureCollection _testFeatures;
+    private readonly AITestGraderCollection _testGraders;
     private readonly IAIUsageAnalyticsService _usageAnalyticsService;
 
     /// <summary>
@@ -60,8 +65,11 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         IAIProfileService profileService,
         IAIContextService contextService,
         IAIGuardrailService guardrailService,
+        AIGuardrailEvaluatorCollection guardrailEvaluators,
         IAITestService testService,
         IAITestRunService testRunService,
+        AITestFeatureCollection testFeatures,
+        AITestGraderCollection testGraders,
         IAIUsageAnalyticsService usageAnalyticsService)
     {
         _telemetryOptions = telemetryOptions;
@@ -73,8 +81,11 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         _profileService = profileService;
         _contextService = contextService;
         _guardrailService = guardrailService;
+        _guardrailEvaluators = guardrailEvaluators;
         _testService = testService;
         _testRunService = testRunService;
+        _testFeatures = testFeatures;
+        _testGraders = testGraders;
         _usageAnalyticsService = usageAnalyticsService;
     }
 
@@ -175,14 +186,14 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
             .GetResult()
             .ToArray();
 
-        var evaluators = guardrails
-            .SelectMany(g => g.Rules)
-            .Select(r => r.EvaluatorId.ToLowerInvariant())
-            .ToHashSet();
+        (var evaluators, var customEvaluatorCount) = AIUsageTelemetryClassification.ClassifyInUse(
+            guardrails.SelectMany(g => g.Rules).Select(r => r.EvaluatorId),
+            AIUsageTelemetryClassification.GetSystemIds(_guardrailEvaluators, e => e.Id));
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.ContextCount, contextCount));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailCount, guardrails.Length));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailEvaluators, evaluators));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.GuardrailEvaluatorCustomCount, customEvaluatorCount));
     }
 
     private void CollectTests(List<UsageInformation> result)
@@ -200,41 +211,36 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
             .GetAwaiter()
             .GetResult();
 
-        var testFeatures = tests
-            .Select(t => t.TestFeatureId.ToLowerInvariant())
-            .ToHashSet();
+        (var testFeatures, var customFeatureCount) = AIUsageTelemetryClassification.ClassifyInUse(
+            tests.Select(t => t.TestFeatureId),
+            AIUsageTelemetryClassification.GetSystemIds(_testFeatures, f => f.Id));
 
-        var testGraders = tests
-            .SelectMany(t => t.Graders)
-            .Select(g => g.GraderTypeId.ToLowerInvariant())
-            .ToHashSet();
+        (var testGraders, var customGraderCount) = AIUsageTelemetryClassification.ClassifyInUse(
+            tests.SelectMany(t => t.Graders).Select(g => g.GraderTypeId),
+            AIUsageTelemetryClassification.GetSystemIds(_testGraders, g => g.Id));
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestCount, tests.Length));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestRunCount, testRunCount));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestFeatures, testFeatures));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.TestFeatureCustomCount, customFeatureCount));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.TestGraders, testGraders));
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.TestGraderCustomCount, customGraderCount));
     }
 
     private void CollectConfiguration(List<UsageInformation> result)
     {
         AIOptions aiOptions = _aiOptions.CurrentValue;
 
-        var defaultProfileCapabilities = new HashSet<string>();
-
-        if (!string.IsNullOrWhiteSpace(aiOptions.DefaultChatProfileAlias))
-        {
-            defaultProfileCapabilities.Add(nameof(AICapability.Chat));
-        }
-
-        if (!string.IsNullOrWhiteSpace(aiOptions.DefaultEmbeddingProfileAlias))
-        {
-            defaultProfileCapabilities.Add(nameof(AICapability.Embedding));
-        }
-
-        if (!string.IsNullOrWhiteSpace(aiOptions.DefaultSpeechToTextProfileAlias))
-        {
-            defaultProfileCapabilities.Add(nameof(AICapability.SpeechToText));
-        }
+        // Capabilities with a configured default are discovered from the Default{Capability}ProfileAlias
+        // properties on AIOptions, so new capabilities are reported without changes here.
+        var defaultProfileCapabilities = typeof(AIOptions)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.PropertyType == typeof(string)
+                && p.Name.StartsWith("Default", StringComparison.Ordinal)
+                && p.Name.EndsWith("ProfileAlias", StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace((string?)p.GetValue(aiOptions)))
+            .Select(p => p.Name["Default".Length..^"ProfileAlias".Length])
+            .ToHashSet();
 
         result.Add(new UsageInformation(AIUsageTelemetryConstants.DefaultProfileCapabilities, defaultProfileCapabilities));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.AuditLogEnabled, _auditLogOptions.CurrentValue.Enabled));

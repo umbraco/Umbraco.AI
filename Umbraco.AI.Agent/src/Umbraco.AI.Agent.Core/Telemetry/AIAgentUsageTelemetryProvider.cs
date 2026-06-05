@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Core.Telemetry;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
@@ -19,16 +20,19 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
 {
     private readonly IOptionsMonitor<AIUsageTelemetryOptions> _telemetryOptions;
     private readonly IAIAgentService _agentService;
+    private readonly AIAgentSurfaceCollection _surfaces;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentUsageTelemetryProvider"/> class.
     /// </summary>
     public AIAgentUsageTelemetryProvider(
         IOptionsMonitor<AIUsageTelemetryOptions> telemetryOptions,
-        IAIAgentService agentService)
+        IAIAgentService agentService,
+        AIAgentSurfaceCollection surfaces)
     {
         _telemetryOptions = telemetryOptions;
         _agentService = agentService;
+        _surfaces = surfaces;
     }
 
     /// <inheritdoc />
@@ -48,10 +52,9 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
                 .GetResult()
                 .ToArray();
 
-            var surfaces = agents
-                .SelectMany(a => a.SurfaceIds)
-                .Select(s => s.ToLowerInvariant())
-                .ToHashSet();
+            (var surfaces, var customSurfaceCount) = AIUsageTelemetryClassification.ClassifyInUse(
+                agents.SelectMany(a => a.SurfaceIds),
+                AIUsageTelemetryClassification.GetSystemIds(_surfaces, s => s.Id));
 
             var result = new List<UsageInformation>
             {
@@ -60,6 +63,7 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
                 new(AIAgentUsageTelemetryConstants.AgentWithProfileCount, agents.Count(a => a.ProfileId.HasValue)),
                 new(AIAgentUsageTelemetryConstants.AgentWithGuardrailCount, agents.Count(a => a.GuardrailIds.Count > 0)),
                 new(AIAgentUsageTelemetryConstants.AgentSurfaces, surfaces),
+                new(AIAgentUsageTelemetryConstants.AgentSurfaceCustomCount, customSurfaceCount),
             };
 
             foreach (var typeGroup in agents.GroupBy(a => a.AgentType))

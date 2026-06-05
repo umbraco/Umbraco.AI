@@ -50,7 +50,20 @@ enforce as a whitelist (`Umbraco.AI.Tests.Unit/Telemetry/`):
   profile counts (total + per capability), context/guardrail counts, guardrail evaluator IDs
   in use, test count, test run count, test feature and grader type IDs in use,
   default-profile configuration, audit/analytics enablement, 30-day request count and
-  success rate.
+  success rate. Plus extension registration counts via `AIExtensionUsageTelemetryProvider`:
+  tool counts (total + custom), context resource type counts (total + custom), and custom
+  middleware counts per pipeline.
+
+### System vs custom extension IDs
+
+Extension point IDs are developer-authored and can encode business information (a tool ID
+like "send-to-acme-erp"), so `AIUsageTelemetryClassification` splits every reported ID set
+by the implementing type's assembly: types in `Umbraco.*` assemblies are system and their
+IDs may be reported verbatim; everything else (and any unregistered ID found in stored
+config) is reported only as a distinct count (`*CustomCount` keys). Tool IDs are never
+reported at all — only counts. Middleware pipelines and `Default{Capability}ProfileAlias`
+options are discovered by reflection, so new capabilities flow into telemetry without code
+changes here.
 - `AIPromptUsageTelemetryConstants` — prompt counts (total/active/linkage) and display modes.
 - `AIAgentUsageTelemetryConstants` — agent counts (total/active/per-type/linkage) and
   code-authored surface IDs.

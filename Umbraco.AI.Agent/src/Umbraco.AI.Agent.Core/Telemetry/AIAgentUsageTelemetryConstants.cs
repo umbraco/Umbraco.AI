@@ -29,8 +29,12 @@ public static class AIAgentUsageTelemetryConstants
     public const string AgentWithGuardrailCount = "UmbracoAIAgentWithGuardrailCount";
 
     /// <summary>
-    /// The set of surface IDs in use across agents. Surface IDs are code-authored extension
-    /// point identifiers (registered by packages), not backoffice-user-authored values.
+    /// The set of system-registered surface IDs in use across agents (surfaces shipped in
+    /// Umbraco packages). Custom surfaces are counted in
+    /// <see cref="AgentSurfaceCustomCount"/>, never named.
     /// </summary>
     public const string AgentSurfaces = "UmbracoAIAgentSurfaces";
+
+    /// <summary>The number of distinct custom (non-Umbraco) surface IDs in use across agents.</summary>
+    public const string AgentSurfaceCustomCount = "UmbracoAIAgentSurfaceCustomCount";
 }

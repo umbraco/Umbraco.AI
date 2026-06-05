@@ -4,12 +4,12 @@
     "net10.0": {
       "Google.GenAI": {
         "type": "Direct",
-        "requested": "[1.6.1, 1.999.999)",
-        "resolved": "1.6.1",
-        "contentHash": "ydKqbLdf1JF6hh49OM1cOOz9/CeAF1ZQ9dcA4KZaJKpACb9oxucGWAIciWvNC/Cci0rnMA8qn4o/3pw5Yy/EOg==",
+        "requested": "[1.8.0, 1.999.999)",
+        "resolved": "1.8.0",
+        "contentHash": "hGpDomIKYgyh7XjgvLyYY96+LdgOwQ81IASBvSjDlHibuycgOievlb/kDMwOFAOsVWKfw5ZDivZdPFkwxrvufQ==",
         "dependencies": {
           "Google.Apis.Auth": "1.69.0",
-          "Microsoft.Extensions.AI.Abstractions": "10.4.0",
+          "Microsoft.Extensions.AI.Abstractions": "10.6.0",
           "MimeTypes": "2.5.2"
         }
       },

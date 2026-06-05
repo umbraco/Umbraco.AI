@@ -35,6 +35,6 @@ public static class AIAgentUsageTelemetryConstants
     /// </summary>
     public const string AgentSurfaces = "UmbracoAIAgentSurfaces";
 
-    /// <summary>The number of distinct custom (non-Umbraco) surface IDs in use across agents.</summary>
+    /// <summary>The number of distinct custom (non-Umbraco.AI) surface IDs in use across agents.</summary>
     public const string AgentSurfaceCustomCount = "UmbracoAIAgentSurfaceCustomCount";
 }

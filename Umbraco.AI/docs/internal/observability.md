@@ -58,9 +58,11 @@ enforce as a whitelist (`Umbraco.AI.Tests.Unit/Telemetry/`):
 
 Extension point IDs are developer-authored and can encode business information (a tool ID
 like "send-to-acme-erp"), so `AIUsageTelemetryClassification` splits every reported ID set
-by the implementing type's assembly: types in `Umbraco.*` assemblies are system and their
-IDs may be reported verbatim; everything else (and any unregistered ID found in stored
-config) is reported only as a distinct count (`*CustomCount` keys). Tool IDs are never
+by the implementing type's assembly: types in official `Umbraco.AI` / `Umbraco.AI.*`
+assemblies are system and their IDs may be reported verbatim; everything else (and any
+unregistered ID found in stored config) is reported only as a distinct count
+(`*CustomCount` keys). The match is deliberately strict — a broad `Umbraco.*` prefix would
+wrongly classify community packages (conventionally named `Umbraco.Community.*`) as system. Tool IDs are never
 reported at all — only counts. Middleware pipelines and `Default{Capability}ProfileAlias`
 options are discovered by reflection, so new capabilities flow into telemetry without code
 changes here.

@@ -6,16 +6,27 @@ namespace Umbraco.AI.Core.Telemetry;
 /// </summary>
 /// <remarks>
 /// Custom extension point IDs are developer-authored and can encode business information
-/// (e.g. a tool ID like "send-to-acme-erp"), so only IDs implemented in Umbraco-owned
-/// assemblies are ever reported verbatim; everything else is reported as a count.
+/// (e.g. a tool ID like "send-to-acme-erp"), so only IDs implemented in official
+/// Umbraco.AI assemblies are ever reported verbatim; everything else is reported as a
+/// count. The match is deliberately strict ("Umbraco.AI" / "Umbraco.AI.*") — a broader
+/// "Umbraco.*" prefix would wrongly classify community packages, which conventionally use
+/// the "Umbraco.Community.*" naming prefix, as system.
 /// </remarks>
 internal static class AIUsageTelemetryClassification
 {
+    private const string SystemAssemblyPrefix = "Umbraco.AI";
+
     /// <summary>
-    /// Determines whether a type ships in an Umbraco-owned assembly.
+    /// Determines whether a type ships in an official Umbraco.AI assembly.
     /// </summary>
     internal static bool IsSystemType(Type type)
-        => type.Assembly.GetName().Name?.StartsWith("Umbraco.", StringComparison.OrdinalIgnoreCase) == true;
+    {
+        var assemblyName = type.Assembly.GetName().Name;
+
+        return assemblyName is not null
+            && (assemblyName.Equals(SystemAssemblyPrefix, StringComparison.OrdinalIgnoreCase)
+                || assemblyName.StartsWith(SystemAssemblyPrefix + ".", StringComparison.OrdinalIgnoreCase));
+    }
 
     /// <summary>
     /// Builds the set of system-registered IDs (lowercased) from an extension point registry.

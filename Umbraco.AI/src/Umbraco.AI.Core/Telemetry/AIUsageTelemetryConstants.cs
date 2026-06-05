@@ -48,7 +48,7 @@ public static class AIUsageTelemetryConstants
     /// </summary>
     public const string GuardrailEvaluators = "UmbracoAIGuardrailEvaluators";
 
-    /// <summary>The number of distinct custom (non-Umbraco) evaluator IDs in use across guardrail rules.</summary>
+    /// <summary>The number of distinct custom (non-Umbraco.AI) evaluator IDs in use across guardrail rules.</summary>
     public const string GuardrailEvaluatorCustomCount = "UmbracoAIGuardrailEvaluatorCustomCount";
 
     /// <summary>The total number of tests defined.</summary>
@@ -64,7 +64,7 @@ public static class AIUsageTelemetryConstants
     /// </summary>
     public const string TestFeatures = "UmbracoAITestFeatures";
 
-    /// <summary>The number of distinct custom (non-Umbraco) test feature IDs in use across tests.</summary>
+    /// <summary>The number of distinct custom (non-Umbraco.AI) test feature IDs in use across tests.</summary>
     public const string TestFeatureCustomCount = "UmbracoAITestFeatureCustomCount";
 
     /// <summary>
@@ -74,23 +74,23 @@ public static class AIUsageTelemetryConstants
     /// </summary>
     public const string TestGraders = "UmbracoAITestGraders";
 
-    /// <summary>The number of distinct custom (non-Umbraco) grader type IDs in use across tests.</summary>
+    /// <summary>The number of distinct custom (non-Umbraco.AI) grader type IDs in use across tests.</summary>
     public const string TestGraderCustomCount = "UmbracoAITestGraderCustomCount";
 
     /// <summary>The total number of registered AI tools. Tool IDs are never reported.</summary>
     public const string ToolCount = "UmbracoAIToolCount";
 
-    /// <summary>The number of registered custom (non-Umbraco) AI tools.</summary>
+    /// <summary>The number of registered custom (non-Umbraco.AI) AI tools.</summary>
     public const string ToolCustomCount = "UmbracoAIToolCustomCount";
 
     /// <summary>The total number of registered context resource types.</summary>
     public const string ContextResourceTypeCount = "UmbracoAIContextResourceTypeCount";
 
-    /// <summary>The number of registered custom (non-Umbraco) context resource types.</summary>
+    /// <summary>The number of registered custom (non-Umbraco.AI) context resource types.</summary>
     public const string ContextResourceTypeCustomCount = "UmbracoAIContextResourceTypeCustomCount";
 
     /// <summary>
-    /// Builds the key for a per-pipeline custom (non-Umbraco) middleware count, e.g.
+    /// Builds the key for a per-pipeline custom (non-Umbraco.AI) middleware count, e.g.
     /// "UmbracoAIChatMiddlewareCustomCount". Pipelines are discovered from the
     /// <c>AI{Pipeline}MiddlewareCollection</c> types at runtime, so middleware for new
     /// capabilities is reported without changes here.

@@ -44,8 +44,8 @@ identifier — never content, names, or identities.
 - API keys, endpoints, or any connection settings
 - Names or aliases of profiles, prompts, agents, connections, contexts, or guardrails
 - IDs of custom code extensions (tools, evaluators, graders, test features, surfaces,
-  resource types, middleware) — only extensions shipped in Umbraco packages are ever named;
-  custom ones appear solely as counts
+  resource types, middleware) — only extensions shipped in official Umbraco.AI packages are
+  ever named; everything else (including community packages) appears solely as counts
 - Model or deployment names — model IDs are not reported at all, as they can be
   user-authored (e.g. Azure AI Foundry deployment names)
 - Token usage totals

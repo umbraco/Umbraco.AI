@@ -65,4 +65,3 @@ This creates a unified solution (`Umbraco.AI.local.slnx`) with all packages and 
 ## License
 
 This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.
-

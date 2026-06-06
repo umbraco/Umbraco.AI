@@ -81,6 +81,16 @@ parameters:
           - name: Umbraco.AI.Agent.Copilot
             changeVar: AgentCopilotChanged
             hasNpm: true
+    # Queue-time override: pack dev builds with NuGet version ranges instead of
+    # project references. Dev normally packs with project references, which pins
+    # dependencies to the exact preview versions computed at build time - those
+    # only resolve if the entire dependency chain is packed in the same build.
+    # Tick this when a nightly of a single product must be installable against
+    # already-published dependency versions.
+    - name: packWithNuGetRanges
+      displayName: Pack with NuGet version ranges (dev only override)
+      type: boolean
+      default: false
 
 trigger:
     branches:
@@ -520,8 +530,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: Umbraco.AI
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
-                      useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
+                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
+                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
 
                 - template: .azure-pipelines/templates/upload-packages.yml
                   parameters:
@@ -571,8 +582,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: $(product)
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
-                      useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
+                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
+                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml
@@ -628,8 +640,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: $(product)
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
-                      useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
+                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
+                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml
@@ -690,8 +703,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: $(product)
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
-                      useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
+                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
+                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml

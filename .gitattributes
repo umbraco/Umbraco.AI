@@ -1,2 +1,6 @@
 # Preserve release-manifest.json on release/hotfix branches during merges
 release-manifest.json merge=preserve-on-release
+
+# Git hooks must use LF line endings (CRLF breaks the shebang on macOS/Linux)
+.githooks/* text eol=lf
+.githooks/*.ps1 text eol=crlf

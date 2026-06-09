@@ -23,12 +23,12 @@ public static partial class UmbracoBuilderExtensions
     {
         var (aiConnectionString, aiProviderName) = AIConnectionStringResolver.Resolve(builder.Config);
 
-        // TODO: Pass shareUmbracoConnection: false when a custom connection string is configured.
-        // Requires Umbraco CMS fix: https://github.com/umbraco/Umbraco-CMS/pull/22133
-        builder.Services.AddUmbracoDbContext<UmbracoAISearchDbContext>((options, connectionString, providerName, serviceProvider) =>
-        {
-            UmbracoAISearchDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);
-        });
+        builder.Services.AddUmbracoDbContext<UmbracoAISearchDbContext>(
+            (options, connectionString, providerName, serviceProvider) =>
+            {
+                UmbracoAISearchDbContext.ConfigureProvider(options, aiConnectionString ?? connectionString, aiProviderName ?? providerName);
+            },
+            shareUmbracoConnection: aiConnectionString is null);
 
         builder.Services.AddSingleton<IAIVectorStore, EFCoreAIVectorStore>();
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchMigrationNotificationHandler>();

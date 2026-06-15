@@ -3,6 +3,7 @@ using System.Reflection;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Providers;
@@ -101,6 +102,16 @@ public abstract class AIProviderBase : IAIProvider
         // Base implementation returns null (no settings)
         return null;
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Default implementation recognises the common transport exception types via
+    /// <see cref="ProviderErrorMapping.FromException"/>. Providers whose SDK surfaces errors
+    /// differently (e.g. an SSE envelope embedded in the message) override this and typically
+    /// delegate to <c>base.ClassifyError</c> for anything they don't recognise.
+    /// </remarks>
+    public virtual AIProviderErrorInfo ClassifyError(Exception exception)
+        => ProviderErrorMapping.FromException(exception);
 
     /// <summary>
     /// Adds a capability to this AI provider.

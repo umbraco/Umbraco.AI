@@ -25,7 +25,6 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 {
     private readonly IAGUIMessageConverter _messageConverter;
     private readonly IAGUIFileProcessor _fileProcessor;
-    private readonly AIProviderErrorClassifier _errorClassifier;
     private readonly ILogger<AGUIStreamingService> _logger;
 
     /// <summary>
@@ -34,12 +33,10 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     public AGUIStreamingService(
         IAGUIMessageConverter messageConverter,
         IAGUIFileProcessor fileProcessor,
-        AIProviderErrorClassifier errorClassifier,
         ILogger<AGUIStreamingService> logger)
     {
         _messageConverter = messageConverter;
         _fileProcessor = fileProcessor;
-        _errorClassifier = errorClassifier;
         _logger = logger;
     }
 
@@ -98,15 +95,31 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         }
 
         // Emit error event if streaming failed.
-        // Classify so the frontend can render a user-friendly message and decide whether
-        // to surface retry affordances based on the category (transient, rate-limited, etc.).
+        // Provider SDK failures arrive pre-classified as AIProviderException (the chat client is
+        // wrapped by the error-classifying decorator in the capability factory), carrying a
+        // user-safe message and a stable category code for retry affordances. Anything else is an
+        // application-layer failure we surface generically without leaking raw exception text.
         if (streamError != null)
         {
-            var errorInfo = _errorClassifier.Classify(streamError);
-            _logger.LogError(streamError,
-                "Agent run {RunId} failed. Category={Category}, ProviderCode={ProviderCode}",
-                request.RunId, errorInfo.Category, errorInfo.ProviderCode);
-            yield return emitter.EmitError(errorInfo.UserMessage, errorInfo.Category.ToString());
+            string userMessage;
+            string code;
+            if (FindProviderException(streamError) is { } providerError)
+            {
+                userMessage = providerError.UserMessage;
+                code = providerError.Category.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed. Category={Category}, ProviderCode={ProviderCode}",
+                    request.RunId, providerError.Category, providerError.ProviderCode);
+            }
+            else
+            {
+                userMessage = "An unexpected error occurred. Please try again.";
+                code = AIProviderErrorCategory.Unknown.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed with an unclassified error.", request.RunId);
+            }
+
+            yield return emitter.EmitError(userMessage, code);
         }
 
         // Emit RunFinished with appropriate outcome
@@ -236,6 +249,24 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
+    }
+
+    /// <summary>
+    /// Finds the classified <see cref="AIProviderException"/> in the exception chain, if any. The
+    /// error-classifying client decorator throws it directly, but agent/middleware layers above may
+    /// wrap it, so we walk inner exceptions rather than only checking the top.
+    /// </summary>
+    private static AIProviderException? FindProviderException(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is AIProviderException providerError)
+            {
+                return providerError;
+            }
+        }
+
+        return null;
     }
 
     private static string FormatProviderErrorForChat(ErrorContent errorContent)

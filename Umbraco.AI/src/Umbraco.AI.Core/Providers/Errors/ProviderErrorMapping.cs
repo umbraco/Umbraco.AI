@@ -1,12 +1,76 @@
+using System.ClientModel;
+using System.Net.Http;
+using System.Text.Json;
+
 namespace Umbraco.AI.Core.Providers.Errors;
 
 /// <summary>
-/// Shared HTTP-status → <see cref="AIProviderErrorCategory"/> mapping used by the built-in
-/// classifiers and available to provider packages so OpenAI-compatible and provider-specific
-/// classifiers stay consistent.
+/// Shared exception → <see cref="AIProviderErrorInfo"/> mapping. Provides the default
+/// classification used by <see cref="AIProviderBase.ClassifyError"/> and an HTTP-status helper
+/// that provider packages can reuse so OpenAI-compatible and provider-specific mappings stay
+/// consistent.
 /// </summary>
 public static class ProviderErrorMapping
 {
+    /// <summary>
+    /// The default classification for an exception, walking the inner-exception chain and
+    /// recognising the common transport types: <see cref="ClientResultException"/> (the OpenAI SDK
+    /// family), <see cref="HttpRequestException"/>, cancellation, and timeouts.
+    /// </summary>
+    /// <remarks>
+    /// Providers override <see cref="AIProviderBase.ClassifyError"/> to handle SDK-specific error
+    /// shapes, typically delegating here for anything they don't recognise.
+    /// </remarks>
+    /// <param name="exception">The exception to classify.</param>
+    public static AIProviderErrorInfo FromException(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            switch (current)
+            {
+                case ClientResultException cre:
+                    // Status == 0 means the request never made it to the server.
+                    return cre.Status == 0
+                        ? new AIProviderErrorInfo(
+                            AIProviderErrorCategory.NetworkError,
+                            "Couldn't reach the AI service. Check your connection and try again.",
+                            ProviderCode: null,
+                            exception.Message)
+                        : FromHttpStatus(cre.Status, exception.Message, TryExtractOpenAIErrorCode(cre));
+
+                case OperationCanceledException:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.Cancelled,
+                        "The request was cancelled.",
+                        ProviderCode: null,
+                        exception.Message);
+
+                case TimeoutException:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.Transient,
+                        "The AI service took too long to respond. Try again in a moment.",
+                        ProviderCode: "timeout",
+                        exception.Message);
+
+                case HttpRequestException { StatusCode: { } code }:
+                    return FromHttpStatus((int)code, exception.Message);
+
+                case HttpRequestException:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Couldn't reach the AI service. Check your connection and try again.",
+                        ProviderCode: null,
+                        exception.Message);
+            }
+        }
+
+        return new AIProviderErrorInfo(
+            AIProviderErrorCategory.Unknown,
+            "An unexpected error occurred talking to the AI service.",
+            ProviderCode: null,
+            exception.Message);
+    }
+
     /// <summary>
     /// Maps an HTTP status code to a populated <see cref="AIProviderErrorInfo"/>.
     /// </summary>
@@ -49,4 +113,36 @@ public static class ProviderErrorMapping
                 "An unexpected error occurred talking to the AI service.",
                 providerCode ?? status.ToString(), rawMessage),
         };
+
+    /// <summary>
+    /// Best-effort extraction of an OpenAI-shaped error code (<c>{ "error": { "code": "..." } }</c>)
+    /// from a <see cref="ClientResultException"/> response body. Returns null on any failure so the
+    /// HTTP-status mapping still provides a fallback code.
+    /// </summary>
+    private static string? TryExtractOpenAIErrorCode(ClientResultException ex)
+    {
+        try
+        {
+            var content = ex.GetRawResponse()?.Content;
+            if (content is null || content.ToMemory().IsEmpty)
+            {
+                return null;
+            }
+
+            using var doc = JsonDocument.Parse(content.ToMemory());
+            if (doc.RootElement.TryGetProperty("error", out var error) &&
+                error.ValueKind == JsonValueKind.Object &&
+                error.TryGetProperty("code", out var code) &&
+                code.ValueKind == JsonValueKind.String)
+            {
+                return code.GetString();
+            }
+        }
+        catch
+        {
+            // Body not JSON, not a known shape, or already disposed. Fall through.
+        }
+
+        return null;
+    }
 }

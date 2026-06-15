@@ -4,8 +4,9 @@ using Umbraco.AI.Core.Providers.Errors;
 namespace Umbraco.AI.Anthropic.Errors;
 
 /// <summary>
-/// Classifies exceptions thrown by the Anthropic .NET SDK, including the mid-stream SSE
-/// <c>overloaded_error</c> case that motivated this work (issue #174).
+/// Maps Anthropic SDK error shapes that the shared <see cref="ProviderErrorMapping"/> doesn't
+/// recognise — in particular the mid-stream SSE <c>overloaded_error</c> envelope that motivated
+/// this work (issue #174).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,22 +18,20 @@ namespace Umbraco.AI.Anthropic.Errors;
 /// "message":"Overloaded"},"request_id":"req_..."}'
 /// </code>
 /// <para>
-/// HTTP-level errors are mapped via <see cref="ProviderErrorMapping"/>; mid-stream SSE errors
-/// are parsed from the message JSON to preserve Anthropic's <c>error.type</c> code.
+/// This is invoked by <see cref="AnthropicProvider.ClassifyError"/>, which is only ever called for
+/// exceptions Anthropic produced — so there is no need to sniff the exception's namespace. Returns
+/// <c>null</c> when no Anthropic-specific structure is found, leaving the caller to fall back to the
+/// shared mapping.
 /// </para>
 /// </remarks>
-internal sealed class AnthropicProviderErrorClassifier : IAIProviderErrorClassifier
+internal static class AnthropicErrorMapping
 {
-    private const string AnthropicNamespacePrefix = "Anthropic";
-
-    /// <inheritdoc />
-    public AIProviderErrorInfo? Classify(Exception exception)
+    /// <summary>
+    /// Attempts to classify an Anthropic SDK exception from its SSE error envelope or HTTP status.
+    /// </summary>
+    /// <returns>The classified info, or <c>null</c> if no Anthropic-specific structure was found.</returns>
+    public static AIProviderErrorInfo? TryClassify(Exception exception)
     {
-        if (!IsAnthropicException(exception))
-        {
-            return null;
-        }
-
         // SSE error events come through as a string-encoded JSON envelope in the Message.
         var sseInfo = TryClassifySseEnvelope(exception);
         if (sseInfo is not null)
@@ -47,31 +46,7 @@ internal sealed class AnthropicProviderErrorClassifier : IAIProviderErrorClassif
             return ProviderErrorMapping.FromHttpStatus(status.Value, exception.Message);
         }
 
-        // Recognised as Anthropic but unable to extract structure — surface a generic message
-        // rather than the raw exception text.
-        return new AIProviderErrorInfo(
-            AIProviderErrorCategory.Unknown,
-            "The Anthropic service returned an unexpected error. Please try again.",
-            ProviderCode: null,
-            exception.Message);
-    }
-
-    /// <summary>
-    /// True when the exception (or any inner exception) originates from the Anthropic SDK.
-    /// Matched by namespace prefix so we don't take an SDK type dependency in Core.
-    /// </summary>
-    private static bool IsAnthropicException(Exception exception)
-    {
-        for (var current = exception; current is not null; current = current.InnerException)
-        {
-            var ns = current.GetType().Namespace;
-            if (ns is not null && ns.StartsWith(AnthropicNamespacePrefix, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return null;
     }
 
     /// <summary>
@@ -147,12 +122,12 @@ internal sealed class AnthropicProviderErrorClassifier : IAIProviderErrorClassif
     };
 
     /// <summary>
-    /// Reads <c>StatusCode</c> from any exception in the chain via duck-typing.
+    /// Reads <c>StatusCode</c>/<c>Status</c> from any exception in the chain via duck-typing.
     /// </summary>
     /// <remarks>
-    /// The Anthropic SDK exposes <c>StatusCode</c> on its <c>ApiException</c> types, but the
-    /// concrete class lives behind generated code that may change between SDK versions. Looking up
-    /// the property by name keeps this classifier independent of those internals.
+    /// The Anthropic SDK exposes the status on its <c>ApiException</c> types, but the concrete class
+    /// lives behind generated code that may change between SDK versions. Looking up the property by
+    /// name keeps this independent of those internals.
     /// </remarks>
     private static int? TryGetHttpStatus(Exception exception)
     {
@@ -160,10 +135,12 @@ internal sealed class AnthropicProviderErrorClassifier : IAIProviderErrorClassif
         {
             var prop = current.GetType().GetProperty("StatusCode")
                        ?? current.GetType().GetProperty("Status");
-            if (prop is null) continue;
+            if (prop is null)
+            {
+                continue;
+            }
 
-            var raw = prop.GetValue(current);
-            switch (raw)
+            switch (prop.GetValue(current))
             {
                 case int i when i > 0:
                     return i;

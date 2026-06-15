@@ -31,10 +31,15 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
     public async Task<IChatClient> CreateClientAsync(AIProfile profile, CancellationToken cancellationToken = default)
     {
         // Get configured provider with resolved settings
-        var chatCapability = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
+        var (chatCapability, provider) = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
 
         // Create base client from provider with the profile's model
         var chatClient = await chatCapability.CreateClientAsync(profile.Model.ModelId, cancellationToken);
+
+        // Wrap innermost so SDK exceptions are classified against the originating provider before
+        // any middleware sees them (and every model round-trip inside function-invoking middleware
+        // passes back through here).
+        chatClient = new AIErrorClassifyingChatClient(chatClient, provider);
 
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);
@@ -65,7 +70,7 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
         return client;
     }
 
-    private async Task<IAIConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
+    private async Task<(IAIConfiguredChatCapability Capability, IAIProvider Provider)> GetConfiguredChatCapabilityAsync(
         AIProfile profile,
         CancellationToken cancellationToken)
     {
@@ -115,6 +120,6 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
                 $"Provider '{profile.Model.ProviderId}' does not support chat capability.");
         }
 
-        return chatCapability;
+        return (chatCapability, configured.Provider);
     }
 }

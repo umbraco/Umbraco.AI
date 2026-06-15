@@ -1,6 +1,7 @@
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Tests.Common.Fakes;
 
@@ -104,4 +105,19 @@ public class FakeAIProvider : IAIProvider
     {
         return _capabilities.ContainsKey(typeof(TCapability));
     }
+
+    /// <summary>
+    /// Optional override for <see cref="ClassifyError"/>. When null, the shared transport mapping
+    /// (<see cref="ProviderErrorMapping.FromException"/>) is used.
+    /// </summary>
+    public Func<Exception, AIProviderErrorInfo>? ClassifyErrorOverride { get; set; }
+
+    public FakeAIProvider WithClassifyError(Func<Exception, AIProviderErrorInfo> classify)
+    {
+        ClassifyErrorOverride = classify;
+        return this;
+    }
+
+    public AIProviderErrorInfo ClassifyError(Exception exception)
+        => ClassifyErrorOverride?.Invoke(exception) ?? ProviderErrorMapping.FromException(exception);
 }

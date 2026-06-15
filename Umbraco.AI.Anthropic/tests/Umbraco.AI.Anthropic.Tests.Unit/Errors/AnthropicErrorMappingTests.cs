@@ -3,28 +3,26 @@ using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Anthropic.Tests.Unit.Errors;
 
-public class AnthropicProviderErrorClassifierTests
+public class AnthropicErrorMappingTests
 {
-    private readonly AnthropicProviderErrorClassifier _classifier = new();
-
     [Fact]
-    public void Classify_NonAnthropicException_ReturnsNull()
+    public void TryClassify_NoSseEnvelopeOrStatus_ReturnsNull()
     {
-        // Anything outside the Anthropic.* namespace should fall through to other classifiers.
-        var result = _classifier.Classify(new InvalidOperationException("not from Anthropic"));
+        // No Anthropic-specific structure → null, so the provider falls back to the shared mapping.
+        var result = AnthropicErrorMapping.TryClassify(new InvalidOperationException("nothing structured here"));
 
         result.ShouldBeNull();
     }
 
     [Fact]
-    public void Classify_OverloadedErrorSseEnvelope_MapsToTransient()
+    public void TryClassify_OverloadedErrorSseEnvelope_MapsToTransient()
     {
         // The exact shape reported in issue #174 — Anthropic SSE error event embedded in the
         // exception message, with error.type="overloaded_error".
         var sseMessage = """SSE error returned from server: '{"type":"error","error":{"details":null,"type":"overloaded_error","message":"Overloaded"},"request_id":"req_abc123"}'""";
         var ex = new global::Anthropic.Fakes.FakeAnthropicException(sseMessage);
 
-        var result = _classifier.Classify(ex);
+        var result = AnthropicErrorMapping.TryClassify(ex);
 
         result.ShouldNotBeNull();
         result.Category.ShouldBe(AIProviderErrorCategory.Transient);
@@ -34,12 +32,12 @@ public class AnthropicProviderErrorClassifierTests
     }
 
     [Fact]
-    public void Classify_RateLimitErrorSseEnvelope_MapsToRateLimited()
+    public void TryClassify_RateLimitErrorSseEnvelope_MapsToRateLimited()
     {
         var sseMessage = """SSE error returned from server: '{"type":"error","error":{"type":"rate_limit_error","message":"Rate limit exceeded"}}'""";
         var ex = new global::Anthropic.Fakes.FakeAnthropicException(sseMessage);
 
-        var result = _classifier.Classify(ex);
+        var result = AnthropicErrorMapping.TryClassify(ex);
 
         result.ShouldNotBeNull();
         result.Category.ShouldBe(AIProviderErrorCategory.RateLimited);
@@ -52,12 +50,12 @@ public class AnthropicProviderErrorClassifierTests
     [InlineData("not_found_error", AIProviderErrorCategory.NotFound)]
     [InlineData("invalid_request_error", AIProviderErrorCategory.InvalidRequest)]
     [InlineData("api_error", AIProviderErrorCategory.Transient)]
-    public void Classify_KnownAnthropicErrorTypes_MapToExpectedCategory(string errorType, AIProviderErrorCategory expected)
+    public void TryClassify_KnownAnthropicErrorTypes_MapToExpectedCategory(string errorType, AIProviderErrorCategory expected)
     {
         var sseMessage = "SSE error returned from server: '{\"type\":\"error\",\"error\":{\"type\":\"" + errorType + "\",\"message\":\"...\"}}'";
         var ex = new global::Anthropic.Fakes.FakeAnthropicException(sseMessage);
 
-        var result = _classifier.Classify(ex);
+        var result = AnthropicErrorMapping.TryClassify(ex);
 
         result.ShouldNotBeNull();
         result.Category.ShouldBe(expected);
@@ -65,12 +63,12 @@ public class AnthropicProviderErrorClassifierTests
     }
 
     [Fact]
-    public void Classify_UnknownAnthropicErrorType_FallsBackToUnknown()
+    public void TryClassify_UnknownAnthropicErrorType_FallsBackToUnknown()
     {
         var sseMessage = """SSE error returned from server: '{"type":"error","error":{"type":"some_future_error","message":"..."}}'""";
         var ex = new global::Anthropic.Fakes.FakeAnthropicException(sseMessage);
 
-        var result = _classifier.Classify(ex);
+        var result = AnthropicErrorMapping.TryClassify(ex);
 
         result.ShouldNotBeNull();
         result.Category.ShouldBe(AIProviderErrorCategory.Unknown);
@@ -78,28 +76,27 @@ public class AnthropicProviderErrorClassifierTests
     }
 
     [Fact]
-    public void Classify_AnthropicExceptionWithStatusCode_UsesHttpStatusMapping()
+    public void TryClassify_ExceptionWithStatusCode_UsesHttpStatusMapping()
     {
-        // When no SSE envelope is present, the classifier falls through to HTTP status detection
-        // via the SDK's StatusCode property.
+        // When no SSE envelope is present, fall through to HTTP status detection via the SDK's
+        // StatusCode property.
         var ex = new global::Anthropic.Fakes.FakeAnthropicException("Server returned 429", statusCode: 429);
 
-        var result = _classifier.Classify(ex);
+        var result = AnthropicErrorMapping.TryClassify(ex);
 
         result.ShouldNotBeNull();
         result.Category.ShouldBe(AIProviderErrorCategory.RateLimited);
     }
 
     [Fact]
-    public void Classify_AnthropicExceptionWithUnparseableJson_ReturnsUnknown()
+    public void TryClassify_UnparseableJsonAndNoStatus_ReturnsNull()
     {
-        // Recognised as Anthropic but no usable structure → friendly fallback, not raw text.
+        // No usable structure → null so the provider falls back to the shared transport mapping
+        // (which never leaks raw exception text to the user).
         var ex = new global::Anthropic.Fakes.FakeAnthropicException("something broke (no JSON, no status)");
 
-        var result = _classifier.Classify(ex);
+        var result = AnthropicErrorMapping.TryClassify(ex);
 
-        result.ShouldNotBeNull();
-        result.Category.ShouldBe(AIProviderErrorCategory.Unknown);
-        result.UserMessage.ShouldNotContain("something broke");
+        result.ShouldBeNull();
     }
 }

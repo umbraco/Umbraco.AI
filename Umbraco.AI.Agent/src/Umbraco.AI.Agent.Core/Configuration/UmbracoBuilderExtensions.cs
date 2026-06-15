@@ -8,6 +8,7 @@ using Umbraco.AI.Agent.Core.Guardrails;
 using Umbraco.AI.Agent.Core.Models;
 using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
+using Umbraco.AI.Agent.Core.Telemetry;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
@@ -15,6 +16,7 @@ using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
 namespace Umbraco.AI.Agent.Core.Configuration;
 
@@ -86,6 +88,9 @@ public static class UmbracoBuilderExtensions
         // Auto-discover agent workflows via [AIAgentWorkflow] attribute
         builder.AIAgentWorkflows()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentWorkflow, AIAgentWorkflowAttribute>(cache: true));
+
+        // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
+        builder.Services.AddTransient<IDetailedTelemetryProvider, AIAgentUsageTelemetryProvider>();
 
         return builder;
     }

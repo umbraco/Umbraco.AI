@@ -5,6 +5,14 @@ All notable changes to Umbraco.AI.Search will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@1.0.0-beta10...Umbraco.AI.Search@1.0.0) (2026-06-10)
+
+First stable release of Umbraco.AI.Search, built against the stable Umbraco.Cms.Search.Core 1.0.0.
+
+### feat
+
+* **core,agent,prompt,search:** Use dedicated connection for custom AI connection strings ([ca01d98](https://github.com/umbraco/Umbraco.AI/commit/ca01d98c4c76b471c736a47659cfcab99a3733bd)), closes [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)
+
 ## [1.0.0-beta10](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@1.0.0-beta9...Umbraco.AI.Search@1.0.0-beta10) (2026-06-04)
 
 ### Internal

@@ -255,6 +255,8 @@ Format: `[min, max)` -- inclusive lower, exclusive upper. Use `[X.Y.0, X.999.999
 
 **Rules**: Use project refs for local dev. Use `[X.Y.0, X.999.999)` ranges. Avoid exact versions `[X.Y.Z]`. Test with `UseProjectReferences=false` before releasing. When releasing Core with breaking changes, verify dependent products update their minimum.
 
+**Pack recompiles against ranges (do not re-add `--no-build` to ranged packs).** The Build stage compiles the whole solution with project references (sibling *source*). For ranged packs (release/hotfix/main, or `packWithNuGetRanges`), `pack-product.yml` deliberately drops `--no-build` and recompiles so the shipped binary is validated against the *same* dependency versions the `.nuspec` declares — resolved from the LocalCI feed when the dependency was packed in the same run (co-release) or from nuget.org when it was not (solo release). This is what makes a solo release that needs an unpublished dependency API fail the pack instead of silently shipping a binary compiled against a higher version than its declared floor. Project-reference packs (dev previews) keep `--no-build` since the Build stage already produced those exact binaries.
+
 ## Commit Message Format
 
 [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>): <description>`

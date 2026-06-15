@@ -44,7 +44,7 @@ public class ChatMessageModel
 /// <summary>
 /// Base class for multimodal chat content parts.
 /// </summary>
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(TextChatContentPartModel), "text")]
 [JsonDerivedType(typeof(BinaryChatContentPartModel), "binary")]
 public abstract class ChatContentPartModel;

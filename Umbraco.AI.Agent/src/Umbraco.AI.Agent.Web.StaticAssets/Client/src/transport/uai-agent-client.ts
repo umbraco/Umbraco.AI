@@ -237,9 +237,11 @@ export class UaiAgentClient {
                 this.#handleRunFinished(event as RunFinishedAGUIEvent);
                 break;
 
-            case AGUIEventType.RUN_ERROR:
-                this.#callbacks.onError?.(new Error((event as RunErrorEvent).message));
+            case AGUIEventType.RUN_ERROR: {
+                const runError = event as RunErrorEvent;
+                this.#callbacks.onError?.(new Error(runError.message), runError.code);
                 break;
+            }
 
             case AGUIEventType.STATE_SNAPSHOT:
                 this.#callbacks.onStateSnapshot?.((event as StateSnapshotEvent).state);

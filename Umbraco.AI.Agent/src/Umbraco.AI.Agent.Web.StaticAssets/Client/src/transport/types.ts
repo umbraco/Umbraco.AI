@@ -189,8 +189,8 @@ export interface AgentClientCallbacks {
     onMessagesSnapshot?: (messages: UaiChatMessage[]) => void;
     /** Called when a custom event is received */
     onCustomEvent?: (name: string, value: unknown) => void;
-    /** Called on error */
-    onError?: (error: Error) => void;
+    /** Called on error. `code` carries a UaiErrorCategory when the backend classified the failure. */
+    onError?: (error: Error, code?: UaiErrorCategory | string) => void;
 }
 
 /**
@@ -266,10 +266,26 @@ export interface RunFinishedAGUIEvent extends TypedBaseEvent {
     error?: string;
 }
 
+/**
+ * Normalised error category sent by the backend on RUN_ERROR.
+ * Values are produced by `AIProviderErrorCategory.ToString()` server-side.
+ */
+export type UaiErrorCategory =
+    | "Unknown"
+    | "Transient"
+    | "RateLimited"
+    | "Authentication"
+    | "InvalidRequest"
+    | "NotFound"
+    | "Cancelled"
+    | "NetworkError";
+
 /** RUN_ERROR event */
 export interface RunErrorEvent extends TypedBaseEvent {
     type: typeof AGUIEventType.RUN_ERROR;
     message: string;
+    /** Provider error category. Absent when the backend didn't classify the error. */
+    code?: UaiErrorCategory | string;
 }
 
 /** STATE_SNAPSHOT event */

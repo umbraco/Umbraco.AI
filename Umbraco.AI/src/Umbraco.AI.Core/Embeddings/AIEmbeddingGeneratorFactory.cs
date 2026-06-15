@@ -33,10 +33,14 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
         CancellationToken cancellationToken = default)
     {
         // Get configured provider with resolved settings
-        var embeddingCapability = await GetConfiguredEmbeddingCapabilityAsync(profile, cancellationToken);
+        var (embeddingCapability, provider) = await GetConfiguredEmbeddingCapabilityAsync(profile, cancellationToken);
 
         // Create base generator from provider with the profile's model
         var generator = await embeddingCapability.CreateGeneratorAsync(profile.Model.ModelId, cancellationToken);
+
+        // Wrap innermost so SDK exceptions are classified against the originating provider before
+        // any middleware sees them.
+        generator = new AIErrorClassifyingEmbeddingGenerator(generator, provider);
 
         // Apply middleware in order
         generator = ApplyMiddleware(generator);
@@ -66,7 +70,7 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
         return generator;
     }
 
-    private async Task<IAIConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
+    private async Task<(IAIConfiguredEmbeddingCapability Capability, IAIProvider Provider)> GetConfiguredEmbeddingCapabilityAsync(
         AIProfile profile,
         CancellationToken cancellationToken)
     {
@@ -116,6 +120,6 @@ internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
                 $"Provider '{profile.Model.ProviderId}' does not support embedding capability.");
         }
 
-        return embeddingCapability;
+        return (embeddingCapability, configured.Provider);
     }
 }

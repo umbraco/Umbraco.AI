@@ -1356,17 +1356,6 @@
         "resolved": "10.1.7",
         "contentHash": "iJo3ODyUb/M8Vm8AH1r9y9iAba0w95xsCn3zFVl96ISRHbTDWxi+l7oFVCZqUEdjd97B8VMDPnMliWAdomR8uw=="
       },
-      "System.ClientModel": {
-        "type": "Transitive",
-        "resolved": "1.10.0",
-        "contentHash": "lBEWs54F5Y5pZ9hC+8z4S/X76957ex+DPk7WecRHlbIHtrPfbRMMlOgI3iDn4Jpb3bSxvBnKaaHoD59auFjlBA==",
-        "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "10.0.3",
-          "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.3",
-          "System.Memory.Data": "10.0.3"
-        }
-      },
       "System.Composition": {
         "type": "Transitive",
         "resolved": "9.0.0",
@@ -1611,6 +1600,7 @@
           "Microsoft.Extensions.Options": "[10.0.7, 10.999.999)",
           "SixLabors.ImageSharp": "[3.1.11, 3.999.999)",
           "SmartReader": "[0.11.0, 0.999.999)",
+          "System.ClientModel": "[1.5.0, 1.999.999)",
           "Umbraco.Cms.Api.Management": "[17.4.0, 17.999.999)",
           "Umbraco.Cms.Core": "[17.4.0, 17.999.999)",
           "Umbraco.Cms.Infrastructure": "[17.4.0, 17.999.999)",
@@ -1675,6 +1665,18 @@
         "contentHash": "DSn2HErPhhaf+IIyFFQNAyPS1Z4Dv3EYLQlgHwdDlpDxolvB8RCDvTiQZGP3yg9tLMTT2eA9RIN7DbZLbiamhg==",
         "dependencies": {
           "AngleSharp": "1.4.0"
+        }
+      },
+      "System.ClientModel": {
+        "type": "CentralTransitive",
+        "requested": "[1.5.0, 1.999.999)",
+        "resolved": "1.10.0",
+        "contentHash": "lBEWs54F5Y5pZ9hC+8z4S/X76957ex+DPk7WecRHlbIHtrPfbRMMlOgI3iDn4Jpb3bSxvBnKaaHoD59auFjlBA==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.3",
+          "System.Memory.Data": "10.0.3"
         }
       },
       "Umbraco.Cms.Api.Management": {

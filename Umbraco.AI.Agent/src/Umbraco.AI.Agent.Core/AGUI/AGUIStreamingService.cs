@@ -7,6 +7,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -93,10 +94,32 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             await enumerator.DisposeAsync();
         }
 
-        // Emit error event if streaming failed
+        // Emit error event if streaming failed.
+        // Provider SDK failures arrive pre-classified as AIProviderException (the chat client is
+        // wrapped by the error-classifying decorator in the capability factory), carrying a
+        // user-safe message and a stable category code for retry affordances. Anything else is an
+        // application-layer failure we surface generically without leaking raw exception text.
         if (streamError != null)
         {
-            yield return emitter.EmitError(streamError.Message, "STREAMING_ERROR");
+            string userMessage;
+            string code;
+            if (FindProviderException(streamError) is { } providerError)
+            {
+                userMessage = providerError.UserMessage;
+                code = providerError.Category.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed. Category={Category}, ProviderCode={ProviderCode}",
+                    request.RunId, providerError.Category, providerError.ProviderCode);
+            }
+            else
+            {
+                userMessage = "An unexpected error occurred. Please try again.";
+                code = AIProviderErrorCategory.Unknown.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed with an unclassified error.", request.RunId);
+            }
+
+            yield return emitter.EmitError(userMessage, code);
         }
 
         // Emit RunFinished with appropriate outcome
@@ -226,6 +249,24 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
+    }
+
+    /// <summary>
+    /// Finds the classified <see cref="AIProviderException"/> in the exception chain, if any. The
+    /// error-classifying client decorator throws it directly, but agent/middleware layers above may
+    /// wrap it, so we walk inner exceptions rather than only checking the top.
+    /// </summary>
+    private static AIProviderException? FindProviderException(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is AIProviderException providerError)
+            {
+                return providerError;
+            }
+        }
+
+        return null;
     }
 
     private static string FormatProviderErrorForChat(ErrorContent errorContent)

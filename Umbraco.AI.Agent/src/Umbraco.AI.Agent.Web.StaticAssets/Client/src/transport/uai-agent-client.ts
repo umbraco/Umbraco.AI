@@ -190,6 +190,10 @@ export class UaiAgentClient {
      */
     #handleEvent(event: AGUIEvent) {
         switch (event.type) {
+            case AGUIEventType.RUN_STARTED:
+                // No-op: the run started when sendMessage was called; no UI reaction needed.
+                break;
+
             case AGUIEventType.TEXT_MESSAGE_START:
                 if (event.messageId) {
                     this.#callbacks.onTextStart?.(event.messageId);

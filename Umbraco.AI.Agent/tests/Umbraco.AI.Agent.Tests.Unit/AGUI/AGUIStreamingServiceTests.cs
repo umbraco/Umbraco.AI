@@ -324,8 +324,7 @@ public class AGUIStreamingServiceTests
         // Code is the AIProviderErrorCategory name.
         errorEvent.Code.ShouldBe("Unknown");
 
-        var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }
 
     [Fact]

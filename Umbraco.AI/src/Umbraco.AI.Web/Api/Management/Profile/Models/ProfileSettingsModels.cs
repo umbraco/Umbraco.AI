@@ -9,6 +9,7 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Models;
 [JsonDerivedType(typeof(ChatProfileSettingsModel), "chat")]
 [JsonDerivedType(typeof(EmbeddingProfileSettingsModel), "embedding")]
 [JsonDerivedType(typeof(SpeechToTextProfileSettingsModel), "speechToText")]
+[JsonDerivedType(typeof(ImageGenerationProfileSettingsModel), "imageGeneration")]
 public abstract class ProfileSettingsModel { }
 
 /// <summary>
@@ -63,4 +64,33 @@ public class SpeechToTextProfileSettingsModel : ProfileSettingsModel
     /// BCP-47 language hint for transcription (e.g., "en", "de", "ja").
     /// </summary>
     public string? Language { get; init; }
+}
+
+/// <summary>
+/// Settings model for Image Generation capability profiles.
+/// </summary>
+/// <remarks>
+/// Use-case policy defaults only. Request mechanics (count, response format) are passed per call.
+/// </remarks>
+public class ImageGenerationProfileSettingsModel : ProfileSettingsModel
+{
+    /// <summary>
+    /// Default image size as "{width}x{height}" (e.g. "1024x1024").
+    /// </summary>
+    public string? Size { get; init; }
+
+    /// <summary>
+    /// Provider-specific quality hint (e.g. "hd", "high"). Varies by model.
+    /// </summary>
+    public string? Quality { get; init; }
+
+    /// <summary>
+    /// Provider-specific style hint (e.g. "vivid", "natural"). Varies by model.
+    /// </summary>
+    public string? Style { get; init; }
+
+    /// <summary>
+    /// Default output media type (MIME) of the generated images (e.g. "image/png"). Varies by model.
+    /// </summary>
+    public string? MediaType { get; init; }
 }

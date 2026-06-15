@@ -4,6 +4,7 @@ import type {
     ChatProfileSettingsModel,
     EmbeddingProfileSettingsModel,
     SpeechToTextProfileSettingsModel,
+    ImageGenerationProfileSettingsModel,
 } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
 import type {
@@ -13,8 +14,9 @@ import type {
     UaiChatProfileSettings,
     UaiEmbeddingProfileSettings,
     UaiSpeechToTextProfileSettings,
+    UaiImageGenerationProfileSettings,
 } from "./types.js";
-import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings } from "./types.js";
+import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
@@ -105,6 +107,17 @@ export const UaiProfileTypeMapper = {
             } as UaiSpeechToTextProfileSettings;
         }
 
+        if (settings.$type === "imageGeneration") {
+            const img = settings as ImageGenerationProfileSettingsModel;
+            return {
+                $type: "imageGeneration",
+                size: img.size ?? null,
+                quality: img.quality ?? null,
+                style: img.style ?? null,
+                mediaType: img.mediaType ?? null,
+            } as UaiImageGenerationProfileSettings;
+        }
+
         return null;
     },
 
@@ -113,7 +126,12 @@ export const UaiProfileTypeMapper = {
      */
     mapRequestSettings(
         settings: UaiProfileSettings | null,
-    ): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null {
+    ):
+        | ChatProfileSettingsModel
+        | EmbeddingProfileSettingsModel
+        | SpeechToTextProfileSettingsModel
+        | ImageGenerationProfileSettingsModel
+        | null {
         if (!settings) return null;
 
         if (isChatSettings(settings)) {
@@ -139,6 +157,16 @@ export const UaiProfileTypeMapper = {
                 $type: "speechToText",
                 language: settings.language,
             } as SpeechToTextProfileSettingsModel;
+        }
+
+        if (isImageGenerationSettings(settings)) {
+            return {
+                $type: "imageGeneration",
+                size: settings.size,
+                quality: settings.quality,
+                style: settings.style,
+                mediaType: settings.mediaType,
+            } as ImageGenerationProfileSettingsModel;
         }
 
         return null;

@@ -222,6 +222,10 @@ public class ServiceResolutionTests : IDisposable
         // Bind AIOptions
         services.Configure<AIOptions>(configuration.GetSection("Umbraco:AI"));
 
+        // Experimental feature gate
+        services.Configure<Umbraco.AI.Core.Settings.AIExperimentalOptions>(configuration.GetSection("Umbraco:AI:Experimental"));
+        services.AddSingleton<Umbraco.AI.Core.Settings.IAIExperimentalFeatures, Umbraco.AI.Core.Settings.AIExperimentalFeatures>();
+
         // Provider infrastructure
         services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();
         services.AddSingleton<IAIEditableModelSchemaBuilder, AIEditableModelSchemaBuilder>();
@@ -248,6 +252,10 @@ public class ServiceResolutionTests : IDisposable
             _ => new AIEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAIEmbeddingMiddleware>()));
         services.AddSingleton<AISpeechToTextMiddlewareCollection>(
             _ => new AISpeechToTextMiddlewareCollection(() => Enumerable.Empty<IAISpeechToTextMiddleware>()));
+#pragma warning disable UMBRACOAI_IMAGEGEN
+        services.AddSingleton<Umbraco.AI.Core.ImageGeneration.AIImageGenerationMiddlewareCollection>(
+            _ => new Umbraco.AI.Core.ImageGeneration.AIImageGenerationMiddlewareCollection(() => Enumerable.Empty<Umbraco.AI.Core.ImageGeneration.IAIImageGenerationMiddleware>()));
+#pragma warning restore UMBRACOAI_IMAGEGEN
 
         // Runtime context infrastructure
         services.AddHttpContextAccessor();
@@ -296,6 +304,9 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
         services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
+#pragma warning disable UMBRACOAI_IMAGEGEN
+        services.AddSingleton<Umbraco.AI.Core.ImageGeneration.IAIImageGeneratorFactory, Umbraco.AI.Core.ImageGeneration.AIImageGeneratorFactory>();
+#pragma warning restore UMBRACOAI_IMAGEGEN
 
         // Tool system (empty collection / no scopes for the integration DI smoke test)
         services.AddSingleton(new AIToolScopeCollection(() => []));
@@ -305,6 +316,9 @@ public class ServiceResolutionTests : IDisposable
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();
         services.AddSingleton<IAISpeechToTextService, AISpeechToTextService>();
+#pragma warning disable UMBRACOAI_IMAGEGEN
+        services.AddSingleton<Umbraco.AI.Core.ImageGeneration.IAIImageGenerationService, Umbraco.AI.Core.ImageGeneration.AIImageGenerationService>();
+#pragma warning restore UMBRACOAI_IMAGEGEN
 
         // Required for options
         services.AddLogging();

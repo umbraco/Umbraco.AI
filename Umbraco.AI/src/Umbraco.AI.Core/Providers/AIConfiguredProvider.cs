@@ -1,3 +1,5 @@
+#pragma warning disable UMBRACOAI_IMAGEGEN // Wraps the experimental image-generation capability
+
 namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
@@ -33,6 +35,7 @@ internal sealed class AIConfiguredProvider(IAIProvider provider, object resolved
                 IAIChatCapability chat => new AIConfiguredChatCapability(chat, settings),
                 IAIEmbeddingCapability embedding => new AIConfiguredEmbeddingCapability(embedding, settings),
                 IAISpeechToTextCapability stt => new AIConfiguredSpeechToTextCapability(stt, settings),
+                IAIImageGeneratorCapability imageGen => new AIConfiguredImageGeneratorCapability(imageGen, settings),
                 _ => null
             };
             if (wrapped is not null)

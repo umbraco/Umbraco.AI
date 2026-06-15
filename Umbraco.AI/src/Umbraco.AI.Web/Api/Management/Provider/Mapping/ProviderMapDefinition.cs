@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
@@ -12,6 +13,16 @@ namespace Umbraco.AI.Web.Api.Management.Provider.Mapping;
 /// </summary>
 public class ProviderMapDefinition : IMapDefinition
 {
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProviderMapDefinition"/> class.
+    /// </summary>
+    public ProviderMapDefinition(IAIExperimentalFeatures experimentalFeatures)
+    {
+        _experimentalFeatures = experimentalFeatures;
+    }
+
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)
     {
@@ -20,21 +31,26 @@ public class ProviderMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void Map(IAIProvider source, ProviderItemResponseModel target, MapperContext context)
+    private void Map(IAIProvider source, ProviderItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Name = source.Name;
-        target.Capabilities = source.GetCapabilities().Select(c => c.Kind.ToString());
+        target.Capabilities = MapCapabilities(source);
     }
 
     // Umbraco.Code.MapAll
-    private static void Map(IAIProvider source, ProviderResponseModel target, MapperContext context)
+    private void Map(IAIProvider source, ProviderResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Name = source.Name;
-        target.Capabilities = source.GetCapabilities().Select(c => c.Kind.ToString());
+        target.Capabilities = MapCapabilities(source);
         target.SettingsSchema = source.SettingsType is not null
             ? context.Map<EditableModelSchemaModel>(source.GetSettingsSchema())
             : null;
     }
+
+    private IEnumerable<string> MapCapabilities(IAIProvider source)
+        => source.GetCapabilities()
+            .Where(c => _experimentalFeatures.IsCapabilityEnabled(c.Kind))
+            .Select(c => c.Kind.ToString());
 }

@@ -6,6 +6,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -92,9 +93,32 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             await enumerator.DisposeAsync();
         }
 
+        // Emit error event if streaming failed.
+        // Provider SDK failures arrive pre-classified as AIProviderException (the chat client is
+        // wrapped by the error-classifying decorator in the capability factory), carrying a
+        // user-safe message and a stable category code for retry affordances. Anything else is an
+        // application-layer failure we surface generically without leaking raw exception text.
         if (streamError != null)
         {
-            yield return emitter.EmitError(streamError.Message, "STREAMING_ERROR");
+            string userMessage;
+            string code;
+            if (FindProviderException(streamError) is { } providerError)
+            {
+                userMessage = providerError.UserMessage;
+                code = providerError.Category.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed. Category={Category}, ProviderCode={ProviderCode}",
+                    request.RunId, providerError.Category, providerError.ProviderCode);
+            }
+            else
+            {
+                userMessage = "An unexpected error occurred. Please try again.";
+                code = AIProviderErrorCategory.Unknown.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed with an unclassified error.", request.RunId);
+            }
+
+            yield return emitter.EmitError(userMessage, code);
         }
         else
         {
@@ -160,6 +184,18 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                     switch (content)
                     {
                         case FunctionCallContent functionCall:
+                            // Diagnostic: this log line is the smoking gun for "model
+                            // generated a tool_use but no TOOL_CALL_CHUNK reached the
+                            // frontend". If the upstream AIToolReorderingChatClient
+                            // logged the buffered call but this line never fires, the
+                            // FunctionInvokingChatClient is consuming the call without
+                            // forwarding it.
+                            _logger.LogInformation(
+                                "AGUIStreamingService received FunctionCallContent for tool '{ToolName}' (callId={CallId}, isFrontend={IsFrontend}) on run {RunId}.",
+                                functionCall.Name,
+                                functionCall.CallId,
+                                frontendToolNames.Contains(functionCall.Name),
+                                request.RunId);
                             var toolCallEvent = ProcessFunctionCall(emitter, functionCall, frontendToolNames);
                             if (toolCallEvent != null)
                             {
@@ -174,6 +210,36 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                 yield return toolResultEvent;
                             }
                             break;
+
+                        case ErrorContent errorContent:
+                            // Providers stream ErrorContent for non-fatal errors that occur
+                            // mid-response (content filters, transient model errors, function-
+                            // call sanitisation when IncludeDetailedErrors is false, etc.). If
+                            // we drop them silently the chat trace renders a bare
+                            // '[unknown:ErrorContent]' with no body and the underlying cause
+                            // never reaches the logs. Log first, then surface inline so the
+                            // user sees what happened and the run can continue.
+                            _logger.LogError(
+                                "Provider streamed ErrorContent during run {RunId}. Code: {ErrorCode}, Message: {Message}, Details: {Details}",
+                                request.RunId,
+                                errorContent.ErrorCode ?? "(none)",
+                                errorContent.Message ?? "(empty)",
+                                errorContent.Details ?? "(none)");
+                            yield return emitter.EmitTextChunk(FormatProviderErrorForChat(errorContent));
+                            break;
+
+                        case TextContent:
+                            // Already aggregated below via update.Text — skip to avoid double-emit.
+                            break;
+
+                        default:
+                            // Future-proof: any AIContent subtype MEAI adds later gets logged at
+                            // debug level so it doesn't vanish silently.
+                            _logger.LogDebug(
+                                "Unhandled AIContent type '{ContentType}' in stream for run {RunId}",
+                                content.GetType().Name,
+                                request.RunId);
+                            break;
                     }
                 }
             }
@@ -184,6 +250,32 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
+    }
+
+    /// <summary>
+    /// Finds the classified <see cref="AIProviderException"/> in the exception chain, if any. The
+    /// error-classifying client decorator throws it directly, but agent/middleware layers above may
+    /// wrap it, so we walk inner exceptions rather than only checking the top.
+    /// </summary>
+    private static AIProviderException? FindProviderException(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is AIProviderException providerError)
+            {
+                return providerError;
+            }
+        }
+
+        return null;
+    }
+
+    private static string FormatProviderErrorForChat(ErrorContent errorContent)
+    {
+        var message = string.IsNullOrEmpty(errorContent.Message) ? "(no message)" : errorContent.Message;
+        return string.IsNullOrEmpty(errorContent.ErrorCode)
+            ? $"\n\n[Provider error: {message}]\n\n"
+            : $"\n\n[Provider error {errorContent.ErrorCode}: {message}]\n\n";
     }
 
 

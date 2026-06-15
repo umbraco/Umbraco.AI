@@ -7,6 +7,7 @@ using Umbraco.AI.Automate.Actions;
 using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.SpeechToText;
 using Umbraco.Automate.Core.Actions;
+using Umbraco.Automate.Core.Security;
 using Umbraco.Automate.Core.Settings;
 using Xunit;
 
@@ -18,12 +19,18 @@ public class TranscribeAudioActionTests
 {
     private readonly Mock<IAISpeechToTextService> _speechToTextServiceMock = new();
     private readonly Mock<IAIUmbracoMediaResolver> _mediaResolverMock = new();
+    private readonly Mock<IAutomationActionAuthorizer> _authorizerMock = new();
     private readonly Mock<ILogger<TranscribeAudioAction>> _loggerMock = new();
     private readonly ActionInfrastructure _infrastructure;
 
     public TranscribeAudioActionTests()
     {
         _infrastructure = new ActionInfrastructure(new Mock<IEditableModelResolver>().Object);
+
+        // Default: node-level authorisation passes. Tests that exercise the deny path
+        // override per-key.
+        _authorizerMock.Setup(a => a.AuthorizeMediaAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AutomationAuthorizationResult.Success);
     }
 
     [Fact]
@@ -112,11 +119,8 @@ public class TranscribeAudioActionTests
         result.Status.ShouldBe(ActionResultStatus.Success);
         result.OutputData.ShouldNotBeNull();
 
-        var textValue = result.OutputData!
-            .GetType()
-            .GetProperty("text")!
-            .GetValue(result.OutputData);
-        textValue.ShouldBe("Hello world.");
+        var output = result.OutputData.ShouldBeOfType<TranscribeAudioOutput>();
+        output.Text.ShouldBe("Hello world.");
     }
 
     [Fact]
@@ -222,7 +226,7 @@ public class TranscribeAudioActionTests
     }
 
     private TranscribeAudioAction CreateAction()
-        => new(_infrastructure, _speechToTextServiceMock.Object, _mediaResolverMock.Object, _loggerMock.Object);
+        => new(_infrastructure, _speechToTextServiceMock.Object, _mediaResolverMock.Object, _authorizerMock.Object, _loggerMock.Object);
 
     private static ActionContext CreateContext(TranscribeAudioSettings settings)
         => new()

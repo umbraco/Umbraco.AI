@@ -13,6 +13,7 @@ using Umbraco.AI.AGUI.Events.Messages;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Core.Providers.Errors;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.AGUI;
@@ -117,6 +118,43 @@ public class AGUIStreamingServiceTests
         textEvents[0].Delta.ShouldBe("Hello");
         textEvents[1].Delta.ShouldBe(" ");
         textEvents[2].Delta.ShouldBe("World");
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithErrorContent_SurfacesAsTextChunkAndKeepsRunGoing()
+    {
+        // Arrange — a stream that emits ErrorContent mid-response (e.g. content
+        // filter, transient provider error). MEAI documents ErrorContent as
+        // non-fatal, so the run should continue and the user should see the
+        // error inline rather than the bare '[unknown:ErrorContent]' the chat
+        // trace renders for unrecognised AIContent.
+        var errorContent = new ErrorContent("Content was filtered.")
+        {
+            ErrorCode = "content_filter",
+            Details = "Detected restricted material.",
+        };
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, "Before. "),
+            new ChatResponseUpdate(ChatRole.Assistant, new List<AIContent> { errorContent }),
+            new ChatResponseUpdate(ChatRole.Assistant, "After."),
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+        var request = CreateRequest();
+
+        // Act
+        var events = await CollectEvents(agent, request);
+
+        // Assert: text chunks include the surrounding text and a marker for the error
+        var textChunks = events.OfType<TextMessageChunkEvent>().Select(e => e.Delta).ToList();
+        textChunks.ShouldContain(d => d == "Before. ");
+        textChunks.ShouldContain(d => d == "After.");
+        textChunks.ShouldContain(d => d.Contains("content_filter") && d.Contains("Content was filtered."));
+
+        // Run completes normally (no RunErrorEvent — ErrorContent is non-fatal)
+        events.OfType<RunErrorEvent>().ShouldBeEmpty();
+        events.Last().ShouldBeOfType<RunFinishedEvent>();
     }
 
     [Fact]
@@ -268,10 +306,10 @@ public class AGUIStreamingServiceTests
     #region Error Handling Tests
 
     [Fact]
-    public async Task StreamAgentAsync_OnError_EmitsRunErrorAndNoRunFinished()
+    public async Task StreamAgentAsync_OnError_EmitsClassifiedErrorAndFinished()
     {
-        // Arrange
-        var agent = CreateThrowingAgent(new InvalidOperationException("Test error"));
+        // Arrange — unrecognised exception type falls through to the Unknown category.
+        var agent = CreateThrowingAgent(new InvalidOperationException("internal-only: Test error"));
         var request = CreateRequest();
 
         // Act
@@ -281,8 +319,38 @@ public class AGUIStreamingServiceTests
         // Per AG-UI spec a run terminates with EITHER RunFinished OR RunError — never both.
         var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
         errorEvent.ShouldNotBeNull();
-        errorEvent.Message.ShouldBe("Test error");
-        errorEvent.Code.ShouldBe("STREAMING_ERROR");
+        // Raw exception text must not be surfaced to users.
+        errorEvent.Message.ShouldNotContain("internal-only");
+        // Code is the AIProviderErrorCategory name.
+        errorEvent.Code.ShouldBe("Unknown");
+
+        var finishedEvent = events.OfType<RunFinishedEvent>().First();
+        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_OnClassifiedProviderError_EmitsCategoryAndUserMessage()
+    {
+        // Arrange — provider SDK failures arrive pre-classified as AIProviderException
+        // (the chat client is wrapped by the error-classifying decorator in the factory).
+        var info = new AIProviderErrorInfo(
+            AIProviderErrorCategory.Transient,
+            "The AI service is briefly overloaded. Please try again in a few seconds.",
+            "overloaded_error",
+            "SSE error returned from server: '{...overloaded_error...}'");
+        var agent = CreateThrowingAgent(new AIProviderException(info));
+        var request = CreateRequest();
+
+        // Act
+        var events = await CollectEvents(agent, request);
+
+        // Assert — the classified user message and category code reach the frontend; the raw
+        // envelope text does not.
+        var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
+        errorEvent.ShouldNotBeNull();
+        errorEvent.Message.ShouldBe(info.UserMessage);
+        errorEvent.Message.ShouldNotContain("SSE error");
+        errorEvent.Code.ShouldBe("Transient");
 
         events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }

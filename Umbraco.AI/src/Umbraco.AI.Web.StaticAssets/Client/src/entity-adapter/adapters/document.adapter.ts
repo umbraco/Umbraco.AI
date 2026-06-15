@@ -7,15 +7,17 @@
 
 import { map, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
 import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
+import { UMB_DOCUMENT_PUBLISHING_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/document";
 import type {
     UaiEntityAdapterApi,
     UaiEntityContext,
+    UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
-import { prepareValueForEditor } from "./value-preparation.js";
+import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
 import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 // Supported text-based property editors for initial implementation
@@ -67,6 +69,11 @@ interface DocumentWorkspaceContextLike {
     };
     // Property mutation - sets value in workspace (staged, not persisted)
     setPropertyValue?<T>(alias: string, value: T, variantId?: UmbVariantId): Promise<void>;
+    // Persists staged changes (clicking the workspace Save button). Throws on validation failure.
+    requestSubmit?(): Promise<void>;
+    // The workspace context is itself a UmbControllerBase so it can resolve sibling contexts
+    // registered against the same host element — used to fetch the publishing context.
+    getContext?<T>(token: unknown): Promise<T | undefined>;
     // Check if entity is new (being created)
     getIsNew?(): boolean | undefined;
     // Internal method for parent access when creating new entities
@@ -344,7 +351,7 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
         // Prepare value for the target editor type
-        const valueToSet = prepareValueForEditor(change.value, existingValue?.editorAlias, existingValue?.value);
+        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);
@@ -353,6 +360,66 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             return {
                 success: false,
                 error: error instanceof Error ? error.message : "Unknown error applying value change",
+            };
+        }
+    }
+
+    /**
+     * Persist staged changes to the document (equivalent to clicking Save).
+     * Delegates to the workspace's `requestSubmit()`; any validation failure thrown by the
+     * workspace is converted into a structured error so the LLM can read it.
+     */
+    async save(workspaceContext: unknown): Promise<UaiPersistResult> {
+        const ctx = workspaceContext as DocumentWorkspaceContextLike;
+
+        if (typeof ctx.requestSubmit !== "function") {
+            return { success: false, error: "Workspace does not support save (no requestSubmit on context)." };
+        }
+
+        try {
+            await ctx.requestSubmit();
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Save failed (workspace rejected the request).",
+            };
+        }
+    }
+
+    /**
+     * Save the document and publish it. Resolves the document publishing workspace context as a
+     * sibling of the workspace context (both register against the same host) and delegates to
+     * `saveAndPublish()`. On multi-variant documents this can surface the CMS's variant-picker
+     * modal — same UX as clicking the Save and publish button.
+     */
+    async publish(workspaceContext: unknown): Promise<UaiPersistResult> {
+        const ctx = workspaceContext as DocumentWorkspaceContextLike;
+
+        if (typeof ctx.getContext !== "function") {
+            return {
+                success: false,
+                error: "Workspace context does not expose getContext; cannot reach the publishing context.",
+            };
+        }
+
+        type PublishingCtxLike = { saveAndPublish?: () => Promise<void> };
+        const publishing = await ctx.getContext<PublishingCtxLike>(UMB_DOCUMENT_PUBLISHING_WORKSPACE_CONTEXT);
+
+        if (!publishing || typeof publishing.saveAndPublish !== "function") {
+            return {
+                success: false,
+                error: "Document publishing context is not available on this workspace.",
+            };
+        }
+
+        try {
+            await publishing.saveAndPublish();
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Publish failed (publishing context rejected the request).",
             };
         }
     }

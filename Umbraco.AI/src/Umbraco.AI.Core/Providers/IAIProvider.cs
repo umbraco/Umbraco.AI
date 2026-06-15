@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.AI.Core.Providers;
@@ -62,4 +63,18 @@ public interface IAIProvider : IDiscoverable
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
     public bool HasCapability<TCapability>() where TCapability : class, IAICapability;
+
+    /// <summary>
+    /// Classifies an exception thrown by this provider's SDK into a normalised, user-safe
+    /// <see cref="AIProviderErrorInfo"/>.
+    /// </summary>
+    /// <remarks>
+    /// Called by the error-classifying client decorators in the capability factories, where the
+    /// originating provider is known — so the exception is always one this provider produced.
+    /// The base implementation handles the common transport types; providers override it to
+    /// recognise SDK-specific error shapes.
+    /// </remarks>
+    /// <param name="exception">The exception to classify.</param>
+    /// <returns>The classified, user-safe error information.</returns>
+    AIProviderErrorInfo ClassifyError(Exception exception);
 }

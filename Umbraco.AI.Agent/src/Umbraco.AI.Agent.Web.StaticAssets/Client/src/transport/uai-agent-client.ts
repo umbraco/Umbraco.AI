@@ -9,6 +9,7 @@ import {
     AgentTransport,
     type AGUIEvent,
     type AGUIInterrupt,
+    type RunErrorEvent,
     type ToolCallStartEvent,
     type ToolCallArgsEvent,
     type ToolCallEndEvent,
@@ -223,9 +224,11 @@ export class UaiAgentClient {
                 this.#handleRunFinished(event as RunFinishedAGUIEvent);
                 break;
 
-            case AGUIEventType.RUN_ERROR:
-                this.#callbacks.onError?.(new Error(event.message));
+            case AGUIEventType.RUN_ERROR: {
+                const runError = event as RunErrorEvent;
+                this.#callbacks.onError?.(new Error(runError.message), runError.code);
                 break;
+            }
 
             case AGUIEventType.STATE_SNAPSHOT:
                 this.#callbacks.onStateSnapshot?.(event.snapshot as UaiAgentState);

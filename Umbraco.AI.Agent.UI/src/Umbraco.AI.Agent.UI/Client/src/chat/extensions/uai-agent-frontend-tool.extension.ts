@@ -1,5 +1,5 @@
 import type { ManifestApi } from "@umbraco-cms/backoffice/extension-api";
-import type { UaiAgentToolApi } from "../types/tool.types.js";
+import type { UaiAgentToolApi, UaiAgentToolApprovalConfig } from "../types/tool.types.js";
 
 /**
  * Manifest for browser-executable frontend tools.
@@ -41,6 +41,19 @@ import type { UaiAgentToolApi } from "../types/tool.types.js";
  *     // Future: conditions gate when the tool resolves
  *     // conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]
  * };
+ *
+ * // Tool that requires HITL approval before execution
+ * const tool: ManifestUaiAgentFrontendTool = {
+ *     type: "uaiAgentFrontendTool",
+ *     alias: "My.AgentFrontendTool.DeleteContent",
+ *     meta: {
+ *         toolName: "delete_content",
+ *         description: "Deletes a content item",
+ *         parameters: { type: "object", properties: { id: { type: "string" } } },
+ *         approval: true,
+ *     },
+ *     api: () => import("./delete-content.api.js"),
+ * };
  * ```
  */
 export interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
@@ -62,6 +75,13 @@ export interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolAp
          * Used for permission filtering.
          */
         isDestructive?: boolean;
+        /**
+         * HITL approval configuration.
+         * When specified, the executor pauses for user approval before invoking the tool.
+         * - `true` - Use the default approval element with localized defaults
+         * - `{ config }` - Default approval element with custom static config (title, message, etc.)
+         */
+        approval?: UaiAgentToolApprovalConfig;
     };
 }
 

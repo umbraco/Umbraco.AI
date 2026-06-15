@@ -5,6 +5,71 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.13.0...Umbraco.AI@1.14.0) (2026-06-04)
+
+### ⚠ BREAKING CHANGE
+
+* **core:** $ configuration references are now default-deny. References
+outside Umbraco:AI:Secrets / Umbraco:AI:Variables (e.g. $OpenAI:ApiKey) no
+longer resolve. Move the values under those sections or add the prefix to
+Umbraco:AI:AllowedConfigurationKeyPrefixes in app settings.
+
+### feat
+
+* **core:** Add default-deny allow-list for $ configuration references ([e813373](https://github.com/umbraco/Umbraco.AI/commit/e8133738a3e3e34139d0a03f833b4c595b500c6d))
+
+### fix
+
+* **core:** Support literal $ in editable-model settings via $$ escape ([26adf6e](https://github.com/umbraco/Umbraco.AI/commit/26adf6ef0d6e2c9c058d559448faa10c5f751490))
+* **settings:** Route editable models through the editable model service ([979f384](https://github.com/umbraco/Umbraco.AI/commit/979f384b22bd631b1741c6ba4b862b401a130725))
+
+## [1.13.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.12.0...Umbraco.AI@1.13.0) (2026-06-01)
+
+### ⚠ BREAKING CHANGE
+
+* **speechtotext:** IAIFileProcessingHandler.CanHandle(string) is now
+CanHandleAsync(string, CancellationToken) so handler eligibility can depend on runtime
+state (e.g. whether a default profile is configured), not just the MIME type.
+
+### feat
+
+* **speechtotext:** Transcribe uploaded audio files via the file-processing pipeline ([e3bccff](https://github.com/umbraco/Umbraco.AI/commit/e3bccff9a3392f5b002f4930967240f3c8417b2d))
+
+## [1.12.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.11.0...Umbraco.AI@1.12.0) (2026-05-20)
+
+### feat
+
+* **core:** Expose AI section alias via public `Constants.Sections.AI` for cross-package consumers ([3378338](https://github.com/umbraco/Umbraco.AI/commit/3378338c818699ca6d919b14fe36ad636498f48f))
+* **core:** Add `MediaKey` to `AIMediaContent` to enable per-node authorization of resolved media references ([3378338](https://github.com/umbraco/Umbraco.AI/commit/3378338c818699ca6d919b14fe36ad636498f48f))
+
+## [1.11.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.10.1...Umbraco.AI@1.11.0) (2026-05-14)
+
+### feat
+
+* **core,copilot,deps:** Add schema-aware property tooling for agents ([418847a](https://github.com/umbraco/Umbraco.AI/commit/418847a118dbd15a290906f4cc6dd95d7a95a61a))
+* **core:** Add first-party property value handlers ([68e18f9](https://github.com/umbraco/Umbraco.AI/commit/68e18f9948819c0339469a29962d34700955f1f2))
+* **core:** Add property value dispatcher and handler contract ([3c9868c](https://github.com/umbraco/Umbraco.AI/commit/3c9868c5dbfef97db5eb52334f639383863effc1))
+* **core:** Add save and publish to entity adapter contract ([ba42260](https://github.com/umbraco/Umbraco.AI/commit/ba422602e74fa459b3250bbcc18c4e7d136a3d84))
+* **core:** Enrich block list/grid schemas with allowed element types ([99f7987](https://github.com/umbraco/Umbraco.AI/commit/99f7987b4cda82f390cbaab9c8473258def8db37))
+* **core:** Expose property value operation endpoint ([804ba48](https://github.com/umbraco/Umbraco.AI/commit/804ba489e102b609cd61e1da35328edfb448bcc5))
+* **core:** Localize entity-save and entity-publish scope labels ([3ed3c9b](https://github.com/umbraco/Umbraco.AI/commit/3ed3c9baeb6757154756751040d875edf6e1684a))
+* **core:** Normalize ISO 8601 date values for the date-time editor ([4ef2dff](https://github.com/umbraco/Umbraco.AI/commit/4ef2dffcc841857d50cb693ddf886fdc33bebe62))
+
+### fix
+
+* **chat:** Register UsageDetails to UsageModel mapper ([fc5caf2](https://github.com/umbraco/Umbraco.AI/commit/fc5caf2d12f0c0565e53d185dc95f30066c59b01)), closes [#155](https://github.com/umbraco/Umbraco.AI/issues/155)
+* **core:** Accept GUID input on get_content_type_schema and survive cache throws ([f2ecf67](https://github.com/umbraco/Umbraco.AI/commit/f2ecf673f6a13c8ca5dd545f295085ca15f93640))
+* **core:** Deep-clone inner element-type schemas before attaching to enrichment tree ([5f24939](https://github.com/umbraco/Umbraco.AI/commit/5f24939716ec597f4b64085ed651247db9db0ff2))
+* **core:** Guard prepareValueForEditor against pre-built block values ([0a8b175](https://github.com/umbraco/Umbraco.AI/commit/0a8b175f56424c07ea15741ca86ab7891b423b46))
+* **core:** Refresh MediaPicker3 thumbnails after AI-driven value changes ([f9d26b8](https://github.com/umbraco/Umbraco.AI/commit/f9d26b8ecd669e2d9b7ebfffa9c3bd925b4c7e04))
+* **core:** Register property value preparer manifests in the root bundle ([4dfeb15](https://github.com/umbraco/Umbraco.AI/commit/4dfeb152aa01adc9fea83d773f79a652736d25b1))
+* **core:** Surface tool exceptions instead of opaque '[unknown:ErrorContent]' ([35489ce](https://github.com/umbraco/Umbraco.AI/commit/35489ceab0e0a93ec395a2f3f77761ac0c02fbce))
+* **core:** Walk block items safely in published-value tool formatter ([e200e58](https://github.com/umbraco/Umbraco.AI/commit/e200e58a7e7ea739ede9208372a0e8224c3f545b))
+
+### Internal
+
+* Bump `Microsoft.Extensions.AI` minimum to 10.6.0.
+
 ## [1.10.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.10.0...Umbraco.AI@1.10.1) (2026-05-06)
 
 ### fix

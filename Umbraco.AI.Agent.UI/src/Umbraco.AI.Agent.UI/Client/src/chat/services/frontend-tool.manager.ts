@@ -77,6 +77,14 @@ export class UaiFrontendToolManager extends UmbControllerBase {
     }
 
     /**
+     * Get the frontend tool manifest for a tool by name.
+     * @param toolName The name of the tool
+     */
+    getManifest(toolName: string): ManifestUaiAgentFrontendTool | undefined {
+        return this.#toolManifests.value.get(toolName);
+    }
+
+    /**
      * Get or load the API instance for a frontend tool.
      * @param toolName The name of the tool
      * @returns The tool API instance

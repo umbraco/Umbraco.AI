@@ -15,6 +15,7 @@ namespace Umbraco.AI.Amazon;
 public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
 {
     private const string CacheKeyPrefix = "Amazon_Models_";
+    private const string FoundationCacheKeyPrefix = "Amazon_FoundationModels_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
@@ -76,6 +77,56 @@ public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
         while (!string.IsNullOrEmpty(nextToken));
 
         var modelIds = allProfiles
+            .OrderBy(id => id)
+            .ToList();
+
+        _cache.Set(cacheKey, (IReadOnlyList<string>)modelIds, CacheDuration);
+
+        return modelIds;
+    }
+
+    /// <summary>
+    /// Gets foundation model IDs that support on-demand invocation, optionally filtered by output modality.
+    /// Unlike <see cref="GetAvailableModelIdsAsync"/> which returns cross-region inference profiles,
+    /// this returns models invoked directly by their foundation model ID (e.g., <c>amazon.titan-embed-text-v2:0</c>).
+    /// Embedding models in particular generally don't have inference profiles, so this API is required to surface them.
+    /// </summary>
+    /// <param name="settings">The provider settings containing AWS credentials.</param>
+    /// <param name="outputModality">Optional output modality filter (e.g., <see cref="ModelModality.EMBEDDING"/>).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of foundation model IDs.</returns>
+    internal async Task<IReadOnlyList<string>> GetAvailableFoundationModelIdsAsync(
+        AmazonProviderSettings settings,
+        ModelModality? outputModality = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateSettings(settings);
+
+        var cacheKey = GetFoundationCacheKey(settings, outputModality);
+
+        if (_cache.TryGetValue<IReadOnlyList<string>>(cacheKey, out var cachedModels) && cachedModels is not null)
+        {
+            return cachedModels;
+        }
+
+        using var client = CreateBedrockClient(settings);
+
+        var request = new ListFoundationModelsRequest
+        {
+            ByInferenceType = InferenceType.ON_DEMAND
+        };
+
+        if (outputModality is not null)
+        {
+            request.ByOutputModality = outputModality;
+        }
+
+        var response = await client.ListFoundationModelsAsync(request, cancellationToken);
+
+        var modelIds = response.ModelSummaries
+            .Select(m => m.ModelId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
             .OrderBy(id => id)
             .ToList();
 
@@ -153,5 +204,12 @@ public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
         // Cache per credentials + region + endpoint combination
         var endpoint = settings.Endpoint ?? "default";
         return $"{CacheKeyPrefix}{settings.AccessKeyId?.GetHashCode()}:{settings.Region}:{endpoint}";
+    }
+
+    private static string GetFoundationCacheKey(AmazonProviderSettings settings, ModelModality? outputModality)
+    {
+        var endpoint = settings.Endpoint ?? "default";
+        var modality = outputModality?.Value ?? "any";
+        return $"{FoundationCacheKeyPrefix}{settings.AccessKeyId?.GetHashCode()}:{settings.Region}:{endpoint}:{modality}";
     }
 }

@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.Anthropic.Tests.Unit/Umbraco.AI.Anthropic.Tests.Unit.csproj" />
+  </Folder>
 </Solution>

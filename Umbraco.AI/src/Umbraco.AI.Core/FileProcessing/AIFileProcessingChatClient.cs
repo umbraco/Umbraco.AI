@@ -117,7 +117,7 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
                     }
                 }
 
-                var handler = FindHandler(dataContent.MediaType);
+                var handler = await FindHandlerAsync(dataContent.MediaType, cancellationToken);
                 if (handler is null)
                 {
                     // No handler for this type — pass through (images, PDFs, etc.)
@@ -156,11 +156,11 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
         return result;
     }
 
-    private IAIFileProcessingHandler? FindHandler(string mimeType)
+    private async Task<IAIFileProcessingHandler?> FindHandlerAsync(string mimeType, CancellationToken cancellationToken)
     {
         foreach (var handler in _handlers)
         {
-            if (handler.CanHandle(mimeType))
+            if (await handler.CanHandleAsync(mimeType, cancellationToken))
             {
                 return handler;
             }

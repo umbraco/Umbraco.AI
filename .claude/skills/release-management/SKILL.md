@@ -195,8 +195,11 @@ while queue not empty:
 
 `patchBump` mirrors `/post-release-cleanup` Phase 4 — reuse the same helper:
 - `1.10.1` → `1.10.2`
-- `1.0.0-beta1` → `1.0.0-beta2`
+- `1.0.0-beta.1` → `1.0.0-beta.2` (dotted — the required form for new prerelease lines)
 - `1.0.0-alpha` → `1.0.0-alpha.1`
+- `1.0.0-beta1` → `1.0.0-beta2` (legacy non-dotted, Search/Automate only — increment in place, never dotify)
+
+New prerelease lines must use dotted `-{stage}.N`; non-dotted `-betaN` sorts incorrectly past 9 (`beta10 < beta9`). See root CLAUDE.md → "Prerelease versioning".
 
 #### Step 4 — Edge cases
 

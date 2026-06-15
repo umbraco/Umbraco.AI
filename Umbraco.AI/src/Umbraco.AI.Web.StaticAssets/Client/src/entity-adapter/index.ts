@@ -23,6 +23,14 @@
 // Context
 export { UaiEntityAdapterContext } from "./entity-adapter.context.js";
 
+// Value preparer plugin surface
+export {
+    UAI_PROPERTY_VALUE_PREPARER_EXTENSION_TYPE,
+    resolveAndPrepareValue,
+    type ManifestUaiPropertyValuePreparer,
+    type UaiPropertyValuePreparerApi,
+} from "./value-preparers/index.js";
+
 // Extension type
 export { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from "./extension-type.js";
 
@@ -38,6 +46,7 @@ export type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
     UaiEntityContext,
+    UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,

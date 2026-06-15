@@ -5,6 +5,31 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.8](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.7...Umbraco.AI.Prompt@1.8.8) (2026-06-04)
+
+### Internal
+
+* Rebuilt against the Umbraco.AI 1.14.0 editable-model service refactor.
+
+## [1.8.7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.6...Umbraco.AI.Prompt@1.8.7) (2026-06-01)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.13.0.
+
+## [1.8.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.4...Umbraco.AI.Prompt@1.8.6) (2026-05-20)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.12.0.
+
+## [1.8.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.2...Umbraco.AI.Prompt@1.8.4) (2026-05-14)
+
+### Internal
+
+* Bump `@umbraco-cms/backoffice` peer dependency to `^17.4.0`.
+* Bump to align with Umbraco.AI 1.11.0.
+
 ## [1.8.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.1...Umbraco.AI.Prompt@1.8.2) (2026-05-06)
 
 ### fix

@@ -1,15 +1,28 @@
-using System.Text.Json;
-using Umbraco.AI.Core;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Guardrails.Evaluators;
 
 namespace Umbraco.AI.Persistence.Guardrails;
 
 /// <summary>
 /// Factory for mapping between <see cref="AIGuardrail"/> domain models and <see cref="AIGuardrailEntity"/> database entities.
+/// Handles encryption/decryption of sensitive evaluator configuration during the mapping process.
 /// </summary>
-internal static class AIGuardrailFactory
+internal sealed class AIGuardrailFactory : IAIGuardrailFactory
 {
-    public static AIGuardrail BuildDomain(AIGuardrailEntity entity)
+    private readonly IAIEditableModelSerializer _serializer;
+    private readonly AIGuardrailEvaluatorCollection _evaluators;
+
+    public AIGuardrailFactory(
+        IAIEditableModelSerializer serializer,
+        AIGuardrailEvaluatorCollection evaluators)
+    {
+        _serializer = serializer;
+        _evaluators = evaluators;
+    }
+
+    /// <inheritdoc />
+    public AIGuardrail BuildDomain(AIGuardrailEntity entity)
     {
         return new AIGuardrail
         {
@@ -28,13 +41,12 @@ internal static class AIGuardrailFactory
         };
     }
 
-    public static AIGuardrailRule BuildRuleDomain(AIGuardrailRuleEntity entity)
+    private AIGuardrailRule BuildRuleDomain(AIGuardrailRuleEntity entity)
     {
-        JsonElement? config = null;
-        if (!string.IsNullOrEmpty(entity.Config))
-        {
-            config = JsonSerializer.Deserialize<JsonElement>(entity.Config, Constants.DefaultJsonSerializerOptions);
-        }
+        // Config is stored as JSON with sensitive fields encrypted. The serializer decrypts any
+        // encrypted values; typed deserialization (and configuration variable resolution) happens
+        // later when the evaluator runs.
+        var config = _serializer.Deserialize(entity.Config);
 
         return new AIGuardrailRule
         {
@@ -48,7 +60,8 @@ internal static class AIGuardrailFactory
         };
     }
 
-    public static AIGuardrailEntity BuildEntity(AIGuardrail guardrail)
+    /// <inheritdoc />
+    public AIGuardrailEntity BuildEntity(AIGuardrail guardrail)
     {
         return new AIGuardrailEntity
         {
@@ -66,7 +79,8 @@ internal static class AIGuardrailFactory
         };
     }
 
-    public static AIGuardrailRuleEntity BuildRuleEntity(AIGuardrailRule rule, Guid guardrailId)
+    /// <inheritdoc />
+    public AIGuardrailRuleEntity BuildRuleEntity(AIGuardrailRule rule, Guid guardrailId)
     {
         return new AIGuardrailRuleEntity
         {
@@ -76,12 +90,13 @@ internal static class AIGuardrailFactory
             Name = rule.Name,
             Phase = (int)rule.Phase,
             Action = (int)rule.Action,
-            Config = rule.Config is null ? null : JsonSerializer.Serialize(rule.Config, Constants.DefaultJsonSerializerOptions),
+            Config = SerializeConfig(rule),
             SortOrder = rule.SortOrder,
         };
     }
 
-    public static void UpdateEntity(AIGuardrailEntity entity, AIGuardrail guardrail)
+    /// <inheritdoc />
+    public void UpdateEntity(AIGuardrailEntity entity, AIGuardrail guardrail)
     {
         entity.Alias = guardrail.Alias;
         entity.Name = guardrail.Name;
@@ -90,13 +105,31 @@ internal static class AIGuardrailFactory
         entity.Version = guardrail.Version;
     }
 
-    public static void UpdateRuleEntity(AIGuardrailRuleEntity entity, AIGuardrailRule rule)
+    /// <inheritdoc />
+    public void UpdateRuleEntity(AIGuardrailRuleEntity entity, AIGuardrailRule rule)
     {
         entity.EvaluatorId = rule.EvaluatorId;
         entity.Name = rule.Name;
         entity.Phase = (int)rule.Phase;
         entity.Action = (int)rule.Action;
-        entity.Config = rule.Config is null ? null : JsonSerializer.Serialize(rule.Config, Constants.DefaultJsonSerializerOptions);
+        entity.Config = SerializeConfig(rule);
         entity.SortOrder = rule.SortOrder;
     }
+
+    /// <summary>
+    /// Serializes a rule's configuration, encrypting sensitive fields based on the evaluator schema.
+    /// </summary>
+    private string? SerializeConfig(AIGuardrailRule rule)
+    {
+        if (rule.Config is null)
+        {
+            return null;
+        }
+
+        var schema = GetConfigSchema(rule.EvaluatorId);
+        return _serializer.Serialize(rule.Config, schema);
+    }
+
+    private AIEditableModelSchema? GetConfigSchema(string evaluatorId)
+        => _evaluators.GetById(evaluatorId)?.GetConfigSchema();
 }

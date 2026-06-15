@@ -57,8 +57,12 @@ if (-not $SkipTemplateInstall) {
         }
     }
 
-    # Install latest version
-    dotnet new install Umbraco.Templates --force
+    # Pin to 17.4.0-rc2 to match the AI Core packages' Umbraco.Cms.Core minimum (the AI tooling
+    # depends on IPropertyEditorSchemaService and other 17.4 APIs introduced in 17.4). Without
+    # this the template installs whatever's latest-stable, which currently is 17.3 — and 17.3
+    # lacks the schema APIs the AI tools call into. Bump in lockstep when the AI packages move
+    # to a newer CMS floor.
+    dotnet new install Umbraco.Templates::17.4.0-rc2 --force
 }
 
 # Step 2: Create demo folder with build overrides

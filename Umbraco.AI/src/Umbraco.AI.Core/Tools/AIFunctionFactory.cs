@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Tools.Scopes;
 using MeaiAIFunctionFactory = Microsoft.Extensions.AI.AIFunctionFactory;
 
@@ -10,14 +11,17 @@ namespace Umbraco.AI.Core.Tools;
 internal sealed class AIFunctionFactory : IAIFunctionFactory
 {
     private readonly AIToolScopeCollection _scopeCollection;
+    private readonly ILoggerFactory? _loggerFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIFunctionFactory"/> class.
     /// </summary>
     /// <param name="scopeCollection">The tool scope collection for enriching tool descriptions.</param>
-    public AIFunctionFactory(AIToolScopeCollection scopeCollection)
+    /// <param name="loggerFactory">Optional logger factory threaded into typed tool functions for failure diagnostics.</param>
+    public AIFunctionFactory(AIToolScopeCollection scopeCollection, ILoggerFactory? loggerFactory = null)
     {
         _scopeCollection = scopeCollection;
+        _loggerFactory = loggerFactory;
     }
     /// <inheritdoc />
     public AIFunction Create(IAITool tool)
@@ -44,11 +48,11 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
     public IReadOnlyList<AIFunction> Create(IEnumerable<IAITool> tools)
         => tools.Select(Create).ToList();
 
-    private static AIFunction CreateTypedFunction(IAITool tool, string description)
+    private AIFunction CreateTypedFunction(IAITool tool, string description)
     {
         // Instantiate AIToolFunction<TArgs> via reflection to match the tool's argument type.
         var functionType = typeof(AIToolFunction<>).MakeGenericType(tool.ArgsType!);
-        return (AIFunction)Activator.CreateInstance(functionType, tool, tool.Id, description)!;
+        return (AIFunction)Activator.CreateInstance(functionType, tool, tool.Id, description, _loggerFactory)!;
     }
 
     /// <summary>

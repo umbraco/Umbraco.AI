@@ -3,6 +3,8 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.Core.EditableModels;
@@ -10,71 +12,88 @@ namespace Umbraco.AI.Core.EditableModels;
 /// <summary>
 /// Service for resolving editable models from various storage formats.
 /// </summary>
+/// <remarks>
+/// Configuration substitution (<c>$Key:Path</c>) is default-deny: a key is only resolved
+/// when it falls under one of <see cref="AIOptions.AllowedConfigurationKeyPrefixes"/>, so a
+/// settings author can only reference the configuration sections an administrator has opted
+/// in — not arbitrary application configuration. A value that needs to start with a literal
+/// <c>$</c> (rather than be treated as a reference) is written with a leading <c>$$</c>.
+/// </remarks>
 internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 {
     private const string ConfigPrefix = "$";
 
     private readonly IConfiguration _configuration;
+    private readonly IReadOnlyList<string> _allowedConfigKeyPrefixes;
+    private readonly IReadOnlyList<string> _secretConfigKeyPrefixes;
 
-    public AIEditableModelResolver(IConfiguration configuration)
+    public AIEditableModelResolver(IConfiguration configuration, IOptions<AIOptions>? options = null)
     {
         _configuration = configuration;
+
+        // Fall back to defaults (the Secrets/Variables allow-list) when constructed without
+        // options. Production always supplies them via DI; this keeps the default secure
+        // rather than permissive.
+        var aiOptions = options?.Value ?? new AIOptions();
+        _allowedConfigKeyPrefixes = aiOptions.AllowedConfigurationKeyPrefixes
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToArray();
+        _secretConfigKeyPrefixes = aiOptions.SecretConfigurationKeyPrefixes
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToArray();
     }
 
     /// <inheritdoc />
     public TModel? ResolveModel<TModel>(object? data, AIEditableModelSchema? schema = null)
         where TModel : class, new()
+        => (TModel?)ResolveModel(typeof(TModel), data, schema);
+
+    /// <inheritdoc />
+    public object? ResolveModel(Type modelType, object? data, AIEditableModelSchema? schema = null)
     {
-        // If data is null, return null (or new instance if required by validation)
+        // If data is null, return null
         if (data is null)
         {
             return null;
         }
 
-        // If already correct type, clone via JSON round-trip to avoid mutating the original object,
-        // then resolve configuration variables and validate on the copy
-        if (data is TModel)
-        {
-            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
-            var deserialized = JsonSerializer.Deserialize<TModel>(json, Constants.DefaultJsonSerializerOptions);
-            if (deserialized is not null)
-            {
-                ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(deserialized, schema);
-            }
-            return deserialized;
-        }
+        object? deserialized;
 
         // Handle JsonElement deserialization
         if (data is JsonElement jsonElement)
         {
-            var deserialized = jsonElement.Deserialize<TModel>(Constants.DefaultJsonSerializerOptions);
-            if (deserialized is not null)
+            deserialized = jsonElement.Deserialize(modelType, Constants.DefaultJsonSerializerOptions);
+        }
+        else if (modelType.IsInstanceOfType(data))
+        {
+            // Already correct type, clone via JSON round-trip to avoid mutating the original object,
+            // then resolve configuration variables and validate on the copy
+            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
+            deserialized = JsonSerializer.Deserialize(json, modelType, Constants.DefaultJsonSerializerOptions);
+        }
+        else
+        {
+            // Try to serialize/deserialize through JSON as fallback
+            try
             {
-                ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(deserialized, schema);
+                var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
+                deserialized = JsonSerializer.Deserialize(json, modelType, Constants.DefaultJsonSerializerOptions);
             }
-            return deserialized;
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to resolve model to type {modelType.Name}",
+                    ex);
+            }
         }
 
-        // Try to serialize/deserialize through JSON as fallback
-        try
+        if (deserialized is not null)
         {
-            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
-            var deserialized = JsonSerializer.Deserialize<TModel>(json, Constants.DefaultJsonSerializerOptions);
-            if (deserialized is not null)
-            {
-                ResolveConfigurationVariablesInObject(deserialized);
-                ValidateModel(deserialized, schema);
-            }
-            return deserialized;
+            ResolveConfigurationVariablesInObject(deserialized);
+            ValidateModel(deserialized, schema);
         }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Failed to resolve model to type {typeof(TModel).Name}",
-                ex);
-        }
+
+        return deserialized;
     }
 
     private void ResolveConfigurationVariablesInObject(object obj)
@@ -87,8 +106,14 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             if (!property.CanRead || !property.CanWrite)
                 continue;
 
+            // Read the field's sensitivity from its attribute, so secret config keys can be
+            // restricted to sensitive fields. A property with no field attribute is treated
+            // as non-sensitive (the secure default).
+            var isSensitiveField = property
+                .GetCustomAttribute<AIEditableModelFieldAttribute>()?.IsSensitive ?? false;
+
             var value = property.GetValue(obj);
-            var resolvedValue = ResolveConfigurationVariable(value, property.PropertyType);
+            var resolvedValue = ResolveConfigurationVariable(value, property.PropertyType, isSensitiveField);
 
             if (!Equals(value, resolvedValue))
             {
@@ -97,7 +122,7 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
         }
     }
 
-    private object? ResolveConfigurationVariable(object? value, Type targetType)
+    private object? ResolveConfigurationVariable(object? value, Type targetType, bool isSensitiveField)
     {
         // Only handle string values with the $ prefix
         if (value is not string strValue || !strValue.StartsWith(ConfigPrefix))
@@ -105,8 +130,43 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
             return value;
         }
 
+        // Escape hatch: a leading "$$" denotes a literal value that happens to start with
+        // "$" (e.g. a guardrail regex or contains-pattern), not a configuration reference.
+        // Strip one '$' and return the remainder verbatim — no allow-list or lookup applied.
+        // Note this only concerns values that START with '$'; a trailing '$' (e.g. a regex
+        // end-of-line anchor) is never treated as a reference and needs no escaping.
+        if (strValue.StartsWith("$$", StringComparison.Ordinal))
+        {
+            return strValue.Substring(1);
+        }
+
         // Extract configuration key
         var configKey = strValue.Substring(ConfigPrefix.Length);
+
+        // Default-deny: only keys under an allowed prefix may be dereferenced. Checked
+        // before the lookup so the rejection does not depend on whether the key exists.
+        // See AIOptions.AllowedConfigurationKeyPrefixes.
+        if (!MatchesPrefix(configKey, _allowedConfigKeyPrefixes))
+        {
+            throw new InvalidOperationException(
+                $"Configuration key '{configKey}' is not permitted in settings. " +
+                $"Only keys under an allowed prefix may be referenced with the $ syntax " +
+                $"(by default '{string.Join("', '", _allowedConfigKeyPrefixes)}'). " +
+                $"An administrator can place the value under an allowed section or extend " +
+                $"Umbraco:AI:AllowedConfigurationKeyPrefixes in app settings.");
+        }
+
+        // Secret keys may only land in sensitive fields, so a resolved secret stays in a
+        // field the system treats as credential-bearing. See SecretConfigurationKeyPrefixes.
+        if (!isSensitiveField && MatchesPrefix(configKey, _secretConfigKeyPrefixes))
+        {
+            throw new InvalidOperationException(
+                $"Configuration key '{configKey}' is a secret and may only be referenced from " +
+                $"a sensitive field (one marked [AIField(IsSensitive = true)]). Move the value " +
+                $"to a non-secret section (e.g. Umbraco:AI:Variables) if it is safe to expose " +
+                $"in this field, or reference it from a sensitive field instead.");
+        }
+
         var configValue = _configuration[configKey];
 
         if (configValue is null)
@@ -118,6 +178,30 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 
         // Convert to target type if needed (supports string, int, bool, etc.)
         return ConvertToTargetType(configValue, targetType);
+    }
+
+    /// <summary>
+    /// Determines whether <paramref name="configKey"/> falls under one of <paramref name="prefixes"/>.
+    /// Matching is segment-aware (a prefix matches the whole key or a key whose next character
+    /// is the <c>:</c> section separator) and case-insensitive, so <c>Umbraco:AI:Secrets</c>
+    /// permits <c>Umbraco:AI:Secrets:ApiKey</c> but not <c>Umbraco:AI:SecretsBackup:ApiKey</c>.
+    /// </summary>
+    private static bool MatchesPrefix(string configKey, IReadOnlyList<string> prefixes)
+    {
+        foreach (var prefix in prefixes)
+        {
+            if (!configKey.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (configKey.Length == prefix.Length || configKey[prefix.Length] == ':')
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private object ConvertToTargetType(string value, Type targetType)

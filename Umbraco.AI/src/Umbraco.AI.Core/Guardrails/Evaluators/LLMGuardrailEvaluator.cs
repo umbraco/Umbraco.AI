@@ -61,11 +61,14 @@ public class LLMGuardrailEvaluator : AIGuardrailEvaluatorBase<LLMGuardrailEvalua
     /// <inheritdoc />
     public override string Description => "Uses an LLM to evaluate content for safety, misinformation, and compliance";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LLMGuardrailEvaluator"/> class.
+    /// </summary>
     public LLMGuardrailEvaluator(
         IAIChatService chatService,
         IAIRuntimeContextAccessor runtimeContextAccessor,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+        IAIGuardrailEvaluatorInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _chatService = chatService;
         _runtimeContextAccessor = runtimeContextAccessor;
@@ -78,7 +81,7 @@ public class LLMGuardrailEvaluator : AIGuardrailEvaluatorBase<LLMGuardrailEvalua
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
     {
-        var evalConfig = config.Deserialize<LLMGuardrailEvaluatorConfig>() ?? new LLMGuardrailEvaluatorConfig();
+        var evalConfig = ResolveConfig(config) ?? new LLMGuardrailEvaluatorConfig();
 
         // Set the guardrail evaluation flag to prevent infinite recursion
         _runtimeContextAccessor.Context?.SetValue(Constants.ContextKeys.IsGuardrailEvaluation, true);

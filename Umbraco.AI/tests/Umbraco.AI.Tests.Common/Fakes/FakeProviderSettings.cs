@@ -21,4 +21,7 @@ public class FakeProviderSettings
 
     [AIField(Label = "Enabled", Description = "Enable this feature")]
     public bool Enabled { get; set; } = true;
+
+    [AIField(Label = "Secret", Description = "A sensitive value", IsSensitive = true)]
+    public string? SecretField { get; set; }
 }

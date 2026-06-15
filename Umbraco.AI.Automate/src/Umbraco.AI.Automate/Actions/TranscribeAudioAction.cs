@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.SpeechToText;
 using Umbraco.Automate.Core.Actions;
+using Umbraco.Automate.Core.Security;
+using Umbraco.Cms.Core;
 
 #pragma warning disable MEAI001 // SpeechToTextOptions / ISpeechToTextClient are experimental in M.E.AI
 
@@ -16,11 +18,13 @@ namespace Umbraco.AI.Automate.Actions;
 [Action(UmbracoAIAutomateConstants.ActionTypes.TranscribeAudio, "Transcribe Audio",
     Description = "Transcribes an audio file from an Umbraco media reference using an AI speech-to-text profile.",
     Group = "AI",
-    Icon = "icon-mic")]
-public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, object>
+    Icon = "icon-mic",
+    RequiredSections = [Constants.Applications.Media])]
+public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, TranscribeAudioOutput>
 {
     private readonly IAISpeechToTextService _speechToTextService;
     private readonly IAIUmbracoMediaResolver _mediaResolver;
+    private readonly IAutomationActionAuthorizer _authorizer;
     private readonly ILogger<TranscribeAudioAction> _logger;
 
     /// <summary>
@@ -30,11 +34,13 @@ public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, 
         ActionInfrastructure infrastructure,
         IAISpeechToTextService speechToTextService,
         IAIUmbracoMediaResolver mediaResolver,
+        IAutomationActionAuthorizer authorizer,
         ILogger<TranscribeAudioAction> logger)
         : base(infrastructure)
     {
         _speechToTextService = speechToTextService;
         _mediaResolver = mediaResolver;
+        _authorizer = authorizer;
         _logger = logger;
     }
 
@@ -72,6 +78,15 @@ public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, 
                     StepRunErrorCategory.Validation);
             }
 
+            // Node-level authorisation: when the audio source was an Umbraco media reference,
+            // the service account must have access to that node. Raw file paths bypass this
+            // because they're not CMS nodes — the operator has explicitly configured them.
+            if (media.MediaKey is { } mediaKey
+                && await _authorizer.AuthorizeMediaOrFailAsync(mediaKey, cancellationToken) is { } failure)
+            {
+                return failure;
+            }
+
             await using var audioStream = new MemoryStream(media.Data);
 
             SpeechToTextResponse response = await _speechToTextService.TranscribeAsync(
@@ -98,7 +113,7 @@ public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, 
                 "Automation {AutomationId} / Run {RunId}: Transcription completed, text length {TextLength}",
                 context.AutomationId, context.RunId, text.Length);
 
-            return Success(new { text });
+            return Success(new TranscribeAudioOutput { Text = text });
         }
         catch (InvalidOperationException ex)
         {

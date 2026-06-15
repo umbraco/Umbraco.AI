@@ -5,6 +5,34 @@ All notable changes to Umbraco.AI.MicrosoftFoundry will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@1.2.5...Umbraco.AI.MicrosoftFoundry@1.2.6) (2026-06-04)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.14.0.
+
+## [1.2.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@1.2.4...Umbraco.AI.MicrosoftFoundry@1.2.5) (2026-06-01)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.13.0.
+
+## [1.2.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@1.2.2...Umbraco.AI.MicrosoftFoundry@1.2.4) (2026-05-20)
+
+### Internal
+
+* Bump to align with Umbraco.AI 1.12.0.
+
+## [1.2.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@1.2.0...Umbraco.AI.MicrosoftFoundry@1.2.2) (2026-05-14)
+
+### fix
+
+* **openai,microsoft-foundry:** Adapt to OpenAI 2.10 GetResponsesClient API change ([0a50abc](https://github.com/umbraco/Umbraco.AI/commit/0a50abcd9a76f7c2e8c48b93638ec8a779a0017e))
+
+### Internal
+
+* Bump `Microsoft.Extensions.AI.OpenAI` minimum to 10.6.0.
+
 ## [1.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@1.1.3...Umbraco.AI.MicrosoftFoundry@1.2.0) (2026-03-12)
 
 ### feat

@@ -1,3 +1,5 @@
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -10,13 +12,20 @@ namespace Umbraco.AI.Core.EntityAdapter.Adapters;
 internal sealed class DocumentEntityAdapter : AIEntityAdapterBase
 {
     private readonly IContentTypeService _contentTypeService;
+    private readonly IPublishedContentTypeCache _publishedContentTypeCache;
+    private readonly IPropertyEditorSchemaService _propertyEditorSchemaService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DocumentEntityAdapter"/> class.
     /// </summary>
-    public DocumentEntityAdapter(IContentTypeService contentTypeService)
+    public DocumentEntityAdapter(
+        IContentTypeService contentTypeService,
+        IPublishedContentTypeCache publishedContentTypeCache,
+        IPropertyEditorSchemaService propertyEditorSchemaService)
     {
         _contentTypeService = contentTypeService;
+        _publishedContentTypeCache = publishedContentTypeCache;
+        _propertyEditorSchemaService = propertyEditorSchemaService;
     }
 
     /// <inheritdoc />
@@ -35,7 +44,11 @@ internal sealed class DocumentEntityAdapter : AIEntityAdapterBase
     public override string FormatForLlm(AISerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        return CmsEntityFormatHelper.FormatCmsEntity(entity);
+        return CmsEntityFormatHelper.FormatCmsEntity(
+            entity,
+            _publishedContentTypeCache,
+            _propertyEditorSchemaService,
+            PublishedItemType.Content);
     }
 
     /// <inheritdoc />

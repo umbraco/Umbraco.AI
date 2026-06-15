@@ -159,9 +159,10 @@ public class RunAutomationToolTests
                 It.IsAny<string>(),
                 It.IsAny<string?>(),
                 It.IsAny<Dictionary<string, object?>?>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken>(
-                (_, _, _, triggerData, _) => capturedTriggerData = triggerData)
+                It.IsAny<CancellationToken>(),
+                It.IsAny<IReadOnlyList<Guid>?>()))
+            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken, IReadOnlyList<Guid>?>(
+                (_, _, _, triggerData, _, _) => capturedTriggerData = triggerData)
             .ReturnsAsync(TestRunId);
 
         var tool = CreateTool();
@@ -196,9 +197,10 @@ public class RunAutomationToolTests
                 It.IsAny<string>(),
                 It.IsAny<string?>(),
                 It.IsAny<Dictionary<string, object?>?>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken>(
-                (_, _, _, triggerData, _) => capturedTriggerData = triggerData)
+                It.IsAny<CancellationToken>(),
+                It.IsAny<IReadOnlyList<Guid>?>()))
+            .Callback<Automation, string, string?, Dictionary<string, object?>?, CancellationToken, IReadOnlyList<Guid>?>(
+                (_, _, _, triggerData, _, _) => capturedTriggerData = triggerData)
             .ReturnsAsync(TestRunId);
 
         var tool = CreateTool();
@@ -246,7 +248,7 @@ public class RunAutomationToolTests
     }
 
     private static Automation CreateAutomation(Guid id, string name, string triggerAlias,
-        AutomationStatus status = AutomationStatus.Published, bool isEnabled = true)
+        AutomationStatus status = AutomationStatus.Published)
     {
         // Use reflection to set the internal Id property
         var automation = new Automation
@@ -255,7 +257,6 @@ public class RunAutomationToolTests
             Name = name,
             WorkspaceId = TestWorkspaceId,
             Status = status,
-            IsEnabled = isEnabled,
             Trigger = new TriggerConfiguration
             {
                 TriggerAlias = triggerAlias,

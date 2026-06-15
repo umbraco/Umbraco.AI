@@ -256,6 +256,32 @@ dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx
 dotnet test Umbraco.AI.local.slnx
 ```
 
+### Local Packing
+
+Products with a `Web.StaticAssets` project ship a Bellissima frontend bundle alongside their .NET assemblies. When packing locally, the frontend **must be built first** — `dotnet pack` does not invoke the npm build, and there is no error if the frontend output is missing.
+
+The required order is:
+
+```bash
+# 1. Install npm workspace dependencies (once, or after lockfile changes)
+npm install
+
+# 2. Build the target product's frontend (and any frontend dependencies)
+#    Targets: core, prompt, agent, agent-ui, copilot
+npm run build:agent
+
+# 3. Pack the .NET solution
+dotnet pack Umbraco.AI.Agent/Umbraco.AI.Agent.slnx
+```
+
+**Why this matters:** if you skip step 2, the resulting `*.Web.StaticAssets.nupkg` will contain only `lib/net10.0/*.dll` — its `staticwebassets/` folder will be empty. The backoffice composers will register at runtime but no UI will render, and there is no build-time signal that anything is wrong.
+
+CI handles this automatically via `.github/actions/build-product/action.yml` (the `has-frontend` gate), so this only affects local pack flows.
+
+**Frontend dependency order:** `npm run build` runs the workspace targets sequentially (`core → prompt → agent → agent-ui → copilot`). When packing an add-on locally, build `core` first if you haven't already, since add-on frontends consume the core bundle.
+
+**Troubleshooting — "my package's UI doesn't render after `dotnet pack`":** unpack the `*.Web.StaticAssets.nupkg` (it's a zip) and look for a `staticwebassets/` folder containing files under `App_Plugins/`. If that folder is empty or missing, the frontend wasn't built before pack — go back to step 2.
+
 ## Pull Request Process
 
 ### PR Title Format

@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Agent.Core.Chat;
@@ -32,16 +34,22 @@ namespace Umbraco.AI.Agent.Core.Chat;
 internal sealed class AIToolReorderingChatClient : DelegatingChatClient
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIToolReorderingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client (typically the provider).</param>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
-    public AIToolReorderingChatClient(IChatClient innerClient, IAIRuntimeContextAccessor runtimeContextAccessor)
+    /// <param name="loggerFactory">Optional logger factory for diagnostic logging.</param>
+    public AIToolReorderingChatClient(
+        IChatClient innerClient,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        ILoggerFactory? loggerFactory = null)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor ?? throw new ArgumentNullException(nameof(runtimeContextAccessor));
+        _logger = (ILogger?)loggerFactory?.CreateLogger<AIToolReorderingChatClient>() ?? NullLogger.Instance;
     }
 
     /// <inheritdoc />
@@ -98,9 +106,24 @@ internal sealed class AIToolReorderingChatClient : DelegatingChatClient
             }
         }
 
-        // Reorder and yield tool calls at the end (server-side first, frontend last)
         if (toolCallUpdates.Count > 0)
         {
+            // Diagnostic: which function call(s) ended up buffered, and in what order
+            // are we yielding them. If this never logs for a turn the user expects
+            // a tool call on, the provider didn't surface FunctionCallContent at all.
+            var toolNames = toolCallUpdates
+                .SelectMany(u => u.Contents ?? Array.Empty<AIContent>())
+                .OfType<FunctionCallContent>()
+                .Select(c => c.Name)
+                .Distinct()
+                .ToList();
+            _logger.LogInformation(
+                "AIToolReorderingChatClient buffered {UpdateCount} tool-call update(s) for tools: [{ToolNames}]. Frontend tools registered: [{FrontendToolNames}].",
+                toolCallUpdates.Count,
+                string.Join(", ", toolNames),
+                string.Join(", ", frontendToolNames));
+
+            // Reorder and yield tool calls at the end (server-side first, frontend last)
             var reorderedToolUpdates = toolCallUpdates
                 .OrderBy(u => IsFrontendToolCall(u, frontendToolNames) ? 1 : 0);
 

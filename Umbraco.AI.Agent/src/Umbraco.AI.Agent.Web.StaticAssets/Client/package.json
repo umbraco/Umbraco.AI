@@ -24,7 +24,7 @@
     "dependencies": {
         "@ag-ui/client": "^0.0.53",
         "@umbraco-ai/core": "*",
-        "@umbraco-cms/backoffice": "^17.3.0",
+        "@umbraco-cms/backoffice": "^17.4.0",
         "rxjs": "^7.8.2"
     },
     "overrides": {
@@ -36,6 +36,6 @@
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "typescript": "^5.9.2",
-        "vite": "^7.3.2"
+        "vite": "^8.0.16"
     }
 }

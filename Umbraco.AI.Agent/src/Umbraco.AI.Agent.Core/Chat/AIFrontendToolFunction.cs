@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.AGUI.Models;
 
 namespace Umbraco.AI.Agent.Core.Chat;
@@ -25,6 +27,7 @@ public sealed class AIFrontendToolFunction : AIFunction
     private readonly string _name;
     private readonly string _description;
     private readonly JsonElement _jsonSchema;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Gets the scope identifier for permission checks.
@@ -42,7 +45,8 @@ public sealed class AIFrontendToolFunction : AIFunction
     /// <param name="tool">The AG-UI tool definition.</param>
     /// <param name="scope">Optional scope identifier for permission checks.</param>
     /// <param name="isDestructive">Whether the tool is destructive.</param>
-    public AIFrontendToolFunction(AGUITool tool, string? scope = null, bool isDestructive = false)
+    /// <param name="loggerFactory">Optional logger factory for diagnostic logging.</param>
+    public AIFrontendToolFunction(AGUITool tool, string? scope = null, bool isDestructive = false, ILoggerFactory? loggerFactory = null)
     {
         ArgumentNullException.ThrowIfNull(tool);
 
@@ -53,6 +57,7 @@ public sealed class AIFrontendToolFunction : AIFunction
         _jsonSchema = tool.Parameters ?? JsonSerializer.SerializeToElement(new { type = "object" });
         Scope = scope;
         IsDestructive = isDestructive;
+        _logger = loggerFactory?.CreateLogger($"Umbraco.AI.Agent.FrontendTools.{_name}") ?? NullLogger.Instance;
     }
 
     /// <summary>
@@ -63,12 +68,14 @@ public sealed class AIFrontendToolFunction : AIFunction
     /// <param name="jsonSchema">The JSON schema for the tool parameters.</param>
     /// <param name="scope">Optional scope identifier for permission checks.</param>
     /// <param name="isDestructive">Whether the tool is destructive.</param>
+    /// <param name="loggerFactory">Optional logger factory for diagnostic logging.</param>
     public AIFrontendToolFunction(
         string name,
         string description,
         JsonElement jsonSchema,
         string? scope = null,
-        bool isDestructive = false)
+        bool isDestructive = false,
+        ILoggerFactory? loggerFactory = null)
     {
         ArgumentNullException.ThrowIfNull(name);
 
@@ -77,6 +84,7 @@ public sealed class AIFrontendToolFunction : AIFunction
         _jsonSchema = jsonSchema;
         Scope = scope;
         IsDestructive = isDestructive;
+        _logger = loggerFactory?.CreateLogger($"Umbraco.AI.Agent.FrontendTools.{_name}") ?? NullLogger.Instance;
     }
 
     /// <inheritdoc />
@@ -93,12 +101,29 @@ public sealed class AIFrontendToolFunction : AIFunction
         AIFunctionArguments arguments,
         CancellationToken cancellationToken)
     {
+        // Diagnostic: this is the smoking-gun log line for "model claims to have
+        // called the frontend tool but the frontend never sees it". If this never
+        // appears in the logs for a given run, the model didn't actually emit a
+        // tool_use; if it appears but the frontend never receives the call, the
+        // breakage is downstream in the AG-UI streaming layer.
+        _logger.LogInformation(
+            "Frontend tool '{ToolName}' invoked. Argument keys: [{Keys}]. Setting FunctionInvokingChatClient.Terminate = true.",
+            _name,
+            string.Join(", ", arguments.Select(kv => kv.Key)));
+
         // Tell FunctionInvokingChatClient to stop its invocation loop.
         // This allows us to return out and emit the tool call to the frontend
         // instead of auto-executing and feeding a fake result back to the model.
         if (FunctionInvokingChatClient.CurrentContext is not null)
         {
             FunctionInvokingChatClient.CurrentContext.Terminate = true;
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Frontend tool '{ToolName}' invoked but FunctionInvokingChatClient.CurrentContext is null - " +
+                "the tool call will not be propagated to the frontend.",
+                _name);
         }
 
         return ValueTask.FromResult<object?>(null);

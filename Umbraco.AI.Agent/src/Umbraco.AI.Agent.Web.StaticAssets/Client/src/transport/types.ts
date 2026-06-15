@@ -243,8 +243,8 @@ export interface AgentClientCallbacks {
     onMessagesSnapshot?: (messages: UaiChatMessage[]) => void;
     /** Called when a custom event is received */
     onCustomEvent?: (name: string, value: unknown) => void;
-    /** Called on error */
-    onError?: (error: Error) => void;
+    /** Called on error. `code` carries a UaiErrorCategory when the backend classified the failure. */
+    onError?: (error: Error, code?: UaiErrorCategory | string) => void;
 }
 
 /**
@@ -268,13 +268,14 @@ export {
     type ToolCallArgsEvent,
     type ToolCallEndEvent,
     type ToolCallResultEvent,
-    type RunErrorEvent,
     type StateSnapshotEvent,
     type StateDeltaEvent,
     type MessagesSnapshotEvent,
     type CustomEvent,
     type AGUIEvent,
 } from "@ag-ui/client";
+
+import type { RunErrorEvent as _AGUIRunErrorEvent } from "@ag-ui/client";
 
 import type { RunFinishedEvent as AGUIRunFinishedEvent } from "@ag-ui/client";
 
@@ -319,4 +320,28 @@ export type AGUIRunOutcome =
  */
 export interface RunFinishedAGUIEvent extends AGUIRunFinishedEvent {
     outcome: AGUIRunOutcome;
+}
+
+/**
+ * Normalised error category sent by the backend on RUN_ERROR.
+ * Values are produced by `AIProviderErrorCategory.ToString()` server-side.
+ */
+export type UaiErrorCategory =
+    | "Unknown"
+    | "Transient"
+    | "RateLimited"
+    | "Authentication"
+    | "InvalidRequest"
+    | "NotFound"
+    | "Cancelled"
+    | "NetworkError";
+
+/**
+ * Extended RUN_ERROR event with a backend-classified error category.
+ * The SDK's RunErrorEvent only defines `message`; `code` is a Umbraco.AI
+ * extension carrying the AIProviderErrorCategory name for retry affordances.
+ */
+export interface RunErrorEvent extends _AGUIRunErrorEvent {
+    /** Provider error category. Absent when the backend didn't classify the error. */
+    code?: UaiErrorCategory | string;
 }

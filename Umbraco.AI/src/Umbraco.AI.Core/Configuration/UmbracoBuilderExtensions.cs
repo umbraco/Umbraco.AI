@@ -25,6 +25,7 @@ using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.SpeechToText;
@@ -33,6 +34,7 @@ using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.AI.Core.RuntimeContext.Middleware;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
+using Umbraco.AI.Core.Telemetry;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
@@ -42,6 +44,7 @@ using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
+using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
 namespace Umbraco.AI.Extensions;
 
@@ -71,6 +74,14 @@ public static partial class UmbracoBuilderExtensions
         // Bind AIMediaOptions from "Umbraco:AI:Media" section
         services.Configure<AIMediaOptions>(config.GetSection("Umbraco:AI:Media"));
 
+        // Bind AIUsageTelemetryOptions from "Umbraco:AI:Telemetry" section
+        services.Configure<AIUsageTelemetryOptions>(config.GetSection("Umbraco:AI:Telemetry"));
+
+        // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
+        // (only sent at CMS TelemetryLevel.Detailed; suppressed via Umbraco:AI:Telemetry:Enabled)
+        services.AddTransient<IDetailedTelemetryProvider, AIUsageTelemetryProvider>();
+        services.AddTransient<IDetailedTelemetryProvider, AIExtensionUsageTelemetryProvider>();
+
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();
 
@@ -89,7 +100,8 @@ public static partial class UmbracoBuilderExtensions
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
         // File processing handlers (extensible - add custom handlers via AIFileProcessingHandlers())
         builder.AIFileProcessingHandlers()
-            .Append<OpenXmlFileProcessingHandler>();
+            .Append<OpenXmlFileProcessingHandler>()
+            .Append<AudioTranscriptionFileProcessingHandler>();
 
         builder.AIChatMiddleware()
             .Append<AIOpenTelemetryChatMiddleware>()          // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
@@ -118,6 +130,12 @@ public static partial class UmbracoBuilderExtensions
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITool, AIToolAttribute>(cache: true));
+
+        // Property value operation infrastructure - dispatcher + handler discovery
+        services.AddSingleton<IAIPropertyDefaultValueProvider, AIPropertyDefaultValueProvider>();
+        services.AddSingleton<IAIPropertyValueDispatcher, AIPropertyValueDispatcher>();
+        builder.AIPropertyValueHandlers()
+            .Add(() => builder.TypeLoader.GetTypes<IAIPropertyValueHandler>());
 
         // Tool scope infrastructure - auto-discover scopes via [AIToolScope] attribute
         builder.AIToolScopes()
@@ -221,6 +239,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIGuardrailService, AIGuardrailService>();
 
         // Guardrail evaluator infrastructure - auto-discover via [AIGuardrailEvaluator] attribute
+        services.AddSingleton<IAIGuardrailEvaluatorInfrastructure, AIGuardrailEvaluatorInfrastructure>();
         builder.AIGuardrailEvaluators()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIGuardrailEvaluator, AIGuardrailEvaluatorAttribute>(cache: true));
 
@@ -282,10 +301,12 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
 
         // Auto-discover test features via [AITestFeature] attribute
+        services.AddSingleton<IAITestFeatureInfrastructure, AITestFeatureInfrastructure>();
         builder.AITestFeatures()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestFeature, AITestFeatureAttribute>(cache: true));
 
         // Auto-discover test graders via [AITestGrader] attribute
+        services.AddSingleton<IAITestGraderInfrastructure, AITestGraderInfrastructure>();
         builder.AITestGraders()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITestGrader, AITestGraderAttribute>(cache: true));
 

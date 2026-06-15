@@ -35,10 +35,14 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
         CancellationToken cancellationToken = default)
     {
         // Get configured provider with resolved settings
-        var speechToTextCapability = await GetConfiguredSpeechToTextCapabilityAsync(profile, cancellationToken);
+        var (speechToTextCapability, provider) = await GetConfiguredSpeechToTextCapabilityAsync(profile, cancellationToken);
 
         // Create base client from provider with the profile's model
         var client = await speechToTextCapability.CreateClientAsync(profile.Model.ModelId, cancellationToken);
+
+        // Wrap innermost so SDK exceptions are classified against the originating provider before
+        // any middleware sees them.
+        client = new AIErrorClassifyingSpeechToTextClient(client, provider);
 
         // Apply middleware in order
         client = ApplyMiddleware(client);
@@ -67,7 +71,7 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
         return client;
     }
 
-    private async Task<IAIConfiguredSpeechToTextCapability> GetConfiguredSpeechToTextCapabilityAsync(
+    private async Task<(IAIConfiguredSpeechToTextCapability Capability, IAIProvider Provider)> GetConfiguredSpeechToTextCapabilityAsync(
         AIProfile profile,
         CancellationToken cancellationToken)
     {
@@ -117,6 +121,6 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
                 $"Provider '{profile.Model.ProviderId}' does not support speech-to-text capability.");
         }
 
-        return speechToTextCapability;
+        return (speechToTextCapability, configured.Provider);
     }
 }

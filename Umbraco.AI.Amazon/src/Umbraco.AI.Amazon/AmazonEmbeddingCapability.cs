@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Amazon.Bedrock;
 using Amazon.BedrockRuntime;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
@@ -28,15 +29,36 @@ public class AmazonEmbeddingCapability(AmazonProvider provider) : AIEmbeddingCap
         new($@"^{RegionPrefixPattern}cohere\.embed-", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
+    /// <summary>
+    /// Pattern matching any Cohere embed model (with or without region prefix). Cohere models require a
+    /// different request/response shape than Titan and need a custom generator.
+    /// </summary>
+    private static readonly Regex CohereEmbedPattern =
+        new($@"^{RegionPrefixPattern}cohere\.embed-", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     /// <inheritdoc />
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AmazonProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
+        // Embedding models reach us via two Bedrock APIs:
+        //   ListFoundationModels (EMBEDDING modality) surfaces direct on-demand models like Titan and
+        //   Cohere Embed v3, which have no inference profile. ListInferenceProfiles surfaces newer
+        //   cross-region models like Cohere Embed v4, which is only invokable via a profile ID
+        //   (e.g. eu.cohere.embed-v4:0) and does not appear in ListFoundationModels under ON_DEMAND.
+        // Union both so the full set of usable embedding models is discoverable.
+        var foundationModelsTask = Provider.GetAvailableFoundationModelIdsAsync(
+            settings,
+            ModelModality.EMBEDDING,
+            cancellationToken);
+        var inferenceProfilesTask = Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
 
-        return allModels
-            .Where(IsEmbeddingModel)
+        await Task.WhenAll(foundationModelsTask, inferenceProfilesTask);
+
+        return foundationModelsTask.Result
+            .Concat(inferenceProfilesTask.Result.Where(IsEmbeddingModel))
+            .Distinct()
+            .OrderBy(id => id)
             .Select(id => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, id),
                 AmazonModelUtilities.FormatDisplayName(id)))
@@ -50,10 +72,20 @@ public class AmazonEmbeddingCapability(AmazonProvider provider) : AIEmbeddingCap
         {
             throw new InvalidOperationException(
                 "A model must be selected for Amazon Bedrock. " +
-                "Please select a model from the available inference profiles.");
+                "Please select a model from the available embedding models.");
         }
 
         var client = AmazonProvider.CreateBedrockRuntimeClient(settings);
+
+        // AWSSDK.Extensions.Bedrock.MEAI's AsIEmbeddingGenerator hardcodes the Titan request/response
+        // shape ({ "inputText": "..." } / { "embedding": [...] }). Cohere uses a different protocol
+        // ({ "texts": [...], "input_type": "...", "embedding_types": [...] } and
+        // { "embeddings": { "float": [[...]] } }), so we provide our own generator for Cohere.
+        if (CohereEmbedPattern.IsMatch(modelId))
+        {
+            return new CohereEmbeddingGenerator(client, modelId);
+        }
+
         return client.AsIEmbeddingGenerator(modelId);
     }
 

@@ -73,12 +73,12 @@ var connection = new AIConnection
     ProviderId = "openai",
     Settings = new OpenAIProviderSettings
     {
-        ApiKey = "$OpenAI:ApiKey"  // Resolved from appsettings.json
+        ApiKey = "$Umbraco:AI:Secrets:OpenAIApiKey"  // Resolved from appsettings.json
     }
 };
 ```
 
-The `$OpenAI:ApiKey` reference is preserved during deployment and resolved in the target environment.
+The `$Umbraco:AI:Secrets:OpenAIApiKey` reference is preserved during deployment and resolved in the target environment. Resolution is default-deny — only keys under an allow-listed prefix (default `Umbraco:AI:Secrets` / `Umbraco:AI:Variables`) resolve, and secret keys only into `IsSensitive` fields.
 
 ## How It Works
 
@@ -114,4 +114,3 @@ When deploying to another environment, Deploy:
 ## License
 
 This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.
-

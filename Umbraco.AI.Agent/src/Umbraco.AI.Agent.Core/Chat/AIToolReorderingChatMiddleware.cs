@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.RuntimeContext;
 
@@ -23,11 +24,13 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// using the key <see cref="Constants.ContextKeys.FrontendToolNames"/>.
 /// </para>
 /// </remarks>
-public sealed class AIToolReorderingChatMiddleware(IAIRuntimeContextAccessor runtimeContextAccessor) : IAIChatMiddleware
+public sealed class AIToolReorderingChatMiddleware(
+    IAIRuntimeContextAccessor runtimeContextAccessor,
+    ILoggerFactory? loggerFactory = null) : IAIChatMiddleware
 {
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AIToolReorderingChatClient(client, runtimeContextAccessor);
+        return new AIToolReorderingChatClient(client, runtimeContextAccessor, loggerFactory);
     }
 }

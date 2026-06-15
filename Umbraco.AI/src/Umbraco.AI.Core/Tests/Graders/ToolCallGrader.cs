@@ -52,8 +52,11 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="ToolCallGrader"/> class.
     /// </summary>
-    public ToolCallGrader(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ToolCallGrader"/> class.
+    /// </summary>
+    public ToolCallGrader(IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
     }
 
@@ -64,11 +67,8 @@ public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        // Deserialize configuration
-        var config = graderConfig.Config is not { } configElement
-            ? new ToolCallGraderConfig()
-            : configElement.Deserialize<ToolCallGraderConfig>(Constants.DefaultJsonSerializerOptions)
-                ?? new ToolCallGraderConfig();
+        // Deserialize configuration (resolves $Config app-settings references and validates)
+        var config = ResolveConfig(graderConfig) ?? new ToolCallGraderConfig();
 
         // Parse expected tools
         var expectedTools = config.ExpectedTools

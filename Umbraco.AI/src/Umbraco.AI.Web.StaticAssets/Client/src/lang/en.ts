@@ -106,6 +106,16 @@ export default {
         selectAll: "Select All",
         selectAllDescription: "Select or deselect all tool permissions at once",
     },
+    // Per-scope labels and descriptions for the scope picker.
+    // Keys must be `{camelCase(scope.id)}Label` / `{camelCase(scope.id)}Description`; the picker
+    // resolves them via `localize.term("uaiToolScope_${camelCase(id)}Label")`. Falls back to the
+    // raw scope id when no key is registered.
+    uaiToolScope: {
+        entitySaveLabel: "Save Entity",
+        entitySaveDescription: "Persist staged workspace changes (save without publishing)",
+        entityPublishLabel: "Publish Entity",
+        entityPublishDescription: "Save and publish content to the public site",
+    },
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
     },

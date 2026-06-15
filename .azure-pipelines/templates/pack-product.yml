@@ -57,9 +57,32 @@ steps:
       condition: ${{ parameters.condition }}
 
     - script: |
+          # Choose the build flag based on how dependencies are resolved:
+          #
+          #   Project references (dev preview builds): the Build stage already
+          #   compiled these exact binaries against sibling source, so reuse them
+          #   with --no-build.
+          #
+          #   NuGet ranges (release/hotfix/main, or packWithNuGetRanges): the Build
+          #   stage compiled against sibling SOURCE, not the ranged dependencies the
+          #   .nuspec will declare. Reusing those binaries (--no-build) would ship a
+          #   package whose compiled contract differs from its declared dependency
+          #   floor. Instead recompile here (drop --no-build, keep --no-restore so we
+          #   keep the UseProjectReferences=false restore above). The same range
+          #   restore resolves dependencies from the LocalCI feed when they were
+          #   packed in this run (co-release) or from nuget.org when they were not
+          #   (solo release) - so a solo release that needs an unpublished dependency
+          #   API now FAILS THE PACK instead of shipping a broken package.
+          USE_PROJ_REFS="${{ parameters.useProjectReferences }}"
+          if [ "$USE_PROJ_REFS" = "True" ] || [ "$USE_PROJ_REFS" = "true" ]; then
+            BUILD_FLAG="--no-build"
+          else
+            BUILD_FLAG="--no-restore"
+          fi
+
           dotnet pack ${{ parameters.product }}/${{ parameters.product }}.slnx \
             --configuration Release \
-            --no-build \
+            $BUILD_FLAG \
             --output ./artifacts/nupkg \
             -p:UseProjectReferences=${{ parameters.useProjectReferences }} \
             -p:DisableCloudBuildNumber=true

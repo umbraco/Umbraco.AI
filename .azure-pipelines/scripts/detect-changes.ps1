@@ -431,21 +431,61 @@ function Get-ChangedProducts {
         }
     }
     elseif ($SourceBranch -match '^refs/heads/(main|dev)$') {
-        # For main/dev pushes: compare with remote tracking branch to capture all commits in push
+        # For main/dev pushes: compare against the source version of the previous completed
+        # build on this branch. origin/<branch> is unreliable here: by the time this job's
+        # checkout fetches, the remote tracking ref already contains the commit being built
+        # (self-comparison -> empty diff) or newer pushes (the diff then shows the *later*
+        # commits' files instead of this push's, hiding the actual changes).
         $branchName = if ($SourceBranch -match '/main$') { 'main' } else { 'dev' }
-        Write-Host "  Main/dev branch detected, comparing with origin/$branchName" -ForegroundColor Cyan
+        Write-Host "  Main/dev branch detected, comparing against previous completed build" -ForegroundColor Cyan
 
-        # Try to use origin branch (captures all commits in multi-commit push)
-        $remoteBranch = "origin/$branchName"
-        $remoteExists = git rev-parse --verify "$remoteBranch" 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            $comparisonBase = $remoteBranch
-            $changedFiles = git diff --name-only $remoteBranch HEAD 2>&1
-            Write-Host "  Comparing against remote: $remoteBranch" -ForegroundColor Cyan
+        $comparisonBase = $null
+
+        if ($env:SYSTEM_ACCESSTOKEN -and $env:SYSTEM_COLLECTIONURI -and $env:SYSTEM_TEAMPROJECTID -and $env:SYSTEM_DEFINITIONID) {
+            try {
+                $url = "$($env:SYSTEM_COLLECTIONURI)$($env:SYSTEM_TEAMPROJECTID)/_apis/build/builds" +
+                    "?definitions=$($env:SYSTEM_DEFINITIONID)" +
+                    "&branchName=$SourceBranch" +
+                    "&statusFilter=completed" +
+                    "&queryOrder=queueTimeDescending" +
+                    "&`$top=50&api-version=7.1"
+                $headers = @{ Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)" }
+                $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+
+                foreach ($build in $response.value) {
+                    # Skip this build and any rebuild of the same commit
+                    if ("$($build.id)" -eq "$($env:BUILD_BUILDID)") { continue }
+                    $sha = $build.sourceVersion
+                    if (-not $sha) { continue }
+                    $headSha = (git rev-parse HEAD).Trim()
+                    if ($sha -eq $headSha) { continue }
+
+                    # Base must exist locally and be an ancestor of HEAD (skips force-pushed history)
+                    git cat-file -e "$sha^{commit}" 2>$null
+                    if ($LASTEXITCODE -ne 0) { continue }
+                    git merge-base --is-ancestor $sha HEAD 2>$null
+                    if ($LASTEXITCODE -ne 0) { continue }
+
+                    $comparisonBase = $sha
+                    Write-Host "  Previous completed build: $($build.id) ($($build.buildNumber)) at $sha" -ForegroundColor Cyan
+                    break
+                }
+            }
+            catch {
+                Write-Host "  Warning: Failed to query previous builds: $($_.Exception.Message)" -ForegroundColor Yellow
+            }
         }
         else {
-            # Fallback to HEAD~1 if remote branch doesn't exist (e.g., first push)
-            Write-Host "  Remote branch not found, falling back to HEAD~1" -ForegroundColor Yellow
+            Write-Host "  Warning: SYSTEM_ACCESSTOKEN not available to query previous builds" -ForegroundColor Yellow
+        }
+
+        if ($comparisonBase) {
+            Write-Host "  Comparing against previous build commit: $comparisonBase" -ForegroundColor Cyan
+            $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
+        }
+        else {
+            # Fallback to HEAD~1 (e.g., first build on branch, API unavailable, force push)
+            Write-Host "  No usable previous build found, falling back to HEAD~1" -ForegroundColor Yellow
             $comparisonBase = "HEAD~1"
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
         }

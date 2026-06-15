@@ -73,4 +73,3 @@ This meta-package includes all required components. For more control, install in
 ## License
 
 This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.
-

@@ -44,7 +44,7 @@ public class UrlValidator : IUrlValidator
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             return new UrlValidationResult(false, "Invalid URL format", null);
 
-        // Check protocol whitelist
+        // Check protocol safelist
         if (!AllowedSchemes.Contains(uri.Scheme.ToLowerInvariant()))
             return new UrlValidationResult(false, $"Protocol '{uri.Scheme}' is not allowed. Only HTTP and HTTPS are supported", null);
 
@@ -56,7 +56,7 @@ public class UrlValidator : IUrlValidator
         if (PrivateHostnames.Contains(host))
             return new UrlValidationResult(false, $"Cannot access {host}", null);
 
-        // Check domain blacklist
+        // Check domain blocklist
         if (_options.BlockedDomains.Count > 0)
         {
             if (_options.BlockedDomains.Any(blocked =>
@@ -67,7 +67,7 @@ public class UrlValidator : IUrlValidator
             }
         }
 
-        // Check domain whitelist (if configured, only allow these domains)
+        // Check domain safelist (if configured, only allow these domains)
         if (_options.AllowedDomains.Count > 0)
         {
             var isAllowed = _options.AllowedDomains.Any(allowed =>

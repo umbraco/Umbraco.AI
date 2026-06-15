@@ -21,12 +21,18 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.Amazon | `Umbraco.AI.Amazon/` | Provider |
 | Umbraco.AI.Google | `Umbraco.AI.Google/` | Provider |
 | Umbraco.AI.MicrosoftFoundry | `Umbraco.AI.MicrosoftFoundry/` | Provider |
+| Umbraco.AI.Mistral | `Umbraco.AI.Mistral/` | Provider |
+| Umbraco.AI.DeepSeek | `Umbraco.AI.DeepSeek/` | Provider |
+| Umbraco.AI.HuggingFace | `Umbraco.AI.HuggingFace/` | Provider |
+| Umbraco.AI.FireworksAI | `Umbraco.AI.FireworksAI/` | Provider |
+| Umbraco.AI.TogetherAI | `Umbraco.AI.TogetherAI/` | Provider |
 
 ### Dependency Tree
 
 ```
 Umbraco.AI (Core)
-├── Providers: OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry
+├── Providers: OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry,
+│              Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI
 ├── Umbraco.AI.Prompt → Prompt.Deploy (depends on Prompt + Deploy)
 ├── Umbraco.AI.Agent → Agent.UI → Agent.Copilot
 │                     → Agent.Deploy (depends on Agent + Deploy)
@@ -181,6 +187,14 @@ BREAKING CHANGE or feat!: -> Major | feat: -> Minor | fix:/perf: -> Patch | docs
 
 When bumping Core to new major, the skill checks `Directory.Packages.props` for dependent add-ons and warns.
 
+#### Prerelease versioning — always use dotted `-{stage}.N`
+
+Prerelease identifiers **must** be dot-separated with a numeric segment: `-alpha.1`, `-beta.1`, `-rc.1` (→ `-beta.2`, `-beta.10`, …).
+
+**Never use the non-dotted form** (`-beta1`, `-alpha2`). NuGet/SemVer treats `beta10` as a single alphanumeric identifier and compares it as a *string*, so it sorts **below** `beta9` (`'1' < '9'`). The result: a published `1.0.0-beta10` is lower-precedence than `1.0.0-beta9`, so `--prerelease` installs and range resolution silently pick the *older* build. Dotted `-beta.10` compares the `10` numerically and sorts correctly.
+
+Note you cannot retrofit a broken line: `-beta.11` (dotted) sorts *below* an existing non-dotted `-beta9` (because identifier `beta` < `beta9`). So a line that already shipped non-dotted betas can only be escaped by advancing the stage (`-rc.1`) or the base version, not by dotifying. **`Umbraco.AI.Search` (`-beta*`) and `Umbraco.AI.Automate` (`-alpha*`) are grandfathered on the broken non-dotted scheme** — leave them as-is; apply the dotted rule to every *new* prerelease line. See [[project_release_tag_sort_prerelease_bug]].
+
 ### Release Manifest
 
 On `release/*` branches, CI **requires** `release-manifest.json`:
@@ -240,6 +254,8 @@ Format: `[min, max)` -- inclusive lower, exclusive upper. Use `[X.Y.0, X.999.999
 | CI/CD | Distribution build (`UseProjectReferences=false`) | Uses NuGet ranges |
 
 **Rules**: Use project refs for local dev. Use `[X.Y.0, X.999.999)` ranges. Avoid exact versions `[X.Y.Z]`. Test with `UseProjectReferences=false` before releasing. When releasing Core with breaking changes, verify dependent products update their minimum.
+
+**Pack recompiles against ranges (do not re-add `--no-build` to ranged packs).** The Build stage compiles the whole solution with project references (sibling *source*). For ranged packs (release/hotfix/main, or `packWithNuGetRanges`), `pack-product.yml` deliberately drops `--no-build` and recompiles so the shipped binary is validated against the *same* dependency versions the `.nuspec` declares — resolved from the LocalCI feed when the dependency was packed in the same run (co-release) or from nuget.org when it was not (solo release). This is what makes a solo release that needs an unpublished dependency API fail the pack instead of silently shipping a binary compiled against a higher version than its declared floor. Project-reference packs (dev previews) keep `--no-build` since the Build stage already produced those exact binaries.
 
 ## Commit Message Format
 

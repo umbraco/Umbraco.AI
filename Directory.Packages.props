@@ -7,7 +7,7 @@
   <ItemGroup>
     <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
     <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.8.118" />
-    <GlobalPackageReference Include="Umbraco.Code" Version="2.4.0" />
+    <GlobalPackageReference Include="Umbraco.Code" Version="3.0.0-beta" />
     <GlobalPackageReference Include="Umbraco.GitVersioning.Extensions" Version="0.2.0" />
     <GlobalPackageReference Include="Umbraco.JsonSchema.Extensions" Version="0.3.0" PrivateAssets="all" />
   </ItemGroup>
@@ -30,12 +30,12 @@
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[0.1.0--preview.458.gb1fed31, 0.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[17.0.0-beta, 17.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0-beta.5, 1.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0, 1.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft.Extensions.AI -->
@@ -57,7 +57,7 @@
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[1.0.1, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[1.0.1, 1.999.999)" />
     <PackageVersion Include="Umbraco.AI.Deploy" Version="[1.0.4, 1.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Automate" Version="[1.0.0-alpha1, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Automate" Version="[17.0.0-beta, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[1.8.8, 1.999.999)" />
   </ItemGroup>
 

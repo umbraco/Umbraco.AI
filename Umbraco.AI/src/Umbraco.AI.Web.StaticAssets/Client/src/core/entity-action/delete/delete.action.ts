@@ -3,6 +3,7 @@ import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
 import { umbPeekError } from "@umbraco-cms/backoffice/notification";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 
 /**
  * Configuration for the delete action.
@@ -56,6 +57,9 @@ export abstract class UaiDeleteActionBase extends UmbEntityActionBase<never> {
             throw error;
         }
 
-        // Event is dispatched by the repository after successful delete
+        // The repository dispatches the entity-deleted event; the action owns the collection
+        // reload. When invoked outside a collection (e.g. a workspace) this is a no-op.
+        const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);
+        collectionContext?.loadCollection();
     }
 }

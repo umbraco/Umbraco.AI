@@ -4,6 +4,7 @@ import { umbPeekError } from "@umbraco-cms/backoffice/notification";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 
 /**
  * Configuration for the bulk delete action.
@@ -58,7 +59,15 @@ export abstract class UaiBulkDeleteActionBase extends UmbEntityBulkActionBase<ne
                     message: problemDetails.detail ?? problemDetails.title ?? "An item could not be deleted.",
                 });
             }
-            // Event is dispatched by the repository for each successful delete
+            // The repository dispatches the entity-deleted event per item.
         }
+
+        // Refresh the collection once, after every delete has completed. The repository no longer
+        // reloads per item: N items used to fire N uncancelled, racing reloads, so an early
+        // (pre-delete) response could resolve last and leave deleted rows on screen. Clearing the
+        // selection also dismisses the now-stale bulk-action selection toolbar.
+        const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);
+        collectionContext?.selection.clearSelection();
+        collectionContext?.loadCollection();
     }
 }

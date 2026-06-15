@@ -43,14 +43,8 @@ export class UaiGuardrailDetailRepository extends UmbDetailRepositoryBase<UaiGua
     override async delete(unique: string) {
         const result = await super.delete(unique);
         if (!result.error) {
+            // Collection reload is owned by the delete action so a bulk delete refreshes once.
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_GUARDRAIL_ENTITY_TYPE));
-            dispatchActionEvent(
-                this,
-                new UmbRequestReloadChildrenOfEntityEvent({
-                    entityType: UAI_GUARDRAIL_ROOT_ENTITY_TYPE,
-                    unique: null,
-                }),
-            );
         }
         return result;
     }

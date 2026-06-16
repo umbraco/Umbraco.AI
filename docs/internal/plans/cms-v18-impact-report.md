@@ -328,6 +328,22 @@ Verified — grepping our worktree for `@umbraco-ui/` matches only `package-lock
 
 CMS bumped to 0.97 (PR #22735). If our schema output meaningfully changes shape on the v18 OpenAPI 3.1.1 output, we may need the same bump to handle it. Pin update only — no API surface change expected.
 
+### 4.4 Node.js toolchain — surfaced during the dev merge
+
+The v18 frontend stack requires **Node.js ≥ 24.13** and **npm ≥ 11**:
+
+- `@umbraco-cms/backoffice@18.0.0-rc2` declares `engines: { node: ">=24.13", npm: ">=11" }`.
+- `@umbraco-ui/uui@2.0.0-rc.2` declares the same.
+- Vite 8 (which dev bumped to alongside the v18 backoffice peer) brings rolldown 1.0.3 as a direct dep; rolldown's per-platform native binaries don't install cleanly on the older npm.
+
+Symptoms on a stale toolchain (Node 22 / npm 10):
+
+- `npm install` succeeds with `EBADENGINE` warnings.
+- `rolldown` is listed in `package-lock.json` but never extracted to `node_modules`.
+- `npm run build` fails on the first workspace with `Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'rolldown'`.
+
+**Action:** developers and CI must run on Node 24+ / npm 11+ for the v18 branch. `nvm install 24 && nvm use 24` on Windows; equivalent on Linux/macOS. Consider pinning the Node version in a `.nvmrc` and updating `scripts/install-demo-site.{ps1,sh}` to check.
+
 ---
 
 ## 5. Versioning & Package Pins

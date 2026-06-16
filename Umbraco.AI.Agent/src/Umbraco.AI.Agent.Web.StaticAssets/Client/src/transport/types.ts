@@ -34,26 +34,80 @@ export interface UaiTextInputContent {
 }
 
 /**
- * Binary content part for multimodal messages (images, PDFs, etc.).
- * At least one of data, url, or id must be provided.
+ * Inline-data content source — base64 value with declared MIME type.
  */
-export interface UaiBinaryInputContent {
-    type: "binary";
+export interface UaiInputContentDataSource {
+    type: "data";
+    value: string;
     mimeType: string;
-    /** Base64-encoded binary data (initial upload) */
-    data?: string;
-    /** URL where the binary content can be retrieved */
-    url?: string;
-    /** Server-side reference ID (after snapshot, for subsequent turns) */
-    id?: string;
-    /** Original filename */
-    filename?: string;
+}
+
+/**
+ * URL-based content source — value is a URL the consumer can fetch.
+ */
+export interface UaiInputContentUrlSource {
+    type: "url";
+    value: string;
+    mimeType?: string;
+}
+
+/**
+ * Discriminated union of media content sources.
+ */
+export type UaiInputContentSource = UaiInputContentDataSource | UaiInputContentUrlSource;
+
+interface UaiMediaInputContentBase {
+    source: UaiInputContentSource;
+    /** Optional metadata bag (e.g., `filename`). */
+    metadata?: Record<string, unknown>;
+}
+
+/** Image content part (`image/*` mime types). */
+export interface UaiImageInputContent extends UaiMediaInputContentBase {
+    type: "image";
+}
+
+/** Audio content part (`audio/*` mime types). */
+export interface UaiAudioInputContent extends UaiMediaInputContentBase {
+    type: "audio";
+}
+
+/** Video content part (`video/*` mime types). */
+export interface UaiVideoInputContent extends UaiMediaInputContentBase {
+    type: "video";
+}
+
+/** Document content part — catch-all for non-media MIME types (PDF, ZIP, etc.). */
+export interface UaiDocumentInputContent extends UaiMediaInputContentBase {
+    type: "document";
 }
 
 /**
  * Union of all input content types for multimodal messages.
+ *
+ * AG-UI spec: https://docs.ag-ui.com/concepts. Spec defines five content types
+ * (text, image, audio, video, document). The legacy `binary` shape was removed
+ * in favour of the typed variants above; document is the catch-all for non-media.
  */
-export type UaiInputContent = UaiTextInputContent | UaiBinaryInputContent;
+export type UaiInputContent =
+    | UaiTextInputContent
+    | UaiImageInputContent
+    | UaiAudioInputContent
+    | UaiVideoInputContent
+    | UaiDocumentInputContent;
+
+/**
+ * Classify a MIME type into the matching AG-UI content variant. Mirrors the
+ * official SDK classifier (`@ag-ui/client` BackwardCompatibility_0_0_47):
+ * `image/*` → image, `audio/*` → audio, `video/*` → video, else document.
+ */
+export function classifyContentKind(mimeType: string | undefined): "image" | "audio" | "video" | "document" {
+    if (!mimeType) return "document";
+    if (mimeType.startsWith("image/")) return "image";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType.startsWith("video/")) return "video";
+    return "document";
+}
 
 // =============================================================================
 // Domain Types for Agent Communication
@@ -106,7 +160,7 @@ export interface UaiToolCallInfo {
  */
 export interface UaiInterruptInfo {
     id: string;
-    /** Reason for the interrupt (e.g., "tool_execution" for frontend tools) */
+    /** Reason for the interrupt (e.g., "tool_call" for frontend tools) */
     reason?: string;
     type: "approval" | "input" | "choice" | "custom";
     title: string;
@@ -189,8 +243,8 @@ export interface AgentClientCallbacks {
     onMessagesSnapshot?: (messages: UaiChatMessage[]) => void;
     /** Called when a custom event is received */
     onCustomEvent?: (name: string, value: unknown) => void;
-    /** Called on error */
-    onError?: (error: Error) => void;
+    /** Called on error. `code` carries a UaiErrorCategory when the backend classified the failure. */
+    onError?: (error: Error, code?: UaiErrorCategory | string) => void;
 }
 
 /**
@@ -203,112 +257,55 @@ export interface RunFinishedEvent {
 }
 
 // =============================================================================
-// AG-UI Event Types (for type-safe event handling)
+// AG-UI Event Types (re-exported from @ag-ui/client for downstream consumers)
 // =============================================================================
 
-import { EventType as AGUIEventType } from "@ag-ui/client";
+export {
+    type TextMessageStartEvent,
+    type TextMessageContentEvent,
+    type TextMessageEndEvent,
+    type ToolCallStartEvent,
+    type ToolCallArgsEvent,
+    type ToolCallEndEvent,
+    type ToolCallResultEvent,
+    type StateSnapshotEvent,
+    type StateDeltaEvent,
+    type MessagesSnapshotEvent,
+    type CustomEvent,
+    type AGUIEvent,
+} from "@ag-ui/client";
 
-/** Base event type with common fields */
-interface TypedBaseEvent {
-    type: AGUIEventType;
-    rawEvent?: unknown;
+// `outcome` (success | interrupt) and the per-interrupt shape are modelled
+// natively by the SDK as of @ag-ui/client 0.0.57 — we previously carried local
+// extension types (RunFinishedAGUIEvent / AGUIRunOutcome / AGUIInterrupt) to
+// compensate for the older schema that only exposed `result?: any`. The SDK's
+// RunFinishedEvent is re-exported aliased (AGUIRunFinishedEvent) to avoid
+// colliding with the local UI-facing RunFinishedEvent callback type below.
+export { type RunFinishedEvent as AGUIRunFinishedEvent } from "@ag-ui/client";
+export { type Interrupt, type RunFinishedOutcome } from "@ag-ui/core";
+
+import type { RunErrorEvent as _AGUIRunErrorEvent } from "@ag-ui/client";
+
+/**
+ * Normalised error category sent by the backend on RUN_ERROR.
+ * Values are produced by `AIProviderErrorCategory.ToString()` server-side.
+ */
+export type UaiErrorCategory =
+    | "Unknown"
+    | "Transient"
+    | "RateLimited"
+    | "Authentication"
+    | "InvalidRequest"
+    | "NotFound"
+    | "Cancelled"
+    | "NetworkError";
+
+/**
+ * Extended RUN_ERROR event with a backend-classified error category.
+ * The SDK's RunErrorEvent only defines `message`; `code` is a Umbraco.AI
+ * extension carrying the AIProviderErrorCategory name for retry affordances.
+ */
+export interface RunErrorEvent extends _AGUIRunErrorEvent {
+    /** Provider error category. Absent when the backend didn't classify the error. */
+    code?: UaiErrorCategory | string;
 }
-
-/** TEXT_MESSAGE_START event */
-export interface TextMessageStartEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TEXT_MESSAGE_START;
-    messageId?: string;
-}
-
-/** TEXT_MESSAGE_CONTENT event - text delta */
-export interface TextMessageContentEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TEXT_MESSAGE_CONTENT;
-    delta: string;
-}
-
-/** TEXT_MESSAGE_END event */
-export interface TextMessageEndEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TEXT_MESSAGE_END;
-}
-
-/** TOOL_CALL_START event */
-export interface ToolCallStartEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_START;
-    toolCallId: string;
-    toolCallName: string;
-}
-
-/** TOOL_CALL_ARGS event - argument delta */
-export interface ToolCallArgsEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_ARGS;
-    toolCallId: string;
-    delta: string;
-}
-
-/** TOOL_CALL_END event */
-export interface ToolCallEndEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_END;
-    toolCallId: string;
-}
-
-/** TOOL_CALL_RESULT event - backend tool execution result */
-export interface ToolCallResultEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.TOOL_CALL_RESULT;
-    toolCallId: string;
-    content: string;
-}
-
-/** RUN_FINISHED event */
-export interface RunFinishedAGUIEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.RUN_FINISHED;
-    outcome: string;
-    interrupt?: unknown;
-    error?: string;
-}
-
-/** RUN_ERROR event */
-export interface RunErrorEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.RUN_ERROR;
-    message: string;
-}
-
-/** STATE_SNAPSHOT event */
-export interface StateSnapshotEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.STATE_SNAPSHOT;
-    state: UaiAgentState;
-}
-
-/** STATE_DELTA event */
-export interface StateDeltaEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.STATE_DELTA;
-    delta: Partial<UaiAgentState>;
-}
-
-/** MESSAGES_SNAPSHOT event */
-export interface MessagesSnapshotEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.MESSAGES_SNAPSHOT;
-    messages: unknown[];
-}
-
-/** CUSTOM event */
-export interface CustomEvent extends TypedBaseEvent {
-    type: typeof AGUIEventType.CUSTOM;
-    name: string;
-    value: unknown;
-}
-
-/** Union of all typed AG-UI events */
-export type AGUITypedEvent =
-    | TextMessageStartEvent
-    | TextMessageContentEvent
-    | TextMessageEndEvent
-    | ToolCallStartEvent
-    | ToolCallArgsEvent
-    | ToolCallEndEvent
-    | ToolCallResultEvent
-    | RunFinishedAGUIEvent
-    | RunErrorEvent
-    | StateSnapshotEvent
-    | StateDeltaEvent
-    | MessagesSnapshotEvent
-    | CustomEvent;

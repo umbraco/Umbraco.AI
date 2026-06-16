@@ -6,42 +6,40 @@ namespace Umbraco.AI.AGUI.Events.Lifecycle;
 /// <summary>
 /// Event emitted when an agent run finishes.
 /// </summary>
+/// <remarks>
+/// <para>
+/// AG-UI spec: <see href="https://docs.ag-ui.com/concepts/events"/>.
+/// </para>
+/// <para>
+/// Per spec the lifecycle terminates with either <c>RUN_FINISHED</c>
+/// (success or interrupt) or <c>RUN_ERROR</c> — never both. Errors are
+/// signalled exclusively via <see cref="RunErrorEvent"/>.
+/// </para>
+/// </remarks>
 public sealed record RunFinishedEvent : BaseAGUIEvent
 {
     /// <summary>
-    /// Gets or sets the thread identifier.
+    /// Thread the run belonged to.
     /// </summary>
     [JsonPropertyName("threadId")]
     public required string ThreadId { get; init; }
 
     /// <summary>
-    /// Gets or sets the run identifier.
+    /// Run identifier.
     /// </summary>
     [JsonPropertyName("runId")]
     public required string RunId { get; init; }
 
     /// <summary>
-    /// Gets or sets the run outcome.
+    /// Outcome of the run: <see cref="AGUIRunOutcomeSuccess"/> or
+    /// <see cref="AGUIRunOutcomeInterrupt"/>. The discriminator on the wire
+    /// is <c>outcome.type</c>.
     /// </summary>
     [JsonPropertyName("outcome")]
-    public AGUIRunOutcome Outcome { get; init; } = AGUIRunOutcome.Success;
+    public required AGUIRunOutcome Outcome { get; init; }
 
     /// <summary>
-    /// Gets or sets the interrupt information when outcome is Interrupt.
-    /// </summary>
-    [JsonPropertyName("interrupt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public AGUIInterruptInfo? Interrupt { get; init; }
-
-    /// <summary>
-    /// Gets or sets the error message when outcome is Error.
-    /// </summary>
-    [JsonPropertyName("error")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Error { get; init; }
-
-    /// <summary>
-    /// Gets or sets the optional result data.
+    /// Optional terminal result data (spec: any).
     /// </summary>
     [JsonPropertyName("result")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

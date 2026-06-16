@@ -52,7 +52,9 @@ public sealed class AIFrontendToolFunction : AIFunction
 
         _name = tool.Name;
         _description = tool.Description;
-        _jsonSchema = BuildJsonSchema(tool.Parameters);
+        // AGUITool.Parameters carries a JSON Schema per AG-UI spec; default to an empty
+        // object schema when callers omit it.
+        _jsonSchema = tool.Parameters ?? JsonSerializer.SerializeToElement(new { type = "object" });
         Scope = scope;
         IsDestructive = isDestructive;
         _logger = loggerFactory?.CreateLogger($"Umbraco.AI.Agent.FrontendTools.{_name}") ?? NullLogger.Instance;
@@ -127,19 +129,4 @@ public sealed class AIFrontendToolFunction : AIFunction
         return ValueTask.FromResult<object?>(null);
     }
 
-    private static JsonElement BuildJsonSchema(AGUIToolParameters parameters)
-    {
-        var schemaObj = new Dictionary<string, object?>
-        {
-            ["type"] = parameters.Type,
-            ["properties"] = parameters.Properties,
-        };
-
-        if (parameters.Required?.Any() == true)
-        {
-            schemaObj["required"] = parameters.Required;
-        }
-
-        return JsonSerializer.SerializeToElement(schemaObj);
-    }
 }

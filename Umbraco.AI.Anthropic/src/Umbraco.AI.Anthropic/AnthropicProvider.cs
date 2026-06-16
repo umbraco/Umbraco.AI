@@ -1,6 +1,8 @@
 using Anthropic;
 using Microsoft.Extensions.Caching.Memory;
+using Umbraco.AI.Anthropic.Errors;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Anthropic;
 
@@ -27,6 +29,15 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
         
         WithCapability<AnthropicChatCapability>();
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Handles Anthropic's mid-stream SSE error envelope (e.g. <c>overloaded_error</c>, issue #174)
+    /// and the SDK's HTTP-status exceptions, falling back to the shared transport mapping for
+    /// anything else.
+    /// </remarks>
+    public override AIProviderErrorInfo ClassifyError(Exception exception)
+        => AnthropicErrorMapping.TryClassify(exception) ?? base.ClassifyError(exception);
 
     /// <summary>
     /// Gets all available models from the Anthropic API with caching.

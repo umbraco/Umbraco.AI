@@ -100,19 +100,19 @@ Three-layer filtering for AIConnection settings:
 **Configuration Reference Pattern:**
 
 ```csharp
-// Source environment (appsettings.json)
+// Source environment (appsettings.json) — must be under an allow-listed prefix
 {
-  "OpenAI": {
-    "ApiKey": "sk-abc123..."
-  }
+  "Umbraco": { "AI": { "Secrets": { "OpenAIApiKey": "sk-abc123..." } } }
 }
 
 // Connection settings
 {
-  "ApiKey": "$OpenAI:ApiKey"  // Reference, not actual value
+  "ApiKey": "$Umbraco:AI:Secrets:OpenAIApiKey"  // Reference, not actual value
 }
 
 // Target environment resolves from its own config
+// (resolution is default-deny: only Umbraco:AI:Secrets / Umbraco:AI:Variables
+//  resolve unless AIOptions.AllowedConfigurationKeyPrefixes is extended)
 ```
 
 ### UDI Registration

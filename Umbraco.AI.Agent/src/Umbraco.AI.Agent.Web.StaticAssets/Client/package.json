@@ -22,7 +22,7 @@
         "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-agent-management"
     },
     "dependencies": {
-        "@ag-ui/client": "^0.0.42",
+        "@ag-ui/client": "^0.0.57",
         "@umbraco-ai/core": "*",
         "@umbraco-cms/backoffice": "^18.0.0-rc2",
         "rxjs": "^7.8.2"
@@ -36,6 +36,7 @@
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "typescript": "^5.9.2",
-        "vite": "^7.3.2"
+        "vite": "^8.0.16",
+        "@umbraco-ui/uui": "^2.0.0-rc.2"
     }
 }

@@ -41,8 +41,8 @@ public class AGUIFileProcessorTests
     {
         var messages = new List<AGUIMessage>
         {
-            new() { Role = AGUIMessageRole.User, Content = "Hello" },
-            new() { Role = AGUIMessageRole.Assistant, Content = "Hi" }
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" },
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.Assistant, Content = "Hi" }
         };
 
         var result = await _processor.ProcessInboundAsync(messages, "thread-1");
@@ -61,12 +61,17 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Check this image",
                 ContentParts = new List<AGUIInputContent>
                 {
                     new AGUITextInputContent { Text = "Check this image" },
-                    new AGUIBinaryInputContent { MimeType = "image/png", Data = base64, Filename = "test.png" }
+                    new AGUIImageInputContent
+                    {
+                        Source = new AGUIInputContentDataSource { Value = base64, MimeType = "image/png" },
+                        Metadata = new Dictionary<string, object?> { ["filename"] = "test.png" }
+                    }
                 }
             }
         };
@@ -78,18 +83,20 @@ public class AGUIFileProcessorTests
         // Act
         var result = await _processor.ProcessInboundAsync(messages, "thread-1");
 
-        // Assert — rewritten should have id, no data
+        // Assert — rewritten should have id in metadata; no inline data unless URL provider absent
         var rewritten = result.RewrittenMessages.First();
-        var rewrittenBinary = rewritten.ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        rewrittenBinary.Id.ShouldBe("file-abc");
-        rewrittenBinary.Data.ShouldBeNull();
+        var rewrittenBinary = rewritten.ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        rewrittenBinary.Metadata.ShouldNotBeNull();
+        rewrittenBinary.Metadata!["fileId"].ShouldBe("file-abc");
 
-        // Assert — resolved should have bytes
+        // Assert — resolved should have bytes attached via metadata
         var resolved = result.ResolvedMessages.First();
-        var resolvedBinary = resolved.ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        resolvedBinary.Id.ShouldBe("file-abc");
-        resolvedBinary.ResolvedData.ShouldNotBeNull();
-        resolvedBinary.ResolvedData!.Length.ShouldBe(3);
+        var resolvedBinary = resolved.ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        resolvedBinary.Metadata.ShouldNotBeNull();
+        resolvedBinary.Metadata!["fileId"].ShouldBe("file-abc");
+        var resolvedBytes = AGUIFileProcessor.GetResolvedBytes(resolvedBinary);
+        resolvedBytes.ShouldNotBeNull();
+        resolvedBytes!.Length.ShouldBe(3);
     }
 
     [Fact]
@@ -101,12 +108,21 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Analyze this",
                 ContentParts = new List<AGUIInputContent>
                 {
                     new AGUITextInputContent { Text = "Analyze this" },
-                    new AGUIBinaryInputContent { MimeType = "image/png", Id = "file-abc", Filename = "test.png" }
+                    new AGUIImageInputContent
+                    {
+                        Source = new AGUIInputContentUrlSource { Value = "https://server/file/file-abc", MimeType = "image/png" },
+                        Metadata = new Dictionary<string, object?>
+                        {
+                            ["filename"] = "test.png",
+                            ["fileId"] = "file-abc"
+                        }
+                    }
                 }
             }
         };
@@ -119,12 +135,13 @@ public class AGUIFileProcessorTests
         var result = await _processor.ProcessInboundAsync(messages, "thread-1");
 
         // Assert — rewritten stays the same (already has id)
-        var rewrittenBinary = result.RewrittenMessages.First().ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        rewrittenBinary.Id.ShouldBe("file-abc");
+        var rewrittenBinary = result.RewrittenMessages.First().ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        rewrittenBinary.Metadata.ShouldNotBeNull();
+        rewrittenBinary.Metadata!["fileId"].ShouldBe("file-abc");
 
         // Assert — resolved has bytes
-        var resolvedBinary = result.ResolvedMessages.First().ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        resolvedBinary.ResolvedData.ShouldBe(storedData);
+        var resolvedBinary = result.ResolvedMessages.First().ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        AGUIFileProcessor.GetResolvedBytes(resolvedBinary).ShouldBe(storedData);
     }
 
     [Fact]
@@ -138,12 +155,17 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Check this file",
                 ContentParts = new List<AGUIInputContent>
                 {
                     new AGUITextInputContent { Text = "Check this file" },
-                    new AGUIBinaryInputContent { MimeType = "application/octet-stream", Data = base64, Filename = "web.config" }
+                    new AGUIDocumentInputContent
+                    {
+                        Source = new AGUIInputContentDataSource { Value = base64, MimeType = "application/octet-stream" },
+                        Metadata = new Dictionary<string, object?> { ["filename"] = "web.config" }
+                    }
                 }
             }
         };
@@ -154,10 +176,14 @@ public class AGUIFileProcessorTests
         // Assert — file should not be stored
         _mockStore.Verify(s => s.StoreAsync(It.IsAny<string>(), It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
 
-        // Assert — binary part returned unchanged (still has Data, no Id)
-        var rewrittenBinary = result.RewrittenMessages.First().ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        rewrittenBinary.Data.ShouldBe(base64);
-        rewrittenBinary.Id.ShouldBeNull();
+        // Assert — binary part returned unchanged (still has data source, no fileId)
+        var rewrittenBinary = result.RewrittenMessages.First().ContentParts![1].ShouldBeOfType<AGUIDocumentInputContent>();
+        var dataSource = rewrittenBinary.Source.ShouldBeOfType<AGUIInputContentDataSource>();
+        dataSource.Value.ShouldBe(base64);
+        if (rewrittenBinary.Metadata is not null)
+        {
+            rewrittenBinary.Metadata.ContainsKey("fileId").ShouldBeFalse();
+        }
     }
 
     [Fact]
@@ -171,12 +197,17 @@ public class AGUIFileProcessorTests
         {
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "Check this image",
                 ContentParts = new List<AGUIInputContent>
                 {
                     new AGUITextInputContent { Text = "Check this image" },
-                    new AGUIBinaryInputContent { MimeType = "image/png", Data = base64, Filename = "test.png" }
+                    new AGUIImageInputContent
+                    {
+                        Source = new AGUIInputContentDataSource { Value = base64, MimeType = "image/png" },
+                        Metadata = new Dictionary<string, object?> { ["filename"] = "test.png" }
+                    }
                 }
             }
         };
@@ -189,8 +220,9 @@ public class AGUIFileProcessorTests
         var result = await _processor.ProcessInboundAsync(messages, "thread-1");
 
         // Assert — file should be stored
-        var rewrittenBinary = result.RewrittenMessages.First().ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        rewrittenBinary.Id.ShouldBe("file-abc");
+        var rewrittenBinary = result.RewrittenMessages.First().ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        rewrittenBinary.Metadata.ShouldNotBeNull();
+        rewrittenBinary.Metadata!["fileId"].ShouldBe("file-abc");
     }
 
     [Fact]
@@ -200,15 +232,19 @@ public class AGUIFileProcessorTests
         var base64 = Convert.ToBase64String(new byte[] { 1 });
         var messages = new List<AGUIMessage>
         {
-            new() { Role = AGUIMessageRole.User, Content = "First message" },
+            new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "First message" },
             new()
             {
+                Id = Guid.NewGuid().ToString(),
                 Role = AGUIMessageRole.User,
                 Content = "With image",
                 ContentParts = new List<AGUIInputContent>
                 {
                     new AGUITextInputContent { Text = "With image" },
-                    new AGUIBinaryInputContent { MimeType = "image/png", Data = base64 }
+                    new AGUIImageInputContent
+                    {
+                        Source = new AGUIInputContentDataSource { Value = base64, MimeType = "image/png" }
+                    }
                 }
             }
         };
@@ -225,7 +261,8 @@ public class AGUIFileProcessorTests
         rewrittenList[0].Content.ShouldBe("First message");
         rewrittenList[0].ContentParts.ShouldBeNull();
 
-        var processedBinary = rewrittenList[1].ContentParts![1].ShouldBeOfType<AGUIBinaryInputContent>();
-        processedBinary.Id.ShouldBe("file-xyz");
+        var processedBinary = rewrittenList[1].ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        processedBinary.Metadata.ShouldNotBeNull();
+        processedBinary.Metadata!["fileId"].ShouldBe("file-xyz");
     }
 }

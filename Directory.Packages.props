@@ -7,7 +7,7 @@
   <ItemGroup>
     <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
     <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.8.118" />
-    <GlobalPackageReference Include="Umbraco.Code" Version="2.4.0" />
+    <GlobalPackageReference Include="Umbraco.Code" Version="3.0.0-beta" />
     <GlobalPackageReference Include="Umbraco.GitVersioning.Extensions" Version="0.2.0" />
     <GlobalPackageReference Include="Umbraco.JsonSchema.Extensions" Version="0.3.0" PrivateAssets="all" />
   </ItemGroup>
@@ -30,12 +30,12 @@
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[0.1.0--preview.422.g8a1061d, 0.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[17.0.0-beta, 17.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0-beta.5, 1.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0, 1.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft.Extensions.AI -->
@@ -44,6 +44,10 @@
     <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.6.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.7, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.7, 10.999.999)" />
+    <!-- Base library for typed SDK exceptions (ClientResultException). Used by Core's provider
+         error classifier and brought in transitively by the OpenAI SDK. Floor matches the
+         minimum version that exposes ClientResultException publicly. -->
+    <PackageVersion Include="System.ClientModel" Version="[1.5.0, 1.999.999)" />
   </ItemGroup>
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
@@ -76,7 +80,7 @@
     <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="[4.0.8, 4.999.999)" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="[2.1.0, 2.999.999)" />
     <PackageVersion Include="Azure.Identity" Version="[1.21.0, 1.999.999)" />
-    <PackageVersion Include="Google.GenAI" Version="[1.6.1, 1.999.999)" />
+    <PackageVersion Include="Google.GenAI" Version="[1.8.0, 1.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="[10.6.0, 10.999.999)" />
     <PackageVersion Include="Mistral.SDK" Version="[2.3.1, 2.999.999)" />
   </ItemGroup>

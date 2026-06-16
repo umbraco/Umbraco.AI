@@ -1,20 +1,28 @@
-using System.Text.Json;
-using Umbraco.AI.Core;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Core.EditableModels;
 
 namespace Umbraco.AI.Persistence.Context;
 
 /// <summary>
 /// Factory for mapping between <see cref="AIContext"/> domain models and <see cref="AIContextEntity"/> database entities.
+/// Handles encryption/decryption of sensitive resource settings during the mapping process.
 /// </summary>
-internal static class AIContextFactory
+internal sealed class AIContextFactory : IAIContextFactory
 {
-    /// <summary>
-    /// Creates an <see cref="AIContext"/> domain model from a database entity.
-    /// </summary>
-    /// <param name="entity">The database entity.</param>
-    /// <returns>The domain model.</returns>
-    public static AIContext BuildDomain(AIContextEntity entity)
+    private readonly IAIEditableModelSerializer _serializer;
+    private readonly AIContextResourceTypeCollection _resourceTypes;
+
+    public AIContextFactory(
+        IAIEditableModelSerializer serializer,
+        AIContextResourceTypeCollection resourceTypes)
+    {
+        _serializer = serializer;
+        _resourceTypes = resourceTypes;
+    }
+
+    /// <inheritdoc />
+    public AIContext BuildDomain(AIContextEntity entity)
     {
         return new AIContext
         {
@@ -36,17 +44,12 @@ internal static class AIContextFactory
     /// <summary>
     /// Creates an <see cref="AIContextResource"/> domain model from a database entity.
     /// </summary>
-    /// <param name="entity">The database entity.</param>
-    /// <returns>The domain model.</returns>
-    public static AIContextResource BuildResourceDomain(AIContextResourceEntity entity)
+    private AIContextResource BuildResourceDomain(AIContextResourceEntity entity)
     {
-        object? settings = null;
-        if (!string.IsNullOrEmpty(entity.Settings))
-        {
-            // Settings are stored as JSON, deserialize to dynamic object
-            // The actual typed deserialization happens at the service layer
-            settings = JsonSerializer.Deserialize<JsonElement>(entity.Settings, Constants.DefaultJsonSerializerOptions);
-        }
+        // Settings are stored as JSON with sensitive fields encrypted.
+        // The serializer decrypts any encrypted values; typed deserialization (and
+        // configuration variable resolution) happens later at the service/resource-type layer.
+        object? settings = _serializer.Deserialize(entity.Settings);
 
         return new AIContextResource
         {
@@ -60,12 +63,8 @@ internal static class AIContextFactory
         };
     }
 
-    /// <summary>
-    /// Creates an <see cref="AIContextEntity"/> database entity from a domain model.
-    /// </summary>
-    /// <param name="context">The domain model.</param>
-    /// <returns>The database entity.</returns>
-    public static AIContextEntity BuildEntity(AIContext context)
+    /// <inheritdoc />
+    public AIContextEntity BuildEntity(AIContext context)
     {
         return new AIContextEntity
         {
@@ -83,13 +82,8 @@ internal static class AIContextFactory
         };
     }
 
-    /// <summary>
-    /// Creates an <see cref="AIContextResourceEntity"/> database entity from a domain model.
-    /// </summary>
-    /// <param name="resource">The domain model.</param>
-    /// <param name="contextId">The parent context ID.</param>
-    /// <returns>The database entity.</returns>
-    public static AIContextResourceEntity BuildResourceEntity(AIContextResource resource, Guid contextId)
+    /// <inheritdoc />
+    public AIContextResourceEntity BuildResourceEntity(AIContextResource resource, Guid contextId)
     {
         return new AIContextResourceEntity
         {
@@ -99,17 +93,13 @@ internal static class AIContextFactory
             Name = resource.Name,
             Description = resource.Description,
             SortOrder = resource.SortOrder,
-            Settings = resource.Settings is null ? string.Empty : JsonSerializer.Serialize(resource.Settings, Constants.DefaultJsonSerializerOptions),
+            Settings = SerializeSettings(resource),
             InjectionMode = (int)resource.InjectionMode
         };
     }
 
-    /// <summary>
-    /// Updates an existing <see cref="AIContextEntity"/> with values from a domain model.
-    /// </summary>
-    /// <param name="entity">The entity to update.</param>
-    /// <param name="context">The domain model with updated values.</param>
-    public static void UpdateEntity(AIContextEntity entity, AIContext context)
+    /// <inheritdoc />
+    public void UpdateEntity(AIContextEntity entity, AIContext context)
     {
         entity.Alias = context.Alias;
         entity.Name = context.Name;
@@ -120,18 +110,31 @@ internal static class AIContextFactory
         // DateCreated and CreatedByUserId are intentionally not updated
     }
 
-    /// <summary>
-    /// Updates an existing <see cref="AIContextResourceEntity"/> with values from a domain model.
-    /// </summary>
-    /// <param name="entity">The entity to update.</param>
-    /// <param name="resource">The domain model with updated values.</param>
-    public static void UpdateResourceEntity(AIContextResourceEntity entity, AIContextResource resource)
+    /// <inheritdoc />
+    public void UpdateResourceEntity(AIContextResourceEntity entity, AIContextResource resource)
     {
         entity.ResourceTypeId = resource.ResourceTypeId;
         entity.Name = resource.Name;
         entity.Description = resource.Description;
         entity.SortOrder = resource.SortOrder;
-        entity.Settings = resource.Settings is null ? string.Empty : JsonSerializer.Serialize(resource.Settings, Constants.DefaultJsonSerializerOptions);
+        entity.Settings = SerializeSettings(resource);
         entity.InjectionMode = (int)resource.InjectionMode;
     }
+
+    /// <summary>
+    /// Serializes a resource's settings, encrypting sensitive fields based on the resource type schema.
+    /// </summary>
+    private string SerializeSettings(AIContextResource resource)
+    {
+        if (resource.Settings is null)
+        {
+            return string.Empty;
+        }
+
+        var schema = GetSettingsSchema(resource.ResourceTypeId);
+        return _serializer.Serialize(resource.Settings, schema) ?? string.Empty;
+    }
+
+    private AIEditableModelSchema? GetSettingsSchema(string resourceTypeId)
+        => _resourceTypes.GetById(resourceTypeId)?.GetSettingsSchema();
 }

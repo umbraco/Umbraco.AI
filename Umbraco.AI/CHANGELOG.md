@@ -5,6 +5,36 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.13.0...Umbraco.AI@1.14.0) (2026-06-04)
+
+### ⚠ BREAKING CHANGE
+
+* **core:** $ configuration references are now default-deny. References
+outside Umbraco:AI:Secrets / Umbraco:AI:Variables (e.g. $OpenAI:ApiKey) no
+longer resolve. Move the values under those sections or add the prefix to
+Umbraco:AI:AllowedConfigurationKeyPrefixes in app settings.
+
+### feat
+
+* **core:** Add default-deny allow-list for $ configuration references ([e813373](https://github.com/umbraco/Umbraco.AI/commit/e8133738a3e3e34139d0a03f833b4c595b500c6d))
+
+### fix
+
+* **core:** Support literal $ in editable-model settings via $$ escape ([26adf6e](https://github.com/umbraco/Umbraco.AI/commit/26adf6ef0d6e2c9c058d559448faa10c5f751490))
+* **settings:** Route editable models through the editable model service ([979f384](https://github.com/umbraco/Umbraco.AI/commit/979f384b22bd631b1741c6ba4b862b401a130725))
+
+## [1.13.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.12.0...Umbraco.AI@1.13.0) (2026-06-01)
+
+### ⚠ BREAKING CHANGE
+
+* **speechtotext:** IAIFileProcessingHandler.CanHandle(string) is now
+CanHandleAsync(string, CancellationToken) so handler eligibility can depend on runtime
+state (e.g. whether a default profile is configured), not just the MIME type.
+
+### feat
+
+* **speechtotext:** Transcribe uploaded audio files via the file-processing pipeline ([e3bccff](https://github.com/umbraco/Umbraco.AI/commit/e3bccff9a3392f5b002f4930967240f3c8417b2d))
+
 ## [1.12.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.11.0...Umbraco.AI@1.12.0) (2026-05-20)
 
 ### feat

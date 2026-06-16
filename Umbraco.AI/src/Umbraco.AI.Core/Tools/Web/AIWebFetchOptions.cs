@@ -26,13 +26,13 @@ public class AIWebFetchOptions
     public int MaxRedirects { get; set; } = 5;
 
     /// <summary>
-    /// Gets or sets the domain whitelist (if specified, only these domains are allowed).
-    /// Empty list means no whitelist filtering.
+    /// Gets or sets the domain safelist (if specified, only these domains are allowed).
+    /// Empty list means no safelist filtering.
     /// </summary>
     public List<string> AllowedDomains { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets the domain blacklist (blocks specific domains even if not in private ranges).
+    /// Gets or sets the domain blocklist (blocks specific domains even if not in private ranges).
     /// </summary>
     public List<string> BlockedDomains { get; set; } = new();
 

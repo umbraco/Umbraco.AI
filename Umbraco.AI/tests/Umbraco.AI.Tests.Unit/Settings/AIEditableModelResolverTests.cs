@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Tests.Common.Fakes;
@@ -17,7 +18,13 @@ public class AIEditableModelResolverTests
             { "OpenAI:ApiKey", "sk-test-key-from-config" },
             { "OpenAI:BaseUrl", "https://api.openai.com" },
             { "TestSettings:Enabled", "true" },
-            { "TestSettings:MaxRetries", "5" }
+            { "TestSettings:MaxRetries", "5" },
+            { "Umbraco:AI:Secrets:ApiKey", "sk-secret-from-config" },
+            { "Umbraco:AI:Variables:BaseUrl", "https://env.example.com" },
+            // A genuine secret that must stay unreachable from settings.
+            { "ConnectionStrings:umbracoDbDSN", "Server=.;Database=secret;User=sa;Password=hunter2" },
+            // Sits just outside the Umbraco:AI:Secrets prefix boundary.
+            { "Umbraco:AI:SecretsBackup:Token", "should-not-resolve" },
         };
 
         _configuration = new ConfigurationBuilder()
@@ -25,10 +32,21 @@ public class AIEditableModelResolverTests
             .Build();
     }
 
-    private AIEditableModelResolver CreateResolver()
+    // Existing mechanics tests reference $OpenAI:* and $TestSettings:* keys, so the default
+    // helper allows those prefixes. Pass explicit prefixes to exercise the allow-list itself.
+    private AIEditableModelResolver CreateResolver(params string[] allowedPrefixes)
     {
-        return new AIEditableModelResolver(_configuration);
+        var prefixes = allowedPrefixes.Length > 0
+            ? allowedPrefixes
+            : ["OpenAI", "TestSettings"];
+
+        var options = Options.Create(new AIOptions { AllowedConfigurationKeyPrefixes = prefixes });
+        return new AIEditableModelResolver(_configuration, options);
     }
+
+    // Resolver wired with the production defaults (Umbraco:AI:Secrets / Umbraco:AI:Variables).
+    private AIEditableModelResolver CreateDefaultResolver()
+        => new(_configuration, Options.Create(new AIOptions()));
 
     private static AIEditableModelSchema CreateSchema(bool requireApiKey = true)
     {
@@ -223,8 +241,9 @@ public class AIEditableModelResolverTests
     [Fact]
     public void ResolveModel_WithMissingConfigKey_ThrowsInvalidOperationException()
     {
-        // Arrange
-        var settings = new FakeProviderSettings { ApiKey = "$NonExistent:Key" };
+        // Arrange - Key is under an allowed prefix but absent from configuration, so it must
+        // reach the "not found" path rather than the allow-list rejection.
+        var settings = new FakeProviderSettings { ApiKey = "$OpenAI:NonExistentKey" };
         var resolver = CreateResolver();
 
         // Act
@@ -233,8 +252,179 @@ public class AIEditableModelResolverTests
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
         exception.Message.ShouldContain("Configuration key");
-        exception.Message.ShouldContain("NonExistent:Key");
+        exception.Message.ShouldContain("OpenAI:NonExistentKey");
         exception.Message.ShouldContain("not found");
+    }
+
+    #endregion
+
+    #region ResolveModel<TModel> - Configuration key allow-list
+
+    [Fact]
+    public void ResolveModel_WithConfigKeyOutsideAllowedPrefix_Throws()
+    {
+        // A sensitive key outside the allow-list (here a connection string) referenced from
+        // a settings field. It exists in configuration but must stay unreachable.
+        var settings = new FakeProviderSettings { ApiKey = "$ConnectionStrings:umbracoDbDSN" };
+        var resolver = CreateResolver(); // allows OpenAI/TestSettings only
+
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("ConnectionStrings:umbracoDbDSN");
+        exception.Message.ShouldContain("not permitted");
+        // The secret value itself must never leak into the error.
+        exception.Message.ShouldNotContain("hunter2");
+    }
+
+    [Fact]
+    public void ResolveModel_WithConfigKeyUnderAllowedPrefix_Resolves()
+    {
+        // Secret key referenced from a sensitive field - the sanctioned use.
+        var settings = new FakeProviderSettings { SecretField = "$Umbraco:AI:Secrets:ApiKey" };
+        var resolver = CreateResolver("Umbraco:AI:Secrets");
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.SecretField.ShouldBe("sk-secret-from-config");
+    }
+
+    [Fact]
+    public void ResolveModel_AllowedPrefixMatchingIsSegmentAware_Throws()
+    {
+        // Umbraco:AI:SecretsBackup must NOT be admitted by the Umbraco:AI:Secrets prefix -
+        // the boundary is the ':' segment separator.
+        var settings = new FakeProviderSettings { ApiKey = "$Umbraco:AI:SecretsBackup:Token" };
+        var resolver = CreateResolver("Umbraco:AI:Secrets");
+
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("not permitted");
+    }
+
+    [Fact]
+    public void ResolveModel_WithDefaultOptions_RejectsKeysOutsideAllowedSections()
+    {
+        // Secure by default: with the production defaults the only resolvable sections are
+        // Umbraco:AI:Secrets and Umbraco:AI:Variables, so an arbitrary key is rejected.
+        var settings = new FakeProviderSettings { ApiKey = "$OpenAI:ApiKey" };
+        var resolver = CreateDefaultResolver();
+
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        Should.Throw<InvalidOperationException>(act)
+            .Message.ShouldContain("not permitted");
+    }
+
+    [Fact]
+    public void ResolveModel_WithDefaultOptions_ResolvesSecretsAndVariablesSections()
+    {
+        // Both default sections resolve out of the box: a Secret into a sensitive field, a
+        // Variable into an ordinary field.
+        var settings = new FakeProviderSettings
+        {
+            SecretField = "$Umbraco:AI:Secrets:ApiKey",
+            BaseUrl = "$Umbraco:AI:Variables:BaseUrl",
+        };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.SecretField.ShouldBe("sk-secret-from-config");
+        result.BaseUrl.ShouldBe("https://env.example.com");
+    }
+
+    #endregion
+
+    #region ResolveModel<TModel> - Secret keys restricted to sensitive fields
+
+    [Fact]
+    public void ResolveModel_SecretKeyInNonSensitiveField_Throws()
+    {
+        // A secret key must not resolve into a non-sensitive field; it is only allowed in
+        // fields the system treats as credential-bearing. Blocked.
+        var settings = new FakeProviderSettings { ApiKey = "$Umbraco:AI:Secrets:ApiKey" };
+        var resolver = CreateDefaultResolver();
+
+        var act = () => resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("secret");
+        exception.Message.ShouldContain("sensitive field");
+        exception.Message.ShouldNotContain("sk-secret-from-config");
+    }
+
+    [Fact]
+    public void ResolveModel_SecretKeyInSensitiveField_Resolves()
+    {
+        var settings = new FakeProviderSettings { SecretField = "$Umbraco:AI:Secrets:ApiKey" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.SecretField.ShouldBe("sk-secret-from-config");
+    }
+
+    [Fact]
+    public void ResolveModel_VariablesKeyInNonSensitiveField_Resolves()
+    {
+        // Variables are not secret, so they are unrestricted by field sensitivity.
+        var settings = new FakeProviderSettings { BaseUrl = "$Umbraco:AI:Variables:BaseUrl" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe("https://env.example.com");
+    }
+
+    #endregion
+
+    #region ResolveModel<TModel> - Literal $ escaping ($$)
+
+    [Fact]
+    public void ResolveModel_LeadingDoubleDollar_ResolvesToLiteralSingleDollar()
+    {
+        // A value that must start with a literal '$' (e.g. a guardrail regex/contains pattern)
+        // is escaped with a leading '$$'. It is returned verbatim minus one '$' — never treated
+        // as a config reference, so the allow-list is not consulted.
+        var settings = new FakeProviderSettings { BaseUrl = "$$ConnectionStrings:umbracoDbDSN" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe("$ConnectionStrings:umbracoDbDSN");
+    }
+
+    [Fact]
+    public void ResolveModel_LoneDoubleDollar_ResolvesToSingleDollar()
+    {
+        var settings = new FakeProviderSettings { BaseUrl = "$$" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe("$");
+    }
+
+    [Fact]
+    public void ResolveModel_TrailingDollar_IsLeftUnchanged()
+    {
+        // A trailing '$' (e.g. a regex end-of-line anchor) does not start with '$', so it is
+        // never treated as a reference and needs no escaping — the common, important case.
+        var settings = new FakeProviderSettings { BaseUrl = @"^\d+$" };
+        var resolver = CreateDefaultResolver();
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe(@"^\d+$");
     }
 
     #endregion

@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Shouldly;
 using Umbraco.AI.Agent.Core.AGUI;
-using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.AGUI.Models;
 using Xunit;
 
@@ -11,166 +10,93 @@ public class AGUIToolConverterTests
 {
     private readonly AGUIToolConverter _converter = new();
 
-    #region ConvertToFrontendTools Tests
+    private static AGUITool Tool(string name, IReadOnlyDictionary<string, object?>? metadata = null) => new()
+    {
+        Name = name,
+        Description = $"{name} description",
+        Metadata = metadata,
+    };
+
+    #region Shape
 
     [Fact]
     public void ConvertToFrontendTools_WithNullTools_ReturnsNull()
     {
-        // Act
-        var result = _converter.ConvertToFrontendTools(null);
-
-        // Assert
-        result.ShouldBeNull();
+        _converter.ConvertToFrontendTools(null).ShouldBeNull();
     }
 
     [Fact]
     public void ConvertToFrontendTools_WithEmptyTools_ReturnsNull()
     {
-        // Arrange
-        var tools = Enumerable.Empty<AGUITool>();
-
-        // Act
-        var result = _converter.ConvertToFrontendTools(tools);
-
-        // Assert
-        result.ShouldBeNull();
+        _converter.ConvertToFrontendTools([]).ShouldBeNull();
     }
 
     [Fact]
-    public void ConvertToFrontendTools_WithSingleTool_ReturnsListWithOneTool()
+    public void ConvertToFrontendTools_PreservesToolAndOrder()
     {
-        // Arrange
-        var tools = new List<AGUITool>
-        {
-            new()
-            {
-                Name = "test-tool",
-                Description = "A test tool",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { name = new { type = "string" } })
-                }
-            }
-        };
+        var result = _converter.ConvertToFrontendTools([Tool("a"), Tool("b")])!.ToList();
 
-        // Act
-        var result = _converter.ConvertToFrontendTools(tools);
+        result.Count.ShouldBe(2);
+        result[0].Tool.Name.ShouldBe("a");
+        result[1].Tool.Name.ShouldBe("b");
+    }
 
-        // Assert
-        result.ShouldNotBeNull();
-        result.Count.ShouldBe(1);
-        result[0].ShouldBeOfType<AIFrontendToolFunction>();
+    #endregion
+
+    #region Metadata extraction
+
+    [Fact]
+    public void ConvertToFrontendTools_NoMetadata_DefaultsScopeNullAndNotDestructive()
+    {
+        var result = _converter.ConvertToFrontendTools([Tool("t")])!.Single();
+
+        result.Scope.ShouldBeNull();
+        result.IsDestructive.ShouldBeFalse();
     }
 
     [Fact]
-    public void ConvertToFrontendTools_WithMultipleTools_ReturnsAllTools()
+    public void ConvertToFrontendTools_StringMetadata_ReadsScopeAndIsDestructive()
     {
-        // Arrange
-        var tools = new List<AGUITool>
+        var tool = Tool("t", new Dictionary<string, object?>
         {
-            new()
-            {
-                Name = "tool-1",
-                Description = "First tool",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
-            },
-            new()
-            {
-                Name = "tool-2",
-                Description = "Second tool",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
-            },
-            new()
-            {
-                Name = "tool-3",
-                Description = "Third tool",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
-            }
-        };
+            ["scope"] = "entity-write",
+            ["isDestructive"] = true,
+        });
 
-        // Act
-        var result = _converter.ConvertToFrontendTools(tools);
+        var result = _converter.ConvertToFrontendTools([tool])!.Single();
 
-        // Assert
-        result.ShouldNotBeNull();
-        result.Count.ShouldBe(3);
+        result.Scope.ShouldBe("entity-write");
+        result.IsDestructive.ShouldBeTrue();
     }
 
     [Fact]
-    public void ConvertToFrontendTools_PreservesToolNames()
+    public void ConvertToFrontendTools_JsonElementMetadata_ReadsScopeAndIsDestructive()
     {
-        // Arrange
-        var tools = new List<AGUITool>
+        // The wire deserializes metadata values to JsonElement, so the converter must
+        // unwrap JsonElement string/bool — not just native CLR types.
+        using var doc = JsonDocument.Parse("""{ "scope": "entity-publish", "isDestructive": true }""");
+        var metadata = new Dictionary<string, object?>
         {
-            new()
-            {
-                Name = "confirm_action",
-                Description = "Confirms an action",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
-            },
-            new()
-            {
-                Name = "request_approval",
-                Description = "Requests approval",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { })
-                }
-            }
+            ["scope"] = doc.RootElement.GetProperty("scope"),
+            ["isDestructive"] = doc.RootElement.GetProperty("isDestructive"),
         };
 
-        // Act
-        var result = _converter.ConvertToFrontendTools(tools);
+        var result = _converter.ConvertToFrontendTools([Tool("t", metadata)])!.Single();
 
-        // Assert
-        result.ShouldNotBeNull();
-        var toolNames = result.Select(t => t.Name).ToList();
-        toolNames.ShouldContain("confirm_action");
-        toolNames.ShouldContain("request_approval");
+        result.Scope.ShouldBe("entity-publish");
+        result.IsDestructive.ShouldBeTrue();
     }
 
     [Fact]
-    public void ConvertToFrontendTools_ReturnsAIFrontendToolFunctionInstances()
+    public void ConvertToFrontendTools_IsDestructiveFalse_IsNotDestructive()
     {
-        // Arrange
-        var tools = new List<AGUITool>
+        using var doc = JsonDocument.Parse("""{ "isDestructive": false }""");
+        var metadata = new Dictionary<string, object?>
         {
-            new()
-            {
-                Name = "frontend-tool",
-                Description = "A frontend tool",
-                Parameters = new AGUIToolParameters
-                {
-                    Type = "object",
-                    Properties = JsonSerializer.SerializeToElement(new { param = new { type = "string" } })
-                }
-            }
+            ["isDestructive"] = doc.RootElement.GetProperty("isDestructive"),
         };
 
-        // Act
-        var result = _converter.ConvertToFrontendTools(tools);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.All(t => t is AIFrontendToolFunction).ShouldBeTrue();
+        _converter.ConvertToFrontendTools([Tool("t", metadata)])!.Single().IsDestructive.ShouldBeFalse();
     }
 
     #endregion

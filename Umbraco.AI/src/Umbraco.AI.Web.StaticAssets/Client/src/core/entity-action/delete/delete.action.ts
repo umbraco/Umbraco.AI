@@ -1,6 +1,7 @@
-import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
+import { UmbEntityActionBase, UmbRequestReloadStructureForEntityEvent } from "@umbraco-cms/backoffice/entity-action";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
 import { umbPeekError } from "@umbraco-cms/backoffice/notification";
+import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
@@ -56,6 +57,15 @@ export abstract class UaiDeleteActionBase extends UmbEntityActionBase<never> {
             throw error;
         }
 
-        // Event is dispatched by the repository after successful delete
+        // Request a reload for this entity via the action event context (as CMS's
+        // UmbDeleteEntityAction does). Any collection, tree or structure consumer listening for
+        // the entity refreshes itself.
+        const eventContext = await this.getContext(UMB_ACTION_EVENT_CONTEXT);
+        eventContext?.dispatchEvent(
+            new UmbRequestReloadStructureForEntityEvent({
+                unique: this.args.unique,
+                entityType: this.args.entityType,
+            }),
+        );
     }
 }

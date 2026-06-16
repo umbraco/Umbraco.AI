@@ -20,7 +20,7 @@ namespace Umbraco.AI.Automate.Actions;
     Group = "AI",
     Icon = "icon-mic",
     RequiredSections = [Constants.Applications.Media])]
-public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, object>
+public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, TranscribeAudioOutput>
 {
     private readonly IAISpeechToTextService _speechToTextService;
     private readonly IAIUmbracoMediaResolver _mediaResolver;
@@ -113,7 +113,7 @@ public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, 
                 "Automation {AutomationId} / Run {RunId}: Transcription completed, text length {TextLength}",
                 context.AutomationId, context.RunId, text.Length);
 
-            return Success(new { text });
+            return Success(new TranscribeAudioOutput { Text = text });
         }
         catch (InvalidOperationException ex)
         {

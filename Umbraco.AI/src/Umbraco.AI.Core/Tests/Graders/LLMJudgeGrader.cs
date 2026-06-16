@@ -61,10 +61,13 @@ public class LLMJudgeGrader : AITestGraderBase<LLMJudgeGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="LLMJudgeGrader"/> class.
     /// </summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LLMJudgeGrader"/> class.
+    /// </summary>
     public LLMJudgeGrader(
         IAIChatService chatService,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+        IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _chatService = chatService;
     }
@@ -76,11 +79,8 @@ public class LLMJudgeGrader : AITestGraderBase<LLMJudgeGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        // Deserialize configuration
-        var config = graderConfig.Config is not { } configElement
-            ? new LLMJudgeGraderConfig()
-            : configElement.Deserialize<LLMJudgeGraderConfig>(Constants.DefaultJsonSerializerOptions)
-                ?? new LLMJudgeGraderConfig();
+        // Deserialize configuration (resolves $Config app-settings references and validates)
+        var config = ResolveConfig(graderConfig) ?? new LLMJudgeGraderConfig();
 
         // Output value is already extracted by the test feature
         var actualValue = outcome.OutputValue ?? string.Empty;

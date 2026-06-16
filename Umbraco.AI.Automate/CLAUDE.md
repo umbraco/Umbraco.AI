@@ -72,7 +72,7 @@ Aliases use `umbracoAI.*` prefix (matching how Automate uses `umbracoAutomate.*`
 
 - Umbraco CMS 18.x
 - Umbraco.AI.Agent 18.x
-- Umbraco.Automate.Core 0.1.x
+- Umbraco.Automate.Core 18.x (currently blocked — only 17.0.0-beta on MyGet; flip `IncludeUmbracoAutomate` in the demo csproj back to `true` once a v18 Automate ships)
 
 ## Testing Focus
 

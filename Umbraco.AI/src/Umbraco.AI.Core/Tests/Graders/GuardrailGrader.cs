@@ -49,10 +49,13 @@ public class GuardrailGrader : AITestGraderBase<GuardrailGraderConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="GuardrailGrader"/> class.
     /// </summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GuardrailGrader"/> class.
+    /// </summary>
     public GuardrailGrader(
         AIGuardrailEvaluatorCollection evaluators,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+        IAITestGraderInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _evaluators = evaluators;
     }
@@ -64,10 +67,8 @@ public class GuardrailGrader : AITestGraderBase<GuardrailGraderConfig>
         AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
-        var config = graderConfig.Config is not { } configElement
-            ? new GuardrailGraderConfig()
-            : configElement.Deserialize<GuardrailGraderConfig>(Constants.DefaultJsonSerializerOptions)
-                ?? new GuardrailGraderConfig();
+        // Resolves $Config app-settings references and validates against the grader schema
+        var config = ResolveConfig(graderConfig) ?? new GuardrailGraderConfig();
 
         if (string.IsNullOrWhiteSpace(config.EvaluatorId))
         {

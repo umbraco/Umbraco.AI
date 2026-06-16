@@ -50,8 +50,11 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
     /// <inheritdoc />
     public override string Description => "Flags content that matches a regular expression pattern";
 
-    public RegexGuardrailEvaluator(IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(schemaBuilder)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RegexGuardrailEvaluator"/> class.
+    /// </summary>
+    public RegexGuardrailEvaluator(IAIGuardrailEvaluatorInfrastructure infrastructure)
+        : base(infrastructure)
     { }
 
     /// <inheritdoc />
@@ -61,7 +64,7 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
     {
-        var evalConfig = config.Deserialize<RegexGuardrailEvaluatorConfig>() ?? new RegexGuardrailEvaluatorConfig();
+        var evalConfig = ResolveConfig(config) ?? new RegexGuardrailEvaluatorConfig();
 
         if (string.IsNullOrEmpty(evalConfig.Pattern))
         {
@@ -137,7 +140,7 @@ public class RegexGuardrailEvaluator : AIGuardrailEvaluatorBase<RegexGuardrailEv
         AIGuardrailConfig config,
         CancellationToken cancellationToken)
     {
-        var evalConfig = config.Deserialize<RegexGuardrailEvaluatorConfig>() ?? new RegexGuardrailEvaluatorConfig();
+        var evalConfig = ResolveConfig(config) ?? new RegexGuardrailEvaluatorConfig();
 
         if (string.IsNullOrEmpty(evalConfig.Pattern))
         {

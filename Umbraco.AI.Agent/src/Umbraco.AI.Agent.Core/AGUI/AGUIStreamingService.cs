@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -7,6 +6,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -93,14 +93,37 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             await enumerator.DisposeAsync();
         }
 
-        // Emit error event if streaming failed
+        // Emit error event if streaming failed.
+        // Provider SDK failures arrive pre-classified as AIProviderException (the chat client is
+        // wrapped by the error-classifying decorator in the capability factory), carrying a
+        // user-safe message and a stable category code for retry affordances. Anything else is an
+        // application-layer failure we surface generically without leaking raw exception text.
         if (streamError != null)
         {
-            yield return emitter.EmitError(streamError.Message, "STREAMING_ERROR");
-        }
+            string userMessage;
+            string code;
+            if (FindProviderException(streamError) is { } providerError)
+            {
+                userMessage = providerError.UserMessage;
+                code = providerError.Category.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed. Category={Category}, ProviderCode={ProviderCode}",
+                    request.RunId, providerError.Category, providerError.ProviderCode);
+            }
+            else
+            {
+                userMessage = "An unexpected error occurred. Please try again.";
+                code = AIProviderErrorCategory.Unknown.ToString();
+                _logger.LogError(streamError,
+                    "Agent run {RunId} failed with an unclassified error.", request.RunId);
+            }
 
-        // Emit RunFinished with appropriate outcome
-        yield return emitter.EmitRunFinished(streamError);
+            yield return emitter.EmitError(userMessage, code);
+        }
+        else
+        {
+            yield return emitter.EmitRunFinished();
+        }
     }
 
     /// <summary>
@@ -132,15 +155,16 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // Convert resolved messages (with bytes) to M.E.AI chat messages
         var chatMessages = _messageConverter.ConvertToChatMessages(fileResult.ResolvedMessages);
 
-        // Handle resume - inject tool results from resume payload
-        if (request.Resume != null)
+        // Handle resume — inject tool results from each resolved resume entry.
+        // Per AG-UI spec the resume array contains one entry per open interrupt.
+        if (request.Resume is { Count: > 0 })
         {
             var resumeMessages = ExtractToolResultsFromResume(request.Resume);
             chatMessages.AddRange(resumeMessages);
 
             _logger.LogDebug(
-                "Resume from interrupt {InterruptId} with {ResultCount} tool results",
-                request.Resume.InterruptId,
+                "Resume with {EntryCount} entries produced {ResultCount} tool results",
+                request.Resume.Count,
                 resumeMessages.Count);
         }
 
@@ -228,6 +252,24 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         }
     }
 
+    /// <summary>
+    /// Finds the classified <see cref="AIProviderException"/> in the exception chain, if any. The
+    /// error-classifying client decorator throws it directly, but agent/middleware layers above may
+    /// wrap it, so we walk inner exceptions rather than only checking the top.
+    /// </summary>
+    private static AIProviderException? FindProviderException(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is AIProviderException providerError)
+            {
+                return providerError;
+            }
+        }
+
+        return null;
+    }
+
     private static string FormatProviderErrorForChat(ErrorContent errorContent)
     {
         var message = string.IsNullOrEmpty(errorContent.Message) ? "(no message)" : errorContent.Message;
@@ -263,52 +305,42 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     }
 
     /// <summary>
-    /// Extracts tool results from the resume payload and converts them to chat messages.
+    /// Converts AG-UI resume entries into M.E.AI tool-result chat messages.
     /// </summary>
     /// <remarks>
-    /// Expected payload format:
-    /// <code>
-    /// {
-    ///   "toolResults": [
-    ///     { "toolCallId": "call-1", "result": { ... } },
-    ///     { "toolCallId": "call-2", "result": { ... } }
-    ///   ]
-    /// }
-    /// </code>
+    /// <para>
+    /// Per AG-UI spec each resume entry maps 1:1 with an open interrupt the previous
+    /// run emitted. For frontend tool-call interrupts we set <c>InterruptInfo.Id</c>
+    /// equal to the <c>toolCallId</c> when emitting (see <c>AGUIEventEmitter</c>),
+    /// so the resume entry's <c>InterruptId</c> recovers the original tool call id.
+    /// </para>
+    /// <para>
+    /// Cancelled entries are skipped — we don't synthesise a tool result when the user
+    /// abandoned the interrupt without input.
+    /// </para>
     /// </remarks>
-    private List<ChatMessage> ExtractToolResultsFromResume(AGUIResumeInfo resume)
+    private List<ChatMessage> ExtractToolResultsFromResume(IReadOnlyList<AGUIResumeEntry> resume)
     {
         var results = new List<ChatMessage>();
 
-        if (!resume.Payload.HasValue)
-            return results;
-
-        try
+        foreach (var entry in resume)
         {
-            var payload = resume.Payload.Value;
-
-            // Try to get toolResults array from payload
-            if (payload.TryGetProperty("toolResults", out var toolResultsElement) &&
-                toolResultsElement.ValueKind == JsonValueKind.Array)
+            if (entry.Status != AGUIResumeStatus.Resolved)
             {
-                foreach (var toolResultElement in toolResultsElement.EnumerateArray())
-                {
-                    if (toolResultElement.TryGetProperty("toolCallId", out var toolCallIdElement) &&
-                        toolResultElement.TryGetProperty("result", out var resultElement))
-                    {
-                        var toolCallId = toolCallIdElement.GetString();
-                        if (!string.IsNullOrEmpty(toolCallId))
-                        {
-                            var resultContent = new FunctionResultContent(toolCallId, resultElement);
-                            results.Add(new ChatMessage(ChatRole.Tool, [resultContent]));
-                        }
-                    }
-                }
+                continue;
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to parse resume payload for interrupt {InterruptId}", resume.InterruptId);
+
+            if (string.IsNullOrEmpty(entry.InterruptId) || !entry.Payload.HasValue)
+            {
+                _logger.LogWarning(
+                    "Resume entry {InterruptId} resolved without a payload; skipping",
+                    entry.InterruptId);
+                continue;
+            }
+
+            // InterruptId is the toolCallId for tool_call interrupts (see AGUIEventEmitter).
+            var resultContent = new FunctionResultContent(entry.InterruptId, entry.Payload.Value);
+            results.Add(new ChatMessage(ChatRole.Tool, [resultContent]));
         }
 
         return results;

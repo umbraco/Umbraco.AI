@@ -28,9 +28,9 @@ public class OpenXmlFileProcessingHandlerTests
     [InlineData("image/png", false)]
     [InlineData("text/plain", false)]
     [InlineData("application/octet-stream", false)]
-    public void CanHandle_WithMimeType_ReturnsExpected(string mimeType, bool expected)
+    public async Task CanHandleAsync_WithMimeType_ReturnsExpected(string mimeType, bool expected)
     {
-        _handler.CanHandle(mimeType).ShouldBe(expected);
+        (await _handler.CanHandleAsync(mimeType)).ShouldBe(expected);
     }
 
     #endregion

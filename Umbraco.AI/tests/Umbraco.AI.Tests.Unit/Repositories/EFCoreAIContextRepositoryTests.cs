@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Persistence;
 using Umbraco.AI.Persistence.Context;
 using Umbraco.AI.Tests.Common.Builders;
@@ -19,7 +22,10 @@ public class EFCoreAIContextRepositoryTests : IClassFixture<EFCoreTestFixture>
     private EFCoreAIContextRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEFCoreScopeProvider(() => context);
-        return new EFCoreAIContextRepository(scopeProvider);
+        var serializer = new AIEditableModelSerializer(new Mock<IAISensitiveFieldProtector>().Object);
+        var resourceTypes = new AIContextResourceTypeCollection(() => Array.Empty<IAIContextResourceType>());
+        var factory = new AIContextFactory(serializer, resourceTypes);
+        return new EFCoreAIContextRepository(scopeProvider, factory);
     }
 
     #region GetByIdAsync

@@ -33,14 +33,16 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
     /// </summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
+    /// </summary>
     public AgentTestFeature(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors,
-        AITestContextResolver contextResolver,
-        IAIEditableModelSchemaBuilder schemaBuilder)
-        : base(contextResolver, schemaBuilder)
+        IAITestFeatureInfrastructure infrastructure)
+        : base(infrastructure)
     {
         _agentService = agentService;
         _contextConverter = contextConverter;
@@ -78,8 +80,8 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         IEnumerable<Guid>? guardrailIdsOverride,
         CancellationToken cancellationToken)
     {
-        // Get strongly-typed config
-        var config = test.GetTestFeatureConfig<AgentTestFeatureConfig>();
+        // Get strongly-typed config (resolves $Config app-settings references and validates)
+        var config = ResolveTestFeatureConfig(test);
         if (config == null)
         {
             throw new InvalidOperationException("Failed to deserialize test feature config");
@@ -111,7 +113,7 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
         {
             ThreadId = config.ThreadId ?? test.Id.ToString(),
             RunId = $"{test.Id}-run-{runNumber}",
-            Messages = [new AGUIMessage { Role = AGUIMessageRole.User, Content = config.Message }],
+            Messages = [new AGUIMessage { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = config.Message }],
             Context = mergedContext
         };
 
@@ -176,8 +178,13 @@ public class AgentTestFeature : AITestFeatureBase<AgentTestFeatureConfig>
                     // Flush any buffered message content before finishing
                     FlushCurrentMessage(messages, currentMessageContent, ref finalContent, ref currentMessageId);
 
-                    outcome = runFinished.Outcome.ToString().ToLowerInvariant();
-                    messages.Add(new { role = "system", content = $"Run finished: {runFinished.Outcome}" });
+                    outcome = runFinished.Outcome switch
+                    {
+                        AGUIRunOutcomeInterrupt => "interrupt",
+                        AGUIRunOutcomeSuccess => "success",
+                        _ => "unknown",
+                    };
+                    messages.Add(new { role = "system", content = $"Run finished: {outcome}" });
                 }
                 else if (evt is RunErrorEvent runError)
                 {

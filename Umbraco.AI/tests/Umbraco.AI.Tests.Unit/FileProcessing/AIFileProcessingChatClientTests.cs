@@ -239,7 +239,8 @@ public class AIFileProcessingChatClientTests
             _content = content;
         }
 
-        public bool CanHandle(string mimeType) => string.Equals(mimeType, _mimeType, StringComparison.OrdinalIgnoreCase);
+        public Task<bool> CanHandleAsync(string mimeType, CancellationToken cancellationToken = default)
+            => Task.FromResult(string.Equals(mimeType, _mimeType, StringComparison.OrdinalIgnoreCase));
 
         public Task<AIFileProcessingResult> ProcessAsync(
             ReadOnlyMemory<byte> data, string mimeType, string? filename,

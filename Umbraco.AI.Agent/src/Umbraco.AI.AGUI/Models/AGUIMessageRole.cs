@@ -43,5 +43,12 @@ public enum AGUIMessageRole
     /// Frontend-only UI updates.
     /// </summary>
     [JsonStringEnumMemberName("activity")]
-    Activity
+    Activity,
+
+    /// <summary>
+    /// Reasoning / chain-of-thought content. Inert until reasoning support emits — added so
+    /// inbound spec-shaped messages with <c>role: "reasoning"</c> deserialize without errors.
+    /// </summary>
+    [JsonStringEnumMemberName("reasoning")]
+    Reasoning
 }

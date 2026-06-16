@@ -245,7 +245,9 @@ builder.AIChatMiddleware()
 
 ### Settings System
 
-Provider settings use `[AIField]` attributes for UI generation. Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:ApiKey"` reads from config).
+Provider settings use `[AIField]` attributes for UI generation. Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Umbraco:AI:Secrets:OpenAIApiKey"` reads from config).
+
+**Resolution is default-deny** (`AIEditableModelResolver`): a `$` key resolves only when it falls under `AIOptions.AllowedConfigurationKeyPrefixes` (default `Umbraco:AI:Secrets`, `Umbraco:AI:Variables`). Keys under `AIOptions.SecretConfigurationKeyPrefixes` (default `Umbraco:AI:Secrets`) may only be referenced from `[AIField(IsSensitive = true)]` fields. This confines references to sanctioned configuration sections rather than arbitrary application configuration. Prefixes are segment-aware/case-insensitive and the allow-list is app-settings-only (not backoffice-editable). A value that must start with a literal `$` (e.g. a guardrail regex/contains pattern) is escaped with a leading `$$` (`$$foo` → `$foo`); a trailing `$` is never treated as a reference and needs no escaping.
 
 ### Management API
 

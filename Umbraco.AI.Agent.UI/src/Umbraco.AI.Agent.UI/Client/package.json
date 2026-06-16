@@ -24,6 +24,6 @@
         "@umbraco-ai/agent": "*",
         "@umbraco-cms/backoffice": "^18.0.0-rc2",
         "typescript": "^5.9.2",
-        "vite": "^7.3.2"
+        "vite": "^8.0.16"
     }
 }

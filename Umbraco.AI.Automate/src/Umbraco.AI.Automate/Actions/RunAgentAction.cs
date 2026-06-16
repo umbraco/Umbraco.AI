@@ -158,7 +158,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
                 "Automation {AutomationId} / Run {RunId}: Agent {AgentId} responded with {MessageCount} message(s), text length {TextLength}",
                 context.AutomationId, context.RunId, settings.AgentId, response.Messages.Count, responseText.Length);
 
-            var outputData = TryParseStructuredOutput(responseText);
+            var outputData = BuildOutputData(responseText);
 
             return Success(outputData);
         }
@@ -179,11 +179,30 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
         }
     }
 
-    private static object TryParseStructuredOutput(string responseText)
+    /// <summary>
+    /// The reserved output property that always holds the agent's raw response text,
+    /// regardless of whether the agent uses a structured output schema. This guarantees
+    /// a bindable property is always available to downstream automation steps.
+    /// </summary>
+    public const string RawResponseKey = "response";
+
+    /// <summary>
+    /// Builds the action output data from the agent's raw response text.
+    /// The raw text is always exposed under the reserved <see cref="RawResponseKey"/> property.
+    /// If the response is a JSON object (structured output), its properties are merged in
+    /// alongside the raw response so both forms are bindable. The reserved raw response key
+    /// is never overwritten by a structured property of the same name.
+    /// </summary>
+    private static Dictionary<string, object?> BuildOutputData(string responseText)
     {
+        var output = new Dictionary<string, object?>
+        {
+            [RawResponseKey] = responseText ?? string.Empty,
+        };
+
         if (string.IsNullOrWhiteSpace(responseText))
         {
-            return new { response = string.Empty };
+            return output;
         }
 
         try
@@ -191,15 +210,24 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             var parsed = JsonSerializer.Deserialize<Dictionary<string, object?>>(responseText);
             if (parsed is not null)
             {
-                return parsed;
+                foreach (var (key, value) in parsed)
+                {
+                    // Don't let a structured property clobber the reserved raw response key.
+                    if (key == RawResponseKey)
+                    {
+                        continue;
+                    }
+
+                    output[key] = value;
+                }
             }
         }
         catch (JsonException)
         {
-            // Not valid JSON -- fall through to plain text response
+            // Not valid JSON -- the raw text is already captured under RawResponseKey.
         }
 
-        return new { response = responseText };
+        return output;
     }
 
     private async Task<IEnumerable<Guid>?> ResolveServiceAccountGroupIdsAsync(ActionContext context)

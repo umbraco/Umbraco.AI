@@ -78,7 +78,7 @@ public class OpenAISettings
 }
 ```
 
-Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:ApiKey"`).
+Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Umbraco:AI:Secrets:OpenAIApiKey"`). Resolution is default-deny — only keys under `AIOptions.AllowedConfigurationKeyPrefixes` (default `Umbraco:AI:Secrets` / `Umbraco:AI:Variables`) resolve, and secret keys only into `IsSensitive` fields. See the core docs for the rationale.
 
 ### Supported Models
 
@@ -103,13 +103,17 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 
 ## Configuration Examples
 
+Place config-reference targets under the allow-listed `Umbraco:AI:Secrets` (sensitive) and `Umbraco:AI:Variables` (non-sensitive) sections so `$` references resolve by default. Then reference them from connection settings, e.g. API Key = `$Umbraco:AI:Secrets:OpenAIApiKey`, Endpoint = `$Umbraco:AI:Variables:OpenAIEndpoint`.
+
 ### OpenAI API
 
 ```json
 {
-    "OpenAI": {
-        "ApiKey": "sk-proj-...",
-        "OrganizationId": "org-..."
+    "Umbraco": {
+        "AI": {
+            "Secrets": { "OpenAIApiKey": "sk-proj-..." },
+            "Variables": { "OpenAIOrganizationId": "org-..." }
+        }
     }
 }
 ```
@@ -118,15 +122,19 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 
 ```json
 {
-    "OpenAI": {
-        "Azure": {
-            "Endpoint": "https://your-resource.openai.azure.com/",
-            "ApiKey": "...",
-            "DeploymentName": "gpt-4"
+    "Umbraco": {
+        "AI": {
+            "Secrets": { "AzureOpenAIApiKey": "..." },
+            "Variables": {
+                "AzureOpenAIEndpoint": "https://your-resource.openai.azure.com/",
+                "AzureOpenAIDeploymentName": "gpt-4"
+            }
         }
     }
 }
 ```
+
+To keep using an existing section such as `OpenAI:ApiKey` instead, add its prefix to `Umbraco:AI:AllowedConfigurationKeyPrefixes`.
 
 ## Dependencies
 

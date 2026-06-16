@@ -890,6 +890,22 @@ git commit -m "chore(deps): Bump Microsoft.Extensions.AI to 10.7.0 for tool appr
 
 ---
 
+## Scope boundary & open questions: headless / non-interactive approval
+
+This plan implements approval over the **AG-UI streaming** path (interrupt → client approves → resume). It does **not** cover non-interactive callers — a real gap that must be resolved before approval can ever be **default-on** (see `project_v17_alignment_breaking_changes`).
+
+Verified constraints:
+- **The non-streaming path has no resume.** `RunAgentAction` (`Umbraco.AI.Automate/Actions/RunAgentAction.cs`) and any non-AG-UI caller invoke `IAIAgentService.RunAgentAsync(...)` — a single, non-streaming call. There is no interrupt/resume there, so a `ToolApprovalRequestContent` produced mid-run has nothing to resolve it: under default-on approval a destructive tool would leave the run incomplete (tool unexecuted) or stalled. **Behavior must be defined explicitly**, not inherited from whatever FICC does by default.
+- **No human is present.** `RunAgentAction` runs as the workspace service account; there is no backoffice user or chat surface to approve, and our `Umbraco.AI.Automate` package currently has **no pause/human-task/approval primitive** (grep-confirmed).
+
+Options (decide before default-on; record the outcome here):
+1. **Per-execution approval policy** on `AIAgentExecutionOptions` (it already carries `UserGroupIds`/`AdditionalProperties` for headless) — e.g. `ApprovalPolicy { Interactive, AutoDeny, AutoAllowWithAudit }`. AG-UI streaming ⇒ `Interactive`; Automate ⇒ configurable.
+2. **Auto-deny (safe default):** the tool is skipped, the model is told approval was denied, the run completes. Preserves automation flow; destructive tools simply don't run headlessly without explicit opt-in.
+3. **Auto-allow-with-audit:** approval bypassed but audit-logged. Keeps automation working but defeats the gate — acceptable only behind an explicit per-agent/per-automation opt-in.
+4. **Orchestrate with Umbraco Automate (richest — user-proposed).** `RunAgentAction` detects a pending approval and surfaces it to the Automate engine: pause the workflow, raise a human-approval task, resume the agent with the decision when actioned. **Depends on Automate capabilities not yet confirmed** — investigate whether `Umbraco.Automate.Core` supports a *suspended/awaiting* `ActionResult`, workflow pause/resume, and a human-task/approval step. Also requires a **non-AG-UI resume mechanism** (re-invoke the agent with a `ToolApprovalResponseContent` injected — the AG-UI `ExtractToolResultsFromResume` logic is AG-UI-specific; Automate needs an analogous path, or the approval is resolved before re-invocation). If Automate supports this, it's the proper headless story; if not, it's a larger cross-product effort and its own plan.
+
+**Recommendation:** ship this plan (AG-UI/interactive) with an `AIAgentExecutionOptions.ApprovalPolicy` defaulting to **`AutoDeny`** for non-interactive callers — that makes a future default-on safe everywhere without deadlock. Treat the Automate-orchestrated human-task flow (option 4) as a **separate cross-product investigation/plan**, gated on confirming Automate's suspend/resume/human-task support.
+
 ## Cross-cutting risks & test obligations
 
 1. **`AIToolReorderingChatClient` interaction.** `Umbraco.AI.Agent.Core/Chat/AIToolReorderingChatClient.cs` reorders so a `Terminate`-setting frontend call is handled correctly when batched with others. Approval-required backend calls are a *second* in-loop halt. Task 1 sets `AllowMultipleToolCalls = false` when destructive tools are present, which sidesteps most batching, but **add a regression test** for a turn that mixes a destructive backend tool and a frontend tool — assert the reordering client still surfaces both correctly (this can live in the Task 3 or Task 6 file). If `AllowMultipleToolCalls = false` makes the model serialize calls, the mixed-turn case may not even arise; document the observed behavior.

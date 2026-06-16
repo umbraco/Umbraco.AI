@@ -54,11 +54,22 @@ Expose `Microsoft.Extensions.VectorData` as the public surface, but implement `V
 - **Pros:** Keeps the SQL 2025 optimization and Umbraco integration; gives consumers the standard interface; lets *other* backends be swapped in later via published connectors; principled long-term end-state.
 - **Cons:** Highest implementation effort — we must satisfy the full collection contract (record mapping, filters, search options, possibly hybrid search) over our model; exposes us to VectorData API churn at the public boundary; most of the ecosystem benefit only materializes once we also wire alternate connectors (i.e. a lot of work before the payoff).
 
+### Option D — `IAIVectorStore` adapter over a MEAI `VectorStoreCollection` connector (additive, opt-in)
+Keep `IAIVectorStore` as the public surface; add an **alternative implementation** (`MeaiVectorStoreAdapter : IAIVectorStore`) that delegates to a MEAI `VectorStoreCollection` from a published connector (Qdrant, Azure AI Search, pgvector…). The existing EF/SQL-2025 store remains the **default** impl; the adapter is opt-in (a separate connector package per backend, mirroring our provider model, e.g. `Umbraco.AI.Search.Db.Qdrant`).
+
+Mapping our 6 used methods onto a collection (validated 2026-06-16):
+- `UpsertAsync` (composite identity → synthesized string key) ✓; `SearchAsync` ✓ (gains native **ANN** vs our brute-force); `GetVectorsByDocumentAsync` → filtered `GetAsync` ✓; `DeleteDocumentAsync`/`ResetAsync` → filter-keys-then-`DeleteAsync(keys)` ✓ (two-step, fine for deletes).
+- **One real gap:** `GetDocumentCountAsync` — there is **no `Count` in the VectorData abstraction**. Resolve via the connector's native client through `VectorStoreCollection.GetService(...)` (Qdrant/Azure expose count), or relax that method to approximate/optional.
+- Arbitrary `IDictionary<string,object>` metadata → a single serialized **JSON data-property** on the record (portable across connectors).
+
+- **Pros:** **No public-API break, no consumer churn** (interface unchanged); actually delivers external-service backends (which C does *not*); keeps our SQL-2025/EF store as default — external backends are purely additive/opt-in; smaller than C (we adapt *our* 6 methods one-way, not implement VectorData's full 14-member contract).
+- **Cons:** each backend needs its connector NuGet (opt-in packages); the `Count` workaround; per-backend config (dimensions/distance/filter support); we don't get the SQL-2025 optimization on the *external* path (acceptable — those backends have their own ANN indexes).
+
 ## Decision (recommended)
 
-**Adopt Option A (keep custom `IAIVectorStore`) now; treat Option C as the deferred end-state, revisited on concrete demand.** Do **not** adopt Option B.
+**Adopt Option A (keep custom `IAIVectorStore`) now.** When external backends become a concrete need, prefer **Option D** (adapter behind `IAIVectorStore`) over B or C. Do **not** adopt B (sacrifices our integration) or pursue C speculatively (no connector payoff standalone).
 
-Rationale: our integration with Umbraco's DbContext/migrations plus the SQL 2025 light-up *is* the product value here, and Option B sacrifices exactly that for an ecosystem we have no current demand for. Option C is the right principled target, but doing it speculatively — against a still-evolving 9.x abstraction, before any user needs Qdrant/Azure AI Search or hybrid search — is YAGNI and exposes a working subsystem to churn for no near-term gain. Staying on a small, well-contained custom abstraction keeps optionality cheap: the ~9-file consumer surface and the clean `IAIVectorStore` seam mean a later move to Option C is tractable when justified.
+Rationale: our integration with Umbraco's DbContext/migrations plus the SQL 2025 light-up *is* the product value, so the default store stays. Option D is the key insight from this review: it delivers the actual goal (plug into external vector services) **additively and without a public break**, because `IAIVectorStore` is a small, well-contained seam — so there's no need to break it or expose VectorData to consumers. There's still no current demand, so we build nothing now; but D, not B/C, is the path when demand arrives. (Option C remains only relevant if we ever want *consumers* to speak the VectorData interface directly — a separate, weaker motivation.)
 
 ## Consequences
 
@@ -68,15 +79,37 @@ Rationale: our integration with Umbraco's DbContext/migrations plus the SQL 2025
 
 ## Revisit triggers
 
-Re-open this ADR (toward Option C) when any of:
+Re-open this ADR (toward Option D — the adapter — for external backends) when any of:
 1. A concrete user/requirement needs a backend we don't have (Qdrant, Azure AI Search, pgvector).
 2. We need hybrid (vector + keyword) search or rich metadata filtering that VectorData provides off the shelf.
 3. `Microsoft.Extensions.VectorData` reaches a stable 10.x aligned with MEAI core and ships a connector that can ride an existing EF Core `DbContext` (removing the Option B integration objection).
 4. Maintaining our own brute-force/capability-detection code becomes a material burden.
 
-## Notes for a future Option C spike (not now)
+## Option C effort assessment (investigated 2026-06-16)
 
-- Map `AIVectorEntryEntity` → a `[VectorStoreKey]`/`[VectorStoreData]`/`[VectorStoreVector]`-annotated record.
-- Implement `VectorStoreCollection<string, TRecord>` + `IVectorSearchable<TRecord>` over `EFCoreAIVectorStore`, keeping the SQL 2025 `VECTOR_DISTANCE` path inside `SearchAsync`.
-- Translate `VectorSearchOptions`/filters to our culture/index filtering; decide hybrid-search support.
-- Keep `IAIVectorStore` as an internal adapter or retire it once consumers move to the collection API.
+Desk investigation of the real effort, prompted by the v17 major-alignment review. **Conclusion: confirms defer** — medium-large effort, leaky "standard" surface, and no connector payoff standalone.
+
+### Consumer surface (small)
+Only 4 consumers, 6 methods used — so keeping `IAIVectorStore` as a facade over a new impl means ~zero consumer churn:
+- `AIVectorIndexer` → `UpsertAsync`, `DeleteDocumentAsync`, `ResetAsync`, `GetDocumentCountAsync`
+- `AIVectorSearcher` → `SearchAsync`
+- `SemanticSearchTool` → `GetVectorsByDocumentAsync`
+- `AISearchUsageTelemetryProvider` → `GetDocumentCountAsync`
+
+### Contract to implement
+`VectorStoreCollection<TKey,TRecord>` (~14 members: `UpsertAsync`/`DeleteAsync`/`GetAsync` singular+batch, filtered `GetAsync`, `SearchAsync`, `CollectionExists`/`EnsureCollection*`), plus `VectorStore` (~8: `GetCollection`, `CollectionExistsAsync`, `EnsureCollectionDeletedAsync`, `ListCollectionNamesAsync`), plus a `[VectorStoreKey]`/`[VectorStoreData]`/`[VectorStoreVector]` record type + mapping to/from `AIVectorEntryEntity`.
+
+### Impedance mismatches (the crux — 3 of 6 used methods)
+1. **No `Count` in the VectorData contract**, but `GetDocumentCountAsync` is used by two consumers. → keep custom (defeats "standard surface") or enumerate (perf hit). Sharpest friction.
+2. **VectorData deletes are key-based; ours are predicate-based** (`DeleteDocumentAsync`, `ResetAsync`). → query-keys-then-delete, or keep custom.
+3. **Composite identity** (indexName+documentId+culture+chunkIndex) → synthesize a string key; `indexName` ⇒ "collection".
+4. **JSON-in-nvarchar + runtime SQL 2025 dimension detection** vs connectors' typed vector columns → only preserved if we implement our *own* collection (not use a connector).
+
+### Benefit reality-check
+A custom `VectorStoreCollection` over our EF store yields the **standard interface only — NOT the connector ecosystem**. Connectors (Qdrant/Azure) = Option B = abandon the SQL 2025 + Umbraco-DbContext integration. So Option C standalone = "standard surface + future optionality"; if alternate backends later become a real need, you'd adopt a connector and most of Option C's mapping work is discarded.
+
+### Effort
+Medium-large: record+mapping (S), 14-member collection contract incl. **re-homing the SQL 2025 `VECTOR_DISTANCE` path into `SearchAsync`** (L), store/factory (M), `IAIVectorStore` facade to avoid consumer churn (S), cross-provider + VectorData conformance tests (M–L), 2-project DI (S), plus the count/delete impedance workarounds. A multi-day refactor — not an interface swap.
+
+### Bottom line
+Not justified now, and this investigation also reframes the *future* path: the effort of implementing VectorData's full contract (Option C) isn't worth it. When external backends are wanted, **Option D (adapter behind `IAIVectorStore`)** is the lighter, non-breaking route — adapt our 6 methods one-way onto a connector's `VectorStoreCollection` rather than implement the 14-member contract or break the public interface. Option C only matters if we ever want *consumers* to speak VectorData directly.

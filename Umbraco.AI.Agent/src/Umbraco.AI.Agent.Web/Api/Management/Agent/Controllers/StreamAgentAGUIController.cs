@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
@@ -44,6 +43,7 @@ public class StreamAgentAGUIController : AgentControllerBase
 {
     private readonly IAIAgentService _agentService;
     private readonly IAGUIContextConverter _contextConverter;
+    private readonly IAGUIToolConverter _toolConverter;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
 
@@ -53,11 +53,13 @@ public class StreamAgentAGUIController : AgentControllerBase
     public StreamAgentAGUIController(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,
+        IAGUIToolConverter toolConverter,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
     {
         _agentService = agentService;
         _contextConverter = contextConverter;
+        _toolConverter = toolConverter;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
     }
@@ -148,7 +150,7 @@ public class StreamAgentAGUIController : AgentControllerBase
         }
 
         // Tool metadata travels inline via AGUITool.Metadata per AG-UI spec — no rejoin needed.
-        var frontendTools = BuildFrontendTools(request.Tools);
+        var frontendTools = _toolConverter.ConvertToFrontendTools(request.Tools);
 
         // Delegate to service - handles tool creation, permission filtering, and streaming
         var events = _agentService.StreamAgentAGUIAsync(
@@ -194,61 +196,6 @@ public class StreamAgentAGUIController : AgentControllerBase
         {
             yield return evt;
         }
-    }
-
-    /// <summary>
-    /// Wraps each AG-UI tool with the metadata it carries inline (<see cref="AGUITool.Metadata"/>).
-    /// Per AG-UI spec, vendor-specific tool data such as <c>scope</c> and <c>isDestructive</c>
-    /// travels in <c>tool.metadata</c> alongside the tool definition.
-    /// </summary>
-    private static IEnumerable<AIFrontendTool>? BuildFrontendTools(IEnumerable<AGUITool>? tools)
-    {
-        if (tools is null)
-        {
-            return null;
-        }
-
-        var frontendTools = new List<AIFrontendTool>();
-        foreach (var tool in tools)
-        {
-            var scope = ReadStringMetadata(tool.Metadata, AGUIConstants.ToolMetadataKeys.Scope);
-            var isDestructive = ReadBoolMetadata(tool.Metadata, AGUIConstants.ToolMetadataKeys.IsDestructive);
-            frontendTools.Add(new AIFrontendTool(tool, scope, isDestructive));
-        }
-
-        return frontendTools;
-    }
-
-    private static string? ReadStringMetadata(IReadOnlyDictionary<string, object?>? metadata, string key)
-    {
-        if (metadata is null || !metadata.TryGetValue(key, out var raw) || raw is null)
-        {
-            return null;
-        }
-
-        return raw switch
-        {
-            string s => s,
-            JsonElement je when je.ValueKind == JsonValueKind.String => je.GetString(),
-            _ => raw.ToString(),
-        };
-    }
-
-    private static bool ReadBoolMetadata(IReadOnlyDictionary<string, object?>? metadata, string key)
-    {
-        if (metadata is null || !metadata.TryGetValue(key, out var raw) || raw is null)
-        {
-            return false;
-        }
-
-        return raw switch
-        {
-            bool b => b,
-            JsonElement je when je.ValueKind == JsonValueKind.True => true,
-            JsonElement je when je.ValueKind == JsonValueKind.False => false,
-            string s => bool.TryParse(s, out var parsed) && parsed,
-            _ => false,
-        };
     }
 
     /// <summary>

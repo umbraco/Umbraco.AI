@@ -160,7 +160,7 @@ export interface UaiToolCallInfo {
  */
 export interface UaiInterruptInfo {
     id: string;
-    /** Reason for the interrupt (e.g., "tool_execution" for frontend tools) */
+    /** Reason for the interrupt (e.g., "tool_call" for frontend tools) */
     reason?: string;
     type: "approval" | "input" | "choice" | "custom";
     title: string;

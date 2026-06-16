@@ -1,7 +1,7 @@
 import type { UaiAgentState, UaiChatMessage, UaiInterruptInfo } from "../types/index.js";
 
 export interface UaiInterruptHandler {
-    readonly reason: string; // e.g., "tool_execution", "human_approval", "*" for fallback
+    readonly reason: string; // e.g., "tool_call", "human_approval", "*" for fallback
     handle(interrupt: UaiInterruptInfo, context: UaiInterruptContext): void;
 }
 

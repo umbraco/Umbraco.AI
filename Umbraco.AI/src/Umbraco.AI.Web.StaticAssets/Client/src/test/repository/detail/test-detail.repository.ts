@@ -43,7 +43,7 @@ export class UaiTestDetailRepository extends UmbDetailRepositoryBase<UaiTestDeta
     override async delete(unique: string) {
         const result = await super.delete(unique);
         if (!result.error) {
-            // Collection reload is owned by the delete action so a bulk delete refreshes once.
+            // Notify listeners of the deletion. Collection and tree reloads are requested by the delete action.
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_TEST_ENTITY_TYPE));
         }
         return result;

@@ -18,8 +18,7 @@ export class UaiAuditLogDetailRepository extends UmbDetailRepositoryBase<UaiAudi
     override async delete(unique: string) {
         const result = await super.delete(unique);
         if (!result.error) {
-            // Notify that a trace was deleted (collection reload is owned by the delete action,
-            // so a bulk delete refreshes the collection once instead of once per item).
+            // Notify listeners of the deletion. Collection and tree reloads are requested by the delete action.
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_AUDIT_LOG_ENTITY_TYPE));
         }
         return result;

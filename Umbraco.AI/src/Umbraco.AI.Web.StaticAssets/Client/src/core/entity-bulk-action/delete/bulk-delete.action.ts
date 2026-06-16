@@ -1,10 +1,15 @@
 import { UmbEntityBulkActionBase } from "@umbraco-cms/backoffice/entity-bulk-action";
+import {
+    UmbRequestReloadChildrenOfEntityEvent,
+    UmbRequestReloadStructureForEntityEvent,
+} from "@umbraco-cms/backoffice/entity-action";
 import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
 import { umbPeekError } from "@umbraco-cms/backoffice/notification";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
+import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
+import { UMB_ENTITY_CONTEXT } from "@umbraco-cms/backoffice/entity";
 import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 
 /**
  * Configuration for the bulk delete action.
@@ -62,12 +67,17 @@ export abstract class UaiBulkDeleteActionBase extends UmbEntityBulkActionBase<ne
             // The repository dispatches the entity-deleted event per item.
         }
 
-        // Refresh the collection once, after every delete has completed. The repository no longer
-        // reloads per item: N items used to fire N uncancelled, racing reloads, so an early
-        // (pre-delete) response could resolve last and leave deleted rows on screen. Clearing the
-        // selection also dismisses the now-stale bulk-action selection toolbar.
-        const collectionContext = await this.getContext(UMB_COLLECTION_CONTEXT);
-        collectionContext?.selection.clearSelection();
-        collectionContext?.loadCollection();
+        // Request one reload of the parent's children and structure via the action event context
+        // (as CMS's UmbDeleteEntityBulkAction does). Every collection, tree and structure consumer
+        // refreshes once; the collection's action-executed handler clears the selection toolbar.
+        const entityContext = await this.getContext(UMB_ENTITY_CONTEXT);
+        const eventContext = await this.getContext(UMB_ACTION_EVENT_CONTEXT);
+        const entityType = entityContext?.getEntityType();
+        const unique = entityContext?.getUnique();
+        if (eventContext && entityType && unique !== undefined) {
+            const args = { entityType, unique };
+            eventContext.dispatchEvent(new UmbRequestReloadChildrenOfEntityEvent(args));
+            eventContext.dispatchEvent(new UmbRequestReloadStructureForEntityEvent(args));
+        }
     }
 }

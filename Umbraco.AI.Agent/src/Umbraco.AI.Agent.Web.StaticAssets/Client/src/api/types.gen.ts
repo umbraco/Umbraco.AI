@@ -15,20 +15,25 @@ export type AGUIFunctionCallModel = {
 };
 
 export type AGUIMessageModel = {
-    id?: string | null;
+    id: string;
     role: AGUIMessageRoleModel;
     content?: string | null;
     name?: string | null;
+    encryptedValue?: string | null;
     toolCalls?: Array<AGUIToolCallModel> | null;
     toolCallId?: string | null;
+    error?: string | null;
 };
 
-export type AGUIMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
+export type AGUIMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity' | 'Reasoning';
 
-export type AGUIResumeInfoModel = {
+export type AGUIResumeEntryModel = {
     interruptId: string;
+    status: AGUIResumeStatusModel;
     payload?: unknown;
 };
+
+export type AGUIResumeStatusModel = 'Resolved' | 'Cancelled';
 
 export type AGUIRunRequestModel = {
     threadId: string;
@@ -37,7 +42,7 @@ export type AGUIRunRequestModel = {
     tools?: Array<AGUIToolModel> | null;
     state?: unknown;
     context?: Array<AGUIContextItemModel> | null;
-    resume?: AGUIResumeInfoModel | null;
+    resume?: Array<AGUIResumeEntryModel> | null;
     forwardedProps?: unknown;
 };
 
@@ -45,18 +50,16 @@ export type AGUIToolCallModel = {
     id: string;
     type: string;
     function: AGUIFunctionCallModel;
+    encryptedValue?: string | null;
 };
 
 export type AGUIToolModel = {
     name: string;
     description: string;
-    parameters: AGUIToolParametersModel;
-};
-
-export type AGUIToolParametersModel = {
-    type: string;
-    properties: unknown;
-    required?: Array<string> | null;
+    parameters?: unknown;
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type AiAgentScopeModel = {
@@ -171,14 +174,6 @@ export type EditableModelFieldModel = {
 export type EditableModelSchemaModel = {
     type?: string | null;
     fields: Array<EditableModelFieldModel>;
-};
-
-export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
-
-export type NotificationHeaderModel = {
-    message: string;
-    category: string;
-    type: EventMessageTypeModel;
 };
 
 export type OrchestratedAgentConfigModel = AgentConfigModel & {

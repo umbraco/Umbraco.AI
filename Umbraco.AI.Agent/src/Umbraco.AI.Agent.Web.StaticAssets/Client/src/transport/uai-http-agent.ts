@@ -150,10 +150,16 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     }
 
     #toAGUITool(tool: Tool): AGUIToolModel {
+        // Forward vendor metadata (scope, isDestructive) inline per AG-UI spec.
+        // UaiAgentClient attaches it to Tool.metadata; the server reads it in
+        // BuildFrontendTools to gate HITL/approval. Dropping it here severs that —
+        // every frontend tool would arrive with scope=null, isDestructive=false.
+        const metadata = (tool as Tool & { metadata?: Record<string, unknown> }).metadata;
         return {
             name: tool.name,
             description: tool.description,
             parameters: tool.parameters,
+            ...(metadata ? { metadata } : {}),
         };
     }
 

@@ -1,4 +1,4 @@
-import { type Message, type BaseEvent, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
+import { type Message, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import {
     UaiChatMessage,
@@ -7,17 +7,15 @@ import {
     AgentClientCallbacks,
     UaiFrontendTool,
     AgentTransport,
-    TextMessageStartEvent,
-    TextMessageContentEvent,
-    ToolCallStartEvent,
-    ToolCallArgsEvent,
-    ToolCallEndEvent,
-    ToolCallResultEvent,
-    RunFinishedAGUIEvent,
-    RunErrorEvent,
-    StateSnapshotEvent,
-    StateDeltaEvent,
-    MessagesSnapshotEvent, CustomEvent,
+    type AGUIEvent,
+    type Interrupt,
+    type RunErrorEvent,
+    type ToolCallStartEvent,
+    type ToolCallArgsEvent,
+    type ToolCallEndEvent,
+    type AGUIRunFinishedEvent,
+    type MessagesSnapshotEvent,
+    type UaiAgentState,
     type UaiInputContent,
 } from "./types.js";
 
@@ -138,8 +136,10 @@ export class UaiAgentClient {
         const convertedMessages = messages.map((m) => UaiAgentClient.#toAGUIMessage(m));
         this.#transport.setMessages(convertedMessages);
 
-        // Split UaiFrontendTool into AGUITool[] and tool metadata
-        const { aguiTools, toolMetadata } = this.#splitFrontendTools(tools ?? []);
+        // Map UaiFrontendTool[] -> AG-UI Tool[] with metadata inline (per AG-UI spec
+        // Tool.metadata field). Replaces the previous forwardedProps.toolMetadata
+        // side-channel where metadata was sent in a parallel array and rejoined by name.
+        const aguiTools = (tools ?? []).map((tool) => UaiAgentClient.#toAGUITool(tool));
 
         // Subscribe to the transport's event stream
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
@@ -150,11 +150,10 @@ export class UaiAgentClient {
                 messages: convertedMessages,
                 tools: aguiTools,
                 context: context ?? [],
-                forwardedProps: toolMetadata.length > 0 ? { toolMetadata } : undefined,
             })
             .pipe(transformChunks(false))
             .subscribe({
-                next: (event) => this.#handleEvent(event),
+                next: (event) => this.#handleEvent(event as AGUIEvent),
                 error: (error) => {
                     const err = error instanceof Error ? error : new Error(String(error));
                     this.#callbacks.onError?.(err);
@@ -163,51 +162,46 @@ export class UaiAgentClient {
     }
 
     /**
-     * Split UaiFrontendTool[] into AGUITool[] and tool metadata for forwardedProps.
-     * @param tools Array of UaiFrontendTool objects with metadata
-     * @returns Object with aguiTools (for LLM) and toolMetadata (for backend permission filtering)
+     * Convert a UaiFrontendTool to an AG-UI Tool. Vendor-specific fields (scope,
+     * isDestructive) travel inline via the spec's Tool.metadata field.
      */
-    #splitFrontendTools(tools: UaiFrontendTool[]): {
-        aguiTools: Tool[];
-        toolMetadata: Array<{ toolName: string; scope?: string; isDestructive: boolean }>;
-    } {
-        const aguiTools: Tool[] = [];
-        const toolMetadata: Array<{ toolName: string; scope?: string; isDestructive: boolean }> = [];
-
-        for (const tool of tools) {
-            // AG-UI tool (for LLM)
-            aguiTools.push({
-                name: tool.name,
-                description: tool.description,
-                parameters: tool.parameters,
-            });
-
-            // Tool metadata (for backend permission filtering)
-            toolMetadata.push({
-                toolName: tool.name,
-                scope: tool.scope,
-                isDestructive: tool.isDestructive ?? false,
-            });
+    static #toAGUITool(tool: UaiFrontendTool): Tool {
+        const metadata: Record<string, unknown> = {};
+        if (tool.scope !== undefined) {
+            metadata.scope = tool.scope;
+        }
+        if (tool.isDestructive !== undefined) {
+            metadata.isDestructive = tool.isDestructive;
         }
 
-        return { aguiTools, toolMetadata };
+        const result: Tool = {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters,
+        };
+        if (Object.keys(metadata).length > 0) {
+            (result as Tool & { metadata?: Record<string, unknown> }).metadata = metadata;
+        }
+        return result;
     }
 
     /**
      * Handle incoming AG-UI events.
      */
-    #handleEvent(event: BaseEvent) {
+    #handleEvent(event: AGUIEvent) {
         switch (event.type) {
-            case AGUIEventType.TEXT_MESSAGE_START: {
-                const messageId = (event as TextMessageStartEvent).messageId;
-                if (messageId) {
-                    this.#callbacks.onTextStart?.(messageId);
+            case AGUIEventType.RUN_STARTED:
+                // No-op: the run started when sendMessage was called; no UI reaction needed.
+                break;
+
+            case AGUIEventType.TEXT_MESSAGE_START:
+                if (event.messageId) {
+                    this.#callbacks.onTextStart?.(event.messageId);
                 }
                 break;
-            }
 
             case AGUIEventType.TEXT_MESSAGE_CONTENT:
-                this.#callbacks.onTextDelta?.((event as TextMessageContentEvent).delta);
+                this.#callbacks.onTextDelta?.(event.delta);
                 break;
 
             case AGUIEventType.TEXT_MESSAGE_END:
@@ -215,26 +209,23 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.TOOL_CALL_START:
-                this.#handleToolCallStart(event as ToolCallStartEvent);
+                this.#handleToolCallStart(event);
                 break;
 
             case AGUIEventType.TOOL_CALL_ARGS:
-                this.#handleToolCallArgs(event as ToolCallArgsEvent);
+                this.#handleToolCallArgs(event);
                 break;
 
             case AGUIEventType.TOOL_CALL_END:
-                this.#handleToolCallEnd(event as ToolCallEndEvent);
+                this.#handleToolCallEnd(event);
                 break;
 
             case AGUIEventType.TOOL_CALL_RESULT:
-                this.#callbacks.onToolCallResult?.(
-                    (event as ToolCallResultEvent).toolCallId,
-                    (event as ToolCallResultEvent).content,
-                );
+                this.#callbacks.onToolCallResult?.(event.toolCallId, event.content);
                 break;
 
             case AGUIEventType.RUN_FINISHED:
-                this.#handleRunFinished(event as RunFinishedAGUIEvent);
+                this.#handleRunFinished(event as AGUIRunFinishedEvent);
                 break;
 
             case AGUIEventType.RUN_ERROR: {
@@ -244,20 +235,20 @@ export class UaiAgentClient {
             }
 
             case AGUIEventType.STATE_SNAPSHOT:
-                this.#callbacks.onStateSnapshot?.((event as StateSnapshotEvent).state);
+                this.#callbacks.onStateSnapshot?.(event.snapshot as UaiAgentState);
                 break;
 
             case AGUIEventType.STATE_DELTA:
-                this.#callbacks.onStateDelta?.((event as StateDeltaEvent).delta);
+                // TODO: apply RFC 6902 JSON Patch ops instead of passing the raw array through.
+                this.#callbacks.onStateDelta?.(event.delta as unknown as Partial<UaiAgentState>);
                 break;
 
             case AGUIEventType.MESSAGES_SNAPSHOT:
-                this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
+                this.#handleMessagesSnapshot(event);
                 break;
 
             case AGUIEventType.CUSTOM:
-                const customEvent = event as CustomEvent;
-                this.#callbacks.onCustomEvent?.(customEvent.name, customEvent.value);
+                this.#callbacks.onCustomEvent?.(event.name, event.value);
                 break;
 
             default:
@@ -290,21 +281,17 @@ export class UaiAgentClient {
         }
     }
 
-    #handleRunFinished(event: RunFinishedAGUIEvent) {
-        // Normalize outcome to lowercase for case-insensitive comparison
-        // Backend sends PascalCase (e.g., "Interrupt") but we use lowercase
-        const outcome = (event.outcome ?? "").toLowerCase();
-
-        if (outcome === "interrupt") {
-            const interrupt = UaiAgentClient.#parseInterrupt(event.interrupt);
+    #handleRunFinished(event: AGUIRunFinishedEvent) {
+        // `outcome` is optional in the SDK schema; absent/success both complete the run.
+        if (event.outcome?.type === "interrupt") {
+            // The callback shape currently surfaces a single interrupt; batched
+            // interrupts beyond the first are dropped here. TODO: extend the
+            // callback to iterate when batched HITL flows land.
+            const first = event.outcome.interrupts[0];
+            const interrupt = UaiAgentClient.#parseInterrupt(first);
             this.#callbacks.onRunFinished?.({
                 outcome: "interrupt",
                 interrupt,
-            });
-        } else if (outcome === "error") {
-            this.#callbacks.onRunFinished?.({
-                outcome: "error",
-                error: event.error as string,
             });
         } else {
             this.#callbacks.onRunFinished?.({
@@ -352,19 +339,24 @@ export class UaiAgentClient {
         this.#callbacks.onMessagesSnapshot?.(messages);
     }
 
-    static #parseInterrupt(raw: unknown): UaiInterruptInfo {
-        const data = raw as Record<string, unknown>;
-
+    /**
+     * Map an AG-UI Interrupt object onto our UI-shaped UaiInterruptInfo.
+     * Spec fields (id / reason / message / toolCallId / metadata) come from
+     * the Interrupt directly; UI-render hints (type / title / options /
+     * inputConfig) are read from `metadata` if the server attached them there.
+     */
+    static #parseInterrupt(raw: Interrupt): UaiInterruptInfo {
+        const metadata = raw.metadata ?? {};
         return {
-            id: (data.id as string) ?? crypto.randomUUID(),
-            reason: data.reason as string | undefined,
-            type: (data.type as UaiInterruptInfo["type"]) ?? "custom",
-            title: (data.title as string) ?? "Action Required",
-            message: (data.message as string) ?? "",
-            options: data.options as UaiInterruptInfo["options"],
-            inputConfig: data.inputConfig as UaiInterruptInfo["inputConfig"],
-            payload: data.payload as Record<string, unknown>,
-            metadata: data.metadata as Record<string, unknown>,
+            id: raw.id ?? crypto.randomUUID(),
+            reason: raw.reason,
+            type: (metadata.type as UaiInterruptInfo["type"]) ?? "custom",
+            title: (metadata.title as string) ?? "Action Required",
+            message: raw.message ?? "",
+            options: metadata.options as UaiInterruptInfo["options"],
+            inputConfig: metadata.inputConfig as UaiInterruptInfo["inputConfig"],
+            payload: raw.toolCallId ? { toolCallId: raw.toolCallId } : undefined,
+            metadata: raw.metadata,
         };
     }
 

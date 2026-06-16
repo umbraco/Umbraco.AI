@@ -11,11 +11,10 @@ namespace Umbraco.AI.AGUI.Models;
 public sealed class AGUIMessage
 {
     /// <summary>
-    /// Gets or sets the message identifier.
+    /// Gets or sets the message identifier. Required by the AG-UI spec on every message variant.
     /// </summary>
     [JsonPropertyName("id")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Id { get; set; }
+    public required string Id { get; set; }
 
     /// <summary>
     /// Gets or sets the message role.
@@ -46,6 +45,14 @@ public sealed class AGUIMessage
     public string? Name { get; set; }
 
     /// <summary>
+    /// Gets or sets the encrypted-value envelope per AG-UI spec — opaque payload providers may use
+    /// for zero-data-retention round-trips. Optional on every message variant.
+    /// </summary>
+    [JsonPropertyName("encryptedValue")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? EncryptedValue { get; set; }
+
+    /// <summary>
     /// Gets or sets the tool calls made by the assistant.
     /// </summary>
     [JsonPropertyName("toolCalls")]
@@ -58,6 +65,13 @@ public sealed class AGUIMessage
     [JsonPropertyName("toolCallId")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ToolCallId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tool-execution error message (tool-role only per AG-UI spec).
+    /// </summary>
+    [JsonPropertyName("error")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Error { get; set; }
 }
 
 /// <summary>
@@ -71,12 +85,20 @@ internal sealed class AGUIMessageJsonConverter : JsonConverter<AGUIMessage>
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("Expected StartObject token for AGUIMessage.");
 
-        var message = new AGUIMessage();
+        string? id = null;
+        var role = default(AGUIMessageRole);
+        string? content = null;
+        IList<AGUIInputContent>? contentParts = null;
+        string? name = null;
+        string? encryptedValue = null;
+        IEnumerable<AGUIToolCall>? toolCalls = null;
+        string? toolCallId = null;
+        string? error = null;
 
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject)
-                return message;
+                break;
 
             if (reader.TokenType != JsonTokenType.PropertyName)
                 throw new JsonException("Expected PropertyName token.");
@@ -87,29 +109,37 @@ internal sealed class AGUIMessageJsonConverter : JsonConverter<AGUIMessage>
             switch (propertyName)
             {
                 case "id":
-                    message.Id = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
+                    id = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
                     break;
 
                 case "role":
-                    message.Role = JsonSerializer.Deserialize<AGUIMessageRole>(ref reader, options);
+                    role = JsonSerializer.Deserialize<AGUIMessageRole>(ref reader, options);
                     break;
 
                 case "content":
-                    ReadContent(ref reader, message, options);
+                    ReadContent(ref reader, ref content, ref contentParts, options);
                     break;
 
                 case "name":
-                    message.Name = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
+                    name = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
+                    break;
+
+                case "encryptedValue":
+                    encryptedValue = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
                     break;
 
                 case "toolCalls":
-                    message.ToolCalls = reader.TokenType == JsonTokenType.Null
+                    toolCalls = reader.TokenType == JsonTokenType.Null
                         ? null
                         : JsonSerializer.Deserialize<List<AGUIToolCall>>(ref reader, options);
                     break;
 
                 case "toolCallId":
-                    message.ToolCallId = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
+                    toolCallId = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
+                    break;
+
+                case "error":
+                    error = reader.TokenType == JsonTokenType.Null ? null : reader.GetString();
                     break;
 
                 default:
@@ -119,30 +149,50 @@ internal sealed class AGUIMessageJsonConverter : JsonConverter<AGUIMessage>
             }
         }
 
-        throw new JsonException("Unexpected end of JSON for AGUIMessage.");
+        if (id is null)
+        {
+            throw new JsonException("AGUIMessage 'id' is required by the AG-UI spec.");
+        }
+
+        return new AGUIMessage
+        {
+            Id = id,
+            Role = role,
+            Content = content,
+            ContentParts = contentParts,
+            Name = name,
+            EncryptedValue = encryptedValue,
+            ToolCalls = toolCalls,
+            ToolCallId = toolCallId,
+            Error = error,
+        };
     }
 
-    private static void ReadContent(ref Utf8JsonReader reader, AGUIMessage message, JsonSerializerOptions options)
+    private static void ReadContent(
+        ref Utf8JsonReader reader,
+        ref string? content,
+        ref IList<AGUIInputContent>? contentParts,
+        JsonSerializerOptions options)
     {
         switch (reader.TokenType)
         {
             case JsonTokenType.String:
                 // Plain string content (backward compatible)
-                message.Content = reader.GetString();
+                content = reader.GetString();
                 break;
 
             case JsonTokenType.StartArray:
                 // Multimodal content parts array
                 var parts = JsonSerializer.Deserialize<List<AGUIInputContent>>(ref reader, options);
-                message.ContentParts = parts;
+                contentParts = parts;
                 // Derive text content from text parts for backward compatibility
-                message.Content = parts != null
+                content = parts != null
                     ? string.Join("", parts.OfType<AGUITextInputContent>().Select(t => t.Text))
                     : null;
                 break;
 
             case JsonTokenType.Null:
-                message.Content = null;
+                content = null;
                 break;
 
             default:
@@ -154,10 +204,7 @@ internal sealed class AGUIMessageJsonConverter : JsonConverter<AGUIMessage>
     {
         writer.WriteStartObject();
 
-        if (value.Id != null)
-        {
-            writer.WriteString("id", value.Id);
-        }
+        writer.WriteString("id", value.Id);
 
         writer.WritePropertyName("role");
         JsonSerializer.Serialize(writer, value.Role, options);
@@ -178,6 +225,11 @@ internal sealed class AGUIMessageJsonConverter : JsonConverter<AGUIMessage>
             writer.WriteString("name", value.Name);
         }
 
+        if (value.EncryptedValue != null)
+        {
+            writer.WriteString("encryptedValue", value.EncryptedValue);
+        }
+
         if (value.ToolCalls != null)
         {
             writer.WritePropertyName("toolCalls");
@@ -187,6 +239,11 @@ internal sealed class AGUIMessageJsonConverter : JsonConverter<AGUIMessage>
         if (value.ToolCallId != null)
         {
             writer.WriteString("toolCallId", value.ToolCallId);
+        }
+
+        if (value.Error != null)
+        {
+            writer.WriteString("error", value.Error);
         }
 
         writer.WriteEndObject();

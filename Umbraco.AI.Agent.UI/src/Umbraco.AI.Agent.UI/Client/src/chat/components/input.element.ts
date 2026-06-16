@@ -5,7 +5,7 @@ import { UmbTemporaryFileConfigRepository } from "@umbraco-cms/backoffice/tempor
 import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
 import { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "../context.js";
 import type { UaiAgentItem } from "../types/index.js";
-import type { UaiInputContent } from "../types/index.js";
+import { classifyContentKind, type UaiInputContent } from "../types/index.js";
 
 /** Maximum file size in bytes (default 10MB) */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -233,19 +233,21 @@ export class UaiChatInputElement extends UmbLitElement {
                 contentParts.push({ type: "text", text: this._value });
             }
 
-            // Read files as base64 in parallel and add binary parts
-            const binaryParts = await Promise.all(
+            // Read files as base64 in parallel; classify each by mime type into the
+            // corresponding AG-UI typed content variant (image / audio / video / document).
+            const mediaParts = await Promise.all(
                 this._attachments.map(async (attachment) => {
                     const base64 = await this.#readFileAsBase64(attachment.file);
+                    const mimeType = attachment.file.type || "application/octet-stream";
+                    const kind = classifyContentKind(mimeType);
                     return {
-                        type: "binary" as const,
-                        mimeType: attachment.file.type,
-                        data: base64,
-                        filename: attachment.file.name,
-                    };
+                        type: kind,
+                        source: { type: "data" as const, value: base64, mimeType },
+                        metadata: { filename: attachment.file.name },
+                    } as UaiInputContent;
                 }),
             );
-            contentParts.push(...binaryParts);
+            contentParts.push(...mediaParts);
         }
 
         this.dispatchEvent(

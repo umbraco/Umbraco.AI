@@ -214,8 +214,8 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
-        finishedEvent.Interrupt.ShouldNotBeNull();
+        var interruptOutcome = finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -280,7 +280,7 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Success);
+        finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
     [Fact]
@@ -298,7 +298,7 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
+        finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
     }
 
     #endregion
@@ -316,6 +316,7 @@ public class AGUIStreamingServiceTests
         var events = await CollectEvents(agent, request);
 
         // Assert
+        // Per AG-UI spec a run terminates with EITHER RunFinished OR RunError — never both.
         var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
         errorEvent.ShouldNotBeNull();
         // Raw exception text must not be surfaced to users.
@@ -323,8 +324,7 @@ public class AGUIStreamingServiceTests
         // Code is the AIProviderErrorCategory name.
         errorEvent.Code.ShouldBe("Unknown");
 
-        var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -351,8 +351,7 @@ public class AGUIStreamingServiceTests
         errorEvent.Message.ShouldNotContain("SSE error");
         errorEvent.Code.ShouldBe("Transient");
 
-        var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -381,25 +380,23 @@ public class AGUIStreamingServiceTests
     {
         // Arrange
         var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
-        var resumePayload = JsonSerializer.SerializeToElement(new
-        {
-            toolResults = new[]
-            {
-                new { toolCallId = "call-1", result = new { approved = true } }
-            }
-        });
+        var resumePayload = JsonSerializer.SerializeToElement(new { approved = true });
         var request = new AGUIRunRequest
         {
             ThreadId = "thread-1",
             RunId = "run-1",
             Messages = new List<AGUIMessage>
             {
-                new() { Role = AGUIMessageRole.User, Content = "Hello" }
+                new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             },
-            Resume = new AGUIResumeInfo
+            Resume = new List<AGUIResumeEntry>
             {
-                InterruptId = "int-123",
-                Payload = resumePayload
+                new()
+                {
+                    InterruptId = "call-1",
+                    Status = AGUIResumeStatus.Resolved,
+                    Payload = resumePayload
+                }
             }
         };
 
@@ -437,7 +434,7 @@ public class AGUIStreamingServiceTests
             RunId = runId ?? "run-test",
             Messages = new List<AGUIMessage>
             {
-                new() { Role = AGUIMessageRole.User, Content = "Hello" }
+                new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             }
         };
     }

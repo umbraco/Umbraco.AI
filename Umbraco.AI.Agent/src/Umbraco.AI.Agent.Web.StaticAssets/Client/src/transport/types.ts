@@ -275,52 +275,16 @@ export {
     type AGUIEvent,
 } from "@ag-ui/client";
 
+// `outcome` (success | interrupt) and the per-interrupt shape are modelled
+// natively by the SDK as of @ag-ui/client 0.0.57 — we previously carried local
+// extension types (RunFinishedAGUIEvent / AGUIRunOutcome / AGUIInterrupt) to
+// compensate for the older schema that only exposed `result?: any`. The SDK's
+// RunFinishedEvent is re-exported aliased (AGUIRunFinishedEvent) to avoid
+// colliding with the local UI-facing RunFinishedEvent callback type below.
+export { type RunFinishedEvent as AGUIRunFinishedEvent } from "@ag-ui/client";
+export { type Interrupt, type RunFinishedOutcome } from "@ag-ui/core";
+
 import type { RunErrorEvent as _AGUIRunErrorEvent } from "@ag-ui/client";
-
-import type { RunFinishedEvent as AGUIRunFinishedEvent } from "@ag-ui/client";
-
-/**
- * AG-UI interrupt object — see https://docs.ag-ui.com/concepts/interrupts.
- *
- * The server emits one entry per pending interrupt inside
- * `RunFinishedEvent.outcome.interrupts` when the run pauses for human input.
- *
- * REMOVE WHEN: `@ag-ui/client` updates its Zod schema to model the
- * `outcome` discriminated union (currently the SDK has not caught up to the
- * published spec — see RunFinishedAGUIEvent below).
- */
-export interface AGUIInterrupt {
-    id: string;
-    reason: string;
-    message?: string;
-    toolCallId?: string;
-    responseSchema?: unknown;
-    expiresAt?: string;
-    metadata?: Record<string, unknown>;
-}
-
-/**
- * Discriminated union for the `outcome` field on a RUN_FINISHED event.
- *
- * REMOVE WHEN: `@ag-ui/client` updates its Zod `RunFinishedEventSchema` to
- * model `outcome`. As of 0.0.53 the SDK schema only exposes
- * `result?: any`; the `outcome` field still rides on the wire via Zod's
- * `passthrough`, but typing it requires this local extension.
- */
-export type AGUIRunOutcome =
-    | { type: "success" }
-    | { type: "interrupt"; interrupts: AGUIInterrupt[] };
-
-/**
- * Spec-shaped extension of AG-UI's RunFinishedEvent that adds `outcome`.
- *
- * REMOVE WHEN: `@ag-ui/client` updates its Zod schema to include the
- * `outcome` field (then `outcome` will be inferred natively and downstream
- * consumers can import the SDK's RunFinishedEvent directly).
- */
-export interface RunFinishedAGUIEvent extends AGUIRunFinishedEvent {
-    outcome: AGUIRunOutcome;
-}
 
 /**
  * Normalised error category sent by the backend on RUN_ERROR.

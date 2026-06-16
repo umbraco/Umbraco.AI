@@ -8,12 +8,12 @@ import {
     UaiFrontendTool,
     AgentTransport,
     type AGUIEvent,
-    type AGUIInterrupt,
+    type Interrupt,
     type RunErrorEvent,
     type ToolCallStartEvent,
     type ToolCallArgsEvent,
     type ToolCallEndEvent,
-    type RunFinishedAGUIEvent,
+    type AGUIRunFinishedEvent,
     type MessagesSnapshotEvent,
     type UaiAgentState,
     type UaiInputContent,
@@ -225,7 +225,7 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.RUN_FINISHED:
-                this.#handleRunFinished(event as RunFinishedAGUIEvent);
+                this.#handleRunFinished(event as AGUIRunFinishedEvent);
                 break;
 
             case AGUIEventType.RUN_ERROR: {
@@ -281,8 +281,9 @@ export class UaiAgentClient {
         }
     }
 
-    #handleRunFinished(event: RunFinishedAGUIEvent) {
-        if (event.outcome.type === "interrupt") {
+    #handleRunFinished(event: AGUIRunFinishedEvent) {
+        // `outcome` is optional in the SDK schema; absent/success both complete the run.
+        if (event.outcome?.type === "interrupt") {
             // The callback shape currently surfaces a single interrupt; batched
             // interrupts beyond the first are dropped here. TODO: extend the
             // callback to iterate when batched HITL flows land.
@@ -341,10 +342,10 @@ export class UaiAgentClient {
     /**
      * Map an AG-UI Interrupt object onto our UI-shaped UaiInterruptInfo.
      * Spec fields (id / reason / message / toolCallId / metadata) come from
-     * the AGUIInterrupt directly; UI-render hints (type / title / options /
+     * the Interrupt directly; UI-render hints (type / title / options /
      * inputConfig) are read from `metadata` if the server attached them there.
      */
-    static #parseInterrupt(raw: AGUIInterrupt): UaiInterruptInfo {
+    static #parseInterrupt(raw: Interrupt): UaiInterruptInfo {
         const metadata = raw.metadata ?? {};
         return {
             id: raw.id ?? crypto.randomUUID(),

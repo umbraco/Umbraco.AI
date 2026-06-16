@@ -48,17 +48,30 @@ This is shared infrastructure: doing it here means AG-UI and Automate (and any f
 - On resume (step re-executes when the `approval` event fires): rehydrate the conversation + pending call from persisted state, read the decision from the event payload, re-invoke `RunAgentAsync` with the `ToolApprovalResponseContent` injected, and continue — suspending again if a further approval is needed, else completing with the agent's final output.
 - Use a `callId`-qualified event key (`{RunId}:{StepId}:{callId}`) so multiple approvals in one run don't collide.
 
-### C. Umbraco Automate core — THEIRS (confirmation only, likely no code)
-The mechanism exists; an Automate-rooted session need only **confirm** these behaviours of the existing infra (and flag any small gaps):
-1. **`WaitForInput` output data is durably persisted** and available to the step when it re-executes on resume (so we can stash + rehydrate the conversation). If size-limited, what's the cap?
-2. **The resume event payload (the approval decision) is delivered to the resumed step** — how does the re-executing action read the submitted decision (event data binding)?
-3. **A single step can suspend more than once** across its lifetime (re-`WaitForInput` after a resume) — does WorkflowCore/our wiring support repeated suspensions of the same step, or must each approval be a distinct step?
-4. **The pending-approvals dashboard renders our custom prompt/payload** (tool name + args), or needs an extension point to do so.
-5. **Event key shape** — is `{RunId}:{StepId}:{callId}` acceptable, and does the decision API key by run+step only (which would need extending for per-call keys)?
+### C. Umbraco Automate core — THEIRS (a real workstream, NOT just confirmation)
+These were the five questions for the confirmation pass; the answers (below) show that beyond output persistence, the agent-specific needs require genuine Automate-core changes.
 
-## Recommendation (revises the earlier "who's better placed" answer)
+## Confirmation pass results (Automate codebase probe, 2026-06-16)
 
-- **Mostly us.** The decisive infra (suspend/resume/human-task) already exists in Automate, and `RunAgentAction` is our code, so the real work is the **transport-agnostic approval primitive in the agent layer (A)** plus the **`RunAgentAction` glue (B)** — both in our repos.
-- **A small confirmation pass in the Automate codebase (C)** answers the five questions above; it's verification, not design. Best done by a Claude session rooted in the Automate repo, handed this brief.
-- **Sequencing:** build (A) with/after the AG-UI HITL plan so the primitive is shared; then (B); run (C) in parallel to de-risk the persistence/resume-payload assumptions before building (B).
-- This is **post-v17** work (it rides the HITL feature, which is targeted opt-in→v18 per `project_v17_alignment_breaking_changes`). No v17 blocker.
+A read-only investigation of `D:\Work\Umbraco\Umbraco.Automate` answered the five questions. **Correction to the optimistic framing above:** the suspension *primitive* exists and output persistence is solid, but everything that makes an *agent* approval differ from a single static `RequestApproval` requires Automate-core changes — concentrated in `ActionStepBody` (resume handling) and the Approval Web API.
+
+| # | Concern | Verdict | Needs Automate-core change |
+|---|---------|---------|----------------------------|
+| 1 | Output persists across suspension | **Yes** | None. Stored in StepRun + WorkflowInstance (`nvarchar(max)`/TEXT, no cap), rehydrated via `BindingDataBuilder`. Caveat: payload must round-trip cleanly through WorkflowCore's Newtonsoft `TypeNameHandling.All` + the unwrap step — keep it plain-JSON, no `JsonElement`/polymorphic reliance. |
+| 2 | Resume payload delivery | **Partial** | `EventData` reaches the resuming pointer, but `ActionStepBody.HandleResumeAsync` hardcodes deserialization to `ApprovalDecision` (approve/reject) and discards the rest. Need a per-action resume hook (e.g. `IResumableAction.ResumeAsync(context, eventData)`) to pass the raw decision to the agent. |
+| 3 | Repeated suspension of one step | **No (biggest gap)** | `HandleResumeAsync` is terminal — always returns `Next()`, never re-invokes the action or returns `WaitForEvent`. The action's `ExecuteAsync` is not re-entered on resume at all. A dynamic, agent-driven count of approvals on one `RunAgentAction` step is impossible today. Needs resume→re-dispatch→honor-`WaitForEvent` re-subscription in `ActionStepBody`. |
+| 4 | Dashboard custom prompt/payload | **Partial → effectively No** | Pending-approvals listing query is hardcoded to `RequestApproval`'s alias (`PendingApprovalsController` → `GetStepRunsByStatusAsync(RequestApprovalAction.ApprovalActionAlias, …)`), so a custom action never lists. Response model has no payload field; `Prompt` isn't even populated today. No extension point — needs API model + query + frontend changes. |
+| 5 | Event key shape | **Partial** | Event name/key are unconstrained strings (`EventKey` col is 200 chars — room for `:{callId}`), but the decision API keys by run+step only and the resume lookup assumes one wait per step. Per-call keying needs API + resume-disambiguation changes. |
+
+Also noted: `SubmitApprovalController` leaves `ApprovedByUserKey = null` (TODO) — approver-identity audit is currently unimplemented (relevant for governance of agent approvals).
+
+**Net:** Q2 and Q3 are really one coherent Automate-core change — generalize `ActionStepBody` resume handling to (a) dispatch raw `EventData` to a resumable-action hook and (b) honor a re-returned `WaitForEvent` for re-suspension. Q4 (Approval API/dashboard generalization beyond the single alias + payload surfacing) and Q5 (per-call keying) are additional Web/API changes.
+
+## Recommendation (corrected by the confirmation pass)
+
+- **This is a genuine collaborative cross-product feature, not "mostly glue."** Both sides have real work:
+  - **Ours (`Umbraco.AI` + `Umbraco.AI.Automate`):** the transport-agnostic approval suspend/resume on `RunAgentAsync` (A) and the `RunAgentAction` glue (B).
+  - **Theirs (Umbraco Automate core):** the `ActionStepBody` resume re-dispatch + re-subscription (Q2+Q3 — the linchpin), plus Approval Web API/dashboard generalization (Q4) and per-call event keying (Q5). Best designed/built by an Automate-rooted effort — it's deep in their `ActionStepBody`/WorkflowCore wiring.
+- **The Q3 limitation is the gating design fact.** Until one step can re-suspend, an agent run needing a dynamic number of approvals can't be modelled as a single `RunAgentAction`. Either the Automate-core resume re-dispatch lands first, or the feature is scoped to **one approval per agent run** as a v1 (acceptable interim — most agent turns do at most one destructive op).
+- **Sequencing:** (1) decide v1 scope (single-approval interim vs. wait for Q2+Q3); (2) Automate team scopes the `ActionStepBody` resume change; (3) we build the transport-agnostic primitive (A) with the AG-UI HITL plan; (4) `RunAgentAction` glue (B) once the Automate hook exists.
+- This remains **post-v17** work (rides the HITL feature, targeted opt-in→v18). No v17 blocker — but it's a larger effort than the headless-approval section of the HITL plan implied.

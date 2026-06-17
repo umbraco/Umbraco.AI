@@ -40,9 +40,9 @@
 
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.6.0, 10.999.999)" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.7, 10.999.999)" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.7, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.7.0, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.9, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.9, 10.999.999)" />
     <!-- Base library for typed SDK exceptions (ClientResultException). Used by Core's provider
          error classifier and brought in transitively by the OpenAI SDK. Floor matches the
          minimum version that exposes ClientResultException publicly. -->
@@ -67,20 +67,20 @@
 
   <!-- Microsoft AI Agent packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Agents.AI" Version="[1.6.1, 1.999.999)" />
-    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.6.1, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="[1.10.0, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.10.0, 1.999.999)" />
   </ItemGroup>
 
   <!-- Provider packages -->
   <ItemGroup>
-    <PackageVersion Include="Anthropic" Version="[12.20.1, 12.999.999)" />
-    <PackageVersion Include="AWSSDK.Bedrock" Version="[4.0.25.5, 4.999.999)" />
-    <PackageVersion Include="AWSSDK.BedrockRuntime" Version="[4.0.17.6, 4.999.999)" />
-    <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="[4.0.8, 4.999.999)" />
+    <PackageVersion Include="Anthropic" Version="[12.29.1, 12.999.999)" />
+    <PackageVersion Include="AWSSDK.Bedrock" Version="[4.0.30.4, 4.999.999)" />
+    <PackageVersion Include="AWSSDK.BedrockRuntime" Version="[4.0.21.1, 4.999.999)" />
+    <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="[4.0.8.12, 4.999.999)" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="[2.1.0, 2.999.999)" />
     <PackageVersion Include="Azure.Identity" Version="[1.21.0, 1.999.999)" />
-    <PackageVersion Include="Google.GenAI" Version="[1.8.0, 1.999.999)" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="[10.6.0, 10.999.999)" />
+    <PackageVersion Include="Google.GenAI" Version="[1.10.0, 1.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="[10.7.0, 10.999.999)" />
     <PackageVersion Include="Mistral.SDK" Version="[2.3.1, 2.999.999)" />
   </ItemGroup>
 
@@ -92,7 +92,7 @@
          hosting app never resolves, and runtime fails with a TypeLoadException. Move this floor
          in lockstep with the host CMS, not ahead of it. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="[10.0.6, 10.999.999)" />
-    <PackageVersion Include="SixLabors.ImageSharp" Version="[3.1.11, 3.999.999)" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="[3.1.12, 3.999.999)" />
     <PackageVersion Include="SmartReader" Version="[0.11.0, 0.999.999)" />
   </ItemGroup>
 

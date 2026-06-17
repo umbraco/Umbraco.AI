@@ -19,20 +19,30 @@ Write-Host "=== Umbraco.AI Unified Demo Site Setup ===" -ForegroundColor Cyan
 Write-Host "Working directory: $RepoRoot" -ForegroundColor Gray
 Write-Host ""
 
-# Toolchain check: v18 backoffice + UUI v2 + vite 8 require Node 24 / npm 11.
+# Toolchain check — required Node version comes from package.json's engines.node, so this
+# stays in lockstep with the npm-side enforcement and the .nvmrc.
+$packageJson = Get-Content (Join-Path $RepoRoot "package.json") -Raw | ConvertFrom-Json
+$requiredNodeRange = $packageJson.engines.node
+if ($requiredNodeRange -match '(\d+)') {
+    $requiredNodeMajor = [int]$matches[1]
+} else {
+    Write-Host "ERROR: Could not parse engines.node ('$requiredNodeRange') from package.json." -ForegroundColor Red
+    exit 1
+}
+
 $nodeVersionRaw = (node --version 2>$null) -replace '^v', ''
 if (-not $nodeVersionRaw) {
-    Write-Host "ERROR: Node.js is not installed or not on PATH." -ForegroundColor Red
-    Write-Host "Install Node 24+ (e.g. 'nvm install 24 && nvm use 24') and re-run." -ForegroundColor Yellow
+    Write-Host "ERROR: Node.js is not installed or not on PATH. package.json requires '$requiredNodeRange'." -ForegroundColor Red
+    Write-Host "Install Node $requiredNodeMajor+ (e.g. 'nvm install $requiredNodeMajor && nvm use $requiredNodeMajor') and re-run." -ForegroundColor Yellow
     exit 1
 }
 $nodeMajor = [int]($nodeVersionRaw -split '\.')[0]
-if ($nodeMajor -lt 24) {
-    Write-Host "ERROR: Node $nodeVersionRaw detected; the v18 frontend stack requires Node 24+." -ForegroundColor Red
-    Write-Host "Run 'nvm install 24 && nvm use 24' (or equivalent) before re-running this script." -ForegroundColor Yellow
+if ($nodeMajor -lt $requiredNodeMajor) {
+    Write-Host "ERROR: Node $nodeVersionRaw detected; package.json requires '$requiredNodeRange'." -ForegroundColor Red
+    Write-Host "Run 'nvm install $requiredNodeMajor && nvm use $requiredNodeMajor' (or equivalent) before re-running this script." -ForegroundColor Yellow
     exit 1
 }
-Write-Host "Node $nodeVersionRaw detected (OK)." -ForegroundColor Gray
+Write-Host "Node $nodeVersionRaw detected (satisfies '$requiredNodeRange')." -ForegroundColor Gray
 Write-Host ""
 
 # Check if demo already exists

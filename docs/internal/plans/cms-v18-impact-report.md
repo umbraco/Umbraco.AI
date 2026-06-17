@@ -344,9 +344,9 @@ Symptoms on a stale toolchain (Node 22 / npm 10):
 
 **Action taken:** developers and CI must run on Node 24+ / npm 11+ for the v18 branch. `nvm install 24 && nvm use 24` on Windows; equivalent on Linux/macOS. Three guards land in the branch so a stale toolchain fails fast instead of silently producing a broken `node_modules`:
 
-- Root `package.json` declares `engines: { node: ">=24.13", npm: ">=11" }` — npm prints a warning on install when the toolchain is below that.
+- Root `package.json` declares `engines: { node: ">=24.13", npm: ">=11" }` — npm prints a warning on install when the toolchain is below that. This is the **single source of truth**; the install scripts read it back so the version doesn't drift between files.
 - `.nvmrc` at the repo root pins to `24` so `nvm use` in the worktree picks the right version automatically.
-- `scripts/install-demo-site.{ps1,sh}` both parse the running Node major version and exit 1 with a clear message when it's below 24.
+- `scripts/install-demo-site.{ps1,sh}` both read `engines.node` from `package.json` (`ConvertFrom-Json` on PowerShell, regex on bash), parse out the minimum major, and exit 1 with a clear `nvm install <N> && nvm use <N>` hint when the running Node major is below that.
 
 ---
 

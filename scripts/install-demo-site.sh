@@ -48,20 +48,28 @@ echo "========================================="
 echo "Working directory: $REPO_ROOT"
 echo ""
 
-# Toolchain check: v18 backoffice + UUI v2 + vite 8 require Node 24 / npm 11.
+# Toolchain check — required Node version comes from package.json's engines.node, so this
+# stays in lockstep with the npm-side enforcement and the .nvmrc.
+REQUIRED_NODE_RANGE=$(grep -oE '"node"[[:space:]]*:[[:space:]]*"[^"]+"' "$REPO_ROOT/package.json" | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
+REQUIRED_NODE_MAJOR=$(echo "$REQUIRED_NODE_RANGE" | grep -oE '[0-9]+' | head -1)
+if [ -z "$REQUIRED_NODE_MAJOR" ]; then
+    echo "ERROR: Could not parse engines.node ('$REQUIRED_NODE_RANGE') from package.json." >&2
+    exit 1
+fi
+
 if ! command -v node >/dev/null 2>&1; then
-    echo "ERROR: Node.js is not installed or not on PATH." >&2
-    echo "Install Node 24+ (e.g. 'nvm install 24 && nvm use 24') and re-run." >&2
+    echo "ERROR: Node.js is not installed or not on PATH. package.json requires '$REQUIRED_NODE_RANGE'." >&2
+    echo "Install Node $REQUIRED_NODE_MAJOR+ (e.g. 'nvm install $REQUIRED_NODE_MAJOR && nvm use $REQUIRED_NODE_MAJOR') and re-run." >&2
     exit 1
 fi
 NODE_VERSION_RAW=$(node --version | sed 's/^v//')
 NODE_MAJOR=${NODE_VERSION_RAW%%.*}
-if [ "${NODE_MAJOR:-0}" -lt 24 ]; then
-    echo "ERROR: Node $NODE_VERSION_RAW detected; the v18 frontend stack requires Node 24+." >&2
-    echo "Run 'nvm install 24 && nvm use 24' (or equivalent) before re-running this script." >&2
+if [ "${NODE_MAJOR:-0}" -lt "$REQUIRED_NODE_MAJOR" ]; then
+    echo "ERROR: Node $NODE_VERSION_RAW detected; package.json requires '$REQUIRED_NODE_RANGE'." >&2
+    echo "Run 'nvm install $REQUIRED_NODE_MAJOR && nvm use $REQUIRED_NODE_MAJOR' (or equivalent) before re-running this script." >&2
     exit 1
 fi
-echo "Node $NODE_VERSION_RAW detected (OK)."
+echo "Node $NODE_VERSION_RAW detected (satisfies '$REQUIRED_NODE_RANGE')."
 echo ""
 
 # Check if demo already exists

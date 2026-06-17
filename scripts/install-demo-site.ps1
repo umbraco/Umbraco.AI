@@ -19,6 +19,22 @@ Write-Host "=== Umbraco.AI Unified Demo Site Setup ===" -ForegroundColor Cyan
 Write-Host "Working directory: $RepoRoot" -ForegroundColor Gray
 Write-Host ""
 
+# Toolchain check: v18 backoffice + UUI v2 + vite 8 require Node 24 / npm 11.
+$nodeVersionRaw = (node --version 2>$null) -replace '^v', ''
+if (-not $nodeVersionRaw) {
+    Write-Host "ERROR: Node.js is not installed or not on PATH." -ForegroundColor Red
+    Write-Host "Install Node 24+ (e.g. 'nvm install 24 && nvm use 24') and re-run." -ForegroundColor Yellow
+    exit 1
+}
+$nodeMajor = [int]($nodeVersionRaw -split '\.')[0]
+if ($nodeMajor -lt 24) {
+    Write-Host "ERROR: Node $nodeVersionRaw detected; the v18 frontend stack requires Node 24+." -ForegroundColor Red
+    Write-Host "Run 'nvm install 24 && nvm use 24' (or equivalent) before re-running this script." -ForegroundColor Yellow
+    exit 1
+}
+Write-Host "Node $nodeVersionRaw detected (OK)." -ForegroundColor Gray
+Write-Host ""
+
 # Check if demo already exists
 if ((Test-Path "demo") -and -not $Force) {
     Write-Host "Demo folder already exists. Use -Force to recreate." -ForegroundColor Yellow

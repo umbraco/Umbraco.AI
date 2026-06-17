@@ -342,7 +342,11 @@ Symptoms on a stale toolchain (Node 22 / npm 10):
 - `rolldown` is listed in `package-lock.json` but never extracted to `node_modules`.
 - `npm run build` fails on the first workspace with `Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'rolldown'`.
 
-**Action:** developers and CI must run on Node 24+ / npm 11+ for the v18 branch. `nvm install 24 && nvm use 24` on Windows; equivalent on Linux/macOS. Consider pinning the Node version in a `.nvmrc` and updating `scripts/install-demo-site.{ps1,sh}` to check.
+**Action taken:** developers and CI must run on Node 24+ / npm 11+ for the v18 branch. `nvm install 24 && nvm use 24` on Windows; equivalent on Linux/macOS. Three guards land in the branch so a stale toolchain fails fast instead of silently producing a broken `node_modules`:
+
+- Root `package.json` declares `engines: { node: ">=24.13", npm: ">=11" }` — npm prints a warning on install when the toolchain is below that.
+- `.nvmrc` at the repo root pins to `24` so `nvm use` in the worktree picks the right version automatically.
+- `scripts/install-demo-site.{ps1,sh}` both parse the running Node major version and exit 1 with a clear message when it's below 24.
 
 ---
 

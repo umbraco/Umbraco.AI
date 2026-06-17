@@ -48,6 +48,22 @@ echo "========================================="
 echo "Working directory: $REPO_ROOT"
 echo ""
 
+# Toolchain check: v18 backoffice + UUI v2 + vite 8 require Node 24 / npm 11.
+if ! command -v node >/dev/null 2>&1; then
+    echo "ERROR: Node.js is not installed or not on PATH." >&2
+    echo "Install Node 24+ (e.g. 'nvm install 24 && nvm use 24') and re-run." >&2
+    exit 1
+fi
+NODE_VERSION_RAW=$(node --version | sed 's/^v//')
+NODE_MAJOR=${NODE_VERSION_RAW%%.*}
+if [ "${NODE_MAJOR:-0}" -lt 24 ]; then
+    echo "ERROR: Node $NODE_VERSION_RAW detected; the v18 frontend stack requires Node 24+." >&2
+    echo "Run 'nvm install 24 && nvm use 24' (or equivalent) before re-running this script." >&2
+    exit 1
+fi
+echo "Node $NODE_VERSION_RAW detected (OK)."
+echo ""
+
 # Check if demo already exists
 if [ -d "demo" ] && [ "$FORCE" = false ]; then
     echo "Demo folder already exists. Use --force to recreate."

@@ -1,4 +1,5 @@
 export * from "./client/exports.js";
+export * from "./collection-action/exports.js";
 export * from "./components/exports.js";
 export * from "./events/exports.js";
 export * from "./command/exports.js";

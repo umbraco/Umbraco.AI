@@ -4,14 +4,14 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Runtime;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
+using Umbraco.AI.Core.Hosting;
 
 namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Background service that periodically cleans up old usage statistics based on retention policies.
 /// </summary>
-internal sealed class AIUsageStatisticsCleanupJob : RecurringHostedServiceBase
+internal sealed class AIUsageStatisticsCleanupJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;

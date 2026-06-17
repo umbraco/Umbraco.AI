@@ -167,19 +167,16 @@ export class UaiFrontendToolRepository {
 
 ```json
 {
-    "peerDependencies": {
-        "@umbraco-ai/core": "^1.0.0",
-        "@umbraco-ai/agent": "^1.0.0",
-        "@umbraco-ai/agent-ui": "^1.0.0",
-        "@umbraco-cms/backoffice": "^17.3.0"
-    },
     "dependencies": {
-        "@ag-ui/client": "^0.0.42"
+        "@umbraco-ai/core": "*",
+        "@umbraco-ai/agent": "*",
+        "@umbraco-ai/agent-ui": "*",
+        "@umbraco-cms/backoffice": "^18.0.0-rc2"
     }
 }
 ```
 
-**Note:** `rxjs` is provided by `@umbraco-ai/agent-ui`.
+**Note:** `@ag-ui/client` and `rxjs` are provided transitively by `@umbraco-ai/agent` / `@umbraco-ai/agent-ui` — the copilot does not declare them directly. Internal `@umbraco-ai/*` packages use `*` during workspace development and are replaced with concrete version ranges on `npm pack`.
 
 ### NuGet Dependencies
 

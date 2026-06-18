@@ -45,6 +45,7 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Extensions;
 
@@ -195,7 +196,7 @@ public static partial class UmbracoBuilderExtensions
         // Unified versioning service
         services.Configure<AIVersionCleanupPolicy>(config.GetSection("Umbraco:AI:VersionCleanupPolicy"));
         services.AddSingleton<IAIEntityVersionService, AIEntityVersionService>();
-        services.AddHostedService<AIVersionCleanupBackgroundJob>();
+        services.AddRecurringBackgroundJob<AIVersionCleanupBackgroundJob>();
 
         // Versionable entity adapters for core entities
         builder.AIVersionableEntityAdapters()
@@ -286,7 +287,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIAuditLogService, AIAuditLogService>();
 
         // Background job for audit-log cleanup
-        services.AddHostedService<AIAuditLogCleanupBackgroundJob>();
+        services.AddRecurringBackgroundJob<AIAuditLogCleanupBackgroundJob>();
 
         // Analytics infrastructure
         // Note: IAIUsageRecordRepository and IAIUsageStatisticsRepository are registered by persistence layer
@@ -296,9 +297,9 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIUsageAnalyticsService, AIUsageAnalyticsService>();
 
         // Background jobs for analytics aggregation and cleanup
-        services.AddHostedService<AIUsageHourlyAggregationJob>();
-        services.AddHostedService<AIUsageDailyRollupJob>();
-        services.AddHostedService<AIUsageStatisticsCleanupJob>();
+        services.AddRecurringBackgroundJob<AIUsageHourlyAggregationJob>();
+        services.AddRecurringBackgroundJob<AIUsageDailyRollupJob>();
+        services.AddRecurringBackgroundJob<AIUsageStatisticsCleanupJob>();
 
         // Auto-discover test features via [AITestFeature] attribute
         services.AddSingleton<IAITestFeatureInfrastructure, AITestFeatureInfrastructure>();

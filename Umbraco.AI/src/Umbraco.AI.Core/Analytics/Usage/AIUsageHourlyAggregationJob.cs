@@ -1,109 +1,63 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Cms.Core;
-using Umbraco.Cms.Core.Runtime;
-using Umbraco.Cms.Core.Services;
-using Umbraco.Cms.Core.Sync;
-using Umbraco.AI.Core.Hosting;
+using Umbraco.Cms.Infrastructure.BackgroundJobs;
 
 namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
-/// Background service that periodically aggregates raw usage records into hourly statistics.
+/// Recurring background job that aggregates raw usage records into hourly statistics.
 /// Runs continuously, processing completed hours and catching up on any missed periods.
 /// </summary>
-internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServiceBase
+internal sealed class AIUsageHourlyAggregationJob : RecurringBackgroundJobBase
 {
+    private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(30);
+
     private readonly IAIUsageAggregationService _aggregationService;
     private readonly IAIUsageRecordRepository _recordRepository;
     private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
-    private readonly IRuntimeState _runtimeState;
-    private readonly IServerRoleAccessor _serverRoleAccessor;
-    private readonly IMainDom _mainDom;
     private readonly ILogger<AIUsageHourlyAggregationJob> _logger;
-
-    // Run every 5 minutes
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(30);
 
     public AIUsageHourlyAggregationJob(
         IAIUsageAggregationService aggregationService,
         IAIUsageRecordRepository recordRepository,
         IAIUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AIAnalyticsOptions> options,
-        IRuntimeState runtimeState,
-        IServerRoleAccessor serverRoleAccessor,
-        IMainDom mainDom,
         ILogger<AIUsageHourlyAggregationJob> logger)
-        : base(logger, CheckInterval, StartupDelay)
+        : base(CheckInterval)
     {
         _aggregationService = aggregationService;
         _recordRepository = recordRepository;
         _statisticsRepository = statisticsRepository;
         _options = options;
-        _runtimeState = runtimeState;
-        _serverRoleAccessor = serverRoleAccessor;
-        _mainDom = mainDom;
         _logger = logger;
     }
 
-    public override async Task PerformExecuteAsync(object? state)
+    public override TimeSpan Delay => StartupDelay;
+
+    public override async Task RunJobAsync(CancellationToken cancellationToken)
     {
-        // Don't run if analytics is disabled
         if (!_options.CurrentValue.Enabled)
         {
             _logger.LogDebug("Analytics disabled, skipping hourly aggregation");
             return;
         }
 
-        // Don't run unless Umbraco is running
-        if (_runtimeState.Level != RuntimeLevel.Run)
-        {
-            return;
-        }
-
-        // Don't run on replicas nor unknown role servers
-        switch (_serverRoleAccessor.CurrentServerRole)
-        {
-            case ServerRole.Subscriber:
-                _logger.LogDebug("AI Usage Hourly Aggregation will not run on subscriber servers.");
-                return;
-            case ServerRole.Unknown:
-                _logger.LogDebug("AI Usage Hourly Aggregation will not run on servers with unknown role.");
-                return;
-            case ServerRole.Single:
-            case ServerRole.SchedulingPublisher:
-            default:
-                break;
-        }
-
-        // Ensure we do not run if not main domain
-        if (!_mainDom.IsMainDom)
-        {
-            _logger.LogDebug("AI Usage Hourly Aggregation will not run if not MainDom.");
-            return;
-        }
-
-        await ProcessMissingHoursAsync(CancellationToken.None);
+        await ProcessMissingHoursAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Processes all hours that need aggregation, from last aggregated to current completed hour.
-    /// </summary>
     private async Task ProcessMissingHoursAsync(CancellationToken ct)
     {
         var now = DateTime.UtcNow;
         var currentCompletedHour = GetHourStart(now.AddHours(-1)); // Only process completed hours
 
-        // Get last aggregated period
         var lastAggregatedPeriod = await _statisticsRepository.GetLastAggregatedHourlyPeriodAsync(ct);
 
         DateTime startFromHour;
 
         if (lastAggregatedPeriod == null)
         {
-            // No previous aggregation - check if we have any raw records
             var firstRecordTimestamp = await _recordRepository.GetLastRecordTimestampAsync(ct);
 
             if (firstRecordTimestamp == null)
@@ -112,7 +66,6 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
                 return;
             }
 
-            // Start from the hour of the first record
             startFromHour = GetHourStart(firstRecordTimestamp.Value);
             _logger.LogInformation(
                 "First hourly aggregation: starting from {StartHour} (first record timestamp: {FirstRecord})",
@@ -121,7 +74,6 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
         }
         else
         {
-            // Start from next hour after last aggregated
             startFromHour = lastAggregatedPeriod.Value.AddHours(1);
             _logger.LogDebug(
                 "Last aggregated hour: {LastHour}, processing from {StartHour}",
@@ -129,7 +81,6 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
                 startFromHour);
         }
 
-        // Process all missing hours sequentially
         var currentHour = startFromHour;
         var processedCount = 0;
 
@@ -148,7 +99,6 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
                     "Failed to aggregate hour {Hour}, will retry on next run",
                     currentHour);
 
-                // Stop processing and retry from this hour on next run
                 break;
             }
 
@@ -169,18 +119,12 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
         }
     }
 
-    /// <summary>
-    /// Gets the start of the hour for a given timestamp.
-    /// </summary>
-    private static DateTime GetHourStart(DateTime timestamp)
-    {
-        return new DateTime(
-            timestamp.Year,
-            timestamp.Month,
-            timestamp.Day,
-            timestamp.Hour,
-            0,
-            0,
-            DateTimeKind.Utc);
-    }
+    private static DateTime GetHourStart(DateTime timestamp) => new(
+        timestamp.Year,
+        timestamp.Month,
+        timestamp.Day,
+        timestamp.Hour,
+        0,
+        0,
+        DateTimeKind.Utc);
 }

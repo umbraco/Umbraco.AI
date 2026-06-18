@@ -8,7 +8,7 @@ import { UmbConditionBase } from "@umbraco-cms/backoffice/extension-registry";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "./agent-workspace.context-token.js";
 import type { UaiAgentType } from "../../types.js";
 
-export const UAI_AGENT_TYPE_CONDITION_ALIAS = "UmbracoAIAgent.Condition.AgentType";
+export { UAI_AGENT_TYPE_CONDITION_ALIAS } from "./agent-type.condition.constants.js";
 
 /**
  * Condition config that matches against the current agent's agentType.

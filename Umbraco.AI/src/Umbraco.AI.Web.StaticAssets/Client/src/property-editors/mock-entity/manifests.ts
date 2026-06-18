@@ -9,6 +9,7 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Mock Entity",
         icon: "icon-document",
         group: "Umbraco AI",
+        keywords: ["ai", "umbraco ai", "mock", "fake", "stub", "test", "fixture", "entity"],
     },
 };
 

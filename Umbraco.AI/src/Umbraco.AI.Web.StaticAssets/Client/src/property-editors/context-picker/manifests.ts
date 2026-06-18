@@ -18,6 +18,7 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Context Picker",
         icon: "icon-wand",
         group: "Umbraco AI",
+        keywords: ["ai", "umbraco ai", "context", "prompt", "system message", "picker", "select"],
         propertyEditorSchemaAlias: "Uai.ContextPicker",
         settings: {
             properties: [

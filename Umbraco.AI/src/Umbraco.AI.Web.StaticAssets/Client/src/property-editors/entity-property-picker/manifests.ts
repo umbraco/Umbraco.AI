@@ -9,6 +9,7 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Entity Property Picker",
         icon: "icon-list",
         group: "Umbraco AI",
+        keywords: ["ai", "umbraco ai", "entity", "property", "field", "alias", "picker", "select"],
         settings: {
             properties: [
                 {

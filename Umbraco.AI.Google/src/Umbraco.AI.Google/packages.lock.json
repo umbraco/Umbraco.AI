@@ -33,7 +33,7 @@
         "type": "Direct",
         "requested": "[3.0.0-beta, )",
         "resolved": "3.0.0-beta",
-        "contentHash": "CNS+ziYdRFQDXMvpqheaFrIqlC4wvY9rma+m9IInu5x4dk2af7YTsPvGeyTX3c1e7mcGoIocmX6pzKeow08Uew==",
+        "contentHash": "JTd/YgzvdpCM0C7n8iZtS/vjKCo/zAO7j/2ZqEyHiF09RRNeEUOrng5Db8hpbn5+XBY4Ax1MaaOop4g2eprTqg==",
         "dependencies": {
           "Microsoft.CodeAnalysis.CSharp.Workspaces": "[5.0.0, 5.999.999)"
         }

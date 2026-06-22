@@ -40,10 +40,11 @@
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search/Umbraco.AI.Search.csproj" />
     <Project Path="Umbraco.AI.Search/tests/Umbraco.AI.Search.Tests.Unit/Umbraco.AI.Search.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/AddOns/Automate/">
-    <Project Path="Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" />
-    <Project Path="Umbraco.AI.Automate/tests/Umbraco.AI.Automate.Tests.Unit/Umbraco.AI.Automate.Tests.Unit.csproj" />
-  </Folder>
+  <!-- Umbraco.AI.Automate is temporarily excluded from the v18 prep:
+       it transitively depends on Umbraco.Automate.Core 17.0.0-beta, which
+       constrains Umbraco.Cms.Api.Management to 17.x and conflicts with the
+       18.x pins on every other product. Restore Automate (and its tests)
+       to the solution once Umbraco.Automate.Core 18.x ships. -->
   <Folder Name="/Core/">
     <Project Path="Umbraco.AI/src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
     <Project Path="Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj" />

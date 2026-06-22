@@ -5,6 +5,41 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.4...Umbraco.AI.Agent@17.0.0) (2026-06-22)
+
+### ⚠ BREAKING CHANGE
+
+* **agent:** Adopt AG-UI typed multimodal content (image/audio/video/document)
+
+### feat
+
+* **agent:** Add usage telemetry provider for CMS telemetry report ([85cff80](https://github.com/umbraco/Umbraco.AI/commit/85cff8011c1d8eb67ccfa8406c7a33d895f76f92))
+* **core,agent,prompt,search:** Use dedicated connection for custom AI connection strings ([ca01d98](https://github.com/umbraco/Umbraco.AI/commit/ca01d98c4c76b471c736a47659cfcab99a3733bd)), closes [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)
+* **core,agent:** Track extension point adoption with system/custom classification ([4029503](https://github.com/umbraco/Umbraco.AI/commit/402950308b2e5f1d717eeb48fdcaefbe9f4aa337))
+* **core,agent:** Track per-surface agent counts for surface adoption ([76a762d](https://github.com/umbraco/Umbraco.AI/commit/76a762d3829763ea908968897aa5dda7f4761257))
+* **core,prompt,agent:** Add usage-by-feature telemetry and generic extension sweep ([df287c7](https://github.com/umbraco/Umbraco.AI/commit/df287c7d9767ccc6273a78a256ac3244a1ac9b7c))
+
+### fix
+
+* **agent-ui,agent:** Align frontend-tool interrupt reason with server ([018b0d8](https://github.com/umbraco/Umbraco.AI/commit/018b0d800ce9c7701f40f07776b92be2af5396fb))
+* **agent:** Correct post-merge AG-UI drift ([9873e51](https://github.com/umbraco/Umbraco.AI/commit/9873e51277bd53d8a1602bc9130d84944ae76bd5))
+* **agent:** Forward AG-UI tool metadata to server ([891eeb0](https://github.com/umbraco/Umbraco.AI/commit/891eeb04193085caff356552a1345916ad1a5a6b))
+* **core,agent:** Restrict system extension classification to Umbraco.AI assemblies ([87d66b3](https://github.com/umbraco/Umbraco.AI/commit/87d66b35b29cbccd687f30bae88e4aa45a6d7d70))
+* **providers, agent, anthropic:** Classify provider errors for friendly chat messages ([8f71209](https://github.com/umbraco/Umbraco.AI/commit/8f712099ca3479774e7d011152ed93276642e8dd)), closes [#174](https://github.com/umbraco/Umbraco.AI/issues/174) [#174](https://github.com/umbraco/Umbraco.AI/issues/174)
+* **providers, agent, anthropic:** Route error classification through per-provider client decorators ([3c9b8d6](https://github.com/umbraco/Umbraco.AI/commit/3c9b8d655e87219927e33dee921e057392fd13e7)), closes [#174](https://github.com/umbraco/Umbraco.AI/issues/174)
+
+### refactor
+
+* **agent:** Adopt AG-UI Tool.metadata, drop forwardedProps.toolMetadata side-channel ([fbfa030](https://github.com/umbraco/Umbraco.AI/commit/fbfa030439b9f07c4c64d08b27be8f3347f955db))
+* **agent:** Adopt AG-UI typed multimodal content (image/audio/video/document) ([b09c722](https://github.com/umbraco/Umbraco.AI/commit/b09c7228eb35186139d702f0d3ab24eb4f1dcf7f))
+* **agent:** Adopt SDK-native RunFinished outcome and Interrupt types ([787c8bc](https://github.com/umbraco/Umbraco.AI/commit/787c8bccff4ae894ad29abc4394a4ea20084f87b))
+* **agent:** Align RUN_FINISHED, STATE_SNAPSHOT, STATE_DELTA with AG-UI spec ([6f31dc3](https://github.com/umbraco/Umbraco.AI/commit/6f31dc327fe13586a516141248807ef354c87415))
+* **agent:** Align RunAgentInput.resume with AG-UI spec array shape ([e58c2be](https://github.com/umbraco/Umbraco.AI/commit/e58c2be9c92e6717c3e749e98022e7df3f93e03d))
+* **agent:** Simplify AG-UI multimodal model after /simplify review ([16dfef9](https://github.com/umbraco/Umbraco.AI/commit/16dfef9ce7dd0c45425896c3bab5f6c456a55363))
+* **agent:** Spec-align AGUIMessage, AGUIToolCall, ActivitySnapshot, deltas, role enum ([e4a9328](https://github.com/umbraco/Umbraco.AI/commit/e4a9328c16cabccd7ec4e6a2d0260d800146713c))
+* **agent:** Spec-narrow role types on text-message and tool-result events ([fd22e59](https://github.com/umbraco/Umbraco.AI/commit/fd22e592ce88596529db120a8be0966e701e9c57))
+* **agent:** Type ToolCallResultEvent.Role as a single-value AGUIToolCallRole enum ([4d4630b](https://github.com/umbraco/Umbraco.AI/commit/4d4630bef92addab09bba22b03c1f3659fa693f8))
+
 ## [1.10.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.3...Umbraco.AI.Agent@1.10.4) (2026-06-04)
 
 ### Internal

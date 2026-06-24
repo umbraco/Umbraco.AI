@@ -41,7 +41,7 @@
     "devDependencies": {
         "@commitlint/cli": "^20.3.1",
         "@commitlint/config-conventional": "^20.3.1",
-        "@umbraco-cms/backoffice": "^18.0.0-rc4",
+        "@umbraco-cms/backoffice": "^18.0.0",
         "concurrently": "^10.0.3",
         "conventional-changelog": "^7.2.0",
         "conventional-changelog-conventionalcommits": "^9.1.0",
@@ -59,7 +59,7 @@
         "@umbraco-ai/agent": "^18.0.0",
         "@umbraco-ai/agent-ui": "^18.0.0",
         "@umbraco-ai/agent-copilot": "^18.0.0",
-        "@umbraco-cms/backoffice": "^18.0.0-rc4"
+        "@umbraco-cms/backoffice": "^18.0.0"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."
 }

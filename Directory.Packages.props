@@ -14,18 +14,22 @@
 
   <!-- Umbraco CMS -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Core" Version="[18.0.0-rc4, 18.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[18.0.0-rc4, 18.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[18.0.0-rc4, 18.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[18.0.0-rc4, 18.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[18.0.0-rc4, 18.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[18.0.0-rc4, 18.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[18.0.0-rc4, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
-  <!-- Umbraco Deploy -->
+  <!-- Umbraco Deploy.
+       Umbraco.Deploy.Infrastructure has no stable v18 yet (latest is 18.0.0-rc3); the v17 line
+       caps Umbraco.Cms.Api.Management at < 18.0.0, which an rc CMS satisfied but stable 18.0.0
+       does not. Floor on the 18.x RC so the Deploy products can consume the now-stable CMS 18
+       and automatically pick up Umbraco.Deploy.Infrastructure 18 stable once it ships. -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[17.0.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[18.0.0-rc3, 18.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Automate -->

@@ -23,13 +23,9 @@
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
-  <!-- Umbraco Deploy.
-       Umbraco.Deploy.Infrastructure has no stable v18 yet (latest is 18.0.0-rc3); the v17 line
-       caps Umbraco.Cms.Api.Management at < 18.0.0, which an rc CMS satisfied but stable 18.0.0
-       does not. Floor on the 18.x RC so the Deploy products can consume the now-stable CMS 18
-       and automatically pick up Umbraco.Deploy.Infrastructure 18 stable once it ships. -->
+  <!-- Umbraco Deploy. -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[18.0.0-rc3, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Automate -->

@@ -23,7 +23,7 @@ if ($currentBranch -eq "main" -or $currentBranch -eq "dev") {
 
 # Check if branch matches valid patterns
 $validBranch = $false
-if ($currentBranch -match "^(feature|claude|release|hotfix)/.+") {
+if ($currentBranch -match "^(feature|claude|release|hotfix|support)/.+") {
     $validBranch = $true
 }
 

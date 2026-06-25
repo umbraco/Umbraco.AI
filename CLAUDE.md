@@ -159,6 +159,45 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 | `<Product>/changelog.config.json` | Per-product scopes for changelog |
 | `<Product>/CHANGELOG.md` | Per-product changelog (auto-generated) |
 
+## Multi-Version Support
+
+Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions may be in active support simultaneously, following the [Umbraco CMS LTS/EOL policy](https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/).
+
+### Branch Model
+
+| Branch | Role |
+|--------|------|
+| `dev` / `main` | Latest version (currently v18) |
+| `support/X.x` | Maintenance branch for older supported versions (e.g., `support/17.x`) |
+
+### Support Policy
+
+| CMS Phase | What to apply |
+|-----------|---------------|
+| Active support | Features + bug fixes |
+| Security phase | Security patches only |
+| EOL | No updates unless explicitly requested |
+
+### Current Versions
+
+Check [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/) for the latest status.
+
+| CMS Version | Type | Active Support Until | AI Branch | Current Policy |
+|-------------|------|----------------------|-----------|----------------|
+| v18 | STS | Mar 2027 | `dev` / `main` | Features + bug fixes |
+| v17 | LTS | Nov 2027 | `support/17.x` | Features + bug fixes |
+
+### Backport Workflow
+
+When a fix or feature applies to an older supported version:
+
+1. Branch from `support/X.x` (not from `dev`)
+2. Apply and commit the change on the feature/fix branch
+3. Merge back into `support/X.x`
+4. Release via the normal release flow on that branch
+
+Do **not** forward-merge `support/X.x` into `dev` — each version line is maintained independently.
+
 ## Release Management
 
 ### Skills Overview

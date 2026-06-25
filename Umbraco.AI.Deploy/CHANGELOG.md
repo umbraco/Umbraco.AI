@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@17.0.0...Umbraco.AI.Deploy@18.0.0) (2026-06-25)
+
+### Internal
+
+* Bump major version to align with Umbraco CMS v18.
+
 ## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@1.0.4...Umbraco.AI.Deploy@17.0.0) (2026-06-22)
 
 ### Internal

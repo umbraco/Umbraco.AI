@@ -75,8 +75,8 @@ public class MistralProviderSettings
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Mistral.SDK (unofficial, MIT-licensed — <https://github.com/tghamm/Mistral.SDK>)
 
 ## Target Framework

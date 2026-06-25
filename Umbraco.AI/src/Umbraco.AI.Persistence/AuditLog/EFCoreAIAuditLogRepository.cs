@@ -20,7 +20,7 @@ internal class EFCoreAIAuditLogRepository : IAIAuditLogRepository
     /// <inheritdoc />
     public async Task<AIAuditLog?> GetByIdAsync(Guid id, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIAuditLogEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.AuditLogs
@@ -34,7 +34,7 @@ internal class EFCoreAIAuditLogRepository : IAIAuditLogRepository
     public async Task<(IEnumerable<AIAuditLog>, int Total)> GetPagedAsync(
         AIAuditLogFilter filter, int skip, int take, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -143,7 +143,7 @@ internal class EFCoreAIAuditLogRepository : IAIAuditLogRepository
     public async Task<IEnumerable<AIAuditLog>> GetByEntityIdAsync(
         string entityId, string entityType, int limit, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AIAuditLogEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.AuditLogs
@@ -159,7 +159,7 @@ internal class EFCoreAIAuditLogRepository : IAIAuditLogRepository
     /// <inheritdoc />
     public async Task<AIAuditLog> SaveAsync(AIAuditLog trace, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<object?>(async db =>
         {
@@ -188,7 +188,7 @@ internal class EFCoreAIAuditLogRepository : IAIAuditLogRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -210,7 +210,7 @@ internal class EFCoreAIAuditLogRepository : IAIAuditLogRepository
     /// <inheritdoc />
     public async Task<int> DeleteOlderThanAsync(DateTime threshold, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         int deletedCount = await scope.ExecuteWithContextAsync(async db =>
         {

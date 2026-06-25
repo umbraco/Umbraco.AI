@@ -388,7 +388,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                 padding: 16px 20px;
                 background: var(--uui-color-surface);
                 border: 1px solid var(--uui-color-border);
-                border-radius: 6px;
+                border-radius: var(--uui-border-radius-2);
                 margin-bottom: 16px;
             }
 

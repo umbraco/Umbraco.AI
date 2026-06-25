@@ -79,8 +79,8 @@ public class DeepSeekProviderSettings
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Microsoft.Extensions.AI.OpenAI (transitively brings the `OpenAI` .NET SDK)
 
 ## Target Framework

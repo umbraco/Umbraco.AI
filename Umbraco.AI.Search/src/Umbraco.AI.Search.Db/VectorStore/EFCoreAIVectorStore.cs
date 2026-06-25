@@ -31,7 +31,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public async Task UpsertAsync(string indexName, string documentId, string? culture, int chunkIndex, ReadOnlyMemory<float> vector, IDictionary<string, object>? metadata = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
@@ -69,7 +69,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public async Task DeleteAsync(string indexName, string documentId, string? culture, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
@@ -92,7 +92,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public async Task DeleteDocumentAsync(string indexName, string documentId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
@@ -115,7 +115,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public virtual async Task<IReadOnlyList<AIVectorSearchResult>> SearchAsync(string indexName, ReadOnlyMemory<float> queryVector, string? culture = null, int topK = 10, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         IReadOnlyList<AIVectorSearchResult> results = await scope.ExecuteWithContextAsync<IReadOnlyList<AIVectorSearchResult>>(async db =>
         {
@@ -158,7 +158,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public async Task<IReadOnlyList<AIVectorEntry>> GetVectorsByDocumentAsync(string indexName, string documentId, string? culture = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         IReadOnlyList<AIVectorEntry> results = await scope.ExecuteWithContextAsync<IReadOnlyList<AIVectorEntry>>(async db =>
         {
@@ -186,7 +186,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public async Task ResetAsync(string indexName, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<bool>(async db =>
         {
@@ -209,7 +209,7 @@ internal class EFCoreAIVectorStore : IAIVectorStore
     /// <inheritdoc />
     public async Task<long> GetDocumentCountAsync(string indexName, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAISearchDbContext> scope = _scopeProvider.CreateScope();
 
         long count = await scope.ExecuteWithContextAsync(async db =>
             await db.VectorEntries.LongCountAsync(e => e.IndexName == indexName, cancellationToken));

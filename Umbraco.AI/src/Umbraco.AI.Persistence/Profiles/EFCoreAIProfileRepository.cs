@@ -23,7 +23,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<AIProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIProfileEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Profiles.FirstOrDefaultAsync(p => p.Id == id, cancellationToken));
@@ -35,7 +35,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<AIProfile?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         // Case-insensitive alias lookup
         AIProfileEntity? entity = await scope.ExecuteWithContextAsync(async db =>
@@ -50,7 +50,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AIProfile>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AIProfileEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Profiles.ToListAsync(cancellationToken));
@@ -62,7 +62,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AIProfile>> GetByCapability(AICapability capability, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         int capabilityValue = (int)capability;
         List<AIProfileEntity> entities = await scope.ExecuteWithContextAsync(async db =>
@@ -82,7 +82,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -121,7 +121,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<AIProfile> SaveAsync(AIProfile profile, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedProfile = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -160,7 +160,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -182,7 +182,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
     /// <inheritdoc />
     public async Task<bool> ExistsWithConnectionIdAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool exists = await scope.ExecuteWithContextAsync(async db =>
             await db.Profiles.AnyAsync(p => p.ConnectionId == connectionId, cancellationToken));

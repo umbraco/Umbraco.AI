@@ -1,91 +1,49 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Cms.Core;
-using Umbraco.Cms.Core.Runtime;
-using Umbraco.Cms.Core.Services;
-using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
+using Umbraco.Cms.Infrastructure.BackgroundJobs;
 
 namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
-/// Background service that periodically cleans up old entity version records
-/// based on the configured cleanup policy.
+/// Recurring background job that cleans up old entity version records based on the configured cleanup policy.
 /// </summary>
-internal sealed class AIVersionCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIVersionCleanupBackgroundJob : RecurringBackgroundJobBase
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IOptionsMonitor<AIVersionCleanupPolicy> _options;
-    private readonly IRuntimeState _runtimeState;
-    private readonly IServerRoleAccessor _serverRoleAccessor;
-    private readonly IMainDom _mainDom;
-    private readonly ILogger<AIVersionCleanupBackgroundJob> _logger;
-
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromHours(12);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(10);
+
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IOptionsMonitor<AIVersionCleanupPolicy> _options;
+    private readonly ILogger<AIVersionCleanupBackgroundJob> _logger;
 
     public AIVersionCleanupBackgroundJob(
         IServiceProvider serviceProvider,
         IOptionsMonitor<AIVersionCleanupPolicy> options,
-        IRuntimeState runtimeState,
-        IServerRoleAccessor serverRoleAccessor,
-        IMainDom mainDom,
         ILogger<AIVersionCleanupBackgroundJob> logger)
-        : base(logger, CleanupInterval, StartupDelay)
+        : base(CleanupInterval)
     {
         _serviceProvider = serviceProvider;
         _options = options;
-        _runtimeState = runtimeState;
-        _serverRoleAccessor = serverRoleAccessor;
-        _mainDom = mainDom;
         _logger = logger;
     }
 
-    public override async Task PerformExecuteAsync(object? state)
+    public override TimeSpan Delay => StartupDelay;
+
+    public override async Task RunJobAsync(CancellationToken cancellationToken)
     {
-        // Don't run if cleanup is disabled
         if (!_options.CurrentValue.Enabled)
         {
             _logger.LogDebug("AI Version Cleanup is disabled. Skipping version cleanup.");
             return;
         }
 
-        // Don't run unless Umbraco is running
-        if (_runtimeState.Level != RuntimeLevel.Run)
-        {
-            return;
-        }
-
-        // Don't run on replicas nor unknown role servers
-        switch (_serverRoleAccessor.CurrentServerRole)
-        {
-            case ServerRole.Subscriber:
-                _logger.LogDebug("AI Version Cleanup will not run on subscriber servers.");
-                return;
-            case ServerRole.Unknown:
-                _logger.LogDebug("AI Version Cleanup will not run on servers with unknown role.");
-                return;
-            case ServerRole.Single:
-            case ServerRole.SchedulingPublisher:
-            default:
-                break;
-        }
-
-        // Ensure we do not run if not main domain
-        if (!_mainDom.IsMainDom)
-        {
-            _logger.LogDebug("AI Version Cleanup will not run if not MainDom.");
-            return;
-        }
-
-        // Perform cleanup
         using var scope = _serviceProvider.CreateScope();
         var versionService = scope.ServiceProvider.GetRequiredService<IAIEntityVersionService>();
 
         try
         {
-            var result = await versionService.CleanupVersionsAsync(CancellationToken.None);
+            var result = await versionService.CleanupVersionsAsync(cancellationToken);
 
             if (result.WasSkipped)
             {

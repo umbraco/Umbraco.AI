@@ -1,6 +1,6 @@
 {
     "name": "@umbraco-ai/agent-ui",
-    "version": "17.0.0",
+    "version": "0.0.0",
     "type": "module",
     "main": "./src/index.ts",
     "types": "./types/umbraco-ai-agent-ui-public-types.d.ts",
@@ -15,14 +15,14 @@
         "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)"
     },
     "dependencies": {
-        "@umbraco-ai/agent": "^17.0.0",
-        "@umbraco-cms/backoffice": "^17.4.0",
+        "@umbraco-ai/agent": "^18.0.0",
+        "@umbraco-cms/backoffice": "^18.0.0",
         "rxjs": "^7.8.2"
     },
     "devDependencies": {
         "@microsoft/api-extractor": "^7.55.1",
         "@umbraco-ai/agent": "*",
-        "@umbraco-cms/backoffice": "^17.4.0",
+        "@umbraco-cms/backoffice": "^18.0.0",
         "typescript": "^5.9.2",
         "vite": "^8.0.16"
     }

@@ -4,9 +4,12 @@
         <Title>Umbraco AI Web</Title>
         <Description>Management API for Umbraco AI</Description>
         <RootNamespace>Umbraco.AI.Web</RootNamespace>
+        <!-- Required for Microsoft.AspNetCore.OpenApi source-generated interceptors (AddOpenApi) in v18. -->
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
 

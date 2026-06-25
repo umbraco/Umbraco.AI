@@ -110,7 +110,7 @@ pr:
 variables:
     - group: dependency-track
     - name: NODE_VERSION
-      value: "22.x"
+      value: "24.x"
     - name: DOTNET_NOLOGO
       value: "true"
     - name: DOTNET_CLI_TELEMETRY_OPTOUT

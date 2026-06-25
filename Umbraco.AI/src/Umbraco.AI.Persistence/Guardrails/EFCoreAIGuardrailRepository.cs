@@ -21,7 +21,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
     /// <inheritdoc />
     public async Task<AIGuardrail?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIGuardrailEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Guardrails
@@ -35,7 +35,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
     /// <inheritdoc />
     public async Task<AIGuardrail?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIGuardrailEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Guardrails
@@ -49,7 +49,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AIGuardrail>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AIGuardrailEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Guardrails
@@ -67,7 +67,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -99,7 +99,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
     public async Task<IEnumerable<AIGuardrail>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
     {
         var idList = ids.ToList();
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AIGuardrailEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Guardrails
@@ -114,7 +114,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
     /// <inheritdoc />
     public async Task<AIGuardrail> SaveAsync(AIGuardrail guardrail, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedGuardrail = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -180,7 +180,7 @@ internal class EFCoreAIGuardrailRepository : IAIGuardrailRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {

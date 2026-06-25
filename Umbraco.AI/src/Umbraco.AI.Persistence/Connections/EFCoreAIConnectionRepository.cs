@@ -29,7 +29,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<AIConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
@@ -41,7 +41,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<AIConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AIConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.FirstOrDefaultAsync(
@@ -55,7 +55,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AIConnection>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AIConnectionEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.ToListAsync(cancellationToken));
@@ -67,7 +67,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AIConnection>> GetByProviderAsync(string providerId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AIConnectionEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections
@@ -86,7 +86,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -124,7 +124,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<AIConnection> SaveAsync(AIConnection connection, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedConnection = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -163,7 +163,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -185,7 +185,7 @@ internal class EFCoreAIConnectionRepository : IAIConnectionRepository
     /// <inheritdoc />
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool exists = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.AnyAsync(c => c.Id == id, cancellationToken));

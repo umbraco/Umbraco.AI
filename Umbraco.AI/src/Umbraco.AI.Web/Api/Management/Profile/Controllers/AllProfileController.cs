@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
-using Umbraco.AI.Web.Api.Common.Configuration;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Profile.Models;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;

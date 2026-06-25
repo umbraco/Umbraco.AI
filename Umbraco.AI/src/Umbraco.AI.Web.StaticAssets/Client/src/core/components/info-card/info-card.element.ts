@@ -22,7 +22,7 @@ export class UaiInfoCardElement extends LitElement {
             display: block;
             background: var(--uui-color-surface);
             padding: 15px;
-            border-radius: 6px;
+            border-radius: var(--uui-border-radius-2);
             border: 1px solid var(--uui-color-border);
         }
 

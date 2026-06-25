@@ -24,7 +24,7 @@ internal sealed class EFCoreAIUsageRecordRepository : IAIUsageRecordRepository
     /// <inheritdoc />
     public async Task SaveAsync(AIUsageRecord record, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -50,7 +50,7 @@ internal sealed class EFCoreAIUsageRecordRepository : IAIUsageRecordRepository
         DateTime to,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageRecords
@@ -74,7 +74,7 @@ internal sealed class EFCoreAIUsageRecordRepository : IAIUsageRecordRepository
         DateTime to,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -109,7 +109,7 @@ internal sealed class EFCoreAIUsageRecordRepository : IAIUsageRecordRepository
     /// <inheritdoc />
     public async Task<DateTime?> GetLastRecordTimestampAsync(CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var lastTimestamp = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageRecords.MaxAsync(r => (DateTime?)r.Timestamp, ct));

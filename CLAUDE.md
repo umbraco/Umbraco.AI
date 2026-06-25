@@ -139,7 +139,7 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 
 ## Target Framework & Stack
 
-- .NET 10.0 (`net10.0`), Umbraco CMS 17.x, Central Package Management via `Directory.Packages.props`
+- .NET 10.0 (`net10.0`), Umbraco CMS 18.x, Central Package Management via `Directory.Packages.props`
 - Frontend: Lit + TypeScript + Vite + @hey-api/openapi-ts
 - Frontend source: `src/*/Web.StaticAssets/Client/` -> `wwwroot/App_Plugins/`
 - Database: SQL Server & SQLite via EF Core; migration prefixes: `UmbracoAI_`, `UmbracoAIPrompt_`, `UmbracoAIAgent_`, `UmbracoAISearch_`

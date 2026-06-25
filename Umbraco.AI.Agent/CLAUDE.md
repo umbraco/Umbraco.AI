@@ -176,6 +176,6 @@ Web follows Umbraco CMS Management API conventions:
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Entity Framework Core 10.x

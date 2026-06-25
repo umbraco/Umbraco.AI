@@ -14,23 +14,27 @@
 
   <!-- Umbraco CMS -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.4.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
-  <!-- Umbraco Deploy -->
+  <!-- Umbraco Deploy.
+       Umbraco.Deploy.Infrastructure has no stable v18 yet (latest is 18.0.0-rc3); the v17 line
+       caps Umbraco.Cms.Api.Management at < 18.0.0, which an rc CMS satisfied but stable 18.0.0
+       does not. Floor on the 18.x RC so the Deploy products can consume the now-stable CMS 18
+       and automatically pick up Umbraco.Deploy.Infrastructure 18 stable once it ships. -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[17.0.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[18.0.0-rc3, 18.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[17.0.0-beta, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[18.0.0-beta, 18.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->
@@ -40,6 +44,7 @@
 
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="[10.0.7, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.7.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.9, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.9, 10.999.999)" />
@@ -51,18 +56,18 @@
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.AGUI" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Deploy" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Automate" Version="[17.0.0-beta.2, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.AGUI" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Deploy" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Automate" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->

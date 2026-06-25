@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0-beta.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.0.0-beta...Umbraco.AI.Automate@17.0.0-beta.2) (2026-06-22)
+
+### Internal
+
+* Bump major version to align with Umbraco CMS v17.
+
 ## [17.0.0-beta](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Automate@17.0.0-beta) (2026-06-10)
 
 Initial beta release of Umbraco.AI.Automate — Umbraco Automate integration for Umbraco.AI agents, exposing AI agents as workflow actions and AI events as workflow triggers.

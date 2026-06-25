@@ -5,6 +5,14 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.8...Umbraco.AI.Prompt@17.0.0) (2026-06-22)
+
+### feat
+
+* **core,agent,prompt,search:** Use dedicated connection for custom AI connection strings ([ca01d98](https://github.com/umbraco/Umbraco.AI/commit/ca01d98c4c76b471c736a47659cfcab99a3733bd)), closes [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)
+* **core,prompt,agent:** Add usage-by-feature telemetry and generic extension sweep ([df287c7](https://github.com/umbraco/Umbraco.AI/commit/df287c7d9767ccc6273a78a256ac3244a1ac9b7c))
+* **prompt:** Add usage telemetry provider for CMS telemetry report ([b6d9290](https://github.com/umbraco/Umbraco.AI/commit/b6d9290b6e891df2c72a06d9258ab4d08f6c93c0))
+
 ## [1.8.8](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.7...Umbraco.AI.Prompt@1.8.8) (2026-06-04)
 
 ### Internal

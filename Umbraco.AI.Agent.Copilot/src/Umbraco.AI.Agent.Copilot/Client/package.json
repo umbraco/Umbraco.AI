@@ -1,6 +1,6 @@
 {
     "name": "@umbraco-ai/agent-copilot",
-    "version": "0.0.0",
+    "version": "17.0.0",
     "type": "module",
     "types": "./types/umbraco-ai-agent-copilot-public-types.d.ts",
     "files": [

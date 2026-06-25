@@ -5,6 +5,7 @@
 #   - feature/<anything>
 #   - release/<anything>
 #   - hotfix/<anything>
+#   - support/<anything>
 
 $ErrorActionPreference = "Stop"
 
@@ -23,7 +24,7 @@ if ($currentBranch -eq "main" -or $currentBranch -eq "dev") {
 
 # Check if branch matches valid patterns
 $validBranch = $false
-if ($currentBranch -match "^(feature|claude|release|hotfix)/.+") {
+if ($currentBranch -match "^(feature|claude|release|hotfix|support)/.+") {
     $validBranch = $true
 }
 
@@ -38,6 +39,7 @@ if (-not $validBranch) {
     Write-Host "  feature/<anything>"
     Write-Host "  release/<anything>"
     Write-Host "  hotfix/<anything>"
+    Write-Host "  support/<anything>"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host "  feature/add-caching"

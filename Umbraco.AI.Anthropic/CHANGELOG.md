@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@1.3.6...Umbraco.AI.Anthropic@17.0.0) (2026-06-22)
+
+### fix
+
+* **providers, agent, anthropic:** Classify provider errors for friendly chat messages ([8f71209](https://github.com/umbraco/Umbraco.AI/commit/8f712099ca3479774e7d011152ed93276642e8dd)), closes [#174](https://github.com/umbraco/Umbraco.AI/issues/174) [#174](https://github.com/umbraco/Umbraco.AI/issues/174)
+* **providers, agent, anthropic:** Route error classification through per-provider client decorators ([3c9b8d6](https://github.com/umbraco/Umbraco.AI/commit/3c9b8d655e87219927e33dee921e057392fd13e7)), closes [#174](https://github.com/umbraco/Umbraco.AI/issues/174)
+
 ## [1.3.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@1.3.5...Umbraco.AI.Anthropic@1.3.6) (2026-06-04)
 
 ### Internal

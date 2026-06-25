@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.1...Umbraco.AI.Agent.UI@17.0.0) (2026-06-22)
+
+### ⚠ BREAKING CHANGE
+
+* **agent-ui:** Adopt AG-UI typed multimodal content (image/audio/video/document). The legacy `AGUIBinaryInputContent` shape has been replaced with four spec-defined typed variants (`image`, `audio`, `video`, `document`) with a nested `source: { type, value, mimeType }` discriminator. Custom tool renderers or frontend tools consuming binary content must migrate to the new shapes.
+
+### fix
+
+* **agent-ui,agent:** Align frontend-tool interrupt reason with server ([018b0d8](https://github.com/umbraco/Umbraco.AI/commit/018b0d800ce9c7701f40f07776b92be2af5396fb))
+
 ## [1.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@1.0.0...Umbraco.AI.Agent.UI@1.0.1) (2026-06-04)
 
 ### Internal

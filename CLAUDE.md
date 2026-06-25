@@ -185,6 +185,8 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 BREAKING CHANGE or feat!: -> Major | feat: -> Minor | fix:/perf: -> Patch | docs/chore/refactor only -> Ask user
 ```
 
+**Major version alignment:** Package major versions track the Umbraco CMS major version. All packages ship as `17.x.x` for CMS 17, `18.x.x` for CMS 18, etc. When preparing a release that spans a CMS major boundary, bump all products to the new major simultaneously — a prep commit on `dev` sets all `version.json` files and inter-product ranges in `Directory.Packages.props` before running `/release-management`.
+
 When bumping Core to new major, the skill checks `Directory.Packages.props` for dependent add-ons and warns.
 
 #### Prerelease versioning — always use dotted `-{stage}.N`
@@ -193,7 +195,7 @@ Prerelease identifiers **must** be dot-separated with a numeric segment: `-alpha
 
 **Never use the non-dotted form** (`-beta1`, `-alpha2`). NuGet/SemVer treats `beta10` as a single alphanumeric identifier and compares it as a *string*, so it sorts **below** `beta9` (`'1' < '9'`). The result: a published `1.0.0-beta10` is lower-precedence than `1.0.0-beta9`, so `--prerelease` installs and range resolution silently pick the *older* build. Dotted `-beta.10` compares the `10` numerically and sorts correctly.
 
-Note you cannot retrofit a broken line: `-beta.11` (dotted) sorts *below* an existing non-dotted `-beta9` (because identifier `beta` < `beta9`). So a line that already shipped non-dotted betas can only be escaped by advancing the stage (`-rc.1`) or the base version, not by dotifying. **`Umbraco.AI.Search` (`-beta*`) and `Umbraco.AI.Automate` (`-alpha*`) are grandfathered on the broken non-dotted scheme** — leave them as-is; apply the dotted rule to every *new* prerelease line. See [[project_release_tag_sort_prerelease_bug]].
+Note you cannot retrofit a broken line: `-beta.11` (dotted) sorts *below* an existing non-dotted `-beta9` (because identifier `beta` < `beta9`). So a line that already shipped non-dotted betas can only be escaped by advancing the stage (`-rc.1`) or the base version, not by dotifying. Apply the dotted rule to every prerelease line. See [[project_release_tag_sort_prerelease_bug]].
 
 ### Release Manifest
 
@@ -239,7 +241,7 @@ Dependencies managed via Central Package Management (`Directory.Packages.props`)
 ```xml
 <Project>
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
 </Project>
 ```

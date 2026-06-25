@@ -59,19 +59,46 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
         var role = ConvertFromChatRole(chatMessage.Role);
         var message = new AGUIMessage
         {
+            // AG-UI requires id on every message — prefer the upstream MessageId, otherwise mint one.
+            Id = chatMessage.MessageId ?? Guid.NewGuid().ToString(),
             Role = role,
             Content = chatMessage.Text
         };
 
-        // Check for DataContent (binary data from LLM responses)
-        var dataContents = chatMessage.Contents?.OfType<DataContent>().ToList();
-        if (dataContents?.Count > 0)
-        {
-            var contentParts = new List<AGUIInputContent>();
+        // Single pass over Contents to bucket text / data / function-call / function-result.
+        List<TextContent>? textContents = null;
+        List<DataContent>? dataContents = null;
+        List<FunctionCallContent>? functionCalls = null;
+        FunctionResultContent? functionResult = null;
 
-            // Add text content if present
-            var textContents = chatMessage.Contents?.OfType<TextContent>().ToList();
-            if (textContents?.Count > 0)
+        if (chatMessage.Contents is not null)
+        {
+            foreach (var content in chatMessage.Contents)
+            {
+                switch (content)
+                {
+                    case TextContent t:
+                        (textContents ??= []).Add(t);
+                        break;
+                    case DataContent d:
+                        (dataContents ??= []).Add(d);
+                        break;
+                    case FunctionCallContent fc:
+                        (functionCalls ??= []).Add(fc);
+                        break;
+                    case FunctionResultContent fr when functionResult is null:
+                        functionResult = fr;
+                        break;
+                }
+            }
+        }
+
+        if (dataContents is { Count: > 0 })
+        {
+            var contentParts = new List<AGUIInputContent>(
+                (textContents?.Count ?? 0) + dataContents.Count);
+
+            if (textContents is { Count: > 0 })
             {
                 foreach (var textContent in textContents)
                 {
@@ -79,22 +106,26 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 }
             }
 
-            // Add binary content
             foreach (var dataContent in dataContents)
             {
-                contentParts.Add(new AGUIBinaryInputContent
+                if (dataContent.Data.IsEmpty)
                 {
-                    MimeType = dataContent.MediaType ?? "application/octet-stream",
-                    Data = !dataContent.Data.IsEmpty ? Convert.ToBase64String(dataContent.Data.Span) : null
-                });
+                    continue;
+                }
+
+                var mimeType = dataContent.MediaType ?? "application/octet-stream";
+                var source = new AGUIInputContentDataSource
+                {
+                    Value = Convert.ToBase64String(dataContent.Data.Span),
+                    MimeType = mimeType,
+                };
+                contentParts.Add(AGUIInputContentFactory.FromSource(source, mimeType));
             }
 
             message.ContentParts = contentParts;
         }
 
-        // Check for function calls
-        var functionCalls = chatMessage.Contents?.OfType<FunctionCallContent>().ToList();
-        if (functionCalls?.Any() == true)
+        if (functionCalls is { Count: > 0 })
         {
             message.ToolCalls = functionCalls.Select(fc => new AGUIToolCall
             {
@@ -110,9 +141,7 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             }).ToList();
         }
 
-        // Check for function results
-        var functionResult = chatMessage.Contents?.OfType<FunctionResultContent>().FirstOrDefault();
-        if (functionResult != null)
+        if (functionResult is not null)
         {
             message.ToolCallId = functionResult.CallId;
             message.Content = functionResult.Result?.ToString() ?? string.Empty;
@@ -128,35 +157,40 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
 
         foreach (var part in message.ContentParts!)
         {
-            switch (part)
+            if (part is AGUITextInputContent textPart)
             {
-                case AGUITextInputContent textPart:
-                    contents.Add(new TextContent(textPart.Text));
+                contents.Add(new TextContent(textPart.Text));
+                continue;
+            }
+
+            if (part is not AGUIMediaInputContent media)
+            {
+                continue;
+            }
+
+            var mimeType = media.Source.GetMimeType();
+            if (mimeType is null)
+            {
+                continue;
+            }
+
+            // Prefer resolved bytes attached by AGUIFileProcessor.
+            var resolved = AGUIFileProcessor.GetResolvedBytes(media);
+            if (resolved is { Length: > 0 })
+            {
+                contents.Add(new DataContent(resolved, mimeType));
+                continue;
+            }
+
+            switch (media.Source)
+            {
+                case AGUIInputContentDataSource dataSource:
+                    var bytes = Convert.FromBase64String(dataSource.Value);
+                    contents.Add(new DataContent(bytes, dataSource.MimeType));
                     break;
 
-                case AGUIBinaryInputContent binaryPart:
-                    if (binaryPart.ResolvedData is { Length: > 0 })
-                    {
-                        // Use resolved bytes from file processor
-                        contents.Add(new DataContent(binaryPart.ResolvedData, binaryPart.MimeType));
-                    }
-                    else if (!string.IsNullOrEmpty(binaryPart.Data))
-                    {
-                        // Fallback: decode inline base64
-                        var bytes = Convert.FromBase64String(binaryPart.Data);
-                        contents.Add(new DataContent(bytes, binaryPart.MimeType));
-                    }
-                    else if (!string.IsNullOrEmpty(binaryPart.Id))
-                    {
-                        // Has a file store ID but no resolved data — skip.
-                        // The file processor should have resolved this; if it didn't,
-                        // the file may have expired or been cleaned up.
-                    }
-                    else if (!string.IsNullOrEmpty(binaryPart.Url))
-                    {
-                        // External URL-based content (not from file store)
-                        contents.Add(new DataContent(new Uri(binaryPart.Url, UriKind.RelativeOrAbsolute), binaryPart.MimeType));
-                    }
+                case AGUIInputContentUrlSource urlSource:
+                    contents.Add(new DataContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
                     break;
             }
         }

@@ -13,6 +13,7 @@ using Umbraco.AI.AGUI.Events.Messages;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Core.Providers.Errors;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.AGUI;
@@ -213,8 +214,8 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
-        finishedEvent.Interrupt.ShouldNotBeNull();
+        var interruptOutcome = finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -279,7 +280,7 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Success);
+        finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
     [Fact]
@@ -297,7 +298,7 @@ public class AGUIStreamingServiceTests
 
         // Assert
         var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
+        finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
     }
 
     #endregion
@@ -305,23 +306,52 @@ public class AGUIStreamingServiceTests
     #region Error Handling Tests
 
     [Fact]
-    public async Task StreamAgentAsync_OnError_EmitsErrorAndFinished()
+    public async Task StreamAgentAsync_OnError_EmitsClassifiedErrorAndFinished()
     {
-        // Arrange
-        var agent = CreateThrowingAgent(new InvalidOperationException("Test error"));
+        // Arrange — unrecognised exception type falls through to the Unknown category.
+        var agent = CreateThrowingAgent(new InvalidOperationException("internal-only: Test error"));
         var request = CreateRequest();
 
         // Act
         var events = await CollectEvents(agent, request);
 
         // Assert
+        // Per AG-UI spec a run terminates with EITHER RunFinished OR RunError — never both.
         var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
         errorEvent.ShouldNotBeNull();
-        errorEvent.Message.ShouldBe("Test error");
-        errorEvent.Code.ShouldBe("STREAMING_ERROR");
+        // Raw exception text must not be surfaced to users.
+        errorEvent.Message.ShouldNotContain("internal-only");
+        // Code is the AIProviderErrorCategory name.
+        errorEvent.Code.ShouldBe("Unknown");
 
-        var finishedEvent = events.OfType<RunFinishedEvent>().First();
-        finishedEvent.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_OnClassifiedProviderError_EmitsCategoryAndUserMessage()
+    {
+        // Arrange — provider SDK failures arrive pre-classified as AIProviderException
+        // (the chat client is wrapped by the error-classifying decorator in the factory).
+        var info = new AIProviderErrorInfo(
+            AIProviderErrorCategory.Transient,
+            "The AI service is briefly overloaded. Please try again in a few seconds.",
+            "overloaded_error",
+            "SSE error returned from server: '{...overloaded_error...}'");
+        var agent = CreateThrowingAgent(new AIProviderException(info));
+        var request = CreateRequest();
+
+        // Act
+        var events = await CollectEvents(agent, request);
+
+        // Assert — the classified user message and category code reach the frontend; the raw
+        // envelope text does not.
+        var errorEvent = events.OfType<RunErrorEvent>().FirstOrDefault();
+        errorEvent.ShouldNotBeNull();
+        errorEvent.Message.ShouldBe(info.UserMessage);
+        errorEvent.Message.ShouldNotContain("SSE error");
+        errorEvent.Code.ShouldBe("Transient");
+
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }
 
     [Fact]
@@ -350,25 +380,23 @@ public class AGUIStreamingServiceTests
     {
         // Arrange
         var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
-        var resumePayload = JsonSerializer.SerializeToElement(new
-        {
-            toolResults = new[]
-            {
-                new { toolCallId = "call-1", result = new { approved = true } }
-            }
-        });
+        var resumePayload = JsonSerializer.SerializeToElement(new { approved = true });
         var request = new AGUIRunRequest
         {
             ThreadId = "thread-1",
             RunId = "run-1",
             Messages = new List<AGUIMessage>
             {
-                new() { Role = AGUIMessageRole.User, Content = "Hello" }
+                new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             },
-            Resume = new AGUIResumeInfo
+            Resume = new List<AGUIResumeEntry>
             {
-                InterruptId = "int-123",
-                Payload = resumePayload
+                new()
+                {
+                    InterruptId = "call-1",
+                    Status = AGUIResumeStatus.Resolved,
+                    Payload = resumePayload
+                }
             }
         };
 
@@ -406,7 +434,7 @@ public class AGUIStreamingServiceTests
             RunId = runId ?? "run-test",
             Messages = new List<AGUIMessage>
             {
-                new() { Role = AGUIMessageRole.User, Content = "Hello" }
+                new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }
             }
         };
     }

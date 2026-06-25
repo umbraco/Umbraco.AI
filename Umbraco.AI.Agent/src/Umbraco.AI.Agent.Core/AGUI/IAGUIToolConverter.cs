@@ -1,18 +1,19 @@
-using Microsoft.Extensions.AI;
+using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.AGUI.Models;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
 /// <summary>
-/// Converts between AG-UI tool definitions and M.E.AI tool types.
+/// Converts AG-UI tool definitions from a run request into <see cref="AIFrontendTool"/>
+/// instances, lifting vendor metadata (scope, isDestructive) off <see cref="AGUITool.Metadata"/>.
 /// </summary>
 public interface IAGUIToolConverter
 {
     /// <summary>
-    /// Converts AG-UI tools to M.E.AI AITool format as frontend tools.
-    /// These tools expose their schema to the LLM but execution happens on the client.
+    /// Maps AG-UI tools to <see cref="AIFrontendTool"/>, reading <c>scope</c> and
+    /// <c>isDestructive</c> from each tool's inline <see cref="AGUITool.Metadata"/>.
     /// </summary>
-    /// <param name="tools">The AG-UI tools to convert.</param>
-    /// <returns>A list of AITool instances, or null if no tools provided.</returns>
-    IList<AITool>? ConvertToFrontendTools(IEnumerable<AGUITool>? tools);
+    /// <param name="tools">The AG-UI tools from the run request.</param>
+    /// <returns>The mapped frontend tools, or <c>null</c> when <paramref name="tools"/> is null/empty.</returns>
+    IEnumerable<AIFrontendTool>? ConvertToFrontendTools(IEnumerable<AGUITool>? tools);
 }

@@ -34,6 +34,7 @@ using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.AI.Core.RuntimeContext.Middleware;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
+using Umbraco.AI.Core.Telemetry;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
@@ -43,6 +44,7 @@ using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
+using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
 namespace Umbraco.AI.Extensions;
 
@@ -71,6 +73,14 @@ public static partial class UmbracoBuilderExtensions
 
         // Bind AIMediaOptions from "Umbraco:AI:Media" section
         services.Configure<AIMediaOptions>(config.GetSection("Umbraco:AI:Media"));
+
+        // Bind AIUsageTelemetryOptions from "Umbraco:AI:Telemetry" section
+        services.Configure<AIUsageTelemetryOptions>(config.GetSection("Umbraco:AI:Telemetry"));
+
+        // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
+        // (only sent at CMS TelemetryLevel.Detailed; suppressed via Umbraco:AI:Telemetry:Enabled)
+        services.AddTransient<IDetailedTelemetryProvider, AIUsageTelemetryProvider>();
+        services.AddTransient<IDetailedTelemetryProvider, AIExtensionUsageTelemetryProvider>();
 
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();

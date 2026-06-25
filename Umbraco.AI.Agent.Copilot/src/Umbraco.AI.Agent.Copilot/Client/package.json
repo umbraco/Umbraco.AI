@@ -1,6 +1,6 @@
 {
     "name": "@umbraco-ai/agent-copilot",
-    "version": "0.0.0",
+    "version": "17.0.0",
     "type": "module",
     "types": "./types/umbraco-ai-agent-copilot-public-types.d.ts",
     "files": [
@@ -22,6 +22,6 @@
     "devDependencies": {
         "@microsoft/api-extractor": "^7.55.1",
         "typescript": "^5.9.2",
-        "vite": "^7.3.2"
+        "vite": "^8.0.16"
     }
 }

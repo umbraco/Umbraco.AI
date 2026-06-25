@@ -1,6 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.AGUI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Models;
@@ -44,6 +43,7 @@ public class StreamAgentAGUIController : AgentControllerBase
 {
     private readonly IAIAgentService _agentService;
     private readonly IAGUIContextConverter _contextConverter;
+    private readonly IAGUIToolConverter _toolConverter;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
 
@@ -53,11 +53,13 @@ public class StreamAgentAGUIController : AgentControllerBase
     public StreamAgentAGUIController(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,
+        IAGUIToolConverter toolConverter,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
     {
         _agentService = agentService;
         _contextConverter = contextConverter;
+        _toolConverter = toolConverter;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
     }
@@ -147,8 +149,8 @@ public class StreamAgentAGUIController : AgentControllerBase
             }
         }
 
-        // Extract tool metadata from ForwardedProps and rejoin with tools
-        var frontendTools = CombineToolsWithMetadata(request.Tools, request.ForwardedProps);
+        // Tool metadata travels inline via AGUITool.Metadata per AG-UI spec — no rejoin needed.
+        var frontendTools = _toolConverter.ConvertToFrontendTools(request.Tools);
 
         // Delegate to service - handles tool creation, permission filtering, and streaming
         var events = _agentService.StreamAgentAGUIAsync(
@@ -197,72 +199,6 @@ public class StreamAgentAGUIController : AgentControllerBase
     }
 
     /// <summary>
-    /// Combines AG-UI tools with their metadata from ForwardedProps.
-    /// Extracts tool metadata (scope, isDestructive) from forwardedProps and rejoins with tool definitions.
-    /// </summary>
-    /// <param name="tools">AG-UI tool definitions from the request.</param>
-    /// <param name="forwardedProps">Forwarded properties containing tool metadata.</param>
-    /// <returns>List of frontend tools with metadata attached, or null if no tools provided.</returns>
-    private IEnumerable<AIFrontendTool>? CombineToolsWithMetadata(
-        IEnumerable<AGUITool>? tools,
-        JsonElement? forwardedProps)
-    {
-        if (tools is null)
-        {
-            return null;
-        }
-
-        // Extract metadata lookup
-        var metadataLookup = ExtractToolMetadataLookup(forwardedProps);
-
-        // Combine tools with their metadata
-        var frontendTools = new List<AIFrontendTool>();
-        foreach (var tool in tools)
-        {
-            // Get metadata for this tool (if available)
-            string? scope = null;
-            bool isDestructive = false;
-
-            if (metadataLookup.TryGetValue(tool.Name, out var metadata))
-            {
-                scope = metadata.Scope;
-                isDestructive = metadata.IsDestructive;
-            }
-
-            frontendTools.Add(new AIFrontendTool(tool, scope, isDestructive));
-        }
-
-        return frontendTools;
-    }
-
-    /// <summary>
-    /// Extracts tool metadata from ForwardedProps into a lookup dictionary.
-    /// </summary>
-    private Dictionary<string, ToolMetadataDto> ExtractToolMetadataLookup(JsonElement? forwardedProps)
-    {
-        if (forwardedProps is null ||
-            !forwardedProps.Value.TryGetProperty("toolMetadata", out var metadataElement))
-        {
-            return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
-        }
-
-        try
-        {
-            var metadataList = JsonSerializer.Deserialize<List<ToolMetadataDto>>(
-                metadataElement.GetRawText(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions) ?? [];
-
-            return metadataList.ToDictionary(
-                m => m.ToolName,
-                m => m,
-                StringComparer.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
-        }
-    }
-
-    /// <summary>
     /// Builds an AgentAvailabilityContext from AG-UI context items using the runtime context infrastructure.
     /// </summary>
     /// <remarks>
@@ -307,15 +243,4 @@ public class StreamAgentAGUIController : AgentControllerBase
         };
     }
 
-    private class ToolMetadataDto
-    {
-        [JsonPropertyName("toolName")]
-        public string ToolName { get; set; } = string.Empty;
-
-        [JsonPropertyName("scope")]
-        public string? Scope { get; set; }
-
-        [JsonPropertyName("isDestructive")]
-        public bool IsDestructive { get; set; }
-    }
 }

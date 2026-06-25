@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Search will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@1.0.0...Umbraco.AI.Search@17.0.0) (2026-06-22)
+
+### feat
+
+* **search:** Add usage telemetry provider for CMS telemetry report ([a6fcf20](https://github.com/umbraco/Umbraco.AI/commit/a6fcf20b68f02755f5b683e6e775e9fe36c2a0a3))
+
 ## [1.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@1.0.0-beta10...Umbraco.AI.Search@1.0.0) (2026-06-10)
 
 First stable release of Umbraco.AI.Search, built against the stable Umbraco.Cms.Search.Core 1.0.0.

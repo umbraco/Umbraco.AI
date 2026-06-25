@@ -1,6 +1,6 @@
 {
     "name": "@umbraco-ai/prompt",
-    "version": "0.0.0",
+    "version": "17.0.0",
     "type": "module",
     "scripts": {
         "watch": "tsc && vite build --watch",
@@ -17,6 +17,6 @@
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "typescript": "^5.9.2",
-        "vite": "^7.3.2"
+        "vite": "^8.0.16"
     }
 }

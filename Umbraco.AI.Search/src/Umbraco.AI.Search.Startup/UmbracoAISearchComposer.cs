@@ -4,11 +4,13 @@ using Umbraco.AI.Search.Core;
 using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.Search;
+using Umbraco.AI.Search.Core.Telemetry;
 using Umbraco.AI.Search.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 using Umbraco.Cms.Search.Core.Configuration;
 using Umbraco.Cms.Search.Core.DependencyInjection;
 using Umbraco.Cms.Search.Core.Services.ContentIndexing;
@@ -53,6 +55,9 @@ public sealed class UmbracoAISearchComposer : IComposer
         builder.Services.Configure<IndexOptions>(options =>
             options.RegisterContentIndex<AIVectorIndexer, AIVectorSearcher, IPublishedContentChangeStrategy>(AISearchConstants.IndexAliases.Search,
                 UmbracoObjectTypes.Document, UmbracoObjectTypes.Media));
+
+        // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
+        builder.Services.AddTransient<IDetailedTelemetryProvider, AISearchUsageTelemetryProvider>();
 
         builder.AddSearchCore();
     }

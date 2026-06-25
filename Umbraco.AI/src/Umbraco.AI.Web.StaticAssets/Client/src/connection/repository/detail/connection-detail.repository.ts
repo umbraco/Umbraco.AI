@@ -43,14 +43,8 @@ export class UaiConnectionDetailRepository extends UmbDetailRepositoryBase<UaiCo
     override async delete(unique: string) {
         const result = await super.delete(unique);
         if (!result.error) {
+            // Notify listeners of the deletion. Collection and tree reloads are requested by the delete action.
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_CONNECTION_ENTITY_TYPE));
-            dispatchActionEvent(
-                this,
-                new UmbRequestReloadChildrenOfEntityEvent({
-                    entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,
-                    unique: null,
-                }),
-            );
         }
         return result;
     }

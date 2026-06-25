@@ -5,7 +5,7 @@
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Only run on release or hotfix branches
-if ! echo "$current_branch" | grep -qE "^(release|hotfix)/"; then
+if ! echo "$current_branch" | grep -qE "^v[0-9]+/(release|hotfix)/"; then
     exit 0
 fi
 

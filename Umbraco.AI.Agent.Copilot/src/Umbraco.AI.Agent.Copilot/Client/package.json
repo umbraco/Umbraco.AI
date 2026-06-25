@@ -14,10 +14,10 @@
         "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)"
     },
     "dependencies": {
-      "@umbraco-ai/agent": "*",
-      "@umbraco-ai/agent-ui": "*",
-      "@umbraco-ai/core": "*",
-      "@umbraco-cms/backoffice": "^17.4.0"
+        "@umbraco-ai/agent": "*",
+        "@umbraco-ai/agent-ui": "*",
+        "@umbraco-ai/core": "*",
+        "@umbraco-cms/backoffice": "^18.0.0"
     },
     "devDependencies": {
         "@microsoft/api-extractor": "^7.55.1",

@@ -73,10 +73,10 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, "") 
     lookup?: UaiTagLookupCallback;
 
     @property({ type: Boolean })
-    override required = false;
+    required = false;
 
     @property({ type: String })
-    override requiredMessage = "This field is required";
+    requiredMessage = "This field is required";
 
     @property({ type: Array })
     public set items(newTags: string[]) {

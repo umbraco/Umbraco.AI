@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.0.0...Umbraco.AI.Agent@18.0.0) (2026-06-25)
+
+### fix
+
+* **agent,frontend:** Split agent-type condition alias into its own module ([54dde74](https://github.com/umbraco/Umbraco.AI/commit/54dde74565ac72ffa8da6737d127b9813c245030))
+
 ## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.4...Umbraco.AI.Agent@17.0.0) (2026-06-22)
 
 ### ⚠ BREAKING CHANGE

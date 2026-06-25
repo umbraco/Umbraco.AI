@@ -10,6 +10,7 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Profile Picker",
         icon: "icon-wand",
         group: "Umbraco AI",
+        keywords: ["ai", "umbraco ai", "profile", "chat", "embedding", "speech to text", "picker", "select"],
         settings: {
             properties: [
                 {

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Profiles;
-using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;

@@ -17,6 +17,7 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Agent.Core.Configuration;
 
@@ -63,7 +64,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIFileStore, AIFileStore>();
         builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
-        builder.Services.AddHostedService<AIFileCleanupBackgroundJob>();
+        builder.Services.AddRecurringBackgroundJob<AIFileCleanupBackgroundJob>();
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();

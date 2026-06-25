@@ -19,7 +19,7 @@ internal sealed class EFCoreAISettingsRepository : IAISettingsRepository
     /// <inheritdoc />
     public async Task<AISettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Settings.ToListAsync(cancellationToken));
@@ -34,7 +34,7 @@ internal sealed class EFCoreAISettingsRepository : IAISettingsRepository
         Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var updatedEntities = await scope.ExecuteWithContextAsync(async db =>
         {

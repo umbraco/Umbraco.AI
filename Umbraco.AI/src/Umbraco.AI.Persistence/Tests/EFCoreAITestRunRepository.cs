@@ -19,7 +19,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<AITestRun?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AITestRunEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.TestRuns.FirstOrDefaultAsync(r => r.Id == id, cancellationToken));
@@ -31,7 +31,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AITestRun>> GetByTestIdAsync(Guid testId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AITestRunEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.TestRuns
@@ -54,7 +54,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
         int take = 20,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -104,7 +104,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<IEnumerable<AITestRun>> GetByExecutionIdAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AITestRunEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.TestRuns
@@ -119,7 +119,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<AITestRun?> GetLatestByTestIdAsync(Guid testId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         AITestRunEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.TestRuns
@@ -134,7 +134,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<AITestRun> SaveAsync(AITestRun run, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedRun = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -161,7 +161,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -183,7 +183,7 @@ internal class EFCoreAITestRunRepository : IAITestRunRepository
     /// <inheritdoc />
     public async Task<int> DeleteOldRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         int deletedCount = await scope.ExecuteWithContextAsync(async db =>
         {

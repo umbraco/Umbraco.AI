@@ -9,17 +9,18 @@ import { join } from "path";
 const args = process.argv.slice(2);
 if (args.length < 1) {
     console.error(chalk.red("ERROR: Missing required arguments"));
-    console.error("Usage: node generate-openapi.js <swagger-endpoint> [output-dir]");
+    console.error("Usage: node generate-openapi.js <openapi-document-name> [output-dir]");
     console.error("Example: node generate-openapi.js ai-management");
     console.error("Example: node generate-openapi.js ai-management src/custom-output");
     process.exit(1);
 }
 
-const swaggerEndpoint = args[0];
+const documentName = args[0];
 const outputDir = args[1] || "src/api";
 
-// Construct full swagger path
-const swaggerPath = `umbraco/swagger/${swaggerEndpoint}/swagger.json`;
+// Construct full OpenAPI document path. CMS v18 swapped Swashbuckle for
+// Microsoft.AspNetCore.OpenApi, moving the document endpoint to /umbraco/openapi/{name}.json.
+const openApiPath = `umbraco/openapi/${documentName}.json`;
 
 // Start notifying user we are generating the TypeScript client
 console.log(chalk.green("Generating OpenAPI client..."));
@@ -53,11 +54,11 @@ const pipeName = `umbraco.demosite.${identifier}`;
 const socketPath = process.platform === "win32" ? `\\\\.\\pipe\\${pipeName}` : `/tmp/${pipeName}`;
 
 console.log(chalk.cyan(`Using named pipe: ${pipeName}`));
-console.log(`Fetching ${chalk.yellow(`pipe://${pipeName}/${swaggerPath}`)}`);
+console.log(`Fetching ${chalk.yellow(`pipe://${pipeName}/${openApiPath}`)}`);
 
 // Fetch OpenAPI spec via named pipe
 const specData = await new Promise((resolve, reject) => {
-    http.get({ socketPath, path: `/${swaggerPath}` }, (res) => {
+    http.get({ socketPath, path: `/${openApiPath}` }, (res) => {
         let data = "";
         res.setEncoding("utf8");
         res.on("data", (chunk) => (data += chunk));

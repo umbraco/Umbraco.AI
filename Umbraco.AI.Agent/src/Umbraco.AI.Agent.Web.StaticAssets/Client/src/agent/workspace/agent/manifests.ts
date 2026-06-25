@@ -1,7 +1,7 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
-import { UAI_AGENT_TYPE_CONDITION_ALIAS } from "./agent-type.condition.js";
+import { UAI_AGENT_TYPE_CONDITION_ALIAS } from "./agent-type.condition.constants.js";
 
 export const manifests: Array<UmbExtensionManifest> = [
     // Workspace condition: matches agent type from workspace context

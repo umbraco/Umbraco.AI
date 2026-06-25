@@ -194,6 +194,11 @@ export class UaiPromptScopeRuleEditorElement extends UmbLitElement {
                 color: inherit;
                 --umb-block-list-entry-actions-opacity: 0;
                 border: 1px solid var(--uui-color-border);
+                border-radius: var(--uui-border-radius-3);
+            }
+
+            .rule-header[aria-expanded="true"] {
+                border-radius: var(--uui-border-radius-3) var(--uui-border-radius-3) 0 0;
             }
 
             .rule-header:hover,
@@ -217,6 +222,7 @@ export class UaiPromptScopeRuleEditorElement extends UmbLitElement {
                 gap: var(--uui-size-space-6);
                 border: 1px solid var(--uui-color-border);
                 border-top: 0;
+                border-radius: 0 0 var(--uui-border-radius-3) var(--uui-border-radius-3);
             }
 
             .rule-content[hidden] {

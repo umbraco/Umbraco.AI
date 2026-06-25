@@ -20,7 +20,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<Core.Agents.AIAgent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Agents.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, cancellationToken));
@@ -33,7 +33,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<Core.Agents.AIAgent?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Agents.AsNoTracking()
@@ -47,7 +47,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<IEnumerable<Core.Agents.AIAgent>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Agents.AsNoTracking().OrderBy(e => e.Name).ToListAsync(cancellationToken));
@@ -68,7 +68,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
         Core.Agents.AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -124,7 +124,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<IEnumerable<Core.Agents.AIAgent>> GetBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -144,7 +144,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<Core.Agents.AIAgent> SaveAsync(Core.Agents.AIAgent agent, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var savedAgent = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -183,7 +183,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -206,7 +206,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var exists = await scope.ExecuteWithContextAsync(async db =>
             await db.Agents.AnyAsync(e => e.Id == id, cancellationToken));
@@ -219,7 +219,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<bool> ExistsWithProfileIdAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var exists = await scope.ExecuteWithContextAsync(async db =>
             await db.Agents.AnyAsync(e => e.ProfileId == profileId, cancellationToken));
@@ -232,7 +232,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     /// <inheritdoc />
     public async Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var exists = await scope.ExecuteWithContextAsync(async db =>
         {

@@ -28,7 +28,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
         AIUsageFilter? filter = null,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -59,7 +59,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
         AIUsageFilter? filter = null,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -98,7 +98,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
             return;
         }
 
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -129,7 +129,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
             return;
         }
 
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -148,7 +148,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     /// <inheritdoc />
     public async Task<DateTime?> GetLastAggregatedHourlyPeriodAsync(CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var lastPeriod = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageStatisticsHourly.MaxAsync(s => (DateTime?)s.Period, ct));
@@ -162,7 +162,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     /// <inheritdoc />
     public async Task<DateTime?> GetLastAggregatedDailyPeriodAsync(CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var lastPeriod = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageStatisticsDaily.MaxAsync(s => (DateTime?)s.Period, ct));
@@ -176,7 +176,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteHourlyForPeriodAsync(DateTime period, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -207,7 +207,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteDailyForPeriodAsync(DateTime period, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -238,7 +238,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteHourlyOlderThanAsync(DateTime olderThan, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -269,7 +269,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteDailyOlderThanAsync(DateTime olderThan, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {

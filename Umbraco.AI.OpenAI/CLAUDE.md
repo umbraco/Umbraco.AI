@@ -138,8 +138,8 @@ To keep using an existing section such as `OpenAI:ApiKey` instead, add its prefi
 
 ## Dependencies
 
-- Umbraco CMS 17.x
-- Umbraco.AI 1.x
+- Umbraco CMS 18.x
+- Umbraco.AI 18.x
 - Microsoft.Extensions.AI.OpenAI
 - Azure.AI.OpenAI (for Azure support)
 

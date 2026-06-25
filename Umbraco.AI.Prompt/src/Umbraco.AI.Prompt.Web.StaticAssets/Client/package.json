@@ -10,10 +10,11 @@
     },
     "dependencies": {
         "@umbraco-ai/core": "*",
-        "@umbraco-cms/backoffice": "^17.4.0"
+        "@umbraco-cms/backoffice": "^18.0.0"
     },
     "devDependencies": {
-        "@hey-api/openapi-ts": "0.96.0",
+        "@hey-api/openapi-ts": "^0.97.0",
+        "@umbraco-ui/uui": "^2.0.0-rc.2",
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "typescript": "^5.9.2",

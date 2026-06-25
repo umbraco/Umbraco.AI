@@ -6,6 +6,7 @@
 #   - feature/<anything>
 #   - release/<anything>
 #   - hotfix/<anything>
+#   - support/<anything>
 
 # Get current branch name
 current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
@@ -22,7 +23,7 @@ fi
 
 # Check if branch matches valid patterns
 valid_branch=false
-if [[ $current_branch =~ ^(feature|claude|release|hotfix)/.+ ]]; then
+if [[ $current_branch =~ ^(feature|claude|release|hotfix|support)/.+ ]]; then
     valid_branch=true
 fi
 
@@ -37,6 +38,7 @@ if [ "$valid_branch" = false ]; then
     echo "  feature/<anything>" >&2
     echo "  release/<anything>" >&2
     echo "  hotfix/<anything>" >&2
+    echo "  support/<anything>" >&2
     echo "" >&2
     echo "Examples:" >&2
     echo "  feature/add-caching" >&2

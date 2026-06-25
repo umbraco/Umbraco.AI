@@ -5,6 +5,20 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.0.0...Umbraco.AI@18.0.0) (2026-06-25)
+
+### feat
+
+* **api:** Preserve v17 polymorphic schema names in OpenAPI document ([fd60d45](https://github.com/umbraco/Umbraco.AI/commit/fd60d45b03b133f0f732295c2452b0f536143758)), closes [dotnet/aspnetcore#58332](https://github.com/dotnet/aspnetcore/issues/58332)
+* **frontend:** Tag property editors and icons with v18 search keywords ([a1e6308](https://github.com/umbraco/Umbraco.AI/commit/a1e630800082d87a7e9b98d7edb201d52eb87c5f))
+
+### fix
+
+* **agent,frontend:** Split agent-type condition alias into its own module ([54dde74](https://github.com/umbraco/Umbraco.AI/commit/54dde74565ac72ffa8da6737d127b9813c245030))
+* **api:** Drop incorrect register-once guard from WithUmbracoAIManagementApi ([a36ceee](https://github.com/umbraco/Umbraco.AI/commit/a36ceee32cb5a4fb2c57e7053718bc754d9ce665))
+* **core:** Suppress execution-context flow for recurring hosted services ([842a4f6](https://github.com/umbraco/Umbraco.AI/commit/842a4f6def1e2e9f603e5f10144c2c34c2b3760a)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+* **frontend:** Restore collection-action create buttons under v18 ([d7e2928](https://github.com/umbraco/Umbraco.AI/commit/d7e2928f9029d9baf634a370cc712f77a766a727)), closes [#21974](https://github.com/umbraco/Umbraco.AI/issues/21974)
+
 ## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.14.0...Umbraco.AI@17.0.0) (2026-06-22)
 
 ### feat

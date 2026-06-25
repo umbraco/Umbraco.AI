@@ -87,11 +87,8 @@ interface DocumentWorkspaceContextLike {
 /**
  * Resolve the active variant from the workspace's split-view manager.
  * Returns null when none can be determined (invariant document, missing API,
- * mocked context). When multiple variants are focused (split view), the first
- * is used since the AI prompt is triggered against a single editing context.
- *
- * TODO: revisit when invoking from the second pane of a split view —
- * `getActiveVariants()[0]` always picks the leftmost pane today.
+ * mocked context). Falls back to the first active variant when the caller
+ * does not supply an override (single-pane editing, invariant content).
  */
 function getActiveVariant(ctx: DocumentWorkspaceContextLike): ActiveVariantInfo | null {
     const active = ctx.splitView?.getActiveVariants?.();
@@ -220,13 +217,16 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
      * for properties that don't vary, so prompt template variables like
      * `{{header}}` resolve to the active culture's value.
      */
-    async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
+    async serializeForLlm(
+        workspaceContext: unknown,
+        activeVariant?: { culture: string | null; segment: string | null },
+    ): Promise<UaiSerializedEntity> {
         const ctx = workspaceContext as DocumentWorkspaceContextLike;
 
         const unique = ctx.getUnique();
         const contentType = ctx.getContentTypeUnique();
         const values = ctx.getValues() ?? [];
-        const active = getActiveVariant(ctx);
+        const active = activeVariant ?? getActiveVariant(ctx);
 
         // Pick the active variant's name when available so the LLM sees the
         // name from the variant the editor is on, matching the property values.

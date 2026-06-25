@@ -154,7 +154,7 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 | `scripts/generate-release-manifest.{ps1,sh}` | Release manifest generator |
 | `Umbraco.AI.local.slnx` | Unified solution (generated) |
 | `commitlint.config.js` | Commit validation with dynamic scope loading |
-| `release-manifest.json` | Release pack list (required on `release/*`, optional on `hotfix/*`) |
+| `release-manifest.json` | Release pack list (required on `vN/release/*`, optional on `vN/hotfix/*`) |
 | `<Product>/version.json` | Per-product version |
 | `<Product>/changelog.config.json` | Per-product scopes for changelog |
 | `<Product>/CHANGELOG.md` | Per-product changelog (auto-generated) |
@@ -165,10 +165,17 @@ Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions ma
 
 ### Branch Model
 
-| Branch | Role |
-|--------|------|
-| `dev` / `main` | Latest version (currently v18) |
-| `support/X.x` | Maintenance branch for older supported versions (e.g., `support/17.x`) |
+All branches are version-prefixed. The `claude/` prefix is exempt (auto-created by Claude Code).
+
+| Branch pattern | Role |
+|----------------|------|
+| `vN/dev` | Active development for version N |
+| `vN/main` | Last released state for version N |
+| `vN/feature/<name>` | Feature or fix branch targeting version N |
+| `vN/release/<date>` | Release preparation branch for version N |
+| `vN/hotfix/<name>` | Hotfix branch for version N |
+
+**Major version cutover:** when a new CMS major ships, rename `vN/dev` → `vN/main` (archive), then create fresh `v(N+1)/dev` and `v(N+1)/main` for the new line.
 
 ### Support Policy
 
@@ -182,21 +189,21 @@ Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions ma
 
 Check [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/) for the latest status.
 
-| CMS Version | Type | Active Support Until | AI Branch | Current Policy |
-|-------------|------|----------------------|-----------|----------------|
-| v18 | STS | Mar 2027 | `dev` / `main` | Features + bug fixes |
-| v17 | LTS | Nov 2027 | `support/17.x` | Features + bug fixes |
+| CMS Version | Type | Active Support Until | AI Branches | Current Policy |
+|-------------|------|----------------------|-------------|----------------|
+| v18 | STS | Mar 2027 | `v18/dev` / `v18/main` | Features + bug fixes |
+| v17 | LTS | Nov 2027 | `v17/dev` / `v17/main` | Features + bug fixes |
 
 ### Backport Workflow
 
 When a fix or feature applies to an older supported version:
 
-1. Branch from `support/X.x` (not from `dev`)
+1. Branch from `vN/dev` (e.g. `v17/dev`), naming it `vN/feature/<name>`
 2. Apply and commit the change on the feature/fix branch
-3. Merge back into `support/X.x`
+3. Merge back into `vN/dev`
 4. Release via the normal release flow on that branch
 
-Do **not** forward-merge `support/X.x` into `dev` — each version line is maintained independently.
+Do **not** forward-merge `vN/dev` into a newer version's `dev` — each version line is maintained independently.
 
 ## Release Management
 
@@ -207,14 +214,14 @@ Do **not** forward-merge `support/X.x` into `dev` — each version line is maint
 | `/release-management` | Full release orchestration: detect changes, recommend bumps, create branch, update versions/manifests/changelogs, commit |
 | `/release-manifest-management` | Generate `release-manifest.json` only |
 | `/changelog-management` | Generate single product changelog |
-| `/post-release-cleanup` | Merge release->main->dev, bump versions on dev, optionally delete branch |
+| `/post-release-cleanup` | Merge `vN/release`->`vN/main`->`vN/dev`, bump versions on `vN/dev`, optionally delete branch |
 | `/repo-management` | Interactive menu of all operations |
 
 ### Release Flow
 
 1. `/release-management` detects changed products since last release tags
 2. Analyzes conventional commits for version bump recommendations
-3. Creates `release/YYYY.MM.N` branch (calendar-based, N increments per month)
+3. Creates `vN/release/YYYY.MM.N` branch (calendar-based, N increments per month)
 4. Updates `version.json`, generates `release-manifest.json` and `CHANGELOG.md` files
 5. Commits all changes to release branch
 
@@ -224,7 +231,7 @@ Do **not** forward-merge `support/X.x` into `dev` — each version line is maint
 BREAKING CHANGE or feat!: -> Major | feat: -> Minor | fix:/perf: -> Patch | docs/chore/refactor only -> Ask user
 ```
 
-**Major version alignment:** Package major versions track the Umbraco CMS major version. All packages ship as `17.x.x` for CMS 17, `18.x.x` for CMS 18, etc. When preparing a release that spans a CMS major boundary, bump all products to the new major simultaneously — a prep commit on `dev` sets all `version.json` files and inter-product ranges in `Directory.Packages.props` before running `/release-management`.
+**Major version alignment:** Package major versions track the Umbraco CMS major version. All packages ship as `17.x.x` for CMS 17, `18.x.x` for CMS 18, etc. When preparing a release that spans a CMS major boundary, bump all products to the new major simultaneously — a prep commit on `vN/dev` sets all `version.json` files and inter-product ranges in `Directory.Packages.props` before running `/release-management`.
 
 When bumping Core to new major, the skill checks `Directory.Packages.props` for dependent add-ons and warns.
 
@@ -238,7 +245,7 @@ Note you cannot retrofit a broken line: `-beta.11` (dotted) sorts *below* an exi
 
 ### Release Manifest
 
-On `release/*` branches, CI **requires** `release-manifest.json`:
+On `vN/release/*` branches, CI **requires** `release-manifest.json`:
 
 ```json
 // Array (legacy): ["Umbraco.AI", "Umbraco.AI.OpenAI"]
@@ -248,19 +255,19 @@ On `release/*` branches, CI **requires** `release-manifest.json`:
 
 CI validates every changed product appears in `include` or `exclude`. Unaccounted products fail the build.
 
-On `hotfix/*` branches: manifest optional (falls back to per-product tag-based change detection).
+On `vN/hotfix/*` branches: manifest optional (falls back to per-product tag-based change detection).
 
 ### Hotfix Change Detection
 
 - Compares each product's folder against its most recent release tag (e.g., `Umbraco.AI@1.0.0`)
 - Excludes `CHANGELOG.md`, `version.json` from diff
-- Falls back to merge-base with main for new products
+- Falls back to merge-base with `vN/main` for new products
 
 ### Post-Release (`/post-release-cleanup`)
 
-1. Merges release->main (no-ff, push), main->dev (no-ff, push)
-2. Bumps `version.json` on dev (patch increment, e.g., `1.5.0` -> `1.5.1` so nightlies are `1.5.1--preview.*`)
-3. Optionally deletes release/hotfix branch
+1. Merges `vN/release/*` -> `vN/main` (no-ff, push), `vN/main` -> `vN/dev` (no-ff, push)
+2. Bumps `version.json` on `vN/dev` (patch increment, e.g., `1.5.0` -> `1.5.1` so nightlies are `1.5.1--preview.*`)
+3. Optionally deletes the release/hotfix branch
 
 ### CI Artifacts
 

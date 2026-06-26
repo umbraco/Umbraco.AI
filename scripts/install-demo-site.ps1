@@ -132,25 +132,52 @@ Push-Location $DemoDir
 dotnet new umbraco --force -n "Umbraco.AI.DemoSite" --friendly-name "Administrator" --email "admin@example.com" --password "password1234" --development-database-type SQLite
 Pop-Location
 
-# Step 3.1: Install Clean starter kit
+# Step 3.1: Set a fixed UserSecretsId so secrets survive demo site recreations.
+# A single shared GUID is used across all versions — API keys don't change between them.
+$UserSecretsId = "d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b"
+Write-Host "Setting UserSecretsId ($UserSecretsId)..." -ForegroundColor Green
+$csprojPath = "$DemoSiteDir\Umbraco.AI.DemoSite.csproj"
+[xml]$csprojXml = Get-Content $csprojPath
+$pg = $csprojXml.Project.PropertyGroup | Select-Object -First 1
+$el = $csprojXml.CreateElement("UserSecretsId")
+$el.InnerText = $UserSecretsId
+$pg.AppendChild($el) | Out-Null
+$csprojXml.Save($csprojPath)
+
+# Step 3.2: Install Clean starter kit and Umbraco.Automate
 Write-Host "Installing Clean starter kit..." -ForegroundColor Green
 Push-Location $DemoSiteDir
 dotnet add package Clean
+dotnet add package Umbraco.Automate --prerelease
 Pop-Location
 
-# Step 3.2: Set fixed port for consistent development
+# Step 3.3: Set fixed port for consistent development
 Write-Host "Configuring fixed port (44355)..." -ForegroundColor Green
 $launchSettingsSource = Join-Path $ScriptDir "templates\launchSettings.json"
 $launchSettingsPath = "$DemoSiteDir\Properties\launchSettings.json"
 New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
 Copy-Item -Path $launchSettingsSource -Destination $launchSettingsPath -Force
 
-# Step 3.3: Add NamedPipeListenerComposer for HTTP over named pipes
+# Step 3.4: Add NamedPipeListenerComposer for HTTP over named pipes
 Write-Host "Adding NamedPipeListenerComposer for HTTP over named pipes..." -ForegroundColor Green
 $composerSourcePath = Join-Path $ScriptDir "templates\NamedPipeListenerComposer.cs"
 $composerDestPath = "$DemoSiteDir\Composers\NamedPipeListenerComposer.cs"
 New-Item -ItemType Directory -Path (Split-Path $composerDestPath) -Force | Out-Null
 Copy-Item -Path $composerSourcePath -Destination $composerDestPath -Force
+
+# Step 3.5: Add UmbracoAISeedData for demo data on first startup
+Write-Host "Adding UmbracoAISeedData..." -ForegroundColor Green
+$seedDataSourcePath = Join-Path $ScriptDir "templates\UmbracoAISeedData.cs"
+$seedDataDestPath = "$DemoSiteDir\SeedData\UmbracoAISeedData.cs"
+New-Item -ItemType Directory -Path (Split-Path $seedDataDestPath) -Force | Out-Null
+Copy-Item -Path $seedDataSourcePath -Destination $seedDataDestPath -Force
+
+# Step 3.6: Configure Umbraco.Automate to share the Umbraco database
+Write-Host "Configuring Umbraco.Automate to share Umbraco database..." -ForegroundColor Green
+$appSettingsPath = "$DemoSiteDir\appsettings.json"
+$appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
+$appSettings.Umbraco | Add-Member -NotePropertyName "Automate" -NotePropertyValue ([PSCustomObject]@{ UseNamedConnectionString = "umbracoDbDSN" }) -Force
+$appSettings | ConvertTo-Json -Depth 10 | Set-Content $appSettingsPath -Encoding UTF8
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
@@ -178,65 +205,65 @@ function Add-ProductProjects {
 Write-Host "Adding Umbraco.AI (Core) projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI" -SolutionFolder "Core"
 
-# Step 6: Add OpenAI provider projects
+# Step 6: Add provider projects
 Write-Host "Adding Umbraco.AI.OpenAI projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.OpenAI" -SolutionFolder "OpenAI"
+Add-ProductProjects -ProductFolder "Umbraco.AI.OpenAI" -SolutionFolder "Providers/OpenAI"
 
-# Step 7: Add Prompt projects
-Write-Host "Adding Umbraco.AI.Prompt projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt" -SolutionFolder "Prompt"
-
-# Step 8: Add Agent projects
-Write-Host "Adding Umbraco.AI.Agent projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Agent" -SolutionFolder "Agent"
-
-# Step 8.1: Add Agent UI projects
-Write-Host "Adding Umbraco.AI.Agent.UI projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.UI" -SolutionFolder "AgentUI"
-
-# Step 8.2: Add Agent Copilot projects
-Write-Host "Adding Umbraco.AI.Agent.Copilot projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "AgentCopilot"
-
-# Step 9: Add Anthropic provider projects
 Write-Host "Adding Umbraco.AI.Anthropic projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Anthropic"
+Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Providers/Anthropic"
 
-# Step 9.05: Add DeepSeek provider projects
-Write-Host "Adding Umbraco.AI.DeepSeek projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.DeepSeek" -SolutionFolder "DeepSeek"
-
-# Step 9.1: Add Microsoft Foundry provider projects
-Write-Host "Adding Umbraco.AI.MicrosoftFoundry projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
-
-# Step 10: Add Google provider projects
-Write-Host "Adding Umbraco.AI.Google projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
-
-# Step 10.1: Add Amazon provider projects
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
+Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Providers/Amazon"
 
-# Step 10.1.1: Add FireworksAI provider projects
+Write-Host "Adding Umbraco.AI.DeepSeek projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.DeepSeek" -SolutionFolder "Providers/DeepSeek"
+
 Write-Host "Adding Umbraco.AI.FireworksAI projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.FireworksAI" -SolutionFolder "FireworksAI"
+Add-ProductProjects -ProductFolder "Umbraco.AI.FireworksAI" -SolutionFolder "Providers/FireworksAI"
 
-# Step 10.1.2: Add HuggingFace provider projects
+Write-Host "Adding Umbraco.AI.Google projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Providers/Google"
+
 Write-Host "Adding Umbraco.AI.HuggingFace projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.HuggingFace" -SolutionFolder "HuggingFace"
+Add-ProductProjects -ProductFolder "Umbraco.AI.HuggingFace" -SolutionFolder "Providers/HuggingFace"
 
-# Step 10.1.3: Add Mistral provider projects
+Write-Host "Adding Umbraco.AI.MicrosoftFoundry projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.MicrosoftFoundry" -SolutionFolder "Providers/MicrosoftFoundry"
+
 Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Mistral"
+Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Providers/Mistral"
 
-# Step 10.1.4: Add TogetherAI provider projects
 Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "TogetherAI"
+Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "Providers/TogetherAI"
 
-# Step 10.2: Add Search projects
+# Step 7: Add add-on projects
+Write-Host "Adding Umbraco.AI.Prompt projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt" -SolutionFolder "Addons/Prompt"
+
+Write-Host "Adding Umbraco.AI.Agent projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent" -SolutionFolder "Addons/Agent"
+
+Write-Host "Adding Umbraco.AI.Agent.UI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.UI" -SolutionFolder "Addons/Copilot"
+
+Write-Host "Adding Umbraco.AI.Agent.Copilot projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "Addons/Copilot"
+
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Search"
+Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Addons/Search"
+
+Write-Host "Adding Umbraco.AI.Automate projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Automate" -SolutionFolder "Addons/Automate"
+
+# Step 8: Add deploy projects
+Write-Host "Adding Umbraco.AI.Deploy projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Deploy" -SolutionFolder "Deploy"
+
+Write-Host "Adding Umbraco.AI.Prompt.Deploy projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt.Deploy" -SolutionFolder "Deploy"
+
+Write-Host "Adding Umbraco.AI.Agent.Deploy projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Deploy" -SolutionFolder "Deploy"
 
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
@@ -322,9 +349,15 @@ if (Test-Path "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.
     dotnet add $demoProject reference "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj"
 }
 
-# Search add-on (Startup only — no Web.StaticAssets)
-if (Test-Path "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj") {
-    dotnet add $demoProject reference "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj"
+# Search add-on — excluded until Umbraco.Cms.Search.Core ships a v18-compatible release.
+# Umbraco.Cms.Search.Core 1.0.0 targets Umbraco.Cms 17.x and its types can't load against 18.0.0 assemblies.
+# if (Test-Path "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj") {
+#     dotnet add $demoProject reference "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj"
+# }
+
+# Automate add-on (single project — no Startup separation)
+if (Test-Path "Umbraco.AI.Automate\src\Umbraco.AI.Automate\Umbraco.AI.Automate.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Automate\src\Umbraco.AI.Automate\Umbraco.AI.Automate.csproj"
 }
 
 Write-Host ""

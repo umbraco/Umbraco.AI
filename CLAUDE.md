@@ -83,7 +83,7 @@ Built on Microsoft.Extensions.AI (M.E.AI), "thin wrapper" philosophy.
 
 ### Demo Site
 
-**Location:** `demo/Umbraco.AI.DemoSite/` | **Credentials:** admin@example.com / password1234
+**Location:** `demos/vN/Umbraco.AI.DemoSite/` (N = major from `Umbraco.Cms.Core` lower bound in `Directory.Packages.props`) | **Credentials:** admin@example.com / password1234
 
 ```bash
 /demo-site-management start|stop|open|generate-client|status
@@ -103,7 +103,7 @@ Test deployed packages from different feeds (vs demo site which uses project ref
 ./scripts/install-package-test-site.sh --feed=release --name="Name"  # Linux/Mac
 ```
 
-Feeds: `nightly` (MyGet nightly), `prereleases` (MyGet pre-release), `release` (NuGet.org). Sites created in `demo/{SiteName}`.
+Feeds: `nightly` (MyGet nightly), `prereleases` (MyGet pre-release), `release` (NuGet.org). Sites created in `demos/vN/{SiteName}` (N = major from `Umbraco.Cms.Core` lower bound in `Directory.Packages.props`).
 
 ## Project Management (Azure DevOps)
 

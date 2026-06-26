@@ -35,7 +35,10 @@ Execute the requested demo site operation.
     - Try querying site address endpoint via named pipe (see "Query site address via named pipe" section)
     - Check if background tasks exist with "DemoSite" in description
     - If running, report and exit
-2. If not running, start in background: `cd demo/Umbraco.AI.DemoSite && dotnet run --launch-profile DemoSite-Claude`
+2. Detect demo site path:
+    - Read `Directory.Packages.props` and extract the major from the `Umbraco.Cms.Core` lower bound (e.g. `[18.0.0, …)` → `18`)
+    - Demo site path: `demos/v{major}/Umbraco.AI.DemoSite`
+3. If not running, start in background: `cd demos/v{major}/Umbraco.AI.DemoSite && dotnet run --launch-profile DemoSite-Claude`
 3. Wait 15-20 seconds for startup
 4. Query site address endpoint via named pipe to get port and pipe name (see "Query site address via named pipe" section)
 5. Report:

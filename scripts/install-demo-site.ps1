@@ -145,10 +145,23 @@ $pg.AppendChild($el) | Out-Null
 $csprojXml.Save($csprojPath)
 
 # Step 3.2: Install Clean starter kit and Umbraco.Automate
+# Clean's major version does not match CMS major — map explicitly and add new entries as needed.
+$cleanVersionMap = @{
+    "17" = "7.*"
+    "18" = "8.*"
+}
+$cleanVersion = $cleanVersionMap["$VersionMajor"]
+if (-not $cleanVersion) {
+    Write-Host "Warning: No Clean version mapping for v$VersionMajor, using latest stable." -ForegroundColor Yellow
+}
 Write-Host "Installing Clean starter kit..." -ForegroundColor Green
 Push-Location $DemoSiteDir
-dotnet add package Clean
-dotnet add package Umbraco.Automate --prerelease
+if ($cleanVersion) {
+    dotnet add package Clean --version $cleanVersion
+} else {
+    dotnet add package Clean
+}
+dotnet add package Umbraco.Automate --version "$VersionMajor.*-*"
 Pop-Location
 
 # Step 3.3: Set fixed port for consistent development

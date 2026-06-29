@@ -146,21 +146,64 @@ pushd "$DEMO_DIR" > /dev/null
 dotnet new umbraco --force -n "Umbraco.AI.DemoSite" --friendly-name "Administrator" --email "admin@example.com" --password "password1234" --development-database-type SQLite
 popd > /dev/null
 
-# Step 3.1: Install Clean starter kit
+# Step 3.1: Set a fixed UserSecretsId so secrets survive demo site recreations.
+# A single shared GUID is used across all versions — API keys don't change between them.
+USER_SECRETS_ID="d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b"
+echo "Setting UserSecretsId ($USER_SECRETS_ID)..."
+CSPROJ_PATH="$DEMO_SITE_DIR/Umbraco.AI.DemoSite.csproj"
+python3 -c "
+import re
+path = '${CSPROJ_PATH}'
+uid = '${USER_SECRETS_ID}'
+content = open(path).read()
+content = re.sub('</PropertyGroup>', '    <UserSecretsId>' + uid + '</UserSecretsId>\n  </PropertyGroup>', content, count=1)
+open(path, 'w').write(content)
+"
+
+# Step 3.2: Install Clean starter kit and Umbraco.Automate
+# Clean's major version does not match CMS major — map explicitly and add new entries as needed.
+case "$VERSION_MAJOR" in
+    17) CLEAN_VERSION="7.*" ;;
+    18) CLEAN_VERSION="8.*" ;;
+    *) CLEAN_VERSION="" ;;
+esac
 echo "Installing Clean starter kit..."
 pushd "$DEMO_SITE_DIR" > /dev/null
-dotnet add package Clean
+if [ -n "$CLEAN_VERSION" ]; then
+    dotnet add package Clean --version "$CLEAN_VERSION"
+else
+    echo "Warning: No Clean version mapping for v$VERSION_MAJOR, using latest stable."
+    dotnet add package Clean
+fi
+dotnet add package Umbraco.Automate --version "${VERSION_MAJOR}.*-*"
 popd > /dev/null
 
-# Step 3.2: Set fixed port for consistent development
+# Step 3.3: Set fixed port for consistent development
 echo "Configuring fixed port (44355)..."
 mkdir -p "$DEMO_SITE_DIR/Properties"
 cp "$SCRIPT_DIR/templates/launchSettings.json" "$DEMO_SITE_DIR/Properties/launchSettings.json"
 
-# Step 3.3: Add NamedPipeListenerComposer for HTTP over named pipes
+# Step 3.4: Add NamedPipeListenerComposer for HTTP over named pipes
 echo "Adding NamedPipeListenerComposer for HTTP over named pipes..."
 mkdir -p "$DEMO_SITE_DIR/Composers"
 cp "$SCRIPT_DIR/templates/NamedPipeListenerComposer.cs" "$DEMO_SITE_DIR/Composers/NamedPipeListenerComposer.cs"
+
+# Step 3.5: Add UmbracoAISeedData for demo data on first startup
+echo "Adding UmbracoAISeedData..."
+mkdir -p "$DEMO_SITE_DIR/SeedData"
+cp "$SCRIPT_DIR/templates/UmbracoAISeedData.cs" "$DEMO_SITE_DIR/SeedData/UmbracoAISeedData.cs"
+
+# Step 3.6: Configure Umbraco.Automate to share the Umbraco database
+echo "Configuring Umbraco.Automate to share Umbraco database..."
+APP_SETTINGS_PATH="$DEMO_SITE_DIR/appsettings.json"
+node -e "
+const fs = require('fs');
+const path = '${APP_SETTINGS_PATH}';
+const s = JSON.parse(fs.readFileSync(path, 'utf8'));
+s.Umbraco = s.Umbraco || {};
+s.Umbraco.Automate = { UseNamedConnectionString: 'umbracoDbDSN' };
+fs.writeFileSync(path, JSON.stringify(s, null, 2) + '\n', 'utf8');
+"
 
 # Step 4: Create unified solution
 echo "Creating unified solution..."
@@ -188,65 +231,65 @@ add_product_projects() {
 echo "Adding Umbraco.AI (Core) projects..."
 add_product_projects "Umbraco.AI" "Core"
 
-# Step 6: Add OpenAI provider projects
+# Step 6: Add provider projects
 echo "Adding Umbraco.AI.OpenAI projects..."
-add_product_projects "Umbraco.AI.OpenAI" "OpenAI"
+add_product_projects "Umbraco.AI.OpenAI" "Providers/OpenAI"
 
-# Step 7: Add Prompt projects
-echo "Adding Umbraco.AI.Prompt projects..."
-add_product_projects "Umbraco.AI.Prompt" "Prompt"
-
-# Step 8: Add Agent projects
-echo "Adding Umbraco.AI.Agent projects..."
-add_product_projects "Umbraco.AI.Agent" "Agent"
-
-# Step 8.1: Add Agent UI projects
-echo "Adding Umbraco.AI.Agent.UI projects..."
-add_product_projects "Umbraco.AI.Agent.UI" "AgentUI"
-
-# Step 8.2: Add Agent Copilot projects
-echo "Adding Umbraco.AI.Agent.Copilot projects..."
-add_product_projects "Umbraco.AI.Agent.Copilot" "AgentCopilot"
-
-# Step 9: Add Anthropic provider projects
 echo "Adding Umbraco.AI.Anthropic projects..."
-add_product_projects "Umbraco.AI.Anthropic" "Anthropic"
+add_product_projects "Umbraco.AI.Anthropic" "Providers/Anthropic"
 
-# Step 9.05: Add DeepSeek provider projects
-echo "Adding Umbraco.AI.DeepSeek projects..."
-add_product_projects "Umbraco.AI.DeepSeek" "DeepSeek"
-
-# Step 9.1: Add Microsoft Foundry provider projects
-echo "Adding Umbraco.AI.MicrosoftFoundry projects..."
-add_product_projects "Umbraco.AI.MicrosoftFoundry" "MicrosoftFoundry"
-
-# Step 10: Add Google provider projects
-echo "Adding Umbraco.AI.Google projects..."
-add_product_projects "Umbraco.AI.Google" "Google"
-
-# Step 10.1: Add Amazon provider projects
 echo "Adding Umbraco.AI.Amazon projects..."
-add_product_projects "Umbraco.AI.Amazon" "Amazon"
+add_product_projects "Umbraco.AI.Amazon" "Providers/Amazon"
 
-# Step 10.1.1: Add FireworksAI provider projects
+echo "Adding Umbraco.AI.DeepSeek projects..."
+add_product_projects "Umbraco.AI.DeepSeek" "Providers/DeepSeek"
+
 echo "Adding Umbraco.AI.FireworksAI projects..."
-add_product_projects "Umbraco.AI.FireworksAI" "FireworksAI"
+add_product_projects "Umbraco.AI.FireworksAI" "Providers/FireworksAI"
 
-# Step 10.1.2: Add HuggingFace provider projects
+echo "Adding Umbraco.AI.Google projects..."
+add_product_projects "Umbraco.AI.Google" "Providers/Google"
+
 echo "Adding Umbraco.AI.HuggingFace projects..."
-add_product_projects "Umbraco.AI.HuggingFace" "HuggingFace"
+add_product_projects "Umbraco.AI.HuggingFace" "Providers/HuggingFace"
 
-# Step 10.1.3: Add Mistral provider projects
+echo "Adding Umbraco.AI.MicrosoftFoundry projects..."
+add_product_projects "Umbraco.AI.MicrosoftFoundry" "Providers/MicrosoftFoundry"
+
 echo "Adding Umbraco.AI.Mistral projects..."
-add_product_projects "Umbraco.AI.Mistral" "Mistral"
+add_product_projects "Umbraco.AI.Mistral" "Providers/Mistral"
 
-# Step 10.1.4: Add TogetherAI provider projects
 echo "Adding Umbraco.AI.TogetherAI projects..."
-add_product_projects "Umbraco.AI.TogetherAI" "TogetherAI"
+add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
 
-# Step 10.2: Add Search projects
+# Step 7: Add add-on projects
+echo "Adding Umbraco.AI.Prompt projects..."
+add_product_projects "Umbraco.AI.Prompt" "Addons/Prompt"
+
+echo "Adding Umbraco.AI.Agent projects..."
+add_product_projects "Umbraco.AI.Agent" "Addons/Agent"
+
+echo "Adding Umbraco.AI.Agent.UI projects..."
+add_product_projects "Umbraco.AI.Agent.UI" "Addons/Copilot"
+
+echo "Adding Umbraco.AI.Agent.Copilot projects..."
+add_product_projects "Umbraco.AI.Agent.Copilot" "Addons/Copilot"
+
 echo "Adding Umbraco.AI.Search projects..."
-add_product_projects "Umbraco.AI.Search" "Search"
+add_product_projects "Umbraco.AI.Search" "Addons/Search"
+
+echo "Adding Umbraco.AI.Automate projects..."
+add_product_projects "Umbraco.AI.Automate" "Addons/Automate"
+
+# Step 8: Add Deploy projects
+echo "Adding Umbraco.AI.Deploy projects..."
+add_product_projects "Umbraco.AI.Deploy" "Deploy"
+
+echo "Adding Umbraco.AI.Prompt.Deploy projects..."
+add_product_projects "Umbraco.AI.Prompt.Deploy" "Deploy"
+
+echo "Adding Umbraco.AI.Agent.Deploy projects..."
+add_product_projects "Umbraco.AI.Agent.Deploy" "Deploy"
 
 # Step 11: Add demo site to solution
 echo "Adding demo site to solution..."
@@ -332,9 +375,15 @@ if [ -f "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj"
 fi
 
-# Search add-on (Startup only — no Web.StaticAssets)
-if [ -f "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj" ]; then
-    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj"
+# Search add-on — excluded until Umbraco.Cms.Search.Core ships a v18-compatible release.
+# Umbraco.Cms.Search.Core 1.0.0 targets Umbraco.Cms 17.x and its types can't load against 18.0.0 assemblies.
+# if [ -f "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj" ]; then
+#     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj"
+# fi
+
+# Automate add-on (single project — no Startup separation)
+if [ -f "Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj"
 fi
 
 echo ""

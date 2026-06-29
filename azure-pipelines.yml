@@ -202,6 +202,7 @@ stages:
           # Core product
           - job: GenerateSBOM_Core
             displayName: Generate SBOM - Umbraco.AI
+            continueOnError: true
             pool:
                 vmImage: "ubuntu-latest"
             steps:
@@ -220,6 +221,7 @@ stages:
           # Level 1 products (matrix)
           - job: GenerateSBOM_Level1
             displayName: Generate SBOM - Level 1
+            continueOnError: true
             pool:
                 vmImage: "ubuntu-latest"
             strategy:
@@ -244,6 +246,7 @@ stages:
           # Level 2 products (matrix)
           - job: GenerateSBOM_Level2
             displayName: Generate SBOM - Level 2
+            continueOnError: true
             pool:
                 vmImage: "ubuntu-latest"
             strategy:
@@ -268,6 +271,7 @@ stages:
           # Level 3 products (matrix)
           - job: GenerateSBOM_Level3
             displayName: Generate SBOM - Level 3
+            continueOnError: true
             pool:
                 vmImage: "ubuntu-latest"
             strategy:

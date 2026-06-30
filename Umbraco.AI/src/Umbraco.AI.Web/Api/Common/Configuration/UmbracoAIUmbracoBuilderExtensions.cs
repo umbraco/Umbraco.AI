@@ -2,7 +2,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Serialization;
+using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Common.Json;
 using Umbraco.Cms.Api.Common.DependencyInjection;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -43,6 +45,15 @@ public static class UmbracoAIUmbracoBuilderExtensions
 
                 configure?.Invoke(options.JsonSerializerOptions);
             });
+
+        // Mirror the relevant MVC JSON options above into the matching named HTTP JsonOptions, which is
+        // what Microsoft.AspNetCore.OpenApi uses for schema generation (via the back-office document
+        // builder's ReplaceOpenApiSchemaService). Without this, schema generation ignores our global
+        // string-enum converter and emits affected enums as `integer`. See ConfigureUmbracoAIHttpJsonOptions.
+        builder.Services.AddSingleton<IConfigureOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>(
+            sp => new ConfigureUmbracoAIHttpJsonOptions(
+                appName,
+                sp.GetRequiredService<IOptionsMonitor<Microsoft.AspNetCore.Mvc.JsonOptions>>()));
 
         return builder;
     }

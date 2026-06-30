@@ -6,10 +6,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.AGUI;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Models;
 using Xunit;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Tests.Integration.Agents;
 
@@ -93,6 +96,24 @@ public class BackendToolApprovalFlowTests
             .Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
+    [Fact]
+    public async Task DestructiveBackendTool_DenyAllPolicy_CompletesWithoutExecuting()
+    {
+        // Non-interactive callers (DenyAll) wrap destructive tools in ApprovalDeniedAIFunction:
+        // the model's call is answered with a denial result so the run completes, but the
+        // underlying function never runs — no human_approval interrupt is emitted.
+        var executions = 0;
+        var agent = CreateDenyAllAgent(() => executions++);
+
+        SetConverterHistory(new ChatMessage(ChatRole.User, "delete content 42"));
+
+        var run = await CollectEvents(agent, CreateRequest());
+
+        executions.ShouldBe(0);
+        run.OfType<RunFinishedEvent>().Single()
+            .Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
+    }
+
     // ---- Helpers ----
 
     /// <summary>
@@ -116,6 +137,24 @@ public class BackendToolApprovalFlowTests
         return new ChatClientAgent(new ScriptedApprovalChatClient(), new ChatClientAgentOptions
         {
             ChatOptions = chatOptions,
+        });
+    }
+
+    /// <summary>
+    /// Builds an agent for the non-interactive <see cref="AIApprovalPolicy.DenyAll"/> path: the
+    /// destructive function is wrapped in <see cref="ApprovalDeniedAIFunction"/> so it is never
+    /// executed, exactly as <c>AIAgentFactory</c> produces it under that policy.
+    /// </summary>
+    private static ChatClientAgent CreateDenyAllAgent(Action onExecute)
+    {
+        var inner = AIFunctionFactory.Create(
+            (string id) => { onExecute(); return $"deleted {id}"; },
+            name: ToolName);
+        var deniedFn = new ApprovalDeniedAIFunction(inner);
+
+        return new ChatClientAgent(new ScriptedApprovalChatClient(), new ChatClientAgentOptions
+        {
+            ChatOptions = new ChatOptions { Tools = [deniedFn] },
         });
     }
 
@@ -149,7 +188,7 @@ public class BackendToolApprovalFlowTests
         return request;
     }
 
-    private async Task<List<IAGUIEvent>> CollectEvents(AIAgent agent, AGUIRunRequest request)
+    private async Task<List<IAGUIEvent>> CollectEvents(MsAIAgent agent, AGUIRunRequest request)
     {
         var events = new List<IAGUIEvent>();
         await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools: null, CancellationToken.None))

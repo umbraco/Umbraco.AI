@@ -95,6 +95,43 @@ public class AIAgentFactoryApprovalTests
     }
 
     [Fact]
+    public async Task CreateAgentAsync_DenyAllPolicy_WrapsDestructiveToolInApprovalDenied()
+    {
+        IAITool[] tools =
+        [
+            new TestTool { Id = "delete-thing", Name = "delete-thing", IsDestructive = true },
+            new TestTool { Id = "get-thing",    Name = "get-thing",    IsDestructive = false },
+        ];
+
+        var factory = CreateFactory(tools);
+        var agent = CreateAgent(["delete-thing", "get-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent, approvalPolicy: AIApprovalPolicy.DenyAll);
+
+        var chatOptions = ExtractChatOptions(result);
+        chatOptions!.Tools!.Single(t => t.Name == "delete-thing").ShouldBeOfType<ApprovalDeniedAIFunction>();
+        chatOptions.Tools!.Single(t => t.Name == "get-thing").ShouldNotBeOfType<ApprovalDeniedAIFunction>();
+        // No ApprovalRequiredAIFunction is produced under DenyAll, so multi-call stays at the default.
+        chatOptions.AllowMultipleToolCalls.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CreateAgentAsync_AllowAllPolicy_LeavesDestructiveToolUnwrapped()
+    {
+        IAITool[] tools = [new TestTool { Id = "delete-thing", Name = "delete-thing", IsDestructive = true }];
+
+        var factory = CreateFactory(tools);
+        var agent = CreateAgent(["delete-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent, approvalPolicy: AIApprovalPolicy.AllowAll);
+
+        var tool = ExtractChatOptions(result)!.Tools!.Single(t => t.Name == "delete-thing");
+        tool.ShouldNotBeOfType<ApprovalRequiredAIFunction>();
+        tool.ShouldNotBeOfType<ApprovalDeniedAIFunction>();
+        ExtractChatOptions(result)!.AllowMultipleToolCalls.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task CreateAgentAsync_DestructiveSystemTool_IsNotWrappedAndDoesNotSetMultipleToolCallsFalse()
     {
         // System tools are always included even without explicit AllowedToolIds;

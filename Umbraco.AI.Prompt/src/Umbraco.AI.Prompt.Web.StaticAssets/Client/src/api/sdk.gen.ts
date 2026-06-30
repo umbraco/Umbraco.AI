@@ -27,14 +27,14 @@ export class PromptsService {
         });
     }
     
-    public static createPrompt<ThrowOnError extends boolean = false>(options?: Options<CreatePromptData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreatePromptResponses, CreatePromptErrors, ThrowOnError>({
+    public static createPrompt<ThrowOnError extends boolean = false>(options: Options<CreatePromptData, ThrowOnError>) {
+        return (options.client ?? client).post<CreatePromptResponses, CreatePromptErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/prompts',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }

@@ -183,6 +183,26 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 {
                     switch (content)
                     {
+                        case ToolApprovalRequestContent approvalRequest:
+                            // MEAI's FunctionInvokingChatClient emits this instead of executing
+                            // a destructive tool wrapped in ApprovalRequiredAIFunction.
+                            // Emit the tool call event so the frontend sees the pending call,
+                            // then register the approval interrupt for EmitRunFinished.
+                            if (approvalRequest.ToolCall is FunctionCallContent pendingCall)
+                            {
+                                var approvalInterruptId = AGUIInterruptKind.ForApproval(pendingCall.CallId);
+                                var argsJson = pendingCall.Arguments is not null
+                                    ? System.Text.Json.JsonSerializer.Serialize(pendingCall.Arguments)
+                                    : "{}";
+                                var pendingEvent = emitter.EmitToolCall(pendingCall.CallId, pendingCall.Name, pendingCall.Arguments, isFrontendTool: false);
+                                if (pendingEvent != null)
+                                {
+                                    yield return pendingEvent;
+                                }
+                                emitter.RegisterApprovalRequest(approvalInterruptId, pendingCall.CallId, pendingCall.Name, argsJson);
+                            }
+                            break;
+
                         case FunctionCallContent functionCall:
                             // Diagnostic: this log line is the smoking gun for "model
                             // generated a tool_use but no TOOL_CALL_CHUNK reached the

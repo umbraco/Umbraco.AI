@@ -263,6 +263,36 @@ public class AGUIStreamingServiceTests
         events.OfType<ToolCallResultEvent>().ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task StreamAgentAsync_WithToolApprovalRequest_EmitsToolCallAndRegistersApprovalInterrupt()
+    {
+        // Arrange — stream a ToolApprovalRequestContent (what FICC emits for ApprovalRequiredAIFunction)
+        var functionCall = new FunctionCallContent("call-del", "delete_thing",
+            new Dictionary<string, object?> { ["id"] = "42" });
+        var approvalRequest = new ToolApprovalRequestContent("call-del", functionCall);
+        var update = new ChatResponseUpdate(ChatRole.Assistant, new List<AIContent> { approvalRequest });
+        var agent = CreateMockAgent(new[] { update }.ToAsyncEnumerable());
+        var request = CreateRequest();
+
+        // Act
+        var events = await CollectEvents(agent, request);
+
+        // Assert — tool call event emitted so the frontend shows the pending call
+        var toolCallEvent = events.OfType<ToolCallChunkEvent>().FirstOrDefault();
+        toolCallEvent.ShouldNotBeNull();
+        toolCallEvent!.ToolCallId.ShouldBe("call-del");
+        toolCallEvent.ToolCallName.ShouldBe("delete_thing");
+
+        // Assert — RunFinished carries a human_approval interrupt
+        var finishedEvent = events.OfType<RunFinishedEvent>().First();
+        var interruptOutcome = finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.Count.ShouldBe(1);
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Id.ShouldBe("approval:call-del");
+        interrupt.Reason.ShouldBe("human_approval");
+        interrupt.ToolCallId.ShouldBe("call-del");
+    }
+
     #endregion
 
     #region Outcome Tests

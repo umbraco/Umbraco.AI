@@ -117,8 +117,22 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         //         - Tool metadata (ForEntityTypes) from enriched descriptions
         //         - User's question
         //         to make informed decisions about which tools to use
+        //
+        //         Destructive non-system tools are wrapped in ApprovalRequiredAIFunction
+        //         so MEAI emits ToolApprovalRequestContent instead of executing them inline.
+        var destructiveToolIds = allowedToolIds
+            .Select(id => _toolCollection.GetById(id))
+            .Where(t => t is not null && t.IsDestructive && t is not IAISystemTool)
+            .Select(t => t!.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         var tools = new List<AITool>();
-        tools.AddRange(_toolCollection.ToAIFunctions(allowedToolIds, _functionFactory));
+        foreach (var fn in _toolCollection.ToAIFunctions(allowedToolIds, _functionFactory))
+        {
+            tools.Add(destructiveToolIds.Contains(fn.Name)
+                ? new ApprovalRequiredAIFunction(fn)
+                : fn);
+        }
 
         // STEP 4: Filter frontend tools by runtime context
         //         Frontend tools ARE context-bound (operate on currently open entity)
@@ -137,12 +151,17 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
         var config = agent.GetStandardConfig();
 
+        var requiresApproval = destructiveToolIds.Count > 0;
+
         // Build ChatOptions — always needed for instructions and tools,
-        // plus output schema response format if configured
+        // plus output schema response format if configured.
+        // When approval is required, disable multi-call turns so each destructive
+        // tool call is presented individually for approval (MEAI limitation).
         var chatOptions = new ChatOptions
         {
             Instructions = config?.Instructions,
             Tools = tools,
+            AllowMultipleToolCalls = requiresApproval ? false : null,
         };
 
         if (config?.OutputSchema is JsonElement schema)

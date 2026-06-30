@@ -27,14 +27,14 @@ export class AgentsService {
         });
     }
     
-    public static createAgent<ThrowOnError extends boolean = false>(options?: Options<CreateAgentData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateAgentResponses, CreateAgentErrors, ThrowOnError>({
+    public static createAgent<ThrowOnError extends boolean = false>(options: Options<CreateAgentData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateAgentResponses, CreateAgentErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/agents',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }

@@ -141,6 +141,20 @@ public static class UmbracoBuilderExtensions
             });
         }
 
+        // Swashbuckle derives string-enum schema values from the .NET member names and ignores
+        // [JsonStringEnumMemberName], so generated clients advertise values the server rejects under
+        // case-sensitive binding. Rewrite them to the wire values. Registered via PostConfigure so it
+        // runs after Umbraco's own EnumSchemaFilter (Umbraco.Cms.Api.Common), which otherwise reassigns
+        // the enum list from member names and would clobber our rewrite. The filter is unscoped (enum
+        // schemas are shared across documents) and de-duped (this method runs once per product).
+        builder.Services.PostConfigure<SwaggerGenOptions>(options =>
+        {
+            if (options.SchemaFilterDescriptors.Any(d => d.Type == typeof(JsonStringEnumMemberNameSchemaFilter)) == false)
+            {
+                options.SchemaFilter<JsonStringEnumMemberNameSchemaFilter>();
+            }
+        });
+
         builder.Services.AddSingleton<IOperationIdHandler, UmbracoAIApiOperationIdHandler>();
         builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAIApiSchemaIdHandler>();
 

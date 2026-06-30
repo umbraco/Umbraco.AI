@@ -25,7 +25,7 @@ export type AGUIMessageModel = {
     error?: string | null;
 };
 
-export type AGUIMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity' | 'Reasoning';
+export type AGUIMessageRoleModel = 'user' | 'assistant' | 'system' | 'tool' | 'developer' | 'activity' | 'reasoning';
 
 export type AGUIResumeEntryModel = {
     interruptId: string;
@@ -33,7 +33,7 @@ export type AGUIResumeEntryModel = {
     payload?: unknown;
 };
 
-export type AGUIResumeStatusModel = 'Resolved' | 'Cancelled';
+export type AGUIResumeStatusModel = 'resolved' | 'cancelled';
 
 export type AGUIRunRequestModel = {
     threadId: string;

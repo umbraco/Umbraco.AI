@@ -263,6 +263,36 @@ public class AGUIStreamingServiceTests
         events.OfType<ToolCallResultEvent>().ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task StreamAgentAsync_WithToolApprovalRequest_EmitsToolCallAndRegistersApprovalInterrupt()
+    {
+        // Arrange — stream a ToolApprovalRequestContent (what FICC emits for ApprovalRequiredAIFunction)
+        var functionCall = new FunctionCallContent("call-del", "delete_thing",
+            new Dictionary<string, object?> { ["id"] = "42" });
+        var approvalRequest = new ToolApprovalRequestContent("call-del", functionCall);
+        var update = new ChatResponseUpdate(ChatRole.Assistant, new List<AIContent> { approvalRequest });
+        var agent = CreateMockAgent(new[] { update }.ToAsyncEnumerable());
+        var request = CreateRequest();
+
+        // Act
+        var events = await CollectEvents(agent, request);
+
+        // Assert — tool call event emitted so the frontend shows the pending call
+        var toolCallEvent = events.OfType<ToolCallChunkEvent>().FirstOrDefault();
+        toolCallEvent.ShouldNotBeNull();
+        toolCallEvent!.ToolCallId.ShouldBe("call-del");
+        toolCallEvent.ToolCallName.ShouldBe("delete_thing");
+
+        // Assert — RunFinished carries a human_approval interrupt
+        var finishedEvent = events.OfType<RunFinishedEvent>().First();
+        var interruptOutcome = finishedEvent.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.Count.ShouldBe(1);
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Id.ShouldBe("approval:call-del");
+        interrupt.Reason.ShouldBe("human_approval");
+        interrupt.ToolCallId.ShouldBe("call-del");
+    }
+
     #endregion
 
     #region Outcome Tests
@@ -407,6 +437,130 @@ public class AGUIStreamingServiceTests
         _mockConverter.Verify(
             x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithApprovalResume_Approved_PromotesHistoryAndAddsApprovalResponse()
+    {
+        // Arrange: converter returns an assistant message with a FunctionCallContent (approval-pending)
+        var pendingToolCall = new FunctionCallContent("call-del", "delete_thing",
+            new Dictionary<string, object?> { ["id"] = "42" });
+        var assistantHistory = new ChatMessage(ChatRole.Assistant, new List<AIContent> { pendingToolCall });
+        // Hold reference to the list so we can inspect it after the service runs
+        var converterReturnList = new List<ChatMessage> { new(ChatRole.User, "delete content 42"), assistantHistory };
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "thread-1", RunId = "run-1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Delete content 42" }],
+            Resume = [new()
+            {
+                InterruptId = "approval:call-del",
+                Status = AGUIResumeStatus.Resolved,
+                Payload = JsonSerializer.SerializeToElement(new { approved = true })
+            }]
+        };
+
+        // Act
+        await CollectEvents(agent, request);
+
+        // Assert: list passed to RunStreamingAsync has 3 entries:
+        // [0] original user message, [1] promoted assistant, [2] ToolApprovalResponseContent
+        // (MAF normalises ToolApprovalRequestContent → FunctionCallContent when forwarding to the
+        // model client, so we verify against the list WE built, not what the model client sees.)
+        converterReturnList.Count.ShouldBe(3);
+
+        // [1] FunctionCallContent → ToolApprovalRequestContent (spike Finding B: FICC needs it)
+        var promotedContent = converterReturnList[1].Contents!
+            .OfType<ToolApprovalRequestContent>()
+            .FirstOrDefault();
+        promotedContent.ShouldNotBeNull("assistant FunctionCallContent should be promoted to ToolApprovalRequestContent");
+        promotedContent!.ToolCall.CallId.ShouldBe("call-del");
+
+        // [2] ToolApprovalResponseContent on ChatRole.User (approved)
+        converterReturnList[2].Role.ShouldBe(ChatRole.User);
+        var approvalResponse = converterReturnList[2].Contents!
+            .OfType<ToolApprovalResponseContent>()
+            .FirstOrDefault();
+        approvalResponse.ShouldNotBeNull("resume should produce a ToolApprovalResponseContent");
+        approvalResponse!.Approved.ShouldBeTrue();
+        approvalResponse.ToolCall.CallId.ShouldBe("call-del");
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithApprovalResume_Denied_AddesDeniedApprovalResponse()
+    {
+        var pendingToolCall = new FunctionCallContent("call-x", "delete_thing", null);
+        var assistantHistory = new ChatMessage(ChatRole.Assistant, new List<AIContent> { pendingToolCall });
+        var converterReturnList = new List<ChatMessage> { assistantHistory };
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "deny" }],
+            Resume = [new()
+            {
+                InterruptId = "approval:call-x",
+                Status = AGUIResumeStatus.Resolved,
+                Payload = JsonSerializer.SerializeToElement(new { approved = false })
+            }]
+        };
+
+        await CollectEvents(agent, request);
+
+        // [0] original assistant message, [1] ToolApprovalResponseContent (denied)
+        converterReturnList.Count.ShouldBe(2);
+        converterReturnList[1].Role.ShouldBe(ChatRole.User);
+        var approvalResponse = converterReturnList[1].Contents!
+            .OfType<ToolApprovalResponseContent>()
+            .FirstOrDefault();
+        approvalResponse.ShouldNotBeNull();
+        approvalResponse!.Approved.ShouldBeFalse();
+        approvalResponse.ToolCall.CallId.ShouldBe("call-x");
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithToolCallResume_StillProducesFunctionResultContent()
+    {
+        // Regular frontend tool_call resume (unchanged behavior)
+        var converterReturnList = new List<ChatMessage>();
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "hi" }],
+            Resume = [new()
+            {
+                InterruptId = "call-fe-1",  // no "approval:" prefix
+                Status = AGUIResumeStatus.Resolved,
+                Payload = JsonSerializer.SerializeToElement(new { ok = true })
+            }]
+        };
+
+        await CollectEvents(agent, request);
+
+        // Should produce a Tool-role message with FunctionResultContent (not ToolApprovalResponseContent)
+        converterReturnList.Count.ShouldBe(1);
+        converterReturnList[0].Role.ShouldBe(ChatRole.Tool);
+        var resultContent = converterReturnList[0].Contents!
+            .OfType<FunctionResultContent>()
+            .FirstOrDefault();
+        resultContent.ShouldNotBeNull();
+        resultContent!.CallId.ShouldBe("call-fe-1");
+        // No ToolApprovalResponseContent for a plain tool_call interrupt
+        converterReturnList[0].Contents!.OfType<ToolApprovalResponseContent>().ShouldBeEmpty();
     }
 
     #endregion

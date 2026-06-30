@@ -242,10 +242,42 @@ export class UaiRunController extends UmbControllerBase {
                     // Text complete
                 },
                 onToolCallStart: (info) => {
+                    let messages = [...this.#messages.value];
+
+                    // A backend HITL approval call is emitted once on the initial run (shown
+                    // pending while awaiting approval) and AGAIN on the resume run once it
+                    // actually executes. Correlate by tool call id so the existing entry
+                    // transitions in place — matching the single-entry frontend-tool behaviour —
+                    // rather than appending a duplicate card.
+                    const existingIndex = messages.findIndex(
+                        (m) => m.role === "assistant" && m.toolCalls?.some((tc) => tc.id === info.id),
+                    );
+
+                    if (existingIndex !== -1) {
+                        const existing = messages[existingIndex];
+                        // A denied approval call is already marked "error"; don't revive it to
+                        // "executing" if the resume stream happens to re-surface the call.
+                        const nextStatus = (tc: UaiToolCallInfo): UaiToolCallStatus =>
+                            tc.status === "error" ? "error" : "executing";
+                        messages[existingIndex] = {
+                            ...existing,
+                            toolCalls: existing.toolCalls!.map((tc) =>
+                                tc.id === info.id ? { ...tc, status: nextStatus(tc) } : tc,
+                            ),
+                        };
+                        this.#currentAssistantMessageId = existing.id;
+                        const existingCall = existing.toolCalls!.find((tc) => tc.id === info.id);
+                        this.#currentToolCalls = [
+                            ...this.#currentToolCalls.filter((tc) => tc.id !== info.id),
+                            { ...info, status: existingCall ? nextStatus(existingCall) : "executing" },
+                        ];
+                        this.#messages.next(messages);
+                        this.#agentState.next({ status: "executing", currentStep: `Calling ${info.name}...` });
+                        return;
+                    }
+
                     const toolCall: UaiToolCallInfo = { ...info, status: "pending" };
                     this.#currentToolCalls = [...this.#currentToolCalls, toolCall];
-
-                    let messages = [...this.#messages.value];
 
                     if (!this.#currentAssistantMessageId) {
                         const newMessage: UaiChatMessage = {
@@ -314,9 +346,32 @@ export class UaiRunController extends UmbControllerBase {
         this.#messages.next(messages);
     }
 
+    /**
+     * Sets the status (and optional result) of a tool call by id, wherever it lives in the
+     * conversation. Used to mark a denied backend-approval call as errored at decision time.
+     */
+    #setToolCallStatus(toolCallId: string, status: UaiToolCallStatus, result?: string): void {
+        const patch = (tc: UaiToolCallInfo): UaiToolCallInfo =>
+            tc.id === toolCallId ? { ...tc, status, ...(result !== undefined ? { result } : {}) } : tc;
+
+        this.#currentToolCalls = this.#currentToolCalls.map(patch);
+        this.#messages.next(
+            this.#messages.value.map((msg) =>
+                msg.role === "assistant" && msg.toolCalls?.some((tc) => tc.id === toolCallId)
+                    ? { ...msg, toolCalls: msg.toolCalls.map(patch) }
+                    : msg,
+            ),
+        );
+    }
+
     #handleServerToolResult(toolCallId: string, result: string): void {
+        // Preserve a denied approval call's "error" status — don't let the resume stream's
+        // result flip it to a completed tick.
+        const nextStatus = (tc: UaiToolCallInfo): UaiToolCallStatus =>
+            tc.status === "error" ? "error" : "completed";
+
         this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
-            tc.id === toolCallId ? { ...tc, status: "completed", result } : tc,
+            tc.id === toolCallId ? { ...tc, status: nextStatus(tc), result } : tc,
         );
 
         const updated = this.#messages.value.map((msg) => {
@@ -324,7 +379,7 @@ export class UaiRunController extends UmbControllerBase {
                 return {
                     ...msg,
                     toolCalls: msg.toolCalls.map((tc) =>
-                        tc.id === toolCallId ? { ...tc, status: "completed" as const, result } : tc,
+                        tc.id === toolCallId ? { ...tc, status: nextStatus(tc), result } : tc,
                     ),
                 };
             }
@@ -358,7 +413,7 @@ export class UaiRunController extends UmbControllerBase {
         }
 
         if (event.outcome === "interrupt" && event.interrupt) {
-            const context = this.#createInterruptContext(assistantMessageId);
+            const context = this.#createInterruptContext(assistantMessageId, event.interrupt);
             if (this.#handlerRegistry.handle(event.interrupt, context)) {
                 return;
             }
@@ -367,9 +422,9 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
     }
 
-    #createInterruptContext(assistantMessageId: string | null): UaiInterruptContext {
+    #createInterruptContext(assistantMessageId: string | null, interrupt?: UaiInterruptInfo): UaiInterruptContext {
         return {
-            resume: (response?: unknown) => this.#resumeRun(response),
+            resume: (response?: unknown) => this.#resumeRun(response, interrupt),
             setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
             lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
             messages: this.#messages.value,
@@ -387,7 +442,41 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
     }
 
-    #resumeRun(response?: unknown): void {
+    #resumeRun(response?: unknown, interrupt?: UaiInterruptInfo): void {
+        // Backend human_approval interrupts resume via an AG-UI resume entry — NOT a chat
+        // message. The decision payload ({ approved: bool }) is correlated server-side by
+        // the interrupt id ("approval:<callId>"); the pending tool call is already replayed
+        // in the assistant message history, so we must not inject the raw decision as a
+        // user turn (it would pollute the conversation and skip the resume path entirely).
+        if (interrupt?.reason === "human_approval") {
+            const payload = typeof response === "string" ? safeParseJson(response) : response;
+            const approved = (payload as { approved?: boolean } | null)?.approved === true;
+
+            // On denial, mark the pending approval tool-call entry as errored (red) so it matches
+            // the frontend-tool deny UX (#handleToolResult maps a denied result to "error", not a
+            // completed tick). The run still resumes so the model is told it was denied and can
+            // respond; the guards in onToolCallStart / #handleServerToolResult keep the resume
+            // stream from flipping this back to executing/completed.
+            if (!approved) {
+                const toolCallId =
+                    (interrupt.payload?.toolCallId as string | undefined) ??
+                    (interrupt.id.startsWith("approval:") ? interrupt.id.slice("approval:".length) : undefined);
+                if (toolCallId) {
+                    this.#setToolCallStatus(toolCallId, "error", "Approval denied");
+                }
+            }
+
+            this.#agentState.next({ status: "thinking" });
+            const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
+            this.#client?.sendMessage(this.#messages.value, frontendTools, this.#pendingContext, [
+                { interruptId: interrupt.id, status: "resolved", payload },
+            ]);
+            return;
+        }
+
+        // Frontend tool_call / generic resume: the tool result is already appended to the
+        // message history (#handleToolResult), so re-sending the messages resumes the run.
+        // A non-undefined response is surfaced as a user turn (legacy input-interrupt path).
         if (response !== undefined) {
             const userMessage: UaiChatMessage = {
                 id: crypto.randomUUID(),

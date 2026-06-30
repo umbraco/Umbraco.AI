@@ -242,10 +242,37 @@ export class UaiRunController extends UmbControllerBase {
                     // Text complete
                 },
                 onToolCallStart: (info) => {
+                    let messages = [...this.#messages.value];
+
+                    // A backend HITL approval call is emitted once on the initial run (shown
+                    // pending while awaiting approval) and AGAIN on the resume run once it
+                    // actually executes. Correlate by tool call id so the existing entry
+                    // transitions in place — matching the single-entry frontend-tool behaviour —
+                    // rather than appending a duplicate card.
+                    const existingIndex = messages.findIndex(
+                        (m) => m.role === "assistant" && m.toolCalls?.some((tc) => tc.id === info.id),
+                    );
+
+                    if (existingIndex !== -1) {
+                        const existing = messages[existingIndex];
+                        messages[existingIndex] = {
+                            ...existing,
+                            toolCalls: existing.toolCalls!.map((tc) =>
+                                tc.id === info.id ? { ...tc, status: "executing" } : tc,
+                            ),
+                        };
+                        this.#currentAssistantMessageId = existing.id;
+                        this.#currentToolCalls = [
+                            ...this.#currentToolCalls.filter((tc) => tc.id !== info.id),
+                            { ...info, status: "executing" },
+                        ];
+                        this.#messages.next(messages);
+                        this.#agentState.next({ status: "executing", currentStep: `Calling ${info.name}...` });
+                        return;
+                    }
+
                     const toolCall: UaiToolCallInfo = { ...info, status: "pending" };
                     this.#currentToolCalls = [...this.#currentToolCalls, toolCall];
-
-                    let messages = [...this.#messages.value];
 
                     if (!this.#currentAssistantMessageId) {
                         const newMessage: UaiChatMessage = {

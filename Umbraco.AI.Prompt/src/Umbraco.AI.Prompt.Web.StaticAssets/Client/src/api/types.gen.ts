@@ -21,14 +21,6 @@ export type CreatePromptRequestModel = {
     optionCount: number;
 };
 
-export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
-
-export type NotificationHeaderModel = {
-    message: string;
-    category: string;
-    type: EventMessageTypeModel;
-};
-
 export type PagedPromptItemResponseModel = {
     total: number;
     items: Array<PromptItemResponseModel>;

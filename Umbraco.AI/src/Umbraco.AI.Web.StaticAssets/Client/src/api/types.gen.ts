@@ -446,7 +446,6 @@ export type PropertyValueOperationRequestModel = {
     operation: AiPropertyOperationModel;
     args?: JsonNode | null;
     rootValue?: JsonNode | null;
-    rootEditorSchemaAlias: string;
     documentMetadata: AiDocumentMetadataModel;
 };
 
@@ -872,7 +871,6 @@ export type PropertyValueOperationRequestModelWritable = {
     operation: AiPropertyOperationModel;
     args?: JsonNodeWritable | null;
     rootValue?: JsonNodeWritable | null;
-    rootEditorSchemaAlias: string;
     documentMetadata: AiDocumentMetadataModelWritable;
 };
 
@@ -1211,6 +1209,10 @@ export type CompleteChatErrors = {
      * Not Found
      */
     404: ProblemDetails;
+    /**
+     * Unprocessable Content
+     */
+    422: ProblemDetails;
 };
 
 export type CompleteChatError = CompleteChatErrors[keyof CompleteChatErrors];

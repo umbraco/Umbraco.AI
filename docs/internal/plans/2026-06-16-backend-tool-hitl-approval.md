@@ -789,37 +789,36 @@ If FICC requires the original `ToolApprovalRequestContent` to be present in the 
 
 The client already has `UaiHitlInterruptHandler` keyed to `reason = "human_approval"` and an approval UI. This task confirms the server's new interrupt shape matches what the client expects and that resume sends `{ approved: bool }`.
 
-- [ ] **Step 1: Trace the client interrupt→resume path**
+- [x] **Step 1: Trace the client interrupt→resume path**
 
-Read the four files above and confirm:
-- The handler receives an interrupt whose `reason === "human_approval"` and renders the approval element.
-- The approval element's approve/deny resolves to a resume payload of `{ approved: true }` / `{ approved: false }`, with the resume entry's `interruptId` set to the server's interrupt `Id` (i.e. `"approval:call-9"`), `status: "Resolved"`.
-- The `message`, `toolName`, and `arguments` (from interrupt `Metadata`) are surfaced to the user.
+**Finding:** the interrupt→render path was already correct (`UaiHitlInterruptHandler` → `UaiHitlContext.setInterrupt` → `uai-hitl-approval` → default approval element resolving `{ approved: bool }`). **But the resume path was NOT wired for approval.** `run.controller.#resumeRun` injected the approve/deny decision as a *user chat message* and re-sent the conversation with no `resume` array — so the server's `ExtractToolResultsFromResume` (Task 4) never ran. The frontend never populated `AGUIRunRequestModel.resume` at all (the field existed in the generated client but was unused).
 
-- [ ] **Step 2: Align any mismatch (edit only if needed)**
+- [x] **Step 2: Align the mismatch (real edits required)**
 
-If the client currently builds a different payload shape (e.g. `{ approve: ... }` or echoes the option `value` string), adjust the approval element / resume assembly so the resolved payload is exactly `{ approved: boolean }` to match `ApprovalResponseSchema` from Task 2. Keep changes minimal and within the existing approval components.
+Wired a true resume path (commit `fix(agent,agent-ui): Wire human_approval resume entries to backend`):
+- `transport/uai-agent-client.ts`: `sendMessage` gained an optional `resume` param, threaded through `forwardedProps` (the AG-UI `RunAgentInput` schema has no first-class resume slot).
+- `transport/uai-http-agent.ts`: lifts `resume` out of `forwardedProps` into the typed `body.resume` field the server reads.
+- `chat/services/run.controller.ts`: `#resumeRun` detects `interrupt.reason === "human_approval"` and sends a single resume entry `{ interruptId: interrupt.id /* "approval:<callId>" */, status: "Resolved", payload: { approved } }` instead of a polluting user turn. The pending tool call is already replayed in the assistant message history (captured by `onToolCallStart`/`onToolCallArgsEnd`), so `PromoteApprovalRequestsInHistory` can correlate it server-side. Frontend `tool_call` resume is unchanged (its result is already appended as a tool-role message).
 
-- [ ] **Step 3: Build the frontend to verify it compiles**
+- [x] **Step 3: Build the frontend to verify it compiles**
 
-Run: `npm run build:agent-ui`
-Expected: build succeeds with no type errors.
+`npm run build:agent-ui` cannot reach a fully-green build in this worktree due to a **pre-existing** duplicate-`@umbraco-cms/backoffice`-copy nominal-identity issue affecting unrelated management UI components (`agent-picker`, `workflow-picker`, `agent-surface-picker`). Verified my three changed files introduce **zero** new type errors: the tsc error set is byte-identical with my changes applied vs. stashed.
 
-- [ ] **Step 4: Commit (only if files changed)**
+- [x] **Step 4: Commit**
 
-```bash
-git add Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Client/src/chat/
-git commit -m "fix(agent-ui): align human_approval resume payload with backend schema"
-```
+Committed as `fix(agent,agent-ui): Wire human_approval resume entries to backend`.
 
 ---
 
 ### Task 6: End-to-end integration test (approve + deny)
 
-**Files:**
-- Test: `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Agents/BackendToolApprovalFlowTests.cs` (create; confirm the integration test project name/path first via `ls Umbraco.AI.Agent/tests`)
+**Status: DONE.** No integration project existed (only `Tests.Unit`); created `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration` (matching the repo convention, e.g. `Umbraco.AI.Tests.Integration`) and registered it in `Umbraco.AI.Agent.slnx`. The `InternalsVisibleTo("Umbraco.AI.Agent.Tests.Integration")` entry was already present in `Umbraco.AI.Agent.Core.csproj`. Both tests pass: a real `ChatClientAgent` (built like `AIAgentFactory`, with `AllowMultipleToolCalls = false`) over a stateless scripted `IChatClient`, driven through the real `AGUIStreamingService` — pause→approve executes the spy once, deny never executes it.
 
-- [ ] **Step 1: Write the failing integration test**
+**Files:**
+- Created: `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Agents/BackendToolApprovalFlowTests.cs`
+- Created: `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Umbraco.AI.Agent.Tests.Integration.csproj`
+
+- [x] **Step 1: Write the failing integration test**
 
 ```csharp
 // Scenario, against a scripted IChatClient registered for a real DI-built agent with one
@@ -862,31 +861,17 @@ git commit -m "test(agent): end-to-end backend tool approval/deny flow"
 
 **Context:** 10.7.0 removed the back-compat path that auto-marked `ToolApprovalResponseContent` as `InformationalOnly`. With approval now in use, verify our resume responses still resume correctly under 10.7.
 
-- [ ] **Step 1: Bump the floors**
+**Status: DONE (no new commit needed).** `Directory.Packages.props` already pins both `Microsoft.Extensions.AI` and `Microsoft.Extensions.AI.OpenAI` at `[10.7.0, 10.999.999)`; no product-level override pins a lower floor.
 
-In `Directory.Packages.props`, change:
-```xml
-<PackageVersion Include="Microsoft.Extensions.AI" Version="[10.7.0, 10.999.999)" />
-<PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="[10.7.0, 10.999.999)" />
-```
-Then check for product-level overrides: `grep -rl "Microsoft.Extensions.AI" --include=Directory.Packages.props .` and update any that pin a lower floor.
+- [x] **Step 1: Bump the floors** — already at 10.7.0.
 
-- [ ] **Step 2: Restore + build**
+- [x] **Step 2: Restore + build** — solution builds on 10.7.0.
 
-Run: `dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx`
-Expected: succeeds.
+- [x] **Step 3: Re-run the full approval suite**
 
-- [ ] **Step 3: Re-run the full approval suite**
+`dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx --filter "FullyQualifiedName~Approval|FullyQualifiedName~MeaiApprovalRoundTrip"` → **23 passed** (21 unit incl. the Task 0 spike + 2 integration). The approved-resume path invokes the tool under 10.7 without needing an explicit `InformationalOnly = false`, confirmed by the Task 6 integration test. Full agent unit suite: **163 passed**.
 
-Run: `dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx --filter "FullyQualifiedName~Approval"`
-Expected: PASS. If the approved-resume path now fails to invoke the tool, the response content needs `InformationalOnly = false` set explicitly — add that in `ExtractToolResultsFromResume` (Task 4) where the `ToolApprovalResponseContent` is built, and re-run. Re-run the Task 0 spike too; update its assumptions if behavior shifted.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add Directory.Packages.props
-git commit -m "chore(deps): Bump Microsoft.Extensions.AI to 10.7.0 for tool approval"
-```
+- [x] **Step 4: Commit** — the 10.7.0 floor was already committed; nothing new to commit for this task.
 
 ---
 

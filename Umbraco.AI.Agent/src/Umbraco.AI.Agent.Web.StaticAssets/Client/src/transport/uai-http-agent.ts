@@ -67,9 +67,11 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
         },
         signal: AbortSignal,
     ): Promise<void> {
-        // Lift resume entries out of forwardedProps (where UaiAgentClient stashes them)
-        // into the typed body.resume field the server expects. The AG-UI RunAgentInput
-        // schema has no first-class resume slot, so the entries travel via forwardedProps.
+        // Lift resume entries out of forwardedProps (where UaiAgentClient stashes them) into
+        // the typed body.resume field the server actually reads. The AG-UI RunAgentInput type
+        // (@ag-ui/client) has no first-class resume slot, so UaiAgentClient ferries the entries
+        // across that boundary via forwardedProps — but the server ignores forwardedProps.resume,
+        // so we strip it here rather than sending it redundantly alongside body.resume.
         //
         // Normalise the status to the lowercase wire form ("resolved"/"cancelled"). The
         // server enum (AGUIResumeStatus) is declared with lowercase [JsonStringEnumMemberName]
@@ -77,8 +79,9 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
         // PascalCase value from the generated client type 400s the request. This mirrors how
         // #mapRole lowercases message roles for the same wire convention. Root cause (OpenAPI
         // enum schema ignoring the member-name attribute) tracked in umbraco/Umbraco.AI#209.
-        const forwardedProps = input.forwardedProps as { resume?: AGUIResumeEntryModel[] } | undefined;
-        const resume = forwardedProps?.resume?.map((entry) => ({
+        const { resume: ferriedResume, ...otherForwardedProps } =
+            (input.forwardedProps as { resume?: AGUIResumeEntryModel[] } | undefined) ?? {};
+        const resume = ferriedResume?.map((entry) => ({
             ...entry,
             status: entry.status?.toLowerCase() as AGUIResumeEntryModel["status"],
         }));
@@ -92,7 +95,8 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             state: input.state,
             context: input.context?.map((ctx) => this.#toAGUIContext(ctx)),
             resume: resume?.length ? resume : undefined,
-            forwardedProps: input.forwardedProps,
+            // Forward only genuine props — not the resume we just lifted out.
+            forwardedProps: Object.keys(otherForwardedProps).length > 0 ? otherForwardedProps : undefined,
         };
 
         const result = await AgentsService.streamAgentAGUI({

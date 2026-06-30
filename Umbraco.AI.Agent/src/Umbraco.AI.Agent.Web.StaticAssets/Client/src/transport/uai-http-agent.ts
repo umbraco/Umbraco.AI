@@ -8,6 +8,7 @@ import {
     type AGUIToolCallModel,
     type AGUIMessageRoleModel,
     type AGUIContextItemModel,
+    type AGUIResumeEntryModel,
 } from "../api/index.js";
 import type { AgentTransport } from "./types.js";
 
@@ -66,6 +67,12 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
         },
         signal: AbortSignal,
     ): Promise<void> {
+        // Lift resume entries out of forwardedProps (where UaiAgentClient stashes them)
+        // into the typed body.resume field the server expects. The AG-UI RunAgentInput
+        // schema has no first-class resume slot, so the entries travel via forwardedProps.
+        const forwardedProps = input.forwardedProps as { resume?: AGUIResumeEntryModel[] } | undefined;
+        const resume = forwardedProps?.resume;
+
         // Convert AG-UI RunAgentInput to hey-api AGUIRunRequestModel
         const body: AGUIRunRequestModel = {
             threadId: input.threadId,
@@ -74,6 +81,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             tools: input.tools?.map((tool) => this.#toAGUITool(tool)),
             state: input.state,
             context: input.context?.map((ctx) => this.#toAGUIContext(ctx)),
+            resume: resume?.length ? resume : undefined,
             forwardedProps: input.forwardedProps,
         };
 

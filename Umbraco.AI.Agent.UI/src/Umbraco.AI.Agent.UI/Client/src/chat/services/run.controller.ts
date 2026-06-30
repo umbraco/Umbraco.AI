@@ -358,7 +358,7 @@ export class UaiRunController extends UmbControllerBase {
         }
 
         if (event.outcome === "interrupt" && event.interrupt) {
-            const context = this.#createInterruptContext(assistantMessageId);
+            const context = this.#createInterruptContext(assistantMessageId, event.interrupt);
             if (this.#handlerRegistry.handle(event.interrupt, context)) {
                 return;
             }
@@ -367,9 +367,9 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
     }
 
-    #createInterruptContext(assistantMessageId: string | null): UaiInterruptContext {
+    #createInterruptContext(assistantMessageId: string | null, interrupt?: UaiInterruptInfo): UaiInterruptContext {
         return {
-            resume: (response?: unknown) => this.#resumeRun(response),
+            resume: (response?: unknown) => this.#resumeRun(response, interrupt),
             setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
             lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
             messages: this.#messages.value,
@@ -387,7 +387,25 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
     }
 
-    #resumeRun(response?: unknown): void {
+    #resumeRun(response?: unknown, interrupt?: UaiInterruptInfo): void {
+        // Backend human_approval interrupts resume via an AG-UI resume entry — NOT a chat
+        // message. The decision payload ({ approved: bool }) is correlated server-side by
+        // the interrupt id ("approval:<callId>"); the pending tool call is already replayed
+        // in the assistant message history, so we must not inject the raw decision as a
+        // user turn (it would pollute the conversation and skip the resume path entirely).
+        if (interrupt?.reason === "human_approval") {
+            const payload = typeof response === "string" ? safeParseJson(response) : response;
+            this.#agentState.next({ status: "thinking" });
+            const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
+            this.#client?.sendMessage(this.#messages.value, frontendTools, this.#pendingContext, [
+                { interruptId: interrupt.id, status: "Resolved", payload },
+            ]);
+            return;
+        }
+
+        // Frontend tool_call / generic resume: the tool result is already appended to the
+        // message history (#handleToolResult), so re-sending the messages resumes the run.
+        // A non-undefined response is surfaced as a user turn (legacy input-interrupt path).
         if (response !== undefined) {
             const userMessage: UaiChatMessage = {
                 id: crypto.randomUUID(),

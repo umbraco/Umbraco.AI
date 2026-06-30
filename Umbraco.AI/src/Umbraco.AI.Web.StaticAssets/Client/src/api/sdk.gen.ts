@@ -103,14 +103,14 @@ export class AuditLogsService {
 }
 
 export class ChatService {
-    public static completeChat<ThrowOnError extends boolean = false>(options?: Options<CompleteChatData, ThrowOnError>) {
-        return (options?.client ?? client).post<CompleteChatResponses, CompleteChatErrors, ThrowOnError>({
+    public static completeChat<ThrowOnError extends boolean = false>(options: Options<CompleteChatData, ThrowOnError>) {
+        return (options.client ?? client).post<CompleteChatResponses, CompleteChatErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/chat/complete',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -125,14 +125,14 @@ export class ConnectionsService {
         });
     }
     
-    public static createConnection<ThrowOnError extends boolean = false>(options?: Options<CreateConnectionData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateConnectionResponses, CreateConnectionErrors, ThrowOnError>({
+    public static createConnection<ThrowOnError extends boolean = false>(options: Options<CreateConnectionData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateConnectionResponses, CreateConnectionErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/connections',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -233,14 +233,14 @@ export class ContextsService {
         });
     }
     
-    public static createContext<ThrowOnError extends boolean = false>(options?: Options<CreateContextData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateContextResponses, CreateContextErrors, ThrowOnError>({
+    public static createContext<ThrowOnError extends boolean = false>(options: Options<CreateContextData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateContextResponses, CreateContextErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/contexts',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -283,14 +283,14 @@ export class ContextsService {
 }
 
 export class EmbeddingsService {
-    public static generateEmbeddings<ThrowOnError extends boolean = false>(options?: Options<GenerateEmbeddingsData, ThrowOnError>) {
-        return (options?.client ?? client).post<GenerateEmbeddingsResponses, GenerateEmbeddingsErrors, ThrowOnError>({
+    public static generateEmbeddings<ThrowOnError extends boolean = false>(options: Options<GenerateEmbeddingsData, ThrowOnError>) {
+        return (options.client ?? client).post<GenerateEmbeddingsResponses, GenerateEmbeddingsErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/embeddings/generate',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -313,14 +313,14 @@ export class GuardrailsService {
         });
     }
     
-    public static createGuardrail<ThrowOnError extends boolean = false>(options?: Options<CreateGuardrailData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateGuardrailResponses, CreateGuardrailErrors, ThrowOnError>({
+    public static createGuardrail<ThrowOnError extends boolean = false>(options: Options<CreateGuardrailData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateGuardrailResponses, CreateGuardrailErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/guardrails',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -371,14 +371,14 @@ export class ProfilesService {
         });
     }
     
-    public static createProfile<ThrowOnError extends boolean = false>(options?: Options<CreateProfileData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateProfileResponses, CreateProfileErrors, ThrowOnError>({
+    public static createProfile<ThrowOnError extends boolean = false>(options: Options<CreateProfileData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateProfileResponses, CreateProfileErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/profiles',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -421,14 +421,14 @@ export class ProfilesService {
 }
 
 export class PropertyValueOperationsService {
-    public static invoke<ThrowOnError extends boolean = false>(options?: Options<InvokeData, ThrowOnError>) {
-        return (options?.client ?? client).post<InvokeResponses, InvokeErrors, ThrowOnError>({
+    public static invoke<ThrowOnError extends boolean = false>(options: Options<InvokeData, ThrowOnError>) {
+        return (options.client ?? client).post<InvokeResponses, InvokeErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/property-value-operation',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -461,29 +461,29 @@ export class SettingsService {
         });
     }
     
-    public static updateSettings<ThrowOnError extends boolean = false>(options?: Options<UpdateSettingsData, ThrowOnError>) {
-        return (options?.client ?? client).put<UpdateSettingsResponses, UpdateSettingsErrors, ThrowOnError>({
+    public static updateSettings<ThrowOnError extends boolean = false>(options: Options<UpdateSettingsData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateSettingsResponses, UpdateSettingsErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/settings',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
 }
 
 export class SpeechToTextService {
-    public static transcribeAudio<ThrowOnError extends boolean = false>(options?: Options<TranscribeAudioData, ThrowOnError>) {
-        return (options?.client ?? client).post<TranscribeAudioResponses, TranscribeAudioErrors, ThrowOnError>({
+    public static transcribeAudio<ThrowOnError extends boolean = false>(options: Options<TranscribeAudioData, ThrowOnError>) {
+        return (options.client ?? client).post<TranscribeAudioResponses, TranscribeAudioErrors, ThrowOnError>({
             ...formDataBodySerializer,
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/speech-to-text/transcribe',
             ...options,
             headers: {
                 'Content-Type': null,
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -562,26 +562,26 @@ export class TestsService {
         });
     }
     
-    public static compareTestRuns<ThrowOnError extends boolean = false>(options?: Options<CompareTestRunsData, ThrowOnError>) {
-        return (options?.client ?? client).post<CompareTestRunsResponses, CompareTestRunsErrors, ThrowOnError>({
+    public static compareTestRuns<ThrowOnError extends boolean = false>(options: Options<CompareTestRunsData, ThrowOnError>) {
+        return (options.client ?? client).post<CompareTestRunsResponses, CompareTestRunsErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/compare',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
     
-    public static compareVariations<ThrowOnError extends boolean = false>(options?: Options<CompareVariationsData, ThrowOnError>) {
-        return (options?.client ?? client).post<CompareVariationsResponses, CompareVariationsErrors, ThrowOnError>({
+    public static compareVariations<ThrowOnError extends boolean = false>(options: Options<CompareVariationsData, ThrowOnError>) {
+        return (options.client ?? client).post<CompareVariationsResponses, CompareVariationsErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/test-runs/compare-variations',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -610,14 +610,14 @@ export class TestsService {
         });
     }
     
-    public static createTest<ThrowOnError extends boolean = false>(options?: Options<CreateTestData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateTestResponses, CreateTestErrors, ThrowOnError>({
+    public static createTest<ThrowOnError extends boolean = false>(options: Options<CreateTestData, ThrowOnError>) {
+        return (options.client ?? client).post<CreateTestResponses, CreateTestErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
@@ -678,26 +678,26 @@ export class TestsService {
         });
     }
     
-    public static runTestBatch<ThrowOnError extends boolean = false>(options?: Options<RunTestBatchData, ThrowOnError>) {
-        return (options?.client ?? client).post<RunTestBatchResponses, RunTestBatchErrors, ThrowOnError>({
+    public static runTestBatch<ThrowOnError extends boolean = false>(options: Options<RunTestBatchData, ThrowOnError>) {
+        return (options.client ?? client).post<RunTestBatchResponses, RunTestBatchErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/run-batch',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }
     
-    public static runTestsByTags<ThrowOnError extends boolean = false>(options?: Options<RunTestsByTagsData, ThrowOnError>) {
-        return (options?.client ?? client).post<RunTestsByTagsResponses, RunTestsByTagsErrors, ThrowOnError>({
+    public static runTestsByTags<ThrowOnError extends boolean = false>(options: Options<RunTestsByTagsData, ThrowOnError>) {
+        return (options.client ?? client).post<RunTestsByTagsResponses, RunTestsByTagsErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/tests/run-by-tags',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options?.headers
+                ...options.headers
             }
         });
     }

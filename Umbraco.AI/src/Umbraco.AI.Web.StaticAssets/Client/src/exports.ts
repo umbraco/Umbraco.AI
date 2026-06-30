@@ -19,12 +19,9 @@ export {
     type AiPropertyOperationModel,
     type AiPropertyValueOperationErrorModel,
     type PropertyValueOperationRequestModel,
-    type PropertyValueOperationRequestModelWritable,
     type PropertyValueOperationResponseModel,
     type AiDocumentMetadataModel,
-    type AiDocumentMetadataModelWritable,
     type AiVariantIdModel,
-    type AiVariantIdModelWritable,
 } from "./api/index.js";
 
 // Export client ready promise for nested packages to wait on

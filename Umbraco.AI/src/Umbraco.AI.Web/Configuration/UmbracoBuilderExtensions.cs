@@ -132,6 +132,10 @@ public static class UmbracoBuilderExtensions
                 // Replaces the v17 SseResponseOperationFilter (text/event-stream 200 response).
                 options.AddOperationTransformer<SseResponseOperationTransformer>();
 
+                // Emit converter-opaque scalar types (IdOrAlias, System.Type) as `type: string` rather
+                // than an empty schema — the v18 equivalent of the v17 Swashbuckle MapType<T> calls.
+                options.AddSchemaTransformer<StringScalarSchemaTransformer>();
+
                 // Microsoft.AspNetCore.OpenApi names derived polymorphic schemas as
                 // {baseSchemaId}{derivedTypeName} (see dotnet/aspnetcore#58332).
                 // CreateSchemaReferenceId can't intercept derived names, so this transformer

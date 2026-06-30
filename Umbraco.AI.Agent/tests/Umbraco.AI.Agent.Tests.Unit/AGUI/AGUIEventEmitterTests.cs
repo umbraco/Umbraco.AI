@@ -353,6 +353,56 @@ public class AGUIEventEmitterTests
         interrupt.Id.ShouldNotBeNullOrEmpty();
     }
 
+    [Fact]
+    public void EmitRunFinished_WithApprovalRequest_ReturnsHumanApprovalInterrupt()
+    {
+        // Arrange
+        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
+        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{\"id\":\"42\"}");
+
+        // Act
+        var evt = emitter.EmitRunFinished();
+
+        // Assert
+        var interruptOutcome = evt.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.Count.ShouldBe(1);
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Id.ShouldBe("approval:call-del");
+        interrupt.Reason.ShouldBe("human_approval");
+        interrupt.ToolCallId.ShouldBe("call-del");
+    }
+
+    [Fact]
+    public void EmitRunFinished_WithFrontendAndApprovalRequests_IncludesBothInterrupts()
+    {
+        // Arrange
+        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
+        emitter.EmitToolCall("call-frontend", "confirm", null, isFrontendTool: true);
+        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{}");
+
+        // Act
+        var interruptOutcome = emitter.EmitRunFinished().Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+
+        // Assert
+        interruptOutcome.Interrupts.Count.ShouldBe(2);
+        interruptOutcome.Interrupts.ShouldContain(i => i.Reason == "tool_call");
+        interruptOutcome.Interrupts.ShouldContain(i => i.Reason == "human_approval");
+    }
+
+    [Fact]
+    public void EmitRunFinished_WithOnlyApprovalRequest_DoesNotReturnSuccess()
+    {
+        // Arrange
+        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
+        emitter.RegisterApprovalRequest("approval:call-x", "call-x", "do_thing", "{}");
+
+        // Act
+        var outcome = emitter.EmitRunFinished().Outcome;
+
+        // Assert — should be interrupt, not success
+        outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+    }
+
     #endregion
 
     #region Helper Methods Tests

@@ -73,21 +73,11 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
         // (https://docs.ag-ui.com/concepts/interrupts), but the installed @ag-ui/client SDK
         // predates that draft and its RunAgentInput type has no resume slot — so UaiAgentClient
         // ferries the entries across that boundary via forwardedProps as a temporary shim. Once
-        // the SDK adds resume to RunAgentInput, set it directly and drop this lift. The server
-        // ignores forwardedProps.resume, so we strip it here rather than sending it redundantly.
-        //
-        // Normalise the status to the lowercase wire form ("resolved"/"cancelled"). The
-        // server enum (AGUIResumeStatus) is declared with lowercase [JsonStringEnumMemberName]
-        // and, under ASP.NET's Web JSON defaults, enum binding is case-SENSITIVE — sending the
-        // PascalCase value from the generated client type 400s the request. This mirrors how
-        // #mapRole lowercases message roles for the same wire convention. Root cause (OpenAPI
-        // enum schema ignoring the member-name attribute) tracked in umbraco/Umbraco.AI#209.
-        const { resume: ferriedResume, ...otherForwardedProps } =
+        // the SDK adds resume to RunAgentInput (umbraco/Umbraco.AI#210), set it directly and drop
+        // this lift. The server ignores forwardedProps.resume, so we strip it from the forwarded
+        // props here rather than sending it redundantly alongside body.resume.
+        const { resume, ...otherForwardedProps } =
             (input.forwardedProps as { resume?: AGUIResumeEntryModel[] } | undefined) ?? {};
-        const resume = ferriedResume?.map((entry) => ({
-            ...entry,
-            status: entry.status?.toLowerCase() as AGUIResumeEntryModel["status"],
-        }));
 
         // Convert AG-UI RunAgentInput to hey-api AGUIRunRequestModel
         const body: AGUIRunRequestModel = {

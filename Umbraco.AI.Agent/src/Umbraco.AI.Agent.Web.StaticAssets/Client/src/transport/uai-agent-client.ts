@@ -127,7 +127,7 @@ export class UaiAgentClient {
         messages: UaiChatMessage[],
         tools?: UaiFrontendTool[],
         context?: Array<{ description: string; value: string }>,
-        resume?: Array<{ interruptId: string; status: "Resolved" | "Cancelled"; payload?: unknown }>,
+        resume?: Array<{ interruptId: string; status: "resolved" | "cancelled"; payload?: unknown }>,
     ): void {
         const runId = crypto.randomUUID();
 

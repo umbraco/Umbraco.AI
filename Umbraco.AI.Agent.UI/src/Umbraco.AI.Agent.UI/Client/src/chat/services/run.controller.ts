@@ -469,7 +469,7 @@ export class UaiRunController extends UmbControllerBase {
             this.#agentState.next({ status: "thinking" });
             const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
             this.#client?.sendMessage(this.#messages.value, frontendTools, this.#pendingContext, [
-                { interruptId: interrupt.id, status: "Resolved", payload },
+                { interruptId: interrupt.id, status: "resolved", payload },
             ]);
             return;
         }

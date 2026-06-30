@@ -68,10 +68,13 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
         signal: AbortSignal,
     ): Promise<void> {
         // Lift resume entries out of forwardedProps (where UaiAgentClient stashes them) into
-        // the typed body.resume field the server actually reads. The AG-UI RunAgentInput type
-        // (@ag-ui/client) has no first-class resume slot, so UaiAgentClient ferries the entries
-        // across that boundary via forwardedProps — but the server ignores forwardedProps.resume,
-        // so we strip it here rather than sending it redundantly alongside body.resume.
+        // the typed body.resume field the server actually reads. `resume` IS a first-class
+        // RunAgentInput field in the AG-UI draft interrupt spec
+        // (https://docs.ag-ui.com/concepts/interrupts), but the installed @ag-ui/client SDK
+        // predates that draft and its RunAgentInput type has no resume slot — so UaiAgentClient
+        // ferries the entries across that boundary via forwardedProps as a temporary shim. Once
+        // the SDK adds resume to RunAgentInput, set it directly and drop this lift. The server
+        // ignores forwardedProps.resume, so we strip it here rather than sending it redundantly.
         //
         // Normalise the status to the lowercase wire form ("resolved"/"cancelled"). The
         // server enum (AGUIResumeStatus) is declared with lowercase [JsonStringEnumMemberName]

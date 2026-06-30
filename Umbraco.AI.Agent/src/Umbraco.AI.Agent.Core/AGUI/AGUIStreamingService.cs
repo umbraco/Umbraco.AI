@@ -159,7 +159,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // Per AG-UI spec the resume array contains one entry per open interrupt.
         if (request.Resume is { Count: > 0 })
         {
-            var resumeMessages = ExtractToolResultsFromResume(request.Resume);
+            // Promote FunctionCallContent → ToolApprovalRequestContent in the converted history
+            // for any approval interrupt. FICC needs the original request present in the
+            // replayed history to correlate the ToolApprovalResponseContent (spike Finding B).
+            PromoteApprovalRequestsInHistory(chatMessages, request.Resume);
+
+            var resumeMessages = ExtractToolResultsFromResume(chatMessages, request.Resume);
             chatMessages.AddRange(resumeMessages);
 
             _logger.LogDebug(
@@ -183,6 +188,26 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 {
                     switch (content)
                     {
+                        case ToolApprovalRequestContent approvalRequest:
+                            // MEAI's FunctionInvokingChatClient emits this instead of executing
+                            // a destructive tool wrapped in ApprovalRequiredAIFunction.
+                            // Emit the tool call event so the frontend sees the pending call,
+                            // then register the approval interrupt for EmitRunFinished.
+                            if (approvalRequest.ToolCall is FunctionCallContent pendingCall)
+                            {
+                                var approvalInterruptId = AGUIInterruptKind.ForApproval(pendingCall.CallId);
+                                var argsJson = pendingCall.Arguments is not null
+                                    ? System.Text.Json.JsonSerializer.Serialize(pendingCall.Arguments)
+                                    : "{}";
+                                var pendingEvent = emitter.EmitToolCall(pendingCall.CallId, pendingCall.Name, pendingCall.Arguments, isFrontendTool: false);
+                                if (pendingEvent != null)
+                                {
+                                    yield return pendingEvent;
+                                }
+                                emitter.RegisterApprovalRequest(approvalInterruptId, pendingCall.CallId, pendingCall.Name, argsJson);
+                            }
+                            break;
+
                         case FunctionCallContent functionCall:
                             // Diagnostic: this log line is the smoking gun for "model
                             // generated a tool_use but no TOOL_CALL_CHUNK reached the
@@ -305,21 +330,83 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     }
 
     /// <summary>
-    /// Converts AG-UI resume entries into M.E.AI tool-result chat messages.
+    /// Promotes <see cref="FunctionCallContent"/> to <see cref="ToolApprovalRequestContent"/>
+    /// in-place for any assistant message whose tool call is covered by an approval resume entry.
+    /// FICC requires the original approval request to be present in the replayed history so it
+    /// can correlate the matching <see cref="ToolApprovalResponseContent"/> (spike Finding B).
+    /// </summary>
+    private static void PromoteApprovalRequestsInHistory(
+        List<ChatMessage> chatMessages,
+        IReadOnlyList<AGUIResumeEntry> resume)
+    {
+        var approvalCallIds = resume
+            .Where(e => AGUIInterruptKind.IsApproval(e.InterruptId))
+            .Select(e => AGUIInterruptKind.GetCallId(e.InterruptId)!)
+            .Where(id => !string.IsNullOrEmpty(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (approvalCallIds.Count == 0) return;
+
+        for (var i = 0; i < chatMessages.Count; i++)
+        {
+            var msg = chatMessages[i];
+            if (msg.Role != ChatRole.Assistant || msg.Contents is null) continue;
+
+            var modified = false;
+            var newContents = new List<AIContent>(msg.Contents.Count);
+
+            foreach (var content in msg.Contents)
+            {
+                if (content is FunctionCallContent fc && approvalCallIds.Contains(fc.CallId))
+                {
+                    newContents.Add(new ToolApprovalRequestContent(fc.CallId, fc));
+                    modified = true;
+                }
+                else
+                {
+                    newContents.Add(content);
+                }
+            }
+
+            if (modified)
+            {
+                chatMessages[i] = new ChatMessage(ChatRole.Assistant, newContents)
+                {
+                    MessageId = msg.MessageId
+                };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Converts AG-UI resume entries into M.E.AI chat messages.
     /// </summary>
     /// <remarks>
     /// <para>
     /// Per AG-UI spec each resume entry maps 1:1 with an open interrupt the previous
-    /// run emitted. For frontend tool-call interrupts we set <c>InterruptInfo.Id</c>
-    /// equal to the <c>toolCallId</c> when emitting (see <c>AGUIEventEmitter</c>),
-    /// so the resume entry's <c>InterruptId</c> recovers the original tool call id.
+    /// run emitted. Two interrupt kinds are handled:
     /// </para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <b>Approval interrupts</b> (<c>"approval:callId"</c> prefix): the payload carries
+    ///     <c>{ "approved": bool }</c>. Produces a <see cref="ToolApprovalResponseContent"/>
+    ///     on <see cref="ChatRole.User"/> so FICC executes (approved) or skips (denied)
+    ///     the wrapped <see cref="ApprovalRequiredAIFunction"/> on the next invocation.
+    ///   </item>
+    ///   <item>
+    ///     <b>Tool-call interrupts</b> (no prefix): the interrupt id equals the tool call id.
+    ///     Produces a <see cref="FunctionResultContent"/> on <see cref="ChatRole.Tool"/>
+    ///     (unchanged from the original frontend-tool resume path).
+    ///   </item>
+    /// </list>
     /// <para>
-    /// Cancelled entries are skipped — we don't synthesise a tool result when the user
+    /// Cancelled entries are skipped — we don't synthesise a result when the user
     /// abandoned the interrupt without input.
     /// </para>
     /// </remarks>
-    private List<ChatMessage> ExtractToolResultsFromResume(IReadOnlyList<AGUIResumeEntry> resume)
+    private List<ChatMessage> ExtractToolResultsFromResume(
+        IReadOnlyList<ChatMessage> chatMessages,
+        IReadOnlyList<AGUIResumeEntry> resume)
     {
         var results = new List<ChatMessage>();
 
@@ -338,7 +425,30 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 continue;
             }
 
-            // InterruptId is the toolCallId for tool_call interrupts (see AGUIEventEmitter).
+            if (AGUIInterruptKind.IsApproval(entry.InterruptId))
+            {
+                // Backend tool approval interrupt: payload is { "approved": bool }.
+                // Build a ToolApprovalResponseContent so FICC executes (approved) or
+                // skips (denied) the wrapped ApprovalRequiredAIFunction.
+                var callId = AGUIInterruptKind.GetCallId(entry.InterruptId)!;
+                var approved = entry.Payload.Value.TryGetProperty("approved", out var ap)
+                    && ap.ValueKind == System.Text.Json.JsonValueKind.True;
+
+                // Recover the ToolCallContent from the (already-promoted) history so FICC
+                // can resolve the function name and arguments for execution.
+                var requestedToolCall = chatMessages
+                    .SelectMany(m => m.Contents ?? [])
+                    .OfType<ToolApprovalRequestContent>()
+                    .FirstOrDefault(c => c.ToolCall.CallId == callId)
+                    ?.ToolCall
+                    ?? new FunctionCallContent(callId, string.Empty, null);
+
+                results.Add(new ChatMessage(ChatRole.User,
+                    [new ToolApprovalResponseContent(callId, approved, requestedToolCall)]));
+                continue;
+            }
+
+            // Frontend tool_call interrupt (unchanged): InterruptId == toolCallId.
             var resultContent = new FunctionResultContent(entry.InterruptId, entry.Payload.Value);
             results.Add(new ChatMessage(ChatRole.Tool, [resultContent]));
         }

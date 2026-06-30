@@ -218,9 +218,9 @@ git commit -m "test(agent): characterize MEAI ApprovalRequiredAIFunction round-t
 ```
 
 > **Task 3/4 assumptions (filled in by Task 0):**
-> - A. Response role: `__________`
-> - B. Request must be in replayed history: `__________`
-> - C. Stateless construction `new ToolApprovalResponseContent(callId, approved, toolCall)` works: `__________`
+> - A. Response role: `ChatRole.User`
+> - B. Request must be in replayed history: `yes` — `history.AddRange(first.Messages)` required
+> - C. Stateless construction `new ToolApprovalResponseContent(callId, approved, toolCall)` works: `yes`
 
 ---
 

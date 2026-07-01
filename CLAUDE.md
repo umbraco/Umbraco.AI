@@ -85,6 +85,8 @@ Built on Microsoft.Extensions.AI (M.E.AI), "thin wrapper" philosophy.
 
 **Location:** `demos/vN/Umbraco.AI.DemoSite/` (N = major from `Umbraco.Cms.Core` lower bound in `Directory.Packages.props`) | **Credentials:** admin@example.com / password1234
 
+**If `demos/vN/` doesn't exist**, generate it with `scripts/install-demo-site.{sh,ps1}` (auto-detects the version from your branch) or run `/repo-setup`. Do not create demo files by hand.
+
 ```bash
 /demo-site-management start|stop|open|generate-client|status
 /demo-site-automation login|navigate-to-connections|create-connection [provider]

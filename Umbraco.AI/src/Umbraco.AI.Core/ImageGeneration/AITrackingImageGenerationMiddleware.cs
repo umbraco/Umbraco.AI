@@ -11,11 +11,14 @@ namespace Umbraco.AI.Core.ImageGeneration;
 /// operations, via the shared <see cref="AIImageGenerationTracker"/>.
 /// </summary>
 [Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
-public sealed class AITrackingImageGenerationMiddleware : IAIImageGenerationMiddleware
+internal sealed class AITrackingImageGenerationMiddleware : IAIImageGenerationMiddleware
 {
     private readonly AIImageGenerationTracker _tracker;
 
-    internal AITrackingImageGenerationMiddleware(AIImageGenerationTracker tracker)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AITrackingImageGenerationMiddleware"/> class.
+    /// </summary>
+    public AITrackingImageGenerationMiddleware(AIImageGenerationTracker tracker)
     {
         _tracker = tracker;
     }

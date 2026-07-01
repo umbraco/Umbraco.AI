@@ -5,7 +5,7 @@
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Handle release/hotfix branches - commit staged manifest if present
-if echo "$current_branch" | grep -qE '^(release|hotfix)/'; then
+if echo "$current_branch" | grep -qE '^v[0-9]+/(release|hotfix)/'; then
     # Check if release-manifest.json is staged but not committed
     if git diff --cached --name-only | grep -q "^release-manifest.json$"; then
         echo "📝 Committing staged release-manifest.json after merge to $current_branch..."
@@ -19,8 +19,8 @@ if echo "$current_branch" | grep -qE '^(release|hotfix)/'; then
     exit 0
 fi
 
-# Handle long-term branches (main/dev/support) - remove manifest
-if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ] || echo "$current_branch" | grep -q "^support/"; then
+# Handle long-term branches (vN/main, vN/dev) - remove manifest
+if echo "$current_branch" | grep -qE '^v[0-9]+/(main|dev)$'; then
     # Check if release-manifest.json exists
     if [ -f "release-manifest.json" ]; then
         echo "🧹 Cleaning up release-manifest.json after merge to $current_branch..."

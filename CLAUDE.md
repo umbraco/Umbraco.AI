@@ -92,6 +92,7 @@ Built on Microsoft.Extensions.AI (M.E.AI), "thin wrapper" philosophy.
 /demo-site-automation login|navigate-to-connections|create-connection [provider]
 ```
 
+- **Path convention:** demo sites live under `demos/vN/` — one directory per CMS major version line (e.g. `demos/v18/`, `demos/v17/`). Never the old top-level `demo/`. The whole `demos/` tree is gitignored and generated per-developer.
 - Uses `DemoSite-Claude` profile with dynamic ports (avoids worktree conflicts)
 - HTTP over named pipes: `umbraco.demosite.{branch-or-worktree}`
 - Site address: query `/site-address` via named pipe to get HTTPS address

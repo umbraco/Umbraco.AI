@@ -24,4 +24,12 @@ public sealed class AGUIToolCall
     /// </summary>
     [JsonPropertyName("function")]
     public required AGUIFunctionCall Function { get; set; }
+
+    /// <summary>
+    /// Gets or sets the encrypted-value envelope per AG-UI spec — opaque payload providers may use
+    /// for zero-data-retention round-trips.
+    /// </summary>
+    [JsonPropertyName("encryptedValue")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? EncryptedValue { get; set; }
 }

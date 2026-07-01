@@ -12,8 +12,16 @@ export type {
     UaiAgentState,
     UaiInputContent,
     UaiTextInputContent,
-    UaiBinaryInputContent,
+    UaiImageInputContent,
+    UaiAudioInputContent,
+    UaiVideoInputContent,
+    UaiDocumentInputContent,
+    UaiInputContentSource,
+    UaiInputContentDataSource,
+    UaiInputContentUrlSource,
 } from "@umbraco-ai/agent";
+
+export { classifyContentKind } from "@umbraco-ai/agent";
 
 /**
  * Agent item for agent selector in chat surfaces.

@@ -87,7 +87,7 @@ public class AGUIEventEmitterTests
         // Assert
         evt.ShouldBeOfType<TextMessageChunkEvent>();
         evt.Delta.ShouldBe(delta);
-        evt.Role.ShouldBe(AGUIMessageRole.Assistant);
+        evt.Role.ShouldBe(AGUITextMessageRole.Assistant);
         evt.MessageId.ShouldBe(emitter.CurrentMessageId);
     }
 
@@ -222,7 +222,7 @@ public class AGUIEventEmitterTests
         evt.ShouldBeOfType<ToolCallResultEvent>();
         evt.ToolCallId.ShouldBe("call-backend");
         evt.Content.ShouldContain("search results");
-        evt.Role.ShouldBe(AGUIMessageRole.Tool);
+        evt.Role.ShouldBe(AGUIToolCallRole.Tool);
     }
 
     [Fact]
@@ -319,7 +319,7 @@ public class AGUIEventEmitterTests
     #region EmitRunFinished Tests
 
     [Fact]
-    public void EmitRunFinished_NoError_NoFrontendTools_ReturnsSuccess()
+    public void EmitRunFinished_NoFrontendTools_ReturnsSuccessOutcome()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
@@ -331,12 +331,11 @@ public class AGUIEventEmitterTests
         evt.ShouldBeOfType<RunFinishedEvent>();
         evt.ThreadId.ShouldBe(TestThreadId);
         evt.RunId.ShouldBe(TestRunId);
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Success);
-        evt.Interrupt.ShouldBeNull();
+        evt.Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
     [Fact]
-    public void EmitRunFinished_WithFrontendTools_ReturnsInterrupt()
+    public void EmitRunFinished_WithFrontendTools_ReturnsInterruptOutcome()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
@@ -346,40 +345,62 @@ public class AGUIEventEmitterTests
         var evt = emitter.EmitRunFinished();
 
         // Assert
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Interrupt);
-        evt.Interrupt.ShouldNotBeNull();
-        evt.Interrupt.Reason.ShouldBe("tool_execution");
-        evt.Interrupt.Id.ShouldNotBeNullOrEmpty();
+        var interruptOutcome = evt.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.ShouldNotBeEmpty();
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Reason.ShouldBe("tool_call");
+        interrupt.ToolCallId.ShouldBe("call-frontend");
+        interrupt.Id.ShouldNotBeNullOrEmpty();
     }
 
     [Fact]
-    public void EmitRunFinished_WithError_ReturnsError()
+    public void EmitRunFinished_WithApprovalRequest_ReturnsHumanApprovalInterrupt()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
-        var error = new Exception("Test error");
+        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{\"id\":\"42\"}");
 
         // Act
-        var evt = emitter.EmitRunFinished(error);
+        var evt = emitter.EmitRunFinished();
 
         // Assert
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Error);
-        evt.Interrupt.ShouldBeNull();
+        var interruptOutcome = evt.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        interruptOutcome.Interrupts.Count.ShouldBe(1);
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Id.ShouldBe("approval:call-del");
+        interrupt.Reason.ShouldBe("human_approval");
+        interrupt.ToolCallId.ShouldBe("call-del");
     }
 
     [Fact]
-    public void EmitRunFinished_WithErrorAndFrontendTools_ErrorTakesPrecedence()
+    public void EmitRunFinished_WithFrontendAndApprovalRequests_IncludesBothInterrupts()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
         emitter.EmitToolCall("call-frontend", "confirm", null, isFrontendTool: true);
-        var error = new Exception("Test error");
+        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{}");
 
         // Act
-        var evt = emitter.EmitRunFinished(error);
+        var interruptOutcome = emitter.EmitRunFinished().Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
 
         // Assert
-        evt.Outcome.ShouldBe(AGUIRunOutcome.Error);
+        interruptOutcome.Interrupts.Count.ShouldBe(2);
+        interruptOutcome.Interrupts.ShouldContain(i => i.Reason == "tool_call");
+        interruptOutcome.Interrupts.ShouldContain(i => i.Reason == "human_approval");
+    }
+
+    [Fact]
+    public void EmitRunFinished_WithOnlyApprovalRequest_DoesNotReturnSuccess()
+    {
+        // Arrange
+        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
+        emitter.RegisterApprovalRequest("approval:call-x", "call-x", "do_thing", "{}");
+
+        // Act
+        var outcome = emitter.EmitRunFinished().Outcome;
+
+        // Assert — should be interrupt, not success
+        outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
     }
 
     #endregion

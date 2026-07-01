@@ -48,11 +48,13 @@ public sealed class AGUIRunRequest
     public IEnumerable<AGUIContextItem>? Context { get; set; }
 
     /// <summary>
-    /// Gets or sets the resume information for continuing from an interrupt.
+    /// Gets or sets the resume entries for continuing from interrupts. Per AG-UI spec,
+    /// the client sends one entry per open interrupt; a single resume array must address
+    /// every open interrupt from the previous run.
     /// </summary>
     [JsonPropertyName("resume")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public AGUIResumeInfo? Resume { get; set; }
+    public IReadOnlyList<AGUIResumeEntry>? Resume { get; set; }
 
     /// <summary>
     /// Gets or sets additional properties to forward to the agent.

@@ -5,6 +5,30 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.14.0...Umbraco.AI@17.0.0) (2026-06-22)
+
+### feat
+
+* **core,agent,prompt,search:** Use dedicated connection for custom AI connection strings ([ca01d98](https://github.com/umbraco/Umbraco.AI/commit/ca01d98c4c76b471c736a47659cfcab99a3733bd)), closes [umbraco/Umbraco-CMS#22133](https://github.com/umbraco/Umbraco-CMS/issues/22133)
+* **core,agent:** Track extension point adoption with system/custom classification ([4029503](https://github.com/umbraco/Umbraco.AI/commit/402950308b2e5f1d717eeb48fdcaefbe9f4aa337))
+* **core,agent:** Track per-surface agent counts for surface adoption ([76a762d](https://github.com/umbraco/Umbraco.AI/commit/76a762d3829763ea908968897aa5dda7f4761257))
+* **core,prompt,agent:** Add usage-by-feature telemetry and generic extension sweep ([df287c7](https://github.com/umbraco/Umbraco.AI/commit/df287c7d9767ccc6273a78a256ac3244a1ac9b7c))
+* **core:** Add tests feature adoption to usage telemetry ([8be697d](https://github.com/umbraco/Umbraco.AI/commit/8be697d62fc12bfde1df1ed9135e9f7e27e618f4))
+* **core:** Add usage telemetry provider for CMS telemetry report ([a4b6eeb](https://github.com/umbraco/Umbraco.AI/commit/a4b6eebfbe4c10709e8898eabdccc9c35f19226c))
+* **core:** Drop model family tracking from usage telemetry ([7af6040](https://github.com/umbraco/Umbraco.AI/commit/7af60407277f5cebf5aa3dc8aa9131a70798783a))
+* **core:** Track context picker adoption funnel in usage telemetry ([0bd4ff7](https://github.com/umbraco/Umbraco.AI/commit/0bd4ff7db8aac15ad20b59334de19adc794577e3))
+* **core:** Track guardrail evaluators and test graders in usage telemetry ([72b7cca](https://github.com/umbraco/Umbraco.AI/commit/72b7cca363fc8f563c04a910e91b324f3ee07326))
+
+### fix
+
+* **core,agent:** Restrict system extension classification to Umbraco.AI assemblies ([87d66b3](https://github.com/umbraco/Umbraco.AI/commit/87d66b35b29cbccd687f30bae88e4aa45a6d7d70))
+* **core:** bind multimodal chat contentParts via $type discriminator ([76fb9b1](https://github.com/umbraco/Umbraco.AI/commit/76fb9b143e8099d516a1c7c11e789ccd25cc92ef))
+* **core:** return 422 for guardrail-blocked chat completions instead of 500 ([78da79d](https://github.com/umbraco/Umbraco.AI/commit/78da79d0b9113a73545ef326b6ceb72382814e89))
+* **frontend:** Dispatch reload events from delete actions ([e183814](https://github.com/umbraco/Umbraco.AI/commit/e1838141c49bd57fa3984e6a4f6c8172febe335a))
+* **frontend:** Reload collection once after delete to prevent stale rows ([012982c](https://github.com/umbraco/Umbraco.AI/commit/012982c9889505ba8408d4209f4bd7673b8dc4d8))
+* **providers, agent, anthropic:** Classify provider errors for friendly chat messages ([8f71209](https://github.com/umbraco/Umbraco.AI/commit/8f712099ca3479774e7d011152ed93276642e8dd)), closes [#174](https://github.com/umbraco/Umbraco.AI/issues/174) [#174](https://github.com/umbraco/Umbraco.AI/issues/174)
+* **providers, agent, anthropic:** Route error classification through per-provider client decorators ([3c9b8d6](https://github.com/umbraco/Umbraco.AI/commit/3c9b8d655e87219927e33dee921e057392fd13e7)), closes [#174](https://github.com/umbraco/Umbraco.AI/issues/174)
+
 ## [1.14.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@1.13.0...Umbraco.AI@1.14.0) (2026-06-04)
 
 ### ⚠ BREAKING CHANGE

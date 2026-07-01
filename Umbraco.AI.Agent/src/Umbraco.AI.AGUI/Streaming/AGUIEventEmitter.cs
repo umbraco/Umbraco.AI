@@ -30,6 +30,7 @@ public sealed class AGUIEventEmitter
     private readonly string _runId;
     private readonly HashSet<string> _emittedToolCallIds = new();
     private readonly HashSet<string> _frontendToolCallIds = new();
+    private readonly List<(string InterruptId, string ToolCallId, string ToolName, string ArgsJson)> _approvalInterrupts = new();
 
     private string _currentMessageId;
     private string? _lastGeneratedCallId;
@@ -67,6 +68,11 @@ public sealed class AGUIEventEmitter
     public bool HasFrontendToolCalls => _frontendToolCallIds.Count > 0;
 
     /// <summary>
+    /// Gets whether any backend tool approval requests have been registered.
+    /// </summary>
+    public bool HasApprovalRequests => _approvalInterrupts.Count > 0;
+
+    /// <summary>
     /// Gets the set of frontend tool call IDs that have been emitted.
     /// </summary>
     public IReadOnlySet<string> FrontendToolCallIds => _frontendToolCallIds;
@@ -90,7 +96,7 @@ public sealed class AGUIEventEmitter
     public TextMessageChunkEvent EmitTextChunk(string delta) => new()
     {
         MessageId = _currentMessageId,
-        Role = AGUIMessageRole.Assistant,
+        Role = AGUITextMessageRole.Assistant,
         Delta = delta,
         Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
     };
@@ -198,7 +204,7 @@ public sealed class AGUIEventEmitter
             MessageId = resultMessageId,
             ToolCallId = effectiveCallId,
             Content = resultJson,
-            Role = AGUIMessageRole.Tool,
+            Role = AGUIToolCallRole.Tool,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
     }
@@ -217,43 +223,73 @@ public sealed class AGUIEventEmitter
     };
 
     /// <summary>
+    /// Registers a pending backend tool approval request to be included in the next
+    /// <see cref="EmitRunFinished"/> call as a <c>human_approval</c> interrupt.
+    /// </summary>
+    /// <param name="interruptId">
+    /// The AG-UI interrupt ID (opaque; typically built by <c>AGUIInterruptKind.ForApproval</c>).
+    /// </param>
+    /// <param name="toolCallId">The MEAI tool call ID for correlation with the resume entry.</param>
+    /// <param name="toolName">The name of the tool requesting approval.</param>
+    /// <param name="argsJson">The serialized arguments JSON for display in the approval UI.</param>
+    public void RegisterApprovalRequest(string interruptId, string toolCallId, string toolName, string argsJson)
+        => _approvalInterrupts.Add((interruptId, toolCallId, toolName, argsJson));
+
+    /// <summary>
     /// Emits a <see cref="RunFinishedEvent"/> with the appropriate outcome.
     /// </summary>
-    /// <param name="error">Optional exception if an error occurred.</param>
     /// <returns>The run finished event.</returns>
     /// <remarks>
+    /// <para>
     /// The outcome is determined as follows:
     /// <list type="bullet">
-    ///   <item>If <paramref name="error"/> is provided: <see cref="AGUIRunOutcome.Error"/></item>
-    ///   <item>If frontend tools were called: <see cref="AGUIRunOutcome.Interrupt"/></item>
-    ///   <item>Otherwise: <see cref="AGUIRunOutcome.Success"/></item>
+    ///   <item>If frontend tools were called: <see cref="AGUIRunOutcomeInterrupt"/>
+    ///   with one entry per pending frontend tool call (<c>reason="tool_call"</c>).</item>
+    ///   <item>Otherwise: <see cref="AGUIRunOutcomeSuccess"/>.</item>
     /// </list>
+    /// </para>
+    /// <para>
+    /// Errors are NOT a valid outcome of <c>RUN_FINISHED</c> per AG-UI spec — emit a
+    /// <see cref="RunErrorEvent"/> via <see cref="EmitError"/> and terminate the stream
+    /// without a subsequent <c>RUN_FINISHED</c>.
+    /// </para>
     /// </remarks>
-    public RunFinishedEvent EmitRunFinished(Exception? error = null)
+    public RunFinishedEvent EmitRunFinished()
     {
-        var outcome = error != null
-            ? AGUIRunOutcome.Error
-            : HasFrontendToolCalls
-                ? AGUIRunOutcome.Interrupt
-                : AGUIRunOutcome.Success;
+        var interrupts = new List<AGUIInterruptInfo>();
 
-        AGUIInterruptInfo? interrupt = null;
-        if (outcome == AGUIRunOutcome.Interrupt)
+        // Frontend tool interrupts — client executes these, so the agent is paused waiting for result.
+        interrupts.AddRange(_frontendToolCallIds.Select(toolCallId => new AGUIInterruptInfo
         {
-            interrupt = new AGUIInterruptInfo
+            // Use toolCallId as the interrupt id so the server can recover the
+            // corresponding tool call from a resume entry without server-side state.
+            Id = toolCallId,
+            Reason = "tool_call",
+            ToolCallId = toolCallId,
+        }));
+
+        // Backend tool approval interrupts — user must approve before execution.
+        interrupts.AddRange(_approvalInterrupts.Select(a => new AGUIInterruptInfo
+        {
+            Id = a.InterruptId,
+            Reason = "human_approval",
+            ToolCallId = a.ToolCallId,
+            Metadata = new Dictionary<string, object?>
             {
-                Id = Guid.NewGuid().ToString(),
-                Reason = "tool_execution"
-            };
-        }
+                ["toolName"] = a.ToolName,
+                ["args"] = a.ArgsJson,
+            },
+        }));
+
+        AGUIRunOutcome outcome = interrupts.Count > 0
+            ? new AGUIRunOutcomeInterrupt(interrupts)
+            : new AGUIRunOutcomeSuccess();
 
         return new RunFinishedEvent
         {
             ThreadId = _threadId,
             RunId = _runId,
             Outcome = outcome,
-            Interrupt = interrupt,
-            Error = error?.Message,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
         };
     }

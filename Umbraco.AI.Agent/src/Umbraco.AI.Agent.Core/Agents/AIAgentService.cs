@@ -455,7 +455,9 @@ internal sealed class AIAgentService : IAIAgentService
         // Convert AG-UI messages to M.E.AI before publishing notification
         var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
 
-        // Prepare agent execution (profile override, notification, permissions, MAF agent creation)
+        // Prepare agent execution (profile override, notification, permissions, MAF agent creation).
+        // AG-UI is the interactive surface — it can emit a human_approval interrupt and resume,
+        // so destructive tools are gated for real approval regardless of the options default.
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools,
             contextItems: _contextConverter.ConvertToRequestContextItems(request.Context),
@@ -465,6 +467,7 @@ internal sealed class AIAgentService : IAIAgentService
                 { Constants.ContextKeys.ThreadId, request.ThreadId },
                 { CoreConstants.ContextKeys.LogKeys, new[] { Constants.ContextKeys.RunId, Constants.ContextKeys.ThreadId } }
             },
+            approvalPolicy: AIApprovalPolicy.Interactive,
             cancellationToken);
 
         if (context is null)
@@ -505,11 +508,14 @@ internal sealed class AIAgentService : IAIAgentService
 
         var additionalProperties = BuildAgentProperties(builder);
 
+        // Inline agents are created for programmatic callers with no interactive surface to
+        // resolve a human_approval interrupt — deny destructive tools so runs don't stall.
         return await _agentFactory.CreateAgentAsync(
             agent,
             builder.ContextItems,
             additionalTools: null,
             additionalProperties,
+            approvalPolicy: AIApprovalPolicy.DenyAll,
             cancellationToken);
     }
 
@@ -544,11 +550,13 @@ internal sealed class AIAgentService : IAIAgentService
         try
         {
             var additionalProperties = BuildAgentProperties(builder);
+            // Non-interactive programmatic execution — deny destructive tools (no resume surface).
             var mafAgent = await _agentFactory.CreateAgentAsync(
                 agent,
                 builder.ContextItems,
                 additionalTools: null,
                 additionalProperties,
+                approvalPolicy: AIApprovalPolicy.DenyAll,
                 cancellationToken);
 
             var response = await mafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
@@ -608,11 +616,13 @@ internal sealed class AIAgentService : IAIAgentService
         try
         {
             var additionalProperties = BuildAgentProperties(builder);
+            // Programmatic streaming (not AG-UI) has no resume surface — deny destructive tools.
             var mafAgent = await _agentFactory.CreateAgentAsync(
                 agent,
                 builder.ContextItems,
                 additionalTools: null,
                 additionalProperties,
+                approvalPolicy: AIApprovalPolicy.DenyAll,
                 cancellationToken);
 
             await foreach (var update in mafAgent.RunStreamingAsync(chatMessages, session: null, options: null, cancellationToken))
@@ -786,6 +796,7 @@ internal sealed class AIAgentService : IAIAgentService
             agent, chatMessages, options, frontendTools: null,
             contextItems: options.ContextItems,
             additionalProperties: BuildAdditionalPropertiesFromOptions(options),
+            approvalPolicy: options.ApprovalPolicy,
             cancellationToken);
 
         if (context is null)
@@ -830,6 +841,7 @@ internal sealed class AIAgentService : IAIAgentService
             agent, chatMessages, options, frontendTools: null,
             contextItems: options.ContextItems,
             additionalProperties: BuildAdditionalPropertiesFromOptions(options),
+            approvalPolicy: options.ApprovalPolicy,
             cancellationToken);
 
         if (context is null)
@@ -881,6 +893,7 @@ internal sealed class AIAgentService : IAIAgentService
         IEnumerable<AIFrontendTool>? frontendTools,
         IEnumerable<AIRequestContextItem>? contextItems,
         Dictionary<string, object?>? additionalProperties,
+        AIApprovalPolicy approvalPolicy,
         CancellationToken cancellationToken)
     {
         // Apply profile override if specified
@@ -946,12 +959,15 @@ internal sealed class AIAgentService : IAIAgentService
             additionalProperties[AI.Core.Constants.ContextKeys.GuardrailIdsOverride] = options.GuardrailIdsOverride;
         }
 
-        // Create MAF agent
+        // Create MAF agent. The AG-UI streaming caller passes Interactive (it can resume), while
+        // headless callers pass options.ApprovalPolicy (default DenyAll) so destructive tools
+        // never stall a run that has no way to approve them.
         var mafAgent = await _agentFactory.CreateAgentAsync(
             agent,
             contextItems,
             convertedFrontendTools,
             additionalProperties,
+            approvalPolicy,
             cancellationToken);
 
         return new AgentExecutionContext(
@@ -990,7 +1006,8 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Emits a complete AG-UI error sequence: run started, error, run finished.
+    /// Emits an AG-UI error sequence: run started, then run error.
+    /// Per spec a run terminates with either RUN_FINISHED or RUN_ERROR — never both.
     /// </summary>
     private static async IAsyncEnumerable<IAGUIEvent> EmitAGUIError(
         AGUIRunRequest request,
@@ -1000,7 +1017,6 @@ internal sealed class AIAgentService : IAIAgentService
         var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
         yield return emitter.EmitRunStarted();
         yield return emitter.EmitError(message, code);
-        yield return emitter.EmitRunFinished(new InvalidOperationException(message));
         await Task.CompletedTask; // Satisfy async enumerable contract
     }
 

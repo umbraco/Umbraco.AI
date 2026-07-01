@@ -27,9 +27,10 @@ public sealed record ToolCallResultEvent : BaseAGUIEvent
     public required string Content { get; init; }
 
     /// <summary>
-    /// Gets or sets the optional role (typically "tool").
+    /// Gets or sets the optional role. AG-UI spec restricts this to the literal <c>"tool"</c>;
+    /// modelled here as a single-value enum so the type system enforces the constraint.
     /// </summary>
     [JsonPropertyName("role")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public AGUIMessageRole? Role { get; init; }
+    public AGUIToolCallRole? Role { get; init; } = AGUIToolCallRole.Tool;
 }

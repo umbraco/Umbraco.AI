@@ -17,8 +17,16 @@ export type {
     UaiFrontendTool,
     UaiInputContent,
     UaiTextInputContent,
-    UaiBinaryInputContent,
+    UaiImageInputContent,
+    UaiAudioInputContent,
+    UaiVideoInputContent,
+    UaiDocumentInputContent,
+    UaiInputContentSource,
+    UaiInputContentDataSource,
+    UaiInputContentUrlSource,
 } from "./types.js";
+
+export { classifyContentKind } from "./types.js";
 
 // Transport types
 export type { AgentTransport, AgentClientCallbacks, RunFinishedEvent } from "./types.js";
@@ -26,9 +34,13 @@ export type { AgentTransport, AgentClientCallbacks, RunFinishedEvent } from "./t
 // AG-UI re-exports
 export { EventType, type AGUITool, type ToolMessage } from "./types.js";
 
-// AG-UI typed events
+// AG-UI typed events: re-exports of @ag-ui/client's discriminated union members
+// (incl. RunFinishedEvent's native outcome + Interrupt as of 0.0.57). RunErrorEvent
+// remains a local extension that narrows `code` to UaiErrorCategory.
 export type {
-    AGUITypedEvent,
+    AGUIEvent,
+    Interrupt,
+    RunFinishedOutcome,
     TextMessageStartEvent,
     TextMessageContentEvent,
     TextMessageEndEvent,
@@ -36,9 +48,9 @@ export type {
     ToolCallArgsEvent,
     ToolCallEndEvent,
     ToolCallResultEvent,
-    RunFinishedAGUIEvent,
     RunErrorEvent,
     StateSnapshotEvent,
     StateDeltaEvent,
     MessagesSnapshotEvent,
+    CustomEvent,
 } from "./types.js";

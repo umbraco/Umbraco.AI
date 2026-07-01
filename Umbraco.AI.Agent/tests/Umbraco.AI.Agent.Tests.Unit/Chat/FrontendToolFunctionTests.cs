@@ -9,6 +9,8 @@ namespace Umbraco.AI.Agent.Tests.Unit.Chat;
 
 public class FrontendToolFunctionTests
 {
+    private static JsonElement Schema(object schema) => JsonSerializer.SerializeToElement(schema);
+
     [Fact]
     public void Constructor_WithAGUITool_SetsNameAndDescription()
     {
@@ -17,14 +19,11 @@ public class FrontendToolFunctionTests
         {
             Name = "test-tool",
             Description = "A test tool for testing",
-            Parameters = new AGUIToolParameters
+            Parameters = Schema(new
             {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new
-                {
-                    param1 = new { type = "string" }
-                })
-            }
+                type = "object",
+                properties = new { param1 = new { type = "string" } }
+            })
         };
 
         // Act
@@ -36,23 +35,23 @@ public class FrontendToolFunctionTests
     }
 
     [Fact]
-    public void Constructor_WithAGUITool_BuildsJsonSchema()
+    public void Constructor_WithAGUITool_PassesParametersThroughAsJsonSchema()
     {
         // Arrange
         var tool = new AGUITool
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AGUIToolParameters
+            Parameters = Schema(new
             {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new
+                type = "object",
+                properties = new
                 {
                     name = new { type = "string", description = "The name" },
                     count = new { type = "integer" }
-                }),
-                Required = ["name"]
-            }
+                },
+                required = new[] { "name" }
+            })
         };
 
         // Act
@@ -73,7 +72,7 @@ public class FrontendToolFunctionTests
     public void Constructor_WithExplicitParameters_SetsProperties()
     {
         // Arrange
-        var schema = JsonSerializer.SerializeToElement(new
+        var schema = Schema(new
         {
             type = "object",
             properties = new { message = new { type = "string" } }
@@ -92,7 +91,7 @@ public class FrontendToolFunctionTests
     public void Constructor_WithNullDescription_SetsEmptyDescription()
     {
         // Arrange
-        var schema = JsonSerializer.SerializeToElement(new { type = "object" });
+        var schema = Schema(new { type = "object" });
 
         // Act
         var function = new AIFrontendToolFunction("my-tool", null!, schema);
@@ -112,7 +111,7 @@ public class FrontendToolFunctionTests
     public void Constructor_WithNullName_ThrowsArgumentNullException()
     {
         // Arrange
-        var schema = JsonSerializer.SerializeToElement(new { type = "object" });
+        var schema = Schema(new { type = "object" });
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() => new AIFrontendToolFunction(null!, "desc", schema));
@@ -126,11 +125,11 @@ public class FrontendToolFunctionTests
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AGUIToolParameters
+            Parameters = Schema(new
             {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
-            }
+                type = "object",
+                properties = new { param1 = new { type = "string" } }
+            })
         };
         var function = new AIFrontendToolFunction(tool);
         var arguments = new AIFunctionArguments(new Dictionary<string, object?>
@@ -146,58 +145,6 @@ public class FrontendToolFunctionTests
     }
 
     [Fact]
-    public void Constructor_WithNoRequiredParams_OmitsRequiredFromSchema()
-    {
-        // Arrange
-        var tool = new AGUITool
-        {
-            Name = "test-tool",
-            Description = "A test tool",
-            Parameters = new AGUIToolParameters
-            {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new
-                {
-                    optional = new { type = "string" }
-                }),
-                Required = null
-            }
-        };
-
-        // Act
-        var function = new AIFrontendToolFunction(tool);
-
-        // Assert
-        function.JsonSchema.TryGetProperty("required", out _).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Constructor_WithEmptyRequiredParams_OmitsRequiredFromSchema()
-    {
-        // Arrange
-        var tool = new AGUITool
-        {
-            Name = "test-tool",
-            Description = "A test tool",
-            Parameters = new AGUIToolParameters
-            {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new
-                {
-                    optional = new { type = "string" }
-                }),
-                Required = []
-            }
-        };
-
-        // Act
-        var function = new AIFrontendToolFunction(tool);
-
-        // Assert
-        function.JsonSchema.TryGetProperty("required", out _).ShouldBeFalse();
-    }
-
-    [Fact]
     public void Constructor_WithScopeAndIsDestructive_SetsMetadataProperties()
     {
         // Arrange
@@ -205,11 +152,11 @@ public class FrontendToolFunctionTests
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AGUIToolParameters
+            Parameters = Schema(new
             {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
-            }
+                type = "object",
+                properties = new { param1 = new { type = "string" } }
+            })
         };
 
         // Act
@@ -228,11 +175,11 @@ public class FrontendToolFunctionTests
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AGUIToolParameters
+            Parameters = Schema(new
             {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
-            }
+                type = "object",
+                properties = new { param1 = new { type = "string" } }
+            })
         };
 
         // Act
@@ -251,11 +198,11 @@ public class FrontendToolFunctionTests
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AGUIToolParameters
+            Parameters = Schema(new
             {
-                Type = "object",
-                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
-            }
+                type = "object",
+                properties = new { param1 = new { type = "string" } }
+            })
         };
 
         // Act

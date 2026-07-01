@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "private": true,
     "description": "Root package for Umbraco.AI frontend development",
+    "engines": {
+        "node": ">=22.17.1",
+        "npm": ">=10.9.2"
+    },
     "workspaces": [
         "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client",
         "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client",
@@ -37,11 +41,13 @@
     "devDependencies": {
         "@commitlint/cli": "^20.3.1",
         "@commitlint/config-conventional": "^20.3.1",
-        "concurrently": "^9.1.2",
+        "@umbraco-cms/backoffice": "^17.4.0",
+        "concurrently": "^10.0.3",
         "conventional-changelog": "^7.2.0",
         "conventional-changelog-conventionalcommits": "^9.1.0",
         "prettier": "^3.8.1"
     },
+    "_comment_devDependencies_backoffice": "@umbraco-cms/backoffice is declared here at the workspace root to force npm to hoist a SINGLE shared copy into the root node_modules. Each publishable workspace declares it independently, and because backoffice has ~25 non-optional peerDependencies, npm otherwise installs a separate copy per workspace. Multiple physical copies give TypeScript distinct nominal class identities (the '#private' brand differs per copy), so cross-workspace types (e.g. agent's app.ts consuming core's UmbElement-typed API) fail to compile. A single hoisted copy keeps all workspaces type-checking against one backoffice. It is never bundled (vite externalizes /^@umbraco/) so this is build/type-time only. Keep the range in sync with the workspaces and peerDependencyVersions.",
     "overrides": {
         "rxjs": "^7.8.2",
         "monaco-editor": {
@@ -49,10 +55,10 @@
         }
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^1.14.0",
-        "@umbraco-ai/agent": "^1.10.4",
-        "@umbraco-ai/agent-ui": "^1.0.1",
-        "@umbraco-ai/agent-copilot": "^1.0.1",
+        "@umbraco-ai/core": "^17.0.0",
+        "@umbraco-ai/agent": "^17.0.0",
+        "@umbraco-ai/agent-ui": "^17.0.0",
+        "@umbraco-ai/agent-copilot": "^17.0.0",
         "@umbraco-cms/backoffice": "^17.4.0"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."

@@ -9,10 +9,18 @@ namespace Umbraco.AI.Agent.Core.AGUI;
 
 /// <summary>
 /// Default implementation of <see cref="IAGUIFileProcessor"/>.
-/// Stores base64 data in a thread-scoped file store and resolves file ID references.
+/// Stores base64 data in a thread-scoped file store and resolves stored URLs back to bytes.
 /// </summary>
+/// <remarks>
+/// Operates on the AG-UI typed multimodal content variants (<c>image</c>, <c>audio</c>,
+/// <c>video</c>, <c>document</c>) defined in <see cref="AGUIInputContent"/>.
+/// </remarks>
 internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 {
+    internal const string FileIdMetadataKey = "fileId";
+    internal const string FilenameMetadataKey = "filename";
+    internal const string ResolvedDataMetadataKey = "__resolvedData";
+
     private readonly IAIFileStore _fileStore;
     private readonly IAIFileUrlProvider? _fileUrlProvider;
     private readonly IOptionsMonitor<ContentSettings> _contentSettings;
@@ -48,26 +56,26 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         var messagesList = messages.ToList();
         var rewritten = new List<AGUIMessage>(messagesList.Count);
         var resolved = new List<AGUIMessage>(messagesList.Count);
-        var hasBinaryContent = false;
+        var hasMediaContent = false;
 
         foreach (var message in messagesList)
         {
-            if (message.ContentParts is null || !message.ContentParts.OfType<AGUIBinaryInputContent>().Any())
+            if (message.ContentParts is null || !message.ContentParts.OfType<AGUIMediaInputContent>().Any())
             {
                 rewritten.Add(message);
                 resolved.Add(message);
                 continue;
             }
 
-            hasBinaryContent = true;
+            hasMediaContent = true;
             var rewrittenParts = new List<AGUIInputContent>(message.ContentParts.Count);
             var resolvedParts = new List<AGUIInputContent>(message.ContentParts.Count);
 
             foreach (var part in message.ContentParts)
             {
-                if (part is AGUIBinaryInputContent binary)
+                if (part is AGUIMediaInputContent media)
                 {
-                    var (rewrittenPart, resolvedPart) = await ProcessBinaryPartAsync(binary, threadId, cancellationToken);
+                    var (rewrittenPart, resolvedPart) = await ProcessMediaPartAsync(media, threadId, cancellationToken);
                     rewrittenParts.Add(rewrittenPart);
                     resolvedParts.Add(resolvedPart);
                 }
@@ -82,8 +90,8 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
             resolved.Add(CloneMessageWithParts(message, resolvedParts));
         }
 
-        // If no binary content was found, return same references so caller can detect no-op
-        if (!hasBinaryContent)
+        // If no media content was found, return same references so caller can detect no-op
+        if (!hasMediaContent)
         {
             return new AGUIFileProcessorResult
             {
@@ -99,81 +107,123 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         };
     }
 
-    private async Task<(AGUIBinaryInputContent Rewritten, AGUIBinaryInputContent Resolved)> ProcessBinaryPartAsync(
-        AGUIBinaryInputContent binary,
+    private async Task<(AGUIInputContent Rewritten, AGUIInputContent Resolved)> ProcessMediaPartAsync(
+        AGUIMediaInputContent part,
+        string threadId,
+        CancellationToken cancellationToken) => part.Source switch
+        {
+            AGUIInputContentDataSource dataSource => await StoreAndRewriteAsync(part, dataSource, part.Metadata, threadId, cancellationToken),
+            AGUIInputContentUrlSource urlSource when TryGetFileId(part.Metadata, out var fileId) =>
+                await ResolveStoredUrlAsync(part, urlSource, part.Metadata, fileId, threadId, cancellationToken),
+            // External URL we can't resolve to bytes — pass through unchanged.
+            _ => (part, part),
+        };
+
+    private async Task<(AGUIInputContent Rewritten, AGUIInputContent Resolved)> StoreAndRewriteAsync(
+        AGUIInputContent original,
+        AGUIInputContentDataSource dataSource,
+        IReadOnlyDictionary<string, object?>? metadata,
         string threadId,
         CancellationToken cancellationToken)
     {
-        // Case 1: Has base64 data — store it and rewrite to ID reference
-        if (!string.IsNullOrEmpty(binary.Data))
+        var filename = metadata is not null && metadata.TryGetValue(FilenameMetadataKey, out var fn) ? fn as string : null;
+
+        // Validate file extension against CMS content settings
+        var extension = Path.GetExtension(filename)?.TrimStart('.');
+        if (!string.IsNullOrEmpty(extension) && !_contentSettings.CurrentValue.IsFileAllowedForUpload(extension))
         {
-            // Validate file extension against CMS content settings
-            var extension = Path.GetExtension(binary.Filename)?.TrimStart('.');
-            if (!string.IsNullOrEmpty(extension) && !_contentSettings.CurrentValue.IsFileAllowedForUpload(extension))
-            {
-                _logger.LogWarning("File \"{Filename}\" has disallowed extension \"{Extension}\", skipping upload", binary.Filename, extension);
-                return (binary, binary);
-            }
-
-            var bytes = Convert.FromBase64String(binary.Data);
-            var fileId = await _fileStore.StoreAsync(threadId, bytes, binary.MimeType, binary.Filename, cancellationToken);
-
-            _logger.LogDebug("Stored uploaded file as {FileId} ({MimeType}, {Size} bytes)", fileId, binary.MimeType, bytes.Length);
-
-            var rewrittenPart = new AGUIBinaryInputContent
-            {
-                MimeType = binary.MimeType,
-                Id = fileId,
-                Filename = binary.Filename,
-                Url = _fileUrlProvider?.GetFileUrl(threadId, fileId)
-            };
-
-            var resolvedPart = new AGUIBinaryInputContent
-            {
-                MimeType = binary.MimeType,
-                Id = fileId,
-                Filename = binary.Filename,
-                ResolvedData = bytes
-            };
-
-            return (rewrittenPart, resolvedPart);
+            _logger.LogWarning("File \"{Filename}\" has disallowed extension \"{Extension}\", skipping upload", filename, extension);
+            return (original, original);
         }
 
-        // Case 2: Has ID reference — resolve from store
-        if (!string.IsNullOrEmpty(binary.Id))
-        {
-            var stored = await _fileStore.ResolveAsync(threadId, binary.Id, cancellationToken);
-            if (stored != null)
-            {
-                // Ensure the rewritten part has a URL for frontend rendering
-                var rewrittenPart = binary.Url is not null
-                    ? binary
-                    : new AGUIBinaryInputContent
-                    {
-                        MimeType = binary.MimeType,
-                        Id = binary.Id,
-                        Filename = binary.Filename,
-                        Url = _fileUrlProvider?.GetFileUrl(threadId, binary.Id)
-                    };
+        var bytes = Convert.FromBase64String(dataSource.Value);
+        var fileId = await _fileStore.StoreAsync(threadId, bytes, dataSource.MimeType, filename, cancellationToken);
 
-                var resolvedPart = new AGUIBinaryInputContent
-                {
-                    MimeType = binary.MimeType,
-                    Id = binary.Id,
-                    Filename = binary.Filename,
-                    ResolvedData = stored.Data
-                };
+        _logger.LogDebug("Stored uploaded file as {FileId} ({MimeType}, {Size} bytes)", fileId, dataSource.MimeType, bytes.Length);
 
-                return (rewrittenPart, resolvedPart);
-            }
+        var serverUrl = _fileUrlProvider?.GetFileUrl(threadId, fileId);
+        var rewrittenMetadata = WithMetadata(metadata, FileIdMetadataKey, fileId);
+        var resolvedMetadata = WithMetadata(metadata, FileIdMetadataKey, fileId, ResolvedDataMetadataKey, bytes);
 
-            _logger.LogWarning("Could not resolve file {FileId} for thread {ThreadId}", binary.Id, threadId);
-            return (binary, binary);
-        }
+        var rewrittenSource = serverUrl is not null
+            ? (AGUIInputContentSource)new AGUIInputContentUrlSource { Value = serverUrl, MimeType = dataSource.MimeType }
+            : new AGUIInputContentDataSource { Value = dataSource.Value, MimeType = dataSource.MimeType };
 
-        // Case 3: Has URL — pass through (URL-based resolution not yet implemented)
-        return (binary, binary);
+        return (
+            AGUIInputContentFactory.FromSource(rewrittenSource, dataSource.MimeType, rewrittenMetadata),
+            AGUIInputContentFactory.FromSource(rewrittenSource, dataSource.MimeType, resolvedMetadata));
     }
+
+    private async Task<(AGUIInputContent Rewritten, AGUIInputContent Resolved)> ResolveStoredUrlAsync(
+        AGUIInputContent original,
+        AGUIInputContentUrlSource urlSource,
+        IReadOnlyDictionary<string, object?>? metadata,
+        string fileId,
+        string threadId,
+        CancellationToken cancellationToken)
+    {
+        var stored = await _fileStore.ResolveAsync(threadId, fileId, cancellationToken);
+        if (stored is null)
+        {
+            _logger.LogWarning("Could not resolve file {FileId} for thread {ThreadId}", fileId, threadId);
+            return (original, original);
+        }
+
+        var resolvedMetadata = WithMetadata(metadata, ResolvedDataMetadataKey, stored.Data);
+        return (
+            original,
+            AGUIInputContentFactory.FromSource(urlSource, urlSource.MimeType, resolvedMetadata));
+    }
+
+    private static bool TryGetFileId(IReadOnlyDictionary<string, object?>? metadata, out string fileId)
+    {
+        if (metadata is not null && metadata.TryGetValue(FileIdMetadataKey, out var raw) && raw is string s && !string.IsNullOrEmpty(s))
+        {
+            fileId = s;
+            return true;
+        }
+
+        fileId = string.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the resolved bytes a previous call attached to an inbound part's metadata,
+    /// or <c>null</c> if no resolution happened (e.g., text parts or external URLs).
+    /// </summary>
+    public static byte[]? GetResolvedBytes(AGUIInputContent part)
+    {
+        if (part is AGUIMediaInputContent media
+            && media.Metadata is { } metadata
+            && metadata.TryGetValue(ResolvedDataMetadataKey, out var raw)
+            && raw is byte[] bytes)
+        {
+            return bytes;
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyDictionary<string, object?> WithMetadata(
+        IReadOnlyDictionary<string, object?>? existing,
+        string key,
+        object? value)
+        => new Dictionary<string, object?>(existing ?? new Dictionary<string, object?>(0), StringComparer.Ordinal)
+        {
+            [key] = value
+        };
+
+    private static IReadOnlyDictionary<string, object?> WithMetadata(
+        IReadOnlyDictionary<string, object?>? existing,
+        string key1,
+        object? value1,
+        string key2,
+        object? value2)
+        => new Dictionary<string, object?>(existing ?? new Dictionary<string, object?>(0), StringComparer.Ordinal)
+        {
+            [key1] = value1,
+            [key2] = value2,
+        };
 
     private static AGUIMessage CloneMessageWithParts(AGUIMessage original, IList<AGUIInputContent> parts)
         => new()

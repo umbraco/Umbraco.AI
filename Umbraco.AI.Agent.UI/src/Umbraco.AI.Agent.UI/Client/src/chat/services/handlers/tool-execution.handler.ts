@@ -4,15 +4,20 @@ import type { UaiFrontendToolExecutor } from "../frontend-tool.executor.js";
 import type { UaiInterruptInfo, UaiToolCallInfo } from "../../types/index.js";
 
 /**
- * Handles tool_execution interrupts by executing frontend tools.
+ * Handles tool_call interrupts by executing frontend tools.
  *
- * When the server interrupts with reason "tool_execution":
+ * When the server interrupts with reason "tool_call":
  * 1. Finds frontend tool calls in the last assistant message
  * 2. Executes them via UaiFrontendToolExecutor
  * 3. Resumes the run when all tools complete
+ *
+ * NOTE: This reason MUST match the value the server emits in
+ * AGUIEventEmitter.EmitRunFinished (Reason = "tool_call"). The registry
+ * routes interrupts by exact reason match — a mismatch silently drops the
+ * frontend tool call to the fallback handler and the tool never executes.
  */
 export class UaiToolExecutionHandler implements UaiInterruptHandler {
-    readonly reason = "tool_execution";
+    readonly reason = "tool_call";
 
     constructor(
         private frontendToolManager: UaiFrontendToolManager,

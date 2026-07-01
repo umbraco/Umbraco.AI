@@ -95,17 +95,17 @@ parameters:
 trigger:
     branches:
         include:
-            - main
-            - dev
-            - release/*
-            - hotfix/*
-            - feature/*
+            - v*/main
+            - v*/dev
+            - v*/release/*
+            - v*/hotfix/*
+            - v*/feature/*
 
 pr:
     branches:
         include:
-            - main
-            - dev
+            - v*/main
+            - v*/dev
 
 variables:
     - group: dependency-track
@@ -187,7 +187,7 @@ stages:
                       publishLocation: pipeline
 
     # ============================================================
-    # Generate & Upload SBOMs - Only runs on push to main/dev/hotfix/release
+    # Generate & Upload SBOMs - Only runs on push to vN/main, vN/dev, vN/hotfix/*, vN/release/*
     # Generates per-product SBOMs and uploads to Dependency-Track
     # ============================================================
     - stage: GenerateSBOM
@@ -387,8 +387,8 @@ stages:
             succeeded(),
             ne(variables['Build.Reason'], 'PullRequest'),
             or(
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/')
+              contains(variables['Build.SourceBranch'], '/release/'),
+              contains(variables['Build.SourceBranch'], '/hotfix/')
             )
           )
       jobs:
@@ -417,7 +417,7 @@ stages:
       dependsOn:
           - Build
           - ValidateChangelogs
-      # Only pack on push (not PR) to main/dev/hotfix/release branches
+      # Only pack on push (not PR) to vN/main, vN/dev, vN/hotfix/*, vN/release/* branches
       # ValidateChangelogs may be skipped (on main/dev branches), which is OK
       condition: |
           and(
@@ -425,10 +425,10 @@ stages:
             in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
             ne(variables['Build.Reason'], 'PullRequest'),
             or(
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'),
-              startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
-              eq(variables['Build.SourceBranch'], 'refs/heads/main'),
-              eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+              contains(variables['Build.SourceBranch'], '/hotfix/'),
+              contains(variables['Build.SourceBranch'], '/release/'),
+              endsWith(variables['Build.SourceBranch'], '/main'),
+              endsWith(variables['Build.SourceBranch'], '/dev')
             )
           )
       jobs:
@@ -450,7 +450,7 @@ stages:
                       filePath: .azure-pipelines/scripts/detect-changes.ps1
                       pwsh: true
                   env:
-                      # Required to query previous builds for main/dev comparison base
+                      # Required to query previous builds for vN/dev comparison base
                       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
                 - task: Bash@3
@@ -534,9 +534,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: Umbraco.AI
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
-                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
-                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
+                      # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
+                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
 
                 - template: .azure-pipelines/templates/upload-packages.yml
                   parameters:
@@ -586,9 +586,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: $(product)
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
-                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
-                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
+                      # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
+                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml
@@ -644,9 +644,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: $(product)
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
-                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
-                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
+                      # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
+                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml
@@ -707,9 +707,9 @@ stages:
                 - template: .azure-pipelines/templates/pack-product.yml
                   parameters:
                       product: $(product)
-                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges).
-                      # packWithNuGetRanges (queue-time) forces NuGet ranges on dev too.
-                      useProjectReferences: ${{ and(eq(variables['Build.SourceBranchName'], 'dev'), not(parameters.packWithNuGetRanges)) }}
+                      # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
+                      # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
+                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml

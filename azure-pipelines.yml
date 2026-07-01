@@ -95,17 +95,17 @@ parameters:
 trigger:
     branches:
         include:
-            - main
-            - dev
-            - release/*
-            - hotfix/*
-            - feature/*
+            - v*/main
+            - v*/dev
+            - v*/release/*
+            - v*/hotfix/*
+            - v*/feature/*
 
 pr:
     branches:
         include:
-            - main
-            - dev
+            - v*/main
+            - v*/dev
 
 variables:
     - group: dependency-track

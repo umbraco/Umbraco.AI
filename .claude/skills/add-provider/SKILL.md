@@ -257,7 +257,7 @@ Then open the PR via the URL GitHub prints, or `gh pr create`.
 
 ## Gotchas (learned from adding Mistral)
 
-- **`demo/Umbraco.AI.DemoSite/*.csproj` is gitignored** — the installer generates it per-developer. Adding a ProjectReference to your local copy isn't enough; you MUST update the install scripts, or other developers won't have your provider registered.
+- **`demos/v{major}/Umbraco.AI.DemoSite/*.csproj` is gitignored** — the installer generates it per-developer. Adding a ProjectReference to your local copy isn't enough; you MUST update the install scripts, or other developers won't have your provider registered.
 - **`wwwroot/` at the repo root is gitignored** — opt back in per-provider with a local `.gitignore` containing `!wwwroot/` inside the provider's source directory.
 - **Providers have no test projects** — every provider's csproj declares `InternalsVisibleTo "Umbraco.AI.<ProviderName>.Tests.Unit"`, but the test projects don't actually exist. Keep the attribute for consistency; don't create a test project just for your provider — it'd be the only one and set an inconsistent precedent.
 - **CLAUDE.md in existing providers is slightly stale** — Anthropic's shows `[AIField("api-key", "API Key", AIFieldType.Password)]` but the actual source uses `[AIField(IsSensitive = true)]`. Always read the actual `.cs` file when matching conventions, not the docs.

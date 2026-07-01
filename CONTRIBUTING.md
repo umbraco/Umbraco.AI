@@ -55,7 +55,7 @@ Umbraco.AI/                    # Monorepo root
 ├── Umbraco.AI.Amazon/         # Amazon Bedrock provider
 ├── Umbraco.AI.Google/         # Google Gemini provider
 ├── Umbraco.AI.MicrosoftFoundry/ # Microsoft AI Foundry provider
-├── demo/                      # Demo site (generated)
+├── demos/                     # Demo sites (generated, one per major version: demos/vN/)
 └── docs/                      # Shared documentation
 ```
 
@@ -169,7 +169,7 @@ dotnet build Umbraco.AI/Umbraco.AI.slnx
 dotnet test Umbraco.AI/Umbraco.AI.slnx
 
 # 4. Test in demo site
-cd demo/Umbraco.AI.DemoSite
+cd demos/v18/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit changes
@@ -199,7 +199,7 @@ git checkout -b v18/feature/shared-context
 dotnet build Umbraco.AI.local.slnx
 
 # 4. Test in demo site
-cd demo/Umbraco.AI.DemoSite
+cd demos/v18/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit atomic changes

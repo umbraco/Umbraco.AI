@@ -51,8 +51,8 @@ Umbraco.AI/
 │   ├── Umbraco.AI.Startup/        # Composition and DI setup
 │   ├── Umbraco.AI/                # Meta-package for distribution
 │   └── Umbraco.AI.Web.StaticAssets/  # Backoffice UI components
-├── demo/
-│   └── Umbraco.AI.DemoSite/       # Demo Umbraco site
+├── demos/
+│   └── v{N}/Umbraco.AI.DemoSite/  # Demo Umbraco site (one per major version)
 └── docs/                          # Documentation
 ```
 

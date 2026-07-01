@@ -218,7 +218,7 @@ The demo site uses HTTP over named pipes for automatic port discovery:
 - **Site address endpoint**: `/site-address` (returns HTTPS address as plain text)
 - **HTTP transport**: Kestrel listens on both named pipe and HTTP/HTTPS
 - **Concurrent support**: Multiple clients can connect simultaneously
-- **Implementation**: `demo/Umbraco.AI.DemoSite/Composers/NamedPipeListenerComposer.cs`
+- **Implementation**: `demos/v{major}/Umbraco.AI.DemoSite/Composers/NamedPipeListenerComposer.cs`
 
 ## Common Issues
 

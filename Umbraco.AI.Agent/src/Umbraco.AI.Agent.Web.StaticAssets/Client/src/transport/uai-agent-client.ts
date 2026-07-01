@@ -121,11 +121,13 @@ export class UaiAgentClient {
      * @param messages The messages to send
      * @param tools Optional frontend tools to include (with metadata)
      * @param context Optional context items to include for LLM awareness
+     * @param resume Optional resume entries for human_approval or tool_call interrupts
      */
     sendMessage(
         messages: UaiChatMessage[],
         tools?: UaiFrontendTool[],
         context?: Array<{ description: string; value: string }>,
+        resume?: Array<{ interruptId: string; status: "resolved" | "cancelled"; payload?: unknown }>,
     ): void {
         const runId = crypto.randomUUID();
 
@@ -150,6 +152,9 @@ export class UaiAgentClient {
                 messages: convertedMessages,
                 tools: aguiTools,
                 context: context ?? [],
+                // Thread resume entries through forwardedProps so UaiHttpAgent can lift
+                // them into the typed body.resume field on the server request.
+                forwardedProps: resume?.length ? { resume } : undefined,
             })
             .pipe(transformChunks(false))
             .subscribe({

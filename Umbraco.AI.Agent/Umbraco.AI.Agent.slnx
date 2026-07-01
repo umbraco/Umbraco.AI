@@ -5,6 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.Agent.Tests.Integration/Umbraco.AI.Agent.Tests.Integration.csproj" />
     <Project Path="tests/Umbraco.AI.Agent.Tests.Unit/Umbraco.AI.Agent.Tests.Unit.csproj" />
   </Folder>
   <Project Path="src/Umbraco.AI.Agent.Core/Umbraco.AI.Agent.Core.csproj" />

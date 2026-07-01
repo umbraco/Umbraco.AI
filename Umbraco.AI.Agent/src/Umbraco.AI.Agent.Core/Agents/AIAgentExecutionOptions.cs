@@ -39,6 +39,15 @@ public class AIAgentExecutionOptions
     public IEnumerable<Guid>? UserGroupIds { get; init; }
 
     /// <summary>
+    /// Controls how destructive backend tools are gated for human approval during this execution.
+    /// Defaults to <see cref="AIApprovalPolicy.DenyAll"/> — the safe choice for non-interactive
+    /// callers (programmatic execution, Automate), which have no way to resolve a
+    /// <c>human_approval</c> interrupt. The AG-UI streaming path overrides this to
+    /// <see cref="AIApprovalPolicy.Interactive"/> because it can pause and resume.
+    /// </summary>
+    public AIApprovalPolicy ApprovalPolicy { get; init; } = AIApprovalPolicy.DenyAll;
+
+    /// <summary>
     /// Optional output schema to override the agent's configured <see cref="AIStandardAgentConfig.OutputSchema"/>.
     /// When set, the agent's response will be constrained to this schema.
     /// </summary>

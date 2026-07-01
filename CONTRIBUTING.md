@@ -55,7 +55,7 @@ Umbraco.AI/                    # Monorepo root
 ├── Umbraco.AI.Amazon/         # Amazon Bedrock provider (1.x)
 ├── Umbraco.AI.Google/         # Google Gemini provider (1.x)
 ├── Umbraco.AI.MicrosoftFoundry/ # Microsoft AI Foundry provider (1.x)
-├── demo/                      # Demo site (generated)
+├── demos/                     # Demo sites (generated, one per major version: demos/vN/)
 └── docs/                      # Shared documentation
 ```
 
@@ -171,7 +171,7 @@ dotnet build Umbraco.AI/Umbraco.AI.slnx
 dotnet test Umbraco.AI/Umbraco.AI.slnx
 
 # 4. Test in demo site
-cd demo/Umbraco.AI.DemoSite
+cd demos/v17/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit changes
@@ -200,7 +200,7 @@ git checkout -b feature/shared-context
 dotnet build Umbraco.AI.local.slnx
 
 # 4. Test in demo site
-cd demo/Umbraco.AI.DemoSite
+cd demos/v17/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit atomic changes
@@ -464,7 +464,7 @@ Use the package test site script to create a fresh Umbraco site with all package
 ./scripts/install-package-test-site.sh --feed=prereleases --force
 ```
 
-This creates a site at `demo/Umbraco.AI.PackageTestSite` with:
+This creates a site at `demos/v17/Umbraco.AI.PackageTestSite` with:
 - All Umbraco.AI packages from MyGet prereleases feed
 - Clean starter kit
 - Configured package source mapping
@@ -485,7 +485,7 @@ npm install @umbraco-ai/core@next
 **Verify the site:**
 
 ```bash
-cd demo/Umbraco.AI.PackageTestSite  # or your test site folder
+cd demos/v17/Umbraco.AI.PackageTestSite  # or your test site folder
 dotnet run
 # Open https://localhost:44355 in your browser
 # Test all features affected by the release
@@ -527,7 +527,7 @@ After deployment to NuGet.org, verify the stable packages work correctly:
 ./scripts/install-package-test-site.sh --feed=release --name="Umbraco.AI.ReleaseSite" --force
 ```
 
-This creates a site at `demo/Umbraco.AI.ReleaseSite` with:
+This creates a site at `demos/v17/Umbraco.AI.ReleaseSite` with:
 - All Umbraco.AI packages from NuGet.org (stable versions only)
 - No pre-release packages
 - Simplified NuGet.config (no PackageSourceMapping needed)
@@ -535,7 +535,7 @@ This creates a site at `demo/Umbraco.AI.ReleaseSite` with:
 **Verify the site:**
 
 ```bash
-cd demo/Umbraco.AI.ReleaseSite
+cd demos/v17/Umbraco.AI.ReleaseSite
 dotnet run
 # Open https://localhost:44355 in your browser
 # Verify all features work correctly with production packages

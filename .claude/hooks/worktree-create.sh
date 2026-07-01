@@ -62,16 +62,43 @@ fi
 WORKTREE_DIR="$GIT_ROOT/.claude/worktrees"
 
 # --- Determine branch name and worktree directory name ---
-# If name contains a slash, treat as an explicit branch name (e.g., PR checkout).
-# Otherwise, prefix with feature/ (gitflow convention for new work).
-# The directory name flattens slashes to dashes to avoid nested directories.
+# Version-prefixed branch models (vN/feature/<name>) are supported but OPTIONAL:
+# projects that don't use them get no version and fall through to plain
+# feature/<name>. VERSION (e.g. "v18") is discovered from two signals, in order:
+#   1. An explicit leading token in the name: "v17/add-streaming"
+#   2. The current HEAD branch, if it is version-prefixed: "v18/dev" -> "v18"
+# The directory slug flattens slashes to dashes and drops the feature/ segment.
+VERSION=""
 if [[ "$NAME" == */* ]]; then
-  BRANCH_NAME="$NAME"
-  WORKTREE_SLUG="${NAME//\//-}"
+  # Name already contains a slash.
+  if [[ "$NAME" =~ ^v[0-9]+/(feature|hotfix|release)/.+ ]] || [[ "$NAME" =~ ^v[0-9]+/(dev|main)$ ]]; then
+    # Already a fully-qualified version branch (e.g. PR checkout) -> literal.
+    BRANCH_NAME="$NAME"
+  elif [[ "$NAME" =~ ^(v[0-9]+)/(.+)$ ]]; then
+    # Version-prefixed short name: v17/add-streaming -> v17/feature/add-streaming
+    VERSION="${BASH_REMATCH[1]}"
+    BRANCH_NAME="$VERSION/feature/${BASH_REMATCH[2]}"
+  else
+    # Any other explicit branch (e.g. user/patch) -> literal.
+    BRANCH_NAME="$NAME"
+  fi
 else
-  BRANCH_NAME="feature/$NAME"
-  WORKTREE_SLUG="$NAME"
+  # No slash: short name. Infer the version from the current branch if it is
+  # version-prefixed; otherwise keep the plain feature/ convention.
+  CURRENT_BRANCH=$(git -C "$GIT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null) || true
+  if [[ "$CURRENT_BRANCH" =~ ^(v[0-9]+)/ ]]; then
+    VERSION="${BASH_REMATCH[1]}"
+    BRANCH_NAME="$VERSION/feature/$NAME"
+  else
+    BRANCH_NAME="feature/$NAME"
+  fi
 fi
+
+# Slug: drop the feature/ segment for short dir names, flatten remaining slashes.
+#   feature/add-streaming     -> add-streaming
+#   v18/feature/add-streaming -> v18-add-streaming
+WORKTREE_SLUG=$(printf '%s' "$BRANCH_NAME" | sed -E 's#(^|/)feature/#\1#')
+WORKTREE_SLUG="${WORKTREE_SLUG//\//-}"
 WORKTREE_PATH="$WORKTREE_DIR/$WORKTREE_SLUG"
 
 # --- Ensure .claude/worktrees is in .gitignore ---
@@ -97,6 +124,13 @@ if [[ -z "$DEFAULT_BRANCH" ]]; then
   done
 fi
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-dev}"
+
+# If this is version-scoped work, prefer that version's dev line as the base
+# (e.g. VERSION=v17 -> origin/v17/dev). Falls back to the default above when
+# the version line has no dev branch on the remote.
+if [[ -n "$VERSION" ]] && git show-ref --verify --quiet "refs/remotes/origin/$VERSION/dev" 2>/dev/null; then
+  DEFAULT_BRANCH="$VERSION/dev"
+fi
 
 # --- Create worktree ---
 mkdir -p "$WORKTREE_DIR"

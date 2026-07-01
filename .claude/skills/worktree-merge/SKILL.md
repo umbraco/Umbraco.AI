@@ -1,13 +1,13 @@
 ---
 name: worktree-merge
-description: Merge a feature worktree branch into dev and clean up. Use for lightweight features that don't need a PR — merges locally, pushes, then removes the worktree and branch.
+description: Merge a feature worktree branch into the appropriate vN/dev and clean up. Use for lightweight features that don't need a PR — merges locally, pushes, then removes the worktree and branch.
 user-invocable: true
 argument-hint: Optional worktree name or branch name. If omitted, shows a list to choose from.
 ---
 
 # Worktree Merge
 
-You are merging a feature branch from a worktree into dev and cleaning up afterwards. This is for lightweight changes that don't warrant a GitHub PR.
+You are merging a feature branch from a worktree into the appropriate versioned dev branch (`vN/dev`) and cleaning up afterwards. This is for lightweight changes that don't warrant a GitHub PR.
 
 ## Steps
 
@@ -45,38 +45,49 @@ You are merging a feature branch from a worktree into dev and cleaning up afterw
    cd <main-repo-path>
    ```
 
-5. **Ensure dev is up to date:**
+5. **Determine the target dev branch** from the feature branch name. The version prefix of the feature branch dictates the target:
+   - `v18/feature/foo` → merge into `v18/dev`
+   - `v17/feature/bar` → merge into `v17/dev`
+
+   Extract the prefix:
    ```bash
-   git checkout dev
-   git pull origin dev
+   version_prefix=$(echo "<branch-name>" | grep -oP '^v\d+')
+   target_dev="${version_prefix}/dev"
+   ```
+   If the branch name doesn't start with `vN/`, ask the user which version's dev branch to target.
+
+6. **Ensure the target dev branch is up to date:**
+   ```bash
+   git checkout $target_dev
+   git pull origin $target_dev
    ```
 
-6. **Merge the feature branch** into dev with a merge commit:
+7. **Merge the feature branch** with a merge commit:
    ```bash
    git merge --no-ff <branch-name>
    ```
    If there are merge conflicts, report them and stop — let the user resolve them.
 
-7. **Push dev:**
+8. **Push:**
    ```bash
-   git push origin dev
+   git push origin $target_dev
    ```
 
-8. **Clean up** by invoking the worktree-cleanup skill:
+9. **Clean up** by invoking the worktree-cleanup skill:
    ```
    /worktree-cleanup <worktree-name>
    ```
 
-9. **Show a summary:**
-   - Branch merged
-   - Commit(s) merged (short log)
-   - Worktree and branch cleaned up
-   - Current state (on dev, pushed)
+10. **Show a summary:**
+    - Branch merged
+    - Commit(s) merged (short log)
+    - Worktree and branch cleaned up
+    - Current state (on `$target_dev`, pushed)
 
 ## Important
 
 - Always use `--no-ff` to preserve the merge commit for history.
-- Never force-push dev.
+- Never force-push.
 - If the user is currently inside the worktree, navigate out before cleanup.
-- The target branch is always `dev` unless the user explicitly says otherwise.
+- The target branch is always `vN/dev` derived from the feature branch prefix — never the bare `dev`.
 - If merge conflicts occur, stop and let the user resolve — don't attempt auto-resolution.

@@ -12,6 +12,7 @@ using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Telemetry;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Tests.Common.Builders;
@@ -44,6 +45,7 @@ public class AIUsageTelemetryProviderTests
     private AIOptions _aiOptions = new();
     private AIAuditLogOptions _auditLogOptions = new();
     private AIAnalyticsOptions _analyticsOptions = new();
+    private AIExperimentalOptions _experimentalOptions = new();
 
     public AIUsageTelemetryProviderTests()
     {
@@ -163,6 +165,7 @@ public class AIUsageTelemetryProviderTests
             MonitorOf(_aiOptions),
             MonitorOf(_auditLogOptions),
             MonitorOf(_analyticsOptions),
+            MonitorOf(_experimentalOptions),
             new AIProviderCollection(() => effectiveProviders),
             _connectionService.Object,
             _profileService.Object,
@@ -292,6 +295,28 @@ public class AIUsageTelemetryProviderTests
 
         result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.UsageRequests30d);
         result.ShouldNotContain(i => i.Name == AIUsageTelemetryConstants.UsageSuccessRate30d);
+    }
+
+    [Fact]
+    public void GetInformation_WhenExperimentalFeatureEnabled_ReportsIt()
+    {
+        _experimentalOptions = new AIExperimentalOptions { ImageGeneration = true };
+
+        UsageInformation[] result = CreateProvider().GetInformation().ToArray();
+
+        var enabled = GetData(result, AIUsageTelemetryConstants.ExperimentalFeatures).ShouldBeAssignableTo<IEnumerable<string>>()!;
+        enabled.ShouldContain(nameof(AIExperimentalOptions.ImageGeneration));
+    }
+
+    [Fact]
+    public void GetInformation_WhenExperimentalFeatureDisabled_ReportsEmptySet()
+    {
+        _experimentalOptions = new AIExperimentalOptions { ImageGeneration = false };
+
+        UsageInformation[] result = CreateProvider().GetInformation().ToArray();
+
+        var enabled = GetData(result, AIUsageTelemetryConstants.ExperimentalFeatures).ShouldBeAssignableTo<IEnumerable<string>>()!;
+        enabled.ShouldNotContain(nameof(AIExperimentalOptions.ImageGeneration));
     }
 
     [Fact]

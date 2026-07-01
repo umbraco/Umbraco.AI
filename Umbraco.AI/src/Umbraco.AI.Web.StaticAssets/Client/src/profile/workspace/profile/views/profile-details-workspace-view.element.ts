@@ -4,8 +4,8 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
-import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings } from "../../../types.js";
-import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings } from "../../../types.js";
+import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
+import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
@@ -224,6 +224,51 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         return isSpeechToTextSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiSpeechToTextProfileSettings) : null;
     }
 
+    #onImageSizeChange(event: Event) {
+        event.stopPropagation();
+        const target = event.target as HTMLInputElement;
+        this.#updateImageGenerationSettings({ size: target.value || null });
+    }
+
+    #onImageQualityChange(event: Event) {
+        event.stopPropagation();
+        const target = event.target as HTMLInputElement;
+        this.#updateImageGenerationSettings({ quality: target.value || null });
+    }
+
+    #onImageStyleChange(event: Event) {
+        event.stopPropagation();
+        const target = event.target as HTMLInputElement;
+        this.#updateImageGenerationSettings({ style: target.value || null });
+    }
+
+    #onImageMediaTypeChange(event: Event) {
+        event.stopPropagation();
+        const target = event.target as HTMLInputElement;
+        this.#updateImageGenerationSettings({ mediaType: target.value || null });
+    }
+
+    #updateImageGenerationSettings(updates: Partial<UaiImageGenerationProfileSettings>) {
+        const currentSettings = this._model?.settings ?? null;
+        const imageSettings: UaiImageGenerationProfileSettings = isImageGenerationSettings(currentSettings)
+            ? { ...currentSettings, ...updates }
+            : {
+                $type: "imageGeneration",
+                size: updates.size ?? null,
+                quality: updates.quality ?? null,
+                style: updates.style ?? null,
+                mediaType: updates.mediaType ?? null,
+            };
+
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: imageSettings }, "settings"),
+        );
+    }
+
+    #getImageGenerationSettings(): UaiImageGenerationProfileSettings | null {
+        return isImageGenerationSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiImageGenerationProfileSettings) : null;
+    }
+
     /**
      * Renders capability-specific settings based on the profile's capability.
      */
@@ -242,6 +287,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         if (capability === "speechtotext") {
             return this.#renderSpeechToTextSettings();
+        }
+
+        if (capability === "imagegeneration") {
+            return this.#renderImageGenerationSettings();
         }
 
         return nothing;
@@ -342,6 +391,57 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${sttSettings?.language ?? ""}
                         @input=${this.#onLanguageChange}
                         placeholder="Auto-detect"
+                    ></uui-input>
+                </umb-property-layout>
+            </uui-box>
+        `;
+    }
+
+    #renderImageGenerationSettings() {
+        const imageSettings = this.#getImageGenerationSettings();
+
+        return html`
+            <uui-box headline="Settings">
+                <umb-property-layout
+                    label="Size"
+                    description="Default image size as &quot;{width}x{height}&quot; (e.g. &quot;1024x1024&quot;). Leave empty for the provider default."
+                >
+                    <uui-input
+                        slot="editor"
+                        type="text"
+                        .value=${imageSettings?.size ?? ""}
+                        @input=${this.#onImageSizeChange}
+                        placeholder="Provider default"
+                    ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="Media Type" description="Output image encoding (e.g. &quot;image/png&quot;, &quot;image/jpeg&quot;, &quot;image/webp&quot;). Supported values vary by model.">
+                    <uui-input
+                        slot="editor"
+                        type="text"
+                        .value=${imageSettings?.mediaType ?? ""}
+                        @input=${this.#onImageMediaTypeChange}
+                        placeholder="Provider default"
+                    ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="Quality" description="Provider-specific quality hint (e.g. &quot;hd&quot; for DALL·E 3, &quot;high&quot; for gpt-image-1). Values vary by model.">
+                    <uui-input
+                        slot="editor"
+                        type="text"
+                        .value=${imageSettings?.quality ?? ""}
+                        @input=${this.#onImageQualityChange}
+                        placeholder="Provider default"
+                    ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="Style" description="Provider-specific style hint (e.g. &quot;vivid&quot;, &quot;natural&quot; for DALL·E 3). Values vary by model.">
+                    <uui-input
+                        slot="editor"
+                        type="text"
+                        .value=${imageSettings?.style ?? ""}
+                        @input=${this.#onImageStyleChange}
+                        placeholder="Provider default"
                     ></uui-input>
                 </umb-property-layout>
             </uui-box>

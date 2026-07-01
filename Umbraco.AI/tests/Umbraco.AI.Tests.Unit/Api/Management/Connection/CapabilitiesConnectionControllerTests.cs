@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.AI.Web.Api.Common.Models;
@@ -12,15 +13,20 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 public class CapabilitiesConnectionControllerTests
 {
     private readonly Mock<IAIConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIExperimentalFeatures> _experimentalFeaturesMock;
 
     public CapabilitiesConnectionControllerTests()
     {
         _connectionServiceMock = new Mock<IAIConnectionService>();
+        _experimentalFeaturesMock = new Mock<IAIExperimentalFeatures>();
+        _experimentalFeaturesMock
+            .Setup(x => x.IsCapabilityEnabled(It.IsAny<AICapability>()))
+            .Returns(true);
     }
 
     private CapabilitiesConnectionController CreateController()
     {
-        return new CapabilitiesConnectionController(_connectionServiceMock.Object);
+        return new CapabilitiesConnectionController(_connectionServiceMock.Object, _experimentalFeaturesMock.Object);
     }
 
     private static Mock<IAIConfiguredProvider> CreateConfiguredProviderMock(

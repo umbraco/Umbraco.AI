@@ -189,6 +189,10 @@ Check [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-t
 | v18 | STS | Mar 2027 | `dev` / `main` | Features + bug fixes |
 | v17 | LTS | Nov 2027 | `support/17.x` | Features + bug fixes |
 
+### Keep Active Versions in Sync
+
+A bug fix or feature is developed against one version line but usually applies to every version still in an active phase (see the table above and [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/)). **Before treating any fix or feature as done, ask whether it should be ported to the other active version(s) and confirm with the user.** This applies in both directions — e.g. a fix on `v18/dev` may need backporting to `v17/dev`, and a fix on `v17/dev` may need porting up to `v18/dev`. Respect each version's phase: security phase → security patches only; EOL → skip unless explicitly requested. Lines are maintained independently (no forward-merge), so port each one via the Backport Workflow below.
+
 ### Backport Workflow
 
 When a fix or feature applies to an older supported version:

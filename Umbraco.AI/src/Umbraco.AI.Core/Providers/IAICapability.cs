@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 
-#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
+#pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
+#pragma warning disable UMBRACOAI_IMAGEGEN // Defining the experimental image-generation capability surface
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -97,6 +99,22 @@ public interface IAIEmbeddingCapability : IAICapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured embedding generator.</returns>
     Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(object? settings, string? modelId = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Defines an AI capability for image generation (text-to-image and image editing).
+/// </summary>
+[Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
+public interface IAIImageGeneratorCapability : IAICapability
+{
+    /// <summary>
+    /// Creates an image generator with the provided settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings (e.g., API key).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured image generator.</returns>
+    Task<IImageGenerator> CreateGeneratorAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -380,5 +398,82 @@ public abstract class AISpeechToTextCapabilityBase<TSettings>(IAIProvider provid
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
         return CreateClientAsync((TSettings)settings, modelId, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI image-generation capability.
+/// </summary>
+[Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
+public abstract class AIImageGeneratorCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAIImageGeneratorCapability
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.ImageGeneration;
+
+    /// <summary>
+    /// Creates an image generator with the specified model.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured image generator.</returns>
+    protected virtual IImageGenerator CreateGenerator(string? modelId)
+    {
+        throw new NotImplementedException("CreateGenerator must be implemented by image-generation capability providers.");
+    }
+
+    /// <summary>
+    /// Creates an image generator with the specified model, asynchronously.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured image generator.</returns>
+    protected virtual Task<IImageGenerator> CreateGeneratorAsync(string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateGenerator(modelId));
+    }
+
+    Task<IImageGenerator> IAIImageGeneratorCapability.CreateGeneratorAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+        => CreateGeneratorAsync(modelId, cancellationToken);
+}
+
+/// <summary>
+/// Base implementation of an AI image-generation capability with specific settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
+[Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
+public abstract class AIImageGeneratorCapabilityBase<TSettings>(IAIProvider provider) : AICapabilityBase<TSettings>(provider), IAICapability<TSettings>, IAIImageGeneratorCapability
+    where TSettings : class
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.ImageGeneration;
+
+    /// <summary>
+    /// Creates an image generator with the provided settings and model.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured image generator.</returns>
+    protected virtual IImageGenerator CreateGenerator(TSettings settings, string? modelId)
+    {
+        throw new NotImplementedException("CreateGenerator must be implemented by image-generation capability providers.");
+    }
+
+    /// <summary>
+    /// Creates an image generator with the provided settings and model, asynchronously.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured image generator.</returns>
+    protected virtual Task<IImageGenerator> CreateGeneratorAsync(TSettings settings, string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateGenerator(settings, modelId));
+    }
+
+    /// <inheritdoc />
+    Task<IImageGenerator> IAIImageGeneratorCapability.CreateGeneratorAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
+        return CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken);
     }
 }

@@ -44,6 +44,17 @@ export interface UaiSpeechToTextProfileSettings extends UaiProfileSettings {
 }
 
 /**
+ * ImageGeneration-specific profile settings.
+ */
+export interface UaiImageGenerationProfileSettings extends UaiProfileSettings {
+    $type: "imageGeneration";
+    size: string | null;
+    quality: string | null;
+    style: string | null;
+    mediaType: string | null;
+}
+
+/**
  * Detail model for workspace editing.
  */
 export interface UaiProfileDetailModel extends UmbEntityModel {
@@ -93,4 +104,11 @@ export function isEmbeddingSettings(settings: UaiProfileSettings | null): settin
  */
 export function isSpeechToTextSettings(settings: UaiProfileSettings | null): settings is UaiSpeechToTextProfileSettings {
     return settings?.$type === "speechToText";
+}
+
+/**
+ * Type guard for image-generation settings.
+ */
+export function isImageGenerationSettings(settings: UaiProfileSettings | null): settings is UaiImageGenerationProfileSettings {
+    return settings?.$type === "imageGeneration";
 }

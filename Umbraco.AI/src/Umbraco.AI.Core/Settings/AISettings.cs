@@ -34,6 +34,12 @@ public sealed class AISettings : IAIAuditableEntity
     public Guid? DefaultSpeechToTextProfileId { get; set; }
 
     /// <summary>
+    /// The ID of the default profile to use for image-generation operations.
+    /// </summary>
+    [AISetting]
+    public Guid? DefaultImageGenerationProfileId { get; set; }
+
+    /// <summary>
     /// The ID of the profile to use for internal classification tasks (e.g., agent routing).
     /// Falls back to the default chat profile if not set.
     /// </summary>

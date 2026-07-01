@@ -24,4 +24,9 @@ public class UpdateSettingsRequestModel
     /// The ID of the default profile to use for speech-to-text operations.
     /// </summary>
     public Guid? DefaultSpeechToTextProfileId { get; set; }
+
+    /// <summary>
+    /// The ID of the default profile to use for image-generation operations.
+    /// </summary>
+    public Guid? DefaultImageGenerationProfileId { get; set; }
 }

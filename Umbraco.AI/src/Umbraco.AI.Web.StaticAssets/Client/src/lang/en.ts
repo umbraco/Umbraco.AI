@@ -33,6 +33,7 @@ export default {
         media: "Media",
         moderation: "Moderation",
         speechtotext: "Speech to Text",
+        imagegeneration: "Image Generation",
     },
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",

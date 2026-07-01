@@ -16,6 +16,7 @@ internal sealed class AIProfileService : IAIProfileService
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
 
     public AIProfileService(
         IAIProfileRepository repository,
@@ -23,6 +24,7 @@ internal sealed class AIProfileService : IAIProfileService
         IOptions<AIOptions> options,
         IAIEntityVersionService versionService,
         IEventAggregator eventAggregator,
+        IAIExperimentalFeatures experimentalFeatures,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -30,6 +32,7 @@ internal sealed class AIProfileService : IAIProfileService
         _options = options.Value;
         _versionService = versionService;
         _eventAggregator = eventAggregator;
+        _experimentalFeatures = experimentalFeatures;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -83,6 +86,8 @@ internal sealed class AIProfileService : IAIProfileService
         {
             AICapability.Chat => _options.DefaultChatProfileAlias,
             AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
+            AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
+            AICapability.ImageGeneration => _options.DefaultImageGenerationProfileAlias,
             _ => null
         };
 
@@ -102,6 +107,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.Chat => settings.DefaultChatProfileId,
             AICapability.Embedding => settings.DefaultEmbeddingProfileId,
             AICapability.SpeechToText => settings.DefaultSpeechToTextProfileId,
+            AICapability.ImageGeneration => settings.DefaultImageGenerationProfileId,
             _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
         };
 
@@ -120,6 +126,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.Chat => _options.DefaultChatProfileAlias,
             AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
             AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
+            AICapability.ImageGeneration => _options.DefaultImageGenerationProfileAlias,
             _ => null
         };
 
@@ -163,6 +170,14 @@ internal sealed class AIProfileService : IAIProfileService
         AIProfile profile,
         CancellationToken cancellationToken = default)
     {
+        // Defense in depth: reject profiles for experimental capabilities that are not enabled.
+        if (!_experimentalFeatures.IsCapabilityEnabled(profile.Capability))
+        {
+            throw new InvalidOperationException(
+                $"The '{profile.Capability}' capability is experimental and not enabled. " +
+                "Enable it under 'Umbraco:AI:Experimental' to create profiles for it.");
+        }
+
         // Generate new ID if needed
         if (profile.Id == Guid.Empty)
         {

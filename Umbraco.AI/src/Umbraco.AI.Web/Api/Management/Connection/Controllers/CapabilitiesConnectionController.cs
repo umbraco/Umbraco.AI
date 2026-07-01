@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Authorization;
@@ -18,13 +19,17 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 public class CapabilitiesConnectionController : ConnectionControllerBase
 {
     private readonly IAIConnectionService _connectionService;
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CapabilitiesConnectionController"/> class.
     /// </summary>
-    public CapabilitiesConnectionController(IAIConnectionService connectionService)
+    public CapabilitiesConnectionController(
+        IAIConnectionService connectionService,
+        IAIExperimentalFeatures experimentalFeatures)
     {
         _connectionService = connectionService;
+        _experimentalFeatures = experimentalFeatures;
     }
 
     /// <summary>
@@ -57,6 +62,7 @@ public class CapabilitiesConnectionController : ConnectionControllerBase
         }
 
         var capabilities = configured.GetCapabilities()
+            .Where(c => _experimentalFeatures.IsCapabilityEnabled(c.Kind))
             .Select(c => c.Kind.ToString())
             .Distinct();
 

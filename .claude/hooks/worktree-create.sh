@@ -125,11 +125,15 @@ if [[ -z "$DEFAULT_BRANCH" ]]; then
 fi
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-dev}"
 
-# If this is version-scoped work, prefer that version's dev line as the base
-# (e.g. VERSION=v17 -> origin/v17/dev). Falls back to the default above when
-# the version line has no dev branch on the remote.
-if [[ -n "$VERSION" ]] && git show-ref --verify --quiet "refs/remotes/origin/$VERSION/dev" 2>/dev/null; then
-  DEFAULT_BRANCH="$VERSION/dev"
+# If this is version-scoped work, prefer that version's dev line as the base,
+# then its main line (e.g. VERSION=v17 -> origin/v17/dev, else origin/v17/main).
+# Falls back to the default above when the version line has neither on the remote.
+if [[ -n "$VERSION" ]]; then
+  if git show-ref --verify --quiet "refs/remotes/origin/$VERSION/dev" 2>/dev/null; then
+    DEFAULT_BRANCH="$VERSION/dev"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$VERSION/main" 2>/dev/null; then
+    DEFAULT_BRANCH="$VERSION/main"
+  fi
 fi
 
 # --- Create worktree ---

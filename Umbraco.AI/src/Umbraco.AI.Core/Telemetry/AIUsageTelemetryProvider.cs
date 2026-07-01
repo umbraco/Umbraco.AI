@@ -10,6 +10,7 @@ using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Tests;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
@@ -43,6 +44,7 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
     private readonly IOptionsMonitor<AIOptions> _aiOptions;
     private readonly IOptionsMonitor<AIAuditLogOptions> _auditLogOptions;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _analyticsOptions;
+    private readonly IOptionsMonitor<AIExperimentalOptions> _experimentalOptions;
     private readonly AIProviderCollection _providers;
     private readonly IAIConnectionService _connectionService;
     private readonly IAIProfileService _profileService;
@@ -65,6 +67,7 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         IOptionsMonitor<AIOptions> aiOptions,
         IOptionsMonitor<AIAuditLogOptions> auditLogOptions,
         IOptionsMonitor<AIAnalyticsOptions> analyticsOptions,
+        IOptionsMonitor<AIExperimentalOptions> experimentalOptions,
         AIProviderCollection providers,
         IAIConnectionService connectionService,
         IAIProfileService profileService,
@@ -83,6 +86,7 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         _aiOptions = aiOptions;
         _auditLogOptions = auditLogOptions;
         _analyticsOptions = analyticsOptions;
+        _experimentalOptions = experimentalOptions;
         _providers = providers;
         _connectionService = connectionService;
         _profileService = profileService;
@@ -306,6 +310,18 @@ public sealed class AIUsageTelemetryProvider : IDetailedTelemetryProvider
         result.Add(new UsageInformation(AIUsageTelemetryConstants.DefaultProfileCapabilities, defaultProfileCapabilities));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.AuditLogEnabled, _auditLogOptions.CurrentValue.Enabled));
         result.Add(new UsageInformation(AIUsageTelemetryConstants.AnalyticsEnabled, _analyticsOptions.CurrentValue.Enabled));
+
+        // Enabled experimental features (e.g. "ImageGeneration") — adoption signal for gated
+        // capabilities. Reflection-driven over the boolean flags on AIExperimentalOptions, so
+        // new experimental flags are reported without changes here.
+        AIExperimentalOptions experimentalOptions = _experimentalOptions.CurrentValue;
+        var enabledExperimentalFeatures = typeof(AIExperimentalOptions)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.PropertyType == typeof(bool) && (bool)(p.GetValue(experimentalOptions) ?? false))
+            .Select(p => p.Name)
+            .ToHashSet();
+
+        result.Add(new UsageInformation(AIUsageTelemetryConstants.ExperimentalFeatures, enabledExperimentalFeatures));
     }
 
     private void CollectUsage(List<UsageInformation> result)

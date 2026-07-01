@@ -15,6 +15,7 @@ public class AIProfileServiceTests
     private readonly Mock<IOptions<AIOptions>> _optionsMock;
     private readonly Mock<IAIEntityVersionService> _versionServiceMock;
     private readonly Mock<IEventAggregator> _eventAggregatorMock;
+    private readonly Mock<IAIExperimentalFeatures> _experimentalFeaturesMock;
     private readonly AIProfileService _service;
 
     public AIProfileServiceTests()
@@ -24,6 +25,10 @@ public class AIProfileServiceTests
         _optionsMock = new Mock<IOptions<AIOptions>>();
         _versionServiceMock = new Mock<IAIEntityVersionService>();
         _eventAggregatorMock = new Mock<IEventAggregator>();
+        _experimentalFeaturesMock = new Mock<IAIExperimentalFeatures>();
+        _experimentalFeaturesMock
+            .Setup(x => x.IsCapabilityEnabled(It.IsAny<AICapability>()))
+            .Returns(true);
         _optionsMock.Setup(x => x.Value).Returns(new AIOptions
         {
             DefaultChatProfileAlias = "default-chat",
@@ -34,7 +39,7 @@ public class AIProfileServiceTests
         _settingsServiceMock.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AISettings());
 
-        _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object);
+        _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object, _experimentalFeaturesMock.Object);
     }
 
     #region GetProfileAsync
@@ -174,6 +179,32 @@ public class AIProfileServiceTests
     }
 
     [Fact]
+    public async Task GetDefaultProfileAsync_ForImageGeneration_ResolvesFromSettings()
+    {
+        // Arrange — exercises the settings-backed default resolution for the image-generation
+        // capability (which previously threw NotSupportedException).
+        var profileId = Guid.NewGuid();
+        var profile = new AIProfileBuilder()
+            .WithId(profileId)
+            .WithCapability(AICapability.ImageGeneration)
+            .Build();
+
+        _settingsServiceMock
+            .Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AISettings { DefaultImageGenerationProfileId = profileId });
+        _repositoryMock
+            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await _service.GetDefaultProfileAsync(AICapability.ImageGeneration);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Capability.ShouldBe(AICapability.ImageGeneration);
+    }
+
+    [Fact]
     public async Task GetDefaultProfileAsync_WithNoConfiguredAlias_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -193,7 +224,8 @@ public class AIProfileServiceTests
             emptySettingsService.Object,
             optionsWithNullAlias.Object,
             _versionServiceMock.Object,
-            _eventAggregatorMock.Object);
+            _eventAggregatorMock.Object,
+            _experimentalFeaturesMock.Object);
 
         // Act
         var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AICapability.Chat);

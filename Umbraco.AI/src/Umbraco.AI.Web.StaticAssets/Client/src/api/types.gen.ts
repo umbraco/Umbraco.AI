@@ -291,9 +291,29 @@ export type EntityVersionResponseModel = {
     changeDescription?: null | string;
 };
 
+export type GeneratedImageModel = {
+    data?: null | string;
+    url?: null | string;
+    mediaType?: null | string;
+};
+
 export type GenerateEmbeddingRequestModel = {
     profileIdOrAlias?: null | IdOrAliasModel;
     values: Array<string>;
+};
+
+export type GenerateImageRequestModel = {
+    prompt: string;
+    profileIdOrAlias?: null | string;
+    count?: null | number;
+    size?: null | string;
+    responseFormat?: null | string;
+    originalImages?: null | Array<ImageInputModel>;
+};
+
+export type GenerateImageResponseModel = {
+    images: Array<GeneratedImageModel>;
+    usage?: null | ImageGenerationUsageModel;
 };
 
 export type GuardrailEvaluatorInfoModel = {
@@ -337,6 +357,25 @@ export type GuardrailRuleModel = {
 export type IdOrAliasModel = string;
 
 export type IFormFile = Blob | File;
+
+export type ImageGenerationProfileSettingsModel = {
+    $type: 'imageGeneration';
+    size?: null | string;
+    quality?: null | string;
+    style?: null | string;
+    mediaType?: null | string;
+};
+
+export type ImageGenerationUsageModel = {
+    inputTokens?: null | number;
+    outputTokens?: null | number;
+    totalTokens?: null | number;
+};
+
+export type ImageInputModel = {
+    data: string;
+    mediaType: string;
+};
 
 export type JsonElement = unknown;
 
@@ -437,7 +476,9 @@ export type ProfileSettingsModel = ({
     $type?: 'embedding';
 } & EmbeddingProfileSettingsModel) | ({
     $type?: 'speechToText';
-} & SpeechToTextProfileSettingsModel);
+} & SpeechToTextProfileSettingsModel) | ({
+    $type?: 'imageGeneration';
+} & ImageGenerationProfileSettingsModel);
 
 export type PropertyValueOperationRequestModel = {
     path: Array<unknown>;
@@ -492,6 +533,7 @@ export type SettingsResponseModel = {
     defaultEmbeddingProfileId?: null | string;
     classifierChatProfileId?: null | string;
     defaultSpeechToTextProfileId?: null | string;
+    defaultImageGenerationProfileId?: null | string;
 };
 
 export type SpeechToTextProfileSettingsModel = {
@@ -784,6 +826,7 @@ export type UpdateSettingsRequestModel = {
     defaultEmbeddingProfileId?: null | string;
     classifierChatProfileId?: null | string;
     defaultSpeechToTextProfileId?: null | string;
+    defaultImageGenerationProfileId?: null | string;
 };
 
 export type UpdateTestRequestModel = {
@@ -1943,6 +1986,39 @@ export type UpdateGuardrailResponses = {
      */
     200: unknown;
 };
+
+export type GenerateData = {
+    body: GenerateImageRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/image-generation/generate';
+};
+
+export type GenerateErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GenerateError = GenerateErrors[keyof GenerateErrors];
+
+export type GenerateResponses = {
+    /**
+     * OK
+     */
+    200: GenerateImageResponseModel;
+};
+
+export type GenerateResponse = GenerateResponses[keyof GenerateResponses];
 
 export type GetAllProfilesData = {
     body?: never;

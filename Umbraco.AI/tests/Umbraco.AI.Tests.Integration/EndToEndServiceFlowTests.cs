@@ -412,6 +412,10 @@ public class EndToEndServiceFlowTests : IDisposable
         // Bind AIOptions
         services.Configure<AIOptions>(configuration.GetSection("Umbraco:AI"));
 
+        // Experimental feature gate
+        services.Configure<Umbraco.AI.Core.Settings.AIExperimentalOptions>(configuration.GetSection("Umbraco:AI:Experimental"));
+        services.AddSingleton<Umbraco.AI.Core.Settings.IAIExperimentalFeatures, Umbraco.AI.Core.Settings.AIExperimentalFeatures>();
+
         // Provider infrastructure
         services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();
         services.AddSingleton<IAIEditableModelSchemaBuilder, AIEditableModelSchemaBuilder>();

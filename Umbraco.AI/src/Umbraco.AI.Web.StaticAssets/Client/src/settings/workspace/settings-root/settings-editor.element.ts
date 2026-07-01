@@ -105,6 +105,20 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>
+                <umb-property-layout
+                    label="Default Image Generation Profile"
+                    description="The default profile to use for image generation when no profile is specified in API calls."
+                >
+                    <div slot="editor">
+                        <uai-profile-picker
+                            name="defaultImageGenerationProfileId"
+                            capability="ImageGeneration"
+                            .value=${this._model?.defaultImageGenerationProfileId ?? undefined}
+                            @change=${this.#onPropertyChange}
+                        >
+                        </uai-profile-picker>
+                    </div>
+                </umb-property-layout>
             </uui-box>
         `;
     }

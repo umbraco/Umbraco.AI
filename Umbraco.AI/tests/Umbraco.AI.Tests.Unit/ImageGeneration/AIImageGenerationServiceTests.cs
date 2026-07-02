@@ -248,7 +248,9 @@ public class AIImageGenerationServiceTests
             .Setup(x => x.GetConfiguredProviderAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuredProvider.Object);
 
-        var result = await _service.GetSupportedModelsAsync(b => b.WithAlias("models"));
+        // No WithAlias() — a metadata lookup only needs a profile, not an alias. This would throw the
+        // "alias is required" validation the generation paths enforce if the query still validated.
+        var result = await _service.GetSupportedModelsAsync(_ => { });
 
         result.ModelId.ShouldBe("gpt-image-1");
         result.Models.Count.ShouldBe(1);

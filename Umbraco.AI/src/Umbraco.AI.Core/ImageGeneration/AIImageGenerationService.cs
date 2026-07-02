@@ -170,7 +170,9 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
     {
         ArgumentNullException.ThrowIfNull(configure);
 
-        var builder = BuildGeneration(configure);
+        // This is a read-only metadata lookup — it only uses the profile, never the alias (no ID
+        // generation, notifications, telemetry or audit), so an alias isn't required here.
+        var builder = BuildGeneration(configure, validate: false);
         var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
 
         var configured = await _connectionService.GetConfiguredProviderAsync(profile.ConnectionId, cancellationToken);
@@ -227,11 +229,15 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         }
     }
 
-    private static AIImageGenerationBuilder BuildGeneration(Action<AIImageGenerationBuilder> configure)
+    private static AIImageGenerationBuilder BuildGeneration(Action<AIImageGenerationBuilder> configure, bool validate = true)
     {
         var builder = new AIImageGenerationBuilder();
         configure(builder);
-        builder.Validate();
+        if (validate)
+        {
+            builder.Validate();
+        }
+
         return builder;
     }
 

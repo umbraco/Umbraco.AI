@@ -126,9 +126,7 @@ public static partial class UmbracoBuilderExtensions
 
         builder.AIEmbeddingMiddleware()
             .Append<AIOpenTelemetryEmbeddingMiddleware>()   // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
-            .Append<AITrackingEmbeddingMiddleware>()        // Tracks usage details
-            .Append<AIUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
-            .Append<AIAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)
+            .Append<AITrackingEmbeddingMiddleware>();       // Usage analytics + audit logging (via IAIOperationTracker)
 
         builder.AISpeechToTextMiddleware()
             .Append<AIOpenTelemetrySpeechToTextMiddleware>()          // OpenTelemetry tracing (innermost - zero cost when unconfigured)

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using OpenIddict.Validation.AspNetCore;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
-using Umbraco.AI.Core.Analytics.Usage.Middleware;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Evaluators;
@@ -130,9 +129,7 @@ public static partial class UmbracoBuilderExtensions
 
         builder.AISpeechToTextMiddleware()
             .Append<AIOpenTelemetrySpeechToTextMiddleware>()          // OpenTelemetry tracing (innermost - zero cost when unconfigured)
-            .Append<AITrackingSpeechToTextMiddleware>()               // Tracks transcription results
-            .Append<AIUsageRecordingSpeechToTextMiddleware>()         // Records usage to database for analytics
-            .Append<AIAuditingSpeechToTextMiddleware>();              // Audit logging (optional, can be disabled)
+            .Append<AITrackingSpeechToTextMiddleware>();              // Usage analytics + audit logging (via IAIOperationTracker)
 
         builder.AIImageGenerationMiddleware()
             .Append<AIOpenTelemetryImageGenerationMiddleware>()       // OpenTelemetry tracing (innermost - zero cost when unconfigured)

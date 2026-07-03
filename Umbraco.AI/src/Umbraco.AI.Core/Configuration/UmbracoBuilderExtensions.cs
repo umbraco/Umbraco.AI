@@ -25,6 +25,7 @@ using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Providers;
@@ -226,7 +227,12 @@ public static partial class UmbracoBuilderExtensions
 
         // Shared usage + audit recorder for image generation (used by both the tracking middleware
         // and the service's tracked escape-hatch helper, so the orchestration exists in one place).
+        // TODO: remove once image generation is migrated onto IAIOperationTracker (tracked in #195).
         services.AddSingleton<AIImageGenerationTracker>();
+
+        // Capability-agnostic usage + audit recorder (chat / embedding / speech-to-text / image),
+        // shared by every tracking middleware and the image escape-hatch helper.
+        services.AddSingleton<IAIOperationTracker, AIOperationTracker>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();

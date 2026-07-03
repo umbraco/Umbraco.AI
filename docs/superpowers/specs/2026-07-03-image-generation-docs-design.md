@@ -77,7 +77,7 @@ vs. editing are distinct enough to warrant separate pages).
 | `concepts/capabilities.md` | Add Image Generation to the capability table; add a capability section; add interface example; add to profile-relationship diagram; add `HasCapability` example; add Related link |
 | `reference/models/ai-capability.md` | Add `ImageGeneration = 5` enum value |
 | `reference/configuration/ai-options.md` | Add `DefaultImageGenerationProfileAlias`; document the `Umbraco:AI:Experimental` section |
-| `providers/*` (OpenAI provider page / capability matrix) | Note OpenAI supports Image Generation |
+| `providers/openai.md` | Add Image Generation to the frontmatter `description` and the intro capability list (also check `providers/README.md` for a capability matrix to update) |
 | `SUMMARY.md` | Wire all new pages into the nav |
 
 ## Experimental Handling

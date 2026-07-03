@@ -9,6 +9,7 @@ using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -50,7 +51,7 @@ public class AIImageGeneratorEscapeHatchTests
 
         // The shared tracker drives usage + audit; GetService never invokes GenerateAsync, so its
         // dependencies just need to be present.
-        var tracker = new AIImageGenerationTracker(
+        var tracker = new AIOperationTracker(
             contextAccessor.Object,
             new Mock<IAIAuditLogService>().Object,
             new Mock<IAIAuditLogFactory>().Object,
@@ -58,7 +59,7 @@ public class AIImageGeneratorEscapeHatchTests
             new Mock<IAIUsageRecordingService>().Object,
             new Mock<IAIUsageRecordFactory>().Object,
             Mock.Of<IOptionsMonitor<AIAnalyticsOptions>>(),
-            NullLogger<AIImageGenerationTracker>.Instance);
+            NullLogger<AIOperationTracker>.Instance);
 
         // Build the full pipeline exactly as AIImageGeneratorFactory does.
         IImageGenerator generator = fake;

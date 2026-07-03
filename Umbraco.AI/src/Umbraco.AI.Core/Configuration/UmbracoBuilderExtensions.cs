@@ -139,7 +139,7 @@ public static partial class UmbracoBuilderExtensions
 
         builder.AIImageGenerationMiddleware()
             .Append<AIOpenTelemetryImageGenerationMiddleware>()       // OpenTelemetry tracing (innermost - zero cost when unconfigured)
-            .Append<AITrackingImageGenerationMiddleware>();           // Usage analytics + audit logging (via AIImageGenerationTracker)
+            .Append<AITrackingImageGenerationMiddleware>();           // Usage analytics + audit logging (via IAIOperationTracker)
 
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
@@ -224,11 +224,6 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
         services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
         services.AddSingleton<IAIImageGeneratorFactory, AIImageGeneratorFactory>();
-
-        // Shared usage + audit recorder for image generation (used by both the tracking middleware
-        // and the service's tracked escape-hatch helper, so the orchestration exists in one place).
-        // TODO: remove once image generation is migrated onto IAIOperationTracker (tracked in #195).
-        services.AddSingleton<AIImageGenerationTracker>();
 
         // Capability-agnostic usage + audit recorder (chat / embedding / speech-to-text / image),
         // shared by every tracking middleware and the image escape-hatch helper.

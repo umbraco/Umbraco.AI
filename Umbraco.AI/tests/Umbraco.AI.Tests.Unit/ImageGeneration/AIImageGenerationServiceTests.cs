@@ -11,6 +11,7 @@ using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -67,7 +68,7 @@ public class AIImageGenerationServiceTests
 
         // The tracked helper records via the shared tracker (same component the middleware uses),
         // so the usage/audit assertions exercise it through a real tracker built from these mocks.
-        var tracker = new AIImageGenerationTracker(
+        var tracker = new AIOperationTracker(
             _contextAccessorMock.Object,
             _auditLogServiceMock.Object,
             _auditLogFactoryMock.Object,
@@ -75,7 +76,7 @@ public class AIImageGenerationServiceTests
             _usageRecordingServiceMock.Object,
             _usageRecordFactoryMock.Object,
             analyticsOptions.Object,
-            NullLogger<AIImageGenerationTracker>.Instance);
+            NullLogger<AIOperationTracker>.Instance);
 
         _service = new AIImageGenerationService(
             _factoryMock.Object,

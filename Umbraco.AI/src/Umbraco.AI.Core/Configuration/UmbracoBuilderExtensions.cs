@@ -121,9 +121,7 @@ public static partial class UmbracoBuilderExtensions
             .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
             .Append<AIGuardrailChatMiddleware>()         // Guardrail evaluation (pre/post-generate)
-            .Append<AITrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
-            .Append<AIUsageRecordingChatMiddleware>()    // Records usage to database for analytics
-            .Append<AIAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
+            .Append<AITrackingChatMiddleware>()          // Usage analytics + audit logging (via IAIOperationTracker)
             .Append<AIContextInjectingChatMiddleware>(); // Context injection (outermost)
 
         builder.AIEmbeddingMiddleware()

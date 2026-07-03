@@ -1,60 +1,114 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
+using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.Chat.Middleware;
 
 /// <summary>
-/// A chat client that tracks the last usage details and response message.
+/// Chat client that records usage analytics and audit entries around a chat completion, by
+/// delegating to the shared <see cref="IAIOperationTracker"/>. Replaces the former separate
+/// tracking/usage-recording/auditing chat client trio with a single tracker-backed client.
 /// </summary>
-/// <param name="innerClient">The inner chat client to wrap.</param>
-internal sealed class AITrackingChatClient(IChatClient innerClient) : AIBoundChatClientBase(innerClient)
+internal sealed class AITrackingChatClient : AIBoundChatClientBase
 {
-    /// <summary>
-    /// The last usage details received from the chat client.
-    /// </summary>
-    public UsageDetails? LastUsageDetails { get; private set; }
+    private readonly IAIOperationTracker _tracker;
+    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    /// <summary>
-    /// The response messages received from the chat client.
-    /// This includes all messages after the user's request (assistant messages, tool results, etc.)
-    /// for complete audit logging of tool-use scenarios.
-    /// </summary>
-    public IReadOnlyList<ChatMessage>? LastResponseMessages { get; private set; }
-
-    /// <inheritdoc />
-    public override async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
+    public AITrackingChatClient(IChatClient innerClient, IAIOperationTracker tracker, IAIRuntimeContextAccessor contextAccessor)
+        : base(innerClient)
     {
-        var response = await base.GetResponseAsync(chatMessages, options, cancellationToken);
-
-        LastUsageDetails = response.Usage;
-        // Capture all response messages for complete audit logging (includes tool calls and results in agentic scenarios)
-        LastResponseMessages = response.Messages.ToList();
-
-        return response;
+        _tracker = tracker;
+        _contextAccessor = contextAccessor;
     }
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null,
+    public override async Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+    {
+        var messages = chatMessages.ToList();
+        var descriptor = BuildDescriptor(messages);
+
+        var tracked = await _tracker.TrackAsync(
+            descriptor,
+            async token =>
+            {
+                var response = await base.GetResponseAsync(messages, options, token);
+                return new AITrackedOperationResult<ChatResponse>
+                {
+                    Result = response,
+                    Usage = response.Usage,
+                    AuditResponse = new AIAuditResponse { Data = response.Messages, Usage = response.Usage },
+                };
+            },
+            cancellationToken);
+
+        return tracked.Result;
+    }
+
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var stream = base.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
+        var messages = chatMessages.ToList();
+        var descriptor = BuildDescriptor(messages);
 
-        // Accumulate updates while yielding immediately
+        var scope = await _tracker.BeginAsync(descriptor, cancellationToken);
         var updates = new List<ChatResponseUpdate>();
+        Exception? captured = null;
 
-        // Stream updates - yield immediately, then accumulate for later
-        await foreach (var update in stream)
+        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior).
+        await using var enumerator = base.GetStreamingResponseAsync(messages, options, cancellationToken)
+            .GetAsyncEnumerator(cancellationToken);
+        try
         {
-            yield return update;  // IMMEDIATE yield - no blocking
-            updates.Add(update);  // Accumulate for post-stream aggregation
-        }
+            while (true)
+            {
+                ChatResponseUpdate current;
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
 
-        // After streaming completes, aggregate for audit logging using M.E.AI's ToChatResponse()
-        // This handles text content concatenation, function call assembly, and usage accumulation
-        var aggregatedResponse = updates.ToChatResponse();
-        LastUsageDetails = aggregatedResponse.Usage;
-        // Capture all response messages for complete audit logging (includes tool calls and results in agentic scenarios)
-        LastResponseMessages = aggregatedResponse.Messages.ToList();
+                    current = enumerator.Current;
+                }
+                catch (Exception ex)
+                {
+                    captured = ex;
+                    break;
+                }
+
+                updates.Add(current);
+                yield return current;
+            }
+
+            if (captured is not null)
+            {
+                await scope.FailAsync(captured);
+                throw captured;
+            }
+
+            var aggregated = updates.ToChatResponse();
+            await scope.CompleteAsync(
+                aggregated.Usage,
+                new AIAuditResponse { Data = aggregated.Messages, Usage = aggregated.Usage });
+        }
+        finally
+        {
+            scope.Dispose();
+        }
     }
+
+    private AIOperationDescriptor BuildDescriptor(IReadOnlyList<ChatMessage> messages) => new()
+    {
+        Capability = AICapability.Chat,
+        PromptData = messages,
+        Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
+        RecordUsageWhenEmpty = false,
+    };
 }

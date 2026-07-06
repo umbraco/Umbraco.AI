@@ -73,6 +73,7 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
             .breakdown-box {
                 display: flex;
                 flex-direction: column;
+                --uui-box-default-padding: var(--uui-size-space-6);
             }
 
             .no-data {
@@ -83,12 +84,7 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
 
             uui-table-head-cell,
             uui-table-cell {
-                padding: var(--uui-size-space-3) var(--uui-size-space-2);
                 height: auto;
-            }
-
-            uui-table-head-cell {
-                padding-top: 0;
             }
 
             uui-box {

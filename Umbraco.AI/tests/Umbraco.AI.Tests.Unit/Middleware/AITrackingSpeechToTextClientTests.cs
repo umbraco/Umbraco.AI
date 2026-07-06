@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -5,22 +6,25 @@ using Umbraco.AI.Core;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.AuditLog;
-using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.SpeechToText;
 using Umbraco.AI.Tests.Common.Fakes;
+
+#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
 
 namespace Umbraco.AI.Tests.Unit.Middleware;
 
 /// <summary>
-/// Tests for <see cref="AITrackingChatClient"/>, the single tracker-backed client that replaced
-/// the former AITrackingChatClient / AIUsageRecordingChatClient / AIAuditingChatClient trio.
-/// Uses a real <see cref="AIOperationTracker"/> wired with mocked audit/usage collaborators
-/// (mirroring <c>AIOperationTrackerTests</c>) so behavior is verified end-to-end through the
-/// tracker, rather than mocking the (internal, non-mockable-return-type) tracker contract itself.
+/// Tests for <see cref="AITrackingSpeechToTextClient"/>, the single tracker-backed client that
+/// replaced the former AITrackingSpeechToTextClient / AIUsageRecordingSpeechToTextClient /
+/// AIAuditingSpeechToTextClient trio. Uses a real <see cref="AIOperationTracker"/> wired with
+/// mocked audit/usage collaborators (mirroring <c>AIOperationTrackerTests</c>) so behavior is
+/// verified end-to-end through the tracker, rather than mocking the (internal,
+/// non-mockable-return-type) tracker contract itself.
 /// </summary>
-public class AITrackingChatClientTests
+public class AITrackingSpeechToTextClientTests
 {
     private readonly Mock<IAIRuntimeContextAccessor> _contextAccessorMock;
     private readonly Mock<IAIAuditLogService> _auditLogServiceMock;
@@ -32,7 +36,7 @@ public class AITrackingChatClientTests
     private readonly AIRuntimeContext _runtimeContext;
     private readonly AIAuditLog _auditLog;
 
-    public AITrackingChatClientTests()
+    public AITrackingSpeechToTextClientTests()
     {
         _contextAccessorMock = new Mock<IAIRuntimeContextAccessor>();
         _auditLogServiceMock = new Mock<IAIAuditLogService>();
@@ -51,7 +55,7 @@ public class AITrackingChatClientTests
         _runtimeContext.SetValue(Constants.ContextKeys.ProfileId, Guid.NewGuid());
         _runtimeContext.SetValue(Constants.ContextKeys.ProfileAlias, "test-profile");
         _runtimeContext.SetValue(Constants.ContextKeys.ProviderId, "openai");
-        _runtimeContext.SetValue(Constants.ContextKeys.ModelId, "gpt-test");
+        _runtimeContext.SetValue(Constants.ContextKeys.ModelId, "stt-test");
         _contextAccessorMock.Setup(x => x.Context).Returns(_runtimeContext);
 
         _auditLog = new AIAuditLog { Id = Guid.NewGuid() };
@@ -78,80 +82,57 @@ public class AITrackingChatClientTests
             .Returns(ValueTask.CompletedTask);
     }
 
-    #region GetResponseAsync
+    #region GetTextAsync
 
     [Fact]
-    public async Task GetResponseAsync_OnSuccess_QueuesCompleteAuditWithMessagesAndUsage()
+    public async Task GetTextAsync_OnSuccess_QueuesCompleteAuditWithTranscriptionTextAndNoUsage()
     {
         // Arrange
-        var responseMessage = new ChatMessage(ChatRole.Assistant, "Hello, world!");
-        var usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5, TotalTokenCount = 15 };
-        var fakeClient = new FakeChatClient((_, _, _) =>
-            Task.FromResult(new ChatResponse(responseMessage) { Usage = usage }));
+        var fakeClient = new FakeSpeechToTextClient("Hello, world!");
+        var client = CreateClient(fakeClient);
+
+        // Act
+        var response = await client.GetTextAsync(new MemoryStream());
+
+        // Assert
+        response.Text.ShouldBe("Hello, world!");
+
+        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
+            _auditLog,
+            It.IsAny<AIAuditPrompt?>(),
+            It.Is<AIAuditResponse?>(r =>
+                r != null &&
+                (string?)r.Data == "Hello, world!" &&
+                r.Usage == null),
+            CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetTextAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
+    {
+        // Arrange — STT uses RecordUsageWhenEmpty=true, so a duration/status record is queued
+        // even though there is no UsageDetails to report (STT has no token usage).
+        var fakeClient = new FakeSpeechToTextClient();
         var client = CreateClient(fakeClient);
         var usageSignal = ArrangeUsageRecordingSignal();
 
         // Act
-        var response = await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
-
+        await client.GetTextAsync(new MemoryStream());
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        response.Messages[0].Text.ShouldBe("Hello, world!");
-
-        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
-            _auditLog,
-            It.IsAny<AIAuditPrompt?>(),
-            It.Is<AIAuditResponse?>(r =>
-                r != null &&
-                r.Usage == usage &&
-                ((IReadOnlyList<ChatMessage>)r.Data!).Count == 1 &&
-                ((IReadOnlyList<ChatMessage>)r.Data!)[0].Text == "Hello, world!"),
-            CancellationToken.None), Times.Once);
-
-        record.InputTokens.ShouldBe(10);
-        record.OutputTokens.ShouldBe(5);
-        record.TotalTokens.ShouldBe(15);
+        record.InputTokens.ShouldBe(0);
+        record.OutputTokens.ShouldBe(0);
+        record.TotalTokens.ShouldBe(0);
+        record.Status.ShouldBe("Succeeded");
     }
 
     [Fact]
-    public async Task GetResponseAsync_WithToolCalls_AuditsAllResponseMessages()
-    {
-        // Arrange — audit response.Messages must include tool-call content for agentic scenarios.
-        var functionCall = new FunctionCallContent(
-            callId: "tc_001",
-            name: "get_weather",
-            arguments: new Dictionary<string, object?> { ["city"] = "London" });
-
-        var responseMessage = new ChatMessage(ChatRole.Assistant, new List<AIContent>
-        {
-            new TextContent("Let me check the weather."),
-            functionCall
-        });
-
-        var fakeClient = new FakeChatClient((_, _, _) =>
-            Task.FromResult(new ChatResponse(responseMessage)));
-        var client = CreateClient(fakeClient);
-
-        // Act
-        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "What's the weather?")]);
-
-        // Assert
-        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
-            _auditLog,
-            It.IsAny<AIAuditPrompt?>(),
-            It.Is<AIAuditResponse?>(r =>
-                r != null &&
-                ((IReadOnlyList<ChatMessage>)r.Data!)[0].Contents.OfType<FunctionCallContent>().Any(c => c.Name == "get_weather")),
-            CancellationToken.None), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetResponseAsync_OnException_QueuesFailureWithNoneToken_RethrowsAndRecordsFailedUsage()
+    public async Task GetTextAsync_OnException_QueuesFailureWithNoneToken_RethrowsAndRecordsFailedUsage()
     {
         // Arrange — inner client throws regardless of cancellation token state
-        var innerClient = new FakeChatClient((_, _, _) => Task.FromException<ChatResponse>(new InvalidOperationException("AI error")));
-        var client = CreateClient(innerClient);
+        var throwingClient = new ThrowingSpeechToTextClient(new InvalidOperationException("AI error"));
+        var client = CreateClient(throwingClient);
         var usageSignal = ArrangeUsageRecordingSignal();
 
         // Use an already-cancelled token to simulate client disconnection
@@ -160,7 +141,7 @@ public class AITrackingChatClientTests
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
-            client.GetResponseAsync([new ChatMessage(ChatRole.User, "hello")], cancellationToken: cts.Token));
+            client.GetTextAsync(new MemoryStream(), cancellationToken: cts.Token));
 
         // The failure must be recorded with CancellationToken.None so it isn't dropped when the
         // request token is cancelled (the original cause of entries being stuck in "Running")
@@ -176,48 +157,20 @@ public class AITrackingChatClientTests
         var record = await AwaitOrTimeout(usageSignal.Task);
         record.Status.ShouldBe("Failed");
         record.ErrorMessage.ShouldBe("AI error");
-        record.InputTokens.ShouldBe(0);
-        record.OutputTokens.ShouldBe(0);
-        record.TotalTokens.ShouldBe(0);
     }
 
     [Fact]
-    public async Task GetResponseAsync_NullUsage_StillRecordsUsageRow()
-    {
-        // Arrange — Chat now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
-        // record (with null token usage) capturing duration/status rather than being dropped.
-        var responseMessage = new ChatMessage(ChatRole.Assistant, "Response");
-        var fakeClient = new FakeChatClient((_, _, _) =>
-            Task.FromResult(new ChatResponse(responseMessage)));
-        var client = CreateClient(fakeClient);
-        var usageSignal = ArrangeUsageRecordingSignal();
-
-        // Act
-        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
-        var record = await AwaitOrTimeout(usageSignal.Task);
-
-        // Assert
-        record.Status.ShouldBe("Succeeded");
-        record.InputTokens.ShouldBe(0);
-        record.OutputTokens.ShouldBe(0);
-        record.TotalTokens.ShouldBe(0);
-        // Audit still completes as before.
-        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
-            _auditLog, It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), CancellationToken.None), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetResponseAsync_ExtractsMetadataFromRuntimeContextLogKeys()
+    public async Task GetTextAsync_ExtractsMetadataFromRuntimeContextLogKeys()
     {
         // Arrange — LogKeys declared in the runtime context must flow through to audit metadata.
         _runtimeContext.SetValue(Constants.ContextKeys.LogKeys, new[] { "customKey" });
         _runtimeContext.SetValue("customKey", "customValue");
 
-        var fakeClient = new FakeChatClient("response");
+        var fakeClient = new FakeSpeechToTextClient();
         var client = CreateClient(fakeClient);
 
         // Act
-        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
+        await client.GetTextAsync(new MemoryStream());
 
         // Assert
         _auditLogFactoryMock.Verify(x => x.Create(
@@ -226,48 +179,82 @@ public class AITrackingChatClientTests
             It.IsAny<Guid?>()), Times.Once);
     }
 
-    #endregion
+    [Fact]
+    public async Task GetTextAsync_WithOptions_BuildsPromptDataFromModelAndLanguage()
+    {
+        // Arrange — STT has no text prompt, so BuildPromptData captures the options metadata instead.
+        var fakeClient = new FakeSpeechToTextClient();
+        var client = CreateClient(fakeClient);
+        var options = new SpeechToTextOptions { ModelId = "whisper-1", SpeechLanguage = "en" };
 
-    #region GetStreamingResponseAsync
+        // Act
+        await client.GetTextAsync(new MemoryStream(), options);
+
+        // Assert
+        _auditLogFactoryMock.Verify(x => x.Create(
+            It.Is<AIAuditContext>(c => PromptHasModelAndLanguage(c.Prompt, "whisper-1", "en")),
+            It.IsAny<IReadOnlyDictionary<string, string>?>(),
+            It.IsAny<Guid?>()), Times.Once);
+    }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_YieldsImmediately_ThenAggregatesAndCompletesAudit()
+    public async Task GetTextAsync_WithoutOptions_BuildsFallbackPromptData()
     {
         // Arrange
-        var fakeClient = new FakeChatClient("Hello world");
+        var fakeClient = new FakeSpeechToTextClient();
         var client = CreateClient(fakeClient);
 
         // Act
-        var updates = new List<ChatResponseUpdate>();
-        await foreach (var update in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
+        await client.GetTextAsync(new MemoryStream());
+
+        // Assert
+        _auditLogFactoryMock.Verify(x => x.Create(
+            It.Is<AIAuditContext>(c => (string?)c.Prompt == "speech-to-text transcription"),
+            It.IsAny<IReadOnlyDictionary<string, string>?>(),
+            It.IsAny<Guid?>()), Times.Once);
+    }
+
+    #endregion
+
+    #region GetStreamingTextAsync
+
+    [Fact]
+    public async Task GetStreamingTextAsync_YieldsImmediately_ThenAggregatesTextAndCompletesAuditWithNoUsage()
+    {
+        // Arrange
+        var fakeClient = new FakeStreamingSpeechToTextClient("Hello ", "world");
+        var client = CreateClient(fakeClient);
+
+        // Act
+        var updates = new List<SpeechToTextResponseUpdate>();
+        await foreach (var update in client.GetStreamingTextAsync(new MemoryStream()))
         {
             updates.Add(update);
         }
 
         // Assert — updates were yielded (not buffered until the end)
-        updates.Count.ShouldBeGreaterThan(1);
+        updates.Count.ShouldBe(2);
 
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             _auditLog,
             It.IsAny<AIAuditPrompt?>(),
             It.Is<AIAuditResponse?>(r =>
                 r != null &&
-                ((IReadOnlyList<ChatMessage>)r.Data!)[0].Text.Contains("Hello")),
+                (string?)r.Data == "Hello world" &&
+                r.Usage == null),
             CancellationToken.None), Times.Once);
     }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
+    public async Task GetStreamingTextAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
     {
-        // Arrange — FakeChatClient's streaming updates carry no UsageContent, so the aggregated
-        // Usage is null. Chat now uses RecordUsageWhenEmpty=true even for the streaming path, so
-        // a duration/status record is still queued.
-        var fakeClient = new FakeChatClient("Hello world");
+        // Arrange — STT uses RecordUsageWhenEmpty=true even for the streaming path.
+        var fakeClient = new FakeStreamingSpeechToTextClient("Hello");
         var client = CreateClient(fakeClient);
         var usageSignal = ArrangeUsageRecordingSignal();
 
         // Act
-        await foreach (var _ in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
+        await foreach (var _ in client.GetStreamingTextAsync(new MemoryStream()))
         {
         }
 
@@ -279,19 +266,24 @@ public class AITrackingChatClientTests
     }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_OnMidStreamException_QueuesFailureWithNoneToken_AndRethrows()
+    public async Task GetStreamingTextAsync_OnMidStreamException_QueuesFailureWithNoneToken_AndRethrows()
     {
-        // Arrange — inner client throws during streaming
-        var throwingClient = new ThrowingStreamingChatClient(new HttpRequestException("Connection reset"));
+        // Arrange — inner client throws during streaming, after yielding some updates
+        var throwingClient = new ThrowingStreamingSpeechToTextClient(new HttpRequestException("Connection reset"), "partial ");
         var client = CreateClient(throwingClient);
+        var updates = new List<SpeechToTextResponseUpdate>();
 
         // Act & Assert
         await Should.ThrowAsync<HttpRequestException>(async () =>
         {
-            await foreach (var _ in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "hi")]))
+            await foreach (var update in client.GetStreamingTextAsync(new MemoryStream()))
             {
+                updates.Add(update);
             }
         });
+
+        // The partial update was still yielded to the caller before the failure.
+        updates.Count.ShouldBe(1);
 
         // The failure must be recorded with CancellationToken.None so it isn't dropped when the
         // request token is cancelled (the original cause of entries being stuck in "Running")
@@ -312,11 +304,11 @@ public class AITrackingChatClientTests
     public void GetService_ReturnsTrackingClient()
     {
         // Arrange
-        var fakeClient = new FakeChatClient();
+        var fakeClient = new FakeSpeechToTextClient();
         var client = CreateClient(fakeClient);
 
         // Act
-        var service = client.GetService<AITrackingChatClient>();
+        var service = client.GetService<AITrackingSpeechToTextClient>();
 
         // Assert
         service.ShouldBe(client);
@@ -324,7 +316,7 @@ public class AITrackingChatClientTests
 
     #endregion
 
-    private AITrackingChatClient CreateClient(IChatClient innerClient) =>
+    private AITrackingSpeechToTextClient CreateClient(ISpeechToTextClient innerClient) =>
         new(innerClient, CreateTracker(), _contextAccessorMock.Object);
 
     private AIOperationTracker CreateTracker() => new(
@@ -382,23 +374,101 @@ public class AITrackingChatClientTests
     }
 
     /// <summary>
-    /// A chat client whose streaming implementation throws on the first MoveNextAsync call.
-    /// Used to simulate connection resets and similar mid-stream errors.
+    /// Reflects into the anonymous <c>{ Type, ModelId, SpeechLanguage }</c> object produced by
+    /// <c>AITrackingSpeechToTextClient.BuildPromptData</c> to verify its shape without exposing it.
     /// </summary>
-    private sealed class ThrowingStreamingChatClient : IChatClient
+    private static bool PromptHasModelAndLanguage(object? prompt, string modelId, string language)
+    {
+        if (prompt is null)
+        {
+            return false;
+        }
+
+        var type = prompt.GetType();
+        var modelValue = type.GetProperty("ModelId")?.GetValue(prompt) as string;
+        var languageValue = type.GetProperty("SpeechLanguage")?.GetValue(prompt) as string;
+        return modelValue == modelId && languageValue == language;
+    }
+
+    /// <summary>
+    /// A speech-to-text client whose <see cref="GetTextAsync"/> throws immediately.
+    /// </summary>
+    private sealed class ThrowingSpeechToTextClient : ISpeechToTextClient
     {
         private readonly Exception _exception;
 
-        public ThrowingStreamingChatClient(Exception exception) => _exception = exception;
+        public ThrowingSpeechToTextClient(Exception exception) => _exception = exception;
 
-        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-            => Task.FromException<ChatResponse>(_exception);
+        public Task<SpeechToTextResponse> GetTextAsync(Stream audioSpeechStream, SpeechToTextOptions? options = null, CancellationToken cancellationToken = default)
+            => Task.FromException<SpeechToTextResponse>(_exception);
 
-        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-            IEnumerable<ChatMessage> chatMessages,
-            ChatOptions? options = null,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<SpeechToTextResponseUpdate> GetStreamingTextAsync(Stream audioSpeechStream, SpeechToTextOptions? options = null, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+
+        public SpeechToTextClientMetadata Metadata => new("ThrowingClient", null, null);
+        public object? GetService(Type serviceType, object? key = null) => null;
+        public void Dispose() { }
+    }
+
+    /// <summary>
+    /// A speech-to-text client that streams one <see cref="SpeechToTextResponseUpdate"/> per
+    /// supplied text part.
+    /// </summary>
+    private sealed class FakeStreamingSpeechToTextClient : ISpeechToTextClient
+    {
+        private readonly string[] _parts;
+
+        public FakeStreamingSpeechToTextClient(params string[] parts) => _parts = parts;
+
+        public Task<SpeechToTextResponse> GetTextAsync(Stream audioSpeechStream, SpeechToTextOptions? options = null, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+
+        public async IAsyncEnumerable<SpeechToTextResponseUpdate> GetStreamingTextAsync(
+            Stream audioSpeechStream,
+            SpeechToTextOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            foreach (var part in _parts)
+            {
+                await Task.Yield();
+                yield return new SpeechToTextResponseUpdate(part);
+            }
+        }
+
+        public SpeechToTextClientMetadata Metadata => new("FakeStreamingClient", null, null);
+        public object? GetService(Type serviceType, object? key = null) => null;
+        public void Dispose() { }
+    }
+
+    /// <summary>
+    /// A speech-to-text client whose streaming implementation yields any supplied text parts and
+    /// then throws. Used to simulate connection resets and similar mid-stream errors.
+    /// </summary>
+    private sealed class ThrowingStreamingSpeechToTextClient : ISpeechToTextClient
+    {
+        private readonly Exception _exception;
+        private readonly string[] _partsBeforeFailure;
+
+        public ThrowingStreamingSpeechToTextClient(Exception exception, params string[] partsBeforeFailure)
+        {
+            _exception = exception;
+            _partsBeforeFailure = partsBeforeFailure;
+        }
+
+        public Task<SpeechToTextResponse> GetTextAsync(Stream audioSpeechStream, SpeechToTextOptions? options = null, CancellationToken cancellationToken = default)
+            => Task.FromException<SpeechToTextResponse>(_exception);
+
+        public async IAsyncEnumerable<SpeechToTextResponseUpdate> GetStreamingTextAsync(
+            Stream audioSpeechStream,
+            SpeechToTextOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            foreach (var part in _partsBeforeFailure)
+            {
+                await Task.Yield();
+                yield return new SpeechToTextResponseUpdate(part);
+            }
+
             await Task.Yield();
             throw _exception;
 #pragma warning disable CS0162 // Unreachable code - required to satisfy IAsyncEnumerable<T> return type
@@ -406,7 +476,7 @@ public class AITrackingChatClientTests
 #pragma warning restore CS0162
         }
 
-        public ChatClientMetadata Metadata => new("ThrowingClient", null, null);
+        public SpeechToTextClientMetadata Metadata => new("ThrowingStreamingClient", null, null);
         public object? GetService(Type serviceType, object? key = null) => null;
         public void Dispose() { }
     }

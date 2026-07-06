@@ -14,13 +14,14 @@ using Umbraco.AI.Tests.Common.Fakes;
 namespace Umbraco.AI.Tests.Unit.Middleware;
 
 /// <summary>
-/// Tests for <see cref="AITrackingChatClient"/>, the single tracker-backed client that replaced
-/// the former AITrackingChatClient / AIUsageRecordingChatClient / AIAuditingChatClient trio.
-/// Uses a real <see cref="AIOperationTracker"/> wired with mocked audit/usage collaborators
-/// (mirroring <c>AIOperationTrackerTests</c>) so behavior is verified end-to-end through the
-/// tracker, rather than mocking the (internal, non-mockable-return-type) tracker contract itself.
+/// Tests for <see cref="AITrackingEmbeddingGenerator"/>, the single tracker-backed generator that
+/// replaced the former AITrackingEmbeddingGenerator / AIUsageRecordingEmbeddingGenerator /
+/// AIAuditingEmbeddingGenerator trio. Uses a real <see cref="AIOperationTracker"/> wired with
+/// mocked audit/usage collaborators (mirroring <c>AIOperationTrackerTests</c>) so behavior is
+/// verified end-to-end through the tracker, rather than mocking the (internal,
+/// non-mockable-return-type) tracker contract itself.
 /// </summary>
-public class AITrackingChatClientTests
+public class AITrackingEmbeddingGeneratorTests
 {
     private readonly Mock<IAIRuntimeContextAccessor> _contextAccessorMock;
     private readonly Mock<IAIAuditLogService> _auditLogServiceMock;
@@ -32,7 +33,7 @@ public class AITrackingChatClientTests
     private readonly AIRuntimeContext _runtimeContext;
     private readonly AIAuditLog _auditLog;
 
-    public AITrackingChatClientTests()
+    public AITrackingEmbeddingGeneratorTests()
     {
         _contextAccessorMock = new Mock<IAIRuntimeContextAccessor>();
         _auditLogServiceMock = new Mock<IAIAuditLogService>();
@@ -51,7 +52,7 @@ public class AITrackingChatClientTests
         _runtimeContext.SetValue(Constants.ContextKeys.ProfileId, Guid.NewGuid());
         _runtimeContext.SetValue(Constants.ContextKeys.ProfileAlias, "test-profile");
         _runtimeContext.SetValue(Constants.ContextKeys.ProviderId, "openai");
-        _runtimeContext.SetValue(Constants.ContextKeys.ModelId, "gpt-test");
+        _runtimeContext.SetValue(Constants.ContextKeys.ModelId, "embedding-test");
         _contextAccessorMock.Setup(x => x.Context).Returns(_runtimeContext);
 
         _auditLog = new AIAuditLog { Id = Guid.NewGuid() };
@@ -78,80 +79,49 @@ public class AITrackingChatClientTests
             .Returns(ValueTask.CompletedTask);
     }
 
-    #region GetResponseAsync
+    #region GenerateAsync
 
     [Fact]
-    public async Task GetResponseAsync_OnSuccess_QueuesCompleteAuditWithMessagesAndUsage()
+    public async Task GenerateAsync_OnSuccess_QueuesCompleteAuditWithEmbeddingsAndUsage()
     {
         // Arrange
-        var responseMessage = new ChatMessage(ChatRole.Assistant, "Hello, world!");
-        var usage = new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5, TotalTokenCount = 15 };
-        var fakeClient = new FakeChatClient((_, _, _) =>
-            Task.FromResult(new ChatResponse(responseMessage) { Usage = usage }));
-        var client = CreateClient(fakeClient);
+        var usage = new UsageDetails { InputTokenCount = 8, TotalTokenCount = 8 };
+        var fakeGenerator = new FakeEmbeddingGenerator((values, _, _) =>
+        {
+            var embeddings = values.Select(_ => new Embedding<float>(new[] { 0.1f, 0.2f, 0.3f })).ToList();
+            return Task.FromResult(new GeneratedEmbeddings<Embedding<float>>(embeddings) { Usage = usage });
+        });
+        var generator = CreateGenerator(fakeGenerator);
         var usageSignal = ArrangeUsageRecordingSignal();
 
         // Act
-        var response = await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
+        var result = await generator.GenerateAsync(["hello", "world"]);
 
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        response.Messages[0].Text.ShouldBe("Hello, world!");
+        result.Count.ShouldBe(2);
 
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             _auditLog,
             It.IsAny<AIAuditPrompt?>(),
             It.Is<AIAuditResponse?>(r =>
                 r != null &&
-                r.Usage == usage &&
-                ((IReadOnlyList<ChatMessage>)r.Data!).Count == 1 &&
-                ((IReadOnlyList<ChatMessage>)r.Data!)[0].Text == "Hello, world!"),
+                ReferenceEquals(r.Data, result) &&
+                r.Usage == usage),
             CancellationToken.None), Times.Once);
 
-        record.InputTokens.ShouldBe(10);
-        record.OutputTokens.ShouldBe(5);
-        record.TotalTokens.ShouldBe(15);
+        record.InputTokens.ShouldBe(8);
+        record.TotalTokens.ShouldBe(8);
     }
 
     [Fact]
-    public async Task GetResponseAsync_WithToolCalls_AuditsAllResponseMessages()
+    public async Task GenerateAsync_OnException_QueuesFailureWithNoneToken_RethrowsAndRecordsFailedUsage()
     {
-        // Arrange — audit response.Messages must include tool-call content for agentic scenarios.
-        var functionCall = new FunctionCallContent(
-            callId: "tc_001",
-            name: "get_weather",
-            arguments: new Dictionary<string, object?> { ["city"] = "London" });
-
-        var responseMessage = new ChatMessage(ChatRole.Assistant, new List<AIContent>
-        {
-            new TextContent("Let me check the weather."),
-            functionCall
-        });
-
-        var fakeClient = new FakeChatClient((_, _, _) =>
-            Task.FromResult(new ChatResponse(responseMessage)));
-        var client = CreateClient(fakeClient);
-
-        // Act
-        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "What's the weather?")]);
-
-        // Assert
-        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
-            _auditLog,
-            It.IsAny<AIAuditPrompt?>(),
-            It.Is<AIAuditResponse?>(r =>
-                r != null &&
-                ((IReadOnlyList<ChatMessage>)r.Data!)[0].Contents.OfType<FunctionCallContent>().Any(c => c.Name == "get_weather")),
-            CancellationToken.None), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetResponseAsync_OnException_QueuesFailureWithNoneToken_RethrowsAndRecordsFailedUsage()
-    {
-        // Arrange — inner client throws regardless of cancellation token state
-        var innerClient = new FakeChatClient((_, _, _) => Task.FromException<ChatResponse>(new InvalidOperationException("AI error")));
-        var client = CreateClient(innerClient);
+        // Arrange — inner generator throws regardless of cancellation token state
+        var fakeGenerator = new FakeEmbeddingGenerator((_, _, _) =>
+            Task.FromException<GeneratedEmbeddings<Embedding<float>>>(new InvalidOperationException("AI error")));
+        var generator = CreateGenerator(fakeGenerator);
         var usageSignal = ArrangeUsageRecordingSignal();
 
         // Use an already-cancelled token to simulate client disconnection
@@ -160,7 +130,7 @@ public class AITrackingChatClientTests
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
-            client.GetResponseAsync([new ChatMessage(ChatRole.User, "hello")], cancellationToken: cts.Token));
+            generator.GenerateAsync(["hello"], cancellationToken: cts.Token));
 
         // The failure must be recorded with CancellationToken.None so it isn't dropped when the
         // request token is cancelled (the original cause of entries being stuck in "Running")
@@ -182,18 +152,16 @@ public class AITrackingChatClientTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_NullUsage_StillRecordsUsageRow()
+    public async Task GenerateAsync_NullUsage_StillRecordsUsageRow()
     {
-        // Arrange — Chat now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
+        // Arrange — Embedding now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
         // record (with null token usage) capturing duration/status rather than being dropped.
-        var responseMessage = new ChatMessage(ChatRole.Assistant, "Response");
-        var fakeClient = new FakeChatClient((_, _, _) =>
-            Task.FromResult(new ChatResponse(responseMessage)));
-        var client = CreateClient(fakeClient);
+        var fakeGenerator = new FakeEmbeddingGenerator();
+        var generator = CreateGenerator(fakeGenerator);
         var usageSignal = ArrangeUsageRecordingSignal();
 
         // Act
-        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
+        await generator.GenerateAsync(["hello"]);
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
@@ -207,17 +175,19 @@ public class AITrackingChatClientTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_ExtractsMetadataFromRuntimeContextLogKeys()
+    public async Task GenerateAsync_ExtractsMetadataFromRuntimeContextLogKeys()
     {
-        // Arrange — LogKeys declared in the runtime context must flow through to audit metadata.
+        // Arrange — LogKeys declared in the runtime context must flow through to audit metadata,
+        // mirroring chat/STT. (Previously embedding incorrectly read LogKeys from
+        // EmbeddingGenerationOptions.AdditionalProperties, a location no caller populates.)
         _runtimeContext.SetValue(Constants.ContextKeys.LogKeys, new[] { "customKey" });
         _runtimeContext.SetValue("customKey", "customValue");
 
-        var fakeClient = new FakeChatClient("response");
-        var client = CreateClient(fakeClient);
+        var fakeGenerator = new FakeEmbeddingGenerator();
+        var generator = CreateGenerator(fakeGenerator);
 
         // Act
-        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
+        await generator.GenerateAsync(["hello"]);
 
         // Assert
         _auditLogFactoryMock.Verify(x => x.Create(
@@ -226,82 +196,21 @@ public class AITrackingChatClientTests
             It.IsAny<Guid?>()), Times.Once);
     }
 
-    #endregion
-
-    #region GetStreamingResponseAsync
-
     [Fact]
-    public async Task GetStreamingResponseAsync_YieldsImmediately_ThenAggregatesAndCompletesAudit()
+    public async Task GenerateAsync_WithoutLogKeysInRuntimeContext_PassesNullMetadata()
     {
         // Arrange
-        var fakeClient = new FakeChatClient("Hello world");
-        var client = CreateClient(fakeClient);
+        var fakeGenerator = new FakeEmbeddingGenerator();
+        var generator = CreateGenerator(fakeGenerator);
 
         // Act
-        var updates = new List<ChatResponseUpdate>();
-        await foreach (var update in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
-        {
-            updates.Add(update);
-        }
-
-        // Assert — updates were yielded (not buffered until the end)
-        updates.Count.ShouldBeGreaterThan(1);
-
-        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
-            _auditLog,
-            It.IsAny<AIAuditPrompt?>(),
-            It.Is<AIAuditResponse?>(r =>
-                r != null &&
-                ((IReadOnlyList<ChatMessage>)r.Data!)[0].Text.Contains("Hello")),
-            CancellationToken.None), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetStreamingResponseAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
-    {
-        // Arrange — FakeChatClient's streaming updates carry no UsageContent, so the aggregated
-        // Usage is null. Chat now uses RecordUsageWhenEmpty=true even for the streaming path, so
-        // a duration/status record is still queued.
-        var fakeClient = new FakeChatClient("Hello world");
-        var client = CreateClient(fakeClient);
-        var usageSignal = ArrangeUsageRecordingSignal();
-
-        // Act
-        await foreach (var _ in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
-        {
-        }
-
-        var record = await AwaitOrTimeout(usageSignal.Task);
+        await generator.GenerateAsync(["hello"]);
 
         // Assert
-        record.Status.ShouldBe("Succeeded");
-        record.TotalTokens.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task GetStreamingResponseAsync_OnMidStreamException_QueuesFailureWithNoneToken_AndRethrows()
-    {
-        // Arrange — inner client throws during streaming
-        var throwingClient = new ThrowingStreamingChatClient(new HttpRequestException("Connection reset"));
-        var client = CreateClient(throwingClient);
-
-        // Act & Assert
-        await Should.ThrowAsync<HttpRequestException>(async () =>
-        {
-            await foreach (var _ in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "hi")]))
-            {
-            }
-        });
-
-        // The failure must be recorded with CancellationToken.None so it isn't dropped when the
-        // request token is cancelled (the original cause of entries being stuck in "Running")
-        _auditLogServiceMock.Verify(x => x.QueueRecordAuditLogFailureAsync(
-            _auditLog,
-            It.IsAny<AIAuditPrompt?>(),
-            It.IsAny<Exception>(),
-            CancellationToken.None), Times.Once);
-        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
-            It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _auditLogFactoryMock.Verify(x => x.Create(
+            It.IsAny<AIAuditContext>(),
+            null,
+            It.IsAny<Guid?>()), Times.Once);
     }
 
     #endregion
@@ -309,23 +218,23 @@ public class AITrackingChatClientTests
     #region GetService
 
     [Fact]
-    public void GetService_ReturnsTrackingClient()
+    public void GetService_ReturnsTrackingGenerator()
     {
         // Arrange
-        var fakeClient = new FakeChatClient();
-        var client = CreateClient(fakeClient);
+        var fakeGenerator = new FakeEmbeddingGenerator();
+        var generator = CreateGenerator(fakeGenerator);
 
         // Act
-        var service = client.GetService<AITrackingChatClient>();
+        var service = generator.GetService<AITrackingEmbeddingGenerator>();
 
         // Assert
-        service.ShouldBe(client);
+        service.ShouldBe(generator);
     }
 
     #endregion
 
-    private AITrackingChatClient CreateClient(IChatClient innerClient) =>
-        new(innerClient, CreateTracker(), _contextAccessorMock.Object);
+    private AITrackingEmbeddingGenerator CreateGenerator(IEmbeddingGenerator<string, Embedding<float>> innerGenerator) =>
+        new(innerGenerator, CreateTracker(), _contextAccessorMock.Object);
 
     private AIOperationTracker CreateTracker() => new(
         _contextAccessorMock.Object,
@@ -379,35 +288,5 @@ public class AITrackingChatClientTests
         var winner = await Task.WhenAny(task, Task.Delay(timeoutMs));
         winner.ShouldBe(task, "Timed out waiting for the fire-and-forget usage record to be queued.");
         return await task;
-    }
-
-    /// <summary>
-    /// A chat client whose streaming implementation throws on the first MoveNextAsync call.
-    /// Used to simulate connection resets and similar mid-stream errors.
-    /// </summary>
-    private sealed class ThrowingStreamingChatClient : IChatClient
-    {
-        private readonly Exception _exception;
-
-        public ThrowingStreamingChatClient(Exception exception) => _exception = exception;
-
-        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
-            => Task.FromException<ChatResponse>(_exception);
-
-        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-            IEnumerable<ChatMessage> chatMessages,
-            ChatOptions? options = null,
-            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            await Task.Yield();
-            throw _exception;
-#pragma warning disable CS0162 // Unreachable code - required to satisfy IAsyncEnumerable<T> return type
-            yield break;
-#pragma warning restore CS0162
-        }
-
-        public ChatClientMetadata Metadata => new("ThrowingClient", null, null);
-        public object? GetService(Type serviceType, object? key = null) => null;
-        public void Dispose() { }
     }
 }

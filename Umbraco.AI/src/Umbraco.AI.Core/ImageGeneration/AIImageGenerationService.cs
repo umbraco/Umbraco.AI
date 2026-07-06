@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.Drawing;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -25,7 +27,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
     private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
-    private readonly AIImageGenerationTracker _tracker;
+    private readonly IAIOperationTracker _tracker;
 
     public AIImageGenerationService(
         IAIImageGeneratorFactory generatorFactory,
@@ -36,7 +38,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors,
-        AIImageGenerationTracker tracker)
+        IAIOperationTracker tracker)
     {
         _generatorFactory = generatorFactory;
         _profileService = profileService;
@@ -156,7 +158,39 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
             // Record usage + audit via the same tracker the middleware uses, so the raw call stays
             // visible in analytics/audit even though it bypasses the GenerateAsync pipeline.
             var promptData = $"image-generation (tracked): {builder.Alias}";
-            return await _tracker.TrackAsync(promptData, token => operation(generator, token), cancellationToken);
+            var descriptor = new AIOperationDescriptor
+            {
+                Capability = AICapability.ImageGeneration,
+                PromptData = promptData,
+                Metadata = null,
+                RecordUsageWhenEmpty = true,
+            };
+
+            UsageDetails? usage = null;
+            int? imageCount = null;
+
+            var tracked = await _tracker.TrackAsync(
+                descriptor,
+                async token =>
+                {
+                    var r = await operation(generator, token);
+                    usage = r.Usage;
+                    imageCount = r.ImageCount;
+                    return new AITrackedOperationResult<TResult>
+                    {
+                        Result = r.Result,
+                        Usage = r.Usage,
+                        AuditResponse = new AIAuditResponse { Data = $"{r.ImageCount ?? 0} image(s)" },
+                    };
+                },
+                cancellationToken);
+
+            return new AITrackedImageResult<TResult>
+            {
+                Result = tracked.Result,
+                Usage = usage,
+                ImageCount = imageCount,
+            };
         }
         finally
         {

@@ -88,6 +88,20 @@ public class UmbracoAISettingsServiceConnector(
             dependencies.Add(new UmbracoAIArtifactDependency(embeddingProfileUdi, ArtifactDependencyMode.Match));
         }
 
+        GuidUdi? speechToTextProfileUdi = null;
+        if (entity.DefaultSpeechToTextProfileId.HasValue)
+        {
+            speechToTextProfileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, entity.DefaultSpeechToTextProfileId.Value);
+            dependencies.Add(new UmbracoAIArtifactDependency(speechToTextProfileUdi, ArtifactDependencyMode.Match));
+        }
+
+        GuidUdi? imageGenerationProfileUdi = null;
+        if (entity.DefaultImageGenerationProfileId.HasValue)
+        {
+            imageGenerationProfileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, entity.DefaultImageGenerationProfileId.Value);
+            dependencies.Add(new UmbracoAIArtifactDependency(imageGenerationProfileUdi, ArtifactDependencyMode.Match));
+        }
+
         GuidUdi? classifierChatProfileUdi = null;
         if (entity.ClassifierChatProfileId.HasValue)
         {
@@ -99,6 +113,8 @@ public class UmbracoAISettingsServiceConnector(
         {
             DefaultChatProfileUdi = chatProfileUdi,
             DefaultEmbeddingProfileUdi = embeddingProfileUdi,
+            DefaultSpeechToTextProfileUdi = speechToTextProfileUdi,
+            DefaultImageGenerationProfileUdi = imageGenerationProfileUdi,
             ClassifierChatProfileUdi = classifierChatProfileUdi
         };
 
@@ -151,6 +167,30 @@ public class UmbracoAISettingsServiceConnector(
         else
         {
             settings.DefaultEmbeddingProfileId = null;
+        }
+
+        // Resolve optional speech-to-text profile dependency
+        if (state.Artifact.DefaultSpeechToTextProfileUdi != null)
+        {
+            state.Artifact.DefaultSpeechToTextProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
+            var speechToTextProfile = await profileService.GetProfileAsync(state.Artifact.DefaultSpeechToTextProfileUdi.Guid, ct);
+            settings.DefaultSpeechToTextProfileId = speechToTextProfile?.Id;
+        }
+        else
+        {
+            settings.DefaultSpeechToTextProfileId = null;
+        }
+
+        // Resolve optional image-generation profile dependency
+        if (state.Artifact.DefaultImageGenerationProfileUdi != null)
+        {
+            state.Artifact.DefaultImageGenerationProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
+            var imageGenerationProfile = await profileService.GetProfileAsync(state.Artifact.DefaultImageGenerationProfileUdi.Guid, ct);
+            settings.DefaultImageGenerationProfileId = imageGenerationProfile?.Id;
+        }
+        else
+        {
+            settings.DefaultImageGenerationProfileId = null;
         }
 
         // Resolve optional classifier chat profile dependency

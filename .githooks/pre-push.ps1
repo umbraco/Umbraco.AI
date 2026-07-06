@@ -1,11 +1,11 @@
 # Pre-push hook to validate branch naming conventions for Umbraco.AI monorepo
 # Valid patterns:
-#   - main
-#   - dev
-#   - feature/<anything>
-#   - release/<anything>
-#   - hotfix/<anything>
-#   - support/<anything>
+#   - v<N>/dev
+#   - v<N>/main
+#   - v<N>/feature/<anything>
+#   - v<N>/release/<anything>
+#   - v<N>/hotfix/<anything>
+#   - claude/<anything>
 
 $ErrorActionPreference = "Stop"
 
@@ -17,14 +17,13 @@ if ([string]::IsNullOrEmpty($currentBranch)) {
     exit 1
 }
 
-# Allow main and dev branches
-if ($currentBranch -eq "main" -or $currentBranch -eq "dev") {
-    exit 0
-}
-
 # Check if branch matches valid patterns
 $validBranch = $false
-if ($currentBranch -match "^(feature|claude|release|hotfix|support)/.+") {
+if ($currentBranch -match "^v\d+/(dev|main)$") {
+    $validBranch = $true
+} elseif ($currentBranch -match "^v\d+/(feature|release|hotfix)/.+") {
+    $validBranch = $true
+} elseif ($currentBranch -match "^claude/.+") {
     $validBranch = $true
 }
 
@@ -34,17 +33,18 @@ if (-not $validBranch) {
     Write-Host "========================================" -ForegroundColor Red
     Write-Host ""
     Write-Host "Branch names must follow one of these patterns:"
-    Write-Host "  main"
-    Write-Host "  dev"
-    Write-Host "  feature/<anything>"
-    Write-Host "  release/<anything>"
-    Write-Host "  hotfix/<anything>"
-    Write-Host "  support/<anything>"
+    Write-Host "  v<N>/dev"
+    Write-Host "  v<N>/main"
+    Write-Host "  v<N>/feature/<anything>"
+    Write-Host "  v<N>/release/<anything>"
+    Write-Host "  v<N>/hotfix/<anything>"
+    Write-Host "  claude/<anything>"
     Write-Host ""
     Write-Host "Examples:"
-    Write-Host "  feature/add-caching"
-    Write-Host "  release/2026.01"
-    Write-Host "  hotfix/2026.01.1"
+    Write-Host "  v18/dev"
+    Write-Host "  v18/feature/add-caching"
+    Write-Host "  v17/release/2026.01"
+    Write-Host "  v17/hotfix/2026.01.1"
     Write-Host "========================================" -ForegroundColor Red
     exit 1
 }

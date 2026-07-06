@@ -5,6 +5,22 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.0.0...Umbraco.AI@18.1.0) (2026-07-06)
+
+### feat
+
+* **core:** Add capability-agnostic IAIOperationTracker ([05709b8](https://github.com/umbraco/Umbraco.AI/commit/05709b872a01f8b596fb03283dafed2eb7393db8))
+* **imagegeneration:** Add experimental image generation capability ([26ae394](https://github.com/umbraco/Umbraco.AI/commit/26ae3948de8cecc3e9409aa058add2176ceba391)), closes [#206](https://github.com/umbraco/Umbraco.AI/issues/206) [#195](https://github.com/umbraco/Umbraco.AI/issues/195)
+
+### fix
+
+* **api,deps:** Regenerate OpenAPI clients and reconcile hey-api version ([1bd31c9](https://github.com/umbraco/Umbraco.AI/commit/1bd31c96f3799c5b844d1f662b58018e9f2bd0e1)), closes [#216](https://github.com/umbraco/Umbraco.AI/issues/216) [#217](https://github.com/umbraco/Umbraco.AI/issues/217)
+* **api:** Honor JSON converters in OpenAPI schema generation ([8dab290](https://github.com/umbraco/Umbraco.AI/commit/8dab290c66da23fb87b6d3d1f50ab111b3193fac)), closes [dotnet/aspnetcore#66340](https://github.com/dotnet/aspnetcore/issues/66340) [#209](https://github.com/umbraco/Umbraco.AI/issues/209)
+* **core:** Read embedding audit metadata from the runtime context ([a0a6cac](https://github.com/umbraco/Umbraco.AI/commit/a0a6cac0de59d1d6c53f21f3ae8d8397d7a21aa2))
+* **core:** Record usage for token-less and failed operations across all capabilities ([5516736](https://github.com/umbraco/Umbraco.AI/commit/55167368ed71c5f44b7499cc2319060e10bbbe0d))
+* **imagegeneration:** Don't require an alias for GetSupportedModelsAsync ([308db0a](https://github.com/umbraco/Umbraco.AI/commit/308db0a965e2ae760cafe3da1e151d23d14ec6f9))
+* **ui:** Give analytics breakdown table breathing room from card edges ([9fb5312](https://github.com/umbraco/Umbraco.AI/commit/9fb53129cf2fa34f413ab8f6996b82d952b2c457))
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.0.0...Umbraco.AI@18.0.0) (2026-06-25)
 
 ### feat

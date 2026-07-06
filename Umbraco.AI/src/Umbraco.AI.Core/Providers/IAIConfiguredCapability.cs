@@ -1,7 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 
-#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
+#pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
+#pragma warning disable UMBRACOAI_IMAGEGEN // Defining the experimental image-generation capability surface
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -62,4 +65,19 @@ public interface IAIConfiguredSpeechToTextCapability : IAIConfiguredCapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured speech-to-text client.</returns>
     Task<ISpeechToTextClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Image-generation capability with resolved settings.
+/// </summary>
+[Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
+public interface IAIConfiguredImageGeneratorCapability : IAIConfiguredCapability
+{
+    /// <summary>
+    /// Creates an image generator with the baked-in settings.
+    /// </summary>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured image generator.</returns>
+    Task<IImageGenerator> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default);
 }

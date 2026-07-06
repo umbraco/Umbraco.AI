@@ -430,7 +430,7 @@ function Get-ChangedProducts {
             $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
         }
     }
-    elseif ($SourceBranch -match '^refs/heads/(main|dev)$') {
+    elseif ($SourceBranch -match '^refs/heads/v\d+/(main|dev)$') {
         # For main/dev pushes: compare against the source version of the previous completed
         # build on this branch. origin/<branch> is unreliable here: by the time this job's
         # checkout fetches, the remote tracking ref already contains the commit being built
@@ -490,10 +490,10 @@ function Get-ChangedProducts {
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
         }
     }
-    elseif ($SourceBranch -match '^refs/heads/(release|hotfix)/') {
+    elseif ($SourceBranch -match '^refs/heads/v\d+/(release|hotfix)/') {
         # Release/hotfix branches: per-product tag-based comparison
         # Each product compares against its own latest release tag
-        $branchType = if ($SourceBranch -match 'release/') { "Release" } else { "Hotfix" }
+        $branchType = if ($SourceBranch -match '/release/') { "Release" } else { "Hotfix" }
         Write-Host "  $branchType branch detected - using per-product tag comparison" -ForegroundColor Cyan
 
         # Process each product independently
@@ -504,10 +504,11 @@ function Get-ChangedProducts {
             $latestTag = git describe --tags --abbrev=0 --match="$($product.DisplayName)@*" 2>&1
 
             if ($LASTEXITCODE -ne 0 -or -not ($latestTag -is [string])) {
-                Write-Host "  ! $($product.DisplayName): No release tag found, falling back to merge-base with main" -ForegroundColor Yellow
+                $versionPrefix = if ($SourceBranch -match '^refs/heads/(v\d+)/') { $Matches[1] } else { 'v18' }
+                Write-Host "  ! $($product.DisplayName): No release tag found, falling back to merge-base with $versionPrefix/main" -ForegroundColor Yellow
 
-                # Fallback: use merge-base with main for this product
-                $mergeBase = git merge-base "origin/main" HEAD 2>&1
+                # Fallback: use merge-base with vN/main for this product
+                $mergeBase = git merge-base "origin/$versionPrefix/main" HEAD 2>&1
                 if ($LASTEXITCODE -eq 0) {
                     $comparisonBase = $mergeBase.Trim()
                     $productChangedFiles = git diff --name-only "$comparisonBase..HEAD" -- $product.Path 2>&1
@@ -583,13 +584,14 @@ function Get-ChangedProducts {
         return $changed
     }
     else {
-        # For feature branches: compare with merge-base against dev
-        Write-Host "  Feature branch detected, comparing against dev" -ForegroundColor Cyan
+        # For feature branches: compare with merge-base against vN/dev
+        $versionPrefix = if ($SourceBranch -match '^refs/heads/(v\d+)/') { $Matches[1] } else { 'v18' }
+        Write-Host "  Feature branch detected, comparing against $versionPrefix/dev" -ForegroundColor Cyan
 
-        $mergeBase = git merge-base "origin/dev" HEAD 2>&1
+        $mergeBase = git merge-base "origin/$versionPrefix/dev" HEAD 2>&1
         if ($LASTEXITCODE -eq 0) {
             $comparisonBase = $mergeBase.Trim()
-            Write-Host "  Using merge-base with dev: $comparisonBase" -ForegroundColor Cyan
+            Write-Host "  Using merge-base with $versionPrefix/dev: $comparisonBase" -ForegroundColor Cyan
             $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
         }
     }
@@ -943,7 +945,7 @@ $changedProducts = Get-ChangedProducts -Products $products -SourceBranch $Source
 
 # 5. Release/hotfix branch manifest enforcement
 $manifestPath = Join-Path $RootPath "release-manifest.json"
-if ($SourceBranch -match '^refs/heads/release/') {
+if ($SourceBranch -match '^refs/heads/v\d+/release/') {
     Write-Host "Release branch detected - enforcing release-manifest.json" -ForegroundColor Cyan
 
     $manifest = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
@@ -969,7 +971,7 @@ if ($SourceBranch -match '^refs/heads/release/') {
     $releaseDisplay = $releaseKeys | ForEach-Object { $products[$_].DisplayName }
     Write-Host "Release packages: $($releaseDisplay -join ', ')" -ForegroundColor Yellow
 }
-elseif ($SourceBranch -match '^refs/heads/hotfix/') {
+elseif ($SourceBranch -match '^refs/heads/v\d+/hotfix/') {
     if (Test-Path $manifestPath) {
         Write-Host "Hotfix branch detected - applying release-manifest.json" -ForegroundColor Cyan
 

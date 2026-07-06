@@ -1,6 +1,7 @@
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.FileProcessing;
+using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.SpeechToText;
@@ -8,6 +9,8 @@ using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
+
+#pragma warning disable UMBRACOAI_IMAGEGEN // Exposes the experimental image-generation middleware collection builder
 
 namespace Umbraco.AI.Extensions;
 
@@ -65,6 +68,23 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AISpeechToTextMiddlewareCollectionBuilder AISpeechToTextMiddleware(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AISpeechToTextMiddlewareCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI image-generation middleware collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI image-generation middleware collection builder.</returns>
+    /// <remarks>
+    /// Use this to add, remove, or reorder image-generation middleware. Example:
+    /// <code>
+    /// builder.AIImageGenerationMiddleware()
+    ///     .Append&lt;LoggingImageGenerationMiddleware&gt;()
+    ///     .Append&lt;CachingMiddleware&gt;();
+    /// </code>
+    /// </remarks>
+    [System.Diagnostics.CodeAnalysis.Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
+    public static AIImageGenerationMiddlewareCollectionBuilder AIImageGenerationMiddleware(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIImageGenerationMiddlewareCollectionBuilder>();
 
     /// <summary>
     /// Gets the AI tools collection builder.

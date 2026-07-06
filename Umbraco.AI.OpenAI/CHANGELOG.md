@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@18.0.0...Umbraco.AI.OpenAI@18.1.0) (2026-07-06)
+
+### feat
+
+* **imagegeneration:** Add experimental image generation capability ([26ae394](https://github.com/umbraco/Umbraco.AI/commit/26ae3948de8cecc3e9409aa058add2176ceba391)), closes [#206](https://github.com/umbraco/Umbraco.AI/issues/206) [#195](https://github.com/umbraco/Umbraco.AI/issues/195)
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.0.0...Umbraco.AI.OpenAI@18.0.0) (2026-06-25)
 
 ### Internal

@@ -35,9 +35,10 @@ public class AIAgentServiceExecutionTests
                 It.IsAny<IEnumerable<AIRequestContextItem>?>(),
                 It.IsAny<IEnumerable<AITool>?>(),
                 It.IsAny<IReadOnlyDictionary<string, object?>?>(),
+                It.IsAny<AIApprovalPolicy>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<AIAgent, IEnumerable<AIRequestContextItem>?, IEnumerable<AITool>?, IReadOnlyDictionary<string, object?>?, CancellationToken>(
-                (_, _, _, properties, _) => capturedAdditionalProperties = properties)
+            .Callback<AIAgent, IEnumerable<AIRequestContextItem>?, IEnumerable<AITool>?, IReadOnlyDictionary<string, object?>?, AIApprovalPolicy, CancellationToken>(
+                (_, _, _, properties, _, _) => capturedAdditionalProperties = properties)
             .ReturnsAsync(CreateRespondingAgent());
 
         var eventAggregatorMock = new Mock<IEventAggregator>();

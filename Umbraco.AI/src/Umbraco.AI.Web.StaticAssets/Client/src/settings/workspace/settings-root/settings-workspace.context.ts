@@ -29,6 +29,7 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
         defaultChatProfileId: null,
         defaultEmbeddingProfileId: null,
         defaultSpeechToTextProfileId: null,
+        defaultImageGenerationProfileId: null,
         classifierChatProfileId: null,
     });
     readonly model = this.#model.asObservable();

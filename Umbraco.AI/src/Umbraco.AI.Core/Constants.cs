@@ -77,6 +77,11 @@ public static class Constants
         /// Feature type for inline embedding executions via <see cref="Embeddings.IAIEmbeddingService.GenerateEmbeddingsAsync"/>.
         /// </summary>
         public const string InlineEmbedding = "inline-embedding";
+
+        /// <summary>
+        /// Feature type for inline image-generation executions via <see cref="ImageGeneration.IAIImageGenerationService.GenerateImagesAsync"/>.
+        /// </summary>
+        public const string InlineImageGeneration = "inline-image-generation";
     }
 
     /// <summary>

@@ -4,7 +4,7 @@ import {
     PropertyValueOperationsService,
     type AiPropertyOperationModel,
     type AiPropertyValueOperationErrorModel,
-    type PropertyValueOperationRequestModelWritable,
+    type PropertyValueOperationRequestModel,
     type PropertyValueOperationResponseModel,
 } from "@umbraco-ai/core";
 
@@ -62,10 +62,10 @@ export async function invokePropertyValueOperation(
     host: UmbControllerHost,
     request: PropertyValueOperationRequest,
 ): Promise<PropertyValueOperationResponse> {
-    // Cast through the generated Writable shape — the OpenAPI generator can't model the
+    // Cast through the generated request shape — the OpenAPI generator can't model the
     // polymorphic AIPropertyPathSegment (string | object), so we shape the body locally and
     // hand it to the typed service.
-    const body = request as unknown as PropertyValueOperationRequestModelWritable;
+    const body = request as unknown as PropertyValueOperationRequestModel;
 
     const { data, error } = await tryExecute(host, PropertyValueOperationsService.invoke({ body }));
 

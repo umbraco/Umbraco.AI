@@ -21,6 +21,16 @@ public class AISettingsArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? de
     public GuidUdi? DefaultEmbeddingProfileUdi { get; set; }
 
     /// <summary>
+    /// The UDI of the default speech-to-text profile (optional).
+    /// </summary>
+    public GuidUdi? DefaultSpeechToTextProfileUdi { get; set; }
+
+    /// <summary>
+    /// The UDI of the default image-generation profile (optional).
+    /// </summary>
+    public GuidUdi? DefaultImageGenerationProfileUdi { get; set; }
+
+    /// <summary>
     /// The UDI of the classifier chat profile (optional).
     /// </summary>
     public GuidUdi? ClassifierChatProfileUdi { get; set; }

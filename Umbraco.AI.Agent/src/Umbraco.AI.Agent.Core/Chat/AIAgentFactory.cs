@@ -61,13 +61,14 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,
+        AIApprovalPolicy approvalPolicy = AIApprovalPolicy.Interactive,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(agent);
 
         MsAIAgent innerAgent = agent.AgentType switch
         {
-            AIAgentType.Standard => await CreateStandardAgentAsync(agent, contextItems, additionalTools, cancellationToken),
+            AIAgentType.Standard => await CreateStandardAgentAsync(agent, contextItems, additionalTools, approvalPolicy, cancellationToken),
             AIAgentType.Orchestrated => await CreateOrchestratedAgentAsync(
                 agent,
                 agent.GetOrchestratedConfig()
@@ -93,6 +94,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         UmbracoAIAgent agent,
         IEnumerable<AIRequestContextItem>? contextItems,
         IEnumerable<AITool>? additionalTools,
+        AIApprovalPolicy approvalPolicy,
         CancellationToken cancellationToken)
     {
         // STEP 1: Get allowed tool IDs (permission check - existing logic)
@@ -117,8 +119,37 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         //         - Tool metadata (ForEntityTypes) from enriched descriptions
         //         - User's question
         //         to make informed decisions about which tools to use
+        //
+        //         Destructive non-system tools are gated for approval per the resolved
+        //         AIApprovalPolicy:
+        //           - Interactive → wrap in ApprovalRequiredAIFunction (MEAI emits
+        //                           ToolApprovalRequestContent instead of executing inline)
+        //           - DenyAll     → wrap in ApprovalDeniedAIFunction (skip + tell the model),
+        //                           so non-interactive runs complete without stalling
+        //           - AllowAll    → leave unwrapped (executes; captured by audit middleware)
+        var destructiveToolIds = allowedToolIds
+            .Select(id => _toolCollection.GetById(id))
+            .Where(t => t is not null && t.IsDestructive && t is not IAISystemTool)
+            .Select(t => t!.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         var tools = new List<AITool>();
-        tools.AddRange(_toolCollection.ToAIFunctions(allowedToolIds, _functionFactory));
+        foreach (var fn in _toolCollection.ToAIFunctions(allowedToolIds, _functionFactory))
+        {
+            if (!destructiveToolIds.Contains(fn.Name))
+            {
+                tools.Add(fn);
+                continue;
+            }
+
+            tools.Add(approvalPolicy switch
+            {
+                AIApprovalPolicy.Interactive => new ApprovalRequiredAIFunction(fn),
+                AIApprovalPolicy.DenyAll => new ApprovalDeniedAIFunction(fn),
+                AIApprovalPolicy.AllowAll => fn,
+                _ => new ApprovalDeniedAIFunction(fn),
+            });
+        }
 
         // STEP 4: Filter frontend tools by runtime context
         //         Frontend tools ARE context-bound (operate on currently open entity)
@@ -137,12 +168,20 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
         var config = agent.GetStandardConfig();
 
+        // Only the Interactive policy produces ToolApprovalRequestContent; the multi-call
+        // disable (which scopes approval to exactly the destructive tool the model chose) is
+        // therefore only meaningful when destructive tools are actually wrapped for approval.
+        var requiresApproval = destructiveToolIds.Count > 0 && approvalPolicy == AIApprovalPolicy.Interactive;
+
         // Build ChatOptions — always needed for instructions and tools,
-        // plus output schema response format if configured
+        // plus output schema response format if configured.
+        // When approval is required, disable multi-call turns so each destructive
+        // tool call is presented individually for approval (MEAI limitation).
         var chatOptions = new ChatOptions
         {
             Instructions = config?.Instructions,
             Tools = tools,
+            AllowMultipleToolCalls = requiresApproval ? false : null,
         };
 
         if (config?.OutputSchema is JsonElement schema)

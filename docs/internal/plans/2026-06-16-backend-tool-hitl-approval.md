@@ -218,9 +218,9 @@ git commit -m "test(agent): characterize MEAI ApprovalRequiredAIFunction round-t
 ```
 
 > **Task 3/4 assumptions (filled in by Task 0):**
-> - A. Response role: `__________`
-> - B. Request must be in replayed history: `__________`
-> - C. Stateless construction `new ToolApprovalResponseContent(callId, approved, toolCall)` works: `__________`
+> - A. Response role: `ChatRole.User`
+> - B. Request must be in replayed history: `yes` — `history.AddRange(first.Messages)` required
+> - C. Stateless construction `new ToolApprovalResponseContent(callId, approved, toolCall)` works: `yes`
 
 ---
 
@@ -789,37 +789,36 @@ If FICC requires the original `ToolApprovalRequestContent` to be present in the 
 
 The client already has `UaiHitlInterruptHandler` keyed to `reason = "human_approval"` and an approval UI. This task confirms the server's new interrupt shape matches what the client expects and that resume sends `{ approved: bool }`.
 
-- [ ] **Step 1: Trace the client interrupt→resume path**
+- [x] **Step 1: Trace the client interrupt→resume path**
 
-Read the four files above and confirm:
-- The handler receives an interrupt whose `reason === "human_approval"` and renders the approval element.
-- The approval element's approve/deny resolves to a resume payload of `{ approved: true }` / `{ approved: false }`, with the resume entry's `interruptId` set to the server's interrupt `Id` (i.e. `"approval:call-9"`), `status: "Resolved"`.
-- The `message`, `toolName`, and `arguments` (from interrupt `Metadata`) are surfaced to the user.
+**Finding:** the interrupt→render path was already correct (`UaiHitlInterruptHandler` → `UaiHitlContext.setInterrupt` → `uai-hitl-approval` → default approval element resolving `{ approved: bool }`). **But the resume path was NOT wired for approval.** `run.controller.#resumeRun` injected the approve/deny decision as a *user chat message* and re-sent the conversation with no `resume` array — so the server's `ExtractToolResultsFromResume` (Task 4) never ran. The frontend never populated `AGUIRunRequestModel.resume` at all (the field existed in the generated client but was unused).
 
-- [ ] **Step 2: Align any mismatch (edit only if needed)**
+- [x] **Step 2: Align the mismatch (real edits required)**
 
-If the client currently builds a different payload shape (e.g. `{ approve: ... }` or echoes the option `value` string), adjust the approval element / resume assembly so the resolved payload is exactly `{ approved: boolean }` to match `ApprovalResponseSchema` from Task 2. Keep changes minimal and within the existing approval components.
+Wired a true resume path (commit `fix(agent,agent-ui): Wire human_approval resume entries to backend`):
+- `transport/uai-agent-client.ts`: `sendMessage` gained an optional `resume` param, threaded through `forwardedProps` (the AG-UI `RunAgentInput` schema has no first-class resume slot).
+- `transport/uai-http-agent.ts`: lifts `resume` out of `forwardedProps` into the typed `body.resume` field the server reads.
+- `chat/services/run.controller.ts`: `#resumeRun` detects `interrupt.reason === "human_approval"` and sends a single resume entry `{ interruptId: interrupt.id /* "approval:<callId>" */, status: "Resolved", payload: { approved } }` instead of a polluting user turn. The pending tool call is already replayed in the assistant message history (captured by `onToolCallStart`/`onToolCallArgsEnd`), so `PromoteApprovalRequestsInHistory` can correlate it server-side. Frontend `tool_call` resume is unchanged (its result is already appended as a tool-role message).
 
-- [ ] **Step 3: Build the frontend to verify it compiles**
+- [x] **Step 3: Build the frontend to verify it compiles**
 
-Run: `npm run build:agent-ui`
-Expected: build succeeds with no type errors.
+`npm run build:agent-ui` cannot reach a fully-green build in this worktree due to a **pre-existing** duplicate-`@umbraco-cms/backoffice`-copy nominal-identity issue affecting unrelated management UI components (`agent-picker`, `workflow-picker`, `agent-surface-picker`). Verified my three changed files introduce **zero** new type errors: the tsc error set is byte-identical with my changes applied vs. stashed.
 
-- [ ] **Step 4: Commit (only if files changed)**
+- [x] **Step 4: Commit**
 
-```bash
-git add Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Client/src/chat/
-git commit -m "fix(agent-ui): align human_approval resume payload with backend schema"
-```
+Committed as `fix(agent,agent-ui): Wire human_approval resume entries to backend`.
 
 ---
 
 ### Task 6: End-to-end integration test (approve + deny)
 
-**Files:**
-- Test: `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Agents/BackendToolApprovalFlowTests.cs` (create; confirm the integration test project name/path first via `ls Umbraco.AI.Agent/tests`)
+**Status: DONE.** No integration project existed (only `Tests.Unit`); created `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration` (matching the repo convention, e.g. `Umbraco.AI.Tests.Integration`) and registered it in `Umbraco.AI.Agent.slnx`. The `InternalsVisibleTo("Umbraco.AI.Agent.Tests.Integration")` entry was already present in `Umbraco.AI.Agent.Core.csproj`. Both tests pass: a real `ChatClientAgent` (built like `AIAgentFactory`, with `AllowMultipleToolCalls = false`) over a stateless scripted `IChatClient`, driven through the real `AGUIStreamingService` — pause→approve executes the spy once, deny never executes it.
 
-- [ ] **Step 1: Write the failing integration test**
+**Files:**
+- Created: `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Agents/BackendToolApprovalFlowTests.cs`
+- Created: `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Umbraco.AI.Agent.Tests.Integration.csproj`
+
+- [x] **Step 1: Write the failing integration test**
 
 ```csharp
 // Scenario, against a scripted IChatClient registered for a real DI-built agent with one
@@ -862,49 +861,44 @@ git commit -m "test(agent): end-to-end backend tool approval/deny flow"
 
 **Context:** 10.7.0 removed the back-compat path that auto-marked `ToolApprovalResponseContent` as `InformationalOnly`. With approval now in use, verify our resume responses still resume correctly under 10.7.
 
-- [ ] **Step 1: Bump the floors**
+**Status: DONE (no new commit needed).** `Directory.Packages.props` already pins both `Microsoft.Extensions.AI` and `Microsoft.Extensions.AI.OpenAI` at `[10.7.0, 10.999.999)`; no product-level override pins a lower floor.
 
-In `Directory.Packages.props`, change:
-```xml
-<PackageVersion Include="Microsoft.Extensions.AI" Version="[10.7.0, 10.999.999)" />
-<PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="[10.7.0, 10.999.999)" />
-```
-Then check for product-level overrides: `grep -rl "Microsoft.Extensions.AI" --include=Directory.Packages.props .` and update any that pin a lower floor.
+- [x] **Step 1: Bump the floors** — already at 10.7.0.
 
-- [ ] **Step 2: Restore + build**
+- [x] **Step 2: Restore + build** — solution builds on 10.7.0.
 
-Run: `dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx`
-Expected: succeeds.
+- [x] **Step 3: Re-run the full approval suite**
 
-- [ ] **Step 3: Re-run the full approval suite**
+`dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx --filter "FullyQualifiedName~Approval|FullyQualifiedName~MeaiApprovalRoundTrip"` → **23 passed** (21 unit incl. the Task 0 spike + 2 integration). The approved-resume path invokes the tool under 10.7 without needing an explicit `InformationalOnly = false`, confirmed by the Task 6 integration test. Full agent unit suite: **163 passed**.
 
-Run: `dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx --filter "FullyQualifiedName~Approval"`
-Expected: PASS. If the approved-resume path now fails to invoke the tool, the response content needs `InformationalOnly = false` set explicitly — add that in `ExtractToolResultsFromResume` (Task 4) where the `ToolApprovalResponseContent` is built, and re-run. Re-run the Task 0 spike too; update its assumptions if behavior shifted.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add Directory.Packages.props
-git commit -m "chore(deps): Bump Microsoft.Extensions.AI to 10.7.0 for tool approval"
-```
+- [x] **Step 4: Commit** — the 10.7.0 floor was already committed; nothing new to commit for this task.
 
 ---
 
 ## Scope boundary & open questions: headless / non-interactive approval
 
-This plan implements approval over the **AG-UI streaming** path (interrupt → client approves → resume). It does **not** cover non-interactive callers — a real gap that must be resolved before approval can ever be **default-on** (see `project_v17_alignment_breaking_changes`).
+**RESOLVED (Task 8 — implemented).** Shipped option 1 + 2: `AIApprovalPolicy { Interactive, DenyAll, AllowAll }` on `AIAgentExecutionOptions` (default **`DenyAll`**). The factory (`AIAgentFactory.CreateStandardAgentAsync`) gates destructive non-system tools per policy:
+- `Interactive` → `ApprovalRequiredAIFunction` (AG-UI streaming path forces this).
+- `DenyAll` → `ApprovalDeniedAIFunction` (new `DelegatingAIFunction` that skips execution and returns a denial result, so the run completes instead of stalling).
+- `AllowAll` → unwrapped (executes; captured by the existing audit-log middleware).
+
+`AGUIStreamingService` callers go through `IAIAgentService.StreamAgentAGUIAsync`, which passes `Interactive`. All headless service paths (`RunAgentAsync`/`StreamAgentAsync` persisted + inline, `CreateInlineAgentAsync`) pass `DenyAll`. `Umbraco.AI.Automate.RunAgentAction` builds `AIAgentExecutionOptions` without setting the policy, so it inherits the safe `DenyAll` default — destructive tools are denied (not stalled) under automation. Tests: factory unit tests for `DenyAll`/`AllowAll` wrapping; integration test `DestructiveBackendTool_DenyAllPolicy_CompletesWithoutExecuting`. The Automate-orchestrated human-task flow (option 4) remains a separate future cross-product effort.
+
+---
+
+This plan implements approval over the **AG-UI streaming** path (interrupt → client approves → resume). The non-interactive gap below is now closed by the `DenyAll` default (see `project_v17_alignment_breaking_changes`).
 
 Verified constraints:
 - **The non-streaming path has no resume.** `RunAgentAction` (`Umbraco.AI.Automate/Actions/RunAgentAction.cs`) and any non-AG-UI caller invoke `IAIAgentService.RunAgentAsync(...)` — a single, non-streaming call. There is no interrupt/resume there, so a `ToolApprovalRequestContent` produced mid-run has nothing to resolve it: under default-on approval a destructive tool would leave the run incomplete (tool unexecuted) or stalled. **Behavior must be defined explicitly**, not inherited from whatever FICC does by default.
 - **No human is present.** `RunAgentAction` runs as the workspace service account; there is no backoffice user or chat surface to approve, and our `Umbraco.AI.Automate` package currently has **no pause/human-task/approval primitive** (grep-confirmed).
 
-Options (decide before default-on; record the outcome here):
-1. **Per-execution approval policy** on `AIAgentExecutionOptions` (it already carries `UserGroupIds`/`AdditionalProperties` for headless) — e.g. `ApprovalPolicy { Interactive, AutoDeny, AutoAllowWithAudit }`. AG-UI streaming ⇒ `Interactive`; Automate ⇒ configurable.
-2. **Auto-deny (safe default):** the tool is skipped, the model is told approval was denied, the run completes. Preserves automation flow; destructive tools simply don't run headlessly without explicit opt-in.
-3. **Auto-allow-with-audit:** approval bypassed but audit-logged. Keeps automation working but defeats the gate — acceptable only behind an explicit per-agent/per-automation opt-in.
+Options (decided — see RESOLVED note above):
+1. **Per-execution approval policy** on `AIAgentExecutionOptions` — shipped as `ApprovalPolicy { Interactive, DenyAll, AllowAll }`. AG-UI streaming ⇒ `Interactive`; Automate ⇒ inherits the `DenyAll` default, configurable.
+2. **DenyAll (safe default):** the tool is skipped, the model is told approval was denied, the run completes. Preserves automation flow; destructive tools simply don't run headlessly without explicit opt-in. **← shipped as the default.**
+3. **AllowAll:** approval bypassed but audit-logged via existing middleware. Keeps automation working but defeats the gate — acceptable only behind an explicit per-agent/per-automation opt-in.
 4. **Orchestrate with Umbraco Automate (richest — user-proposed).** `RunAgentAction` detects a pending approval and surfaces it to the Automate engine: pause the workflow, raise a human-approval task, resume the agent with the decision when actioned. **Depends on Automate capabilities not yet confirmed** — investigate whether `Umbraco.Automate.Core` supports a *suspended/awaiting* `ActionResult`, workflow pause/resume, and a human-task/approval step. Also requires a **non-AG-UI resume mechanism** (re-invoke the agent with a `ToolApprovalResponseContent` injected — the AG-UI `ExtractToolResultsFromResume` logic is AG-UI-specific; Automate needs an analogous path, or the approval is resolved before re-invocation). If Automate supports this, it's the proper headless story; if not, it's a larger cross-product effort and its own plan.
 
-**Recommendation:** ship this plan (AG-UI/interactive) with an `AIAgentExecutionOptions.ApprovalPolicy` defaulting to **`AutoDeny`** for non-interactive callers — that makes a future default-on safe everywhere without deadlock. Treat the Automate-orchestrated human-task flow (option 4) as a **separate cross-product investigation/plan**, gated on confirming Automate's suspend/resume/human-task support.
+**Recommendation (shipped):** this plan (AG-UI/interactive) ships with `AIAgentExecutionOptions.ApprovalPolicy` defaulting to **`DenyAll`** for non-interactive callers — making a future default-on safe everywhere without deadlock. The Automate-orchestrated human-task flow (option 4) remains a **separate cross-product investigation/plan**, gated on confirming Automate's suspend/resume/human-task support.
 
 ## Cross-cutting risks & test obligations
 

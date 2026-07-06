@@ -3,6 +3,7 @@ export * from "./context/exports.js";
 export * from "./core/exports.js";
 export * from "./embeddings/exports.js";
 export * from "./speech-to-text/exports.js";
+export * from "./image-generation/exports.js";
 export * from "./entity-adapter/exports.js";
 export * from "./profile/exports.js";
 export * from "./request-context/exports.js";
@@ -19,12 +20,9 @@ export {
     type AiPropertyOperationModel,
     type AiPropertyValueOperationErrorModel,
     type PropertyValueOperationRequestModel,
-    type PropertyValueOperationRequestModelWritable,
     type PropertyValueOperationResponseModel,
     type AiDocumentMetadataModel,
-    type AiDocumentMetadataModelWritable,
     type AiVariantIdModel,
-    type AiVariantIdModelWritable,
 } from "./api/index.js";
 
 // Export client ready promise for nested packages to wait on

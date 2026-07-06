@@ -69,16 +69,30 @@ done
 # Set feed URL based on selection
 FEED_URL="${FEED_URLS[$FEED]}"
 
+# Detect major version from the Umbraco.Cms.Core lower bound in Directory.Packages.props
+PACKAGES_PROPS_PATH="$REPO_ROOT/Directory.Packages.props"
+if [ ! -f "$PACKAGES_PROPS_PATH" ]; then
+    echo "ERROR: Could not find $PACKAGES_PROPS_PATH" >&2
+    exit 1
+fi
+TEMPLATE_VERSION=$(grep -oE 'Include="Umbraco\.Cms\.Core" Version="\[[^,]+,' "$PACKAGES_PROPS_PATH" | grep -oE '\[[^,]+,' | tr -d '[,')
+if [ -z "$TEMPLATE_VERSION" ]; then
+    echo "ERROR: Could not find Umbraco.Cms.Core version range in $PACKAGES_PROPS_PATH" >&2
+    exit 1
+fi
+VERSION_MAJOR=$(echo "$TEMPLATE_VERSION" | cut -d. -f1)
+
 echo "========================================="
 echo "Umbraco.AI Feed Test Site Setup"
 echo "========================================="
 echo "Working directory: $REPO_ROOT"
 echo "Feed: $FEED ($FEED_URL)"
 echo "Site name: $SITE_NAME"
+echo "Version: v$VERSION_MAJOR (from Directory.Packages.props)"
 echo ""
 
 # Check if specific site folder already exists
-SITE_PATH="demo/$SITE_NAME"
+SITE_PATH="demos/v${VERSION_MAJOR}/$SITE_NAME"
 if [ -d "$SITE_PATH" ] && [ "$FORCE" = false ]; then
     echo "Site folder '$SITE_PATH' already exists. Use --force to recreate."
     exit 0
@@ -99,29 +113,33 @@ fi
 
 # Step 1: Install Umbraco templates
 if [ "$SKIP_TEMPLATE_INSTALL" = false ]; then
-    echo "Installing Umbraco templates..."
-    dotnet new install Umbraco.Templates --force
+    # TEMPLATE_VERSION already set above from Directory.Packages.props
+    echo "Installing Umbraco templates ($TEMPLATE_VERSION)..."
+    if echo "$TEMPLATE_VERSION" | grep -q '-'; then
+        echo "NOTE: Prerelease template ($TEMPLATE_VERSION) requires the umbracoprereleases MyGet source."
+    fi
+    dotnet new install "Umbraco.Templates::${TEMPLATE_VERSION}" --force
 fi
 
 # Step 2: Create demo folder
-echo "Creating demo folder..."
-mkdir -p "demo"
+echo "Creating demo folder 'demos/v${VERSION_MAJOR}'..."
+mkdir -p "demos/v${VERSION_MAJOR}"
 
 # Step 3: Create the Umbraco site
 echo "Creating Umbraco site '$SITE_NAME'..."
-pushd "demo" > /dev/null
+pushd "demos/v${VERSION_MAJOR}" > /dev/null
 dotnet new umbraco --force -n "$SITE_NAME" --friendly-name "Administrator" --email "admin@example.com" --password "password1234" --development-database-type SQLite
 popd > /dev/null
 
 # Step 4: Install Clean starter kit
 echo "Installing Clean starter kit..."
-pushd "demo/$SITE_NAME" > /dev/null
+pushd "demos/v${VERSION_MAJOR}/$SITE_NAME" > /dev/null
 dotnet add package Clean
 popd > /dev/null
 
 # Step 5: Configure NuGet sources and PackageSourceMapping
 echo "Configuring NuGet sources and package routing..."
-pushd "demo/$SITE_NAME" > /dev/null
+pushd "demos/v${VERSION_MAJOR}/$SITE_NAME" > /dev/null
 
 # Determine feed name
 case "$FEED" in
@@ -181,7 +199,7 @@ popd > /dev/null
 
 # Step 6: Install Umbraco.AI packages from feed
 echo "Installing Umbraco.AI packages from $FEED feed..."
-pushd "demo/$SITE_NAME" > /dev/null
+pushd "demos/v${VERSION_MAJOR}/$SITE_NAME" > /dev/null
 
 # Determine if we need --prerelease flag (only for nightly/prereleases, not for release)
 if [ "$FEED" = "release" ]; then
@@ -251,14 +269,14 @@ echo "========================================="
 echo "Setup Complete!"
 echo "========================================="
 echo ""
-echo "Site location: demo/$SITE_NAME"
+echo "Site location: demos/v${VERSION_MAJOR}/$SITE_NAME"
 echo ""
 echo "Credentials:"
 echo "  Email: admin@example.com"
 echo "  Password: password1234"
 echo ""
 echo "Next steps:"
-echo "  1. cd demo/$SITE_NAME"
+echo "  1. cd demos/v${VERSION_MAJOR}/$SITE_NAME"
 echo "  2. dotnet run"
 echo "  3. Open https://localhost:44355 in your browser"
 echo ""

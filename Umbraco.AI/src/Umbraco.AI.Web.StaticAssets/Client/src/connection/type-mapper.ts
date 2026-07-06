@@ -55,9 +55,10 @@ export const UaiConnectionTypeMapper = {
 
     toModelDescriptorModel(response: ModelDescriptorResponseModel): UaiModelDescriptorModel {
         return {
+            // Model is [Required] server-side; the nullable schema type is a model-binding artifact.
             model: {
-                providerId: response.model.providerId,
-                modelId: response.model.modelId,
+                providerId: response.model!.providerId,
+                modelId: response.model!.modelId,
             },
             name: response.name,
             metadata: response.metadata ?? undefined,

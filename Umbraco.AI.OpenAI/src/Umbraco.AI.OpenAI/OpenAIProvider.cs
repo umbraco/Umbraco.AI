@@ -28,6 +28,9 @@ public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
         WithCapability<OpenAIChatCapability>();
         WithCapability<OpenAIEmbeddingCapability>();
         WithCapability<OpenAISpeechToTextCapability>();
+#pragma warning disable UMBRACOAI_IMAGEGEN // Registers the experimental image-generation capability
+        WithCapability<OpenAIImageGeneratorCapability>();
+#pragma warning restore UMBRACOAI_IMAGEGEN
     }
 
     /// <summary>

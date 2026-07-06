@@ -35,7 +35,7 @@
 
   <!-- Umbraco Search -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Search.Core" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft.Extensions.AI -->

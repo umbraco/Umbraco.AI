@@ -116,12 +116,13 @@ public class AITrackingEmbeddingGeneratorTests
     }
 
     [Fact]
-    public async Task GenerateAsync_OnException_QueuesFailureWithNoneToken_AndRethrows()
+    public async Task GenerateAsync_OnException_QueuesFailureWithNoneToken_RethrowsAndRecordsFailedUsage()
     {
         // Arrange — inner generator throws regardless of cancellation token state
         var fakeGenerator = new FakeEmbeddingGenerator((_, _, _) =>
             Task.FromException<GeneratedEmbeddings<Embedding<float>>>(new InvalidOperationException("AI error")));
         var generator = CreateGenerator(fakeGenerator);
+        var usageSignal = ArrangeUsageRecordingSignal();
 
         // Use an already-cancelled token to simulate client disconnection
         using var cts = new CancellationTokenSource();
@@ -140,22 +141,35 @@ public class AITrackingEmbeddingGeneratorTests
             CancellationToken.None), Times.Once);
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        // RecordUsageWhenEmpty=true means even a failed operation with no usage records duration/status.
+        var record = await AwaitOrTimeout(usageSignal.Task);
+        record.Status.ShouldBe("Failed");
+        record.ErrorMessage.ShouldBe("AI error");
+        record.InputTokens.ShouldBe(0);
+        record.OutputTokens.ShouldBe(0);
+        record.TotalTokens.ShouldBe(0);
     }
 
     [Fact]
-    public async Task GenerateAsync_NullUsage_SkipsUsageRecording()
+    public async Task GenerateAsync_NullUsage_StillRecordsUsageRow()
     {
-        // Arrange — Embedding uses RecordUsageWhenEmpty=false, so a null Usage must not queue a record.
+        // Arrange — Embedding now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
+        // record (with null token usage) capturing duration/status rather than being dropped.
         var fakeGenerator = new FakeEmbeddingGenerator();
         var generator = CreateGenerator(fakeGenerator);
+        var usageSignal = ArrangeUsageRecordingSignal();
 
         // Act
         await generator.GenerateAsync(["hello"]);
-        await EnsureNoUsageRecorded();
+        var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        _usageRecordingServiceMock.Verify(x => x.QueueRecordUsageAsync(It.IsAny<AIUsageRecord>(), It.IsAny<CancellationToken>()), Times.Never);
-        // Audit still completes even when there's no usage to record.
+        record.Status.ShouldBe("Succeeded");
+        record.InputTokens.ShouldBe(0);
+        record.OutputTokens.ShouldBe(0);
+        record.TotalTokens.ShouldBe(0);
+        // Audit still completes as before.
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             _auditLog, It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), CancellationToken.None), Times.Once);
     }
@@ -275,10 +289,4 @@ public class AITrackingEmbeddingGeneratorTests
         winner.ShouldBe(task, "Timed out waiting for the fire-and-forget usage record to be queued.");
         return await task;
     }
-
-    /// <summary>
-    /// Gives the fire-and-forget usage-recording task a brief window to run, then callers assert
-    /// it was never invoked.
-    /// </summary>
-    private static Task EnsureNoUsageRecorded() => Task.Delay(100);
 }

@@ -147,11 +147,12 @@ public class AITrackingChatClientTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_OnException_QueuesFailureWithNoneToken_AndRethrows()
+    public async Task GetResponseAsync_OnException_QueuesFailureWithNoneToken_RethrowsAndRecordsFailedUsage()
     {
         // Arrange — inner client throws regardless of cancellation token state
         var innerClient = new FakeChatClient((_, _, _) => Task.FromException<ChatResponse>(new InvalidOperationException("AI error")));
         var client = CreateClient(innerClient);
+        var usageSignal = ArrangeUsageRecordingSignal();
 
         // Use an already-cancelled token to simulate client disconnection
         using var cts = new CancellationTokenSource();
@@ -170,24 +171,37 @@ public class AITrackingChatClientTests
             CancellationToken.None), Times.Once);
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        // RecordUsageWhenEmpty=true means even a failed operation with no usage records duration/status.
+        var record = await AwaitOrTimeout(usageSignal.Task);
+        record.Status.ShouldBe("Failed");
+        record.ErrorMessage.ShouldBe("AI error");
+        record.InputTokens.ShouldBe(0);
+        record.OutputTokens.ShouldBe(0);
+        record.TotalTokens.ShouldBe(0);
     }
 
     [Fact]
-    public async Task GetResponseAsync_NullUsage_SkipsUsageRecording()
+    public async Task GetResponseAsync_NullUsage_StillRecordsUsageRow()
     {
-        // Arrange — Chat uses RecordUsageWhenEmpty=false, so a null Usage must not queue a record.
+        // Arrange — Chat now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
+        // record (with null token usage) capturing duration/status rather than being dropped.
         var responseMessage = new ChatMessage(ChatRole.Assistant, "Response");
         var fakeClient = new FakeChatClient((_, _, _) =>
             Task.FromResult(new ChatResponse(responseMessage)));
         var client = CreateClient(fakeClient);
+        var usageSignal = ArrangeUsageRecordingSignal();
 
         // Act
         await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
-        await EnsureNoUsageRecorded();
+        var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        _usageRecordingServiceMock.Verify(x => x.QueueRecordUsageAsync(It.IsAny<AIUsageRecord>(), It.IsAny<CancellationToken>()), Times.Never);
-        // Audit still completes even when there's no usage to record.
+        record.Status.ShouldBe("Succeeded");
+        record.InputTokens.ShouldBe(0);
+        record.OutputTokens.ShouldBe(0);
+        record.TotalTokens.ShouldBe(0);
+        // Audit still completes as before.
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             _auditLog, It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), CancellationToken.None), Times.Once);
     }
@@ -240,11 +254,28 @@ public class AITrackingChatClientTests
                 r != null &&
                 ((IReadOnlyList<ChatMessage>)r.Data!)[0].Text.Contains("Hello")),
             CancellationToken.None), Times.Once);
+    }
 
-        // FakeChatClient's streaming updates carry no UsageContent, so the aggregated Usage is null;
-        // Chat's RecordUsageWhenEmpty=false means no usage record should be queued.
-        await EnsureNoUsageRecorded();
-        _usageRecordingServiceMock.Verify(x => x.QueueRecordUsageAsync(It.IsAny<AIUsageRecord>(), It.IsAny<CancellationToken>()), Times.Never);
+    [Fact]
+    public async Task GetStreamingResponseAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
+    {
+        // Arrange — FakeChatClient's streaming updates carry no UsageContent, so the aggregated
+        // Usage is null. Chat now uses RecordUsageWhenEmpty=true even for the streaming path, so
+        // a duration/status record is still queued.
+        var fakeClient = new FakeChatClient("Hello world");
+        var client = CreateClient(fakeClient);
+        var usageSignal = ArrangeUsageRecordingSignal();
+
+        // Act
+        await foreach (var _ in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
+        {
+        }
+
+        var record = await AwaitOrTimeout(usageSignal.Task);
+
+        // Assert
+        record.Status.ShouldBe("Succeeded");
+        record.TotalTokens.ShouldBe(0);
     }
 
     [Fact]
@@ -349,12 +380,6 @@ public class AITrackingChatClientTests
         winner.ShouldBe(task, "Timed out waiting for the fire-and-forget usage record to be queued.");
         return await task;
     }
-
-    /// <summary>
-    /// Gives the fire-and-forget usage-recording task a brief window to run, then callers assert
-    /// it was never invoked.
-    /// </summary>
-    private static Task EnsureNoUsageRecorded() => Task.Delay(100);
 
     /// <summary>
     /// A chat client whose streaming implementation throws on the first MoveNextAsync call.

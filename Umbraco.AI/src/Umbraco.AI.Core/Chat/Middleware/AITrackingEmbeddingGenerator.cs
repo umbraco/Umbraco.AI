@@ -37,7 +37,7 @@ internal sealed class AITrackingEmbeddingGenerator : AIBoundEmbeddingGeneratorBa
             Capability = AICapability.Embedding,
             PromptData = valueList,
             Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
-            RecordUsageWhenEmpty = false,
+            RecordUsageWhenEmpty = true,
         };
 
         var tracked = await _tracker.TrackAsync(

@@ -55,9 +55,9 @@
         }
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^17.0.0",
-        "@umbraco-ai/agent": "^17.0.0",
-        "@umbraco-ai/agent-ui": "^17.0.0",
+        "@umbraco-ai/core": "^17.1.0",
+        "@umbraco-ai/agent": "^17.1.0",
+        "@umbraco-ai/agent-ui": "^17.0.1",
         "@umbraco-ai/agent-copilot": "^17.0.0",
         "@umbraco-cms/backoffice": "^17.4.0"
     },

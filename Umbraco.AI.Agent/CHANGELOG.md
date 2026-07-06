@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.0.0...Umbraco.AI.Agent@17.1.0) (2026-07-06)
+
+### feat
+
+* **agent:** Backend tool HITL approval ([9dd53a7](https://github.com/umbraco/Umbraco.AI/commit/9dd53a72636ecd4529dd8b6b17e1d8d2d9fdf730)), closes [#212](https://github.com/umbraco/Umbraco.AI/issues/212)
+
+### fix
+
+* **api,agent:** Honor [JsonStringEnumMemberName] in OpenAPI enum schemas ([7af369a](https://github.com/umbraco/Umbraco.AI/commit/7af369af52bcce1bf597b04ea0b40dacb837fb38)), closes [#209](https://github.com/umbraco/Umbraco.AI/issues/209)
+
 ## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.10.4...Umbraco.AI.Agent@17.0.0) (2026-06-22)
 
 ### ⚠ BREAKING CHANGE

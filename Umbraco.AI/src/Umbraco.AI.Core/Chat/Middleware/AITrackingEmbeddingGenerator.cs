@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
+using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.Chat.Middleware;
 
@@ -14,11 +15,16 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 internal sealed class AITrackingEmbeddingGenerator : AIBoundEmbeddingGeneratorBase<string, Embedding<float>>
 {
     private readonly IAIOperationTracker _tracker;
+    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    public AITrackingEmbeddingGenerator(IEmbeddingGenerator<string, Embedding<float>> innerGenerator, IAIOperationTracker tracker)
+    public AITrackingEmbeddingGenerator(
+        IEmbeddingGenerator<string, Embedding<float>> innerGenerator,
+        IAIOperationTracker tracker,
+        IAIRuntimeContextAccessor contextAccessor)
         : base(innerGenerator)
     {
         _tracker = tracker;
+        _contextAccessor = contextAccessor;
     }
 
     /// <inheritdoc />
@@ -30,7 +36,7 @@ internal sealed class AITrackingEmbeddingGenerator : AIBoundEmbeddingGeneratorBa
         {
             Capability = AICapability.Embedding,
             PromptData = valueList,
-            Metadata = ExtractMetadataFromOptions(options),
+            Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
             RecordUsageWhenEmpty = false,
         };
 
@@ -49,24 +55,5 @@ internal sealed class AITrackingEmbeddingGenerator : AIBoundEmbeddingGeneratorBa
             cancellationToken);
 
         return tracked.Result;
-    }
-
-    /// <summary>
-    /// Extracts audit metadata (LogKeys) from the embedding options' additional properties.
-    /// Unlike chat/speech-to-text, embedding has no runtime-context-derived metadata source, so
-    /// this reproduces the extraction the former <c>AIAuditingEmbeddingGenerator</c> performed
-    /// directly against <see cref="EmbeddingGenerationOptions.AdditionalProperties"/>.
-    /// </summary>
-    private static IReadOnlyDictionary<string, string>? ExtractMetadataFromOptions(EmbeddingGenerationOptions? options)
-    {
-        if (options?.AdditionalProperties?.TryGetValue(Constants.ContextKeys.LogKeys, out var logKeys) == true
-            && logKeys is IEnumerable<string> keys)
-        {
-            return keys.ToDictionary(
-                key => key,
-                key => options?.AdditionalProperties?[key]?.ToString() ?? string.Empty);
-        }
-
-        return null;
     }
 }

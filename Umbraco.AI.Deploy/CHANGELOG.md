@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.0.0...Umbraco.AI.Deploy@18.0.1) (2026-07-06)
+
+### fix
+
+* **deploy:** Deploy capability-specific profile settings and default profiles ([5a3fa19](https://github.com/umbraco/Umbraco.AI/commit/5a3fa19409aa6a222c0430c9d8a3c65d7b234d74))
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@17.0.0...Umbraco.AI.Deploy@18.0.0) (2026-06-25)
 
 ### Internal

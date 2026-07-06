@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-    "version": "18.0.1",
+    "version": "18.1.0",
     "assemblyVersion": {
         "precision": "build"
     },
@@ -8,7 +8,7 @@
     "nugetPackageVersion": {
         "semVer": 2
     },
-    "publicReleaseRefSpec": ["^refs/heads/main$", "^refs/heads/hotfix/", "^refs/heads/release/"],
+    "publicReleaseRefSpec": ["^refs/heads/(v\\d+/)?main$", "^refs/heads/(v\\d+/)?hotfix/", "^refs/heads/(v\\d+/)?release/"],
     "cloudBuild": {
         "buildNumber": {
             "enabled": false

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.0...Umbraco.AI.Agent.Copilot@18.0.1) (2026-07-06)
+
+### fix
+
+* **api,deps:** Regenerate OpenAPI clients and reconcile hey-api version ([1bd31c9](https://github.com/umbraco/Umbraco.AI/commit/1bd31c96f3799c5b844d1f662b58018e9f2bd0e1)), closes [#216](https://github.com/umbraco/Umbraco.AI/issues/216) [#217](https://github.com/umbraco/Umbraco.AI/issues/217)
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.0.0...Umbraco.AI.Agent.Copilot@18.0.0) (2026-06-25)
 
 ### Internal

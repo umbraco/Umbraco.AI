@@ -1,4 +1,7 @@
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
 
 #pragma warning disable MEAI001 // IImageGenerator is experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Internal plumbing for the experimental image-generation API
@@ -7,18 +10,18 @@ namespace Umbraco.AI.Core.ImageGeneration;
 
 /// <summary>
 /// Middleware client that records usage analytics and audit entries around a normal pipeline
-/// generation, by delegating to the shared <see cref="AIImageGenerationTracker"/>.
+/// generation, by delegating to the shared <see cref="IAIOperationTracker"/>.
 /// </summary>
 /// <remarks>
-/// The recording orchestration lives entirely in <see cref="AIImageGenerationTracker"/> so it is
+/// The recording orchestration lives entirely in <see cref="IAIOperationTracker"/> so it is
 /// shared with <see cref="IAIImageGenerationService.InvokeWithTrackingAsync{TResult}"/> (the
 /// escape-hatch path) — there is a single implementation of "record an image-generation operation".
 /// </remarks>
 internal sealed class AITrackingImageGenerationClient : AIBoundImageGeneratorBase
 {
-    private readonly AIImageGenerationTracker _tracker;
+    private readonly IAIOperationTracker _tracker;
 
-    public AITrackingImageGenerationClient(IImageGenerator innerGenerator, AIImageGenerationTracker tracker)
+    public AITrackingImageGenerationClient(IImageGenerator innerGenerator, IAIOperationTracker tracker)
         : base(innerGenerator)
     {
         _tracker = tracker;
@@ -30,17 +33,25 @@ internal sealed class AITrackingImageGenerationClient : AIBoundImageGeneratorBas
         ImageGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        var descriptor = new AIOperationDescriptor
+        {
+            Capability = AICapability.ImageGeneration,
+            PromptData = BuildPromptData(request, options),
+            Metadata = null,
+            RecordUsageWhenEmpty = true,
+        };
+
         var tracked = await _tracker.TrackAsync(
-            BuildPromptData(request, options),
+            descriptor,
             async token =>
             {
                 var response = await base.GenerateAsync(request, options, token);
                 var imageCount = response.Contents?.Count(c => c is DataContent or UriContent) ?? 0;
-                return new AITrackedImageResult<ImageGenerationResponse>
+                return new AITrackedOperationResult<ImageGenerationResponse>
                 {
                     Result = response,
                     Usage = response.Usage,
-                    ImageCount = imageCount,
+                    AuditResponse = new AIAuditResponse { Data = $"{imageCount} image(s)" },
                 };
             },
             cancellationToken);

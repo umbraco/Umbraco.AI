@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using OpenIddict.Validation.AspNetCore;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
-using Umbraco.AI.Core.Analytics.Usage.Middleware;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Evaluators;
@@ -25,6 +24,7 @@ using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Providers;
@@ -120,26 +120,20 @@ public static partial class UmbracoBuilderExtensions
             .Append<AIRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (before function invoking)
             .Append<AIFunctionInvokingChatMiddleware>()  // Function/tool invocation
             .Append<AIGuardrailChatMiddleware>()         // Guardrail evaluation (pre/post-generate)
-            .Append<AITrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
-            .Append<AIUsageRecordingChatMiddleware>()    // Records usage to database for analytics
-            .Append<AIAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
+            .Append<AITrackingChatMiddleware>()          // Usage analytics + audit logging (via IAIOperationTracker)
             .Append<AIContextInjectingChatMiddleware>(); // Context injection (outermost)
 
         builder.AIEmbeddingMiddleware()
             .Append<AIOpenTelemetryEmbeddingMiddleware>()   // OpenTelemetry tracing + metrics (innermost - zero cost when unconfigured)
-            .Append<AITrackingEmbeddingMiddleware>()        // Tracks usage details
-            .Append<AIUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
-            .Append<AIAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)
+            .Append<AITrackingEmbeddingMiddleware>();       // Usage analytics + audit logging (via IAIOperationTracker)
 
         builder.AISpeechToTextMiddleware()
             .Append<AIOpenTelemetrySpeechToTextMiddleware>()          // OpenTelemetry tracing (innermost - zero cost when unconfigured)
-            .Append<AITrackingSpeechToTextMiddleware>()               // Tracks transcription results
-            .Append<AIUsageRecordingSpeechToTextMiddleware>()         // Records usage to database for analytics
-            .Append<AIAuditingSpeechToTextMiddleware>();              // Audit logging (optional, can be disabled)
+            .Append<AITrackingSpeechToTextMiddleware>();              // Usage analytics + audit logging (via IAIOperationTracker)
 
         builder.AIImageGenerationMiddleware()
             .Append<AIOpenTelemetryImageGenerationMiddleware>()       // OpenTelemetry tracing (innermost - zero cost when unconfigured)
-            .Append<AITrackingImageGenerationMiddleware>();           // Usage analytics + audit logging (via AIImageGenerationTracker)
+            .Append<AITrackingImageGenerationMiddleware>();           // Usage analytics + audit logging (via IAIOperationTracker)
 
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
@@ -225,9 +219,9 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
         services.AddSingleton<IAIImageGeneratorFactory, AIImageGeneratorFactory>();
 
-        // Shared usage + audit recorder for image generation (used by both the tracking middleware
-        // and the service's tracked escape-hatch helper, so the orchestration exists in one place).
-        services.AddSingleton<AIImageGenerationTracker>();
+        // Capability-agnostic usage + audit recorder (chat / embedding / speech-to-text / image),
+        // shared by every tracking middleware and the image escape-hatch helper.
+        services.AddSingleton<IAIOperationTracker, AIOperationTracker>();
 
         // High-level services
         services.AddSingleton<IAIChatService, AIChatService>();

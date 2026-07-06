@@ -109,6 +109,6 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
         Capability = AICapability.Chat,
         PromptData = messages,
         Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
-        RecordUsageWhenEmpty = false,
+        RecordUsageWhenEmpty = true,
     };
 }

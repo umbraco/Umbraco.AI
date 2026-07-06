@@ -6,9 +6,11 @@ using Shouldly;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Deploy;
 using Xunit;
 
 namespace Umbraco.AI.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -137,5 +139,117 @@ public class UmbracoAIProfileServiceConnectorTests
     {
         // Assert
         _connector.UdiEntityType.ShouldBe("umbraco-ai-profile");
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ImageGenerationProfile_RoundTripsSettings()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var profile = new AIProfile
+        {
+            Alias = "image-profile",
+            Name = "Image Profile",
+            Capability = AICapability.ImageGeneration,
+            Model = new AIModelRef("openai", "gpt-image-1"),
+            ConnectionId = connectionId,
+            Settings = new AIImageGenerationProfileSettings
+            {
+                Size = "1024x1024",
+                Quality = "hd",
+                Style = "vivid",
+                MediaType = "image/png"
+            }
+        };
+
+        var udi = new GuidUdi("umbraco-ai-profile", profile.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, profile);
+        artifact.ShouldNotBeNull();
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIConnection
+            {
+                Alias = "conn",
+                Name = "Conn",
+                ProviderId = "openai"
+            });
+
+        AIProfile? savedProfile = null;
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AIProfile>(), It.IsAny<CancellationToken>()))
+            .Callback<AIProfile, CancellationToken>((p, _) => savedProfile = p)
+            .ReturnsAsync((AIProfile p, CancellationToken _) => p);
+
+        var state = new ArtifactDeployState<AIProfileArtifact, AIProfile>(
+            artifact, null, _connector, 2);
+
+        // Act
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 2);
+
+        // Assert
+        savedProfile.ShouldNotBeNull();
+        var settings = savedProfile.Settings.ShouldBeOfType<AIImageGenerationProfileSettings>();
+        settings.Size.ShouldBe("1024x1024");
+        settings.Quality.ShouldBe("hd");
+        settings.Style.ShouldBe("vivid");
+        settings.MediaType.ShouldBe("image/png");
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ChatProfile_RoundTripsSettings()
+    {
+        // Arrange - guards against the marker-interface being serialized as an empty object,
+        // which would silently drop all concrete settings for every capability.
+        var connectionId = Guid.NewGuid();
+        var guardrailId = Guid.NewGuid();
+        var profile = new AIProfile
+        {
+            Alias = "chat-profile",
+            Name = "Chat Profile",
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4"),
+            ConnectionId = connectionId,
+            Settings = new AIChatProfileSettings
+            {
+                Temperature = 0.7f,
+                MaxTokens = 1000,
+                SystemPromptTemplate = "You are helpful.",
+                GuardrailIds = [guardrailId]
+            }
+        };
+
+        var udi = new GuidUdi("umbraco-ai-profile", profile.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, profile);
+        artifact.ShouldNotBeNull();
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIConnection
+            {
+                Alias = "conn",
+                Name = "Conn",
+                ProviderId = "openai"
+            });
+
+        AIProfile? savedProfile = null;
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AIProfile>(), It.IsAny<CancellationToken>()))
+            .Callback<AIProfile, CancellationToken>((p, _) => savedProfile = p)
+            .ReturnsAsync((AIProfile p, CancellationToken _) => p);
+
+        var state = new ArtifactDeployState<AIProfileArtifact, AIProfile>(
+            artifact, null, _connector, 2);
+
+        // Act
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 2);
+
+        // Assert
+        savedProfile.ShouldNotBeNull();
+        var settings = savedProfile.Settings.ShouldBeOfType<AIChatProfileSettings>();
+        settings.Temperature.ShouldBe(0.7f);
+        settings.MaxTokens.ShouldBe(1000);
+        settings.SystemPromptTemplate.ShouldBe("You are helpful.");
+        settings.GuardrailIds.ShouldBe([guardrailId]);
     }
 }

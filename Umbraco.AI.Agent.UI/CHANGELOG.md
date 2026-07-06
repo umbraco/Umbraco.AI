@@ -5,6 +5,14 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.0...Umbraco.AI.Agent.UI@18.0.1) (2026-07-06)
+
+### fix
+
+* **agent-ui:** Correlate backend approval tool call to a single chat entry ([25bc2cb](https://github.com/umbraco/Umbraco.AI/commit/25bc2cb8831b3d63cdb8129b9593d70228a011f5))
+* **agent-ui:** Show denied backend approval as errored, matching frontend tools ([b4e9c05](https://github.com/umbraco/Umbraco.AI/commit/b4e9c050f656d76c2632aabeede1431eb1dd6ed7))
+* **agent,agent-ui:** Wire human_approval resume entries to backend ([f789e83](https://github.com/umbraco/Umbraco.AI/commit/f789e83b1c66f89d2d82903cb2156fd4f7a4f6c3))
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@17.0.0...Umbraco.AI.Agent.UI@18.0.0) (2026-06-25)
 
 ### Internal

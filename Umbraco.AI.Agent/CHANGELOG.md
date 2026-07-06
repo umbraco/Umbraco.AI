@@ -5,6 +5,22 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.0.0...Umbraco.AI.Agent@18.1.0) (2026-07-06)
+
+### feat
+
+* **agent,approval:** Route approval resume entries to ToolApprovalResponseContent ([6ec852f](https://github.com/umbraco/Umbraco.AI/commit/6ec852f3c2a42706ffbf74d2a29937b2b9861b90))
+* **agent:** Add AGUIInterruptKind and approval interrupt emission ([e93707f](https://github.com/umbraco/Umbraco.AI/commit/e93707f9bdf36291ec7def22d9907e7990419340))
+* **agent:** Add ApprovalPolicy for non-interactive agent callers ([2f89469](https://github.com/umbraco/Umbraco.AI/commit/2f894692e129afa687aef218b3d2a691dc4412b3))
+* **agent:** Detect ToolApprovalRequestContent in stream and register human_approval interrupt ([3316787](https://github.com/umbraco/Umbraco.AI/commit/33167878a42ea997b6163896105bae233d18cbae))
+* **agent:** Wrap destructive backend tools in ApprovalRequiredAIFunction ([6683266](https://github.com/umbraco/Umbraco.AI/commit/6683266dc54be79ab08a712ea4486cf0457194fe))
+
+### fix
+
+* **agent,agent-ui:** Wire human_approval resume entries to backend ([f789e83](https://github.com/umbraco/Umbraco.AI/commit/f789e83b1c66f89d2d82903cb2156fd4f7a4f6c3))
+* **agent:** Make AGUIMessage introspectable so OpenAPI emits its model ([5a43c33](https://github.com/umbraco/Umbraco.AI/commit/5a43c334d1f1cfe609c227233659ebb91e15a1d1)), closes [#216](https://github.com/umbraco/Umbraco.AI/issues/216)
+* **agent:** Send lowercase resume status to match AG-UI wire contract ([a1f43df](https://github.com/umbraco/Umbraco.AI/commit/a1f43df37b3cb7bdba1c27450851a9b0e0dc3e0e))
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.0.0...Umbraco.AI.Agent@18.0.0) (2026-06-25)
 
 ### fix

@@ -161,23 +161,19 @@ public class AITrackingEmbeddingGeneratorTests
     }
 
     [Fact]
-    public async Task GenerateAsync_ExtractsMetadataFromOptionsAdditionalProperties()
+    public async Task GenerateAsync_ExtractsMetadataFromRuntimeContextLogKeys()
     {
-        // Arrange — unlike chat/STT, embedding LogKeys metadata is sourced from
-        // EmbeddingGenerationOptions.AdditionalProperties rather than the runtime context.
+        // Arrange — LogKeys declared in the runtime context must flow through to audit metadata,
+        // mirroring chat/STT. (Previously embedding incorrectly read LogKeys from
+        // EmbeddingGenerationOptions.AdditionalProperties, a location no caller populates.)
+        _runtimeContext.SetValue(Constants.ContextKeys.LogKeys, new[] { "customKey" });
+        _runtimeContext.SetValue("customKey", "customValue");
+
         var fakeGenerator = new FakeEmbeddingGenerator();
         var generator = CreateGenerator(fakeGenerator);
-        var options = new EmbeddingGenerationOptions
-        {
-            AdditionalProperties = new AdditionalPropertiesDictionary
-            {
-                [Constants.ContextKeys.LogKeys] = new[] { "customKey" },
-                ["customKey"] = "customValue",
-            },
-        };
 
         // Act
-        await generator.GenerateAsync(["hello"], options);
+        await generator.GenerateAsync(["hello"]);
 
         // Assert
         _auditLogFactoryMock.Verify(x => x.Create(
@@ -187,7 +183,7 @@ public class AITrackingEmbeddingGeneratorTests
     }
 
     [Fact]
-    public async Task GenerateAsync_WithoutLogKeysInOptions_PassesNullMetadata()
+    public async Task GenerateAsync_WithoutLogKeysInRuntimeContext_PassesNullMetadata()
     {
         // Arrange
         var fakeGenerator = new FakeEmbeddingGenerator();
@@ -224,7 +220,7 @@ public class AITrackingEmbeddingGeneratorTests
     #endregion
 
     private AITrackingEmbeddingGenerator CreateGenerator(IEmbeddingGenerator<string, Embedding<float>> innerGenerator) =>
-        new(innerGenerator, CreateTracker());
+        new(innerGenerator, CreateTracker(), _contextAccessorMock.Object);
 
     private AIOperationTracker CreateTracker() => new(
         _contextAccessorMock.Object,

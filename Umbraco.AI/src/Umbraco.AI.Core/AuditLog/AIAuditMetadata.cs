@@ -4,8 +4,8 @@ namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Extracts audit metadata (declared via <see cref="Constants.ContextKeys.LogKeys"/>) from the
-/// ambient runtime context. Used by capabilities whose LogKeys live in the runtime context
-/// (chat, speech-to-text). Embedding reads its LogKeys from the options bag instead.
+/// ambient runtime context. Used by all capabilities (chat, embedding, speech-to-text) — LogKeys
+/// always live in the runtime context, written there by the builders' WithAdditionalProperties.
 /// </summary>
 internal static class AIAuditMetadata
 {

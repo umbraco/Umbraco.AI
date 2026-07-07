@@ -17,7 +17,7 @@ Guide users through the complete release preparation process:
 4. **Confirm versions** with the user (including cascaded products)
 5. **Update Directory.Packages.props** inter-product dependency ranges (with user approval)
 6. **Update peerDependencyVersions in root package.json** npm peer dependency ranges (with user approval)
-7. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
+7. **Create release branch** (e.g., `v17/release/2026.02.1`) and switch to it
 8. **Dependency validation** - Check for cross-product conflicts using the graph built in cascade analysis
 9. **Update version.json** files for each product
 10. **Generate release-manifest.json** via `/release-manifest-management`
@@ -396,12 +396,17 @@ This phase mirrors Phase 4: every product in `bumpSet` (direct or forced) gets i
 
 **Branch Naming Convention:**
 
-Per CONTRIBUTING.md, the **recommended** convention is calendar-based with incrementing numbers:
-- `release/YYYY.MM.N` - Year, month, and incrementing release number
-- Example: `release/2026.02.1` for the first February 2026 release
-- Example: `release/2026.02.2` for the second February 2026 release
+The **recommended** convention is calendar-based with a version prefix:
+- `vN/release/YYYY.MM.N` — version prefix, year, month, and incrementing release number
+- Example: `v17/release/2026.02.1` for the first February 2026 release on v17
+- Example: `v18/release/2026.02.1` for the first February 2026 release on v18
 
-This is independent from product version numbers (which follow semantic versioning). A single release branch like `release/2026.02.1` can contain multiple products at different versions (e.g., Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5).
+**Determine the version prefix** from the current branch before creating the release branch:
+```bash
+git branch --show-current  # e.g. v17/dev → prefix = v17
+```
+
+This is independent from product version numbers (which follow semantic versioning). A single release branch like `v17/release/2026.02.1` can contain multiple products at different versions (e.g., Core@17.1.0, OpenAI@17.0.1, Prompt@17.2.0).
 
 **Workflow:**
 
@@ -452,12 +457,13 @@ This is independent from product version numbers (which follow semantic versioni
    ```
    Create release branch using recommended calendar naming?
 
+   Version prefix: v17 (from current branch v17/dev)
    Latest release tag for February 2026: 2026.02.2
-   Suggested branch name: release/2026.02.3 (next release in February 2026)
+   Suggested branch name: v17/release/2026.02.3 (next release in February 2026)
 
    Options:
-   - Use suggested name (release/2026.02.3)
-   - Enter custom name (e.g., release/v1.1.0 for version-based)
+   - Use suggested name (v17/release/2026.02.3)
+   - Enter custom name
    - Cancel
    ```
 
@@ -465,23 +471,24 @@ This is independent from product version numbers (which follow semantic versioni
    ```
    Create release branch using recommended calendar naming?
 
+   Version prefix: v17 (from current branch v17/dev)
    No previous releases found for February 2026.
-   Suggested branch name: release/2026.02.1 (first release in February 2026)
+   Suggested branch name: v17/release/2026.02.1 (first release in February 2026)
 
    Options:
-   - Use suggested name (release/2026.02.1)
-   - Enter custom name (e.g., release/v1.1.0 for version-based)
+   - Use suggested name (v17/release/2026.02.1)
+   - Enter custom name
    - Cancel
    ```
 
 3. **Create and checkout branch**:
     ```bash
-    git checkout -b release/<name>
+    git checkout -b ${prefix}/release/<name>
     ```
 
 4. **Confirm branch creation**:
     ```
-    ✓ Created and switched to branch: release/2026.02.1
+    ✓ Created and switched to branch: v17/release/2026.02.1
 
     All subsequent changes will be made on this branch.
 
@@ -575,7 +582,7 @@ include = sorted(bumpSet keys)
 exclude = sorted(union of:
     - Phase 1 changed products you chose NOT to release  (file changes, dropped)
     - Phase 2.5 Step 5 manifestAffected                  (range-delta consumers)
-    - First-time products with commits since main not in include
+    - First-time products with commits since vN/main not in include
 )
 ```
 
@@ -755,29 +762,28 @@ Verify all files are consistent:
 
 3. **Show summary**:
     ```
-    ✓ Release branch created: release/2026.02.1
+    ✓ Release branch created: v17/release/2026.02.1
     ✓ Updated 3 products:
-      - Umbraco.AI: 1.0.0 → 1.1.0
-      - Umbraco.AI.OpenAI: 1.0.0 → 1.0.1
-      - Umbraco.AI.Prompt: 1.0.0 → 2.0.0
+      - Umbraco.AI: 17.0.0 → 17.1.0
+      - Umbraco.AI.OpenAI: 17.0.0 → 17.0.1
+      - Umbraco.AI.Prompt: 17.0.0 → 17.2.0
     ✓ Generated changelogs
     ✓ All changes committed
 
     Next steps:
     - Review the changes: git show HEAD
-    - Push to remote: git push -u origin release/2026.02.1
-    - Create PR to merge into main
+    - Push to remote: git push -u origin v17/release/2026.02.1
     - CI will validate and build packages
+    - After CI passes, run /post-release-cleanup
     ```
 
 ## Important Notes
 
 - Always run from repository root
-- **Branch naming**: Use calendar-based naming `release/YYYY.MM.N` (recommended per CONTRIBUTING.md)
+- **Branch naming**: Use `vN/release/YYYY.MM.N` — version prefix derived from current branch, calendar date, incrementing number
   - Independent from product versions (multiple products = different versions in one release)
   - N is an incrementing number for each release in that month (1, 2, 3, etc.)
-  - Example: `release/2026.02.1` can contain Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5
-  - Version-based naming like `release/v1.1.0` is valid but not recommended
+  - Example: `v17/release/2026.02.1` can contain Core@17.1.0, OpenAI@17.0.1, Prompt@17.2.0
 - Use conventional commit analysis for version recommendations
 - Validate cross-product dependencies
 - This skill orchestrates `/release-manifest-management` and `/changelog-management`
@@ -874,7 +880,7 @@ Phase 6: Create release branch
 You fetch tags from remote
 You check for existing YYYY.MM.* tags (e.g., 2026.02.*)
 You find: 2026.02.1 (latest release tag for February 2026)
-You suggest: release/2026.02.2 (next release in February 2026)
+You suggest: v17/release/2026.02.2 (next release in February 2026)
 You create the branch and switch to it
 All subsequent work happens on this branch
 
@@ -917,7 +923,7 @@ You show summary and next steps
 ## Error Handling
 
 - **No changes detected**: Ask user if they want to proceed anyway (manual version bump)
-- **Git tag not found**: Fall back to comparing with main branch
+- **Git tag not found**: Fall back to comparing with `vN/main` branch
 - **Invalid version.json**: Report error and ask user to fix manually
 - **Changelog generation fails**: Report error but continue with other products
 - **Dependency conflict**: Warn user but allow them to proceed

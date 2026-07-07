@@ -11,6 +11,7 @@ export class UaiSettingsRepository {
             defaultChatProfileId: data?.defaultChatProfileId ?? null,
             defaultEmbeddingProfileId: data?.defaultEmbeddingProfileId ?? null,
             defaultSpeechToTextProfileId: data?.defaultSpeechToTextProfileId ?? null,
+            defaultImageGenerationProfileId: data?.defaultImageGenerationProfileId ?? null,
             classifierChatProfileId: data?.classifierChatProfileId ?? null,
         };
     }
@@ -21,6 +22,7 @@ export class UaiSettingsRepository {
                 defaultChatProfileId: model.defaultChatProfileId ?? undefined,
                 defaultEmbeddingProfileId: model.defaultEmbeddingProfileId ?? undefined,
                 defaultSpeechToTextProfileId: model.defaultSpeechToTextProfileId ?? undefined,
+                defaultImageGenerationProfileId: model.defaultImageGenerationProfileId ?? undefined,
                 classifierChatProfileId: model.classifierChatProfileId ?? undefined,
             },
         });
@@ -28,6 +30,7 @@ export class UaiSettingsRepository {
             defaultChatProfileId: data?.defaultChatProfileId ?? null,
             defaultEmbeddingProfileId: data?.defaultEmbeddingProfileId ?? null,
             defaultSpeechToTextProfileId: data?.defaultSpeechToTextProfileId ?? null,
+            defaultImageGenerationProfileId: data?.defaultImageGenerationProfileId ?? null,
             classifierChatProfileId: data?.classifierChatProfileId ?? null,
         };
     }

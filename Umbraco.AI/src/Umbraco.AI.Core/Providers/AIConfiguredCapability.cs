@@ -1,7 +1,8 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 
-#pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
+#pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
+#pragma warning disable UMBRACOAI_IMAGEGEN // Wraps the experimental image-generation capability
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -52,6 +53,24 @@ internal sealed class AIConfiguredSpeechToTextCapability(IAISpeechToTextCapabili
     /// <inheritdoc />
     public Task<ISpeechToTextClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default)
         => inner.CreateClientAsync(settings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
+        => inner.GetModelsAsync(settings, cancellationToken);
+}
+
+/// <summary>
+/// Decorator that wraps an image-generation capability with resolved settings.
+/// </summary>
+internal sealed class AIConfiguredImageGeneratorCapability(IAIImageGeneratorCapability inner, object settings)
+    : IAIConfiguredImageGeneratorCapability
+{
+    /// <inheritdoc />
+    public AICapability Kind => inner.Kind;
+
+    /// <inheritdoc />
+    public Task<IImageGenerator> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default)
+        => inner.CreateGeneratorAsync(settings, modelId, cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)

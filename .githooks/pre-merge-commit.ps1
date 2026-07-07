@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 $currentBranch = git rev-parse --abbrev-ref HEAD 2>$null
 
 # Only run on release or hotfix branches
-if ($currentBranch -notmatch '^(release|hotfix)/') {
+if ($currentBranch -notmatch '^v\d+/(release|hotfix)/') {
     exit 0
 }
 

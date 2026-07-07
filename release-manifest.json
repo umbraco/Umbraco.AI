@@ -1,25 +1,26 @@
 {
-  "include": [
-    "Umbraco.AI",
-    "Umbraco.AI.Agent",
-    "Umbraco.AI.Agent.Copilot",
-    "Umbraco.AI.Agent.Deploy",
-    "Umbraco.AI.Agent.UI",
-    "Umbraco.AI.Amazon",
-    "Umbraco.AI.Anthropic",
-    "Umbraco.AI.Automate",
-    "Umbraco.AI.DeepSeek",
-    "Umbraco.AI.Deploy",
-    "Umbraco.AI.FireworksAI",
-    "Umbraco.AI.Google",
-    "Umbraco.AI.HuggingFace",
-    "Umbraco.AI.MicrosoftFoundry",
-    "Umbraco.AI.Mistral",
-    "Umbraco.AI.OpenAI",
-    "Umbraco.AI.Prompt",
-    "Umbraco.AI.Prompt.Deploy",
-    "Umbraco.AI.Search",
-    "Umbraco.AI.TogetherAI"
-  ],
-  "exclude": []
+    "include": [
+        "Umbraco.AI",
+        "Umbraco.AI.Agent",
+        "Umbraco.AI.Agent.UI",
+        "Umbraco.AI.Deploy",
+        "Umbraco.AI.OpenAI",
+        "Umbraco.AI.Prompt"
+    ],
+    "exclude": [
+        "Umbraco.AI.Agent.Copilot",
+        "Umbraco.AI.Agent.Deploy",
+        "Umbraco.AI.Amazon",
+        "Umbraco.AI.Anthropic",
+        "Umbraco.AI.Automate",
+        "Umbraco.AI.DeepSeek",
+        "Umbraco.AI.FireworksAI",
+        "Umbraco.AI.Google",
+        "Umbraco.AI.HuggingFace",
+        "Umbraco.AI.MicrosoftFoundry",
+        "Umbraco.AI.Mistral",
+        "Umbraco.AI.Prompt.Deploy",
+        "Umbraco.AI.Search",
+        "Umbraco.AI.TogetherAI"
+    ]
 }

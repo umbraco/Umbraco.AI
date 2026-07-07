@@ -287,7 +287,7 @@ This package is frontend-only. Testing approaches:
 ### Debugging Copilot
 
 1. Build copilot: `npm run build:copilot`
-2. Run demo site: `dotnet run --project demo/Umbraco.AI.DemoSite`
+2. Run demo site: `dotnet run --project demos/v17/Umbraco.AI.DemoSite`
 3. Open browser dev tools to see console logs
 4. Check Network tab for AG-UI streaming requests
 

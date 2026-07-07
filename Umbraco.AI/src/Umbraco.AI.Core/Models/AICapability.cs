@@ -28,7 +28,16 @@ public enum AICapability
     /// <summary>
     /// Speech-to-text transcription capability
     /// </summary>
-    SpeechToText = 4
+    SpeechToText = 4,
 
-    // Future: TextToSpeech = 5, SpeechToSpeech = 6
+    /// <summary>
+    /// Image generation capability (text-to-image and image editing).
+    /// </summary>
+    /// <remarks>
+    /// Experimental — gated behind the <c>Umbraco:AI:Experimental:ImageGeneration</c> feature flag
+    /// (default off). Distinct from the reserved <see cref="Media"/> slot.
+    /// </remarks>
+    ImageGeneration = 5
+
+    // Future: TextToSpeech = 6, SpeechToSpeech = 7
 }

@@ -226,7 +226,7 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
     tags: Array<string>;
 };
 
@@ -303,6 +303,26 @@ export type GenerateEmbeddingRequestModel = {
     values: Array<string>;
 };
 
+export type GenerateImageRequestModel = {
+    prompt: string;
+    profileIdOrAlias?: string | null;
+    count?: number | null;
+    size?: string | null;
+    responseFormat?: string | null;
+    originalImages?: Array<ImageInputModel> | null;
+};
+
+export type GenerateImageResponseModel = {
+    images: Array<GeneratedImageModel>;
+    usage?: ImageGenerationUsageModel | null;
+};
+
+export type GeneratedImageModel = {
+    data?: string | null;
+    url?: string | null;
+    mediaType?: string | null;
+};
+
 export type GuardrailEvaluatorInfoModel = {
     id: string;
     name: string;
@@ -339,6 +359,25 @@ export type GuardrailRuleModel = {
     action: string;
     config?: unknown;
     sortOrder: number;
+};
+
+export type ImageGenerationProfileSettingsModel = ProfileSettingsModel & {
+    $type: 'imageGeneration';
+    size?: string | null;
+    quality?: string | null;
+    style?: string | null;
+    mediaType?: string | null;
+};
+
+export type ImageGenerationUsageModel = {
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+};
+
+export type ImageInputModel = {
+    data: string;
+    mediaType: string;
 };
 
 export type JsonNode = {
@@ -430,7 +469,7 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -446,7 +485,6 @@ export type PropertyValueOperationRequestModel = {
     operation: AiPropertyOperationModel;
     args?: JsonNode | null;
     rootValue?: JsonNode | null;
-    rootEditorSchemaAlias: string;
     documentMetadata: AiDocumentMetadataModel;
 };
 
@@ -495,6 +533,7 @@ export type SettingsResponseModel = {
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
+    defaultImageGenerationProfileId?: string | null;
 };
 
 export type SpeechToTextProfileSettingsModel = ProfileSettingsModel & {
@@ -776,7 +815,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
     tags: Array<string>;
 };
 
@@ -785,6 +824,7 @@ export type UpdateSettingsRequestModel = {
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
+    defaultImageGenerationProfileId?: string | null;
 };
 
 export type UpdateTestRequestModel = {
@@ -872,7 +912,6 @@ export type PropertyValueOperationRequestModelWritable = {
     operation: AiPropertyOperationModel;
     args?: JsonNodeWritable | null;
     rootValue?: JsonNodeWritable | null;
-    rootEditorSchemaAlias: string;
     documentMetadata: AiDocumentMetadataModelWritable;
 };
 
@@ -1211,6 +1250,10 @@ export type CompleteChatErrors = {
      * Not Found
      */
     404: ProblemDetails;
+    /**
+     * Unprocessable Content
+     */
+    422: ProblemDetails;
 };
 
 export type CompleteChatError = CompleteChatErrors[keyof CompleteChatErrors];
@@ -1983,6 +2026,39 @@ export type UpdateGuardrailResponses = {
      */
     200: unknown;
 };
+
+export type GenerateData = {
+    body?: GenerateImageRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/image-generation/generate';
+};
+
+export type GenerateErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GenerateError = GenerateErrors[keyof GenerateErrors];
+
+export type GenerateResponses = {
+    /**
+     * OK
+     */
+    200: GenerateImageResponseModel;
+};
+
+export type GenerateResponse = GenerateResponses[keyof GenerateResponses];
 
 export type GetAllProfilesData = {
     body?: never;

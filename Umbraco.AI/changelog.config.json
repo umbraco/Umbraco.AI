@@ -10,6 +10,7 @@
         "settings",
         "providers",
         "speechtotext",
+        "imagegeneration",
         "ui",
         "frontend",
         "api"

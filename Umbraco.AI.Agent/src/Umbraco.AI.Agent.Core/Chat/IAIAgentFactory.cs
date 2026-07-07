@@ -42,6 +42,11 @@ public interface IAIAgentFactory
     /// <param name="additionalTools">Optional additional tools to include in the agent (e.g., frontend tools).</param>
     /// <param name="additionalProperties">Optional additional properties to set in the runtime context
     ///  (e.g., RunId, ThreadId for telemetry/logging).</param>
+    /// <param name="approvalPolicy">How destructive backend tools are gated for human approval.
+    ///  Defaults to <see cref="AIApprovalPolicy.Interactive"/> (wrap in
+    ///  <see cref="ApprovalRequiredAIFunction"/>). Non-interactive callers must pass
+    ///  <see cref="AIApprovalPolicy.DenyAll"/> (or <see cref="AIApprovalPolicy.AllowAll"/>)
+    ///  since they cannot resolve a <c>human_approval</c> interrupt.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An <see cref="MsAIAgent"/> ready for use with MAF's RunAsync/RunStreamingAsync methods.</returns>
     /// <remarks>
@@ -79,5 +84,6 @@ public interface IAIAgentFactory
         IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,
+        AIApprovalPolicy approvalPolicy = AIApprovalPolicy.Interactive,
         CancellationToken cancellationToken = default);
 }

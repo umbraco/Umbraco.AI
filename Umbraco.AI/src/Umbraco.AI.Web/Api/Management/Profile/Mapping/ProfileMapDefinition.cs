@@ -117,6 +117,13 @@ public class ProfileMapDefinition : IMapDefinition
             {
                 Language = speechToText.Language
             },
+            AIImageGenerationProfileSettings imageGeneration => new ImageGenerationProfileSettingsModel
+            {
+                Size = imageGeneration.Size,
+                Quality = imageGeneration.Quality,
+                Style = imageGeneration.Style,
+                MediaType = imageGeneration.MediaType
+            },
             _ => null
         };
     }
@@ -144,6 +151,14 @@ public class ProfileMapDefinition : IMapDefinition
                 Language = speechToText.Language
             },
             AICapability.SpeechToText => new AISpeechToTextProfileSettings(),
+            AICapability.ImageGeneration when settings is ImageGenerationProfileSettingsModel imageGeneration => new AIImageGenerationProfileSettings
+            {
+                Size = imageGeneration.Size,
+                Quality = imageGeneration.Quality,
+                Style = imageGeneration.Style,
+                MediaType = imageGeneration.MediaType
+            },
+            AICapability.ImageGeneration => new AIImageGenerationProfileSettings(),
             _ => null
         };
     }

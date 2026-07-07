@@ -88,7 +88,12 @@ public class UmbracoAIProfileServiceConnector(
             ModelProviderId = entity.Model.ProviderId,
             ModelModelId = entity.Model.ModelId,
             ConnectionUdi = connectionUdi,
-            Settings = entity.Settings != null ? JsonSerializer.SerializeToElement(entity.Settings) : null,
+            // Serialize against the runtime type (Settings is declared as the marker interface
+            // IAIProfileSettings, which would otherwise serialize as an empty object) using the
+            // core serializer options so the artifact round-trips through AIProfileSettingsSerializer.
+            Settings = entity.Settings != null
+                ? JsonSerializer.SerializeToElement(entity.Settings, entity.Settings.GetType(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
+                : null,
             Tags = entity.Tags.ToList()
         };
 
@@ -128,18 +133,14 @@ public class UmbracoAIProfileServiceConnector(
             throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
         }
 
-        // Deserialize settings from JsonElement based on capability
+        // Deserialize settings from JsonElement based on capability.
+        // Delegate to the core serializer (rather than duplicating the capability switch here)
+        // so support for every capability — including ImageGeneration — stays in sync with the core.
         IAIProfileSettings? settings = null;
         if (artifact.Settings.HasValue)
         {
             var capability = (AICapability)artifact.Capability;
-            settings = capability switch
-            {
-                AICapability.Chat => artifact.Settings.Value.Deserialize<AIChatProfileSettings>(),
-                AICapability.Embedding => artifact.Settings.Value.Deserialize<AIEmbeddingProfileSettings>(),
-                AICapability.SpeechToText => artifact.Settings.Value.Deserialize<AISpeechToTextProfileSettings>(),
-                _ => null
-            };
+            settings = AIProfileSettingsSerializer.Deserialize(capability, artifact.Settings.Value.GetRawText());
         }
 
         // Create AIModelRef from artifact properties

@@ -26,6 +26,11 @@ public class AIOptions
     public string? DefaultSpeechToTextProfileAlias { get; set; }
 
     /// <summary>
+    /// The default image-generation profile alias to use when none is specified.
+    /// </summary>
+    public string? DefaultImageGenerationProfileAlias { get; set; }
+
+    /// <summary>
     /// Gets or sets the <see cref="Microsoft.Extensions.Configuration.IConfiguration"/> key
     /// prefixes that editable model settings may dereference via the <c>$Key:Path</c> syntax.
     /// </summary>
@@ -91,7 +96,6 @@ public class AIOptions
         "Umbraco:AI:Secrets",
     };
 
-    // TODO: public string? DefaultImageProviderAlias { get; set; }
     // TODO: public string? DefaultModerationProviderAlias { get; set; }
     // TODO: public string? DefaultToolProviderAlias { get; set; }
 }

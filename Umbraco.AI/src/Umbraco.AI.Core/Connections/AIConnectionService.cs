@@ -1,6 +1,7 @@
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
@@ -19,6 +20,7 @@ internal sealed class AIConnectionService : IAIConnectionService
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
 
     public AIConnectionService(
         IAIConnectionRepository repository,
@@ -26,6 +28,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         IAIEditableModelResolver modelResolver,
         IAIEntityVersionService versionService,
         IEventAggregator eventAggregator,
+        IAIExperimentalFeatures experimentalFeatures,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -33,6 +36,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         _modelResolver = modelResolver;
         _versionService = versionService;
         _eventAggregator = eventAggregator;
+        _experimentalFeatures = experimentalFeatures;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -266,7 +270,11 @@ internal sealed class AIConnectionService : IAIConnectionService
             {
                 foreach (var cap in provider.GetCapabilities())
                 {
-                    capabilities.Add(cap.Kind);
+                    // Hide experimental capabilities that are not enabled.
+                    if (_experimentalFeatures.IsCapabilityEnabled(cap.Kind))
+                    {
+                        capabilities.Add(cap.Kind);
+                    }
                 }
             }
         }
@@ -277,6 +285,12 @@ internal sealed class AIConnectionService : IAIConnectionService
     /// <inheritdoc />
     public async Task<IEnumerable<AIConnection>> GetConnectionsByCapabilityAsync(AICapability capability, CancellationToken cancellationToken = default)
     {
+        // Experimental capabilities that are disabled behave as if no connection supports them.
+        if (!_experimentalFeatures.IsCapabilityEnabled(capability))
+        {
+            return [];
+        }
+
         var connections = await _repository.GetAllAsync(cancellationToken);
 
         return connections.Where(conn =>

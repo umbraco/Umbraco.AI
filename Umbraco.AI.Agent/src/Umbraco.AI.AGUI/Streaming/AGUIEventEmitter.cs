@@ -30,6 +30,7 @@ public sealed class AGUIEventEmitter
     private readonly string _runId;
     private readonly HashSet<string> _emittedToolCallIds = new();
     private readonly HashSet<string> _frontendToolCallIds = new();
+    private readonly List<(string InterruptId, string ToolCallId, string ToolName, string ArgsJson)> _approvalInterrupts = new();
 
     private string _currentMessageId;
     private string? _lastGeneratedCallId;
@@ -65,6 +66,11 @@ public sealed class AGUIEventEmitter
     /// Gets whether any frontend tool calls have been emitted.
     /// </summary>
     public bool HasFrontendToolCalls => _frontendToolCallIds.Count > 0;
+
+    /// <summary>
+    /// Gets whether any backend tool approval requests have been registered.
+    /// </summary>
+    public bool HasApprovalRequests => _approvalInterrupts.Count > 0;
 
     /// <summary>
     /// Gets the set of frontend tool call IDs that have been emitted.
@@ -217,6 +223,19 @@ public sealed class AGUIEventEmitter
     };
 
     /// <summary>
+    /// Registers a pending backend tool approval request to be included in the next
+    /// <see cref="EmitRunFinished"/> call as a <c>human_approval</c> interrupt.
+    /// </summary>
+    /// <param name="interruptId">
+    /// The AG-UI interrupt ID (opaque; typically built by <c>AGUIInterruptKind.ForApproval</c>).
+    /// </param>
+    /// <param name="toolCallId">The MEAI tool call ID for correlation with the resume entry.</param>
+    /// <param name="toolName">The name of the tool requesting approval.</param>
+    /// <param name="argsJson">The serialized arguments JSON for display in the approval UI.</param>
+    public void RegisterApprovalRequest(string interruptId, string toolCallId, string toolName, string argsJson)
+        => _approvalInterrupts.Add((interruptId, toolCallId, toolName, argsJson));
+
+    /// <summary>
     /// Emits a <see cref="RunFinishedEvent"/> with the appropriate outcome.
     /// </summary>
     /// <returns>The run finished event.</returns>
@@ -237,19 +256,33 @@ public sealed class AGUIEventEmitter
     /// </remarks>
     public RunFinishedEvent EmitRunFinished()
     {
-        AGUIRunOutcome outcome = HasFrontendToolCalls
-            ? new AGUIRunOutcomeInterrupt(
-                _frontendToolCallIds
-                    .Select(toolCallId => new AGUIInterruptInfo
-                    {
-                        // Use toolCallId as the interrupt id so the server can recover
-                        // the corresponding tool call from a resume entry without
-                        // having to track an interruptId -> toolCallId mapping.
-                        Id = toolCallId,
-                        Reason = "tool_call",
-                        ToolCallId = toolCallId,
-                    })
-                    .ToList())
+        var interrupts = new List<AGUIInterruptInfo>();
+
+        // Frontend tool interrupts — client executes these, so the agent is paused waiting for result.
+        interrupts.AddRange(_frontendToolCallIds.Select(toolCallId => new AGUIInterruptInfo
+        {
+            // Use toolCallId as the interrupt id so the server can recover the
+            // corresponding tool call from a resume entry without server-side state.
+            Id = toolCallId,
+            Reason = "tool_call",
+            ToolCallId = toolCallId,
+        }));
+
+        // Backend tool approval interrupts — user must approve before execution.
+        interrupts.AddRange(_approvalInterrupts.Select(a => new AGUIInterruptInfo
+        {
+            Id = a.InterruptId,
+            Reason = "human_approval",
+            ToolCallId = a.ToolCallId,
+            Metadata = new Dictionary<string, object?>
+            {
+                ["toolName"] = a.ToolName,
+                ["args"] = a.ArgsJson,
+            },
+        }));
+
+        AGUIRunOutcome outcome = interrupts.Count > 0
+            ? new AGUIRunOutcomeInterrupt(interrupts)
             : new AGUIRunOutcomeSuccess();
 
         return new RunFinishedEvent

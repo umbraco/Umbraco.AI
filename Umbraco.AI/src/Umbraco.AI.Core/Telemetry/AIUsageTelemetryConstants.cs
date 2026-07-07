@@ -120,6 +120,15 @@ public static class AIUsageTelemetryConstants
     /// <summary>The set of capability names that have a default profile alias configured.</summary>
     public const string DefaultProfileCapabilities = "UmbracoAIDefaultProfileCapabilities";
 
+    /// <summary>
+    /// The set of experimental feature names that are enabled (opted in via
+    /// <c>Umbraco:AI:Experimental</c>), e.g. "ImageGeneration". Lets us track adoption of
+    /// experimental capabilities while they remain gated. Discovered by reflection over the
+    /// boolean flags on <see cref="Settings.AIExperimentalOptions"/>, so new flags are reported
+    /// without changes here.
+    /// </summary>
+    public const string ExperimentalFeatures = "UmbracoAIExperimentalFeatures";
+
     /// <summary>Whether audit logging is enabled.</summary>
     public const string AuditLogEnabled = "UmbracoAIAuditLogEnabled";
 

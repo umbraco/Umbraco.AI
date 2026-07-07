@@ -10,8 +10,8 @@ node_modules/
 # Generated API clients
 **/api/**/*.gen.ts
 
-# Demo site
-demo/
+# Demo sites
+demos/
 
 # Package files
 *.nupkg

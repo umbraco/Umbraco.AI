@@ -106,6 +106,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Image Generation features.
+            /// </summary>
+            public static class ImageGeneration
+            {
+                /// <summary>
+                /// The route segment for Image Generation features.
+                /// </summary>
+                public const string RouteSegment = "image-generation";
+
+                /// <summary>
+                /// The Swagger group name for Image Generation features.
+                /// </summary>
+                public const string GroupName = "Image Generation";
+            }
+
+            /// <summary>
             /// Defines constants for Embedding features.
             /// </summary>
             public static class Embedding

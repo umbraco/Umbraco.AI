@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.0.0...Umbraco.AI.Prompt@17.0.1) (2026-07-06)
+
+### fix
+
+* **api:** Regenerate OpenAPI client ([fa45596](https://github.com/umbraco/Umbraco.AI/commit/fa455963b83f08b2096a63f56c3f2352dd57f40c)), closes [#215](https://github.com/umbraco/Umbraco.AI/issues/215)
+
 ## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@1.8.8...Umbraco.AI.Prompt@17.0.0) (2026-06-22)
 
 ### feat

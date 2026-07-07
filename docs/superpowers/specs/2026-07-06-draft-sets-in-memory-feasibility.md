@@ -160,7 +160,15 @@ The structural wall is *not* fundamental — it comes down to two choke points, 
 
 One optional refactor worth flagging: having `DocumentNavigationService` derive ancestors/descendants/siblings/level from the three primitives (parent / ordered children / roots) would shrink an overlay's surface from ~10 methods to 3 and guarantee coherence between the inbound and outbound walks.
 
-**Net ask to the CMS team:** essentially *one navigation-overlay seam* (does most of the work, both routing directions) *+ one make-public* (node fabrication) *+ two small tolerances* — a far more fundable proposal than "make structural preview work," and the natural bridge from this interim add-on toward first-class core Draft Sets.
+**The same seam pays off twice — front-end preview *and* back-office in-set editing.** Tracing how the back office (and an MCP) *read* content inside a set surfaced the same convergence point. Fetching a *single* item in draft is add-on-solvable via replay-on-read (we overlay `IContentEditingService.GetAsync`, `IContentQueryService`, and `IContentListViewService`). But *listing/browsing* inside a set splits exactly like preview:
+
+- **Collection / list-view grid** → `IContentListViewService` (DB-backed, content-specific): overlaid cleanly in the add-on today.
+- **Content tree, ancestors, item labels** → all funnel through **`IEntityService`** (via `EntityTreeControllerBase.GetPagedChildren` and `IItemAncestorService`) — a ~100-method interface shared across ~11 entity types. It is DB-backed, so replay-on-read *works*, but decorating it in an add-on is disproportionate. **This is the same tree-structure problem, and seam #1 (the navigation overlay) is the right fix** — one core seam then serves both the front-end preview tree and the back-office in-set tree.
+- **Search / filter** → `IIndexedEntitySearchService` (Examine): blocked, exactly like the published-cache case above.
+
+So seam #1 is not a preview-only nicety: it's the shared answer to "show the tree as-the-set-would-leave-it" wherever that tree is rendered — public site or back office.
+
+**Net ask to the CMS team:** essentially *one navigation-overlay seam* (does most of the work, both routing directions, *and* the back-office in-set tree) *+ one make-public* (node fabrication) *+ two small tolerances* — a far more fundable proposal than "make structural preview work," and the natural bridge from this interim add-on toward first-class core Draft Sets.
 
 ---
 

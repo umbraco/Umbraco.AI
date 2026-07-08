@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.0.0-beta.2...Umbraco.AI.Automate@17.0.0) (2026-07-08)
+
+### Internal
+
+* Graduate to a stable release now that Umbraco.Automate v17 has shipped 17.0.0; bump the Umbraco.Automate.Core dependency floor from 17.0.0-beta to the stable 17.0.0.
+
 ## [17.0.0-beta.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.0.0-beta...Umbraco.AI.Automate@17.0.0-beta.2) (2026-06-22)
 
 ### Internal

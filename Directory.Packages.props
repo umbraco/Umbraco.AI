@@ -30,7 +30,7 @@
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[18.0.0-beta, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[18.0.0, 18.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->
@@ -62,7 +62,7 @@
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[18.0.1, 18.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[18.0.1, 18.999.999)" />
     <PackageVersion Include="Umbraco.AI.Deploy" Version="[18.0.1, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Automate" Version="[18.0.0-beta.1, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Automate" Version="[18.0.0, 18.999.999)" />
     <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[18.0.1, 18.999.999)" />
   </ItemGroup>
 

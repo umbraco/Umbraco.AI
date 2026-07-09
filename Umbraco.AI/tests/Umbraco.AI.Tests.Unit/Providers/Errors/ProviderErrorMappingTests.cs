@@ -2,6 +2,8 @@ using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Authentication;
 using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Tests.Unit.Providers.Errors;
@@ -34,6 +36,56 @@ public class ProviderErrorMappingTests
         var result = ProviderErrorMapping.FromException(ex);
 
         result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+    }
+
+    [Fact]
+    public void FromException_ClientResultException_WithZeroStatus_AndUnrecognisedInner_UsesGenericNetworkMessage()
+    {
+        // No differentiable transport cause in the inner chain - falls back to the original,
+        // still-generic network message rather than guessing.
+        var ex = new ClientResultException("transport failure", response: null, new Exception("boom"));
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+        result.UserMessage.ShouldBe("Couldn't reach the AI service. Check your connection and try again.");
+    }
+
+    [Fact]
+    public void FromException_ClientResultException_WrappingConnectionRefused_DifferentiatesMessage()
+    {
+        var socketEx = new SocketException((int)SocketError.ConnectionRefused);
+        var ex = new ClientResultException("transport failure", response: null, socketEx);
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+        result.ProviderCode.ShouldBe("connection");
+        result.UserMessage.ShouldNotBe("Couldn't reach the AI service. Check your connection and try again.");
+    }
+
+    [Fact]
+    public void FromException_ClientResultException_WrappingHostNotFound_IsDnsMessage()
+    {
+        var socketEx = new SocketException((int)SocketError.HostNotFound);
+        var ex = new ClientResultException("transport failure", response: null, socketEx);
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+        result.ProviderCode.ShouldBe("dns");
+    }
+
+    [Fact]
+    public void FromException_ClientResultException_WrappingAuthenticationFailure_IsTlsMessage()
+    {
+        var authEx = new AuthenticationException("The remote certificate is invalid.");
+        var ex = new ClientResultException("transport failure", response: null, authEx);
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+        result.ProviderCode.ShouldBe("tls");
     }
 
     [Fact]
@@ -93,6 +145,20 @@ public class ProviderErrorMappingTests
     }
 
     [Fact]
+    public void FromException_TaskCanceled_WrappingTimeout_ReturnsTransient()
+    {
+        // HttpClient reports its own request timeout as a TaskCanceledException wrapping a
+        // TimeoutException — this must be classified as a timeout, not a plain cancellation.
+        var timeout = new TimeoutException("The request timed out.");
+        var ex = new TaskCanceledException("A task was canceled.", timeout);
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.Transient);
+        result.ProviderCode.ShouldBe("timeout");
+    }
+
+    [Fact]
     public void FromException_Timeout_ReturnsTransient()
     {
         var result = ProviderErrorMapping.FromException(new TimeoutException("upstream timeout"));
@@ -124,6 +190,28 @@ public class ProviderErrorMappingTests
         var result = ProviderErrorMapping.FromException(new HttpRequestException("connection refused"));
 
         result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+    }
+
+    [Fact]
+    public void FromException_HttpRequestException_WithNameResolutionError_IsDnsMessage()
+    {
+        var ex = new HttpRequestException(HttpRequestError.NameResolutionError, "no such host", inner: null, statusCode: null);
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+        result.ProviderCode.ShouldBe("dns");
+    }
+
+    [Fact]
+    public void FromException_HttpRequestException_WithSecureConnectionError_IsTlsMessage()
+    {
+        var ex = new HttpRequestException(HttpRequestError.SecureConnectionError, "handshake failed", inner: null, statusCode: null);
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(AIProviderErrorCategory.NetworkError);
+        result.ProviderCode.ShouldBe("tls");
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
@@ -31,6 +33,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IAIPromptPropertyValueSchemaResolver _propertyValueSchemaResolver;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -43,6 +46,7 @@ internal sealed class AIPromptService : IAIPromptService
         IAIRuntimeContextScopeProvider runtimeContextScopeProvider,
         AIRuntimeContextContributorCollection contextContributors,
         IEventAggregator eventAggregator,
+        IAIPromptPropertyValueSchemaResolver propertyValueSchemaResolver,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -55,6 +59,7 @@ internal sealed class AIPromptService : IAIPromptService
         _runtimeContextScopeProvider = runtimeContextScopeProvider;
         _contextContributors = contextContributors;
         _eventAggregator = eventAggregator;
+        _propertyValueSchemaResolver = propertyValueSchemaResolver;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -349,6 +354,18 @@ internal sealed class AIPromptService : IAIPromptService
             }
         }
 
+        // 9. Resolve the target property's own value schema (when its editor exposes one via
+        // IPropertyEditorSchemaService) so generation can be constrained to the exact shape the
+        // property expects (e.g. a ColorPicker's {value,label}) instead of assuming a plain string.
+        // Editors that don't expose a schema fall back to the string-only shapes below.
+        JsonObject? propertyValueSchema = prompt.OptionCount >= 1
+            ? await _propertyValueSchemaResolver.ResolveValueSchemaAsync(
+                request.ContentTypeAlias,
+                request.ElementType ?? request.EntityType,
+                request.PropertyAlias,
+                cancellationToken)
+            : null;
+
         // 10. Execute and build result based on option count.
         // For OptionCount 1 and 2+, use structured output via GetStructuredResponseAsync<T>
         // which delegates to M.E.AI's structured output extensions (schema, ResponseFormat, deserialization).
@@ -374,11 +391,32 @@ internal sealed class AIPromptService : IAIPromptService
                 var response = await _chatService.GetChatResponseAsync(chat =>
                 {
                     ConfigureChat(chat);
-                    chat.WithOutputSchema(AIOutputSchema.FromType<SingleValueResponse>());
+                    chat.WithOutputSchema(propertyValueSchema is not null
+                        ? AIOutputSchema.FromJsonSchema(ToJsonElement(AIPromptDynamicResponseSchemas.BuildSingleValueSchema(propertyValueSchema)))
+                        : AIOutputSchema.FromType<SingleValueResponse>());
                 }, messages, cancellationToken);
                 var responseText = response.Text ?? string.Empty;
 
-                var displayValue = response.TryGetResult<SingleValueResponse>(out var parsed) ? parsed.Value : responseText;
+                object? value;
+                string displayValue;
+                if (propertyValueSchema is not null &&
+                    response.TryGetResult(out JsonElement structuredResult) &&
+                    structuredResult.TryGetProperty("value", out var valueElement))
+                {
+                    value = valueElement;
+                    displayValue = FormatDisplayValue(valueElement);
+                }
+                else if (response.TryGetResult<SingleValueResponse>(out var parsed))
+                {
+                    value = parsed.Value;
+                    displayValue = parsed.Value;
+                }
+                else
+                {
+                    value = responseText;
+                    displayValue = responseText;
+                }
+
                 result = new AIPromptExecutionResult
                 {
                     Content = responseText,
@@ -394,7 +432,7 @@ internal sealed class AIPromptService : IAIPromptService
                             ValueChange = new AIValueChange
                             {
                                 Path = request.PropertyAlias,
-                                Value = displayValue,
+                                Value = value,
                                 Culture = request.Culture,
                                 Segment = request.Segment
                             }
@@ -409,11 +447,27 @@ internal sealed class AIPromptService : IAIPromptService
                 var response = await _chatService.GetChatResponseAsync(chat =>
                 {
                     ConfigureChat(chat);
-                    chat.WithOutputSchema(AIOutputSchema.FromType<MultiOptionResponse>());
+                    chat.WithOutputSchema(propertyValueSchema is not null
+                        ? AIOutputSchema.FromJsonSchema(ToJsonElement(AIPromptDynamicResponseSchemas.BuildMultiOptionSchema(propertyValueSchema)))
+                        : AIOutputSchema.FromType<MultiOptionResponse>());
                 }, messages, cancellationToken);
                 var responseText = response.Text ?? string.Empty;
 
-                if (response.TryGetResult<MultiOptionResponse>(out var parsed) && parsed.Options is { Count: > 0 })
+                var structuredOptions = propertyValueSchema is not null
+                    ? TryParseStructuredMultiOptionResult(response, request)
+                    : null;
+
+                if (structuredOptions is { Count: > 0 })
+                {
+                    result = new AIPromptExecutionResult
+                    {
+                        Content = responseText,
+                        Usage = response.Usage,
+                        Messages = messages,
+                        ResultOptions = structuredOptions
+                    };
+                }
+                else if (response.TryGetResult<MultiOptionResponse>(out var parsed) && parsed.Options is { Count: > 0 })
                 {
                     result = new AIPromptExecutionResult
                     {
@@ -680,5 +734,69 @@ internal sealed class AIPromptService : IAIPromptService
             OutputTokenCount = (usage1.OutputTokenCount ?? 0) + (usage2.OutputTokenCount ?? 0),
             TotalTokenCount = (usage1.TotalTokenCount ?? 0) + (usage2.TotalTokenCount ?? 0)
         };
+    }
+
+    /// <summary>
+    /// Parses a multi-option response constrained to a dynamic property value schema
+    /// (<see cref="AIPromptDynamicResponseSchemas.BuildMultiOptionSchema"/>). Unlike
+    /// <see cref="MultiOptionResponse"/>, each option's value may be any JSON shape, not just a string.
+    /// </summary>
+    private static IReadOnlyList<AIPromptExecutionResult.AIPromptResultOption>? TryParseStructuredMultiOptionResult(
+        ChatResponse response,
+        AIPromptExecutionRequest request)
+    {
+        if (!response.TryGetResult(out JsonElement structuredResult) ||
+            !structuredResult.TryGetProperty("options", out var optionsElement) ||
+            optionsElement.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var options = new List<AIPromptExecutionResult.AIPromptResultOption>();
+        foreach (var optionElement in optionsElement.EnumerateArray())
+        {
+            if (!optionElement.TryGetProperty("label", out var labelElement) ||
+                !optionElement.TryGetProperty("value", out var valueElement))
+            {
+                continue;
+            }
+
+            var description = optionElement.TryGetProperty("description", out var descriptionElement) &&
+                descriptionElement.ValueKind == JsonValueKind.String
+                    ? descriptionElement.GetString()
+                    : null;
+
+            options.Add(new AIPromptExecutionResult.AIPromptResultOption
+            {
+                Label = labelElement.GetString() ?? "Option",
+                DisplayValue = FormatDisplayValue(valueElement),
+                Description = description,
+                ValueChange = new AIValueChange
+                {
+                    Path = request.PropertyAlias,
+                    Value = valueElement,
+                    Culture = request.Culture,
+                    Segment = request.Segment
+                }
+            });
+        }
+
+        return options;
+    }
+
+    /// <summary>
+    /// Formats a structured value for display — strings render as-is, everything else as compact JSON.
+    /// </summary>
+    private static string FormatDisplayValue(JsonElement value) =>
+        value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.GetRawText();
+
+    /// <summary>
+    /// Converts a <see cref="JsonNode"/>-built schema into a <see cref="JsonElement"/> for
+    /// <see cref="AIOutputSchema.FromJsonSchema"/>, cloning the root so it outlives the source document.
+    /// </summary>
+    private static JsonElement ToJsonElement(JsonNode node)
+    {
+        using var doc = JsonDocument.Parse(node.ToJsonString());
+        return doc.RootElement.Clone();
     }
 }

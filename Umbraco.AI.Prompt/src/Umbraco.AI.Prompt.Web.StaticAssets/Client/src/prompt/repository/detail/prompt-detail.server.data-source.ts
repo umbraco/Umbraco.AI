@@ -5,7 +5,6 @@ import { PromptsService } from "../../../api/index.js";
 import { UaiPromptTypeMapper } from "../../type-mapper.js";
 import type { UaiPromptDetailModel } from "../../types.js";
 import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
-import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../property-actions/constants.js";
 import { UAI_EMPTY_GUID } from "@umbraco-ai/core";
 
 /**
@@ -36,7 +35,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             scope: {
                 allowRules: [
                     {
-                        propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
+                        propertyEditorUiAliases: null,
                         propertyAliases: null,
                         contentTypeAliases: null,
                     },

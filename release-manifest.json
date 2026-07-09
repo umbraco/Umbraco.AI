@@ -1,4 +1,0 @@
-{
-    "include": ["Umbraco.AI.Automate"],
-    "exclude": ["Umbraco.AI.Agent.Copilot"]
-}

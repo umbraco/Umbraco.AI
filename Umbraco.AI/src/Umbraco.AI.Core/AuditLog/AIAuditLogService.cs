@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.TaskQueue;
 
 namespace Umbraco.AI.Core.AuditLog;
@@ -331,6 +332,24 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
     private static AIAuditLogErrorCategory CategorizeError(Exception exception)
     {
+        // A provider error has already been classified into an AIProviderErrorCategory (see
+        // ProviderErrorMapping) - map that directly instead of re-deriving a category by matching
+        // substrings against its own user-facing message, which drifts whenever that message wording
+        // changes and doesn't happen to contain one of the strings checked for below.
+        if (exception is AIProviderException providerException)
+        {
+            return providerException.Category switch
+            {
+                AIProviderErrorCategory.Authentication => AIAuditLogErrorCategory.Authentication,
+                AIProviderErrorCategory.RateLimited => AIAuditLogErrorCategory.RateLimiting,
+                AIProviderErrorCategory.NotFound => AIAuditLogErrorCategory.ModelNotFound,
+                AIProviderErrorCategory.InvalidRequest => AIAuditLogErrorCategory.InvalidRequest,
+                AIProviderErrorCategory.Transient => AIAuditLogErrorCategory.ServerError,
+                AIProviderErrorCategory.NetworkError => AIAuditLogErrorCategory.NetworkError,
+                _ => AIAuditLogErrorCategory.Unknown,
+            };
+        }
+
         // Basic error categorization - can be enhanced based on exception types
         var exceptionType = exception.GetType().Name;
         var message = exception.Message.ToLower();

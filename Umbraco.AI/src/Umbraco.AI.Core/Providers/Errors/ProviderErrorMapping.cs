@@ -1,5 +1,7 @@
 using System.ClientModel;
 using System.Net.Http;
+using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text.Json;
 
 namespace Umbraco.AI.Core.Providers.Errors;
@@ -31,12 +33,19 @@ public static class ProviderErrorMapping
                 case ClientResultException cre:
                     // Status == 0 means the request never made it to the server.
                     return cre.Status == 0
-                        ? new AIProviderErrorInfo(
-                            AIProviderErrorCategory.NetworkError,
-                            "Couldn't reach the AI service. Check your connection and try again.",
-                            ProviderCode: null,
-                            exception.Message)
+                        ? ClassifyTransportFailure(exception)
                         : FromHttpStatus(cre.Status, exception.Message, TryExtractOpenAIErrorCode(cre));
+
+                // A TimeoutException surfacing as (or wrapped by) an OperationCanceledException is how
+                // HttpClient reports its own request timeout, not a real cancellation - check it first
+                // so genuine timeouts aren't misreported as "request was cancelled".
+                case OperationCanceledException when HasInner<TimeoutException>(current):
+                case TimeoutException:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.Transient,
+                        "The AI service took too long to respond. Try again in a moment.",
+                        ProviderCode: "timeout",
+                        exception.Message);
 
                 case OperationCanceledException:
                     return new AIProviderErrorInfo(
@@ -45,22 +54,11 @@ public static class ProviderErrorMapping
                         ProviderCode: null,
                         exception.Message);
 
-                case TimeoutException:
-                    return new AIProviderErrorInfo(
-                        AIProviderErrorCategory.Transient,
-                        "The AI service took too long to respond. Try again in a moment.",
-                        ProviderCode: "timeout",
-                        exception.Message);
-
                 case HttpRequestException { StatusCode: { } code }:
                     return FromHttpStatus((int)code, exception.Message);
 
                 case HttpRequestException:
-                    return new AIProviderErrorInfo(
-                        AIProviderErrorCategory.NetworkError,
-                        "Couldn't reach the AI service. Check your connection and try again.",
-                        ProviderCode: null,
-                        exception.Message);
+                    return ClassifyTransportFailure(exception);
             }
         }
 
@@ -69,6 +67,91 @@ public static class ProviderErrorMapping
             "An unexpected error occurred talking to the AI service.",
             ProviderCode: null,
             exception.Message);
+    }
+
+    /// <summary>
+    /// Differentiates a connectivity failure - one where the request never reached the server - by
+    /// walking <paramref name="exception"/>'s inner-exception chain for a recognisable transport
+    /// cause (DNS resolution, connection refused/unreachable, TLS handshake). Falls back to a generic
+    /// network message when nothing more specific is recognised.
+    /// </summary>
+    /// <remarks>
+    /// All outcomes stay in <see cref="AIProviderErrorCategory.NetworkError"/> - only the user-facing
+    /// message and <see cref="AIProviderErrorInfo.ProviderCode"/> are differentiated, since every case
+    /// here shares the same retry semantics (check connectivity/config, then try again).
+    /// </remarks>
+    private static AIProviderErrorInfo ClassifyTransportFailure(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            switch (current)
+            {
+                case AuthenticationException:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Secure (TLS/SSL) connection to the AI service failed. Check certificates and the endpoint URL.",
+                        ProviderCode: "tls",
+                        exception.Message);
+
+                case SocketException { SocketErrorCode: SocketError.HostNotFound or SocketError.TryAgain or SocketError.NoData }:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Couldn't resolve the AI service address. Check the endpoint/host and your DNS.",
+                        ProviderCode: "dns",
+                        exception.Message);
+
+                case SocketException:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Couldn't connect to the AI service. It may be down, unreachable, or blocked by a firewall.",
+                        ProviderCode: "connection",
+                        exception.Message);
+
+                case HttpRequestException { HttpRequestError: HttpRequestError.NameResolutionError }:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Couldn't resolve the AI service address. Check the endpoint/host and your DNS.",
+                        ProviderCode: "dns",
+                        exception.Message);
+
+                case HttpRequestException { HttpRequestError: HttpRequestError.SecureConnectionError }:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Secure (TLS/SSL) connection to the AI service failed. Check certificates and the endpoint URL.",
+                        ProviderCode: "tls",
+                        exception.Message);
+
+                case HttpRequestException { HttpRequestError: HttpRequestError.ConnectionError }:
+                    return new AIProviderErrorInfo(
+                        AIProviderErrorCategory.NetworkError,
+                        "Couldn't connect to the AI service. It may be down, unreachable, or blocked by a firewall.",
+                        ProviderCode: "connection",
+                        exception.Message);
+            }
+        }
+
+        return new AIProviderErrorInfo(
+            AIProviderErrorCategory.NetworkError,
+            "Couldn't reach the AI service. Check your connection and try again.",
+            ProviderCode: null,
+            exception.Message);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="exception"/>'s inner-exception chain contains a <typeparamref name="T"/>.
+    /// </summary>
+    private static bool HasInner<T>(Exception exception)
+        where T : Exception
+    {
+        for (var current = exception.InnerException; current is not null; current = current.InnerException)
+        {
+            if (current is T)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

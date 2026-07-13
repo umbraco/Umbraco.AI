@@ -4,17 +4,16 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiPromptDetailModel } from "../../../types.js";
 import type { UaiPromptScope, UaiScopeRule } from "../../../property-actions/types.js";
-import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../property-actions/constants.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
 
 /**
- * Creates a default scope with one allow rule for all text-based editors.
+ * Creates a default scope with one allow rule matching every property editor.
  */
 function createDefaultScope(): UaiPromptScope {
     return {
         allowRules: [
             {
-                propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
+                propertyEditorUiAliases: null,
                 propertyAliases: null,
                 contentTypeAliases: null,
             },

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@18.0.1...Umbraco.AI.Prompt@18.1.0) (2026-07-13)
+
+### feat
+
+* **prompt:** Enable AI wand on all property editors via value schemas ([628dc1c](https://github.com/umbraco/Umbraco.AI/commit/628dc1c696257f566d155bb695c754cac3a080d2)), closes [#239](https://github.com/umbraco/Umbraco.AI/issues/239)
+
 ## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@18.0.0...Umbraco.AI.Prompt@18.0.1) (2026-07-06)
 
 ### fix

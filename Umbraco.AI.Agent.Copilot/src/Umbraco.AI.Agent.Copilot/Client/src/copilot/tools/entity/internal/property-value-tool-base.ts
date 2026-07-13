@@ -9,6 +9,9 @@ import {
     type PropertyValueOperationResponse,
     type VariantId,
 } from "./property-value-operation.client.js";
+import { normalizeVariantForProperty } from "./variant-normalization.js";
+
+export { normalizeVariantForProperty } from "./variant-normalization.js";
 
 /**
  * Loose structural shape of a workspace context's `getValues()` entry. Both document and block
@@ -43,23 +46,6 @@ interface WorkspaceContextLike {
         getPropertyStructureByAlias?: (
             alias: string,
         ) => Promise<{ variesByCulture?: boolean; variesBySegment?: boolean } | undefined>;
-    };
-}
-
-/**
- * Normalises a staged variant against a property's variance. An invariant property must be staged
- * with `culture`/`segment` of `null`; otherwise the save is rejected by the Management API with
- * `PropertyTypeCultureVarianceMismatch`. Genuinely variant properties keep their culture/segment.
- * Exported for unit testing.
- */
-export function normalizeVariantForProperty(
-    variant: VariantId | undefined,
-    variesByCulture: boolean,
-    variesBySegment: boolean,
-): VariantId {
-    return {
-        culture: variesByCulture ? (variant?.culture ?? null) : null,
-        segment: variesBySegment ? (variant?.segment ?? null) : null,
     };
 }
 

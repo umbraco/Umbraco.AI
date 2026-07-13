@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeVariantForProperty } from "./property-value-tool-base.js";
+import { normalizeVariantForProperty } from "./variant-normalization.js";
 
 describe("normalizeVariantForProperty", () => {
     const active = { culture: "pt-PT", segment: null };

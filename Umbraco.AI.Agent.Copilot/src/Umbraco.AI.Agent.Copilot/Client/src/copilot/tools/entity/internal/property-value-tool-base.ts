@@ -37,6 +37,30 @@ interface WorkspaceContextLike {
             | undefined;
     };
     variants?: unknown;
+    // Content/media/block workspaces expose a structure manager that knows each property's
+    // variance. Used to avoid staging an invariant property under a culture/segment.
+    structure?: {
+        getPropertyStructureByAlias?: (
+            alias: string,
+        ) => Promise<{ variesByCulture?: boolean; variesBySegment?: boolean } | undefined>;
+    };
+}
+
+/**
+ * Normalises a staged variant against a property's variance. An invariant property must be staged
+ * with `culture`/`segment` of `null`; otherwise the save is rejected by the Management API with
+ * `PropertyTypeCultureVarianceMismatch`. Genuinely variant properties keep their culture/segment.
+ * Exported for unit testing.
+ */
+export function normalizeVariantForProperty(
+    variant: VariantId | undefined,
+    variesByCulture: boolean,
+    variesBySegment: boolean,
+): VariantId {
+    return {
+        culture: variesByCulture ? (variant?.culture ?? null) : null,
+        segment: variesBySegment ? (variant?.segment ?? null) : null,
+    };
 }
 
 /**
@@ -119,18 +143,60 @@ export abstract class PropertyValueOperationToolBase
 
         const variantHint = built.variant ?? this.#resolveActiveVariant(workspace);
 
+        // Normalise the variant against the ROOT property's variance. Falling back to the active
+        // variant (above) tags EVERY value with the active culture/segment — but an invariant
+        // (shared) property must be staged with culture/segment = null, or the save fails with
+        // PropertyTypeCultureVarianceMismatch. Genuinely variant properties keep their variant.
+        let rootPropertyType: { variesByCulture?: boolean; variesBySegment?: boolean } | undefined;
+        try {
+            rootPropertyType = await workspace.structure?.getPropertyStructureByAlias?.(rootProperty);
+        } catch (error) {
+            // Keep execute()'s convention: every failure path returns a structured error to the agent.
+            return JSON.stringify({
+                success: false,
+                error: {
+                    code: "property-variance-unresolved",
+                    message:
+                        `Failed to resolve the variance of property '${rootProperty}' from the workspace ` +
+                        `structure: ${error instanceof Error ? error.message : String(error)}. Refusing to ` +
+                        `stage the value to avoid a culture variance mismatch on save.`,
+                },
+            });
+        }
+        if (!rootPropertyType) {
+            // Do NOT silently fall back to the active variant: if the property is actually invariant,
+            // staging it under a culture reintroduces the PropertyTypeCultureVarianceMismatch this
+            // guards against. Fail deterministically instead so the miss is visible, not intermittent.
+            return JSON.stringify({
+                success: false,
+                error: {
+                    code: "property-variance-unresolved",
+                    message:
+                        `Could not resolve the variance of property '${rootProperty}' from the workspace ` +
+                        `structure. Refusing to stage the value, because staging under the wrong culture/segment ` +
+                        `would fail on save with a culture variance mismatch. Verify the property exists on the ` +
+                        `content type.`,
+                },
+            });
+        }
+        const variant = normalizeVariantForProperty(
+            variantHint,
+            rootPropertyType.variesByCulture ?? false,
+            rootPropertyType.variesBySegment ?? false,
+        );
+
         // The workspace's getValues() only lists properties with staged values; properties the
         // user hasn't touched are absent. The dispatcher canonicalises root editor alias resolution
         // server-side from documentMetadata.contentTypeKey + path[0], so we only need to send the
         // staged root value (or undefined for never-touched properties).
-        const rootEntry = this.#findValueEntry(values, rootProperty, variantHint);
+        const rootEntry = this.#findValueEntry(values, rootProperty, variant);
         const rootValue = rootEntry?.value;
 
         const documentMetadata: DocumentMetadata = {
             contentTypeKey: workspace.getContentTypeUnique?.() ?? "",
             variants: this.#resolveVariants(workspace),
-            isVariant: variantHint?.culture != null,
-            isSegmented: variantHint?.segment != null,
+            isVariant: variant?.culture != null,
+            isSegmented: variant?.segment != null,
             name: workspace.getName?.(),
         };
 
@@ -150,8 +216,8 @@ export abstract class PropertyValueOperationToolBase
         const applyResult = await adapterContext.applyValueChange({
             path: rootProperty,
             value: response.newRootValue,
-            culture: variantHint?.culture ?? undefined,
-            segment: variantHint?.segment ?? undefined,
+            culture: variant?.culture ?? undefined,
+            segment: variant?.segment ?? undefined,
         });
 
         if (!applyResult.success) {

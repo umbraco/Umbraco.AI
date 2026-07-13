@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.1.0...Umbraco.AI@17.1.1) (2026-07-13)
+
+### fix
+
+* **core:** Differentiate AI transport failure messages ([2c323e9](https://github.com/umbraco/Umbraco.AI/commit/2c323e911517bdb5216151605ebc28a71cfe23a4)), closes [#240](https://github.com/umbraco/Umbraco.AI/issues/240)
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.0.0...Umbraco.AI@17.1.0) (2026-07-06)
 
 ### feat

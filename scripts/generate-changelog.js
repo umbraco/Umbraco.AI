@@ -96,6 +96,19 @@ function getPreviousVersion(product, currentVersion, tagPrefix) {
             } else if (currentIndex === 0) {
                 return null; // This is the first version
             }
+
+            // currentTag not yet created (release-prep). Constrain the lookup to the
+            // same major line — otherwise a higher parallel major (e.g. v18 tags while
+            // preparing a v17 release) sorts to tags[0] and the changelog diffs across
+            // lines, pulling the entire previous major's history back in.
+            const major = currentVersion.split(".")[0];
+            const sameMajor = tags.filter(
+                (t) => t !== currentTag && t.slice(tagPrefix.length).split(".")[0] === major,
+            );
+            if (sameMajor.length > 0) {
+                return sameMajor[0]; // highest tag on this major line (sorted desc)
+            }
+            return null; // first release on this major line
         }
 
         // Return the most recent tag

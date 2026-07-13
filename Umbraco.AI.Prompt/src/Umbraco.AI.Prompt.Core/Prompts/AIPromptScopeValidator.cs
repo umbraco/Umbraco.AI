@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Prompt.Core.Prompts;
@@ -109,19 +108,9 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
         string propertyAlias,
         CancellationToken cancellationToken)
     {
-        IContentTypeBase? contentType = entityType.ToLowerInvariant() switch
-        {
-            "document" or "block" => _contentTypeService.Get(contentTypeAlias),
-            "media" => _mediaTypeService.Get(contentTypeAlias),
-            "member" => _memberTypeService.Get(contentTypeAlias),
-            _ => _contentTypeService.Get(contentTypeAlias), // Default fallback
-        };
-
-        var propertyType = contentType is IContentTypeComposition compositionContentType
-            ? compositionContentType.CompositionPropertyTypes.FirstOrDefault(
-                pt => pt.Alias.Equals(propertyAlias, StringComparison.OrdinalIgnoreCase))
-            : contentType?.PropertyTypes.FirstOrDefault(
-                pt => pt.Alias.Equals(propertyAlias, StringComparison.OrdinalIgnoreCase));
+        var propertyType = AIPromptPropertyResolver.ResolvePropertyType(
+            _contentTypeService, _mediaTypeService, _memberTypeService,
+            contentTypeAlias, entityType, propertyAlias);
 
         if (propertyType is null)
         {

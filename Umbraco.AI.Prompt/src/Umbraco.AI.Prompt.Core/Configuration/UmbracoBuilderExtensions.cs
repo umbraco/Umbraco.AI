@@ -48,6 +48,9 @@ public static class UmbracoBuilderExtensions
         // Register scope validator
         builder.Services.AddScoped<IAIPromptScopeValidator, AIPromptScopeValidator>();
 
+        // Register property value schema resolver (backs schema-driven generation for non-string editors)
+        builder.Services.AddSingleton<IAIPromptPropertyValueSchemaResolver, AIPromptPropertyValueSchemaResolver>();
+
         // Register service (Singleton to match IAIProfileService pattern and allow use in context resolvers)
         builder.Services.AddSingleton<IAIPromptService, AIPromptService>();
 

@@ -1,8 +1,9 @@
 import { css, customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import type { ManifestPropertyEditorUi } from "@umbraco-cms/backoffice/property-editor";
 import "@umbraco-ai/core";
-import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../prompt/property-actions/constants.js";
 
 /**
  * Tag item for lookup results.
@@ -18,8 +19,18 @@ interface TagItem {
 type TagLookupCallback = (query: string) => Promise<TagItem[]>;
 
 /**
- * A tags input component for selecting text-based property editor UI aliases.
- * Wraps uai-tags-input with a restricted lookup that only allows text-based editors.
+ * Gets all registered property editor UIs that back a value-holding property editor
+ * (i.e. have a property editor schema alias — excludes settings-only UIs).
+ */
+function getAvailablePropertyEditorUis(): ManifestPropertyEditorUi[] {
+    return umbExtensionsRegistry
+        .getByType<"propertyEditorUi", ManifestPropertyEditorUi>("propertyEditorUi")
+        .filter((manifest) => !!manifest.meta.propertyEditorSchemaAlias);
+}
+
+/**
+ * A tags input component for selecting property editor UI aliases.
+ * Wraps uai-tags-input with a lookup restricted to registered property editor UIs.
  *
  * @fires change - Fires when tags are added or removed
  */
@@ -30,10 +41,9 @@ export class UaiPropertyEditorUiTagsInputElement extends UmbLitElement {
      */
     @property({ type: Array })
     public set items(value: string[]) {
-        // Filter to only allow valid text-based property editor UIs
-        this.#items = (value ?? []).filter((item) =>
-            TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as (typeof TEXT_BASED_PROPERTY_EDITOR_UIS)[number]),
-        );
+        // Filter to only allow currently-registered property editor UIs
+        const validAliases = new Set(getAvailablePropertyEditorUis().map((manifest) => manifest.alias));
+        this.#items = (value ?? []).filter((item) => validAliases.has(item));
     }
     public get items(): string[] {
         return this.#items;
@@ -53,52 +63,41 @@ export class UaiPropertyEditorUiTagsInputElement extends UmbLitElement {
     readonly = false;
 
     /**
-     * Lookup callback for fetching text-based property editor UI aliases.
-     * Only returns aliases from the TEXT_BASED_PROPERTY_EDITOR_UIS list.
+     * Lookup callback for fetching registered property editor UI aliases, matched by alias or label.
      */
     #lookup: TagLookupCallback = async (query: string): Promise<TagItem[]> => {
         const lowerQuery = query.toLowerCase();
 
-        return TEXT_BASED_PROPERTY_EDITOR_UIS.filter((alias) => {
-            // Match against full alias or simplified name
-            const simpleName = alias.replace("Umb.PropertyEditorUi.", "");
-            return alias.toLowerCase().includes(lowerQuery) || simpleName.toLowerCase().includes(lowerQuery);
-        })
-            .filter((alias) => !this.#items.includes(alias)) // Exclude already selected
-            .map((alias) => ({
-                id: alias,
-                text: alias.replace("Umb.PropertyEditorUi.", ""), // Show simplified name
-            }));
+        return getAvailablePropertyEditorUis()
+            .filter(
+                (manifest) =>
+                    manifest.alias.toLowerCase().includes(lowerQuery) ||
+                    manifest.meta.label.toLowerCase().includes(lowerQuery),
+            )
+            .filter((manifest) => !this.#items.includes(manifest.alias)) // Exclude already selected
+            .map((manifest) => ({ id: manifest.alias, text: manifest.meta.label }));
     };
 
     #onChange(event: Event) {
         event.stopPropagation();
         const target = event.target as HTMLElement & { items: string[] };
+        const editors = getAvailablePropertyEditorUis();
+        const aliasByLabel = new Map(editors.map((manifest) => [manifest.meta.label, manifest.alias]));
+        const validAliases = new Set(editors.map((manifest) => manifest.alias));
 
-        // Map simplified names back to full aliases and validate
+        // Map display labels back to full aliases and validate
         const newItems = target.items
-            .map((item) => {
-                // If it's already a full alias, use it
-                if (TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as (typeof TEXT_BASED_PROPERTY_EDITOR_UIS)[number])) {
-                    return item;
-                }
-                // Try to find matching full alias from simplified name
-                const fullAlias = TEXT_BASED_PROPERTY_EDITOR_UIS.find(
-                    (alias) => alias.replace("Umb.PropertyEditorUi.", "") === item,
-                );
-                return fullAlias ?? item;
-            })
-            .filter((item) =>
-                TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as (typeof TEXT_BASED_PROPERTY_EDITOR_UIS)[number]),
-            );
+            .map((item) => (validAliases.has(item) ? item : aliasByLabel.get(item) ?? item))
+            .filter((item) => validAliases.has(item));
 
         this.#items = newItems;
         this.dispatchEvent(new UmbChangeEvent());
     }
 
     render() {
-        // Display simplified names in the tags
-        const displayItems = this.#items.map((item) => item.replace("Umb.PropertyEditorUi.", ""));
+        // Display friendly labels in the tags
+        const labelByAlias = new Map(getAvailablePropertyEditorUis().map((manifest) => [manifest.alias, manifest.meta.label]));
+        const displayItems = this.#items.map((item) => labelByAlias.get(item) ?? item);
 
         return html`
             <uai-tags-input

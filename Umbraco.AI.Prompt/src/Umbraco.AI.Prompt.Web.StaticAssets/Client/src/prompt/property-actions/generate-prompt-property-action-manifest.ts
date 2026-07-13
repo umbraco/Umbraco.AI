@@ -1,9 +1,7 @@
 import type { ManifestPropertyAction } from "@umbraco-cms/backoffice/property-action";
-import {
-    TEXT_BASED_PROPERTY_EDITOR_UIS,
-    UAI_PROMPT_PROPERTY_ACTION_PREFIX,
-    UAI_PROMPT_SCOPE_CONDITION_ALIAS,
-} from "./constants.js";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import type { ManifestPropertyEditorUi } from "@umbraco-cms/backoffice/property-editor";
+import { UAI_PROMPT_PROPERTY_ACTION_PREFIX, UAI_PROMPT_SCOPE_CONDITION_ALIAS } from "./constants.js";
 import type { UaiPromptRegistrationModel, UaiPromptPropertyActionMeta } from "./types.js";
 import type { UaiPromptScopeConditionConfig } from "./prompt-scope.condition.js";
 
@@ -31,10 +29,14 @@ function getPropertyEditorUisForScope(prompt: UaiPromptRegistrationModel): strin
         }
     }
 
-    // If no specific editors defined, the scope applies to all text-based editors
-    // (filtered further by content type or property alias via the condition)
+    // If no specific editors defined, the scope applies to every registered property editor UI
+    // (filtered further by content type or property alias via the condition). Generation is
+    // constrained per-editor via its value schema (see IPropertyEditorSchemaService), falling
+    // back to plain-string generation for editors that don't expose one.
     if (editorAliases.size === 0) {
-        return [...TEXT_BASED_PROPERTY_EDITOR_UIS];
+        return umbExtensionsRegistry
+            .getByType<"propertyEditorUi", ManifestPropertyEditorUi>("propertyEditorUi")
+            .map((manifest) => manifest.alias);
     }
 
     return Array.from(editorAliases);

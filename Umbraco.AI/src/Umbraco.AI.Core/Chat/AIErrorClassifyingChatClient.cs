@@ -17,8 +17,12 @@ namespace Umbraco.AI.Core.Chat;
 /// model round-trip made inside function-invoking middleware passes back through it.
 /// </para>
 /// <para>
-/// Cancellation propagates untouched; an already-classified <see cref="AIProviderException"/>
-/// passes through unchanged so it is never double-wrapped.
+/// Cancellation propagates untouched only when the caller's own <see cref="CancellationToken"/>
+/// was actually signalled; an <see cref="OperationCanceledException"/> raised for any other reason
+/// (most commonly a client-side HTTP timeout, which the underlying SDK reports as a
+/// <see cref="TaskCanceledException"/>) is still classified so it gets a meaningful message instead
+/// of leaking the runtime's raw cancellation text. An already-classified
+/// <see cref="AIProviderException"/> passes through unchanged so it is never double-wrapped.
 /// </para>
 /// </remarks>
 internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
@@ -41,7 +45,7 @@ internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
         {
             return await base.GetResponseAsync(messages, options, cancellationToken);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
@@ -79,7 +83,7 @@ internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
 
                     update = enumerator.Current;
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     throw;
                 }

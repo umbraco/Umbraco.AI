@@ -366,6 +366,20 @@ internal sealed class AIPromptService : IAIPromptService
                 cancellationToken)
             : null;
 
+        // A resolved schema that isn't strict-representable (e.g. a block editor's unconstrained
+        // `{}` value node) would be rejected by strict providers like OpenAI with an opaque HTTP
+        // 400. Falling back to the string model here would silently produce a value the editor
+        // can't consume, so fail fast with a clear message instead. Editors that expose no schema
+        // (propertyValueSchema is null) still fall through to the string-based response models.
+        if (propertyValueSchema is not null &&
+            !AIPromptSchemaCompatibility.IsStrictRepresentable(propertyValueSchema))
+        {
+            throw new InvalidOperationException(
+                $"AI Prompt generation is not supported for property '{request.PropertyAlias}': its editor " +
+                "produces a value that cannot be constrained for structured generation (for example Block " +
+                "List or Block Grid). Scope this prompt to properties whose editors expose a constrainable value.");
+        }
+
         // 10. Execute and build result based on option count.
         // For OptionCount 1 and 2+, use structured output via GetStructuredResponseAsync<T>
         // which delegates to M.E.AI's structured output extensions (schema, ResponseFormat, deserialization).

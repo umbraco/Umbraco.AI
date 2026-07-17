@@ -23,6 +23,8 @@ import type {
     UaiSerializedProperty,
 } from "../types.js";
 import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
+import { resolveEditorSchemaAlias } from "../resolve-editor-schema-alias.js";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
 /**
  * Property editor aliases that represent the binary payload of a media item.
@@ -303,7 +305,10 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
         // surfaces the right variant id without changes here.
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
-        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
+        // Resolve the editor alias (falling back to the data type when the field is empty) so preparers still run.
+        const editorAlias = await resolveEditorSchemaAlias(
+            ctx as unknown as UmbControllerHost, existingValue?.editorAlias, property?.dataType?.unique);
+        const valueToSet = await resolveAndPrepareValue(change.value, editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);

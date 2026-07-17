@@ -43,4 +43,16 @@ public interface IAIEditableModelResolver
 
         return genericMethod.Invoke(this, new[] { data, schema });
     }
+
+    /// <summary>
+    /// Escapes a literal value so it survives configuration-variable resolution unchanged.
+    /// A value that already starts with the <c>$</c> reference prefix is prefixed with an extra
+    /// <c>$</c> (e.g. <c>$5</c> becomes <c>$$5</c>), which <see cref="ResolveModel{TModel}"/>
+    /// un-escapes back to the original. This is the inverse of the <c>$$</c> un-escape step and is
+    /// lossless. Values that do not start with <c>$</c> are returned unchanged.
+    /// </summary>
+    /// <param name="value">The literal value to escape (may be null).</param>
+    /// <returns>The escaped value, safe to store as settings that resolve back to the original literal.</returns>
+    string? EscapeLiteral(string? value)
+        => value is not null && value.StartsWith("$", StringComparison.Ordinal) ? "$" + value : value;
 }

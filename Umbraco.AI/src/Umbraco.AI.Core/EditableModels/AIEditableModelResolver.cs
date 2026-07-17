@@ -49,6 +49,13 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
         => (TModel?)ResolveModel(typeof(TModel), data, schema);
 
     /// <inheritdoc />
+    // Co-located with ConfigPrefix and the $$ un-escape (see ResolveConfigurationVariable) so a change
+    // to the escape syntax updates both the escape and un-escape in one place. Prefixing one extra '$'
+    // to a value already starting with '$' round-trips losslessly ($5 -> $$5 -> $5).
+    public string? EscapeLiteral(string? value)
+        => value is not null && value.StartsWith(ConfigPrefix, StringComparison.Ordinal) ? ConfigPrefix + value : value;
+
+    /// <inheritdoc />
     public object? ResolveModel(Type modelType, object? data, AIEditableModelSchema? schema = null)
     {
         // If data is null, return null

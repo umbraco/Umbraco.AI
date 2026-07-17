@@ -429,6 +429,51 @@ public class AIEditableModelResolverTests
 
     #endregion
 
+    #region EscapeLiteral
+
+    [Fact]
+    public void EscapeLiteral_Null_ReturnsNull()
+    {
+        CreateDefaultResolver().EscapeLiteral(null).ShouldBeNull();
+    }
+
+    [Fact]
+    public void EscapeLiteral_ValueWithoutLeadingDollar_ReturnedUnchanged()
+    {
+        CreateDefaultResolver().EscapeLiteral("# Heading").ShouldBe("# Heading");
+    }
+
+    [Fact]
+    public void EscapeLiteral_ValueWithLeadingDollar_IsPrefixedWithDollar()
+    {
+        CreateDefaultResolver().EscapeLiteral("$x").ShouldBe("$$x");
+    }
+
+    [Fact]
+    public void EscapeLiteral_ValueWithDoubleLeadingDollar_GainsOneMoreDollar()
+    {
+        CreateDefaultResolver().EscapeLiteral("$$x$$").ShouldBe("$$$x$$");
+    }
+
+    [Fact]
+    public void EscapeLiteral_ThenResolveModel_RoundTripsToOriginalLiteral()
+    {
+        // A literal that begins with '$' must survive a store-then-resolve round trip verbatim,
+        // rather than being treated as (or rejected as) a configuration reference.
+        const string literal = "$5 per month";
+        var resolver = CreateDefaultResolver();
+
+        var escaped = resolver.EscapeLiteral(literal);
+        var settings = new FakeProviderSettings { BaseUrl = escaped };
+
+        var result = resolver.ResolveModel<FakeProviderSettings>(settings);
+
+        result.ShouldNotBeNull();
+        result!.BaseUrl.ShouldBe(literal);
+    }
+
+    #endregion
+
     #region ResolveModel<TModel> - Validation
 
     [Fact]

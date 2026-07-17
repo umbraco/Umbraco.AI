@@ -15,6 +15,10 @@ appsettings.Local.json
 demos/v18/
 *.local.slnx
 
+# Local Claude/agent config (workflow rules + local settings)
+CLAUDE.local.md
+.claude/settings.local.json
+
 # Exclude non-source directories that contain pattern matches
 !refs/**
 !node_modules/**

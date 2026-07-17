@@ -16,6 +16,8 @@ import type {
     UaiSerializedProperty,
 } from "../types.js";
 import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
+import { resolveEditorSchemaAlias } from "../resolve-editor-schema-alias.js";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 /**
@@ -274,8 +276,11 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         const values = ctx.content.getValues() ?? [];
         const existingValue = values.find((v) => v.alias === propertyAlias);
 
-        // Prepare value for the target editor type
-        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
+        // Prepare value for the target editor type. Resolve the editor alias (falling back to the
+        // data type when the field is empty and has no existing value entry) so preparers still run.
+        const editorAlias = await resolveEditorSchemaAlias(
+            ctx as unknown as UmbControllerHost, existingValue?.editorAlias, property?.dataType?.unique);
+        const valueToSet = await resolveAndPrepareValue(change.value, editorAlias, existingValue?.value);
 
         try {
             await ctx.content.setPropertyValue(propertyAlias, valueToSet, variantId);

@@ -90,4 +90,28 @@ public class RichTextSimplifiedPropertyValueTransformerTests
         var obj = result.ShouldBeOfType<JsonObject>();
         obj["markup"]!.GetValue<string>().ShouldBe(string.Empty);
     }
+
+    // Regression for issue #249: replays the exact data from a live execute request/response to prove
+    // the server transform reproduces the response value, and that an empty current-blocks envelope
+    // (layout: {}) is PRESERVED verbatim rather than replaced by the Empty("Umbraco.RichText") default.
+    [Fact]
+    public async Task TransformToWriteValueAsync_PreservesCurrentEmptyBlocksEnvelope_Issue249()
+    {
+        // errorMessage's current value, verbatim from the live request's serialized entity context.
+        var currentValue = JsonNode.Parse(
+            "{\"markup\":\"<h2>Error</h2>\\n<p>Sorry there was a problem with submitting the form. Please try again.</p>\"," +
+            "\"blocks\":{\"layout\":{},\"contentData\":[],\"settingsData\":[],\"expose\":[]}}");
+        var llmValue = JsonValue.Create("There was an issue with submitting the form; please try again.");
+
+        var result = await _transformer.TransformToWriteValueAsync(llmValue, currentValue, Guid.NewGuid());
+
+        // Byte-for-byte match with the value the live server returned for this option.
+        var expected = JsonNode.Parse(
+            "{\"markup\":\"There was an issue with submitting the form; please try again.\"," +
+            "\"blocks\":{\"layout\":{},\"contentData\":[],\"settingsData\":[],\"expose\":[]}}")!.ToJsonString();
+        result!.ToJsonString().ShouldBe(expected);
+
+        // The preserved layout is empty ({}), NOT the no-current-value default which keys by editor alias.
+        result["blocks"]!["layout"]!.AsObject().Count.ShouldBe(0);
+    }
 }

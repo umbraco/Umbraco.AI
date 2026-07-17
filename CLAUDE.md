@@ -383,6 +383,14 @@ Controller/OtherService -> EntityService -> EntityRepository (internal)
 
 All extension methods in `Umbraco.AI.Extensions` namespace (or product-specific: `Umbraco.AI.Prompt.Extensions`).
 
+### Public API Backwards Compatibility
+
+Never break a public API. When a new method replaces an old one, keep the old signature and have it
+**proxy to the new method**, resolving any new parameters via service locator (e.g.
+`StaticServiceProvider.Instance.GetRequiredService<T>()`). Mark the old method `[Obsolete]` with the
+message `"Will be removed in vX"`, where **X = current major version + 2** (currently v17, so
+`"Will be removed in v19"`). This gives consumers two major versions to migrate.
+
 ## Excluded Folders
 
 - `Ref/` - External reference projects

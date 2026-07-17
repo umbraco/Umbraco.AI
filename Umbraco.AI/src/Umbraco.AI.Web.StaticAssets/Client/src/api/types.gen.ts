@@ -390,6 +390,14 @@ export type KeyValuePairOfstringAndstring = {
     value: null | string;
 };
 
+export type KnowledgeSetResponseModel = {
+    id: string;
+    name: string;
+    description?: null | string;
+    icon?: null | string;
+    itemCount: number;
+};
+
 export type ModelDescriptorResponseModel = {
     model: null | ModelRefModel;
     name: string;
@@ -2019,6 +2027,29 @@ export type GenerateResponses = {
 };
 
 export type GenerateResponse = GenerateResponses[keyof GenerateResponses];
+
+export type GetAllKnowledgeSetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/knowledge-sets';
+};
+
+export type GetAllKnowledgeSetsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllKnowledgeSetsResponses = {
+    /**
+     * OK
+     */
+    200: Array<KnowledgeSetResponseModel>;
+};
+
+export type GetAllKnowledgeSetsResponse = GetAllKnowledgeSetsResponses[keyof GetAllKnowledgeSetsResponses];
 
 export type GetAllProfilesData = {
     body?: never;

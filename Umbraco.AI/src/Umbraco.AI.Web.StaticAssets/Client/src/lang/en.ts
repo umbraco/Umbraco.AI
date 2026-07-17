@@ -57,6 +57,15 @@ export default {
         deleteConfirm: "Are you sure you want to delete this context?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
     },
+    uaiKnowledgeSet: {
+        label: "Knowledge Sets",
+        description:
+            "Background knowledge shipped by installed packages that the AI can draw on. Installed sets are automatically available to every request — there is nothing to configure here.",
+        emptyList: "No knowledge sets are currently installed.",
+        itemCount: (count: number) => (count === 1 ? "1 item" : `${count} items`),
+        surfacedOnDemand:
+            "Surfaced to the AI on demand — items are retrieved by the model only when relevant to a request.",
+    },
     uaiTool: {
         selectTool: "Select Tools",
         addTool: "Add tool",

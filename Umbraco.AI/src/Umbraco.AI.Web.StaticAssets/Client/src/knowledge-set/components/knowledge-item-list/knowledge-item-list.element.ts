@@ -43,7 +43,7 @@ export class UaiKnowledgeItemListElement extends UmbLitElement {
 
     override render() {
         if (!this.items?.length) {
-            return html`<p class="empty">${this.localize.term("uaiKnowledgeSet_noItems")}</p>`;
+            return html`<p class="empty">${this.localize.term("uaiKnowledgeSet_noTopics")}</p>`;
         }
 
         return html`

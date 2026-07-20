@@ -1,4 +1,4 @@
-import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiKnowledgeSetDetailModel } from "../../../types.js";
@@ -34,8 +34,8 @@ export class UaiKnowledgeSetDetailsWorkspaceViewElement extends UmbLitElement {
         return html`
             <uui-box headline="General">
                 <umb-property-layout
-                    label="Topics"
-                    description="Topical information that provides additional context to AI operations."
+                    label=${this.localize.term("uaiKnowledgeSet_topicsHeading")}
+                    description=${this.localize.term("uaiKnowledgeSet_topicsDescription")}
                 >
                     <div slot="editor">
                         <uai-knowledge-item-list

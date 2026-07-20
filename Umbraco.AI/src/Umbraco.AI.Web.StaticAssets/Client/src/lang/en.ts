@@ -66,13 +66,16 @@ export default {
         surfacedOnDemand:
             "Surfaced to the AI on demand — items are retrieved by the model only when relevant to a request.",
         backToList: "Back to knowledge sets",
-        itemsHeading: "Items",
-        noItems: "This knowledge set contains no items.",
+        // "Topics" is the user-facing label for a knowledge set's items. The domain/API stay generic
+        // ("item"); this presentation vocabulary is defined once here so a future relabel is one edit.
+        topicsHeading: "Topics",
+        topicsDescription: "Topical information that provides additional context to AI operations.",
+        noTopics: "This knowledge set contains no topics.",
         contentLabel: "Content",
         infoHeading: "Info",
         idLabel: "Id",
         descriptionLabel: "Description",
-        itemContentHeadline: "Knowledge item",
+        topicHeadline: "Topic",
         contentError: "Failed to load this item's content.",
         close: "Close",
     },

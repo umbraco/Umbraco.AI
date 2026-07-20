@@ -26,15 +26,16 @@ export class UaiKnowledgeSetTableCollectionViewElement extends UmbLitElement {
     @state()
     private _items: UmbTableItem[] = [];
 
-    private _columns: UmbTableColumn[] = [
-        { name: "Name", alias: "name" },
-        { name: "Alias", alias: "alias" },
-        { name: "Description", alias: "description" },
-        { name: "Topics", alias: "itemCount" },
-    ];
+    private _columns: UmbTableColumn[];
 
     constructor() {
         super();
+        this._columns = [
+            { name: "Name", alias: "name" },
+            { name: "Alias", alias: "alias" },
+            { name: "Description", alias: "description" },
+            { name: this.localize.term("uaiKnowledgeSet_topicsHeading"), alias: "itemCount" },
+        ];
         this.consumeContext(UMB_COLLECTION_CONTEXT, (instance) => {
             this.#collectionContext = instance;
             this.#observeCollectionItems();

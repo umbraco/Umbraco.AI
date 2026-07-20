@@ -59,7 +59,7 @@ export class UaiKnowledgeItemModalElement extends UmbModalBaseElement<
 
     override render() {
         const item = this.data?.item;
-        const headline = item?.name ?? this.localize.term("uaiKnowledgeSet_itemContentHeadline");
+        const headline = item?.name ?? this.localize.term("uaiKnowledgeSet_topicHeadline");
 
         return html`
             <umb-body-layout>

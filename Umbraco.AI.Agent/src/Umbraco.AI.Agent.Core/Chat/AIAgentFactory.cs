@@ -209,9 +209,9 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
             // Attach the custom history provider (durable Conversations store) when supplied. Null for
             // non-persisted surfaces (e.g. contextual Copilot) → MAF defaults, byte-for-byte unchanged.
-            // Leaving ThrowOnChatHistoryProviderConflict at its default keeps the run in client-history
-            // mode: if a profile's provider returns a server-managed conversation id, MAF surfaces a
-            // clear configuration error rather than silently double-storing.
+            // Providers that can store history server-side must run statelessly when this is set (so the
+            // service returns no conversation id) — see ContextKeys.ClientManagedChatHistory and the
+            // OpenAI provider. If one doesn't, MAF's default conflict guard surfaces a clear error.
             ChatHistoryProvider = chatHistoryProvider,
         });
     }

@@ -239,5 +239,13 @@ public static class Constants
         /// callers that own resources directly (e.g. a Copilot Workspace project's attached resources).
         /// </summary>
         public const string AdditionalResources = "Umbraco.AI.AdditionalResources";
+
+        /// <summary>
+        /// Key (bool) signalling that the caller manages chat history itself (e.g. a persisted-conversation
+        /// surface with its own store), so providers must NOT use service-side conversation storage.
+        /// Provider-agnostic: providers that can persist history server-side (e.g. OpenAI's Responses API)
+        /// honour this by running statelessly, keeping the caller's store the single source of truth.
+        /// </summary>
+        public const string ClientManagedChatHistory = "Umbraco.AI.ClientManagedChatHistory";
     }
 }

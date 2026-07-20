@@ -1,9 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.OpenAI;
 
@@ -55,9 +58,16 @@ public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBas
     /// <inheritdoc />
     [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
-        => OpenAIProvider.CreateOpenAIClient(settings)
+    {
+        var client = OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
             .AsIChatClient(modelId ?? DefaultChatModel);
+
+        // Run statelessly (no server-side Responses storage) when the caller manages history itself,
+        // so an attached ChatHistoryProvider stays the single source of truth. No-op otherwise.
+        var runtimeContextAccessor = StaticServiceProvider.Instance.GetRequiredService<IAIRuntimeContextAccessor>();
+        return new ClientManagedHistoryChatClient(client, runtimeContextAccessor);
+    }
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId))

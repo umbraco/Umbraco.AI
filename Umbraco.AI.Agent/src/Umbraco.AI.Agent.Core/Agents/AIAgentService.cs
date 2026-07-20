@@ -991,6 +991,10 @@ internal sealed class AIAgentService : IAIAgentService
             additionalProperties[CoreConstants.ContextKeys.LogKeys] = AppendLogKey(
                 additionalProperties.GetValueOrDefault(CoreConstants.ContextKeys.LogKeys),
                 Constants.ContextKeys.ConversationId);
+
+            // We manage history via the attached provider, so providers must not also persist it
+            // server-side (that conflict otherwise detaches our provider — see the OpenAI provider).
+            additionalProperties[CoreConstants.ContextKeys.ClientManagedChatHistory] = true;
         }
 
         // Create MAF agent. The AG-UI streaming caller passes Interactive (it can resume), while

@@ -1,4 +1,5 @@
 using Umbraco.AI.Agent.Conversations.Web.Api.Management.Conversations.Mapping;
+using Umbraco.AI.Agent.Conversations.Web.Api.Management.Projects.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Extensions;
@@ -20,7 +21,8 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAIConversationsWeb(this IUmbracoBuilder builder)
     {
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
-            .Add<ConversationMapDefinition>();
+            .Add<ConversationMapDefinition>()
+            .Add<ProjectMapDefinition>();
 
         return builder;
     }

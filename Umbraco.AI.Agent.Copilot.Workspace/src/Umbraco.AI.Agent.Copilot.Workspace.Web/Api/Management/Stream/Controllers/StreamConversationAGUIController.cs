@@ -92,7 +92,13 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
         var binding = new AIConversationHistoryBinding(
             _historyProvider,
             id,
-            session => _historyProvider.BindConversation(session, id));
+            session => _historyProvider.BindConversation(session, id))
+        {
+            // On an approval resume after a reload, the original tool call lives only in persisted
+            // history — recover it so the run can correlate the approval rather than skip it (B2).
+            ResolveApprovalToolCalls = async (callIds, ct) =>
+                await _historyProvider.GetApprovalToolCallsAsync(id, callIds, ct),
+        };
 
         var options = new AIAgentExecutionOptions
         {

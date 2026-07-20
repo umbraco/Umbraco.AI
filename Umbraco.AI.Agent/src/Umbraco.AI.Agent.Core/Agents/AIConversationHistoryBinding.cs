@@ -1,4 +1,5 @@
 using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
@@ -29,4 +30,13 @@ namespace Umbraco.AI.Agent.Core.Agents;
 public sealed record AIConversationHistoryBinding(
     ChatHistoryProvider Provider,
     Guid ConversationId,
-    Action<AgentSession> BindSession);
+    Action<AgentSession> BindSession)
+{
+    /// <summary>
+    /// Optional resolver that, given a set of approval <c>callId</c>s, returns the original tool calls
+    /// (name + arguments) recovered from persisted history — used to correlate human-approval resume
+    /// entries after a reload, when the original call is no longer in the client-supplied messages (B2).
+    /// The consumer closes this over its own conversation store; the Agent layer stays product-agnostic.
+    /// </summary>
+    public Func<IReadOnlyCollection<string>, CancellationToken, ValueTask<IReadOnlyDictionary<string, FunctionCallContent>>>? ResolveApprovalToolCalls { get; init; }
+}

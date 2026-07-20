@@ -485,17 +485,22 @@ internal sealed class AIAgentService : IAIAgentService
         // binding lives with the consumer's provider) so the attached ChatHistoryProvider loads/stores
         // against the right conversation. Non-persisted surfaces stream with a null session as before.
         AgentSession? session = null;
+        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls = null;
         if (options.ConversationHistory is { } historyBinding)
         {
             session = await context.MafAgent.CreateSessionAsync(cancellationToken);
             historyBinding.BindSession(session);
+
+            // For an approval resume after a reload, the original tool call may only exist in persisted
+            // history — recover it (name + args) so the resume path can correlate instead of skipping (B2).
+            pendingApprovalCalls = await ResolvePendingApprovalCallsAsync(historyBinding, request, cancellationToken);
         }
 
         // Stream via AG-UI streaming service
         bool streamCompleted = false;
         try
         {
-            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, cancellationToken))
+            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, pendingApprovalCalls, cancellationToken))
             {
                 yield return evt;
             }
@@ -799,6 +804,34 @@ internal sealed class AIAgentService : IAIAgentService
     {
         var keys = existingLogKeys as IEnumerable<string> ?? [];
         return keys.Append(keyToAppend).Distinct(StringComparer.Ordinal).ToArray();
+    }
+
+    /// <summary>
+    /// For an approval-resume request, resolves the original tool calls for the resume entries' approval
+    /// callIds from persisted history (via the binding), so the streaming resume path can correlate a
+    /// reloaded approval instead of skipping it. Returns null when there is nothing to resolve (B2).
+    /// </summary>
+    private static async ValueTask<IReadOnlyDictionary<string, FunctionCallContent>?> ResolvePendingApprovalCallsAsync(
+        AIConversationHistoryBinding binding,
+        AGUIRunRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (binding.ResolveApprovalToolCalls is null || request.Resume is not { Count: > 0 })
+        {
+            return null;
+        }
+
+        var callIds = request.Resume
+            .Where(e => AGUI.AGUIInterruptKind.IsApproval(e.InterruptId))
+            .Select(e => AGUI.AGUIInterruptKind.GetCallId(e.InterruptId))
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Select(id => id!)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        return callIds.Count == 0
+            ? null
+            : await binding.ResolveApprovalToolCalls(callIds, cancellationToken);
     }
 
     /// <summary>

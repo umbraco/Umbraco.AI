@@ -45,7 +45,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
         CancellationToken cancellationToken = default)
-        => StreamAgentAsync(agent, request, frontendTools, session: null, cancellationToken);
+        => StreamAgentAsync(agent, request, frontendTools, session: null, cancellationToken: cancellationToken);
 
     /// <inheritdoc />
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
@@ -53,6 +53,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
         AgentSession? session,
+        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
@@ -65,7 +66,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -145,6 +146,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AGUIEventEmitter emitter,
         HashSet<string> frontendToolNames,
         AgentSession? session,
+        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Process file content: store base64, resolve id references
@@ -174,7 +176,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             // replayed history to correlate the ToolApprovalResponseContent (spike Finding B).
             PromoteApprovalRequestsInHistory(chatMessages, request.Resume);
 
-            var resumeMessages = ExtractToolResultsFromResume(chatMessages, request.Resume);
+            var resumeMessages = ExtractToolResultsFromResume(chatMessages, request.Resume, pendingApprovalCalls, request.RunId);
             chatMessages.AddRange(resumeMessages);
 
             _logger.LogDebug(
@@ -417,7 +419,9 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     /// </remarks>
     private List<ChatMessage> ExtractToolResultsFromResume(
         IReadOnlyList<ChatMessage> chatMessages,
-        IReadOnlyList<AGUIResumeEntry> resume)
+        IReadOnlyList<AGUIResumeEntry> resume,
+        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls,
+        string runId)
     {
         var results = new List<ChatMessage>();
 
@@ -445,14 +449,27 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 var approved = entry.Payload.Value.TryGetProperty("approved", out var ap)
                     && ap.ValueKind == System.Text.Json.JsonValueKind.True;
 
-                // Recover the ToolCallContent from the (already-promoted) history so FICC
-                // can resolve the function name and arguments for execution.
-                var requestedToolCall = chatMessages
-                    .SelectMany(m => m.Contents ?? [])
-                    .OfType<ToolApprovalRequestContent>()
-                    .FirstOrDefault(c => c.ToolCall.CallId == callId)
-                    ?.ToolCall
-                    ?? new FunctionCallContent(callId, string.Empty, null);
+                // Recover the ORIGINAL tool call (name + arguments) so FICC can execute the approved
+                // function — it recreates the call from THIS response, so an empty placeholder would make
+                // it invoke a nameless function. Look in the replayed client history first (in-flight
+                // resume), then the persisted history the provider will load (resume after a reload, B2).
+                var requestedToolCall = FindApprovalToolCall(chatMessages, callId);
+                if (requestedToolCall is null && pendingApprovalCalls is not null)
+                {
+                    pendingApprovalCalls.TryGetValue(callId, out requestedToolCall);
+                }
+
+                if (requestedToolCall is null)
+                {
+                    // Not correlatable to a pending tool call in client OR persisted history — a stale or
+                    // duplicate resume entry (e.g. from a prior run). Skip it rather than synthesise an
+                    // empty call that FICC would try and fail to invoke (B2).
+                    _logger.LogWarning(
+                        "Resume approval for callId {CallId} on run {RunId} has no matching pending tool " +
+                        "call in client or persisted history; skipping as stale.",
+                        callId, runId);
+                    continue;
+                }
 
                 results.Add(new ChatMessage(ChatRole.User,
                     [new ToolApprovalResponseContent(callId, approved, requestedToolCall)]));
@@ -466,4 +483,15 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
         return results;
     }
+
+    /// <summary>
+    /// Finds the original <see cref="FunctionCallContent"/> for an approval <paramref name="callId"/> in the
+    /// replayed history (as an already-promoted <see cref="ToolApprovalRequestContent"/>), or null if absent.
+    /// </summary>
+    private static FunctionCallContent? FindApprovalToolCall(IReadOnlyList<ChatMessage> chatMessages, string callId)
+        => chatMessages
+            .SelectMany(m => m.Contents ?? [])
+            .OfType<ToolApprovalRequestContent>()
+            .FirstOrDefault(c => c.ToolCall.CallId == callId)
+            ?.ToolCall as FunctionCallContent;
 }

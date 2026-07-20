@@ -44,6 +44,54 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         _sessionState.SaveState(session, state);
     }
 
+    /// <summary>
+    /// Recovers the original tool calls (name + arguments) for the given approval <paramref name="callIds"/>
+    /// from the conversation's persisted history — so a human-approval resume after a reload can correlate
+    /// against the real call rather than a synthesised empty one (B2). Returns only the callIds found.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, FunctionCallContent>> GetApprovalToolCallsAsync(
+        Guid conversationId,
+        IReadOnlyCollection<string> callIds,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new Dictionary<string, FunctionCallContent>(StringComparer.Ordinal);
+        if (conversationId == Guid.Empty || callIds.Count == 0)
+        {
+            return result;
+        }
+
+        var wanted = callIds.ToHashSet(StringComparer.Ordinal);
+        var stored = await _repository.GetMessagesAsync(conversationId, cancellationToken);
+
+        foreach (var message in stored)
+        {
+            var chatMessage = TryDeserialize(message.ContentJson);
+            if (chatMessage?.Contents is null)
+            {
+                continue;
+            }
+
+            foreach (var content in chatMessage.Contents)
+            {
+                // The interrupted run persisted the approval request (FICC emits ToolApprovalRequestContent);
+                // fall back to a raw FunctionCallContent in case it was stored pre-promotion.
+                var call = content switch
+                {
+                    ToolApprovalRequestContent { ToolCall: FunctionCallContent fcc } => fcc,
+                    FunctionCallContent fcc => fcc,
+                    _ => null,
+                };
+
+                if (call is not null && wanted.Contains(call.CallId))
+                {
+                    result[call.CallId] = call;
+                }
+            }
+        }
+
+        return result;
+    }
+
     /// <inheritdoc />
     protected override async ValueTask<IEnumerable<ChatMessage>> ProvideChatHistoryAsync(
         InvokingContext context,

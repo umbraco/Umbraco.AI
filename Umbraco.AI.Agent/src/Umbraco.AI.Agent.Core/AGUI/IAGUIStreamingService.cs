@@ -60,17 +60,24 @@ public interface IAGUIStreamingService
     /// The MAF session to run within, or <see langword="null"/> to start a fresh session (the previous
     /// behaviour).
     /// </param>
+    /// <param name="pendingApprovalCalls">
+    /// Optional map of <c>callId → original tool call</c> reconstructed from persisted history, used to
+    /// correlate human-approval resume entries after a reload (when the original call is not in the
+    /// client-supplied messages). Null for the contextual Copilot.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of AG-UI events.</returns>
     /// <remarks>
     /// Default interface method: implementations that predate session binding inherit this default,
-    /// which ignores <paramref name="session"/> and delegates to the core overload.
+    /// which ignores <paramref name="session"/>/<paramref name="pendingApprovalCalls"/> and delegates to
+    /// the core overload.
     /// </remarks>
     IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         AIAgent agent,
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
         AgentSession? session,
+        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls = null,
         CancellationToken cancellationToken = default)
         => StreamAgentAsync(agent, request, frontendTools, cancellationToken);
 }

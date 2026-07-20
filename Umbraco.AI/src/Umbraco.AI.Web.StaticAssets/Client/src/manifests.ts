@@ -18,6 +18,7 @@ import { analyticsManifests } from "./analytics/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
 import { contextManifests } from "./context/manifests.js";
 import { contextResourceTypeManifests } from "./context-resource-type/manifests.js";
+import { knowledgeSetManifests } from "./knowledge-set/manifests.js";
 import { entityAdapterManifests } from "./entity-adapter/manifests.js";
 import { valuePreparerManifests } from "./entity-adapter/value-preparers/manifests.js";
 import { profileManifests } from "./profile/manifests.js";
@@ -40,6 +41,7 @@ export const manifests: Array<UmbExtensionManifest | UmbExtensionManifestKind> =
     ...connectionManifests,
     ...contextResourceTypeManifests,
     ...contextManifests,
+    ...knowledgeSetManifests,
     ...entityAdapterManifests,
     ...valuePreparerManifests,
     ...profileManifests,

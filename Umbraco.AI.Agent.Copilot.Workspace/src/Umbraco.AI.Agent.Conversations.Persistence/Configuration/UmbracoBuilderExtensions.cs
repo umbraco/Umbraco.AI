@@ -1,3 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Agent.Conversations.Core.Conversations;
+using Umbraco.AI.Agent.Conversations.Persistence.Conversations;
 using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -28,7 +31,9 @@ public static class UmbracoBuilderExtensions
             },
             shareUmbracoConnection: aiConnectionString is null);
 
-        // TODO (Phase 2 cont.): register IAIConversationRepository / IAIProjectRepository EF implementations.
+        // Conversation/message repository (EF Core). Project repository follows in Phase 3 alongside
+        // the resource-type serializer its Resources collection depends on.
+        builder.Services.AddSingleton<IAIConversationRepository, EFCoreAIConversationRepository>();
 
         // Register migration notification handler.
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunConversationsMigrationNotificationHandler>();

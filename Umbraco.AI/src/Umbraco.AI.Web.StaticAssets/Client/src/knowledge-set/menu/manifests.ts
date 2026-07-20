@@ -8,7 +8,7 @@ export const knowledgeSetMenuManifests: Array<UaiEntityContainerMenuItemManifest
         kind: "entityContainer",
         alias: "UmbracoAI.MenuItem.KnowledgeSets",
         name: "Knowledge Sets Menu Item",
-        weight: 0,
+        weight: -5,
         meta: {
             label: "Knowledge Sets",
             icon: UAI_KNOWLEDGE_SET_ICON,

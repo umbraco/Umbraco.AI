@@ -1,19 +1,20 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { codeBlockStyles } from "../../../../core/styles/code-block.styles.js";
 import type { UaiKnowledgeSetDetailModel } from "../../../types.js";
 import { UAI_KNOWLEDGE_SET_WORKSPACE_CONTEXT } from "../knowledge-set-workspace.context-token.js";
+// Ensure the item list element is registered (barrel-exported component).
+import "../../../components/index.js";
 
 /**
- * Read-only workspace view auditing a single knowledge set.
+ * Read-only workspace view for Knowledge Set details.
  *
- * Renders the set's metadata and each item's name, description and full markdown content, plus a note
- * that items are surfaced to the AI on demand. Content is shown verbatim (as authored) so an admin can
- * see exactly what the LLM can retrieve. There are no editable fields.
+ * Mirrors `uai-context-details-workspace-view` but read-only: a `<uui-box>` wrapping the
+ * `<uai-knowledge-item-list>` card grid (replacing the old inline `<pre>` dump). Each card opens the
+ * content modal, which fetches the item's markdown on demand.
  */
-@customElement("uai-knowledge-set-detail-workspace-view")
-export class UaiKnowledgeSetDetailWorkspaceViewElement extends UmbLitElement {
+@customElement("uai-knowledge-set-details-workspace-view")
+export class UaiKnowledgeSetDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _model?: UaiKnowledgeSetDetailModel;
 
@@ -40,31 +41,19 @@ export class UaiKnowledgeSetDetailWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             <uui-box headline=${this.localize.term("uaiKnowledgeSet_itemsHeading")}>
-                <span slot="header-actions">${this.localize.term("uaiKnowledgeSet_itemCount", this._model.items.length)}</span>
-                ${this._model.items.length === 0
-                    ? html`<p>${this.localize.term("uaiKnowledgeSet_noItems")}</p>`
-                    : html`<div id="items">${this._model.items.map((item) => this.#renderItem(item))}</div>`}
+                <span slot="header-actions">
+                    ${this.localize.term("uaiKnowledgeSet_itemCount", this._model.items.length)}
+                </span>
+                <uai-knowledge-item-list
+                    knowledge-set-id=${this._model.unique}
+                    .items=${this._model.items}
+                ></uai-knowledge-item-list>
             </uui-box>
-        `;
-    }
-
-    #renderItem(item: UaiKnowledgeSetDetailModel["items"][number]) {
-        return html`
-            <div class="item">
-                <h4 class="item-name">${item.name}</h4>
-                ${item.description ? html`<p class="item-description">${item.description}</p>` : nothing}
-                <umb-property-layout label=${this.localize.term("uaiKnowledgeSet_contentLabel")} orientation="vertical">
-                    <div slot="editor">
-                        <pre class="code-block">${item.content}</pre>
-                    </div>
-                </umb-property-layout>
-            </div>
         `;
     }
 
     static styles = [
         UmbTextStyles,
-        codeBlockStyles,
         css`
             :host {
                 display: block;
@@ -82,19 +71,8 @@ export class UaiKnowledgeSetDetailWorkspaceViewElement extends UmbLitElement {
                 margin-top: 0;
             }
 
-            .item:not(:first-child) {
-                margin-top: var(--uui-size-layout-1);
-                padding-top: var(--uui-size-layout-1);
-                border-top: 1px solid var(--uui-color-divider);
-            }
-
-            .item-name {
-                margin: 0;
-            }
-
-            .item-description {
-                color: var(--uui-color-text-alt);
-                margin-top: var(--uui-size-space-1);
+            uui-tag {
+                white-space: nowrap;
             }
 
             uui-loader {
@@ -109,10 +87,10 @@ export class UaiKnowledgeSetDetailWorkspaceViewElement extends UmbLitElement {
     ];
 }
 
-export default UaiKnowledgeSetDetailWorkspaceViewElement;
+export default UaiKnowledgeSetDetailsWorkspaceViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-knowledge-set-detail-workspace-view": UaiKnowledgeSetDetailWorkspaceViewElement;
+        "uai-knowledge-set-details-workspace-view": UaiKnowledgeSetDetailsWorkspaceViewElement;
     }
 }

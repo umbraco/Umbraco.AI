@@ -69,6 +69,12 @@ export default {
         itemsHeading: "Items",
         noItems: "This knowledge set contains no items.",
         contentLabel: "Content",
+        infoHeading: "Info",
+        idLabel: "Id",
+        descriptionLabel: "Description",
+        itemContentHeadline: "Knowledge item",
+        contentError: "Failed to load this item's content.",
+        close: "Close",
     },
     uaiTool: {
         selectTool: "Select Tools",

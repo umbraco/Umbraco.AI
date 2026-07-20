@@ -16,22 +16,34 @@ export interface UaiKnowledgeSetItemModel {
 }
 
 /**
- * A single knowledge item within a set (name, description and full markdown content).
+ * A single knowledge item within a set — metadata only (`key`, `name`, `description`).
  *
- * Maps from the API's `KnowledgeSetItemModel`. Content is returned inline so an admin can audit
- * exactly what the LLM can see.
+ * Maps from the API's `KnowledgeSetItemModel`. Content is **not** included here; it is fetched lazily
+ * per item via {@link UaiKnowledgeSetItemContentModel} only when an admin opens the item modal, matching
+ * the async item model (content is materialised on demand, never merely to list items).
  */
-export interface UaiKnowledgeSetContentItemModel {
+export interface UaiKnowledgeSetItemDetailModel {
+    key: string;
     name: string;
     description: string | null;
+}
+
+/**
+ * The markdown content for a single knowledge item, fetched on demand.
+ *
+ * Maps from the API's `KnowledgeSetItemContentResponseModel` (`GET /v1/knowledge-sets/{id}/item/{key}`).
+ * Content ships in the assembly (not secret), so returning it for audit is fine.
+ */
+export interface UaiKnowledgeSetItemContentModel {
+    key: string;
     content: string;
 }
 
 /**
- * Detail model for an installed knowledge set, including its items.
+ * Detail model for an installed knowledge set, including its items (metadata only).
  *
  * Read-only — maps from the API's `KnowledgeSetDetailResponseModel`. `unique` is the knowledge set id
- * (used for workspace routing).
+ * (used for workspace routing and to address items for their per-item content fetch).
  */
 export interface UaiKnowledgeSetDetailModel {
     unique: string;
@@ -39,5 +51,5 @@ export interface UaiKnowledgeSetDetailModel {
     name: string;
     description: string | null;
     icon: string | null;
-    items: Array<UaiKnowledgeSetContentItemModel>;
+    items: Array<UaiKnowledgeSetItemDetailModel>;
 }

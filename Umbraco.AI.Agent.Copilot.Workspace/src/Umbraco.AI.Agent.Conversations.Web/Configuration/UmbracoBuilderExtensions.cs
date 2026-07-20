@@ -1,4 +1,7 @@
+using Umbraco.AI.Agent.Conversations.Web.Api.Management.Conversations.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Mapping;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Agent.Conversations.Web.Configuration;
 
@@ -9,13 +12,16 @@ public static class UmbracoBuilderExtensions
 {
     /// <summary>
     /// Adds the Conversations management API (conversation + project CRUD controllers, mapping, models).
+    /// Controllers bind to the <c>ai-copilot-workspace-management</c> OpenAPI document registered by the
+    /// Workspace composer.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIConversationsWeb(this IUmbracoBuilder builder)
     {
-        // TODO (Phase 4): register controllers/mapping; controllers bind to the
-        // ai-copilot-workspace-management OpenAPI document registered by the Workspace composer.
+        builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
+            .Add<ConversationMapDefinition>();
+
         return builder;
     }
 }

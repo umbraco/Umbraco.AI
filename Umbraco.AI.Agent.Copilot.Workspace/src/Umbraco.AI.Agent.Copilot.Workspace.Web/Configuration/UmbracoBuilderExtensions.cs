@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Agent.Copilot.Workspace.Core;
 using Umbraco.AI.Agent.Copilot.Workspace.Core.Authorization;
 using Umbraco.AI.Agent.Copilot.Workspace.Web.Authorization;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Web.Configuration;
@@ -27,7 +29,15 @@ public static class UmbracoBuilderExtensions
                 policy.Requirements.Add(new CopilotWorkspaceSectionRequirement());
             });
 
-        // TODO (Phase 4): register the ai-copilot-workspace-management document + stream/file controllers.
+        // Register the single product OpenAPI document. Both the Conversations CRUD controllers and the
+        // Workspace stream/file controllers bind to it via [MapToApi] (house one-doc-per-product convention).
+        builder.WithUmbracoAIManagementApi(
+            CopilotWorkspaceConstants.ManagementApi.ApiName,
+            CopilotWorkspaceConstants.ManagementApi.ApiTitle,
+            "Describes the Umbraco AI Copilot Workspace Management API for conversations, projects, and " +
+            "persisted streaming, available when authenticated as a backoffice user with Copilot Workspace access.");
+
+        // TODO (Phase 4): register the stream/file controllers + mapping.
         return builder;
     }
 }

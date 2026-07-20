@@ -146,6 +146,10 @@ public static partial class UmbracoBuilderExtensions
         builder.AIPropertyValueHandlers()
             .Add(() => builder.TypeLoader.GetTypes<IAIPropertyValueHandler>());
 
+        // Simplified value transformers - simplified LLM schema + expand-to-write transform, per editor
+        builder.AISimplifiedPropertyValueTransformers()
+            .Add(() => builder.TypeLoader.GetTypes<IAISimplifiedPropertyValueTransformer>());
+
         // Tool scope infrastructure - auto-discover scopes via [AIToolScope] attribute
         builder.AIToolScopes()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIToolScope, AIToolScopeAttribute>(cache: true));

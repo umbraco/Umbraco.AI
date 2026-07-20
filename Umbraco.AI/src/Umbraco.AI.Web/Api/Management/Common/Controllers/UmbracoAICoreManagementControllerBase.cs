@@ -81,4 +81,14 @@ public abstract class UmbracoAICoreManagementControllerBase : UmbracoAIManagemen
                 .WithTitle("Knowledge set not found")
                 .WithDetail("The specified knowledge set could not be found.")
                 .Build()));
+
+    /// <summary>
+    /// Returns a 404 Not Found response for a knowledge set item.
+    /// </summary>
+    protected IActionResult KnowledgeSetItemNotFound()
+        => OperationStatusResult(ProviderOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Knowledge set item not found")
+                .WithDetail("The specified knowledge set item could not be found.")
+                .Build()));
 }

@@ -262,6 +262,10 @@ dotnet add package Umbraco.AI.Search $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Agent.Copilot..."
 dotnet add package Umbraco.AI.Agent.Copilot $PRERELEASE_FLAG
 
+# Agent Copilot Workspace (full-section persisted chat; pulls the Conversations backend)
+echo "  Installing Umbraco.AI.Agent.Copilot.Workspace..."
+dotnet add package Umbraco.AI.Agent.Copilot.Workspace $PRERELEASE_FLAG
+
 popd > /dev/null
 
 echo ""

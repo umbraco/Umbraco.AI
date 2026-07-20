@@ -15,6 +15,7 @@ body:
               - Umbraco.AI.Prompt
               - Umbraco.AI.Agent
               - Umbraco.AI.Agent.Copilot
+              - Umbraco.AI.Agent.Copilot.Workspace
               - Other / Not sure
       validations:
           required: true

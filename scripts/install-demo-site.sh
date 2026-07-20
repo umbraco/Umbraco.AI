@@ -275,6 +275,9 @@ add_product_projects "Umbraco.AI.Agent.UI" "Addons/Copilot"
 echo "Adding Umbraco.AI.Agent.Copilot projects..."
 add_product_projects "Umbraco.AI.Agent.Copilot" "Addons/Copilot"
 
+echo "Adding Umbraco.AI.Agent.Copilot.Workspace projects..."
+add_product_projects "Umbraco.AI.Agent.Copilot.Workspace" "Addons/CopilotWorkspace"
+
 echo "Adding Umbraco.AI.Search projects..."
 add_product_projects "Umbraco.AI.Search" "Addons/Search"
 
@@ -373,6 +376,12 @@ fi
 # Agent Copilot add-on (frontend-only static assets)
 if [ -f "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj"
+fi
+
+# Agent Copilot Workspace add-on (full-section persisted chat; roll-up meta pulls the Conversations backend
+# + Startup composer transitively, so RunConversationsMigrationNotificationHandler creates its tables)
+if [ -f "Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace/Umbraco.AI.Agent.Copilot.Workspace.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace/Umbraco.AI.Agent.Copilot.Workspace.csproj"
 fi
 
 # Search add-on — excluded until Umbraco.Cms.Search.Core ships a v18-compatible release.

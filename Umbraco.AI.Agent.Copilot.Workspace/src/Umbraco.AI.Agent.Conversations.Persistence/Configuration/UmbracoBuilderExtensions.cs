@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
+using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Conversations.Persistence.Conversations;
+using Umbraco.AI.Agent.Conversations.Persistence.Projects;
 using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -31,9 +33,13 @@ public static class UmbracoBuilderExtensions
             },
             shareUmbracoConnection: aiConnectionString is null);
 
-        // Conversation/message repository (EF Core). Project repository follows in Phase 3 alongside
-        // the resource-type serializer its Resources collection depends on.
+        // Conversation/message repository (EF Core).
         builder.Services.AddSingleton<IAIConversationRepository, EFCoreAIConversationRepository>();
+
+        // Project repository (EF Core) + its factory, which reuses the core resource-type collection
+        // and editable-model serializer for schema-driven settings (de)serialization.
+        builder.Services.AddSingleton<AIProjectFactory>();
+        builder.Services.AddSingleton<IAIProjectRepository, EFCoreAIProjectRepository>();
 
         // Register migration notification handler.
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunConversationsMigrationNotificationHandler>();

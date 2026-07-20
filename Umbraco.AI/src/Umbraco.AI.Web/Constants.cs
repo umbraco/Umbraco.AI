@@ -186,6 +186,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Knowledge Set features.
+            /// </summary>
+            public static class KnowledgeSets
+            {
+                /// <summary>
+                /// The route segment for Knowledge Set features.
+                /// </summary>
+                public const string RouteSegment = "knowledge-sets";
+
+                /// <summary>
+                /// The Swagger group name for Knowledge Set features.
+                /// </summary>
+                public const string GroupName = "Knowledge Sets";
+            }
+
+            /// <summary>
             /// Defines constants for AuditLog features.
             /// </summary>
             public static class AuditLog

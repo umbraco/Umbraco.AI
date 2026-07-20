@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Contexts.KnowledgeSets;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -33,4 +34,12 @@ public static partial class UmbracoBuilderExtensions
     /// <returns>The resource type collection builder.</returns>
     public static AIContextResourceTypeCollectionBuilder AIContextResourceTypes(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIContextResourceTypeCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI knowledge set collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The knowledge set collection builder.</returns>
+    public static AIKnowledgeSetCollectionBuilder AIKnowledgeSets(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIKnowledgeSetCollectionBuilder>();
 }

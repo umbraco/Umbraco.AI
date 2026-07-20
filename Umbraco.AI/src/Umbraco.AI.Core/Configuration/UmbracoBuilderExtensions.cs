@@ -10,6 +10,7 @@ using Umbraco.AI.Core.Guardrails.Middleware;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.KnowledgeSets;
 using Umbraco.AI.Core.Contexts.Middleware;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
@@ -232,7 +233,14 @@ public static partial class UmbracoBuilderExtensions
         // Context resource type infrastructure - auto-discover via [AIContextResourceType] attribute
         services.AddSingleton<IAIContextResourceTypeInfrastructure, AIContextResourceTypeInfrastructure>();
         builder.AIContextResourceTypes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true))
+            // The Core-internal knowledge-content resource type has no [AIContextResourceType] attribute
+            // (it is invisible to authors and the resource-type picker), so it is registered explicitly.
+            .Add<KnowledgeContentResourceType>();
+
+        // Knowledge sets - code-defined, package-embeddable knowledge, auto-discover via [AIKnowledgeSet] attribute
+        builder.AIKnowledgeSets()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIKnowledgeSet, AIKnowledgeSetAttribute>(cache: true));
 
         // Context system
         services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
@@ -241,10 +249,13 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIContextAccessor, AIContextAccessor>();
 
         // Context resolution - pluggable resolver system
-        // Order: Profile -> Content (content can override profile-level context)
+        // Order: Profile -> Content (content can override profile-level context) -> KnowledgeSet
+        // (knowledge-set GUIDs are namespaced so they never collide with user contexts; order only
+        // controls prompt sequence, not override).
         builder.AIContextResolvers()
             .Append<ProfileContextResolver>()
-            .Append<ContentContextResolver>();
+            .Append<ContentContextResolver>()
+            .Append<KnowledgeSetContextResolver>();
         services.AddSingleton<IAIContextResolutionService, AIContextResolutionService>();
 
         // Guardrail system

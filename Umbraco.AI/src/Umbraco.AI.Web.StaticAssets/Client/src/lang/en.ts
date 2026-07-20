@@ -57,6 +57,28 @@ export default {
         deleteConfirm: "Are you sure you want to delete this context?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
     },
+    uaiKnowledgeSet: {
+        label: "Knowledge Sets",
+        description:
+            "Background knowledge shipped by installed packages that the AI can draw on. Installed sets are automatically available to every request — there is nothing to configure here.",
+        emptyList: "No knowledge sets are currently installed.",
+        itemCount: (count: number) => (count === 1 ? "1 item" : `${count} items`),
+        surfacedOnDemand:
+            "Surfaced to the AI on demand — items are retrieved by the model only when relevant to a request.",
+        backToList: "Back to knowledge sets",
+        // "Topics" is the user-facing label for a knowledge set's items. The domain/API stay generic
+        // ("item"); this presentation vocabulary is defined once here so a future relabel is one edit.
+        topicsHeading: "Topics",
+        topicsDescription: "Topical information that provides additional context to AI operations.",
+        noTopics: "This knowledge set contains no topics.",
+        contentLabel: "Content",
+        infoHeading: "Info",
+        idLabel: "Id",
+        descriptionLabel: "Description",
+        topicHeadline: "Topic",
+        contentError: "Failed to load this item's content.",
+        close: "Close",
+    },
     uaiTool: {
         selectTool: "Select Tools",
         addTool: "Add tool",

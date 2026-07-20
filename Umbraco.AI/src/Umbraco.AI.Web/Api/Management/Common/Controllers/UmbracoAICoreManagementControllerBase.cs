@@ -71,4 +71,14 @@ public abstract class UmbracoAICoreManagementControllerBase : UmbracoAIManagemen
                 .WithTitle("Resource Type not found")
                 .WithDetail("The specified resource type could not be found.")
                 .Build()));
+
+    /// <summary>
+    /// Returns a 404 Not Found response for a knowledge set.
+    /// </summary>
+    protected IActionResult KnowledgeSetNotFound()
+        => OperationStatusResult(ProviderOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Knowledge set not found")
+                .WithDetail("The specified knowledge set could not be found.")
+                .Build()));
 }

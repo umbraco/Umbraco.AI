@@ -65,6 +65,10 @@ export default {
         itemCount: (count: number) => (count === 1 ? "1 item" : `${count} items`),
         surfacedOnDemand:
             "Surfaced to the AI on demand — items are retrieved by the model only when relevant to a request.",
+        backToList: "Back to knowledge sets",
+        itemsHeading: "Items",
+        noItems: "This knowledge set contains no items.",
+        contentLabel: "Content",
     },
     uaiTool: {
         selectTool: "Select Tools",

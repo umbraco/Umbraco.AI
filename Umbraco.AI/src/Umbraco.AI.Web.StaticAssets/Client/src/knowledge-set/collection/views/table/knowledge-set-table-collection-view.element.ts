@@ -6,12 +6,13 @@ import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiKnowledgeSetItemModel } from "../../../types.js";
 import { UAI_KNOWLEDGE_SET_ICON } from "../../../constants.js";
+import { UAI_EDIT_KNOWLEDGE_SET_WORKSPACE_PATH_PATTERN } from "../../../workspace/knowledge-set/paths.js";
 
 /**
  * Read-only table view for the Knowledge Set collection.
  *
- * Unlike the Context table view, rows are not selectable (no bulk actions exist) and names are not
- * linked to a workspace (the per-set audit workspace is added in a later phase).
+ * Unlike the Context table view, rows are not selectable (no bulk actions exist). Names link to the
+ * read-only per-set audit workspace.
  */
 @customElement("uai-knowledge-set-table-collection-view")
 export class UaiKnowledgeSetTableCollectionViewElement extends UmbLitElement {
@@ -54,7 +55,13 @@ export class UaiKnowledgeSetTableCollectionViewElement extends UmbLitElement {
             id: item.unique,
             icon: item.icon ?? UAI_KNOWLEDGE_SET_ICON,
             data: [
-                { columnAlias: "name", value: item.name },
+                {
+                    columnAlias: "name",
+                    value: html`<a
+                        href=${UAI_EDIT_KNOWLEDGE_SET_WORKSPACE_PATH_PATTERN.generateAbsolute({ id: item.unique })}
+                        >${item.name}</a
+                    >`,
+                },
                 { columnAlias: "description", value: item.description ?? "-" },
                 { columnAlias: "itemCount", value: item.itemCount.toString() },
             ],

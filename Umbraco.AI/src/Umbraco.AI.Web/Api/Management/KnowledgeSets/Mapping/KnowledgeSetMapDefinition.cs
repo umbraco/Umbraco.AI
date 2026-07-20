@@ -47,8 +47,8 @@ public class KnowledgeSetMapDefinition : IMapDefinition
 
         mapper.Define<AIKnowledgeSetItem, KnowledgeSetItemModel>((_, _) => new KnowledgeSetItemModel
         {
-            Name = string.Empty,
-            Content = string.Empty
+            Key = string.Empty,
+            Name = string.Empty
         }, MapKnowledgeSetItemToResponse);
     }
 
@@ -82,8 +82,8 @@ public class KnowledgeSetMapDefinition : IMapDefinition
     // Umbraco.Code.MapAll
     private static void MapKnowledgeSetItemToResponse(AIKnowledgeSetItem source, KnowledgeSetItemModel target, MapperContext context)
     {
+        target.Key = source.Key;
         target.Name = source.Name;
         target.Description = source.Description;
-        target.Content = source.Content;
     }
 }

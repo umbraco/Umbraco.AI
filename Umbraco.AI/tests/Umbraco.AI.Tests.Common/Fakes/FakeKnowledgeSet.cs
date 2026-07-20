@@ -31,4 +31,19 @@ public sealed class FakeKnowledgeSet : IAIKnowledgeSet
 
     public Task<IReadOnlyList<AIKnowledgeSetItem>> GetItemsAsync(CancellationToken cancellationToken = default)
         => Task.FromResult(_items);
+
+    /// <summary>
+    /// Creates an item whose <see cref="AIKnowledgeSetItem.GetContentAsync"/> producer throws, for
+    /// exercising the graceful-degradation path when content materialisation fails.
+    /// </summary>
+    /// <param name="key">The stable item key.</param>
+    /// <param name="name">The display name.</param>
+    /// <param name="exception">The exception to throw; defaults to an <see cref="InvalidOperationException"/>.</param>
+    public static AIKnowledgeSetItem ThrowingItem(string key, string name, Exception? exception = null)
+        => new()
+        {
+            Key = key,
+            Name = name,
+            GetContentAsync = _ => throw (exception ?? new InvalidOperationException("Content producer failed."))
+        };
 }

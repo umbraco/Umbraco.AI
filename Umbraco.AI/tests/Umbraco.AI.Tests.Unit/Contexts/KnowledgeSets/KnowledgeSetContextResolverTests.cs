@@ -1,23 +1,16 @@
-using Microsoft.Extensions.Configuration;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.KnowledgeSets;
-using Umbraco.AI.Core.Contexts.ResourceTypes;
-using Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
-using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Tests.Common.Fakes;
 
 namespace Umbraco.AI.Tests.Unit.Contexts.KnowledgeSets;
 
 public class KnowledgeSetContextResolverTests
 {
-    private static AIEditableModelResolver CreateModelResolver()
-        => new(new ConfigurationBuilder().Build());
-
     private static AIKnowledgeSetCollection CreateCollection(params IAIKnowledgeSet[] sets)
         => new(() => sets);
 
     private static KnowledgeSetContextResolver CreateResolver(params IAIKnowledgeSet[] sets)
-        => new(CreateCollection(sets), CreateModelResolver());
+        => new(CreateCollection(sets));
 
     [Fact]
     public async Task ResolveAsync_NoKnowledgeSets_ReturnsEmpty()
@@ -40,7 +33,7 @@ public class KnowledgeSetContextResolverTests
     }
 
     [Fact]
-    public async Task ResolveAsync_MapsItemsToOnDemandTextResources()
+    public async Task ResolveAsync_MapsItemsToOnDemandKnowledgeContentReferences()
     {
         var set = new FakeKnowledgeSet(
             id: "engage",
@@ -48,8 +41,8 @@ public class KnowledgeSetContextResolverTests
             description: "Background knowledge about Umbraco Engage",
             items:
             [
-                new AIKnowledgeSetItem { Name = "Goals", Description = "How goals work", Content = "# Goals\nDetails" },
-                new AIKnowledgeSetItem { Name = "Segments", Content = "# Segments" }
+                AIKnowledgeSetItem.FromContent("goals", "Goals", "# Goals\nDetails", "How goals work"),
+                AIKnowledgeSetItem.FromContent("segments", "Segments", "# Segments")
             ]);
 
         var result = await CreateResolver(set).ResolveAsync();
@@ -57,12 +50,16 @@ public class KnowledgeSetContextResolverTests
         result.Resources.Count.ShouldBe(2);
 
         var goals = result.Resources.Single(r => r.Name == "Goals");
-        goals.ResourceTypeId.ShouldBe("text");
+        goals.ResourceTypeId.ShouldBe("knowledge-content");
         goals.InjectionMode.ShouldBe(AIContextResourceInjectionMode.OnDemand);
         goals.Description.ShouldBe("How goals work");
         goals.ContextName.ShouldBe("Umbraco Engage");
         goals.ContextDescription.ShouldBe("Background knowledge about Umbraco Engage");
-        goals.Settings.ShouldBeOfType<TextResourceSettings>().Content.ShouldBe("# Goals\nDetails");
+
+        // The resource carries a reference to the item, never the content itself.
+        var reference = goals.Settings.ShouldBeOfType<KnowledgeContentRef>();
+        reference.KnowledgeSetId.ShouldBe("engage");
+        reference.ItemKey.ShouldBe("goals");
 
         // One source per set, tagged with the set name as the context name.
         result.Sources.ShouldHaveSingleItem().ContextName.ShouldBe("Umbraco Engage");
@@ -71,10 +68,10 @@ public class KnowledgeSetContextResolverTests
     [Fact]
     public async Task ResolveAsync_GuidsAreDeterministicAcrossResolvesAndNamespaced()
     {
-        var items = new AIKnowledgeSetItem[]
+        var items = new[]
         {
-            new() { Name = "Goals", Content = "a" },
-            new() { Name = "Segments", Content = "b" }
+            AIKnowledgeSetItem.FromContent("goals", "Goals", "a"),
+            AIKnowledgeSetItem.FromContent("segments", "Segments", "b")
         };
 
         var first = await CreateResolver(new FakeKnowledgeSet(id: "engage", items: items)).ResolveAsync();
@@ -88,64 +85,33 @@ public class KnowledgeSetContextResolverTests
         // Distinct per item.
         firstIds.Distinct().Count().ShouldBe(2);
         // Namespaced deterministic identifiers produced by the shared DeterministicGuid helper,
-        // keyed on "{setId}\0{itemName}". Asserting equality with the helper both proves the values
+        // keyed on "{setId}\0{itemKey}". Asserting equality with the helper both proves the values
         // are namespaced (never Guid.Empty) and pins the derivation to the reusable utility.
-        firstIds[0].ShouldBe(KnowledgeSetContextResolver.CreateResourceId("engage", "Goals"));
-        firstIds[1].ShouldBe(KnowledgeSetContextResolver.CreateResourceId("engage", "Segments"));
+        firstIds[0].ShouldBe(KnowledgeSetContextResolver.CreateResourceId("engage", "goals"));
+        firstIds[1].ShouldBe(KnowledgeSetContextResolver.CreateResourceId("engage", "segments"));
         firstIds.ShouldNotContain(Guid.Empty);
     }
 
     [Fact]
-    public async Task ResolveAsync_DifferentSetsProduceDifferentGuidsForSameItemName()
+    public async Task ResolveAsync_GuidDerivesFromKeyNotName_StableAcrossRename()
     {
-        var itemName = "Goals";
-        var a = await CreateResolver(new FakeKnowledgeSet(id: "engage",
-            items: [new AIKnowledgeSetItem { Name = itemName, Content = "a" }])).ResolveAsync();
-        var b = await CreateResolver(new FakeKnowledgeSet(id: "commerce",
-            items: [new AIKnowledgeSetItem { Name = itemName, Content = "b" }])).ResolveAsync();
+        var beforeRename = await CreateResolver(new FakeKnowledgeSet(id: "engage",
+            items: [AIKnowledgeSetItem.FromContent("goals", "Goals", "a")])).ResolveAsync();
+        var afterRename = await CreateResolver(new FakeKnowledgeSet(id: "engage",
+            items: [AIKnowledgeSetItem.FromContent("goals", "Conversion Goals", "a")])).ResolveAsync();
 
-        a.Resources.Single().Id.ShouldNotBe(b.Resources.Single().Id);
+        // The display name changed but the key did not, so the GUID is unchanged.
+        afterRename.Resources.Single().Id.ShouldBe(beforeRename.Resources.Single().Id);
     }
 
     [Fact]
-    public async Task ResolveAsync_ContentStartingWithDollar_IsEscapedAndSurvivesProcessorRoundTrip()
+    public async Task ResolveAsync_DifferentSetsProduceDifferentGuidsForSameItemKey()
     {
-        const string literal = "$5 per month";
-        var set = new FakeKnowledgeSet(id: "pricing",
-            items: [new AIKnowledgeSetItem { Name = "Pricing", Content = literal }]);
+        var a = await CreateResolver(new FakeKnowledgeSet(id: "engage",
+            items: [AIKnowledgeSetItem.FromContent("goals", "Goals", "a")])).ResolveAsync();
+        var b = await CreateResolver(new FakeKnowledgeSet(id: "commerce",
+            items: [AIKnowledgeSetItem.FromContent("goals", "Goals", "b")])).ResolveAsync();
 
-        var result = await CreateResolver(set).ResolveAsync();
-
-        var resource = result.Resources.Single();
-        // The stored settings content is escaped ($$) so it is never treated as a config reference.
-        resource.Settings.ShouldBeOfType<TextResourceSettings>().Content.ShouldBe("$" + literal);
-
-        // Running it through the same processing path the LLM uses returns the original literal.
-        var processed = await CreateProcessor().ProcessResourceForLlmAsync(ToResolvedResource(resource));
-        processed.ShouldBe(literal);
+        a.Resources.Single().Id.ShouldNotBe(b.Resources.Single().Id);
     }
-
-    private static AIContextProcessor CreateProcessor()
-    {
-        var infrastructure = new AIContextResourceTypeInfrastructure(
-            Mock.Of<IAIEditableModelSchemaBuilder>(),
-            CreateModelResolver());
-        var resourceTypes = new AIContextResourceTypeCollection(
-            () => [new TextResourceType(infrastructure)]);
-        return new AIContextProcessor(resourceTypes);
-    }
-
-    private static AIResolvedResource ToResolvedResource(
-        Umbraco.AI.Core.Contexts.Resolvers.AIContextResolverResource resource)
-        => new()
-        {
-            Id = resource.Id,
-            ResourceTypeId = resource.ResourceTypeId,
-            Name = resource.Name,
-            Description = resource.Description,
-            Settings = resource.Settings,
-            InjectionMode = resource.InjectionMode,
-            Source = nameof(KnowledgeSetContextResolver),
-            ContextName = resource.ContextName
-        };
 }

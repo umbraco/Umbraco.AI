@@ -234,7 +234,10 @@ public static partial class UmbracoBuilderExtensions
         // Context resource type infrastructure - auto-discover via [AIContextResourceType] attribute
         services.AddSingleton<IAIContextResourceTypeInfrastructure, AIContextResourceTypeInfrastructure>();
         builder.AIContextResourceTypes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true))
+            // The Core-internal knowledge-content resource type has no [AIContextResourceType] attribute
+            // (it is invisible to authors and the resource-type picker), so it is registered explicitly.
+            .Add<KnowledgeContentResourceType>();
 
         // Knowledge sets - code-defined, package-embeddable knowledge, auto-discover via [AIKnowledgeSet] attribute
         builder.AIKnowledgeSets()

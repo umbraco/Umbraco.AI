@@ -26,20 +26,26 @@ public class KnowledgeSetDetailResponseModel
     public string? Icon { get; set; }
 
     /// <summary>
-    /// The items contributed by this knowledge set, including their full content.
+    /// The items contributed by this knowledge set, as metadata only. Content is materialised lazily via
+    /// the per-item content endpoint, not returned here.
     /// </summary>
     public IEnumerable<KnowledgeSetItemModel> Items { get; set; } = [];
 }
 
 /// <summary>
-/// Response model for a single item within a knowledge set.
+/// Response model for a single item within a knowledge set (metadata only).
 /// </summary>
 /// <remarks>
-/// Full <see cref="Content"/> is returned inline: knowledge-set content ships in the assembly (it is not
-/// secret) and is exposed so an admin can audit exactly what the LLM can see.
+/// Content is deliberately omitted: items are no longer materialised for the listing. The markdown body
+/// is fetched on demand via the per-item content endpoint keyed on <see cref="Key"/>.
 /// </remarks>
 public class KnowledgeSetItemModel
 {
+    /// <summary>
+    /// The stable key of the item within its knowledge set, used to fetch its content on demand.
+    /// </summary>
+    public required string Key { get; set; }
+
     /// <summary>
     /// The display name of the item.
     /// </summary>
@@ -49,9 +55,4 @@ public class KnowledgeSetItemModel
     /// The description of the item — the breadcrumb the LLM sees when the item is advertised on demand.
     /// </summary>
     public string? Description { get; set; }
-
-    /// <summary>
-    /// The knowledge content, as markdown.
-    /// </summary>
-    public required string Content { get; set; }
 }

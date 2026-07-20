@@ -62,20 +62,13 @@ export class UaiKnowledgeItemModalElement extends UmbModalBaseElement<
         const headline = item?.name ?? this.localize.term("uaiKnowledgeSet_itemContentHeadline");
 
         return html`
-            <umb-body-layout headline=${headline}>
-                <uui-box>
+            <umb-body-layout>
+                <div slot="header" class="header-layout">
+                    <h3 id="name">${headline}</h3>
                     ${item?.description ? html`<p id="description">${item.description}</p>` : nothing}
-                    <uui-tag look="secondary" color="default">
-                        <uui-icon name="icon-info"></uui-icon>
-                        ${this.localize.term("uaiKnowledgeSet_surfacedOnDemand")}
-                    </uui-tag>
-
-                    <umb-property-layout
-                        label=${this.localize.term("uaiKnowledgeSet_contentLabel")}
-                        orientation="vertical"
-                    >
-                        <div slot="editor">${this.#renderContent()}</div>
-                    </umb-property-layout>
+                </div>
+                <uui-box headline="Content">
+                    ${this.#renderContent()}
                 </uui-box>
 
                 <div slot="actions">
@@ -101,8 +94,12 @@ export class UaiKnowledgeItemModalElement extends UmbModalBaseElement<
                 --uui-box-default-padding: var(--uui-size-space-5);
             }
 
+            #name {
+                margin: 0;
+            }
+
             #description {
-                margin-top: 0;
+                margin: 0;
                 color: var(--uui-color-text-alt);
             }
 

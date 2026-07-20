@@ -28,8 +28,9 @@ export class UaiKnowledgeSetTableCollectionViewElement extends UmbLitElement {
 
     private _columns: UmbTableColumn[] = [
         { name: "Name", alias: "name" },
+        { name: "Alias", alias: "alias" },
         { name: "Description", alias: "description" },
-        { name: "Items", alias: "itemCount" },
+        { name: "Topics", alias: "itemCount" },
     ];
 
     constructor() {
@@ -61,6 +62,10 @@ export class UaiKnowledgeSetTableCollectionViewElement extends UmbLitElement {
                         href=${UAI_EDIT_KNOWLEDGE_SET_WORKSPACE_PATH_PATTERN.generateAbsolute({ id: item.unique })}
                         >${item.name}</a
                     >`,
+                },
+                {
+                    columnAlias: "alias",
+                    value: html`<uui-tag color="primary" look="secondary">${item.unique}</uui-tag>`,
                 },
                 { columnAlias: "description", value: item.description ?? "-" },
                 { columnAlias: "itemCount", value: item.itemCount.toString() },

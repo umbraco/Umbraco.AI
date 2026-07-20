@@ -38,22 +38,4 @@ export const manifests: Array<UmbExtensionManifest> = [
             },
         ],
     },
-    {
-        type: "workspaceView",
-        alias: "UmbracoAI.Workspace.KnowledgeSet.View.Info",
-        name: "Knowledge Set Info Workspace View",
-        js: () => import("./views/knowledge-set-info-workspace-view.element.js"),
-        weight: 90,
-        meta: {
-            label: "Info",
-            pathname: "info",
-            icon: "icon-info",
-        },
-        conditions: [
-            {
-                alias: UMB_WORKSPACE_CONDITION_ALIAS,
-                match: UAI_KNOWLEDGE_SET_WORKSPACE_ALIAS,
-            },
-        ],
-    },
 ];

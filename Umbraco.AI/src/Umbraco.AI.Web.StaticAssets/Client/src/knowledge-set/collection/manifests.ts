@@ -4,9 +4,8 @@ import { UAI_KNOWLEDGE_SET_COLLECTION_REPOSITORY_ALIAS } from "../repository/con
 /**
  * Knowledge Set collection manifests.
  *
- * Read-only, unlike the Context collection: no create action, no bulk-delete action, and no custom
- * collection element — the `default` collection kind's built-in element (with its default toolbar) is
- * used as-is.
+ * Read-only, unlike the Context collection: no create action and no bulk-delete action. It does use a
+ * custom collection element (mirroring the Context collection) to render a search field in the toolbar.
  */
 export const knowledgeSetCollectionManifests: Array<UmbExtensionManifest> = [
     {
@@ -14,6 +13,7 @@ export const knowledgeSetCollectionManifests: Array<UmbExtensionManifest> = [
         kind: "default",
         alias: UAI_KNOWLEDGE_SET_COLLECTION_ALIAS,
         name: "Knowledge Set Collection",
+        element: () => import("./knowledge-set-collection.element.js"),
         meta: {
             repositoryAlias: UAI_KNOWLEDGE_SET_COLLECTION_REPOSITORY_ALIAS,
         },

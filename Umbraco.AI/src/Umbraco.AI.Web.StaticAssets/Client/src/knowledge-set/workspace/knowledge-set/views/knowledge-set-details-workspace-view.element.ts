@@ -32,23 +32,20 @@ export class UaiKnowledgeSetDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <uui-box headline=${this._model.name}>
-                ${this._model.description ? html`<p id="description">${this._model.description}</p>` : nothing}
-                <uui-tag look="secondary" color="default">
-                    <uui-icon name="icon-info"></uui-icon>
-                    ${this.localize.term("uaiKnowledgeSet_surfacedOnDemand")}
-                </uui-tag>
+            <uui-box headline="General">
+                <umb-property-layout
+                    label="Topics"
+                    description="Topical information that provides additional context to AI operations."
+                >
+                    <div slot="editor">
+                        <uai-knowledge-item-list
+                            knowledge-set-id=${this._model.unique}
+                            .items=${this._model.items}
+                        ></uai-knowledge-item-list>
+                    </div>
+                </umb-property-layout>
             </uui-box>
 
-            <uui-box headline=${this.localize.term("uaiKnowledgeSet_itemsHeading")}>
-                <span slot="header-actions">
-                    ${this.localize.term("uaiKnowledgeSet_itemCount", this._model.items.length)}
-                </span>
-                <uai-knowledge-item-list
-                    knowledge-set-id=${this._model.unique}
-                    .items=${this._model.items}
-                ></uai-knowledge-item-list>
-            </uui-box>
         `;
     }
 
@@ -61,7 +58,7 @@ export class UaiKnowledgeSetDetailsWorkspaceViewElement extends UmbLitElement {
             }
 
             uui-box {
-                --uui-box-default-padding: var(--uui-size-space-5);
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
             uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
@@ -73,6 +70,10 @@ export class UaiKnowledgeSetDetailsWorkspaceViewElement extends UmbLitElement {
 
             uui-tag {
                 white-space: nowrap;
+            }
+
+            umb-property-layout[orientation="vertical"]:not(:last-child) {
+                padding-bottom: 0;
             }
 
             uui-loader {

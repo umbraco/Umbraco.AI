@@ -41,7 +41,11 @@ export class UaiKnowledgeSetWorkspaceEditorElement extends UmbLitElement {
                     >
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
-                    <span id="name">${this._model.name}</span>
+                    <div style="flex: 1;">
+                        <span id="name">${this._model.name}</span>
+                        <span id="description">${this._model.description}</span>
+                    </div>
+                    <uui-tag color="primary" look="secondary">${this._model.unique}</uui-tag>
                 </div>
             </umb-workspace-editor>
         `;
@@ -64,7 +68,12 @@ export class UaiKnowledgeSetWorkspaceEditorElement extends UmbLitElement {
             }
 
             #name {
+                display: block;
                 font-weight: bold;
+            }
+
+            #description {
+                display: block;
             }
 
             uui-loader {

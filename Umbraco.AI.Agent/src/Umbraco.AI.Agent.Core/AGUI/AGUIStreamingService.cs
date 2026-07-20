@@ -40,10 +40,19 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     }
 
     /// <inheritdoc />
+    public IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        AIAgent agent,
+        AGUIRunRequest request,
+        IEnumerable<AITool>? frontendTools,
+        CancellationToken cancellationToken = default)
+        => StreamAgentAsync(agent, request, frontendTools, session: null, cancellationToken);
+
+    /// <inheritdoc />
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         AIAgent agent,
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
+        AgentSession? session,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
@@ -56,7 +65,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -135,6 +144,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AGUIRunRequest request,
         AGUIEventEmitter emitter,
         HashSet<string> frontendToolNames,
+        AgentSession? session,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Process file content: store base64, resolve id references
@@ -178,8 +188,9 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             chatMessages.Count,
             frontendToolNames.Count);
 
-        // Use MAF streaming with options (session=null for new session)
-        await foreach (var update in agent.RunStreamingAsync(chatMessages, session: null, cancellationToken: cancellationToken))
+        // Use MAF streaming. A null session starts a fresh one (contextual Copilot); a bound session
+        // (Copilot Workspace) drives the attached ChatHistoryProvider against its conversation.
+        await foreach (var update in agent.RunStreamingAsync(chatMessages, session: session, cancellationToken: cancellationToken))
         {
             // Process content items (tool calls and results first, then text)
             if (update.Contents != null)

@@ -44,4 +44,33 @@ public interface IAGUIStreamingService
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams AG-UI events as
+    /// <see cref="StreamAgentAsync(AIAgent, AGUIRunRequest, IEnumerable{AITool}, CancellationToken)"/>,
+    /// additionally binding the run to an existing MAF <paramref name="session"/>. Surfaces with
+    /// server-side conversation persistence (Copilot Workspace) pass a conversation-bound session so
+    /// the attached <c>ChatHistoryProvider</c> loads/stores against the right conversation; the
+    /// contextual Copilot passes <see langword="null"/> and behaves exactly as before.
+    /// </summary>
+    /// <param name="agent">The MAF AIAgent to run.</param>
+    /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
+    /// <param name="frontendTools">The frontend tools (converted from request.Tools).</param>
+    /// <param name="session">
+    /// The MAF session to run within, or <see langword="null"/> to start a fresh session (the previous
+    /// behaviour).
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of AG-UI events.</returns>
+    /// <remarks>
+    /// Default interface method: implementations that predate session binding inherit this default,
+    /// which ignores <paramref name="session"/> and delegates to the core overload.
+    /// </remarks>
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        AIAgent agent,
+        AGUIRunRequest request,
+        IEnumerable<AITool>? frontendTools,
+        AgentSession? session,
+        CancellationToken cancellationToken = default)
+        => StreamAgentAsync(agent, request, frontendTools, cancellationToken);
 }

@@ -42,6 +42,13 @@ public static class Constants
         /// Identifies which UI surface the request originated from (e.g., "copilot", "workspace").
         /// </summary>
         public const string Surface = "Umbraco.AI.Agent.Surface";
+
+        /// <summary>
+        /// Key for the persisted conversation ID in runtime context. Populated by surfaces with
+        /// server-side conversation persistence (Copilot Workspace); absent otherwise. Lets telemetry
+        /// and notifications correlate a run with its durable conversation.
+        /// </summary>
+        public const string ConversationId = "Umbraco.AI.Agent.ConversationId";
     }
 
     /// <summary>

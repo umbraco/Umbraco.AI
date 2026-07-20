@@ -481,11 +481,21 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
+        // When bound to a persisted conversation, create the run's session and bind it (the concrete
+        // binding lives with the consumer's provider) so the attached ChatHistoryProvider loads/stores
+        // against the right conversation. Non-persisted surfaces stream with a null session as before.
+        AgentSession? session = null;
+        if (options.ConversationHistory is { } historyBinding)
+        {
+            session = await context.MafAgent.CreateSessionAsync(cancellationToken);
+            historyBinding.BindSession(session);
+        }
+
         // Stream via AG-UI streaming service
         bool streamCompleted = false;
         try
         {
-            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, cancellationToken))
+            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, cancellationToken))
             {
                 yield return evt;
             }
@@ -781,6 +791,17 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
+    /// Returns a <c>LogKeys</c> string array containing the existing keys (if any) plus
+    /// <paramref name="keyToAppend"/>, de-duplicated. Used to ensure a newly-added context key is
+    /// persisted to the audit log without dropping keys the caller already requested.
+    /// </summary>
+    private static string[] AppendLogKey(object? existingLogKeys, string keyToAppend)
+    {
+        var keys = existingLogKeys as IEnumerable<string> ?? [];
+        return keys.Append(keyToAppend).Distinct(StringComparer.Ordinal).ToArray();
+    }
+
+    /// <summary>
     /// Runs a persisted agent by ID with full orchestration.
     /// </summary>
     private async Task<AgentResponse> RunPersistedAgentAsync(
@@ -904,7 +925,10 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Publish executing notification (before execution)
         var eventMessages = new EventMessages();
-        var executingNotification = new AIAgentExecutingNotification(agent, chatMessages, eventMessages);
+        var executingNotification = new AIAgentExecutingNotification(agent, chatMessages, eventMessages)
+        {
+            ConversationId = options.ConversationHistory?.ConversationId,
+        };
         await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
 
         if (executingNotification.Cancel)
@@ -959,16 +983,25 @@ internal sealed class AIAgentService : IAIAgentService
             additionalProperties[AI.Core.Constants.ContextKeys.GuardrailIdsOverride] = options.GuardrailIdsOverride;
         }
 
+        // Surface the bound conversation id into the runtime context (visible to chat middleware /
+        // telemetry) and persist it onto the audit log alongside any keys the caller already flagged.
+        if (options.ConversationHistory is { } historyBinding)
+        {
+            additionalProperties[Constants.ContextKeys.ConversationId] = historyBinding.ConversationId;
+            additionalProperties[CoreConstants.ContextKeys.LogKeys] = AppendLogKey(
+                additionalProperties.GetValueOrDefault(CoreConstants.ContextKeys.LogKeys),
+                Constants.ContextKeys.ConversationId);
+        }
+
         // Create MAF agent. The AG-UI streaming caller passes Interactive (it can resume), while
         // headless callers pass options.ApprovalPolicy (default DenyAll) so destructive tools
-        // never stall a run that has no way to approve them.
-        var mafAgent = await _agentFactory.CreateAgentAsync(
-            agent,
-            contextItems,
-            convertedFrontendTools,
-            additionalProperties,
-            approvalPolicy,
-            cancellationToken);
+        // never stall a run that has no way to approve them. Only the persisted path uses the
+        // history-provider overload; every other caller takes the original overload unchanged.
+        var mafAgent = options.ConversationHistory is { } binding
+            ? await _agentFactory.CreateAgentAsync(
+                agent, binding.Provider, contextItems, convertedFrontendTools, additionalProperties, approvalPolicy, cancellationToken)
+            : await _agentFactory.CreateAgentAsync(
+                agent, contextItems, convertedFrontendTools, additionalProperties, approvalPolicy, cancellationToken);
 
         return new AgentExecutionContext(
             agent,
@@ -999,6 +1032,7 @@ internal sealed class AIAgentService : IAIAgentService
             {
                 ResponseText = responseText,
                 Exception = exception,
+                ConversationId = context.ExecutingNotification.ConversationId,
             }
             .WithStateFrom(context.ExecutingNotification);
 

@@ -1,6 +1,6 @@
 {
   "disabled": false,
-  "pathTemplate": ".worktrees/{{ TASKSLUG }}/{{ REPOBASENAME }}",
+  "pathTemplate": "~/.humanlayer/workspaces/{{ TASKSLUG }}/{{ REPOBASENAME }}",
   "branchTemplate": "v18/feature/{{ TASKSLUG }}",
   "repos": [
     {

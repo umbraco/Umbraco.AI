@@ -20,6 +20,13 @@ public class KnowledgeContentResourceTypeTests
     }
 
     [Fact]
+    public void IsInternal_IsTrue()
+    {
+        // Guards the seam: knowledge-content must stay hidden from the resource-type listing/picker.
+        CreateResourceType().IsInternal.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task ResolveDataAsync_AwaitsGetContentAsync_ReturnsMarkdown()
     {
         var set = new FakeKnowledgeSet(id: "engage",

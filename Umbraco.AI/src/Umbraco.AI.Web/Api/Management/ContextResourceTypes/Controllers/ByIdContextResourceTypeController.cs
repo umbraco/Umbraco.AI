@@ -44,7 +44,9 @@ public class ByIdContextResourceTypeController : ContextResourceTypeControllerBa
         CancellationToken cancellationToken = default)
     {
         var contextResourceType = _contextResourceTypes.GetById(id);
-        if (contextResourceType is null)
+        // Internal resource types are Core seams, not author-pickable — treat them as not found here too, so
+        // the listing and by-id endpoints present a consistent (author-visible) view of resource types.
+        if (contextResourceType is null || contextResourceType.IsInternal)
         {
             return Task.FromResult(ResourceTypeNotFound());
         }

@@ -63,6 +63,11 @@ internal sealed class KnowledgeContentResourceType : IAIContextResourceType
     public string? Icon => "icon-book";
 
     /// <inheritdoc />
+    // Core-internal seam: hidden from the resource-type listing API and the Context picker, but still
+    // registered and resolvable at format time.
+    public bool IsInternal => true;
+
+    /// <inheritdoc />
     public Type? SettingsType => typeof(KnowledgeContentRef);
 
     /// <inheritdoc />

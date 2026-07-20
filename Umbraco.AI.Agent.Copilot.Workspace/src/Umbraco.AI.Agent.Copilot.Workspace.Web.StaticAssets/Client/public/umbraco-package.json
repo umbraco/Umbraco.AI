@@ -1,0 +1,6 @@
+{
+  "$schema": "../../node_modules/@umbraco-cms/backoffice/umbraco-package-schema.json",
+  "name": "Umbraco.AI.Agent.Copilot.Workspace",
+  "version": "0.0.0",
+  "extensions": []
+}

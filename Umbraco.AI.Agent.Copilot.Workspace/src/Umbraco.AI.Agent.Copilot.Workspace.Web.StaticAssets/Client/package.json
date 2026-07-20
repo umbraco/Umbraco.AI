@@ -1,0 +1,10 @@
+{
+  "name": "@umbraco-ai/agent-copilot-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"[copilot-workspace] frontend build - TODO Phase 5\" && exit 0",
+    "watch": "echo \"[copilot-workspace] frontend watch - TODO Phase 5\" && exit 0"
+  }
+}

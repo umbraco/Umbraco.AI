@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "experimentalDecorators": false,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}

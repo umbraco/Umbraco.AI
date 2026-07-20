@@ -86,4 +86,36 @@ public interface IAIAgentFactory
         IReadOnlyDictionary<string, object?>? additionalProperties = null,
         AIApprovalPolicy approvalPolicy = AIApprovalPolicy.Interactive,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an AIAgent as <see cref="CreateAgentAsync(UmbracoAIAgent, IEnumerable{AIRequestContextItem}, IEnumerable{AITool}, IReadOnlyDictionary{string, object}, AIApprovalPolicy, CancellationToken)"/>,
+    /// additionally attaching a MAF <paramref name="chatHistoryProvider"/> so the agent's history is
+    /// loaded/persisted through custom storage (e.g. the durable Conversations store) instead of the
+    /// LLM service.
+    /// </summary>
+    /// <param name="agent">The agent definition.</param>
+    /// <param name="chatHistoryProvider">
+    /// The chat-history provider to attach, or <see langword="null"/> for the default (no server-side
+    /// storage — the caller manages history). Surfaces that don't persist (e.g. the contextual Copilot)
+    /// pass <see langword="null"/> and behave exactly as before.
+    /// </param>
+    /// <param name="contextItems">Optional context items.</param>
+    /// <param name="additionalTools">Optional additional tools (e.g. frontend tools).</param>
+    /// <param name="additionalProperties">Optional runtime-context properties.</param>
+    /// <param name="approvalPolicy">How destructive backend tools are gated for approval.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An <see cref="MsAIAgent"/> ready for use with MAF's RunAsync/RunStreamingAsync methods.</returns>
+    /// <remarks>
+    /// Default interface method: implementations that predate history persistence inherit this default,
+    /// which ignores <paramref name="chatHistoryProvider"/> and delegates to the core overload.
+    /// </remarks>
+    Task<MsAIAgent> CreateAgentAsync(
+        UmbracoAIAgent agent,
+        ChatHistoryProvider? chatHistoryProvider,
+        IEnumerable<AIRequestContextItem>? contextItems = null,
+        IEnumerable<AITool>? additionalTools = null,
+        IReadOnlyDictionary<string, object?>? additionalProperties = null,
+        AIApprovalPolicy approvalPolicy = AIApprovalPolicy.Interactive,
+        CancellationToken cancellationToken = default)
+        => CreateAgentAsync(agent, contextItems, additionalTools, additionalProperties, approvalPolicy, cancellationToken);
 }

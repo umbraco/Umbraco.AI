@@ -18,6 +18,7 @@
 
     <ItemGroup>
         <PackageReference Include="Umbraco.Cms.Core" />
+        <PackageReference Include="Umbraco.Cms.Infrastructure" />
     </ItemGroup>
 
     <ItemGroup>

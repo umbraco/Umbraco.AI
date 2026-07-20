@@ -42,7 +42,10 @@ public class AllContextResourceTypeController : ContextResourceTypeControllerBas
     public Task<ActionResult<IEnumerable<ContextResourceTypeResponseModel>>> GetAllContextResourceTypes(
         CancellationToken cancellationToken = default)
     {
-        var contextResourceTypes = _umbracoMapper.MapEnumerable<IAIContextResourceType, ContextResourceTypeResponseModel>(_contextResourceTypes);
+        // Internal resource types (e.g. knowledge-set content) are Core seams, not author-pickable — exclude
+        // them so they never surface in the resource-type listing or the Context resource-type picker.
+        var visibleResourceTypes = _contextResourceTypes.Where(rt => !rt.IsInternal);
+        var contextResourceTypes = _umbracoMapper.MapEnumerable<IAIContextResourceType, ContextResourceTypeResponseModel>(visibleResourceTypes);
         return Task.FromResult<ActionResult<IEnumerable<ContextResourceTypeResponseModel>>>(Ok(contextResourceTypes));
     }
 }

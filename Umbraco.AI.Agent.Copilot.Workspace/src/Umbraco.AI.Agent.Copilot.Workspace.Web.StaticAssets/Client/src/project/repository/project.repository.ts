@@ -14,4 +14,8 @@ export class UaiProjectRepository extends UmbRepositoryBase {
     async requestCollection() {
         return this.#source.getCollection();
     }
+
+    async requestById(id: string) {
+        return this.#source.getById(id);
+    }
 }

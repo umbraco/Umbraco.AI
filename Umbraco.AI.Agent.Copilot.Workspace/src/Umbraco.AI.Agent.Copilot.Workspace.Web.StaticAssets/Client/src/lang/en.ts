@@ -30,5 +30,15 @@ export default {
         renamePrompt: "Conversation title",
         deleteConfirmTitle: "Delete conversation",
         deleteConfirmMessage: "Are you sure you want to delete this conversation? This cannot be undone.",
+
+        // Context panel
+        contextTitle: "Context",
+        contextCollapse: "Collapse context panel",
+        contextNoProject: "This conversation isn't part of a project. Add it to a project to give it shared instructions and attachments.",
+        contextInstructionsHeading: "Instructions",
+        contextAttachmentsHeading: "Attachments",
+        contextContextsHeading: "Contexts",
+        contextNoAttachments: "No attachments.",
+        contextContextCount: "{0} context set(s) attached",
     },
 } satisfies UmbLocalizationDictionary;

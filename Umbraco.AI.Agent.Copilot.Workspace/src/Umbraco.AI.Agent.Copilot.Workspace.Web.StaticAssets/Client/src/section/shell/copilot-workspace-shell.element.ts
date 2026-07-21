@@ -26,6 +26,14 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
     @state()
     private _rightCollapsed = readBool(STORAGE_COLLAPSED, false);
 
+    /** Active conversation id (conversation route), passed to the context panel. */
+    @state()
+    private _activeConversationId?: string;
+
+    /** Active project id (project route), passed to the context panel. */
+    @state()
+    private _activeProjectId?: string;
+
     @state()
     private _routes: UmbRoute[] = [
         {
@@ -33,6 +41,8 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
             component: () => import("./views/workspace-conversation-view.element.js"),
             setup: (component, info) => {
                 (component as { conversationId?: string }).conversationId = info.match.params.id;
+                this._activeConversationId = info.match.params.id;
+                this._activeProjectId = undefined;
             },
         },
         {
@@ -40,11 +50,17 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
             component: () => import("./views/workspace-project-view.element.js"),
             setup: (component, info) => {
                 (component as { projectId?: string }).projectId = info.match.params.id;
+                this._activeProjectId = info.match.params.id;
+                this._activeConversationId = undefined;
             },
         },
         {
             path: "",
             component: () => import("./views/workspace-empty-view.element.js"),
+            setup: () => {
+                this._activeConversationId = undefined;
+                this._activeProjectId = undefined;
+            },
         },
         {
             path: "**",
@@ -109,6 +125,8 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
                     @pointerdown=${this.#startResize}
                 ></div>
                 <uai-copilot-workspace-context-panel
+                    .conversationId=${this._activeConversationId}
+                    .projectId=${this._activeProjectId}
                     @collapse=${() => this.#setCollapsed(true)}
                 ></uai-copilot-workspace-context-panel>
             </div>

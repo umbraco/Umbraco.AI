@@ -19,4 +19,9 @@ export class UaiProjectServerDataSource {
         await copilotWorkspaceClientReady;
         return tryExecute(this.#host, ProjectsService.getAll());
     }
+
+    async getById(id: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ProjectsService.getById({ path: { id } }));
+    }
 }

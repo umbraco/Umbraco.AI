@@ -3,7 +3,7 @@
  * (`CopilotWorkspaceConstants.Sections.CopilotWorkspace`) so a user granted the section
  * (see the AddCopilotWorkspaceSectionToAdminGroup migration) can see and enter it.
  */
-export const UAI_COPILOT_WORKSPACE_SECTION_ALIAS = "aiCopilotWorkspace";
+export const UAI_COPILOT_WORKSPACE_SECTION_ALIAS = "Uai.Section.CopilotWorkspace";
 
 /** URL path segment for the section. */
 export const UAI_COPILOT_WORKSPACE_SECTION_PATHNAME = "copilot-workspace";

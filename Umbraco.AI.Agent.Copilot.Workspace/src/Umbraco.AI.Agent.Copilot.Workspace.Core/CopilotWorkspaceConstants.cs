@@ -14,7 +14,7 @@ public static class CopilotWorkspaceConstants
         /// The Copilot Workspace backoffice section alias. This is a distinct section from the core AI
         /// admin section ("ai") so end-users can be granted the Workspace without AI configuration access.
         /// </summary>
-        public const string CopilotWorkspace = "aiCopilotWorkspace";
+        public const string CopilotWorkspace = "Uai.Section.CopilotWorkspace";
     }
 
     /// <summary>

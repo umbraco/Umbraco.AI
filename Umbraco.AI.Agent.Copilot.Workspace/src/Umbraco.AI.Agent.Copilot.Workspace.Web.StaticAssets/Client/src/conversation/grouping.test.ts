@@ -88,6 +88,22 @@ describe("groupConversations", () => {
         ]);
     });
 
+    it("emits a folder for a project with no conversations (sorted after active ones)", () => {
+        const groups = groupConversations(
+            [conv({ id: "a1", projectId: "A", lastMessageAt: daysAgo(1) })],
+            new Map([
+                ["A", "Alpha"],
+                ["Empty", "Empty Project"],
+            ]),
+            NOW,
+        );
+        const projectGroups = groups.filter((g) => g.kind === "project");
+        expect(projectGroups.map((g) => g.projectId)).toEqual(["A", "Empty"]);
+        const empty = projectGroups.find((g) => g.projectId === "Empty")!;
+        expect(empty.label).toBe("Empty Project");
+        expect(empty.conversations).toEqual([]);
+    });
+
     it("falls back to unknown-project label when the id is not in the name map", () => {
         const groups = groupConversations(
             [conv({ id: "x", projectId: "missing", lastMessageAt: daysAgo(0) })],

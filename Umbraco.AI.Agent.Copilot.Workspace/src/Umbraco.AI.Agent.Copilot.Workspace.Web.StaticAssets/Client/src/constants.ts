@@ -12,6 +12,13 @@ export const UAI_COPILOT_WORKSPACE_SECTION_PATHNAME = "copilot-workspace";
 export const UAI_COPILOT_WORKSPACE_API_NAME = "ai-copilot-workspace-management";
 
 /**
+ * Entity type for a Copilot Workspace project. Used with `UaiEntityActionEvent` on the shared action
+ * event bus so the reactive project repository (and its observers, e.g. the sidebar tree) update on
+ * create/update/delete without a manual reload.
+ */
+export const UAI_PROJECT_ENTITY_TYPE = "uai-copilot-workspace-project";
+
+/**
  * Window event fired when a conversation is created/renamed/moved/etc. from anywhere in the section,
  * so the sidebar list can reload. Used as a lightweight cross-region signal because the list (sidebar)
  * and the chat (routed centre) live in sibling subtrees of the section shell.

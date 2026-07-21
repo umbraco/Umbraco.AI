@@ -41,12 +41,12 @@ interface DateBucketDef {
 
 /**
  * Groups conversations for the sidebar: pinned first (any project), then one
- * group per project (most-recently-active project first), then the remaining
- * project-less conversations bucketed by recency. Empty groups are omitted.
+ * group per project — including projects with no conversations, so a newly-created (empty) project
+ * shows as a folder in the tree — then the remaining project-less conversations bucketed by recency.
  *
- * `now` is injected so the date bucketing is deterministic and unit-testable.
- * `projectNames` resolves a projectId to its display name; unknown ids fall
- * back to a generic label.
+ * `now` is injected so the date bucketing is deterministic and unit-testable. `projectNames` is the
+ * full set of projects (id → display name); a project group is emitted for every entry. Conversations
+ * whose project is missing from the map (e.g. a deleted project) fall under a generic "unknown" group.
  */
 export function groupConversations(
     conversations: readonly ConversationResponseModel[],
@@ -62,28 +62,45 @@ export function groupConversations(
 
     const unpinned = conversations.filter((c) => !c.isPinned);
 
-    // One group per project, ordered by the project's most recent activity.
+    // Bucket unpinned conversations: by known project, orphaned (project not in the map), or loose.
     const byProject = new Map<string, ConversationResponseModel[]>();
+    const orphans: ConversationResponseModel[] = [];
     const projectless: ConversationResponseModel[] = [];
     for (const c of unpinned) {
-        if (c.projectId) {
+        if (!c.projectId) {
+            projectless.push(c);
+        } else if (projectNames.has(c.projectId)) {
             const list = byProject.get(c.projectId) ?? [];
             list.push(c);
             byProject.set(c.projectId, list);
         } else {
-            projectless.push(c);
+            orphans.push(c);
         }
     }
 
-    const projectGroups: UaiConversationGroup[] = [...byProject.entries()].map(([projectId, list]) => ({
+    // One group per project (empty included), most-recently-active first, empty ones last (by name).
+    const projectGroups: UaiConversationGroup[] = [...projectNames.entries()].map(([projectId, name]) => ({
         key: `project:${projectId}`,
         kind: "project" as const,
-        label: projectNames.get(projectId) ?? "#uaiCopilotWorkspace_groupUnknownProject",
+        label: name,
         projectId,
-        conversations: list.sort(byActivityDesc),
+        conversations: (byProject.get(projectId) ?? []).sort(byActivityDesc),
     }));
-    projectGroups.sort((a, b) => byActivityDesc(a.conversations[0], b.conversations[0]));
+    projectGroups.sort((a, b) => {
+        const ta = a.conversations.length ? activityTime(a.conversations[0]) : Number.NEGATIVE_INFINITY;
+        const tb = b.conversations.length ? activityTime(b.conversations[0]) : Number.NEGATIVE_INFINITY;
+        return tb !== ta ? tb - ta : a.label.localeCompare(b.label);
+    });
     groups.push(...projectGroups);
+
+    if (orphans.length) {
+        groups.push({
+            key: "project:unknown",
+            kind: "project",
+            label: "#uaiCopilotWorkspace_groupUnknownProject",
+            conversations: orphans.sort(byActivityDesc),
+        });
+    }
 
     // Project-less conversations bucketed by recency.
     const buckets: DateBucketDef[] = [

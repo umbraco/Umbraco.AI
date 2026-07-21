@@ -57,6 +57,7 @@ export default {
         projectDeleteConfirmMessage:
             "Delete this project? Its conversations are kept but detached from the project. This cannot be undone.",
         projectNotFound: "This project could not be found.",
+        projectNoConversations: "No conversations yet",
 
         // Context panel
         contextTitle: "Context",

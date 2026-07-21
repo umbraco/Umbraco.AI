@@ -8,7 +8,6 @@ import { UaiConversationRepository } from "../../conversation/repository/convers
 import { UaiProjectRepository } from "../../project/repository/project.repository.js";
 import { groupConversations, type UaiConversationGroup } from "../../conversation/grouping.js";
 import type { ConversationResponseModel } from "../../conversation/types.js";
-import type { ProjectResponseModel } from "../../api/types.gen.js";
 import {
     copilotWorkspaceConversationPath,
     copilotWorkspaceProjectPath,
@@ -30,6 +29,12 @@ export class UaiCopilotWorkspaceConversationListElement
 {
     #conversationRepository = new UaiConversationRepository(this);
     #projectRepository = new UaiProjectRepository(this);
+
+    /** Last-loaded conversations (re-fetched on change/search); combined with the reactive projects. */
+    #conversations: ConversationResponseModel[] = [];
+
+    /** Projects (id → name) from the reactive project store; drives grouping + the move picker. */
+    #projectNames = new Map<string, string>();
 
     @state()
     private _loading = true;
@@ -63,6 +68,15 @@ export class UaiCopilotWorkspaceConversationListElement
         super.connectedCallback();
         window.addEventListener("navigationend", this.#onNavigationEnd);
         window.addEventListener(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT, this.#onConversationsChanged);
+
+        // Projects are reactive: observe the store so the tree re-groups (incl. new empty project
+        // folders) whenever a project is created/renamed/deleted anywhere — no manual reload.
+        this.observe(this.#projectRepository.projectItems$, (projects) => {
+            this.#projectNames = new Map([...projects].map(([id, p]) => [id, p.name]));
+            this.#recompute();
+        });
+        void this.#projectRepository.initialize();
+
         this.#load();
     }
 
@@ -72,21 +86,18 @@ export class UaiCopilotWorkspaceConversationListElement
         window.removeEventListener(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT, this.#onConversationsChanged);
     }
 
+    /** Re-fetches conversations (projects come from the reactive store) and re-groups. */
     async #load() {
         this._loading = true;
-
-        const [conversationsResult, projectsResult] = await Promise.all([
-            this.#conversationRepository.requestCollection({ search: this._search || undefined }),
-            this.#projectRepository.requestCollection(),
-        ]);
-
-        const conversations = conversationsResult.data?.items ?? [];
-        const projects = projectsResult.data?.items ?? [];
-        const projectNames = new Map<string, string>(projects.map((p) => [p.id, p.name]));
-
-        this._groups = groupConversations(conversations, projectNames, Date.now());
-        this._empty = conversations.length === 0;
+        const { data } = await this.#conversationRepository.requestCollection({ search: this._search || undefined });
+        this.#conversations = data?.items ?? [];
         this._loading = false;
+        this.#recompute();
+    }
+
+    #recompute() {
+        this._groups = groupConversations(this.#conversations, this.#projectNames, Date.now());
+        this._empty = this._groups.length === 0;
     }
 
     #debouncedSearch = debounce(() => this.#load(), 250);
@@ -109,6 +120,8 @@ export class UaiCopilotWorkspaceConversationListElement
     }
 
     async #onNewProject() {
+        // The reactive project store updates the tree (empty folder appears) on the dispatched
+        // CREATED event — no manual reload needed here.
         const { data } = await this.#projectRepository.create({
             name: this.localize.term("uaiCopilotWorkspace_newProjectDefaultName"),
             contextIds: [],
@@ -116,7 +129,6 @@ export class UaiCopilotWorkspaceConversationListElement
         });
         if (data?.id) {
             this.#navigateTo(copilotWorkspaceProjectPath(data.id));
-            await this.#load();
         }
     }
 
@@ -132,14 +144,12 @@ export class UaiCopilotWorkspaceConversationListElement
 
     async #onMoveToProject(conversation: ConversationResponseModel) {
         // Mirror the CMS "Move to" UX with the generic item picker (our items aren't tree entities):
-        // a flat list of projects plus a "No project" option to detach. Fetch projects fresh so a
-        // just-created project is present.
-        const { data } = await this.#projectRepository.requestCollection();
-        const projects: ProjectResponseModel[] = data?.items ?? [];
+        // a flat list of projects plus a "No project" option to detach. Projects come from the
+        // reactive store, so the list is always current.
         const noProjectValue = "";
         const items = [
             { label: this.localize.term("uaiCopilotWorkspace_moveNoProject"), value: noProjectValue, icon: "icon-delete" },
-            ...projects.map((p) => ({ label: p.name, value: p.id, icon: "icon-folder" })),
+            ...[...this.#projectNames].map(([id, name]) => ({ label: name, value: id, icon: "icon-folder" })),
         ];
 
         let chosen;
@@ -243,11 +253,13 @@ export class UaiCopilotWorkspaceConversationListElement
                         ? html`<a class="group-link" href=${copilotWorkspaceProjectPath(group.projectId)}>${group.label}</a>`
                         : html`<span>${group.label.startsWith("#") ? this.localize.term(group.label.slice(1)) : group.label}</span>`}
                 </div>
-                ${repeat(
-                    group.conversations,
-                    (c) => c.id,
-                    (c) => this.#renderItem(c),
-                )}
+                ${group.conversations.length === 0
+                    ? html`<p class="empty-project">${this.localize.term("uaiCopilotWorkspace_projectNoConversations")}</p>`
+                    : repeat(
+                          group.conversations,
+                          (c) => c.id,
+                          (c) => this.#renderItem(c),
+                      )}
             </div>
         `;
     }
@@ -368,6 +380,13 @@ export class UaiCopilotWorkspaceConversationListElement
             }
             .group-link:hover {
                 text-decoration: underline;
+            }
+            .empty-project {
+                margin: 0;
+                padding: 0 var(--uui-size-space-4) var(--uui-size-space-2);
+                color: var(--uui-color-text-alt);
+                font-size: 0.8em;
+                font-style: italic;
             }
             .rename-input {
                 display: block;

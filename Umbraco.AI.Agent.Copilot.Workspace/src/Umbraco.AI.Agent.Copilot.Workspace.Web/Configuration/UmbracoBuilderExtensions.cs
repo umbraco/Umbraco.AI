@@ -37,9 +37,9 @@ public static class UmbracoBuilderExtensions
             "Describes the Umbraco AI Copilot Workspace Management API for conversations, projects, and " +
             "persisted streaming, available when authenticated as a backoffice user with Copilot Workspace access.");
 
-        // Stream controllers are auto-discovered (their DI dependencies — conversation/project services
-        // and the ConversationChatHistoryProvider — are registered by the Conversations core layer).
-        // TODO (Phase 4): the authenticated, ownership-checked file-serving endpoint (B6).
+        // Stream + file controllers are auto-discovered (their DI dependencies — conversation/project
+        // services, the ConversationChatHistoryProvider, and the IAIFileStore — are registered by the
+        // Conversations core and Agent layers).
         return builder;
     }
 }

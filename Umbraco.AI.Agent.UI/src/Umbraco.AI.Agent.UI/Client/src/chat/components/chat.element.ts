@@ -158,6 +158,14 @@ export class UaiChatElement extends UmbLitElement {
         `;
     }
 
+    /** Focuses the message composer. Delegates to the chat input; safe to call before it renders. */
+    focusComposer(): void {
+        const input = this.shadowRoot?.querySelector("uai-chat-input") as
+            | (HTMLElement & { focusComposer?: () => void })
+            | null;
+        input?.focusComposer?.();
+    }
+
     static override styles = css`
         :host {
             display: flex;

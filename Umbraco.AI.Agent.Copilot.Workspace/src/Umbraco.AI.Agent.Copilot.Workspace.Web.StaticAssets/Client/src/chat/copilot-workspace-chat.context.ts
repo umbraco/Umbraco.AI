@@ -19,9 +19,20 @@ import { UaiConversationRepository } from "../conversation/repository/conversati
 import type { ConversationResponseModel } from "../conversation/types.js";
 import { ServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
 import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
+import { notifyCopilotWorkspaceConversationsChanged } from "../constants.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
 const AUTO_AGENT: UaiAgentItem = { id: "auto", name: "Auto", alias: "auto" };
+
+/** Max length of an auto-derived conversation title before it's truncated with an ellipsis. */
+const AUTO_TITLE_MAX_LENGTH = 60;
+
+/** Derives a conversation title from the first user message (collapsed whitespace, truncated). */
+function deriveConversationTitle(content: string): string {
+    const text = content.trim().replace(/\s+/g, " ");
+    if (!text) return "";
+    return text.length > AUTO_TITLE_MAX_LENGTH ? `${text.slice(0, AUTO_TITLE_MAX_LENGTH).trimEnd()}…` : text;
+}
 
 /**
  * Chat context for the Copilot Workspace section. Implements `UaiChatContextApi` so the shared
@@ -175,8 +186,27 @@ export class CopilotWorkspaceChatContext extends UmbControllerBase implements Ua
     }
 
     async sendUserMessage(content: string, contentParts?: UaiInputContent[]): Promise<void> {
+        // Title an untitled conversation from its first message (fire-and-forget; doesn't delay the send).
+        this.#maybeAutoTitle(content);
         // Project context is injected server-side from the conversation; no client context needed.
         this.#runController.sendUserMessage(content, [], contentParts);
+    }
+
+    /**
+     * On the first message of an untitled conversation, derives a title from it, persists it, and
+     * signals the sidebar to refresh. Sets the local title synchronously so a rapid second send
+     * doesn't re-title.
+     */
+    #maybeAutoTitle(content: string): void {
+        const conversation = this.#conversation;
+        if (!conversation || conversation.title?.trim()) return;
+        const title = deriveConversationTitle(content);
+        if (!title) return;
+
+        this.#conversation = { ...conversation, title };
+        void this.#conversationRepository.rename(conversation, title).then((result) => {
+            if (!result.error) notifyCopilotWorkspaceConversationsChanged();
+        });
     }
 
     abortRun(): void {

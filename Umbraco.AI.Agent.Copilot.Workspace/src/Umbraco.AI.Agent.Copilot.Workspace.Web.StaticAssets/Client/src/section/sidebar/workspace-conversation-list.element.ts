@@ -1,18 +1,20 @@
 import { css, customElement, html, nothing, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UmbSectionSidebarAppElement } from "@umbraco-cms/backoffice/section";
-import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
+import { umbConfirmModal, umbOpenModal, UMB_ITEM_PICKER_MODAL } from "@umbraco-cms/backoffice/modal";
 import { debounce } from "@umbraco-cms/backoffice/utils";
 import type { UUIInputElement } from "@umbraco-cms/backoffice/external/uui";
 import { UaiConversationRepository } from "../../conversation/repository/conversation.repository.js";
 import { UaiProjectRepository } from "../../project/repository/project.repository.js";
 import { groupConversations, type UaiConversationGroup } from "../../conversation/grouping.js";
 import type { ConversationResponseModel } from "../../conversation/types.js";
+import type { ProjectResponseModel } from "../../api/types.gen.js";
 import {
     copilotWorkspaceConversationPath,
     copilotWorkspaceProjectPath,
     UAI_COPILOT_WORKSPACE_SECTION_PATH,
 } from "../../paths.js";
+import { UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT } from "../../constants.js";
 
 /**
  * The conversation list, rendered as a section-sidebar app so it uses the CMS's standard section
@@ -52,15 +54,22 @@ export class UaiCopilotWorkspaceConversationListElement
         this._activePath = window.location.pathname;
     };
 
+    /** Reload when a conversation changes elsewhere in the section (e.g. auto-titled by the chat). */
+    #onConversationsChanged = () => {
+        this.#load();
+    };
+
     override connectedCallback() {
         super.connectedCallback();
         window.addEventListener("navigationend", this.#onNavigationEnd);
+        window.addEventListener(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT, this.#onConversationsChanged);
         this.#load();
     }
 
     override disconnectedCallback() {
         super.disconnectedCallback();
         window.removeEventListener("navigationend", this.#onNavigationEnd);
+        window.removeEventListener(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT, this.#onConversationsChanged);
     }
 
     async #load() {
@@ -72,9 +81,8 @@ export class UaiCopilotWorkspaceConversationListElement
         ]);
 
         const conversations = conversationsResult.data?.items ?? [];
-        const projectNames = new Map<string, string>(
-            (projectsResult.data?.items ?? []).map((p) => [p.id, p.name]),
-        );
+        const projects = projectsResult.data?.items ?? [];
+        const projectNames = new Map<string, string>(projects.map((p) => [p.id, p.name]));
 
         this._groups = groupConversations(conversations, projectNames, Date.now());
         this._empty = conversations.length === 0;
@@ -119,6 +127,33 @@ export class UaiCopilotWorkspaceConversationListElement
 
     async #onArchive(conversation: ConversationResponseModel) {
         await this.#conversationRepository.setArchived(conversation, !conversation.isArchived);
+        await this.#load();
+    }
+
+    async #onMoveToProject(conversation: ConversationResponseModel) {
+        // Mirror the CMS "Move to" UX with the generic item picker (our items aren't tree entities):
+        // a flat list of projects plus a "No project" option to detach. Fetch projects fresh so a
+        // just-created project is present.
+        const { data } = await this.#projectRepository.requestCollection();
+        const projects: ProjectResponseModel[] = data?.items ?? [];
+        const noProjectValue = "";
+        const items = [
+            { label: this.localize.term("uaiCopilotWorkspace_moveNoProject"), value: noProjectValue, icon: "icon-delete" },
+            ...projects.map((p) => ({ label: p.name, value: p.id, icon: "icon-folder" })),
+        ];
+
+        let chosen;
+        try {
+            chosen = await umbOpenModal(this, UMB_ITEM_PICKER_MODAL, {
+                data: { headline: this.localize.term("uaiCopilotWorkspace_moveHeadline"), items },
+            });
+        } catch {
+            return; // cancelled
+        }
+
+        const projectId = chosen.value === noProjectValue ? null : chosen.value;
+        if ((conversation.projectId ?? null) === projectId) return; // no change
+        await this.#conversationRepository.moveToProject(conversation, projectId);
         await this.#load();
     }
 
@@ -263,6 +298,12 @@ export class UaiCopilotWorkspaceConversationListElement
                     @click=${() => this.#startRename(conversation)}
                 >
                     <uui-icon slot="icon" name="icon-edit"></uui-icon>
+                </uui-menu-item>
+                <uui-menu-item
+                    label=${this.localize.term("uaiCopilotWorkspace_actionMoveToProject")}
+                    @click=${() => this.#onMoveToProject(conversation)}
+                >
+                    <uui-icon slot="icon" name="icon-enter"></uui-icon>
                 </uui-menu-item>
                 <uui-menu-item
                     label=${this.localize.term(conversation.isArchived ? "uaiCopilotWorkspace_actionUnarchive" : "uaiCopilotWorkspace_actionArchive")}

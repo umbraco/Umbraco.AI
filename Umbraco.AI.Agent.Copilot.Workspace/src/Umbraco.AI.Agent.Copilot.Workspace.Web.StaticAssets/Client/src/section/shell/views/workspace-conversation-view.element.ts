@@ -1,4 +1,4 @@
-import { css, customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, query } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { CopilotWorkspaceChatContext } from "../../../chat/copilot-workspace-chat.context.js";
 
@@ -13,6 +13,10 @@ export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
     #context = new CopilotWorkspaceChatContext(this);
     #agentsLoaded = false;
 
+    /** The shared chat element; used to focus its composer when the conversation changes. */
+    @query("uai-chat")
+    private _chat?: HTMLElement & { focusComposer?: () => void };
+
     #conversationId?: string;
 
     @property({ type: String })
@@ -25,6 +29,9 @@ export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
         if (value && value !== previous) {
             this.#ensureAgentsLoaded();
             void this.#context.setConversation(value);
+            // Focus the composer on every open/switch (the view is reused across conversations, so
+            // the input doesn't remount — its own first-mount focus wouldn't fire on a switch).
+            this.updateComplete.then(() => this._chat?.focusComposer?.());
         }
         this.requestUpdate("conversationId", previous);
     }

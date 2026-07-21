@@ -10,3 +10,15 @@ export const UAI_COPILOT_WORKSPACE_SECTION_PATHNAME = "copilot-workspace";
 
 /** The management API OpenAPI document name (matches the backend `[MapToApi]`). */
 export const UAI_COPILOT_WORKSPACE_API_NAME = "ai-copilot-workspace-management";
+
+/**
+ * Window event fired when a conversation is created/renamed/moved/etc. from anywhere in the section,
+ * so the sidebar list can reload. Used as a lightweight cross-region signal because the list (sidebar)
+ * and the chat (routed centre) live in sibling subtrees of the section shell.
+ */
+export const UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT = "uai-copilot-workspace:conversations-changed";
+
+/** Dispatches {@link UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT} so the sidebar list refreshes. */
+export function notifyCopilotWorkspaceConversationsChanged(): void {
+    window.dispatchEvent(new CustomEvent(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT));
+}

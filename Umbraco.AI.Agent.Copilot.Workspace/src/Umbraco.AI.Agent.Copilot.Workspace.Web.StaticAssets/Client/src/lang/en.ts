@@ -1,6 +1,12 @@
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 
 export default {
+    // Labels for the `copilot-workspace` agent surface, shown in the agent Availability picker.
+    // Convention (see IAIAgentSurface): `uaiAgentSurface_{surfaceId}{Label|Description}`.
+    uaiAgentSurface: {
+        "copilot-workspaceLabel": "Copilot Workspace",
+        "copilot-workspaceDescription": "Make this agent available in the Copilot Workspace.",
+    },
     uaiCopilotWorkspace: {
         sectionLabel: "Copilot Workspace",
         dashboardLabel: "Workspace",

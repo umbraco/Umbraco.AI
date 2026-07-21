@@ -16,6 +16,10 @@ export { UaiToolRendererManager } from "./chat/services/tool-renderer.manager.js
 export { UaiFrontendToolManager } from "./chat/services/frontend-tool.manager.js";
 export { UaiFrontendToolExecutor } from "./chat/services/frontend-tool.executor.js";
 export { UaiRunController, type UaiRunControllerConfig } from "./chat/services/run.controller.js";
+export {
+    UaiClientOwnedConversationStrategy,
+    type UaiConversationStrategy,
+} from "./chat/services/conversation-strategy.js";
 export { UaiHitlContext, UAI_HITL_CONTEXT } from "./chat/services/hitl.context.js";
 export { UaiInterruptHandlerRegistry } from "./chat/services/interrupt-handler.registry.js";
 

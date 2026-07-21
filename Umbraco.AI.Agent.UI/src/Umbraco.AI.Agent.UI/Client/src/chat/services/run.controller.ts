@@ -18,7 +18,8 @@ import type {
     UaiInputContent,
 } from "../types/index.js";
 import { safeParseJson } from "../utils/json.js";
-import { UaiAgentClient } from "@umbraco-ai/agent";
+import type { UaiAgentClient } from "@umbraco-ai/agent";
+import { UaiClientOwnedConversationStrategy, type UaiConversationStrategy } from "./conversation-strategy.js";
 
 /**
  * Configuration for the run controller.
@@ -31,6 +32,12 @@ export interface UaiRunControllerConfig {
     frontendToolManager?: UaiFrontendToolManager;
     /** Interrupt handlers to register */
     interruptHandlers: UaiInterruptHandler[];
+    /**
+     * Optional conversation strategy (transport + history ownership). Defaults to
+     * {@link UaiClientOwnedConversationStrategy} — the client accumulates history and re-sends it to
+     * the agent-keyed endpoint. Server-persisted surfaces (Copilot Workspace) inject their own.
+     */
+    conversationStrategy?: UaiConversationStrategy;
 }
 
 /**
@@ -49,6 +56,7 @@ export class UaiRunController extends UmbControllerBase {
     #currentToolCalls: UaiToolCallInfo[] = [];
     #subscriptions: Subscription[] = [];
     #handlerRegistry = new UaiInterruptHandlerRegistry();
+    #strategy: UaiConversationStrategy;
 
     /** ID of the assistant message currently being streamed */
     #currentAssistantMessageId: string | null = null;
@@ -78,6 +86,7 @@ export class UaiRunController extends UmbControllerBase {
         super(host);
         this.#toolRendererManager = config.toolRendererManager;
         this.#frontendToolManager = config.frontendToolManager;
+        this.#strategy = config.conversationStrategy ?? new UaiClientOwnedConversationStrategy();
 
         // Create frontend tool executor if frontend tools are available
         if (this.#frontendToolManager) {
@@ -138,7 +147,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next({ status: "thinking" });
 
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
-        this.#client.sendMessage(nextMessages, frontendTools, this.#pendingContext);
+        this.#client.sendMessage(this.#strategy.outbound(nextMessages), frontendTools, this.#pendingContext);
     }
 
     resetConversation(): void {
@@ -186,14 +195,23 @@ export class UaiRunController extends UmbControllerBase {
 
         this.#agentState.next({ status: "thinking" });
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
-        this.#client.sendMessage(truncatedMessages, frontendTools, this.#pendingContext);
+        this.#client.sendMessage(this.#strategy.outbound(truncatedMessages), frontendTools, this.#pendingContext);
+    }
+
+    /**
+     * Loads the conversation's initial messages via the strategy (server-persisted surfaces fetch
+     * from the durable store; client-owned returns none) and seeds the display. Display-only — the
+     * server supplies the authoritative history to the model on each turn.
+     */
+    async loadInitialMessages(): Promise<void> {
+        this.#messages.next(await this.#strategy.loadInitial());
     }
 
     #createClient(): void {
-        if (!this.#agent?.id) return;
+        if (!this.#agent) return;
 
-        this.#client = UaiAgentClient.create(
-            { agentId: this.#agent.id },
+        this.#client = this.#strategy.createClient(
+            this.#agent,
             {
                 onTextStart: (messageId) => {
                     const messages = this.#messages.value;
@@ -419,6 +437,11 @@ export class UaiRunController extends UmbControllerBase {
             }
         }
 
+        // Turn finished without an outstanding interrupt: the server-persisted strategy (if any) can
+        // now treat everything up to here as durably stored (HTTP turns are serial, so the store is
+        // current before the next send). No-op for the client-owned default.
+        this.#strategy.onTurnComplete?.(this.#messages.value);
+
         this.#agentState.next(undefined);
     }
 
@@ -468,7 +491,7 @@ export class UaiRunController extends UmbControllerBase {
 
             this.#agentState.next({ status: "thinking" });
             const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
-            this.#client?.sendMessage(this.#messages.value, frontendTools, this.#pendingContext, [
+            this.#client?.sendMessage(this.#strategy.outbound(this.#messages.value), frontendTools, this.#pendingContext, [
                 { interruptId: interrupt.id, status: "resolved", payload },
             ]);
             return;
@@ -488,7 +511,7 @@ export class UaiRunController extends UmbControllerBase {
         }
         this.#agentState.next({ status: "thinking" });
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
-        this.#client?.sendMessage(this.#messages.value, frontendTools, this.#pendingContext);
+        this.#client?.sendMessage(this.#strategy.outbound(this.#messages.value), frontendTools, this.#pendingContext);
     }
 
     #handleToolResult(result: UaiFrontendToolResult): void {

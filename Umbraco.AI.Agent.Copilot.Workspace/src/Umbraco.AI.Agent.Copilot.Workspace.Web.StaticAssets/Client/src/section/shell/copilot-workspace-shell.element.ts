@@ -6,13 +6,25 @@ import type { UmbRoute } from "@umbraco-cms/backoffice/router";
 import "./regions/workspace-conversation-list.element.js";
 import "./regions/workspace-context-panel.element.js";
 
+const RIGHT_MIN = 260;
+const RIGHT_MAX = 640;
+const RIGHT_DEFAULT = 340;
+const STORAGE_WIDTH = "uai-cw-context-width";
+const STORAGE_COLLAPSED = "uai-cw-context-collapsed";
+
 /**
  * The Copilot Workspace three-region shell: a conversation list (left), a routed main area (center),
- * and a context panel (right). The center hosts an <umb-router-slot> with the section's routes:
- * empty landing, an open conversation (/conversation/:id), and a project (/project/:id).
+ * and a collapsible + resizable context panel (right). The center hosts an <umb-router-slot> with the
+ * section's routes: empty landing, an open conversation (/conversation/:id), and a project (/project/:id).
  */
 @customElement("uai-copilot-workspace-shell")
 export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
+    @state()
+    private _rightWidth = readNumber(STORAGE_WIDTH, RIGHT_DEFAULT);
+
+    @state()
+    private _rightCollapsed = readBool(STORAGE_COLLAPSED, false);
+
     @state()
     private _routes: UmbRoute[] = [
         {
@@ -39,15 +51,80 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
         },
     ];
 
+    #setCollapsed(collapsed: boolean) {
+        this._rightCollapsed = collapsed;
+        try {
+            localStorage.setItem(STORAGE_COLLAPSED, String(collapsed));
+        } catch {
+            /* storage unavailable — in-session only */
+        }
+    }
+
+    #startResize = (event: PointerEvent) => {
+        event.preventDefault();
+        const startX = event.clientX;
+        const startWidth = this._rightWidth;
+        document.body.style.userSelect = "none";
+
+        const onMove = (moveEvent: PointerEvent) => {
+            // Dragging the handle left widens the panel (it sits on the panel's left edge).
+            const next = startWidth + (startX - moveEvent.clientX);
+            this._rightWidth = Math.min(RIGHT_MAX, Math.max(RIGHT_MIN, next));
+        };
+        const onUp = () => {
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerup", onUp);
+            document.body.style.userSelect = "";
+            try {
+                localStorage.setItem(STORAGE_WIDTH, String(this._rightWidth));
+            } catch {
+                /* storage unavailable */
+            }
+        };
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+    };
+
     override render() {
+        const rightColumn = this._rightCollapsed ? "2.5rem" : `${this._rightWidth}px`;
+        const style = `grid-template-columns: 320px minmax(0, 1fr) ${rightColumn};`;
+
         return html`
-            <div class="shell">
+            <div class="shell" style=${style}>
                 <uai-copilot-workspace-conversation-list></uai-copilot-workspace-conversation-list>
                 <main>
                     <umb-router-slot .routes=${this._routes}></umb-router-slot>
                 </main>
-                <uai-copilot-workspace-context-panel></uai-copilot-workspace-context-panel>
+                ${this._rightCollapsed ? this.#renderCollapsedStrip() : this.#renderExpandedPanel()}
             </div>
+        `;
+    }
+
+    #renderExpandedPanel() {
+        return html`
+            <div class="right">
+                <div
+                    class="resizer"
+                    title="Drag to resize"
+                    @pointerdown=${this.#startResize}
+                ></div>
+                <uai-copilot-workspace-context-panel
+                    @collapse=${() => this.#setCollapsed(true)}
+                ></uai-copilot-workspace-context-panel>
+            </div>
+        `;
+    }
+
+    #renderCollapsedStrip() {
+        return html`
+            <button
+                class="expand-strip"
+                title="Show context panel"
+                aria-label="Show context panel"
+                @click=${() => this.#setCollapsed(false)}
+            >
+                <uui-icon name="icon-navigation-left"></uui-icon>
+            </button>
         `;
     }
 
@@ -59,7 +136,6 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
             }
             .shell {
                 display: grid;
-                grid-template-columns: 320px minmax(0, 1fr) 340px;
                 height: 100%;
                 min-height: 0;
             }
@@ -68,8 +144,63 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
                 height: 100%;
                 overflow: hidden;
             }
+            .right {
+                position: relative;
+                display: flex;
+                height: 100%;
+                min-height: 0;
+                border-left: 1px solid var(--uui-color-divider);
+            }
+            .right uai-copilot-workspace-context-panel {
+                flex: 1;
+                min-width: 0;
+            }
+            .resizer {
+                flex: 0 0 6px;
+                cursor: col-resize;
+                background: transparent;
+                transition: background 120ms;
+            }
+            .resizer:hover {
+                background: var(--uui-color-focus, #3879ff);
+            }
+            .expand-strip {
+                all: unset;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                padding-top: var(--uui-size-space-3);
+                height: 100%;
+                cursor: pointer;
+                border-left: 1px solid var(--uui-color-divider);
+                background: var(--uui-color-surface);
+                color: var(--uui-color-text-alt);
+            }
+            .expand-strip:hover {
+                background: var(--uui-color-surface-alt);
+                color: var(--uui-color-text);
+            }
         `,
     ];
+}
+
+function readNumber(key: string, fallback: number): number {
+    try {
+        const raw = localStorage.getItem(key);
+        const value = raw ? Number(raw) : NaN;
+        return Number.isFinite(value) ? value : fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function readBool(key: string, fallback: boolean): boolean {
+    try {
+        const raw = localStorage.getItem(key);
+        return raw === null ? fallback : raw === "true";
+    } catch {
+        return fallback;
+    }
 }
 
 export default UaiCopilotWorkspaceShellElement;

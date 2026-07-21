@@ -100,6 +100,18 @@ export class UaiCopilotWorkspaceConversationListElement
         }
     }
 
+    async #onNewProject() {
+        const { data } = await this.#projectRepository.create({
+            name: this.localize.term("uaiCopilotWorkspace_newProjectDefaultName"),
+            contextIds: [],
+            resources: [],
+        });
+        if (data?.id) {
+            this.#navigateTo(copilotWorkspaceProjectPath(data.id));
+            await this.#load();
+        }
+    }
+
     async #onTogglePin(conversation: ConversationResponseModel) {
         await this.#conversationRepository.setPinned(conversation, !conversation.isPinned);
         await this.#load();
@@ -143,14 +155,24 @@ export class UaiCopilotWorkspaceConversationListElement
     override render() {
         return html`
             <div class="header">
-                <uui-button
-                    look="primary"
-                    label=${this.localize.term("uaiCopilotWorkspace_newChat")}
-                    @click=${this.#onNewChat}
-                >
-                    <uui-icon name="icon-add"></uui-icon>
-                    ${this.localize.term("uaiCopilotWorkspace_newChat")}
-                </uui-button>
+                <div class="new-actions">
+                    <uui-button
+                        look="primary"
+                        label=${this.localize.term("uaiCopilotWorkspace_newChat")}
+                        @click=${this.#onNewChat}
+                    >
+                        <uui-icon name="icon-add"></uui-icon>
+                        ${this.localize.term("uaiCopilotWorkspace_newChat")}
+                    </uui-button>
+                    <uui-button
+                        look="secondary"
+                        label=${this.localize.term("uaiCopilotWorkspace_newProject")}
+                        title=${this.localize.term("uaiCopilotWorkspace_newProject")}
+                        @click=${this.#onNewProject}
+                    >
+                        <uui-icon name="icon-folder"></uui-icon>
+                    </uui-button>
+                </div>
                 <uui-input
                     type="search"
                     .value=${this._search}
@@ -273,9 +295,15 @@ export class UaiCopilotWorkspaceConversationListElement
                 padding: var(--uui-size-space-4);
                 border-bottom: 1px solid var(--uui-color-divider);
             }
-            .header uui-button,
             .header uui-input {
                 width: 100%;
+            }
+            .new-actions {
+                display: flex;
+                gap: var(--uui-size-space-2);
+            }
+            .new-actions uui-button:first-child {
+                flex: 1;
             }
             .list {
                 flex: 1;

@@ -31,6 +31,24 @@ export default {
         deleteConfirmTitle: "Delete conversation",
         deleteConfirmMessage: "Are you sure you want to delete this conversation? This cannot be undone.",
 
+        // Projects
+        newProject: "New project",
+        newProjectDefaultName: "Untitled project",
+        projectNameLabel: "Name",
+        projectNamePlaceholder: "Project name",
+        projectDescriptionLabel: "Description",
+        projectInstructionsLabel: "Instructions",
+        projectInstructionsHelp: "Guidance applied to every conversation in this project.",
+        projectContextsLabel: "Contexts",
+        projectResourcesLabel: "Resources",
+        projectSave: "Save",
+        projectNewChat: "New chat in this project",
+        projectDelete: "Delete project",
+        projectDeleteConfirmTitle: "Delete project",
+        projectDeleteConfirmMessage:
+            "Delete this project? Its conversations are kept but detached from the project. This cannot be undone.",
+        projectNotFound: "This project could not be found.",
+
         // Context panel
         contextTitle: "Context",
         contextCollapse: "Collapse context panel",

@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UmbRoute } from "@umbraco-cms/backoffice/router";
 
 // Region elements (side-effect imports register the custom elements used in the template).
-import "./regions/workspace-conversation-list.element.js";
+// The conversation list lives in the CMS section sidebar (a sectionSidebarApp), not here.
 import "./regions/workspace-context-panel.element.js";
 
 const RIGHT_MIN = 260;
@@ -13,9 +13,10 @@ const STORAGE_WIDTH = "uai-cw-context-width";
 const STORAGE_COLLAPSED = "uai-cw-context-collapsed";
 
 /**
- * The Copilot Workspace three-region shell: a conversation list (left), a routed main area (center),
- * and a collapsible + resizable context panel (right). The center hosts an <umb-router-slot> with the
- * section's routes: empty landing, an open conversation (/conversation/:id), and a project (/project/:id).
+ * The Copilot Workspace main-area shell: a routed main area plus a collapsible + resizable context
+ * panel (right). The conversation list is the CMS section sidebar (a sectionSidebarApp), giving the
+ * standard sidebar chrome. The center hosts an <umb-router-slot> with the section's routes: empty
+ * landing, an open conversation (/conversation/:id), and a project (/project/:id).
  */
 @customElement("uai-copilot-workspace-shell")
 export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
@@ -87,11 +88,10 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
 
     override render() {
         const rightColumn = this._rightCollapsed ? "2.5rem" : `${this._rightWidth}px`;
-        const style = `grid-template-columns: 320px minmax(0, 1fr) ${rightColumn};`;
+        const style = `grid-template-columns: minmax(0, 1fr) ${rightColumn};`;
 
         return html`
             <div class="shell" style=${style}>
-                <uai-copilot-workspace-conversation-list></uai-copilot-workspace-conversation-list>
                 <main>
                     <umb-router-slot .routes=${this._routes}></umb-router-slot>
                 </main>

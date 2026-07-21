@@ -1,13 +1,19 @@
 import { css, customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import type { UmbSectionSidebarAppElement } from "@umbraco-cms/backoffice/section";
 
 /**
- * Left region: the conversation list. This placeholder establishes the layout (New Chat + search
- * header, scrollable list area); the data-bound list — grouped by project then date bucket, with
- * pin/archive/rename/delete — is wired over the generated client in the next slice.
+ * The conversation list, rendered as a section-sidebar app so it uses the CMS's standard section
+ * sidebar chrome (placement, width, global collapse) and stays consistent with the rest of the
+ * backoffice. This placeholder establishes the layout (New Chat + search header, scrollable list);
+ * the data-bound list — grouped by project then date bucket, with pinned + per-item pin/archive/
+ * rename/delete, wired over the generated client and navigating the main-area router — is the next slice.
  */
 @customElement("uai-copilot-workspace-conversation-list")
-export class UaiCopilotWorkspaceConversationListElement extends UmbLitElement {
+export class UaiCopilotWorkspaceConversationListElement
+    extends UmbLitElement
+    implements UmbSectionSidebarAppElement
+{
     override render() {
         return html`
             <div class="header">
@@ -28,8 +34,7 @@ export class UaiCopilotWorkspaceConversationListElement extends UmbLitElement {
                 display: flex;
                 flex-direction: column;
                 height: 100%;
-                border-right: 1px solid var(--uui-color-divider);
-                background: var(--uui-color-surface);
+                min-height: 0;
             }
             .header {
                 padding: var(--uui-size-space-4);

@@ -3,6 +3,7 @@ import {
     UAI_COPILOT_WORKSPACE_SECTION_PATHNAME,
 } from "../constants.js";
 import { dashboardManifests } from "./dashboard/manifests.js";
+import { sidebarManifests } from "./sidebar/manifests.js";
 
 const section: UmbExtensionManifest = {
     type: "section",
@@ -21,4 +22,8 @@ const section: UmbExtensionManifest = {
     ],
 };
 
-export const sectionManifests: UmbExtensionManifest[] = [section, ...dashboardManifests];
+export const sectionManifests: UmbExtensionManifest[] = [
+    section,
+    ...sidebarManifests,
+    ...dashboardManifests,
+];

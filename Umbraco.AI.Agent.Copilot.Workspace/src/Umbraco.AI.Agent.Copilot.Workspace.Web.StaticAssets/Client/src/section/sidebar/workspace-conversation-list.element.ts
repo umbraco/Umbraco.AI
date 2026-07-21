@@ -11,7 +11,7 @@ import type { ConversationResponseModel } from "../../conversation/types.js";
 import {
     copilotWorkspaceConversationPath,
     copilotWorkspaceProjectPath,
-    UAI_COPILOT_WORKSPACE_DASHBOARD_PATH,
+    UAI_COPILOT_WORKSPACE_SECTION_PATH,
 } from "../../paths.js";
 
 /**
@@ -135,7 +135,7 @@ export class UaiCopilotWorkspaceConversationListElement
 
         // If the deleted conversation is open, fall back to the section landing.
         if (this._activePath.includes(copilotWorkspaceConversationPath(conversation.id))) {
-            this.#navigateTo(UAI_COPILOT_WORKSPACE_DASHBOARD_PATH);
+            this.#navigateTo(UAI_COPILOT_WORKSPACE_SECTION_PATH);
         }
         await this.#load();
     }

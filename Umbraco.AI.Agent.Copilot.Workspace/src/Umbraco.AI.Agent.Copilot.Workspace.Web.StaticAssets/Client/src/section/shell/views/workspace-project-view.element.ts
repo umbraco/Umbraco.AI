@@ -9,7 +9,7 @@ import { UaiConversationRepository } from "../../../conversation/repository/conv
 import type { ContextResourceModel } from "../../../api/types.gen.js";
 import {
     copilotWorkspaceConversationPath,
-    UAI_COPILOT_WORKSPACE_DASHBOARD_PATH,
+    UAI_COPILOT_WORKSPACE_SECTION_PATH,
 } from "../../../paths.js";
 
 /** Minimal structural type for the globally-registered (but not type-exported) `uai-resource-list`. */
@@ -105,7 +105,7 @@ export class UaiCopilotWorkspaceProjectViewElement extends UmbLitElement {
         });
         const { error } = await this.#projectRepository.delete(id);
         if (error) return;
-        window.history.pushState({}, "", UAI_COPILOT_WORKSPACE_DASHBOARD_PATH);
+        window.history.pushState({}, "", UAI_COPILOT_WORKSPACE_SECTION_PATH);
     }
 
     async #newChatInProject() {

@@ -1,9 +1,10 @@
 import { css, customElement, html, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UmbRoute } from "@umbraco-cms/backoffice/router";
+import type { ManifestSection, UmbSectionElement } from "@umbraco-cms/backoffice/section";
 
 // Region elements (side-effect imports register the custom elements used in the template).
-// The conversation list lives in the CMS section sidebar (a sectionSidebarApp), not here.
+import "../sidebar/workspace-conversation-list.element.js";
 import "./regions/workspace-context-panel.element.js";
 
 const RIGHT_MIN = 260;
@@ -11,15 +12,30 @@ const RIGHT_MAX = 640;
 const RIGHT_DEFAULT = 340;
 const STORAGE_WIDTH = "uai-cw-context-width";
 const STORAGE_COLLAPSED = "uai-cw-context-collapsed";
+const STORAGE_SIDEBAR = "uai-cw-sidebar-position";
+const SIDEBAR_DEFAULT = "300px";
 
 /**
- * The Copilot Workspace main-area shell: a routed main area plus a collapsible + resizable context
- * panel (right). The conversation list is the CMS section sidebar (a sectionSidebarApp), giving the
- * standard sidebar chrome. The center hosts an <umb-router-slot> with the section's routes: empty
- * landing, an open conversation (/conversation/:id), and a project (/project/:id).
+ * The Copilot Workspace section element — a **standalone, fully-owned section** (deliberately NOT a
+ * dashboard, so third parties can't register content into it and it doesn't inherit the section
+ * dashboard/tab machinery). It renders all three regions itself:
+ *  - left: the conversation list, in the standard `<umb-section-sidebar>` chrome (resizable via
+ *    `<umb-split-panel>`);
+ *  - center: an `<umb-router-slot>` for the section's routes — empty landing, an open conversation
+ *    (`conversation/:id`), and a project (`project/:id`);
+ *  - right: a collapsible + resizable context panel.
+ *
+ * Mounted directly at the section path (`/section/copilot-workspace`), so the center router bases
+ * there and its routes resolve to `/section/copilot-workspace/{conversation|project}/:id`.
  */
 @customElement("uai-copilot-workspace-shell")
-export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
+export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements UmbSectionElement {
+    /** Required by {@link UmbSectionElement}; set by the extension host, otherwise unused. */
+    public manifest?: ManifestSection;
+
+    @state()
+    private _sidebarPosition = readString(STORAGE_SIDEBAR, SIDEBAR_DEFAULT);
+
     @state()
     private _rightWidth = readNumber(STORAGE_WIDTH, RIGHT_DEFAULT);
 
@@ -68,13 +84,15 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
         },
     ];
 
+    #onSidebarPositionChanged = (event: CustomEvent) => {
+        const position = String(event.detail?.position ?? this._sidebarPosition);
+        this._sidebarPosition = position;
+        writeStorage(STORAGE_SIDEBAR, position);
+    };
+
     #setCollapsed(collapsed: boolean) {
         this._rightCollapsed = collapsed;
-        try {
-            localStorage.setItem(STORAGE_COLLAPSED, String(collapsed));
-        } catch {
-            /* storage unavailable — in-session only */
-        }
+        writeStorage(STORAGE_COLLAPSED, String(collapsed));
     }
 
     #startResize = (event: PointerEvent) => {
@@ -92,38 +110,42 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
             window.removeEventListener("pointermove", onMove);
             window.removeEventListener("pointerup", onUp);
             document.body.style.userSelect = "";
-            try {
-                localStorage.setItem(STORAGE_WIDTH, String(this._rightWidth));
-            } catch {
-                /* storage unavailable */
-            }
+            writeStorage(STORAGE_WIDTH, String(this._rightWidth));
         };
         window.addEventListener("pointermove", onMove);
         window.addEventListener("pointerup", onUp);
     };
 
     override render() {
-        const rightColumn = this._rightCollapsed ? "2.5rem" : `${this._rightWidth}px`;
-        const style = `grid-template-columns: minmax(0, 1fr) ${rightColumn};`;
-
         return html`
-            <div class="shell" style=${style}>
-                <main>
-                    <umb-router-slot .routes=${this._routes}></umb-router-slot>
-                </main>
-                ${this._rightCollapsed ? this.#renderCollapsedStrip() : this.#renderExpandedPanel()}
-            </div>
+            <umb-split-panel
+                lock="start"
+                snap="300px"
+                .position=${this._sidebarPosition}
+                @position-changed=${this.#onSidebarPositionChanged}
+            >
+                <umb-section-sidebar slot="start">
+                    <uai-copilot-workspace-conversation-list></uai-copilot-workspace-conversation-list>
+                </umb-section-sidebar>
+                <div slot="end" class="main-area" style=${this.#mainAreaStyle()}>
+                    <main>
+                        <umb-router-slot .routes=${this._routes}></umb-router-slot>
+                    </main>
+                    ${this._rightCollapsed ? this.#renderCollapsedStrip() : this.#renderExpandedPanel()}
+                </div>
+            </umb-split-panel>
         `;
+    }
+
+    #mainAreaStyle() {
+        const rightColumn = this._rightCollapsed ? "2.5rem" : `${this._rightWidth}px`;
+        return `grid-template-columns: minmax(0, 1fr) ${rightColumn};`;
     }
 
     #renderExpandedPanel() {
         return html`
             <div class="right">
-                <div
-                    class="resizer"
-                    title="Drag to resize"
-                    @pointerdown=${this.#startResize}
-                ></div>
+                <div class="resizer" title="Drag to resize" @pointerdown=${this.#startResize}></div>
                 <uai-copilot-workspace-context-panel
                     .conversationId=${this._activeConversationId}
                     .projectId=${this._activeProjectId}
@@ -149,13 +171,25 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
     static override styles = [
         css`
             :host {
-                display: block;
+                display: flex;
+                flex: 1 1 auto;
+                height: 100%;
+                min-height: 0;
+            }
+            umb-split-panel {
+                width: 100%;
+                height: 100%;
+                --umb-split-panel-start-min-width: 240px;
+                --umb-split-panel-start-max-width: 460px;
+            }
+            umb-section-sidebar {
                 height: 100%;
             }
-            .shell {
+            .main-area {
                 display: grid;
                 height: 100%;
                 min-height: 0;
+                min-width: 0;
             }
             main {
                 min-width: 0;
@@ -202,6 +236,14 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement {
     ];
 }
 
+function readString(key: string, fallback: string): string {
+    try {
+        return localStorage.getItem(key) ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
 function readNumber(key: string, fallback: number): number {
     try {
         const raw = localStorage.getItem(key);
@@ -218,6 +260,14 @@ function readBool(key: string, fallback: boolean): boolean {
         return raw === null ? fallback : raw === "true";
     } catch {
         return fallback;
+    }
+}
+
+function writeStorage(key: string, value: string): void {
+    try {
+        localStorage.setItem(key, value);
+    } catch {
+        /* storage unavailable — in-session only */
     }
 }
 

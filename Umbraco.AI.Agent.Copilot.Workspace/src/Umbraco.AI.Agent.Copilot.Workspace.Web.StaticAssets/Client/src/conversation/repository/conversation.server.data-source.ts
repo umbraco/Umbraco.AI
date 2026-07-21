@@ -47,8 +47,21 @@ export class UaiConversationServerDataSource {
         return tryExecute(this.#host, ConversationsService.update({ path: { id }, body: request }));
     }
 
+    async getById(id: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.getById({ path: { id } }));
+    }
+
     async delete(id: string) {
         await copilotWorkspaceClientReady;
         return tryExecute(this.#host, ConversationsService.delete({ path: { id } }));
+    }
+
+    async getMessages(id: string, skip = 0, take = 500) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(
+            this.#host,
+            ConversationsService.getMessages({ path: { id }, query: { skip, take } }),
+        );
     }
 }

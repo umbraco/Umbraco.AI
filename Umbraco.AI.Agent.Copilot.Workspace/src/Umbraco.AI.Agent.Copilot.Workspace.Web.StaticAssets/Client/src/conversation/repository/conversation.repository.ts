@@ -39,6 +39,14 @@ export class UaiConversationRepository extends UmbRepositoryBase {
         return this.#source.update(id, request);
     }
 
+    async requestMessages(id: string) {
+        return this.#source.getMessages(id);
+    }
+
+    async requestById(id: string) {
+        return this.#source.getById(id);
+    }
+
     setPinned(conversation: ConversationResponseModel, isPinned: boolean) {
         return this.update(conversation.id, { ...toUpdateModel(conversation), isPinned });
     }

@@ -1,10 +1,24 @@
 {
   "name": "@umbraco-ai/agent-copilot-workspace",
-  "version": "0.0.0",
-  "private": true,
+  "version": "18.0.0",
   "type": "module",
   "scripts": {
-    "build": "echo \"[copilot-workspace] frontend build - TODO Phase 5\" && exit 0",
-    "watch": "echo \"[copilot-workspace] frontend watch - TODO Phase 5\" && exit 0"
+    "build": "tsc -p tsconfig.json && vite build",
+    "watch": "tsc && vite build --watch",
+    "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-copilot-workspace-management",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@umbraco-ai/agent": "*",
+    "@umbraco-ai/agent-ui": "*",
+    "@umbraco-ai/core": "*",
+    "@umbraco-cms/backoffice": "^18.0.0"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.97.0",
+    "happy-dom": "^20.10.6",
+    "typescript": "^5.9.2",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.10"
   }
 }

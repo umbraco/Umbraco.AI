@@ -16,7 +16,7 @@ public sealed class AIProjectResource
     public Guid Id { get; set; }
 
     /// <summary>
-    /// The immutable identifier of the resource type (e.g., "cms-content", "file"). Links to
+    /// The immutable identifier of the resource type (e.g., "content", "media"). Links to
     /// the registered <c>IAIContextResourceType.Id</c>.
     /// </summary>
     public required string ResourceTypeId { get; set; }

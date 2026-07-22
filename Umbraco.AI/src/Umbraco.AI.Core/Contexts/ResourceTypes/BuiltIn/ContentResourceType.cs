@@ -1,47 +1,51 @@
 using System.Text;
+using System.Text.Json;
+using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core.Actions;
-using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Security.Authorization;
-using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Web;
 
 namespace Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
 
 /// <summary>
-/// Resource type that grounds the AI with the current values of a live CMS content node, fetched at
-/// resolve time. Access is gated by the acting backoffice user's read permission on the node, so the
-/// AI never surfaces content the user could not otherwise read (decision #6).
+/// Resource type that grounds the AI with the current values of a live (published) CMS content node,
+/// fetched at resolve time. Access is gated by the acting backoffice user's read permission on the
+/// node, so the AI never surfaces content the user could not otherwise read (decision #6). The node is
+/// serialized via <see cref="ContentToolHelpers.BuildContentItem"/> — the same path the
+/// <c>get_content</c> tool uses — so property values are formatted consistently and we don't duplicate
+/// serialization.
 /// </summary>
-[AIContextResourceType("cms-content", "CMS Content",
+[AIContextResourceType("content", "Content",
     Description = "Grounds the AI with the current values of a content node (respecting the user's read permissions)",
-    Icon = "icon-document")]
-public sealed class CmsContentResourceType : AIContextResourceTypeBase<CmsContentResourceSettings, CmsContentResourceData>
+    Icon = "icon-documents")]
+public sealed class ContentResourceType : AIContextResourceTypeBase<ContentResourceSettings, ContentResourceData>
 {
-    private readonly IContentService _contentService;
+    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
     private readonly IContentPermissionAuthorizer _contentPermissionAuthorizer;
     private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CmsContentResourceType"/> class.
+    /// Initializes a new instance of the <see cref="ContentResourceType"/> class.
     /// </summary>
-    public CmsContentResourceType(
+    public ContentResourceType(
         IAIContextResourceTypeInfrastructure infrastructure,
-        IContentService contentService,
+        IUmbracoContextAccessor umbracoContextAccessor,
         IContentPermissionAuthorizer contentPermissionAuthorizer,
         IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
         : base(infrastructure)
     {
-        _contentService = contentService;
+        _umbracoContextAccessor = umbracoContextAccessor;
         _contentPermissionAuthorizer = contentPermissionAuthorizer;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
     /// <inheritdoc />
-    public override async Task<CmsContentResourceData?> ResolveDataAsync(
-        CmsContentResourceSettings settings,
+    public override async Task<ContentResourceData?> ResolveDataAsync(
+        ContentResourceSettings settings,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(settings.ContentId) || !Guid.TryParse(settings.ContentId, out var contentKey))
+        if (settings.ContentId is not { } contentKey)
         {
             return null;
         }
@@ -59,31 +63,28 @@ public sealed class CmsContentResourceType : AIContextResourceTypeBase<CmsConten
             return null;
         }
 
-        var content = _contentService.GetById(contentKey);
+        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
+        {
+            return null;
+        }
+
+        var content = umbracoContext.Content?.GetById(contentKey);
         if (content is null)
         {
             return null;
         }
 
-        var body = new StringBuilder();
-        foreach (var property in content.Properties)
-        {
-            var value = property.GetValue()?.ToString();
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                body.Append(property.Alias).Append(": ").AppendLine(value);
-            }
-        }
+        var item = ContentToolHelpers.BuildContentItem(content);
 
-        return new CmsContentResourceData
+        return new ContentResourceData
         {
             Name = content.Name,
-            Content = body.ToString().Trim(),
+            Json = JsonSerializer.Serialize(item, Constants.DefaultJsonSerializerOptions),
         };
     }
 
     /// <inheritdoc />
-    protected override string FormatDataForLlm(CmsContentResourceData data)
+    protected override string FormatDataForLlm(ContentResourceData data)
     {
         var sb = new StringBuilder();
         if (!string.IsNullOrWhiteSpace(data.Name))
@@ -91,9 +92,9 @@ public sealed class CmsContentResourceType : AIContextResourceTypeBase<CmsConten
             sb.Append("# ").AppendLine(data.Name);
         }
 
-        if (!string.IsNullOrWhiteSpace(data.Content))
+        if (!string.IsNullOrWhiteSpace(data.Json))
         {
-            sb.AppendLine(data.Content);
+            sb.AppendLine(data.Json);
         }
 
         return sb.ToString().Trim();

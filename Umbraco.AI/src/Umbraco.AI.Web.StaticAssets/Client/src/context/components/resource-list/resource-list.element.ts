@@ -258,6 +258,14 @@ export class UaiResourceListElement extends UmbLitElement {
                 flex-direction: column;
                 gap: var(--uui-size-space-3);
             }
+            /* Thin single-divider rows: uui-ref-list's native row divider provides single lines
+               between rows; gap:0 so they touch. The boundary to a stacked list is drawn by the
+               consumer. */
+            .compact uui-ref-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+            }
 
             #btn-add-compact {
                 display: block;

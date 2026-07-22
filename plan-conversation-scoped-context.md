@@ -97,15 +97,20 @@ composer attachments.
 ### 5. Panel becomes editable at conversation scope (answers Q7)
 
 Keep the **type-based blocks** chosen in the polish pass (Instructions / Contexts / Resources); within
-the two attachable blocks, split inherited vs. conversation-own:
+the two attachable blocks, present the project-inherited and conversation-own items as **one continuous
+list** — the project's items are shown locked (read-only, no remove affordance) above the conversation's
+editable items and a slim Add control. No "from project"/"this conversation" labels; the missing remove
+button is the cue.
 
 - **Instructions** — unchanged (project only; a conversation has no instructions of its own in v1).
-- **Contexts** — readonly inherited contexts (as now) **+** an editable `<uai-context-picker multiple>`
-  for the conversation's own ids, with an Add control. Writes go through the conversation update
-  endpoint.
-- **Resources** — readonly inherited `<uui-ref-list>` **+** an editable `<uai-resource-list>` for the
-  conversation's own resources (added via the resource picker only — composer attachments are out of
-  scope per Q6).
+- **Contexts** — a readonly `<uai-context-picker>` (project ids, locked) stacked directly above an
+  editable `<uai-context-picker multiple>` for the conversation's own ids + its Add button. Writes go
+  through the conversation update endpoint.
+- **Resources** — a readonly compact `<uai-resource-list compact>` (project, locked) above an editable
+  compact `<uai-resource-list compact>` for the conversation's own resources (added via the resource
+  picker only — composer attachments are out of scope per Q6). The `compact` mode (added to the core
+  component) renders thin `uui-ref-list` rows + a slim Add button instead of the thumbnail-card grid,
+  because horizontal space in the panel is limited.
 
 Mirror the project details editor (`project-details-workspace-view.element.ts`) for the editable
 controls — it already uses `<uai-context-picker>` and `<uai-resource-list>` with change handlers. The

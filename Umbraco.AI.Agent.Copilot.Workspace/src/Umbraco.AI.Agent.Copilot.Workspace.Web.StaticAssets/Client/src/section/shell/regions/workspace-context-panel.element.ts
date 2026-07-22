@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, repeat, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -131,63 +131,41 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         `;
     }
 
+    // Contexts and resources render as a single list per block: the project's items are shown locked
+    // (read-only, no remove affordance) above the conversation's own editable items and a slim add
+    // control. No "from project"/"this conversation" labels — the missing remove button is the cue.
     #renderContexts(projectContextIds: Array<string>, conversation?: ConversationResponseModel) {
-        const hasInherited = projectContextIds.length > 0;
-        if (!hasInherited && !conversation) {
+        if (projectContextIds.length === 0 && !conversation) {
             return this.#renderEmpty("uaiCopilotWorkspace_contextNoContexts");
         }
         return html`
-            ${hasInherited
-                ? this.#renderSubgroup(
-                      "uaiCopilotWorkspace_contextFromProject",
-                      html`<uai-context-picker readonly multiple .value=${projectContextIds}></uai-context-picker>`,
-                  )
+            ${projectContextIds.length > 0
+                ? html`<uai-context-picker readonly multiple .value=${projectContextIds}></uai-context-picker>`
                 : nothing}
             ${conversation
-                ? this.#renderSubgroup(
-                      "uaiCopilotWorkspace_contextThisConversation",
-                      html`<uai-context-picker
-                          multiple
-                          .value=${conversation.contextIds}
-                          @change=${this.#onContextsChange}
-                      ></uai-context-picker>`,
-                  )
+                ? html`<uai-context-picker
+                      multiple
+                      .value=${conversation.contextIds}
+                      @change=${this.#onContextsChange}
+                  ></uai-context-picker>`
                 : nothing}
         `;
     }
 
     #renderResources(projectResources: Array<ContextResourceModel>, conversation?: ConversationResponseModel) {
-        const hasInherited = projectResources.length > 0;
-        if (!hasInherited && !conversation) {
+        if (projectResources.length === 0 && !conversation) {
             return this.#renderEmpty("uaiCopilotWorkspace_contextNoResources");
         }
         return html`
-            ${hasInherited
-                ? this.#renderSubgroup(
-                      "uaiCopilotWorkspace_contextFromProject",
-                      html`<uui-ref-list>
-                          ${repeat(
-                              projectResources,
-                              (r) => r.id,
-                              (r) => html`
-                                  <uui-ref-node
-                                      name=${r.name}
-                                      detail=${r.description ?? r.resourceTypeId}
-                                      readonly
-                                  ></uui-ref-node>
-                              `,
-                          )}
-                      </uui-ref-list>`,
-                  )
+            ${projectResources.length > 0
+                ? html`<uai-resource-list compact readonly .items=${projectResources}></uai-resource-list>`
                 : nothing}
             ${conversation
-                ? this.#renderSubgroup(
-                      "uaiCopilotWorkspace_contextThisConversation",
-                      html`<uai-resource-list
-                          .items=${conversation.resources}
-                          @change=${this.#onResourcesChange}
-                      ></uai-resource-list>`,
-                  )
+                ? html`<uai-resource-list
+                      compact
+                      .items=${conversation.resources}
+                      @change=${this.#onResourcesChange}
+                  ></uai-resource-list>`
                 : nothing}
         `;
     }
@@ -202,16 +180,6 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
                 </summary>
                 <div class="block-body">${content}</div>
             </details>
-        `;
-    }
-
-    /** A labelled inherited/conversation subgroup inside a block. */
-    #renderSubgroup(labelKey: string, content: unknown) {
-        return html`
-            <div class="subgroup">
-                <span class="sublabel">${this.localize.term(labelKey)}</span>
-                ${content}
-            </div>
         `;
     }
 
@@ -297,14 +265,15 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
             .block-body {
                 padding: 0 var(--uui-size-space-4) var(--uui-size-space-4);
             }
-            .subgroup + .subgroup {
-                margin-top: var(--uui-size-space-4);
-            }
-            .sublabel {
+            .block-body > uai-context-picker,
+            .block-body > uai-resource-list {
                 display: block;
-                margin-bottom: var(--uui-size-space-1);
-                color: var(--uui-color-text-alt);
-                font-size: 0.8em;
+            }
+            /* Resources use the compact list (divider-separated rows with no divider between two
+               stacked lists), so add one at the boundary in the same colour as the row dividers.
+               Contexts use the normal picker view — boundary styling handled there. */
+            .block-body > uai-resource-list + uai-resource-list {
+                border-top: 1px solid var(--uui-color-border);
             }
             .instructions {
                 margin: 0;

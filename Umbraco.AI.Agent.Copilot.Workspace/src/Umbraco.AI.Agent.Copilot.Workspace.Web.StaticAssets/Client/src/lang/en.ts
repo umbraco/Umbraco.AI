@@ -79,11 +79,13 @@ export default {
         // Context panel
         contextTitle: "Context",
         contextCollapse: "Collapse context panel",
+        contextExpand: "Show context panel",
         contextNoProject: "This conversation isn't part of a project. Add it to a project to give it shared instructions and attachments.",
         contextInstructionsHeading: "Instructions",
-        contextAttachmentsHeading: "Attachments",
         contextContextsHeading: "Contexts",
-        contextNoAttachments: "No attachments.",
-        contextContextCount: "{0} context set(s) attached",
+        contextResourcesHeading: "Resources",
+        contextNoInstructions: "No instructions.",
+        contextNoContexts: "No contexts attached.",
+        contextNoResources: "No resources attached.",
     },
 } satisfies UmbLocalizationDictionary;

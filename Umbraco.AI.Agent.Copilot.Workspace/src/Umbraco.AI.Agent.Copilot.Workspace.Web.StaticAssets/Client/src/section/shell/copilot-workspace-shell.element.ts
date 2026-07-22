@@ -149,11 +149,7 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
                     <main>
                         <umb-router-slot .routes=${this._routes}></umb-router-slot>
                     </main>
-                    ${this.#showContextPanel()
-                        ? this._rightCollapsed
-                            ? this.#renderCollapsedStrip()
-                            : this.#renderExpandedPanel()
-                        : nothing}
+                    ${this.#showContextPanel() ? this.#renderContextRegion() : nothing}
                 </div>
             </umb-split-panel>
         `;
@@ -170,29 +166,44 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
         return `grid-template-columns: minmax(0, 1fr) ${rightColumn};`;
     }
 
-    #renderExpandedPanel() {
+    /**
+     * The right region in both states. The open/close toggle is a single element anchored to the same
+     * top-right spot regardless of state (`.right` is always flush to the screen's right edge and the
+     * toggle is `position: absolute; top: 0; right: 0` with a fixed 2.5rem box), so its icon stays put
+     * when you collapse/expand — only the chevron rotates. When collapsed the whole 2.5rem strip is a
+     * click target with a clear hover; when expanded the panel and resizer render behind the toggle.
+     */
+    #renderContextRegion() {
+        const collapsed = this._rightCollapsed;
+        const label = collapsed
+            ? this.localize.term("uaiCopilotWorkspace_contextExpand")
+            : this.localize.term("uaiCopilotWorkspace_contextCollapse");
         return html`
-            <div class="right">
-                <div class="resizer" title="Drag to resize" @pointerdown=${this.#startResize}></div>
-                <uai-copilot-workspace-context-panel
-                    .conversationId=${this._activeConversationId}
-                    .projectId=${this._activeProjectId}
-                    @collapse=${() => this.#setCollapsed(true)}
-                ></uai-copilot-workspace-context-panel>
+            <div class="right ${collapsed ? "is-collapsed" : ""}">
+                ${collapsed
+                    ? html`<button
+                          class="collapsed-strip"
+                          tabindex="-1"
+                          aria-hidden="true"
+                          @click=${() => this.#setCollapsed(false)}
+                      ></button>`
+                    : html`
+                          <div class="resizer" title="Drag to resize" @pointerdown=${this.#startResize}></div>
+                          <uai-copilot-workspace-context-panel
+                              .conversationId=${this._activeConversationId}
+                              .projectId=${this._activeProjectId}
+                          ></uai-copilot-workspace-context-panel>
+                      `}
+                <button
+                    class="context-toggle"
+                    title=${label}
+                    aria-label=${label}
+                    aria-expanded=${collapsed ? "false" : "true"}
+                    @click=${() => this.#setCollapsed(!collapsed)}
+                >
+                    <uui-icon name="icon-navigation-right"></uui-icon>
+                </button>
             </div>
-        `;
-    }
-
-    #renderCollapsedStrip() {
-        return html`
-            <button
-                class="expand-strip"
-                title="Show context panel"
-                aria-label="Show context panel"
-                @click=${() => this.#setCollapsed(false)}
-            >
-                <uui-icon name="icon-navigation-left"></uui-icon>
-            </button>
         `;
     }
 
@@ -229,14 +240,26 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
                 display: flex;
                 height: 100%;
                 min-height: 0;
-                border-left: 1px solid var(--uui-color-divider);
+                /* Surface background so the transparent resizer strip reads as white and sits flush
+                   against the border — otherwise the page background shows through as a grey sliver
+                   between the border and the panel body. */
+                background: var(--uui-color-surface);
+                /* Match the section sidebar's separator (uses --uui-color-border, not divider). */
+                border-left: 1px solid var(--uui-color-border);
             }
             .right uai-copilot-workspace-context-panel {
                 flex: 1;
                 min-width: 0;
             }
+            /* Overlay on the panel's left seam rather than a flex child — keeps the panel body (and
+               its header/block dividers) flush to the border instead of inset by the handle width. */
             .resizer {
-                flex: 0 0 6px;
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 6px;
+                z-index: 2;
                 cursor: col-resize;
                 background: transparent;
                 transition: background 120ms;
@@ -244,21 +267,42 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
             .resizer:hover {
                 background: var(--uui-color-focus, #3879ff);
             }
-            .expand-strip {
+            /* Full-height click target behind the toggle when collapsed, with a clearly
+               distinct hover (surface-emphasis) so it doesn't blend into the chat surface. */
+            .collapsed-strip {
                 all: unset;
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-                padding-top: var(--uui-size-space-3);
+                flex: 1;
                 height: 100%;
                 cursor: pointer;
-                border-left: 1px solid var(--uui-color-divider);
                 background: var(--uui-color-surface);
+            }
+            .collapsed-strip:hover {
+                background: var(--uui-color-surface-emphasis);
+            }
+            /* Single toggle, anchored to the same top-right spot in both states so its icon never
+               jumps — only the chevron rotates. The 2.5rem box matches the collapsed column width,
+               so the icon's centre lines up whether the panel is open or collapsed. */
+            .context-toggle {
+                all: unset;
+                position: absolute;
+                top: 0;
+                right: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 2.5rem;
+                height: var(--umb-header-layout-height);
+                cursor: pointer;
                 color: var(--uui-color-text-alt);
             }
-            .expand-strip:hover {
-                background: var(--uui-color-surface-alt);
+            .context-toggle:hover {
                 color: var(--uui-color-text);
+            }
+            .context-toggle uui-icon {
+                transition: transform 120ms ease;
+            }
+            .right.is-collapsed .context-toggle uui-icon {
+                transform: rotate(180deg);
             }
         `,
     ];

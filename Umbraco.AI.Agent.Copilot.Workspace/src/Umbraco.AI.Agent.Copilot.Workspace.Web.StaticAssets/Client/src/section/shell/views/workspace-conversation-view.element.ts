@@ -53,9 +53,14 @@ export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
                 height: 100%;
                 min-height: 0;
             }
+            /* Constrain the chat to a comfortable reading width, centred in the workspace area
+               (which can get very wide, especially when the context panel is collapsed). */
             uai-chat {
                 display: block;
                 height: 100%;
+                width: 100%;
+                max-width: 860px;
+                margin-inline: auto;
             }
         `,
     ];

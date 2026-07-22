@@ -37,6 +37,14 @@ export class UaiResourceListElement extends UmbLitElement {
     @property({ type: Boolean, reflect: true })
     public readonly = false;
 
+    /**
+     * Compact mode renders the resources as a thin {@link https://uui.umbraco.com | uui-ref-list}
+     * (one row per resource) with a slim full-width "Add" button, instead of the default thumbnail
+     * card grid. Use where horizontal space is limited (e.g. the Copilot Workspace context panel).
+     */
+    @property({ type: Boolean, reflect: true })
+    public compact = false;
+
     constructor() {
         super();
         this.#loadContextResourceTypes();
@@ -134,7 +142,49 @@ export class UaiResourceListElement extends UmbLitElement {
     }
 
     override render() {
+        if (this.compact) {
+            return html`<div class="compact">${this.#renderCompactItems()} ${this.#renderCompactAddButton()}</div>`;
+        }
         return html`<div class="container">${this.#renderItems()} ${this.#renderAddButton()}</div>`;
+    }
+
+    #renderCompactItems() {
+        if (!this._cards?.length) return nothing;
+        return html`
+            <uui-ref-list>
+                ${repeat(
+                    this._cards,
+                    (item) => item.id,
+                    (item) => this.#renderCompactItem(item),
+                )}
+            </uui-ref-list>
+        `;
+    }
+
+    #renderCompactItem(card: UaiResourceCardModel) {
+        return html`
+            <uui-ref-node
+                name=${card.name}
+                detail=${card.description || card.resourceType?.name || card.resourceTypeId}
+                ?readonly=${this.readonly}
+                @open=${() => this.#onEdit(card)}
+            >
+                <umb-icon slot="icon" name=${card.resourceType?.icon ?? "icon-document"}></umb-icon>
+                ${this.readonly
+                    ? nothing
+                    : html`<uui-action-bar slot="actions">${this.#renderRemoveAction(card)}</uui-action-bar>`}
+            </uui-ref-node>
+        `;
+    }
+
+    #renderCompactAddButton() {
+        if (this.readonly) return nothing;
+        return html`
+            <uui-button id="btn-add-compact" look="placeholder" @click=${this.#openPicker} label="Add resource">
+                <uui-icon name="icon-add"></uui-icon>
+                Add
+            </uui-button>
+        `;
     }
 
     #renderItems() {
@@ -201,6 +251,17 @@ export class UaiResourceListElement extends UmbLitElement {
             #btn-add {
                 text-align: center;
                 height: 100%;
+            }
+
+            .compact {
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-space-3);
+            }
+
+            #btn-add-compact {
+                display: block;
+                width: 100%;
             }
 
             uui-tag {

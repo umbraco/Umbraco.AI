@@ -27,4 +27,8 @@
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Core\Umbraco.AI.Agent.Conversations.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Core\Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit" />
+    </ItemGroup>
 </Project>

@@ -458,15 +458,29 @@ internal sealed class AIAgentService : IAIAgentService
         // Prepare agent execution (profile override, notification, permissions, MAF agent creation).
         // AG-UI is the interactive surface — it can emit a human_approval interrupt and resume,
         // so destructive tools are gated for real approval regardless of the options default.
+        // Start from the AG-UI-specific keys, then forward any caller-supplied
+        // options.AdditionalProperties (e.g. a Copilot Workspace project's context/resources) so they
+        // reach the runtime context — matching the persisted Run/Stream paths, which was previously
+        // dropped on this path.
+        var additionalProperties = new Dictionary<string, object?>
+        {
+            { Constants.ContextKeys.RunId, request.RunId },
+            { Constants.ContextKeys.ThreadId, request.ThreadId },
+            { CoreConstants.ContextKeys.LogKeys, new[] { Constants.ContextKeys.RunId, Constants.ContextKeys.ThreadId } }
+        };
+
+        if (options.AdditionalProperties is not null)
+        {
+            foreach (var property in options.AdditionalProperties)
+            {
+                additionalProperties[property.Key] = property.Value;
+            }
+        }
+
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools,
             contextItems: _contextConverter.ConvertToRequestContextItems(request.Context),
-            additionalProperties: new Dictionary<string, object?>
-            {
-                { Constants.ContextKeys.RunId, request.RunId },
-                { Constants.ContextKeys.ThreadId, request.ThreadId },
-                { CoreConstants.ContextKeys.LogKeys, new[] { Constants.ContextKeys.RunId, Constants.ContextKeys.ThreadId } }
-            },
+            additionalProperties: additionalProperties,
             approvalPolicy: AIApprovalPolicy.Interactive,
             cancellationToken);
 

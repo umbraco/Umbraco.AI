@@ -8,8 +8,6 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
-using Umbraco.AI.Core.Contexts.Resolvers;
-using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Web.Api.Management.Stream.Controllers;
 
@@ -147,8 +145,9 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
     }
 
     /// <summary>
-    /// Builds the runtime-context properties that inject a project's context set into the run: its
-    /// referenced <c>AIContext</c> ids and its directly-attached resources. Returns null when the
+    /// Builds the runtime-context properties that inject a project's grounding into the run: its
+    /// framing (name/description), custom instructions, directly-attached resources, and referenced
+    /// <c>AIContext</c> ids (see <see cref="ProjectRuntimeContextBuilder"/>). Returns null when the
     /// conversation belongs to no project (or the project is unavailable), leaving resolution untouched.
     /// </summary>
     private async Task<IReadOnlyDictionary<string, object?>?> BuildProjectContextAsync(
@@ -161,37 +160,6 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
         }
 
         var project = await _projectService.GetProjectAsync(projectId.Value, cancellationToken);
-        if (project is null)
-        {
-            return null;
-        }
-
-        var properties = new Dictionary<string, object?>();
-
-        if (project.ContextIds.Count > 0)
-        {
-            // Honoured by ProfileContextResolver (the "attach a context" mechanism).
-            properties[CoreConstants.ContextKeys.AdditionalContextIds] = project.ContextIds.ToList();
-        }
-
-        if (project.Resources.Count > 0)
-        {
-            // Honoured by AdditionalResourcesContextResolver (S3 — the "attach a resource" mechanism).
-            properties[CoreConstants.ContextKeys.AdditionalResources] = project.Resources
-                .OrderBy(r => r.SortOrder)
-                .Select(r => new AIContextResolverResource
-                {
-                    Id = r.Id,
-                    ResourceTypeId = r.ResourceTypeId,
-                    Name = r.Name ?? string.Empty,
-                    Description = r.Description,
-                    Settings = r.Settings,
-                    InjectionMode = r.InjectionMode,
-                    ContextName = project.Name,
-                })
-                .ToList();
-        }
-
-        return properties.Count > 0 ? properties : null;
+        return project is null ? null : ProjectRuntimeContextBuilder.Build(project);
     }
 }

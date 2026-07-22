@@ -69,7 +69,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         weight: 600,
         api: UaiConversationPinAction,
         ...forConversation,
-        meta: { icon: "icon-pin", label: "#uaiCopilotWorkspace_actionPin" },
+        meta: { icon: "icon-pushpin", label: "#uaiCopilotWorkspace_actionPin" },
         conditions: [{ alias: UAI_CONVERSATION_IS_NOT_PINNED_CONDITION }],
     },
     {
@@ -80,7 +80,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         weight: 600,
         api: UaiConversationUnpinAction,
         ...forConversation,
-        meta: { icon: "icon-pin", label: "#uaiCopilotWorkspace_actionUnpin" },
+        meta: { icon: "icon-pushpin", label: "#uaiCopilotWorkspace_actionUnpin" },
         conditions: [{ alias: UAI_CONVERSATION_IS_PINNED_CONDITION }],
     },
     {

@@ -42,7 +42,7 @@ export class UaiCopilotWorkspaceConversationTreeItemElement extends UmbLitElemen
 
         return html`
             <uui-menu-item label=${title} href=${href} ?active=${active}>
-                <uui-icon slot="icon" name=${conversation.isPinned ? "icon-pin" : "icon-chat"}></uui-icon>
+                <uui-icon slot="icon" name=${conversation.isPinned ? "icon-pushpin" : "icon-chat"}></uui-icon>
                 <umb-entity-actions-dropdown slot="actions" compact .label=${title}>
                     <uui-symbol-more slot="label"></uui-symbol-more>
                 </umb-entity-actions-dropdown>

@@ -9,14 +9,14 @@ import {
     type UaiConversationEntityContext,
 } from "../entity/conversation-entity.context.js";
 import { UAI_RENAME_CONVERSATION_MODAL } from "../modal/rename-conversation-modal.token.js";
-import { notifyCopilotWorkspaceConversationsChanged } from "../../constants.js";
 import type { ConversationResponseModel } from "../types.js";
 
 /**
  * Base for conversation entity actions (shown in each sidebar tree item's ⋯ menu). Resolves the
- * conversation from the per-node {@link UaiConversationEntityContext} (falling back to a fetch), runs
- * the mutation through the repository, then notifies the section so the sidebar reloads. Toggle pairs
- * (Pin/Unpin, Archive/Unarchive) are gated by the state conditions, not by execute().
+ * conversation from the per-node {@link UaiConversationEntityContext} (falling back to a fetch) and
+ * runs the mutation through the repository, which dispatches a `UaiEntityActionEvent` on the shared
+ * action-event bus so the sidebar refreshes. Toggle pairs (Pin/Unpin, Archive/Unarchive) are gated by
+ * the state conditions, not by execute().
  */
 abstract class UaiConversationActionBase extends UmbEntityActionBase<never> {
     protected repository = new UaiConversationRepository(this);
@@ -37,10 +37,6 @@ abstract class UaiConversationActionBase extends UmbEntityActionBase<never> {
         const { data } = await this.repository.requestById(this.args.unique);
         return data ?? undefined;
     }
-
-    protected refresh(): void {
-        notifyCopilotWorkspaceConversationsChanged();
-    }
 }
 
 export class UaiConversationPinAction extends UaiConversationActionBase {
@@ -48,7 +44,6 @@ export class UaiConversationPinAction extends UaiConversationActionBase {
         const conversation = await this.resolveConversation();
         if (!conversation) return;
         await this.repository.setPinned(conversation, true);
-        this.refresh();
     }
 }
 
@@ -57,7 +52,6 @@ export class UaiConversationUnpinAction extends UaiConversationActionBase {
         const conversation = await this.resolveConversation();
         if (!conversation) return;
         await this.repository.setPinned(conversation, false);
-        this.refresh();
     }
 }
 
@@ -66,7 +60,6 @@ export class UaiConversationArchiveAction extends UaiConversationActionBase {
         const conversation = await this.resolveConversation();
         if (!conversation) return;
         await this.repository.setArchived(conversation, true);
-        this.refresh();
     }
 }
 
@@ -75,7 +68,6 @@ export class UaiConversationUnarchiveAction extends UaiConversationActionBase {
         const conversation = await this.resolveConversation();
         if (!conversation) return;
         await this.repository.setArchived(conversation, false);
-        this.refresh();
     }
 }
 
@@ -89,7 +81,6 @@ export class UaiConversationRenameAction extends UaiConversationActionBase {
         const title = result?.name?.trim();
         if (!title || title === (conversation.title ?? "")) return;
         await this.repository.rename(conversation, title);
-        this.refresh();
     }
 }
 
@@ -114,7 +105,6 @@ export class UaiConversationMoveAction extends UaiConversationActionBase {
         const projectId = chosen.value === noProjectValue ? null : chosen.value;
         if ((conversation.projectId ?? null) === projectId) return;
         await this.repository.moveToProject(conversation, projectId);
-        this.refresh();
     }
 }
 
@@ -130,6 +120,5 @@ export class UaiConversationDeleteAction extends UaiConversationActionBase {
         });
         const { error } = await this.repository.delete(unique);
         if (error) return;
-        this.refresh();
     }
 }

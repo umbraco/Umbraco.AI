@@ -3,15 +3,14 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UmbSectionSidebarAppElement } from "@umbraco-cms/backoffice/section";
 import { debounce } from "@umbraco-cms/backoffice/utils";
 import type { UUIInputElement } from "@umbraco-cms/backoffice/external/uui";
+import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
+import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
+import { UaiEntityActionEvent } from "@umbraco-ai/core";
 import { UaiConversationRepository } from "../../conversation/repository/conversation.repository.js";
 import { UaiProjectRepository } from "../../project/repository/project.repository.js";
 import { groupConversations, type UaiSidebarModel } from "../../conversation/grouping.js";
 import type { ConversationResponseModel } from "../../conversation/types.js";
-import {
-    copilotWorkspaceConversationPath,
-    copilotWorkspaceProjectCreatePath,
-} from "../../paths.js";
-import { UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT } from "../../constants.js";
+import { UAI_CONVERSATION_ENTITY_TYPE, UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE } from "../../constants.js";
 import "./conversation-tree-item.element.js";
 import "./project-tree-item.element.js";
 
@@ -33,6 +32,9 @@ export class UaiCopilotWorkspaceConversationListElement
 {
     #conversationRepository = new UaiConversationRepository(this);
     #projectRepository = new UaiProjectRepository(this);
+
+    /** Root/collection entity context so the header create (+) menu renders the root entity actions. */
+    #rootEntityContext = new UmbEntityContext(this);
 
     /** Last-loaded conversations (re-fetched on change/search); combined with the reactive projects. */
     #conversations: ConversationResponseModel[] = [];
@@ -60,15 +62,25 @@ export class UaiCopilotWorkspaceConversationListElement
         this._activePath = window.location.pathname;
     };
 
-    /** Reload when a conversation changes elsewhere (auto-title, entity actions, chat view). */
-    #onConversationsChanged = () => {
-        this.#load();
+    /** Reload when a conversation is created/updated/deleted anywhere (entity actions, chat auto-title). */
+    #onConversationActionEvent = (event: UaiEntityActionEvent) => {
+        if (event.getEntityType() === UAI_CONVERSATION_ENTITY_TYPE) this.#load();
     };
 
     override connectedCallback() {
         super.connectedCallback();
         window.addEventListener("navigationend", this.#onNavigationEnd);
-        window.addEventListener(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT, this.#onConversationsChanged);
+
+        // Host the section-root entity type so the header's create menu resolves the root entity actions.
+        this.#rootEntityContext.setEntityType(UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE);
+        this.#rootEntityContext.setUnique(null);
+
+        // Conversations refresh via the shared action-event bus (projects use their reactive store).
+        this.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
+            context?.addEventListener(UaiEntityActionEvent.CREATED, this.#onConversationActionEvent as EventListener);
+            context?.addEventListener(UaiEntityActionEvent.UPDATED, this.#onConversationActionEvent as EventListener);
+            context?.addEventListener(UaiEntityActionEvent.DELETED, this.#onConversationActionEvent as EventListener);
+        });
 
         // Projects are reactive: observe the store so the tree re-groups (incl. new empty project
         // nodes) whenever a project is created/renamed/deleted anywhere — no manual reload.
@@ -84,7 +96,6 @@ export class UaiCopilotWorkspaceConversationListElement
     override disconnectedCallback() {
         super.disconnectedCallback();
         window.removeEventListener("navigationend", this.#onNavigationEnd);
-        window.removeEventListener(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT, this.#onConversationsChanged);
     }
 
     /** Re-fetches conversations (projects come from the reactive store) and re-groups. */
@@ -105,24 +116,6 @@ export class UaiCopilotWorkspaceConversationListElement
     #onSearchInput(event: InputEvent) {
         this._search = (event.target as UUIInputElement).value?.toString() ?? "";
         this.#debouncedSearch();
-    }
-
-    #navigateTo(path: string) {
-        window.history.pushState({}, "", path);
-    }
-
-    async #onNewChat() {
-        const { data } = await this.#conversationRepository.create({});
-        if (data?.id) {
-            this.#navigateTo(copilotWorkspaceConversationPath(data.id));
-            await this.#load();
-        }
-    }
-
-    #onNewProject() {
-        // Open the project workspace in "create" mode; it scaffolds an unsaved project and creates
-        // it on Save (which dispatches CREATED → the reactive tree adds the node).
-        this.#navigateTo(copilotWorkspaceProjectCreatePath());
     }
 
     /** Id of the conversation open in the main area, if any (for auto-expanding its project). */
@@ -146,28 +139,11 @@ export class UaiCopilotWorkspaceConversationListElement
             <div class="header">
                 <div class="title-row">
                     <span class="title">${this.localize.term("uaiCopilotWorkspace_sectionLabel")}</span>
-                    <umb-dropdown
-                        compact
-                        hide-expand
-                        placement="bottom-end"
-                        label=${this.localize.term("uaiCopilotWorkspace_treeCreate")}
-                    >
+                    <umb-entity-actions-dropdown compact .label=${this.localize.term("uaiCopilotWorkspace_treeCreate")}>
                         <span slot="label" class="create-trigger" title=${this.localize.term("uaiCopilotWorkspace_treeCreate")}>
                             <uui-icon name="icon-add"></uui-icon>
                         </span>
-                        <uui-menu-item
-                            label=${this.localize.term("uaiCopilotWorkspace_newChat")}
-                            @click=${this.#onNewChat}
-                        >
-                            <uui-icon slot="icon" name="icon-add"></uui-icon>
-                        </uui-menu-item>
-                        <uui-menu-item
-                            label=${this.localize.term("uaiCopilotWorkspace_newProject")}
-                            @click=${this.#onNewProject}
-                        >
-                            <uui-icon slot="icon" name="icon-folder"></uui-icon>
-                        </uui-menu-item>
-                    </umb-dropdown>
+                    </umb-entity-actions-dropdown>
                 </div>
                 <uui-input
                     type="search"

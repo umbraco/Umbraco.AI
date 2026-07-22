@@ -12,29 +12,19 @@ export const UAI_COPILOT_WORKSPACE_SECTION_PATHNAME = "copilot-workspace";
 export const UAI_COPILOT_WORKSPACE_API_NAME = "ai-copilot-workspace-management";
 
 /**
- * Entity type for a Copilot Workspace project. Used with `UaiEntityActionEvent` on the shared action
- * event bus so the reactive project repository (and its observers, e.g. the sidebar tree) update on
- * create/update/delete without a manual reload.
+ * Entity types for Copilot Workspace, `uai:`-namespaced to match the AI section convention
+ * (`uai:context`, `uai:profile`, …). Used with `UaiEntityActionEvent` on the shared action event bus
+ * so reactive repositories and their observers (e.g. the sidebar tree) update on create/update/delete
+ * without a manual reload, and as `forEntityTypes` targets for the entity actions.
  */
-export const UAI_PROJECT_ENTITY_TYPE = "uai-copilot-workspace-project";
+export const UAI_PROJECT_ENTITY_TYPE = "uai:copilot-workspace-project";
+export const UAI_CONVERSATION_ENTITY_TYPE = "uai:copilot-workspace-conversation";
+
+/**
+ * The section-root/collection entity type. Hosts the "create" entity actions (New chat / New project)
+ * surfaced by the sidebar header — mirroring the CMS `…-root` collection convention.
+ */
+export const UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE = "uai:copilot-workspace-root";
 
 /** Workspace alias for the project entity workspace (matches its manifests' condition + editor). */
 export const UAI_PROJECT_WORKSPACE_ALIAS = "Uai.CopilotWorkspace.Workspace.Project";
-
-/**
- * Entity type for a Copilot Workspace conversation. Drives the sidebar tree items' entity actions
- * (pin/rename/move/archive/delete) via the standard entity-action system + state conditions.
- */
-export const UAI_CONVERSATION_ENTITY_TYPE = "uai-copilot-workspace-conversation";
-
-/**
- * Window event fired when a conversation is created/renamed/moved/etc. from anywhere in the section,
- * so the sidebar list can reload. Used as a lightweight cross-region signal because the list (sidebar)
- * and the chat (routed centre) live in sibling subtrees of the section shell.
- */
-export const UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT = "uai-copilot-workspace:conversations-changed";
-
-/** Dispatches {@link UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT} so the sidebar list refreshes. */
-export function notifyCopilotWorkspaceConversationsChanged(): void {
-    window.dispatchEvent(new CustomEvent(UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT));
-}

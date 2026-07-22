@@ -19,7 +19,6 @@ import { UaiConversationRepository } from "../conversation/repository/conversati
 import type { ConversationResponseModel } from "../conversation/types.js";
 import { ServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
 import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
-import { notifyCopilotWorkspaceConversationsChanged } from "../constants.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
 const AUTO_AGENT: UaiAgentItem = { id: "auto", name: "Auto", alias: "auto" };
@@ -204,9 +203,8 @@ export class CopilotWorkspaceChatContext extends UmbControllerBase implements Ua
         if (!title) return;
 
         this.#conversation = { ...conversation, title };
-        void this.#conversationRepository.rename(conversation, title).then((result) => {
-            if (!result.error) notifyCopilotWorkspaceConversationsChanged();
-        });
+        // rename() dispatches a UaiEntityActionEvent on the shared bus → the sidebar refreshes.
+        void this.#conversationRepository.rename(conversation, title);
     }
 
     abortRun(): void {

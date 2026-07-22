@@ -1,6 +1,8 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
+import { UaiEntityActionEvent, dispatchActionEvent } from "@umbraco-ai/core";
 import { UaiConversationServerDataSource } from "./conversation.server.data-source.js";
+import { UAI_CONVERSATION_ENTITY_TYPE } from "../../constants.js";
 import type {
     ConversationResponseModel,
     CreateConversationRequestModel,
@@ -28,15 +30,27 @@ export class UaiConversationRepository extends UmbRepositoryBase {
     }
 
     async create(request: CreateConversationRequestModel) {
-        return this.#source.create(request);
+        const result = await this.#source.create(request);
+        if (!result.error && result.data?.id) {
+            dispatchActionEvent(this, UaiEntityActionEvent.created(result.data.id, UAI_CONVERSATION_ENTITY_TYPE));
+        }
+        return result;
     }
 
     async delete(id: string) {
-        return this.#source.delete(id);
+        const result = await this.#source.delete(id);
+        if (!result.error) {
+            dispatchActionEvent(this, UaiEntityActionEvent.deleted(id, UAI_CONVERSATION_ENTITY_TYPE));
+        }
+        return result;
     }
 
     async update(id: string, request: UpdateConversationRequestModel) {
-        return this.#source.update(id, request);
+        const result = await this.#source.update(id, request);
+        if (!result.error) {
+            dispatchActionEvent(this, UaiEntityActionEvent.updated(id, UAI_CONVERSATION_ENTITY_TYPE));
+        }
+        return result;
     }
 
     async requestMessages(id: string) {

@@ -68,7 +68,7 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
                                               @open=${() => this.#open(copilotWorkspaceConversationPath(c.id))}
                                               @click=${() => this.#open(copilotWorkspaceConversationPath(c.id))}
                                           >
-                                              <uui-icon slot="icon" name=${c.projectId && this._projectNames.has(c.projectId) ? "icon-folder" : "icon-chat"}></uui-icon>
+                                              <uui-icon slot="icon" name="icon-chat"></uui-icon>
                                           </uui-ref-node>
                                       `,
                                   )}

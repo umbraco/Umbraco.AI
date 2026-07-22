@@ -17,8 +17,11 @@ export default {
         launcherStartInProject: "Start in a project",
         launcherRecent: "Recent",
 
-        // Conversation list
+        // Conversation list / tree
         newChat: "New chat",
+        treeCreate: "Create",
+        treeProjectsHeading: "Projects",
+        treeRecentHeading: "Recent",
         searchPlaceholder: "Search conversations",
         listEmpty: "Your conversations will appear here.",
         listNoResults: "No conversations match your search.",

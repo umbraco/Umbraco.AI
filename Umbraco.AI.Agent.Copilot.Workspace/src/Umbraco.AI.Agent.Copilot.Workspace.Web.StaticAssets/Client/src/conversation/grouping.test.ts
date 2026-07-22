@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { groupConversations } from "./grouping.js";
 import type { ConversationResponseModel } from "./types.js";
 
-// Fixed "now": 2026-07-21T12:00:00 local.
+// Fixed reference time: 2026-07-21T12:00:00 local (only used to derive relative timestamps).
 const NOW = new Date(2026, 6, 21, 12, 0, 0).getTime();
 
 function conv(overrides: Partial<ConversationResponseModel>): ConversationResponseModel {
@@ -29,25 +29,29 @@ function daysAgo(days: number): string {
 }
 
 describe("groupConversations", () => {
-    it("returns no groups when there are no conversations", () => {
-        expect(groupConversations([], new Map(), NOW)).toEqual([]);
+    it("is empty when there are no conversations or projects", () => {
+        const model = groupConversations([], new Map());
+        expect(model.isEmpty).toBe(true);
+        expect(model.pinned).toEqual([]);
+        expect(model.projects).toEqual([]);
+        expect(model.recent).toEqual([]);
     });
 
-    it("puts pinned conversations first regardless of project or date", () => {
-        const groups = groupConversations(
+    it("floats pinned conversations into their own region regardless of project or date", () => {
+        const model = groupConversations(
             [
-                conv({ id: "old-pinned", isPinned: true, lastMessageAt: daysAgo(30) }),
+                conv({ id: "old-pinned", projectId: "A", isPinned: true, lastMessageAt: daysAgo(30) }),
                 conv({ id: "today", lastMessageAt: daysAgo(0) }),
             ],
-            new Map(),
-            NOW,
+            new Map([["A", "Alpha"]]),
         );
-        expect(groups[0].kind).toBe("pinned");
-        expect(groups[0].conversations.map((c) => c.id)).toEqual(["old-pinned"]);
+        expect(model.pinned.map((c) => c.id)).toEqual(["old-pinned"]);
+        // The pinned conversation is not also listed under its project node.
+        expect(model.projects[0].conversations).toEqual([]);
     });
 
     it("groups unpinned conversations by project, ordering projects by recency", () => {
-        const groups = groupConversations(
+        const model = groupConversations(
             [
                 conv({ id: "a1", projectId: "A", lastMessageAt: daysAgo(5) }),
                 conv({ id: "b1", projectId: "B", lastMessageAt: daysAgo(1) }),
@@ -57,60 +61,48 @@ describe("groupConversations", () => {
                 ["A", "Alpha"],
                 ["B", "Beta"],
             ]),
-            NOW,
         );
-        const projectGroups = groups.filter((g) => g.kind === "project");
         // Project B (most recent activity 1d ago) sorts above A (2d ago).
-        expect(projectGroups.map((g) => g.projectId)).toEqual(["B", "A"]);
-        expect(projectGroups[0].label).toBe("Beta");
+        expect(model.projects.map((p) => p.projectId)).toEqual(["B", "A"]);
+        expect(model.projects[0].name).toBe("Beta");
         // Within A, the more recent conversation comes first.
-        const groupA = projectGroups.find((g) => g.projectId === "A")!;
-        expect(groupA.conversations.map((c) => c.id)).toEqual(["a2", "a1"]);
+        const projectA = model.projects.find((p) => p.projectId === "A")!;
+        expect(projectA.conversations.map((c) => c.id)).toEqual(["a2", "a1"]);
     });
 
-    it("buckets project-less conversations by recency", () => {
-        const groups = groupConversations(
+    it("puts project-less conversations in a flat recent list, most-recent-first", () => {
+        const model = groupConversations(
             [
-                conv({ id: "today", lastMessageAt: daysAgo(0) }),
-                conv({ id: "yesterday", lastMessageAt: daysAgo(1) }),
-                conv({ id: "week", lastMessageAt: daysAgo(4) }),
                 conv({ id: "old", lastMessageAt: daysAgo(90) }),
+                conv({ id: "today", lastMessageAt: daysAgo(0) }),
+                conv({ id: "week", lastMessageAt: daysAgo(4) }),
             ],
             new Map(),
-            NOW,
         );
-        const dateGroups = groups.filter((g) => g.kind === "date");
-        expect(dateGroups.map((g) => g.key)).toEqual([
-            "date:today",
-            "date:yesterday",
-            "date:previous7",
-            "date:older",
-        ]);
+        expect(model.projects).toEqual([]);
+        expect(model.recent.map((c) => c.id)).toEqual(["today", "week", "old"]);
     });
 
-    it("emits a folder for a project with no conversations (sorted after active ones)", () => {
-        const groups = groupConversations(
+    it("emits a node for a project with no conversations (sorted after active ones)", () => {
+        const model = groupConversations(
             [conv({ id: "a1", projectId: "A", lastMessageAt: daysAgo(1) })],
             new Map([
                 ["A", "Alpha"],
                 ["Empty", "Empty Project"],
             ]),
-            NOW,
         );
-        const projectGroups = groups.filter((g) => g.kind === "project");
-        expect(projectGroups.map((g) => g.projectId)).toEqual(["A", "Empty"]);
-        const empty = projectGroups.find((g) => g.projectId === "Empty")!;
-        expect(empty.label).toBe("Empty Project");
+        expect(model.projects.map((p) => p.projectId)).toEqual(["A", "Empty"]);
+        const empty = model.projects.find((p) => p.projectId === "Empty")!;
+        expect(empty.name).toBe("Empty Project");
         expect(empty.conversations).toEqual([]);
     });
 
-    it("falls back to unknown-project label when the id is not in the name map", () => {
-        const groups = groupConversations(
+    it("folds conversations with an unknown project id into recent", () => {
+        const model = groupConversations(
             [conv({ id: "x", projectId: "missing", lastMessageAt: daysAgo(0) })],
             new Map(),
-            NOW,
         );
-        const projectGroup = groups.find((g) => g.kind === "project")!;
-        expect(projectGroup.label).toBe("#uaiCopilotWorkspace_groupUnknownProject");
+        expect(model.projects).toEqual([]);
+        expect(model.recent.map((c) => c.id)).toEqual(["x"]);
     });
 });

@@ -22,6 +22,12 @@ export const UAI_PROJECT_ENTITY_TYPE = "uai-copilot-workspace-project";
 export const UAI_PROJECT_WORKSPACE_ALIAS = "Uai.CopilotWorkspace.Workspace.Project";
 
 /**
+ * Entity type for a Copilot Workspace conversation. Drives the sidebar tree items' entity actions
+ * (pin/rename/move/archive/delete) via the standard entity-action system + state conditions.
+ */
+export const UAI_CONVERSATION_ENTITY_TYPE = "uai-copilot-workspace-conversation";
+
+/**
  * Window event fired when a conversation is created/renamed/moved/etc. from anywhere in the section,
  * so the sidebar list can reload. Used as a lightweight cross-region signal because the list (sidebar)
  * and the chat (routed centre) live in sibling subtrees of the section shell.

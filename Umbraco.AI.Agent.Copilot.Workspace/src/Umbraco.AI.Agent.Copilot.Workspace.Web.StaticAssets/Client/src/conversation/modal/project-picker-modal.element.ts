@@ -26,6 +26,7 @@ export class UaiProjectPickerModalElement extends UmbModalBaseElement<
         const projects = this.data?.projects ?? [];
         return html`
             <uui-dialog-layout headline=${this.localize.term("uaiCopilotWorkspace_newChatInProject")}>
+                <uui-ref-list>
                 ${repeat(
                     projects,
                     (p) => p.id,
@@ -42,6 +43,7 @@ export class UaiProjectPickerModalElement extends UmbModalBaseElement<
                         </uui-ref-node>
                     `,
                 )}
+                </uui-ref-list>
                 <uui-button
                     slot="actions"
                     id="cancel"

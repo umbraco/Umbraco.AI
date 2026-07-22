@@ -1,9 +1,10 @@
 import { css, customElement, html, query, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { umbOpenModal, UMB_ITEM_PICKER_MODAL } from "@umbraco-cms/backoffice/modal";
+import { umbOpenModal } from "@umbraco-cms/backoffice/modal";
 import type { UUIPopoverContainerElement } from "@umbraco-cms/backoffice/external/uui";
 import { UaiConversationRepository } from "./repository/conversation.repository.js";
 import { UaiProjectRepository } from "../project/repository/project.repository.js";
+import { UAI_PROJECT_PICKER_MODAL } from "./modal/project-picker-modal.token.js";
 import { copilotWorkspaceConversationPath } from "../paths.js";
 
 /**
@@ -37,15 +38,14 @@ export class UaiCopilotWorkspaceNewChatButtonElement extends UmbLitElement {
         // No projects yet — fall back to a loose conversation rather than a dead end.
         if (projects.length === 0) return this.#newChat();
 
-        const chosen = await umbOpenModal(this, UMB_ITEM_PICKER_MODAL, {
+        const chosen = await umbOpenModal(this, UAI_PROJECT_PICKER_MODAL, {
             data: {
-                headline: this.localize.term("uaiCopilotWorkspace_newChatInProject"),
-                items: projects.map((p) => ({ label: p.name, value: p.id, icon: "icon-folder" })),
+                projects: projects.map((p) => ({ id: p.id, name: p.name, description: p.description })),
             },
         }).catch(() => undefined);
         if (!chosen) return;
 
-        const { data: conversation } = await this.#conversationRepository.create({ projectId: chosen.value });
+        const { data: conversation } = await this.#conversationRepository.create({ projectId: chosen.projectId });
         if (conversation?.id) this.#navigate(conversation.id);
     }
 

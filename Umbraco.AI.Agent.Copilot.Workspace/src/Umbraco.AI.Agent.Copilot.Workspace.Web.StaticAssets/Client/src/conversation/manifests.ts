@@ -20,6 +20,8 @@ import {
 } from "./entity/conversation-state.conditions.js";
 import UaiRenameConversationModalElement from "./modal/rename-conversation-modal.element.js";
 import { UAI_RENAME_CONVERSATION_MODAL_ALIAS } from "./modal/rename-conversation-modal.token.js";
+import UaiProjectPickerModalElement from "./modal/project-picker-modal.element.js";
+import { UAI_PROJECT_PICKER_MODAL_ALIAS } from "./modal/project-picker-modal.token.js";
 
 const forConversation = { forEntityTypes: [UAI_CONVERSATION_ENTITY_TYPE] };
 
@@ -34,6 +36,12 @@ export const conversationManifests: UmbExtensionManifest[] = [
         alias: UAI_RENAME_CONVERSATION_MODAL_ALIAS,
         name: "Rename Conversation Modal",
         element: UaiRenameConversationModalElement,
+    },
+    {
+        type: "modal",
+        alias: UAI_PROJECT_PICKER_MODAL_ALIAS,
+        name: "Project Picker Modal",
+        element: UaiProjectPickerModalElement,
     },
 
     {

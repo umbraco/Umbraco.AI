@@ -27,6 +27,6 @@ export const rootEntityActionManifests: UmbExtensionManifest[] = [
         weight: 100,
         api: UaiCopilotWorkspaceNewProjectAction,
         forEntityTypes: [UAI_PROJECT_ROOT_ENTITY_TYPE],
-        meta: { icon: "icon-folder", label: "#uaiCopilotWorkspace_newProject" },
+        meta: { icon: "icon-add", label: "#uaiCopilotWorkspace_newProject" },
     },
 ];

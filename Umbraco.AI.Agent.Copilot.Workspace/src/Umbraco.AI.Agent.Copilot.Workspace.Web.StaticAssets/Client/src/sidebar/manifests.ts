@@ -1,6 +1,5 @@
 import {
     UAI_COPILOT_WORKSPACE_SECTION_ALIAS,
-    UAI_PROJECT_ROOT_ENTITY_TYPE,
     UAI_PINNED_MENU_ALIAS,
     UAI_PROJECTS_MENU_ALIAS,
     UAI_RECENT_MENU_ALIAS,
@@ -68,15 +67,11 @@ export const sidebarManifests: UmbExtensionManifest[] = [
     },
     {
         type: "sectionSidebarApp",
-        kind: "menuWithEntityActions",
+        kind: "menu",
         alias: "Uai.CopilotWorkspace.SidebarApp.Projects",
         name: "Projects Sidebar Group",
         weight: 300,
-        meta: {
-            label: "#uaiCopilotWorkspace_treeProjectsHeading",
-            menu: UAI_PROJECTS_MENU_ALIAS,
-            entityType: UAI_PROJECT_ROOT_ENTITY_TYPE,
-        },
+        meta: { label: "#uaiCopilotWorkspace_treeProjectsHeading", menu: UAI_PROJECTS_MENU_ALIAS },
         conditions: [sectionCondition, { alias: UAI_SIDEBAR_GROUP_NOT_EMPTY_CONDITION, match: "projects" }],
     },
     {

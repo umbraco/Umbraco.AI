@@ -1,14 +1,12 @@
-import { UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE, UAI_PROJECT_ROOT_ENTITY_TYPE } from "../../constants.js";
+import { UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE } from "../../constants.js";
 import {
     UaiCopilotWorkspaceNewChatAction,
     UaiCopilotWorkspaceNewProjectAction,
 } from "./root-create.actions.js";
 
-/**
- * Create entity actions: New chat on the section root (sidebar header create menu); New project on both
- * the section root (so it's in the header create menu for convenience) and the project root (the Projects
- * sidebar group's entity-action header).
- */
+const forRoot = { forEntityTypes: [UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE] };
+
+/** Create entity actions on the section root, surfaced by the sidebar header's create (+) menu. */
 export const rootEntityActionManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
@@ -17,7 +15,7 @@ export const rootEntityActionManifests: UmbExtensionManifest[] = [
         name: "New Chat Entity Action",
         weight: 200,
         api: UaiCopilotWorkspaceNewChatAction,
-        forEntityTypes: [UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE],
+        ...forRoot,
         meta: { icon: "icon-add", label: "#uaiCopilotWorkspace_newChat" },
     },
     {
@@ -27,7 +25,7 @@ export const rootEntityActionManifests: UmbExtensionManifest[] = [
         name: "New Project Entity Action",
         weight: 100,
         api: UaiCopilotWorkspaceNewProjectAction,
-        forEntityTypes: [UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE, UAI_PROJECT_ROOT_ENTITY_TYPE],
-        meta: { icon: "icon-add", label: "#uaiCopilotWorkspace_newProject" },
+        ...forRoot,
+        meta: { icon: "icon-folder", label: "#uaiCopilotWorkspace_newProject" },
     },
 ];

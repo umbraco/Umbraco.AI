@@ -21,12 +21,10 @@ export const UAI_PROJECT_ENTITY_TYPE = "uai:copilot-workspace-project";
 export const UAI_CONVERSATION_ENTITY_TYPE = "uai:copilot-workspace-conversation";
 
 /**
- * Root/collection entity types (mirroring the CMS `…-root` convention). The section root hosts the
- * top-level "New chat" create action; the project root hosts "New project" (on the Projects sidebar
- * group's entity-action header).
+ * The section-root/collection entity type (mirroring the CMS `…-root` convention). Hosts the top-level
+ * "New chat" / "New project" create actions surfaced by the sidebar header's create (+) menu.
  */
 export const UAI_COPILOT_WORKSPACE_ROOT_ENTITY_TYPE = "uai:copilot-workspace-root";
-export const UAI_PROJECT_ROOT_ENTITY_TYPE = "uai:copilot-workspace-project-root";
 
 /** Sidebar group menu aliases (each backs a sectionSidebarApp, mirroring the AI section's menus). */
 export const UAI_PINNED_MENU_ALIAS = "Uai.CopilotWorkspace.Menu.Pinned";

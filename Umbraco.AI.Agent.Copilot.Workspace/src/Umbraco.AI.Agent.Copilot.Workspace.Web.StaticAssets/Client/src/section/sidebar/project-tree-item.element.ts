@@ -71,7 +71,15 @@ export class UaiCopilotWorkspaceProjectTreeItemElement extends UmbLitElement {
 
     #renderChildren(project: UaiSidebarProject) {
         if (project.conversations.length === 0) {
-            return html`<p class="empty">${this.localize.term("uaiCopilotWorkspace_projectNoConversations")}</p>`;
+            // Rendered as a (disabled) nested menu item so it inherits the same child indentation as
+            // real conversation items, rather than sitting at the project's own indent level.
+            return html`
+                <uui-menu-item
+                    class="empty"
+                    disabled
+                    label=${this.localize.term("uaiCopilotWorkspace_projectNoConversations")}
+                ></uui-menu-item>
+            `;
         }
         return repeat(
             project.conversations,
@@ -91,10 +99,6 @@ export class UaiCopilotWorkspaceProjectTreeItemElement extends UmbLitElement {
                 display: block;
             }
             .empty {
-                margin: 0;
-                padding: var(--uui-size-space-1) var(--uui-size-space-4) var(--uui-size-space-2);
-                color: var(--uui-color-text-alt);
-                font-size: 0.8em;
                 font-style: italic;
             }
         `,

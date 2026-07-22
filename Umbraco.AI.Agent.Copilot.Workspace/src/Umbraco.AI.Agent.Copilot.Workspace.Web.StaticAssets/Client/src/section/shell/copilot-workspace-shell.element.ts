@@ -3,8 +3,9 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UmbRoute } from "@umbraco-cms/backoffice/router";
 import type { ManifestSection, UmbSectionElement } from "@umbraco-cms/backoffice/section";
 
+import { UaiCopilotWorkspaceSidebarContext } from "../../sidebar/sidebar.context.js";
+
 // Region elements (side-effect imports register the custom elements used in the template).
-import "../sidebar/workspace-conversation-list.element.js";
 import "./regions/workspace-context-panel.element.js";
 
 const RIGHT_MIN = 260;
@@ -32,6 +33,13 @@ const SIDEBAR_DEFAULT = "300px";
 export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements UmbSectionElement {
     /** Required by {@link UmbSectionElement}; set by the extension host, otherwise unused. */
     public manifest?: ManifestSection;
+
+    constructor() {
+        super();
+        // Provides UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT (conversations/projects/search/active path) to
+        // the sidebar apps rendered in the section-sidebar extension slot. Retained by the controller host.
+        new UaiCopilotWorkspaceSidebarContext(this);
+    }
 
     @state()
     private _sidebarPosition = readString(STORAGE_SIDEBAR, SIDEBAR_DEFAULT);
@@ -135,7 +143,7 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
                 @position-changed=${this.#onSidebarPositionChanged}
             >
                 <umb-section-sidebar slot="start">
-                    <uai-copilot-workspace-conversation-list></uai-copilot-workspace-conversation-list>
+                    <umb-extension-slot type="sectionSidebarApp"></umb-extension-slot>
                 </umb-section-sidebar>
                 <div slot="end" class="main-area" style=${this.#mainAreaStyle()}>
                     <main>

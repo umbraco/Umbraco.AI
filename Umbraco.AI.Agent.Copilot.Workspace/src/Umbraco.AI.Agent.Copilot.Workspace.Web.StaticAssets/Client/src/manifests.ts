@@ -2,6 +2,7 @@ import type { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension
 import { manifests as langManifests } from "./lang/manifests.js";
 import { sectionManifests } from "./section/manifests.js";
 import { rootEntityActionManifests } from "./section/entity-actions/manifests.js";
+import { sidebarManifests } from "./sidebar/manifests.js";
 import { projectWorkspaceManifests } from "./project/workspace/manifests.js";
 import { conversationManifests } from "./conversation/manifests.js";
 
@@ -10,6 +11,7 @@ export const manifests: Array<UmbExtensionManifest | UmbExtensionManifestKind> =
     ...langManifests,
     ...sectionManifests,
     ...rootEntityActionManifests,
+    ...sidebarManifests,
     ...projectWorkspaceManifests,
     ...conversationManifests,
 ];

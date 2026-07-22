@@ -80,6 +80,8 @@ export type ConversationResponseModel = {
     title?: null | string;
     agentIdOrAlias?: null | string;
     profileId?: null | string;
+    contextIds: Array<string>;
+    resources: Array<ContextResourceModel>;
     isPinned: boolean;
     isArchived: boolean;
     dateCreated: string;
@@ -154,6 +156,8 @@ export type UpdateConversationRequestModel = {
     projectId?: null | string;
     agentIdOrAlias?: null | string;
     profileId?: null | string;
+    contextIds: Array<string>;
+    resources: Array<ContextResourceModel>;
     isPinned: boolean;
     isArchived: boolean;
 };

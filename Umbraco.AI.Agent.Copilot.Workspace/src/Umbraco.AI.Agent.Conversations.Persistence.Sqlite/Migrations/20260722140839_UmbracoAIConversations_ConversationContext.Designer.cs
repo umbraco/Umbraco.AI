@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Umbraco.AI.Agent.Conversations.Persistence;
 
@@ -10,9 +11,11 @@ using Umbraco.AI.Agent.Conversations.Persistence;
 namespace Umbraco.AI.Agent.Conversations.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIConversationsDbContext))]
-    partial class UmbracoAIConversationsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722140839_UmbracoAIConversations_ConversationContext")]
+    partial class UmbracoAIConversations_ConversationContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");

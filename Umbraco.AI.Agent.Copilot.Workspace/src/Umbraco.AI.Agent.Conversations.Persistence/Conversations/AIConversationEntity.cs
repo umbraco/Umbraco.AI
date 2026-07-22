@@ -38,6 +38,12 @@ internal class AIConversationEntity
     public Guid? ProfileId { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of referenced <c>AIContext</c> ids attached to this conversation only
+    /// (mirrors <c>AIProjectEntity.ContextIds</c>).
+    /// </summary>
+    public string? ContextIds { get; set; }
+
+    /// <summary>
     /// Whether the conversation is pinned.
     /// </summary>
     public bool IsPinned { get; set; }

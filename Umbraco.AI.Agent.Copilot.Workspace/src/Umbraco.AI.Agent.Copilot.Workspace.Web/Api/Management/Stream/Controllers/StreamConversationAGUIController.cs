@@ -8,6 +8,8 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.Contexts.Resolvers;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Web.Api.Management.Stream.Controllers;
 
@@ -101,7 +103,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
         var options = new AIAgentExecutionOptions
         {
             ConversationHistory = binding,
-            AdditionalProperties = await BuildProjectContextAsync(conversation.ProjectId, cancellationToken),
+            AdditionalProperties = await BuildRuntimeContextAsync(conversation, cancellationToken),
         };
 
         var frontendTools = _toolConverter.ConvertToFrontendTools(request.Tools);
@@ -145,21 +147,83 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
     }
 
     /// <summary>
-    /// Builds the runtime-context properties that inject a project's grounding into the run: its
-    /// framing (name/description), custom instructions, directly-attached resources, and referenced
-    /// <c>AIContext</c> ids (see <see cref="ProjectRuntimeContextBuilder"/>). Returns null when the
-    /// conversation belongs to no project (or the project is unavailable), leaving resolution untouched.
+    /// Builds the runtime-context properties injected into the run by stacking two layers: the owning
+    /// project's grounding (framing, instructions, resources, referenced <c>AIContext</c> ids — see
+    /// <see cref="ProjectRuntimeContextBuilder"/>) and the conversation's <em>own</em> attached
+    /// contexts/resources (<see cref="ConversationRuntimeContextBuilder"/>). Returns null when neither
+    /// layer contributes anything, leaving resolution untouched.
     /// </summary>
-    private async Task<IReadOnlyDictionary<string, object?>?> BuildProjectContextAsync(
-        Guid? projectId,
+    private async Task<IReadOnlyDictionary<string, object?>?> BuildRuntimeContextAsync(
+        AIConversation conversation,
         CancellationToken cancellationToken)
     {
-        if (projectId is null)
+        IReadOnlyDictionary<string, object?>? projectContext = null;
+        if (conversation.ProjectId is not null)
         {
-            return null;
+            var project = await _projectService.GetProjectAsync(conversation.ProjectId.Value, cancellationToken);
+            projectContext = project is null ? null : ProjectRuntimeContextBuilder.Build(project);
         }
 
-        var project = await _projectService.GetProjectAsync(projectId.Value, cancellationToken);
-        return project is null ? null : ProjectRuntimeContextBuilder.Build(project);
+        var conversationContext = ConversationRuntimeContextBuilder.Build(conversation);
+
+        return MergeRuntimeContext(projectContext, conversationContext);
+    }
+
+    /// <summary>
+    /// Merges the project and conversation runtime-context property bags: referenced context ids are
+    /// concatenated and de-duplicated (project order first), and resources are appended project-first
+    /// so the project's framing/instructions still lead the injected block.
+    /// </summary>
+    private static IReadOnlyDictionary<string, object?>? MergeRuntimeContext(
+        IReadOnlyDictionary<string, object?>? projectContext,
+        IReadOnlyDictionary<string, object?>? conversationContext)
+    {
+        if (projectContext is null)
+        {
+            return conversationContext;
+        }
+
+        if (conversationContext is null)
+        {
+            return projectContext;
+        }
+
+        var merged = new Dictionary<string, object?>(projectContext);
+
+        var ids = new List<Guid>();
+        CollectContextIds(projectContext, ids);
+        CollectContextIds(conversationContext, ids);
+        if (ids.Count > 0)
+        {
+            merged[CoreConstants.ContextKeys.AdditionalContextIds] = ids.Distinct().ToList();
+        }
+
+        var resources = new List<AIContextResolverResource>();
+        CollectResources(projectContext, resources);
+        CollectResources(conversationContext, resources);
+        if (resources.Count > 0)
+        {
+            merged[CoreConstants.ContextKeys.AdditionalResources] = resources;
+        }
+
+        return merged;
+    }
+
+    private static void CollectContextIds(IReadOnlyDictionary<string, object?> context, List<Guid> into)
+    {
+        if (context.TryGetValue(CoreConstants.ContextKeys.AdditionalContextIds, out var value)
+            && value is IEnumerable<Guid> ids)
+        {
+            into.AddRange(ids);
+        }
+    }
+
+    private static void CollectResources(IReadOnlyDictionary<string, object?> context, List<AIContextResolverResource> into)
+    {
+        if (context.TryGetValue(CoreConstants.ContextKeys.AdditionalResources, out var value)
+            && value is IEnumerable<AIContextResolverResource> resources)
+        {
+            into.AddRange(resources);
+        }
     }
 }

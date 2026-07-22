@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Agent.Conversations.Core;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
@@ -66,7 +67,7 @@ internal sealed class AIProjectFactory
         // UserKey and DateCreated are intentionally not updated.
     }
 
-    public AIProjectResourceEntity BuildResourceEntity(AIProjectResource resource, Guid projectId) => new()
+    public AIProjectResourceEntity BuildResourceEntity(AIAttachedResource resource, Guid projectId) => new()
     {
         Id = resource.Id,
         ProjectId = projectId,
@@ -78,7 +79,7 @@ internal sealed class AIProjectFactory
         InjectionMode = (int)resource.InjectionMode,
     };
 
-    public void UpdateResourceEntity(AIProjectResourceEntity entity, AIProjectResource resource)
+    public void UpdateResourceEntity(AIProjectResourceEntity entity, AIAttachedResource resource)
     {
         entity.ResourceTypeId = resource.ResourceTypeId;
         entity.Name = resource.Name;
@@ -88,13 +89,13 @@ internal sealed class AIProjectFactory
         entity.InjectionMode = (int)resource.InjectionMode;
     }
 
-    private AIProjectResource BuildResourceDomain(AIProjectResourceEntity entity)
+    private AIAttachedResource BuildResourceDomain(AIProjectResourceEntity entity)
     {
         // Settings are stored as JSON with sensitive fields encrypted. The serializer decrypts any
         // encrypted values; typed deserialization happens later at the resource-type layer.
         object? settings = _serializer.Deserialize(entity.Settings);
 
-        return new AIProjectResource
+        return new AIAttachedResource
         {
             Id = entity.Id,
             ResourceTypeId = entity.ResourceTypeId,
@@ -106,7 +107,7 @@ internal sealed class AIProjectFactory
         };
     }
 
-    private string SerializeSettings(AIProjectResource resource)
+    private string SerializeSettings(AIAttachedResource resource)
     {
         if (resource.Settings is null)
         {

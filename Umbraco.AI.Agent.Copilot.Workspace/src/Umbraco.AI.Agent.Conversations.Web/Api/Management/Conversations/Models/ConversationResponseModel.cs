@@ -1,3 +1,5 @@
+using Umbraco.AI.Web.Api.Management.Context.Models;
+
 namespace Umbraco.AI.Agent.Conversations.Web.Api.Management.Conversations.Models;
 
 /// <summary>
@@ -19,6 +21,12 @@ public sealed class ConversationResponseModel
 
     /// <summary>Optional profile id override.</summary>
     public Guid? ProfileId { get; set; }
+
+    /// <summary>Referenced <c>AIContext</c> ids attached to this conversation only.</summary>
+    public IEnumerable<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>Resources attached to this conversation only.</summary>
+    public IEnumerable<ContextResourceModel> Resources { get; set; } = [];
 
     /// <summary>Whether the conversation is pinned.</summary>
     public bool IsPinned { get; set; }

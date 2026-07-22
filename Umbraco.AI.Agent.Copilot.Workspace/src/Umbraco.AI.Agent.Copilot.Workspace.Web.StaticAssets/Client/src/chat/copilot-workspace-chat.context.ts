@@ -175,6 +175,8 @@ export class CopilotWorkspaceChatContext extends UmbControllerBase implements Ua
             projectId: conversation.projectId ?? null,
             agentIdOrAlias,
             profileId: conversation.profileId ?? null,
+            contextIds: [...conversation.contextIds],
+            resources: [...conversation.resources],
             isPinned: conversation.isPinned,
             isArchived: conversation.isArchived,
         });

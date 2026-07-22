@@ -1,3 +1,4 @@
+using Umbraco.AI.Agent.Conversations.Core;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Conversations.Web.Api.Management.Projects.Models;
 using Umbraco.AI.Core.Contexts;
@@ -17,10 +18,10 @@ internal sealed class ProjectMapDefinition : IMapDefinition
     public void DefineMaps(IUmbracoMapper mapper)
     {
         mapper.Define<AIProject, ProjectResponseModel>((_, _) => new ProjectResponseModel(), MapToResponse);
-        mapper.Define<AIProjectResource, ContextResourceModel>((_, _) => new ContextResourceModel(), MapToResponse);
+        mapper.Define<AIAttachedResource, ContextResourceModel>((_, _) => new ContextResourceModel(), MapToResponse);
         mapper.Define<ProjectRequestModel, AIProject>((_, _) => new AIProject(), MapFromRequest);
-        mapper.Define<ContextResourceModel, AIProjectResource>(
-            (_, _) => new AIProjectResource { ResourceTypeId = string.Empty }, MapFromRequest);
+        mapper.Define<ContextResourceModel, AIAttachedResource>(
+            (_, _) => new AIAttachedResource { ResourceTypeId = string.Empty }, MapFromRequest);
     }
 
     // Umbraco.Code.MapAll
@@ -31,13 +32,13 @@ internal sealed class ProjectMapDefinition : IMapDefinition
         target.Description = source.Description;
         target.Instructions = source.Instructions;
         target.ContextIds = source.ContextIds.ToArray();
-        target.Resources = context.MapEnumerable<AIProjectResource, ContextResourceModel>(source.Resources);
+        target.Resources = context.MapEnumerable<AIAttachedResource, ContextResourceModel>(source.Resources);
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToResponse(AIProjectResource source, ContextResourceModel target, MapperContext context)
+    private static void MapToResponse(AIAttachedResource source, ContextResourceModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.ResourceTypeId = source.ResourceTypeId;
@@ -55,11 +56,11 @@ internal sealed class ProjectMapDefinition : IMapDefinition
         target.Description = source.Description;
         target.Instructions = source.Instructions;
         target.ContextIds = source.ContextIds.ToList();
-        target.Resources = context.MapEnumerable<ContextResourceModel, AIProjectResource>(source.Resources);
+        target.Resources = context.MapEnumerable<ContextResourceModel, AIAttachedResource>(source.Resources);
     }
 
     // Umbraco.Code.MapAll
-    private static void MapFromRequest(ContextResourceModel source, AIProjectResource target, MapperContext context)
+    private static void MapFromRequest(ContextResourceModel source, AIAttachedResource target, MapperContext context)
     {
         target.Id = source.Id;
         target.ResourceTypeId = source.ResourceTypeId;

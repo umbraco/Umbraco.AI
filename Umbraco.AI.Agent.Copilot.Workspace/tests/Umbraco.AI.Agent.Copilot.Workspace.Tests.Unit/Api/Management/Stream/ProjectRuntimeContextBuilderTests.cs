@@ -1,4 +1,5 @@
 using Shouldly;
+using Umbraco.AI.Agent.Conversations.Core;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Copilot.Workspace.Web.Api.Management.Stream;
 using Umbraco.AI.Core.Contexts;
@@ -34,8 +35,8 @@ public class ProjectRuntimeContextBuilderTests
             ContextIds = [contextA, contextB],
             Resources =
             [
-                new AIProjectResource { Id = alwaysId, ResourceTypeId = "text", Name = "Always fact", SortOrder = 1, InjectionMode = AIContextResourceInjectionMode.Always },
-                new AIProjectResource { Id = onDemandId, ResourceTypeId = "file", Name = "Big doc", SortOrder = 0, InjectionMode = AIContextResourceInjectionMode.OnDemand },
+                new AIAttachedResource { Id = alwaysId, ResourceTypeId = "text", Name = "Always fact", SortOrder = 1, InjectionMode = AIContextResourceInjectionMode.Always },
+                new AIAttachedResource { Id = onDemandId, ResourceTypeId = "file", Name = "Big doc", SortOrder = 0, InjectionMode = AIContextResourceInjectionMode.OnDemand },
             ],
         };
 

@@ -32,6 +32,10 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("ContextIds")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -78,6 +82,48 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
                     b.HasIndex("UserKey");
 
                     b.ToTable("umbracoAIConversationsConversation", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationResourceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("InjectionMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("ResourceTypeId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Settings")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.ToTable("umbracoAIConversationsConversationResource", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIMessageEntity", b =>
@@ -217,6 +263,15 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationResourceEntity", b =>
+                {
+                    b.HasOne("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIMessageEntity", b =>

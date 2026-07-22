@@ -12,10 +12,14 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
     private const int MaxAppendRetries = 3;
 
     private readonly IEFCoreScopeProvider<UmbracoAIConversationsDbContext> _scopeProvider;
+    private readonly AIConversationEntityFactory _factory;
 
-    public EFCoreAIConversationRepository(IEFCoreScopeProvider<UmbracoAIConversationsDbContext> scopeProvider)
+    public EFCoreAIConversationRepository(
+        IEFCoreScopeProvider<UmbracoAIConversationsDbContext> scopeProvider,
+        AIConversationEntityFactory factory)
     {
         _scopeProvider = scopeProvider;
+        _factory = factory;
     }
 
     // --- Conversations ---
@@ -23,10 +27,22 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
     public async Task<AIConversation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
-        var entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.Conversations.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, cancellationToken));
+        var result = await scope.ExecuteWithContextAsync(async db =>
+        {
+            var entity = await db.Conversations.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            if (entity is null)
+            {
+                return ((AIConversationEntity?)null, new List<AIConversationResourceEntity>());
+            }
+
+            var resources = await db.ConversationResources.AsNoTracking()
+                .Where(r => r.ConversationId == id)
+                .ToListAsync(cancellationToken);
+
+            return (entity, resources);
+        });
         scope.Complete();
-        return entity is null ? null : AIConversationEntityFactory.BuildDomain(entity);
+        return result.Item1 is null ? null : _factory.BuildDomain(result.Item1, result.Item2);
     }
 
     public async Task<(IReadOnlyList<AIConversation> Items, int Total)> GetPagedAsync(
@@ -78,7 +94,9 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         });
         scope.Complete();
 
-        return (result.items.Select(AIConversationEntityFactory.BuildDomain).ToList(), result.total);
+        // The sidebar list doesn't need per-conversation resources — build with an empty set to avoid
+        // an N+1 resource load. GetByIdAsync loads them for the single-conversation views.
+        return (result.items.Select(e => _factory.BuildDomain(e, [])).ToList(), result.total);
     }
 
     public async Task<AIConversation> CreateAsync(AIConversation conversation, CancellationToken cancellationToken = default)
@@ -93,10 +111,23 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         conversation.DateModified = now;
         conversation.Version = conversation.Version <= 0 ? 1 : conversation.Version;
 
+        foreach (var resource in conversation.Resources)
+        {
+            if (resource.Id == Guid.Empty)
+            {
+                resource.Id = Guid.NewGuid();
+            }
+        }
+
         using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
         await scope.ExecuteWithContextAsync(async db =>
         {
-            db.Conversations.Add(AIConversationEntityFactory.BuildEntity(conversation));
+            db.Conversations.Add(_factory.BuildEntity(conversation));
+            foreach (var resource in conversation.Resources)
+            {
+                db.ConversationResources.Add(_factory.BuildResourceEntity(resource, conversation.Id));
+            }
+
             return await db.SaveChangesAsync(cancellationToken);
         });
         scope.Complete();
@@ -119,14 +150,59 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
             entity.ProjectId = conversation.ProjectId;
             entity.ProfileId = conversation.ProfileId;
             entity.AgentIdOrAlias = conversation.AgentIdOrAlias;
+            entity.ContextIds = _factory.BuildEntity(conversation).ContextIds;
             entity.IsPinned = conversation.IsPinned;
             entity.IsArchived = conversation.IsArchived;
             entity.DateModified = DateTime.UtcNow;
             entity.Version++;
 
+            await ReconcileResourcesAsync(db, conversation, cancellationToken);
+
             return await db.SaveChangesAsync(cancellationToken);
         });
         scope.Complete();
+    }
+
+    /// <summary>
+    /// Reconciles a conversation's directly-attached resources against the incoming set (add new,
+    /// update existing, remove deleted) — mirrors the project repository's resource reconcile.
+    /// </summary>
+    private async Task ReconcileResourcesAsync(
+        UmbracoAIConversationsDbContext db,
+        AIConversation conversation,
+        CancellationToken cancellationToken)
+    {
+        foreach (var resource in conversation.Resources)
+        {
+            if (resource.Id == Guid.Empty)
+            {
+                resource.Id = Guid.NewGuid();
+            }
+        }
+
+        var existingResources = await db.ConversationResources
+            .Where(r => r.ConversationId == conversation.Id)
+            .ToListAsync(cancellationToken);
+
+        var existingById = existingResources.ToDictionary(r => r.Id);
+        var incomingIds = conversation.Resources.Select(r => r.Id).ToHashSet();
+
+        foreach (var stale in existingResources.Where(r => !incomingIds.Contains(r.Id)))
+        {
+            db.ConversationResources.Remove(stale);
+        }
+
+        foreach (var resource in conversation.Resources)
+        {
+            if (existingById.TryGetValue(resource.Id, out var existingResource))
+            {
+                _factory.UpdateResourceEntity(existingResource, resource);
+            }
+            else
+            {
+                db.ConversationResources.Add(_factory.BuildResourceEntity(resource, conversation.Id));
+            }
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)

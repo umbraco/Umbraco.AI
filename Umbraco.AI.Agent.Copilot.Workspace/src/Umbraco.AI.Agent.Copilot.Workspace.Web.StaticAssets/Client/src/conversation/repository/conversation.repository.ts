@@ -3,6 +3,7 @@ import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import { UaiEntityActionEvent, dispatchActionEvent } from "@umbraco-ai/core";
 import { UaiConversationServerDataSource } from "./conversation.server.data-source.js";
 import { UAI_CONVERSATION_ENTITY_TYPE } from "../../constants.js";
+import type { ContextResourceModel } from "../../api/types.gen.js";
 import type {
     ConversationResponseModel,
     CreateConversationRequestModel,
@@ -76,6 +77,16 @@ export class UaiConversationRepository extends UmbRepositoryBase {
     moveToProject(conversation: ConversationResponseModel, projectId: string | null) {
         return this.update(conversation.id, { ...toUpdateModel(conversation), projectId });
     }
+
+    /** Sets the conversation's own attached context ids (stacked on top of its project's). */
+    setContextIds(conversation: ConversationResponseModel, contextIds: string[]) {
+        return this.update(conversation.id, { ...toUpdateModel(conversation), contextIds });
+    }
+
+    /** Sets the conversation's own attached resources (stacked on top of its project's). */
+    setResources(conversation: ConversationResponseModel, resources: ContextResourceModel[]) {
+        return this.update(conversation.id, { ...toUpdateModel(conversation), resources });
+    }
 }
 
 /** Projects the full mutable surface of a conversation into an update request. */
@@ -85,6 +96,8 @@ function toUpdateModel(conversation: ConversationResponseModel): UpdateConversat
         projectId: conversation.projectId ?? null,
         agentIdOrAlias: conversation.agentIdOrAlias ?? null,
         profileId: conversation.profileId ?? null,
+        contextIds: [...conversation.contextIds],
+        resources: [...conversation.resources],
         isPinned: conversation.isPinned,
         isArchived: conversation.isArchived,
     };

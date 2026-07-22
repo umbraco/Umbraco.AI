@@ -33,7 +33,9 @@ public static class UmbracoBuilderExtensions
             },
             shareUmbracoConnection: aiConnectionString is null);
 
-        // Conversation/message repository (EF Core).
+        // Conversation/message repository (EF Core) + its factory, which reuses the core resource-type
+        // collection and editable-model serializer for schema-driven settings (de)serialization.
+        builder.Services.AddSingleton<AIConversationEntityFactory>();
         builder.Services.AddSingleton<IAIConversationRepository, EFCoreAIConversationRepository>();
 
         // Project repository (EF Core) + its factory, which reuses the core resource-type collection

@@ -1,17 +1,29 @@
-import { css, customElement, html, repeat, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, repeat, property, state } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import type { UaiContextPickerElement } from "@umbraco-ai/core";
 import { UaiConversationRepository } from "../../../conversation/repository/conversation.repository.js";
 import { UaiProjectRepository } from "../../../project/repository/project.repository.js";
-import type { ProjectResponseModel } from "../../../api/types.gen.js";
+import type {
+    ContextResourceModel,
+    ConversationResponseModel,
+    ProjectResponseModel,
+} from "../../../api/types.gen.js";
+
+/** Minimal structural type for the globally-registered (but not type-exported) `uai-resource-list`. */
+interface ResourceListElement extends HTMLElement {
+    items: ContextResourceModel[];
+}
 
 /**
- * Right region: the context panel. Shows the context the open conversation runs with — its project's
- * instructions, attached context sets, and resources — mirroring what the backend injects server-side
- * from the conversation's project. Read-only here; the rich picker/editing lands with the projects UI
- * (Phase 6). Each concept is its own auto-open collapsible block. Collapse/resize chrome and the
- * open/close toggle are owned by the shell; this element only renders the header title and the body.
+ * Right region: the context panel. Shows the context the open conversation runs with, in two stacked
+ * layers that mirror what the backend injects server-side:
+ *  - <b>inherited from the project</b> (read-only) — its instructions, attached contexts, resources;
+ *  - <b>this conversation</b> (editable) — contexts and resources attached to this conversation only,
+ *    which stack on top of the project's rather than replacing them.
+ * Each concept is its own auto-open collapsible block. Collapse/resize chrome and the open/close
+ * toggle are owned by the shell; this element only renders the header title and the body.
  *
  * Driven by `conversationId` (conversation route) or `projectId` (project route), set by the shell
  * from the active route. A request token guards against out-of-order resolution when the user switches
@@ -35,6 +47,9 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
     @state()
     private _project?: ProjectResponseModel;
 
+    @state()
+    private _conversation?: ConversationResponseModel;
+
     override willUpdate(changed: PropertyValues) {
         if (changed.has("conversationId") || changed.has("projectId")) {
             void this.#resolve();
@@ -45,26 +60,38 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         const token = ++this.#requestToken;
         this._loading = true;
         this._project = undefined;
+        this._conversation = undefined;
 
-        const projectId = this.projectId ?? (await this.#projectIdForConversation(this.conversationId));
-        if (token !== this.#requestToken) return; // superseded by a newer request
-
-        if (!projectId) {
-            this._loading = false;
-            return;
+        // Conversation route: load the conversation first (carries its own contexts/resources), then
+        // resolve its owning project for the inherited layer.
+        if (this.conversationId) {
+            const { data } = await this.#conversationRepository.requestById(this.conversationId);
+            if (token !== this.#requestToken) return; // superseded by a newer request
+            this._conversation = data ?? undefined;
         }
 
-        const { data } = await this.#projectRepository.requestById(projectId);
-        if (token !== this.#requestToken) return;
+        const projectId = this.projectId ?? this._conversation?.projectId ?? undefined;
+        if (projectId) {
+            const { data } = await this.#projectRepository.requestById(projectId);
+            if (token !== this.#requestToken) return;
+            this._project = data ?? undefined;
+        }
 
-        this._project = data ?? undefined;
         this._loading = false;
     }
 
-    async #projectIdForConversation(conversationId?: string): Promise<string | undefined> {
-        if (!conversationId) return undefined;
-        const { data } = await this.#conversationRepository.requestById(conversationId);
-        return data?.projectId ?? undefined;
+    #onContextsChange(event: Event) {
+        if (!this._conversation) return;
+        const value = ((event.target as UaiContextPickerElement).value as string[] | undefined) ?? [];
+        this._conversation = { ...this._conversation, contextIds: value };
+        void this.#conversationRepository.setContextIds(this._conversation, value);
+    }
+
+    #onResourcesChange(event: Event) {
+        if (!this._conversation) return;
+        const items = [...(event.target as ResourceListElement).items];
+        this._conversation = { ...this._conversation, resources: items };
+        void this.#conversationRepository.setResources(this._conversation, items);
     }
 
     override render() {
@@ -80,18 +107,18 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         if (this._loading) {
             return html`<uui-loader></uui-loader>`;
         }
-        if (!this._project) {
+        if (!this._conversation && !this._project) {
             return html`<p class="muted">${this.localize.term("uaiCopilotWorkspace_contextNoProject")}</p>`;
         }
-        return this.#renderProject(this._project);
-    }
 
-    #renderProject(project: ProjectResponseModel) {
-        const resources = [...project.resources].sort((a, b) => a.sortOrder - b.sortOrder);
-        const instructions = project.instructions?.trim();
+        const project = this._project;
+        const conversation = this._conversation;
+        const instructions = project?.instructions?.trim();
+        const projectContextIds = project?.contextIds ?? [];
+        const projectResources = project ? [...project.resources].sort((a, b) => a.sortOrder - b.sortOrder) : [];
 
         return html`
-            <h4 class="project-name">${project.name}</h4>
+            ${project ? html`<h4 class="project-name">${project.name}</h4>` : nothing}
 
             ${this.#renderBlock(
                 "uaiCopilotWorkspace_contextInstructionsHeading",
@@ -99,18 +126,48 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
                     ? html`<p class="instructions">${instructions}</p>`
                     : this.#renderEmpty("uaiCopilotWorkspace_contextNoInstructions"),
             )}
-            ${this.#renderBlock(
-                "uaiCopilotWorkspace_contextContextsHeading",
-                project.contextIds.length > 0
-                    ? html`<uai-context-picker readonly multiple .value=${project.contextIds}></uai-context-picker>`
-                    : this.#renderEmpty("uaiCopilotWorkspace_contextNoContexts"),
-            )}
-            ${this.#renderBlock(
-                "uaiCopilotWorkspace_contextResourcesHeading",
-                resources.length > 0
-                    ? html`<uui-ref-list>
+            ${this.#renderBlock("uaiCopilotWorkspace_contextContextsHeading", this.#renderContexts(projectContextIds, conversation))}
+            ${this.#renderBlock("uaiCopilotWorkspace_contextResourcesHeading", this.#renderResources(projectResources, conversation))}
+        `;
+    }
+
+    #renderContexts(projectContextIds: Array<string>, conversation?: ConversationResponseModel) {
+        const hasInherited = projectContextIds.length > 0;
+        if (!hasInherited && !conversation) {
+            return this.#renderEmpty("uaiCopilotWorkspace_contextNoContexts");
+        }
+        return html`
+            ${hasInherited
+                ? this.#renderSubgroup(
+                      "uaiCopilotWorkspace_contextFromProject",
+                      html`<uai-context-picker readonly multiple .value=${projectContextIds}></uai-context-picker>`,
+                  )
+                : nothing}
+            ${conversation
+                ? this.#renderSubgroup(
+                      "uaiCopilotWorkspace_contextThisConversation",
+                      html`<uai-context-picker
+                          multiple
+                          .value=${conversation.contextIds}
+                          @change=${this.#onContextsChange}
+                      ></uai-context-picker>`,
+                  )
+                : nothing}
+        `;
+    }
+
+    #renderResources(projectResources: Array<ContextResourceModel>, conversation?: ConversationResponseModel) {
+        const hasInherited = projectResources.length > 0;
+        if (!hasInherited && !conversation) {
+            return this.#renderEmpty("uaiCopilotWorkspace_contextNoResources");
+        }
+        return html`
+            ${hasInherited
+                ? this.#renderSubgroup(
+                      "uaiCopilotWorkspace_contextFromProject",
+                      html`<uui-ref-list>
                           ${repeat(
-                              resources,
+                              projectResources,
                               (r) => r.id,
                               (r) => html`
                                   <uui-ref-node
@@ -120,9 +177,18 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
                                   ></uui-ref-node>
                               `,
                           )}
-                      </uui-ref-list>`
-                    : this.#renderEmpty("uaiCopilotWorkspace_contextNoResources"),
-            )}
+                      </uui-ref-list>`,
+                  )
+                : nothing}
+            ${conversation
+                ? this.#renderSubgroup(
+                      "uaiCopilotWorkspace_contextThisConversation",
+                      html`<uai-resource-list
+                          .items=${conversation.resources}
+                          @change=${this.#onResourcesChange}
+                      ></uai-resource-list>`,
+                  )
+                : nothing}
         `;
     }
 
@@ -136,6 +202,16 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
                 </summary>
                 <div class="block-body">${content}</div>
             </details>
+        `;
+    }
+
+    /** A labelled inherited/conversation subgroup inside a block. */
+    #renderSubgroup(labelKey: string, content: unknown) {
+        return html`
+            <div class="subgroup">
+                <span class="sublabel">${this.localize.term(labelKey)}</span>
+                ${content}
+            </div>
         `;
     }
 
@@ -220,6 +296,15 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
             }
             .block-body {
                 padding: 0 var(--uui-size-space-4) var(--uui-size-space-4);
+            }
+            .subgroup + .subgroup {
+                margin-top: var(--uui-size-space-4);
+            }
+            .sublabel {
+                display: block;
+                margin-bottom: var(--uui-size-space-1);
+                color: var(--uui-color-text-alt);
+                font-size: 0.8em;
             }
             .instructions {
                 margin: 0;

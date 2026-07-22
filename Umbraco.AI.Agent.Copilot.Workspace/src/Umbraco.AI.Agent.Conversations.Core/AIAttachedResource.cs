@@ -1,16 +1,17 @@
 using Umbraco.AI.Core.Contexts;
 
-namespace Umbraco.AI.Agent.Conversations.Core.Projects;
+namespace Umbraco.AI.Agent.Conversations.Core;
 
 /// <summary>
-/// A resource directly attached to a project (the "attach a direct resource" mechanism). Parallel to
-/// the core <see cref="AIContextResource"/> — a distinct type because <c>AIContextResource</c> is
-/// constructed only inside <c>Umbraco.AI</c>'s own assemblies (its <c>Id</c> setter is internal). It
-/// reuses the public resource-type machinery (<c>AIContextResourceTypeCollection</c>, the
-/// editable-model serializer, and <c>[AIContextResourceType]</c> registrations) for schema and
-/// settings serialization, and converts to <see cref="AIResolvedResource"/> at resolve time.
+/// A resource directly attached to a context owner — a project or a single conversation (the "attach a
+/// direct resource" mechanism). Parallel to the core <see cref="AIContextResource"/> — a distinct type
+/// because <c>AIContextResource</c> is constructed only inside <c>Umbraco.AI</c>'s own assemblies (its
+/// <c>Id</c> setter is internal). It reuses the public resource-type machinery
+/// (<c>AIContextResourceTypeCollection</c>, the editable-model serializer, and
+/// <c>[AIContextResourceType]</c> registrations) for schema and settings serialization, and converts to
+/// <see cref="AIResolvedResource"/> at resolve time.
 /// </summary>
-public sealed class AIProjectResource
+public sealed class AIAttachedResource
 {
     /// <summary>The unique identifier of the resource.</summary>
     public Guid Id { get; set; }
@@ -27,7 +28,7 @@ public sealed class AIProjectResource
     /// <summary>Optional description shown in the UI and to the LLM for OnDemand resources.</summary>
     public string? Description { get; set; }
 
-    /// <summary>Ordering within the project's resource list.</summary>
+    /// <summary>Ordering within the owner's resource list.</summary>
     public int SortOrder { get; set; }
 
     /// <summary>Type-specific settings object configured by the user.</summary>

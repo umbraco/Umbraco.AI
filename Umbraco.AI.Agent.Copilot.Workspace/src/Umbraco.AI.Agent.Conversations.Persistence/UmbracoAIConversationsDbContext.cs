@@ -20,6 +20,9 @@ public class UmbracoAIConversationsDbContext : DbContext
     /// <summary>Conversations table.</summary>
     internal DbSet<AIConversationEntity> Conversations { get; set; } = null!;
 
+    /// <summary>Conversation direct-resource attachments table.</summary>
+    internal DbSet<AIConversationResourceEntity> ConversationResources { get; set; } = null!;
+
     /// <summary>Messages table.</summary>
     internal DbSet<AIMessageEntity> Messages { get; set; } = null!;
 
@@ -128,6 +131,7 @@ public class UmbracoAIConversationsDbContext : DbContext
             entity.Property(e => e.UserKey).IsRequired();
             entity.Property(e => e.AgentIdOrAlias).HasMaxLength(255);
             entity.Property(e => e.ProfileId).IsRequired(false);
+            entity.Property(e => e.ContextIds).HasMaxLength(4000);
             entity.Property(e => e.IsPinned).IsRequired().HasDefaultValue(false);
             entity.Property(e => e.IsArchived).IsRequired().HasDefaultValue(false);
             entity.Property(e => e.DateCreated).IsRequired();
@@ -144,6 +148,28 @@ public class UmbracoAIConversationsDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ProjectId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AIConversationResourceEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIConversationsConversationResource");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ConversationId).IsRequired();
+            entity.Property(e => e.ResourceTypeId).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.SortOrder).IsRequired().HasDefaultValue(0);
+            entity.Property(e => e.Settings);
+            entity.Property(e => e.InjectionMode).IsRequired().HasDefaultValue(0);
+
+            entity.HasIndex(e => e.ConversationId);
+
+            // Conversation delete cascades to its direct resources.
+            entity.HasOne<AIConversationEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AIMessageEntity>(entity =>

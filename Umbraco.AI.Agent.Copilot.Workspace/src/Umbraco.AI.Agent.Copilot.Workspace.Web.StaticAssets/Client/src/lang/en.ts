@@ -87,5 +87,7 @@ export default {
         contextNoInstructions: "No instructions.",
         contextNoContexts: "No contexts attached.",
         contextNoResources: "No resources attached.",
+        contextFromProject: "From project",
+        contextThisConversation: "This conversation",
     },
 } satisfies UmbLocalizationDictionary;

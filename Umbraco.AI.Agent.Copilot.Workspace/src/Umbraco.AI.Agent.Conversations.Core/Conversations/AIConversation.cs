@@ -25,6 +25,20 @@ public sealed class AIConversation
     /// <summary>Optional profile id override.</summary>
     public Guid? ProfileId { get; set; }
 
+    /// <summary>
+    /// Referenced <c>AIContext</c> ids attached to <em>this conversation only</em> (the "attach a
+    /// context" mechanism at conversation scope). These stack on top of the owning project's contexts
+    /// at run time — they do not replace them.
+    /// </summary>
+    public IList<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
+    /// Resources attached to <em>this conversation only</em> (the "attach a direct resource"
+    /// mechanism at conversation scope). These stack on top of the owning project's resources at run
+    /// time — they do not replace them.
+    /// </summary>
+    public IList<AIAttachedResource> Resources { get; set; } = [];
+
     /// <summary>Whether the conversation is pinned.</summary>
     public bool IsPinned { get; set; }
 

@@ -65,21 +65,21 @@ export class UaiCopilotWorkspaceNewChatButtonElement extends UmbLitElement {
                 >
                     <uui-symbol-expand .open=${this._open}></uui-symbol-expand>
                 </uui-button>
-                <uui-popover-container
-                    id="new-chat-menu"
-                    placement="bottom-end"
-                    @beforetoggle=${(e: ToggleEvent) => (this._open = e.newState === "open")}
-                >
-                    <umb-popover-layout>
-                        <uui-menu-item
-                            label=${this.localize.term("uaiCopilotWorkspace_newChatInProject")}
-                            @click=${this.#newChatInProject}
-                        >
-                            <uui-icon slot="icon" name="icon-folder"></uui-icon>
-                        </uui-menu-item>
-                    </umb-popover-layout>
-                </uui-popover-container>
             </uui-button-group>
+            <uui-popover-container
+                id="new-chat-menu"
+                placement="bottom-end"
+                @beforetoggle=${(e: ToggleEvent) => (this._open = e.newState === "open")}
+            >
+                <umb-popover-layout>
+                    <uui-menu-item
+                        label=${this.localize.term("uaiCopilotWorkspace_newChatInProject")}
+                        @click=${this.#newChatInProject}
+                    >
+                        <uui-icon slot="icon" name="icon-folder"></uui-icon>
+                    </uui-menu-item>
+                </umb-popover-layout>
+            </uui-popover-container>
         `;
     }
 

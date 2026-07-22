@@ -1,23 +1,21 @@
 import { css, customElement, html, nothing, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { umbOpenModal, UMB_ITEM_PICKER_MODAL } from "@umbraco-cms/backoffice/modal";
 import { UaiConversationRepository } from "../../../conversation/repository/conversation.repository.js";
-import { UaiProjectRepository } from "../../../project/repository/project.repository.js";
 import type { ConversationResponseModel } from "../../../conversation/types.js";
 import { copilotWorkspaceConversationPath } from "../../../paths.js";
+import "../../../conversation/new-chat-button.element.js";
 
 const RECENT_LIMIT = 6;
 
 /**
  * The section landing/launcher (main workspace area when nothing is open). Leads the user into
- * starting a conversation — a prominent "New chat", an optional "start in a project" picker, and a
- * short list of recent conversations to resume. Selecting any of these opens the conversation
- * workspace; the sidebar tree remains the persistent way to browse everything else.
+ * starting a conversation with the shared New chat split button (New chat / New chat in a project),
+ * plus a short list of recent conversations to resume. The sidebar tree remains the persistent way to
+ * browse everything else.
  */
 @customElement("uai-copilot-workspace-launcher")
 export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
     #conversationRepository = new UaiConversationRepository(this);
-    #projectRepository = new UaiProjectRepository(this);
 
     @state() private _recent: ConversationResponseModel[] = [];
 
@@ -35,32 +33,6 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
         window.history.pushState({}, "", path);
     }
 
-    async #startConversation(projectId?: string) {
-        const { data } = await this.#conversationRepository.create(projectId ? { projectId } : {});
-        if (data?.id) this.#open(copilotWorkspaceConversationPath(data.id));
-    }
-
-    async #startInProject() {
-        const { data } = await this.#projectRepository.requestCollection();
-        const projects = data?.items ?? [];
-        if (projects.length === 0) {
-            // No projects yet — just start a loose conversation.
-            void this.#startConversation();
-            return;
-        }
-        try {
-            const chosen = await umbOpenModal(this, UMB_ITEM_PICKER_MODAL, {
-                data: {
-                    headline: this.localize.term("uaiCopilotWorkspace_launcherStartInProject"),
-                    items: projects.map((p) => ({ label: p.name, value: p.id, icon: "icon-folder" })),
-                },
-            });
-            void this.#startConversation(chosen.value);
-        } catch {
-            /* cancelled */
-        }
-    }
-
     override render() {
         return html`
             <div class="launcher">
@@ -69,22 +41,7 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
                 <p class="subtitle">${this.localize.term("uaiCopilotWorkspace_launcherSubtitle")}</p>
 
                 <div class="actions">
-                    <uui-button
-                        look="primary"
-                        label=${this.localize.term("uaiCopilotWorkspace_newChat")}
-                        @click=${() => this.#startConversation()}
-                    >
-                        <uui-icon name="icon-add"></uui-icon>
-                        ${this.localize.term("uaiCopilotWorkspace_newChat")}
-                    </uui-button>
-                    <uui-button
-                        look="secondary"
-                        label=${this.localize.term("uaiCopilotWorkspace_launcherStartInProject")}
-                        @click=${this.#startInProject}
-                    >
-                        <uui-icon name="icon-folder"></uui-icon>
-                        ${this.localize.term("uaiCopilotWorkspace_launcherStartInProject")}
-                    </uui-button>
+                    <uai-copilot-workspace-new-chat-button></uai-copilot-workspace-new-chat-button>
                 </div>
 
                 ${this._recent.length
@@ -141,9 +98,11 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
             }
             .actions {
                 display: flex;
-                gap: var(--uui-size-space-3);
                 justify-content: center;
-                flex-wrap: wrap;
+            }
+            .actions uai-copilot-workspace-new-chat-button {
+                width: auto;
+                min-width: 240px;
             }
             .recent {
                 margin-top: var(--uui-size-layout-1);

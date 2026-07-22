@@ -19,6 +19,7 @@ export default {
 
         // Conversation list / tree
         newChat: "New chat",
+        newChatInProject: "New chat in a project",
         treeCreate: "Create",
         treeProjectsHeading: "Projects",
         treeRecentHeading: "Recent",

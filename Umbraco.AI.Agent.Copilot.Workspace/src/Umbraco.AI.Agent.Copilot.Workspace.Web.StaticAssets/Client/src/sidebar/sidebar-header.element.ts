@@ -65,6 +65,11 @@ export class UaiCopilotWorkspaceSidebarHeaderElement extends UmbLitElement {
                 gap: var(--uui-size-space-3);
                 padding: var(--uui-size-space-4);
                 border-bottom: 1px solid var(--uui-color-divider);
+                /* Keep the create actions + search pinned while the group list scrolls. */
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                background: var(--uui-color-surface);
             }
             .new-project {
                 width: 100%;

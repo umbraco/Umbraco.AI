@@ -89,8 +89,9 @@ export class UaiCopilotWorkspaceNewChatButtonElement extends UmbLitElement {
             uui-button-group {
                 width: 100%;
             }
-            uui-button-group {
-                --uui-button-group-min-width: 0;
+            /* uui-button-group grows all children equally; keep the caret sized to its content. */
+            uui-button-group > uui-button:last-child {
+                flex: 0 0 auto;
             }
         `,
     ];

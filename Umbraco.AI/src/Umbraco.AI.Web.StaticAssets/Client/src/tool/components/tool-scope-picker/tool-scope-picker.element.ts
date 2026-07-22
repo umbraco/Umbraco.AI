@@ -298,23 +298,8 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                 width: 100%;
             }
 
-            uui-ref-list {
-                display: flex;
-                flex-direction: column;
-                gap: var(--uui-size-space-1);
-            }
-
             uui-tag {
                 white-space: nowrap;
-            }
-
-            uui-ref-node {
-                padding: var(--uui-size-space-3);
-            }
-
-            uui-ref-node::before {
-                border-radius: var(--uui-border-radius);
-                border: 1px solid var(--uui-color-divider-standalone);
             }
         `,
     ];

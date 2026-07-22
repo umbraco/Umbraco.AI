@@ -118,8 +118,6 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         const projectResources = project ? [...project.resources].sort((a, b) => a.sortOrder - b.sortOrder) : [];
 
         return html`
-            ${project ? html`<h4 class="project-name">${project.name}</h4>` : nothing}
-
             ${this.#renderBlock(
                 "uaiCopilotWorkspace_contextInstructionsHeading",
                 instructions
@@ -272,7 +270,8 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
             /* Resources use the compact list (divider-separated rows with no divider between two
                stacked lists), so add one at the boundary in the same colour as the row dividers.
                Contexts use the normal picker view — boundary styling handled there. */
-            .block-body > uai-resource-list + uai-resource-list {
+            .block-body > uai-resource-list + uai-resource-list,
+            .block-body > uai-context-picker + uai-context-picker {
                 border-top: 1px solid var(--uui-color-border);
             }
             .instructions {

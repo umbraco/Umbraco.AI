@@ -86,7 +86,11 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
     }
 
     #recompute(): void {
-        this.#model.setValue(groupConversations(this.#conversations, this.#projectNames));
+        // While searching, drop projects with no matching chat (conversations are already filtered).
+        const searching = this.#search.getValue().trim().length > 0;
+        this.#model.setValue(
+            groupConversations(this.#conversations, this.#projectNames, { includeEmptyProjects: !searching }),
+        );
     }
 }
 

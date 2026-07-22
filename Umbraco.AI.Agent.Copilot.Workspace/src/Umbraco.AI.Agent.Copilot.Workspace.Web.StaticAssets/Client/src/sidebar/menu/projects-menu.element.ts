@@ -16,6 +16,7 @@ const STORAGE_EXPANDED = "uai-cw-expanded-projects";
 export class UaiCopilotWorkspaceProjectsMenuElement extends UmbLitElement {
     @state() private _projects: UaiSidebarProject[] = [];
     @state() private _activePath?: string;
+    @state() private _searching = false;
 
     #expanded = readExpanded();
 
@@ -24,6 +25,7 @@ export class UaiCopilotWorkspaceProjectsMenuElement extends UmbLitElement {
         this.consumeContext(UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT, (context) => {
             this.observe(context?.projects, (projects) => (this._projects = projects ?? []));
             this.observe(context?.activePath, (path) => (this._activePath = path));
+            this.observe(context?.search, (search) => (this._searching = (search ?? "").trim().length > 0));
         });
     }
 
@@ -50,11 +52,13 @@ export class UaiCopilotWorkspaceProjectsMenuElement extends UmbLitElement {
             (p) => p.projectId,
             (p) => {
                 const hasActiveChild = !!activeId && p.conversations.some((c) => c.id === activeId);
+                // While searching, every shown project has a match — expand them all.
+                const open = this._searching || this.#isOpen(p.projectId, hasActiveChild);
                 return html`
                     <uai-copilot-workspace-project-tree-item
                         .project=${p}
                         .activePath=${this._activePath}
-                        ?open=${this.#isOpen(p.projectId, hasActiveChild)}
+                        ?open=${open}
                         @toggle=${() => this.#toggle(p.projectId)}
                     ></uai-copilot-workspace-project-tree-item>
                 `;

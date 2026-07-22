@@ -39,11 +39,17 @@ function byActivityDesc(a: ConversationResponseModel, b: ConversationResponseMod
  * (id → display name); a project node is emitted for every entry — including empty ones, so a
  * newly-created project shows immediately. Conversations whose project id is not in the map (loose
  * or orphaned) fall into `recent`.
+ *
+ * When `includeEmptyProjects` is false (e.g. while searching, where `conversations` is already the
+ * filtered set), projects with no matching conversations are dropped so only projects that contain a
+ * match are shown.
  */
 export function groupConversations(
     conversations: readonly ConversationResponseModel[],
     projectNames: ReadonlyMap<string, string>,
+    options: { includeEmptyProjects?: boolean } = {},
 ): UaiSidebarModel {
+    const { includeEmptyProjects = true } = options;
     const pinned = conversations.filter((c) => c.isPinned).sort(byActivityDesc);
     const unpinned = conversations.filter((c) => !c.isPinned);
 
@@ -61,11 +67,14 @@ export function groupConversations(
     }
 
     // One node per project (empty included), most-recently-active first, empty ones last (by name).
-    const projects: UaiSidebarProject[] = [...projectNames.entries()].map(([projectId, name]) => ({
+    let projects: UaiSidebarProject[] = [...projectNames.entries()].map(([projectId, name]) => ({
         projectId,
         name,
         conversations: (byProject.get(projectId) ?? []).sort(byActivityDesc),
     }));
+    if (!includeEmptyProjects) {
+        projects = projects.filter((p) => p.conversations.length > 0);
+    }
     projects.sort((a, b) => {
         const ta = a.conversations.length ? activityTime(a.conversations[0]) : Number.NEGATIVE_INFINITY;
         const tb = b.conversations.length ? activityTime(b.conversations[0]) : Number.NEGATIVE_INFINITY;

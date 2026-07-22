@@ -1,6 +1,7 @@
 import { css, customElement, html, nothing, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiConversationRepository } from "../../../conversation/repository/conversation.repository.js";
+import { UaiProjectRepository } from "../../../project/repository/project.repository.js";
 import type { ConversationResponseModel } from "../../../conversation/types.js";
 import { copilotWorkspaceConversationPath } from "../../../paths.js";
 import "../../../conversation/new-chat-button.element.js";
@@ -16,17 +17,25 @@ const RECENT_LIMIT = 6;
 @customElement("uai-copilot-workspace-launcher")
 export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
     #conversationRepository = new UaiConversationRepository(this);
+    #projectRepository = new UaiProjectRepository(this);
 
     @state() private _recent: ConversationResponseModel[] = [];
+    @state() private _projectNames = new Map<string, string>();
 
     override connectedCallback() {
         super.connectedCallback();
         void this.#loadRecent();
+        void this.#loadProjects();
     }
 
     async #loadRecent() {
         const { data } = await this.#conversationRepository.requestCollection({ take: RECENT_LIMIT });
         this._recent = data?.items ?? [];
+    }
+
+    async #loadProjects() {
+        const { data } = await this.#projectRepository.requestCollection();
+        this._projectNames = new Map((data?.items ?? []).map((p) => [p.id, p.name]));
     }
 
     #open(path: string) {
@@ -55,10 +64,11 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
                                       (c) => html`
                                           <uui-ref-node
                                               name=${c.title?.trim() || this.localize.term("uaiCopilotWorkspace_untitledConversation")}
+                                              detail=${(c.projectId && this._projectNames.get(c.projectId)) || ""}
                                               @open=${() => this.#open(copilotWorkspaceConversationPath(c.id))}
                                               @click=${() => this.#open(copilotWorkspaceConversationPath(c.id))}
                                           >
-                                              <uui-icon slot="icon" name="icon-chat"></uui-icon>
+                                              <uui-icon slot="icon" name=${c.projectId && this._projectNames.has(c.projectId) ? "icon-folder" : "icon-chat"}></uui-icon>
                                           </uui-ref-node>
                                       `,
                                   )}

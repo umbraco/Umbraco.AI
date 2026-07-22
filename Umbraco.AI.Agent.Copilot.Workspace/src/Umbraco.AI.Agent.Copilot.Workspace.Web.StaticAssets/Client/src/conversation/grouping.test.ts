@@ -97,6 +97,19 @@ describe("groupConversations", () => {
         expect(empty.conversations).toEqual([]);
     });
 
+    it("drops empty projects when includeEmptyProjects is false (search mode)", () => {
+        const model = groupConversations(
+            [conv({ id: "a1", projectId: "A", lastMessageAt: daysAgo(1) })],
+            new Map([
+                ["A", "Alpha"],
+                ["Empty", "Empty Project"],
+            ]),
+            { includeEmptyProjects: false },
+        );
+        // Only the project with a matching conversation survives.
+        expect(model.projects.map((p) => p.projectId)).toEqual(["A"]);
+    });
+
     it("folds conversations with an unknown project id into recent", () => {
         const model = groupConversations(
             [conv({ id: "x", projectId: "missing", lastMessageAt: daysAgo(0) })],

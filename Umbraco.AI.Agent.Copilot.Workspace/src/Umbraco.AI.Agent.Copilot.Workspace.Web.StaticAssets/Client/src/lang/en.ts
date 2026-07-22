@@ -8,7 +8,7 @@ export default {
         "copilot-workspaceDescription": "Make this agent available in the Copilot Workspace.",
     },
     uaiCopilotWorkspace: {
-        sectionLabel: "Copilot Workspace",
+        sectionLabel: "Copilot",
         dashboardLabel: "Workspace",
 
         // Launcher (section landing)

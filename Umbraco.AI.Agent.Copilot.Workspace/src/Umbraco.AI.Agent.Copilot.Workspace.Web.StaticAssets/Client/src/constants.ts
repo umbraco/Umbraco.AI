@@ -18,6 +18,9 @@ export const UAI_COPILOT_WORKSPACE_API_NAME = "ai-copilot-workspace-management";
  */
 export const UAI_PROJECT_ENTITY_TYPE = "uai-copilot-workspace-project";
 
+/** Workspace alias for the project entity workspace (matches its manifests' condition + editor). */
+export const UAI_PROJECT_WORKSPACE_ALIAS = "Uai.CopilotWorkspace.Workspace.Project";
+
 /**
  * Window event fired when a conversation is created/renamed/moved/etc. from anywhere in the section,
  * so the sidebar list can reload. Used as a lightweight cross-region signal because the list (sidebar)

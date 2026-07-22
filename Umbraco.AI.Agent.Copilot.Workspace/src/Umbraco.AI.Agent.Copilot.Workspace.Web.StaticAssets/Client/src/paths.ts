@@ -19,3 +19,8 @@ export function copilotWorkspaceConversationPath(conversationId: string): string
 export function copilotWorkspaceProjectPath(projectId: string): string {
     return `${UAI_COPILOT_WORKSPACE_SECTION_PATH}/project/${encodeURIComponent(projectId)}`;
 }
+
+/** Deep link to create a new project. */
+export function copilotWorkspaceProjectCreatePath(): string {
+    return `${UAI_COPILOT_WORKSPACE_SECTION_PATH}/project/create`;
+}

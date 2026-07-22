@@ -1,4 +1,4 @@
-import { css, customElement, html, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UmbRoute } from "@umbraco-cms/backoffice/router";
 import type { ManifestSection, UmbSectionElement } from "@umbraco-cms/backoffice/section";
@@ -62,8 +62,18 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
             },
         },
         {
+            // Must precede "project/:id" so "create" isn't captured as an id.
+            path: "project/create",
+            component: () => import("../../project/workspace/project-workspace-editor.element.js"),
+            setup: (component) => {
+                (component as { create?: boolean }).create = true;
+                this._activeProjectId = undefined;
+                this._activeConversationId = undefined;
+            },
+        },
+        {
             path: "project/:id",
-            component: () => import("./views/workspace-project-view.element.js"),
+            component: () => import("../../project/workspace/project-workspace-editor.element.js"),
             setup: (component, info) => {
                 (component as { projectId?: string }).projectId = info.match.params.id;
                 this._activeProjectId = info.match.params.id;
@@ -72,7 +82,7 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
         },
         {
             path: "",
-            component: () => import("./views/workspace-empty-view.element.js"),
+            component: () => import("./views/workspace-launcher.element.js"),
             setup: () => {
                 this._activeConversationId = undefined;
                 this._activeProjectId = undefined;
@@ -131,13 +141,23 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
                     <main>
                         <umb-router-slot .routes=${this._routes}></umb-router-slot>
                     </main>
-                    ${this._rightCollapsed ? this.#renderCollapsedStrip() : this.#renderExpandedPanel()}
+                    ${this.#showContextPanel()
+                        ? this._rightCollapsed
+                            ? this.#renderCollapsedStrip()
+                            : this.#renderExpandedPanel()
+                        : nothing}
                 </div>
             </umb-split-panel>
         `;
     }
 
+    /** The context panel is a companion to an open conversation only (projects/launcher are full-width). */
+    #showContextPanel() {
+        return !!this._activeConversationId;
+    }
+
     #mainAreaStyle() {
+        if (!this.#showContextPanel()) return "grid-template-columns: minmax(0, 1fr);";
         const rightColumn = this._rightCollapsed ? "2.5rem" : `${this._rightWidth}px`;
         return `grid-template-columns: minmax(0, 1fr) ${rightColumn};`;
     }

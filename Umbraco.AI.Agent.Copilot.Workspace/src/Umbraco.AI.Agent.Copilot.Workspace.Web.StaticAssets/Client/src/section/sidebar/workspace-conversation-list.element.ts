@@ -11,6 +11,7 @@ import type { ConversationResponseModel } from "../../conversation/types.js";
 import {
     copilotWorkspaceConversationPath,
     copilotWorkspaceProjectPath,
+    copilotWorkspaceProjectCreatePath,
     UAI_COPILOT_WORKSPACE_SECTION_PATH,
 } from "../../paths.js";
 import { UAI_COPILOT_WORKSPACE_CONVERSATIONS_CHANGED_EVENT } from "../../constants.js";
@@ -119,17 +120,10 @@ export class UaiCopilotWorkspaceConversationListElement
         }
     }
 
-    async #onNewProject() {
-        // The reactive project store updates the tree (empty folder appears) on the dispatched
-        // CREATED event — no manual reload needed here.
-        const { data } = await this.#projectRepository.create({
-            name: this.localize.term("uaiCopilotWorkspace_newProjectDefaultName"),
-            contextIds: [],
-            resources: [],
-        });
-        if (data?.id) {
-            this.#navigateTo(copilotWorkspaceProjectPath(data.id));
-        }
+    #onNewProject() {
+        // Open the project workspace in "create" mode; it scaffolds an unsaved project and creates
+        // it on Save (which dispatches CREATED → the reactive tree adds the folder).
+        this.#navigateTo(copilotWorkspaceProjectCreatePath());
     }
 
     async #onTogglePin(conversation: ConversationResponseModel) {

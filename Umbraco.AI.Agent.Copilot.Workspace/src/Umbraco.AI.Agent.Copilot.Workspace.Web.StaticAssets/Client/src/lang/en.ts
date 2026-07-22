@@ -11,6 +11,12 @@ export default {
         sectionLabel: "Copilot Workspace",
         dashboardLabel: "Workspace",
 
+        // Launcher (section landing)
+        launcherHeading: "Start a conversation",
+        launcherSubtitle: "Ask anything, or pick up where you left off.",
+        launcherStartInProject: "Start in a project",
+        launcherRecent: "Recent",
+
         // Conversation list
         newChat: "New chat",
         searchPlaceholder: "Search conversations",
@@ -58,6 +64,13 @@ export default {
             "Delete this project? Its conversations are kept but detached from the project. This cannot be undone.",
         projectNotFound: "This project could not be found.",
         projectNoConversations: "No conversations yet",
+        projectBack: "Back",
+        projectDetailsHeadline: "Details",
+        projectInfoHeadline: "Info",
+        projectInfoId: "Id",
+        projectInfoCreated: "Created",
+        projectInfoModified: "Last modified",
+        projectInfoUnsaved: "Unsaved",
 
         // Context panel
         contextTitle: "Context",

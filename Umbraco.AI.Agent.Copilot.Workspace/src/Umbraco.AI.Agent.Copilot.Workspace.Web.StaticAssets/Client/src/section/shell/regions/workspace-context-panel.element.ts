@@ -138,7 +138,12 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         }
         return html`
             ${projectContextIds.length > 0
-                ? html`<uai-context-picker readonly multiple .value=${projectContextIds}></uai-context-picker>`
+                ? html`<uai-context-picker
+                      readonly
+                      multiple
+                      .value=${projectContextIds}
+                      .readonlyHint=${this.localize.term("uaiCopilotWorkspace_contextInheritedHint")}
+                  ></uai-context-picker>`
                 : nothing}
             ${conversation
                 ? html`<uai-context-picker
@@ -156,7 +161,12 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         }
         return html`
             ${projectResources.length > 0
-                ? html`<uai-resource-list compact readonly .items=${projectResources}></uai-resource-list>`
+                ? html`<uai-resource-list
+                      compact
+                      readonly
+                      .items=${projectResources}
+                      .readonlyHint=${this.localize.term("uaiCopilotWorkspace_contextInheritedHint")}
+                  ></uai-resource-list>`
                 : nothing}
             ${conversation
                 ? html`<uai-resource-list

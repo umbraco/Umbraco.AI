@@ -87,5 +87,6 @@ export default {
         contextNoInstructions: "No instructions.",
         contextNoContexts: "No contexts attached.",
         contextNoResources: "No resources attached.",
+        contextInheritedHint: "Inherited from the project",
     },
 } satisfies UmbLocalizationDictionary;

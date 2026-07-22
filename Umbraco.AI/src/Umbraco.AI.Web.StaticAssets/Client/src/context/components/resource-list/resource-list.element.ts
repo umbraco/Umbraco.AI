@@ -38,6 +38,14 @@ export class UaiResourceListElement extends UmbLitElement {
     public readonly = false;
 
     /**
+     * Optional hint for readonly items. When set, each readonly row shows a disabled "no-entry" icon
+     * where the remove button would be (keeping tags aligned with editable rows) using this text as
+     * its tooltip — e.g. to explain the items are inherited and can't be removed here.
+     */
+    @property({ type: String })
+    public readonlyHint?: string;
+
+    /**
      * Compact mode renders the resources as a thin {@link https://uui.umbraco.com | uui-ref-list}
      * (one row per resource) with a slim full-width "Add" button, instead of the default thumbnail
      * card grid. Use where horizontal space is limited (e.g. the Copilot Workspace context panel).
@@ -174,9 +182,22 @@ export class UaiResourceListElement extends UmbLitElement {
                 <umb-icon slot="icon" name=${card.resourceType?.icon ?? "icon-document"}></umb-icon>
                 <uui-tag slot="tag" color=${tagColor}>${injectionLabel}</uui-tag>
                 ${this.readonly
-                    ? nothing
+                    ? this.#renderReadonlyHint()
                     : html`<uui-action-bar slot="actions">${this.#renderRemoveAction(card)}</uui-action-bar>`}
             </uui-ref-node>
+        `;
+    }
+
+    /** A disabled "no-entry" marker shown for readonly items when a {@link readonlyHint} is set —
+     * keeps tags aligned with editable rows and explains (via tooltip) why there's no remove button. */
+    #renderReadonlyHint() {
+        if (!this.readonlyHint) return nothing;
+        return html`
+            <uui-action-bar slot="actions">
+                <uui-button disabled compact label=${this.readonlyHint} title=${this.readonlyHint}>
+                    <uui-icon name="icon-block"></uui-icon>
+                </uui-button>
+            </uui-action-bar>
         `;
     }
 

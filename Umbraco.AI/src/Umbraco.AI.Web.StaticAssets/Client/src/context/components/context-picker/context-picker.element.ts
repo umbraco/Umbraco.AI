@@ -31,6 +31,14 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     public readonly = false;
 
     /**
+     * Optional hint for readonly items. When set, each readonly row shows a disabled "no-entry" icon
+     * where the remove button would be (keeping tags aligned with editable rows) using this text as
+     * its tooltip — e.g. to explain the items are inherited and can't be removed here.
+     */
+    @property({ type: String })
+    public readonlyHint?: string;
+
+    /**
      * Minimum number of required contexts.
      */
     @property({ type: Number })
@@ -201,23 +209,35 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
                     item.resourceCount > 0,
                     () => html` <uui-tag slot="tag" look="secondary">${item.resourceCount} resources</uui-tag> `,
                 )}
-                ${when(
-                    !this.readonly,
-                    () => html`
-                        <uui-action-bar slot="actions">
-                            <uui-button
-                                label="Remove"
-                                @click=${(e: Event) => {
-                                    e.stopPropagation();
-                                    this.#onRemove(item.unique);
-                                }}
-                            >
-                                <uui-icon name="icon-trash"></uui-icon>
-                            </uui-button>
-                        </uui-action-bar>
-                    `,
-                )}
+                ${this.readonly
+                    ? this.#renderReadonlyHint()
+                    : html`
+                          <uui-action-bar slot="actions">
+                              <uui-button
+                                  label="Remove"
+                                  @click=${(e: Event) => {
+                                      e.stopPropagation();
+                                      this.#onRemove(item.unique);
+                                  }}
+                              >
+                                  <uui-icon name="icon-trash"></uui-icon>
+                              </uui-button>
+                          </uui-action-bar>
+                      `}
             </uui-ref-node>
+        `;
+    }
+
+    /** A disabled "no-entry" marker shown for readonly items when a {@link readonlyHint} is set —
+     * keeps tags aligned with editable rows and explains (via tooltip) why there's no remove button. */
+    #renderReadonlyHint() {
+        if (!this.readonlyHint) return nothing;
+        return html`
+            <uui-action-bar slot="actions">
+                <uui-button disabled compact label=${this.readonlyHint} title=${this.readonlyHint}>
+                    <uui-icon name="icon-block"></uui-icon>
+                </uui-button>
+            </uui-action-bar>
         `;
     }
 

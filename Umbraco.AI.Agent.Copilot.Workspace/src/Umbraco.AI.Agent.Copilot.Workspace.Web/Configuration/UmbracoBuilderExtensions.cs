@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Copilot.Workspace.Core;
 using Umbraco.AI.Agent.Copilot.Workspace.Core.Authorization;
@@ -29,13 +30,19 @@ public static class UmbracoBuilderExtensions
                 policy.Requirements.Add(new CopilotWorkspaceSectionRequirement());
             });
 
-        // Register the single product OpenAPI document. Both the Conversations CRUD controllers and the
-        // Workspace stream/file controllers bind to it via [MapToApi] (house one-doc-per-product convention).
+        // Register the single product OpenAPI document. The Workspace stream/file controllers bind to it
+        // via a compile-time [MapToApi]; the host-agnostic Conversations CRUD controllers are bound to it
+        // (and gated behind the section policy) by the convention below (house one-doc-per-product).
         builder.WithUmbracoAIManagementApi(
             CopilotWorkspaceConstants.ManagementApi.ApiName,
             CopilotWorkspaceConstants.ManagementApi.ApiTitle,
             "Describes the Umbraco AI Copilot Workspace Management API for conversations, projects, and " +
             "persisted streaming, available when authenticated as a backoffice user with Copilot Workspace access.");
+
+        // Bind the reusable Conversations/Projects controllers into this product's document + section
+        // policy at runtime, so the Conversations web assembly carries no Copilot Workspace dependency.
+        builder.Services.Configure<MvcOptions>(options =>
+            options.Conventions.Add(new CopilotWorkspaceConversationsApiConvention()));
 
         // Stream + file controllers are auto-discovered (their DI dependencies — conversation/project
         // services, the ConversationChatHistoryProvider, and the IAIFileStore — are registered by the

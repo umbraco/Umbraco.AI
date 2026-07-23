@@ -1,3 +1,4 @@
+using Umbraco.AI.Agent.Conversations.Web.Api.Management.Common.Controllers;
 using Umbraco.AI.Agent.Conversations.Web.Api.Management.Conversations.Mapping;
 using Umbraco.AI.Agent.Conversations.Web.Api.Management.Projects.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -13,8 +14,9 @@ public static class UmbracoBuilderExtensions
 {
     /// <summary>
     /// Adds the Conversations management API (conversation + project CRUD controllers, mapping, models).
-    /// Controllers bind to the <c>ai-copilot-workspace-management</c> OpenAPI document registered by the
-    /// Workspace composer.
+    /// The controllers are host-agnostic: the hosting product binds them to its own OpenAPI document and
+    /// section-access policy via an application-model convention (see
+    /// <see cref="ConversationsManagementControllerBase"/>).
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>

@@ -33,7 +33,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     public override IReadOnlyList<string> StateKeys => [_sessionState.StateKey];
 
     /// <summary>
-    /// Binds a session to a persisted conversation. Called by the Workspace stream endpoint before the
+    /// Binds a session to a persisted conversation. Called by the host's stream endpoint before the
     /// run so <see cref="ProvideChatHistoryAsync"/>/<see cref="StoreChatHistoryAsync"/> know which
     /// conversation to load/persist.
     /// </summary>

@@ -1,8 +1,8 @@
 namespace Umbraco.AI.Agent.Conversations.Persistence.Projects;
 
 /// <summary>
-/// EF Core entity for a Copilot Workspace project (a named container grouping conversations plus
-/// reusable context attachments).
+/// EF Core entity for a project (a named container grouping conversations plus reusable context
+/// attachments).
 /// </summary>
 internal class AIProjectEntity
 {

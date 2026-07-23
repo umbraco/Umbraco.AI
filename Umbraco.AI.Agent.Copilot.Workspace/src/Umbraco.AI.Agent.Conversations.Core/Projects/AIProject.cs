@@ -3,8 +3,8 @@ namespace Umbraco.AI.Agent.Conversations.Core.Projects;
 // AIAttachedResource lives in the parent namespace (shared with conversations).
 
 /// <summary>
-/// A Copilot Workspace project (domain model): a named container grouping conversations plus reusable
-/// context attachments. A project has TWO distinct attachment mechanisms:
+/// A project (domain model): a named container grouping conversations plus reusable context
+/// attachments. A project has TWO distinct attachment mechanisms:
 /// <list type="bullet">
 /// <item><description><see cref="ContextIds"/> — references to existing <c>AIContext</c> entities.</description></item>
 /// <item><description><see cref="Resources"/> — its own directly-attached resources.</description></item>

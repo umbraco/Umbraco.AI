@@ -5,7 +5,7 @@ namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
 
 /// <summary>
 /// Default <see cref="IAIConversationService"/>. Enforces per-user ownership on top of the repository
-/// and purges a conversation's uploaded files (keyed by conversation id, per the Workspace
+/// and purges a conversation's uploaded files (keyed by conversation id, per the
 /// <c>threadId := conversationId</c> scheme) when it is deleted.
 /// </summary>
 internal sealed class AIConversationService : IAIConversationService

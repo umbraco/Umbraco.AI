@@ -10,7 +10,10 @@ public sealed class AIConversation
     /// <summary>Unique identifier (also used as the AG-UI threadId).</summary>
     public Guid Id { get; set; }
 
-    /// <summary>Optional owning project id.</summary>
+    /// <summary>
+    /// Optional owning project id — an opaque grouping reference. Conversations carry this id but do not
+    /// depend on the project's internals; resolving a project's contents is the host's responsibility.
+    /// </summary>
     public Guid? ProjectId { get; set; }
 
     /// <summary>Display title (auto-generated from the first exchange when empty).</summary>

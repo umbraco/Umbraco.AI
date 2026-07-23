@@ -26,7 +26,5 @@
     <ItemGroup>
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Core\Umbraco.AI.Agent.Conversations.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
-        <!-- References Workspace.Core for the shared section-access policy (interrogation-2 F-SEC). -->
-        <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Core\Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
     </ItemGroup>
 </Project>

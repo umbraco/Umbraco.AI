@@ -133,27 +133,31 @@ export class UaiChatElement extends UmbLitElement {
         return html`
             <div class="chat-container">
                 <div class="messages-area" ${ref(this.#messagesRef)}>
-                    ${this._messages.length === 0
-                        ? html`
-                              <div class="empty-state">
-                                  <uui-icon name="icon-chat"></uui-icon>
-                                  <p>Start a conversation with ${this._agentName || "an agent"}</p>
-                              </div>
-                          `
-                        : this.#renderMessages()}
+                    <div class="content-column">
+                        ${this._messages.length === 0
+                            ? html`
+                                  <div class="empty-state">
+                                      <uui-icon name="icon-chat"></uui-icon>
+                                      <p>Start a conversation with ${this._agentName || "an agent"}</p>
+                                  </div>
+                              `
+                            : this.#renderMessages()}
+                    </div>
                 </div>
 
-                ${this._agentState?.status && this._agentState.status !== "idle"
-                    ? html`<uai-agent-status
-                          .state=${this._agentState}
-                          @cancel=${this.#handleCancel}
-                      ></uai-agent-status>`
-                    : ""}
+                <div class="content-column composer">
+                    ${this._agentState?.status && this._agentState.status !== "idle"
+                        ? html`<uai-agent-status
+                              .state=${this._agentState}
+                              @cancel=${this.#handleCancel}
+                          ></uai-agent-status>`
+                        : ""}
 
-                <uai-chat-input
-                    ?disabled=${this._isRunning || !!this._pendingApproval}
-                    @send=${this.#handleSendMessage}
-                ></uai-chat-input>
+                    <uai-chat-input
+                        ?disabled=${this._isRunning || !!this._pendingApproval}
+                        @send=${this.#handleSendMessage}
+                    ></uai-chat-input>
+                </div>
             </div>
         `;
     }
@@ -186,12 +190,32 @@ export class UaiChatElement extends UmbLitElement {
             padding: var(--uui-size-space-2);
         }
 
+        /*
+         * Centres the message list and composer to an optional comfortable reading width while the
+         * scroll container (.messages-area) stays full width — so the scrollbar sits at the far edge.
+         * Defaults to no cap (full width), so surfaces that don't opt in (e.g. the Copilot sidebar)
+         * are unchanged; set --uai-chat-content-max-width to enable it.
+         */
+        .content-column {
+            width: 100%;
+            max-width: var(--uai-chat-content-max-width, none);
+            margin-inline: auto;
+            box-sizing: border-box;
+        }
+
+        /* Let the column fill the scroll area's height so the empty state can centre vertically. */
+        .messages-area > .content-column {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
         .empty-state {
             display: flex;
+            flex: 1;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
             color: var(--uui-color-text-alt);
             text-align: center;
             padding: var(--uui-size-space-5);

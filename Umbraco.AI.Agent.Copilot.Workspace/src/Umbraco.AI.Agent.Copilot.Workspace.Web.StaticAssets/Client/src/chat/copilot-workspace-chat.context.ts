@@ -17,7 +17,7 @@ import {
 } from "@umbraco-ai/agent-ui";
 import { UaiConversationRepository } from "../conversation/repository/conversation.repository.js";
 import type { ConversationResponseModel } from "../conversation/types.js";
-import { ServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
+import { UaiServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
 import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
@@ -43,12 +43,12 @@ function deriveConversationTitle(content: string): string {
  * choice onto the conversation (`agentIdOrAlias`); the backend resolves the actual agent server-side,
  * so agent selection does NOT reset the run controller (which would wipe the loaded history).
  */
-export class CopilotWorkspaceChatContext extends UmbControllerBase implements UaiChatContextApi {
+export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements UaiChatContextApi {
     public readonly IS_COPILOT_WORKSPACE_CONTEXT = true;
 
     #conversationRepository: UaiConversationRepository;
     #agentRepository: UaiWorkspaceAgentRepository;
-    #strategy: ServerPersistedConversationStrategy;
+    #strategy: UaiServerPersistedConversationStrategy;
     #runController: UaiRunController;
     #hitlContext: UaiHitlContext;
     #toolRendererManager: UaiToolRendererManager;
@@ -96,7 +96,7 @@ export class CopilotWorkspaceChatContext extends UmbControllerBase implements Ua
         this.#agentRepository = new UaiWorkspaceAgentRepository(host);
         this.#hitlContext = new UaiHitlContext(host);
         this.#toolRendererManager = new UaiToolRendererManager(host);
-        this.#strategy = new ServerPersistedConversationStrategy(this.#conversationRepository);
+        this.#strategy = new UaiServerPersistedConversationStrategy(this.#conversationRepository);
         const frontendToolManager = new UaiFrontendToolManager(host);
 
         this.#runController = new UaiRunController(host, this.#hitlContext, {
@@ -170,16 +170,7 @@ export class CopilotWorkspaceChatContext extends UmbControllerBase implements Ua
         if (!conversation) return;
         const agentIdOrAlias = !agent || agent.id === AUTO_AGENT.id ? "auto" : agent.id;
         this.#conversation = { ...conversation, agentIdOrAlias };
-        void this.#conversationRepository.update(conversation.id, {
-            title: conversation.title ?? null,
-            projectId: conversation.projectId ?? null,
-            agentIdOrAlias,
-            profileId: conversation.profileId ?? null,
-            contextIds: [...conversation.contextIds],
-            resources: [...conversation.resources],
-            isPinned: conversation.isPinned,
-            isArchived: conversation.isArchived,
-        });
+        void this.#conversationRepository.setAgentIdOrAlias(conversation, agentIdOrAlias);
     }
 
     respondToHitl(response: string): void {
@@ -218,11 +209,11 @@ export class CopilotWorkspaceChatContext extends UmbControllerBase implements Ua
     }
 }
 
-export const UAI_COPILOT_WORKSPACE_CHAT_CONTEXT = new UmbContextToken<CopilotWorkspaceChatContext>(
+export const UAI_COPILOT_WORKSPACE_CHAT_CONTEXT = new UmbContextToken<UaiCopilotWorkspaceChatContext>(
     "UaiCopilotWorkspaceChatContext",
     undefined,
-    (context): context is CopilotWorkspaceChatContext =>
-        (context as CopilotWorkspaceChatContext).IS_COPILOT_WORKSPACE_CONTEXT,
+    (context): context is UaiCopilotWorkspaceChatContext =>
+        (context as UaiCopilotWorkspaceChatContext).IS_COPILOT_WORKSPACE_CONTEXT,
 );
 
-export default CopilotWorkspaceChatContext;
+export default UaiCopilotWorkspaceChatContext;

@@ -62,7 +62,7 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
     private _routes: UmbRoute[] = [
         {
             path: "conversation/:id",
-            component: () => import("./views/workspace-conversation-view.element.js"),
+            component: () => import("../../chat/conversation-view.element.js"),
             setup: (component, info) => {
                 (component as { conversationId?: string }).conversationId = info.match.params.id;
                 this._activeConversationId = info.match.params.id;

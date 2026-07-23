@@ -1,6 +1,6 @@
 import { UmbEntityActionBase, type UmbEntityActionArgs } from "@umbraco-cms/backoffice/entity-action";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { umbConfirmModal, umbOpenModal, UMB_ITEM_PICKER_MODAL } from "@umbraco-cms/backoffice/modal";
+import { umbConfirmModal, umbOpenModal } from "@umbraco-cms/backoffice/modal";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import { UaiConversationRepository } from "../repository/conversation.repository.js";
 import { UaiProjectRepository } from "../../project/repository/project.repository.js";
@@ -9,6 +9,7 @@ import {
     type UaiConversationEntityContext,
 } from "../entity/conversation-entity.context.js";
 import { UAI_RENAME_CONVERSATION_MODAL } from "../modal/rename-conversation-modal.token.js";
+import { UAI_PROJECT_PICKER_MODAL } from "../modal/project-picker-modal.token.js";
 import type { ConversationResponseModel } from "../types.js";
 
 /**
@@ -91,18 +92,17 @@ export class UaiConversationMoveAction extends UaiConversationActionBase {
 
         const localize = new UmbLocalizationController(this);
         const { data } = await new UaiProjectRepository(this).requestCollection();
-        const noProjectValue = "";
-        const items = [
-            { label: localize.term("uaiCopilotWorkspace_moveNoProject"), value: noProjectValue, icon: "icon-delete" },
-            ...(data?.items ?? []).map((p) => ({ label: p.name, value: p.id, icon: "icon-folder" })),
-        ];
 
-        const chosen = await umbOpenModal(this, UMB_ITEM_PICKER_MODAL, {
-            data: { headline: localize.term("uaiCopilotWorkspace_moveHeadline"), items },
+        const chosen = await umbOpenModal(this, UAI_PROJECT_PICKER_MODAL, {
+            data: {
+                headline: localize.term("uaiCopilotWorkspace_moveHeadline"),
+                noProjectLabel: localize.term("uaiCopilotWorkspace_moveNoProject"),
+                projects: (data?.items ?? []).map((p) => ({ id: p.id, name: p.name, description: p.description })),
+            },
         }).catch(() => undefined);
         if (!chosen) return;
 
-        const projectId = chosen.value === noProjectValue ? null : chosen.value;
+        const projectId = chosen.projectId;
         if ((conversation.projectId ?? null) === projectId) return;
         await this.repository.moveToProject(conversation, projectId);
     }

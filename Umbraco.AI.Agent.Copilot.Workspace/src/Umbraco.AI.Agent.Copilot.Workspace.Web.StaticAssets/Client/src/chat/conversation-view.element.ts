@@ -1,16 +1,16 @@
 import { css, customElement, html, property, query } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { CopilotWorkspaceChatContext } from "../../../chat/copilot-workspace-chat.context.js";
+import { UaiCopilotWorkspaceChatContext } from "./copilot-workspace-chat.context.js";
 
 /**
- * Center-region view for an open conversation. Hosts a {@link CopilotWorkspaceChatContext} (which
+ * Center-region view for an open conversation. Hosts a {@link UaiCopilotWorkspaceChatContext} (which
  * provides `UAI_CHAT_CONTEXT` + `UAI_HITL_CONTEXT` to the subtree) and renders the shared Agent.UI
  * `<uai-chat>` against it. The router reuses this element across conversations, so a changed
  * `conversationId` rebinds the context to the new conversation (loads its persisted history).
  */
 @customElement("uai-copilot-workspace-conversation-view")
 export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
-    #context = new CopilotWorkspaceChatContext(this);
+    #context = new UaiCopilotWorkspaceChatContext(this);
     #agentsLoaded = false;
 
     /** The shared chat element; used to focus its composer when the conversation changes. */

@@ -78,6 +78,11 @@ export class UaiConversationRepository extends UmbRepositoryBase {
         return this.update(conversation.id, { ...toUpdateModel(conversation), projectId });
     }
 
+    /** Sets the conversation's chosen agent (id/alias, or "auto"); the server resolves it on the next turn. */
+    setAgentIdOrAlias(conversation: ConversationResponseModel, agentIdOrAlias: string) {
+        return this.update(conversation.id, { ...toUpdateModel(conversation), agentIdOrAlias });
+    }
+
     /** Sets the conversation's own attached context ids (stacked on top of its project's). */
     setContextIds(conversation: ConversationResponseModel, contextIds: string[]) {
         return this.update(conversation.id, { ...toUpdateModel(conversation), contextIds });

@@ -1,10 +1,10 @@
 import { css, customElement, html, nothing, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
-import { UaiConversationEntityContext } from "../../conversation/entity/conversation-entity.context.js";
-import type { ConversationResponseModel } from "../../conversation/types.js";
-import { UAI_CONVERSATION_ENTITY_TYPE } from "../../constants.js";
-import { copilotWorkspaceConversationPath } from "../../paths.js";
+import { UaiConversationEntityContext } from "./entity/conversation-entity.context.js";
+import type { ConversationResponseModel } from "./types.js";
+import { UAI_CONVERSATION_ENTITY_TYPE } from "../constants.js";
+import { copilotWorkspaceConversationPath } from "../paths.js";
 
 /**
  * A single conversation node in the sidebar tree. Provides the standard `UMB_ENTITY_CONTEXT` plus the

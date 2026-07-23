@@ -1,13 +1,13 @@
 import { UmbSubmitWorkspaceAction, UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
-import { UAI_PROJECT_WORKSPACE_ALIAS, UAI_PROJECT_ENTITY_TYPE } from "../../constants.js";
+import { UAI_PROJECT_WORKSPACE_ALIAS } from "../../constants.js";
 
 const workspaceCondition = { alias: UMB_WORKSPACE_CONDITION_ALIAS, match: UAI_PROJECT_WORKSPACE_ALIAS };
 
 /**
- * Project workspace extensions: the Details/Info tab views, the Save action, and the ⋯-menu entity
- * actions (New chat / Delete). The workspace context itself is provided by the editor element (the
- * section shell routes to it), so there is no routable `workspace` manifest — these are resolved by
- * `<umb-workspace-editor alias="…">` and the workspace condition against the provided context.
+ * Project workspace extensions: the Details/Info tab views and the Save action. The workspace context
+ * itself is provided by the editor element (the section shell routes to it), so there is no routable
+ * `workspace` manifest — these are resolved by `<umb-workspace-editor alias="…">` and the workspace
+ * condition against the provided context. (Project entity actions live in ../entity-actions/manifests.)
  */
 export const projectWorkspaceManifests: UmbExtensionManifest[] = [
     {
@@ -36,25 +36,5 @@ export const projectWorkspaceManifests: UmbExtensionManifest[] = [
         api: UmbSubmitWorkspaceAction,
         meta: { label: "#buttons_save", look: "primary", color: "positive" },
         conditions: [workspaceCondition],
-    },
-    {
-        type: "entityAction",
-        kind: "default",
-        alias: "Uai.CopilotWorkspace.EntityAction.Project.NewChat",
-        name: "New Chat In Project Entity Action",
-        weight: 200,
-        api: () => import("../entity-actions/project-new-chat.action.js"),
-        forEntityTypes: [UAI_PROJECT_ENTITY_TYPE],
-        meta: { icon: "icon-add", label: "#uaiCopilotWorkspace_projectNewChat" },
-    },
-    {
-        type: "entityAction",
-        kind: "default",
-        alias: "Uai.CopilotWorkspace.EntityAction.Project.Delete",
-        name: "Delete Project Entity Action",
-        weight: 100,
-        api: () => import("../entity-actions/project-delete.action.js"),
-        forEntityTypes: [UAI_PROJECT_ENTITY_TYPE],
-        meta: { icon: "icon-trash", label: "#actions_delete" },
     },
 ];

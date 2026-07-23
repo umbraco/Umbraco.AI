@@ -5,11 +5,8 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiContextPickerElement } from "@umbraco-ai/core";
 import { UaiConversationRepository } from "../../../conversation/repository/conversation.repository.js";
 import { UaiProjectRepository } from "../../../project/repository/project.repository.js";
-import type {
-    ContextResourceModel,
-    ConversationResponseModel,
-    ProjectResponseModel,
-} from "../../../api/types.gen.js";
+import type { ConversationResponseModel } from "../../../conversation/types.js";
+import type { ContextResourceModel, ProjectResponseModel } from "../../../project/types.js";
 
 /** Minimal structural type for the globally-registered (but not type-exported) `uai-resource-list`. */
 interface ResourceListElement extends HTMLElement {
@@ -124,8 +121,14 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
                     ? html`<p class="instructions">${instructions}</p>`
                     : this.#renderEmpty("uaiCopilotWorkspace_contextNoInstructions"),
             )}
-            ${this.#renderBlock("uaiCopilotWorkspace_contextContextsHeading", this.#renderContexts(projectContextIds, conversation))}
-            ${this.#renderBlock("uaiCopilotWorkspace_contextResourcesHeading", this.#renderResources(projectResources, conversation))}
+            ${this.#renderBlock(
+                "uaiCopilotWorkspace_contextContextsHeading",
+                this.#renderContexts(projectContextIds, conversation),
+            )}
+            ${this.#renderBlock(
+                "uaiCopilotWorkspace_contextResourcesHeading",
+                this.#renderResources(projectResources, conversation),
+            )}
         `;
     }
 
@@ -234,10 +237,6 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
             .body > uui-loader {
                 display: block;
                 padding: var(--uui-size-space-4);
-            }
-            .project-name {
-                margin: 0;
-                padding: var(--uui-size-space-4) var(--uui-size-space-4) var(--uui-size-space-3);
             }
             .block {
                 border-bottom: 1px solid var(--uui-color-divider);

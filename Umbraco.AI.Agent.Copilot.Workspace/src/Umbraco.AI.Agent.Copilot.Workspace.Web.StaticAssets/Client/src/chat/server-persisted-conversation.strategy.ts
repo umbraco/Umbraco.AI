@@ -17,7 +17,7 @@ import { toDisplayMessages } from "../conversation/message-mapper.js";
  * Client creation reuses the shared `UaiHttpAgent` (all AG-UI body/tool/context/resume conversion)
  * with an injected `runner` that redirects the one stream call to the conversation endpoint.
  */
-export class ServerPersistedConversationStrategy implements UaiConversationStrategy {
+export class UaiServerPersistedConversationStrategy implements UaiConversationStrategy {
     #repository: UaiConversationRepository;
     #conversationId?: string;
     #persisted = 0;

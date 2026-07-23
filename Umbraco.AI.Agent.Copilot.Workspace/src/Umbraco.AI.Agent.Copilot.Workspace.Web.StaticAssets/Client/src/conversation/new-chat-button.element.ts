@@ -5,7 +5,7 @@ import type { UUIPopoverContainerElement } from "@umbraco-cms/backoffice/externa
 import { UaiConversationRepository } from "./repository/conversation.repository.js";
 import { UaiProjectRepository } from "../project/repository/project.repository.js";
 import { UAI_PROJECT_PICKER_MODAL } from "./modal/project-picker-modal.token.js";
-import { copilotWorkspaceConversationPath } from "../paths.js";
+import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../paths.js";
 
 /**
  * The primary "New chat" affordance — a CMS-style split button (à la Save and publish): the main
@@ -23,7 +23,7 @@ export class UaiCopilotWorkspaceNewChatButtonElement extends UmbLitElement {
     @query("#new-chat-menu") private _popover?: UUIPopoverContainerElement;
 
     #navigate(id: string) {
-        window.history.pushState({}, "", copilotWorkspaceConversationPath(id));
+        navigateToWorkspacePath(copilotWorkspaceConversationPath(id));
     }
 
     async #newChat() {

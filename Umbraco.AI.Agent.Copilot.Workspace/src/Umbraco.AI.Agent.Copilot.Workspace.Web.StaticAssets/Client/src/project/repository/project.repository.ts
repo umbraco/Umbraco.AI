@@ -1,49 +1,22 @@
-import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { BehaviorSubject, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
-import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
+import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import { UaiEntityActionEvent, dispatchActionEvent } from "@umbraco-ai/core";
 import { UaiProjectServerDataSource } from "./project.server.data-source.js";
 import { UAI_PROJECT_ENTITY_TYPE } from "../../constants.js";
-import type { ProjectRequestModel, ProjectResponseModel } from "../../api/types.gen.js";
+import type { ProjectRequestModel } from "../../api/types.gen.js";
 
 /**
- * Reactive repository for projects. Holds an observable map of projects (`projectItems$`) that
- * re-emits whenever a project is created/updated/deleted — anywhere in the app — by listening to
- * `UaiEntityActionEvent`s on the shared `UMB_ACTION_EVENT_CONTEXT` bus and dispatching them from its
- * own mutations. Every consumer news up its own instance; the global event bus keeps them in sync,
- * so creating a project in the editor makes the sidebar tree update with no manual reload.
- *
- * Mirrors `UaiAgentRepository`'s reactive-list pattern.
+ * Stateless repository for project CRUD (mirrors {@link UaiConversationRepository}). Mutations dispatch
+ * a `UaiEntityActionEvent` on the shared action-event bus so reactive observers — notably the sidebar
+ * context — refresh without a manual reload. The reactive project list itself is owned by the sidebar
+ * context (the only consumer that needs it), not by this repository, so consumers can freely `new` it.
  */
-export class UaiProjectRepository extends UmbControllerBase {
+export class UaiProjectRepository extends UmbRepositoryBase {
     #source: UaiProjectServerDataSource;
-    #projectItems$ = new BehaviorSubject<Map<string, ProjectResponseModel>>(new Map());
-    #isInitialized = false;
 
     constructor(host: UmbControllerHost) {
         super(host);
         this.#source = new UaiProjectServerDataSource(host);
-
-        this.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
-            context?.addEventListener(UaiEntityActionEvent.CREATED, this.#onProjectChanged as EventListener);
-            context?.addEventListener(UaiEntityActionEvent.UPDATED, this.#onProjectChanged as EventListener);
-            context?.addEventListener(UaiEntityActionEvent.DELETED, this.#onProjectDeleted as EventListener);
-        });
-    }
-
-    /** Observable of all projects, keyed by id. Re-emits on any create/update/delete. */
-    get projectItems$(): Observable<Map<string, ProjectResponseModel>> {
-        return this.#projectItems$.asObservable();
-    }
-
-    /** Loads all projects into the reactive map. Call once when the repository is first used. */
-    async initialize(): Promise<void> {
-        const { data } = await this.#source.getCollection();
-        const items = new Map<string, ProjectResponseModel>();
-        (data?.items ?? []).forEach((project) => items.set(project.id, project));
-        this.#projectItems$.next(items);
-        this.#isInitialized = true;
     }
 
     async requestCollection() {
@@ -76,35 +49,5 @@ export class UaiProjectRepository extends UmbControllerBase {
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(id, UAI_PROJECT_ENTITY_TYPE));
         }
         return result;
-    }
-
-    #onProjectChanged = (event: UaiEntityActionEvent) => {
-        if (!this.#isInitialized || event.getEntityType() !== UAI_PROJECT_ENTITY_TYPE) return;
-        const unique = event.getUnique();
-        if (unique) void this.#refreshEntry(unique);
-    };
-
-    #onProjectDeleted = (event: UaiEntityActionEvent) => {
-        if (!this.#isInitialized || event.getEntityType() !== UAI_PROJECT_ENTITY_TYPE) return;
-        const unique = event.getUnique();
-        if (unique) this.#removeEntry(unique);
-    };
-
-    async #refreshEntry(id: string): Promise<void> {
-        const { data, error } = await this.#source.getById(id);
-        if (error || !data) {
-            this.#removeEntry(id);
-            return;
-        }
-        const current = new Map(this.#projectItems$.value);
-        current.set(id, data);
-        this.#projectItems$.next(current);
-    }
-
-    #removeEntry(id: string): void {
-        const current = new Map(this.#projectItems$.value);
-        if (current.delete(id)) {
-            this.#projectItems$.next(current);
-        }
     }
 }

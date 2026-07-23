@@ -8,7 +8,7 @@ import type {
 } from "./rename-conversation-modal.token.js";
 
 /** Small single-input modal for renaming a conversation (opened by the Rename entity action). */
-@customElement("uai-rename-conversation-modal")
+@customElement("uai-copilot-workspace-rename-conversation-modal")
 export class UaiRenameConversationModalElement extends UmbModalBaseElement<
     UaiRenameConversationModalData,
     UaiRenameConversationModalValue
@@ -85,6 +85,6 @@ export default UaiRenameConversationModalElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-rename-conversation-modal": UaiRenameConversationModalElement;
+        "uai-copilot-workspace-rename-conversation-modal": UaiRenameConversationModalElement;
     }
 }

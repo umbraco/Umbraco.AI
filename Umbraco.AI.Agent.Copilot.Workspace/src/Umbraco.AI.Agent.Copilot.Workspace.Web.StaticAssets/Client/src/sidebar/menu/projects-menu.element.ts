@@ -2,7 +2,7 @@ import { customElement, html, nothing, repeat, state } from "@umbraco-cms/backof
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT } from "../sidebar.context.js";
 import type { UaiSidebarProject } from "../../conversation/grouping.js";
-import "../../section/sidebar/project-tree-item.element.js";
+import "../../project/tree-item.element.js";
 
 const STORAGE_EXPANDED = "uai-cw-expanded-projects";
 

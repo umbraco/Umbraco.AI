@@ -10,15 +10,21 @@ export interface UaiProjectPickerModalItem {
 
 export interface UaiProjectPickerModalData {
     projects: UaiProjectPickerModalItem[];
+    /** Optional custom dialog headline (defaults to the "New chat in a project" term). */
+    headline?: string;
+    /** When set, a leading "no project" row is shown that resolves `{ projectId: null }` (used by Move). */
+    noProjectLabel?: string;
 }
 
 export interface UaiProjectPickerModalValue {
-    projectId: string;
+    /** The chosen project id, or `null` when the "no project" row was picked. */
+    projectId: string | null;
 }
 
 /**
- * Centered "create-style" picker for choosing which project to start a chat in (mirrors the CMS create
- * modal). Distinct from the side `UMB_ITEM_PICKER_MODAL` used for move-to-project, which stays a flyout.
+ * Centered "create-style" picker for choosing a project (mirrors the CMS create modal). Shared by both
+ * "New chat in a project" (start a chat) and the Move-to-project entity action (via `noProjectLabel`,
+ * which adds a "remove from project" option).
  */
 export const UAI_PROJECT_PICKER_MODAL = new UmbModalToken<UaiProjectPickerModalData, UaiProjectPickerModalValue>(
     UAI_PROJECT_PICKER_MODAL_ALIAS,

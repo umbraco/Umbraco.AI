@@ -9,7 +9,11 @@ import { UaiProjectWorkspaceContext } from "./project-workspace.context.js";
 import { UAI_PROJECT_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiProjectDetailModel } from "../types.js";
 import { UAI_EMPTY_GUID } from "../types.js";
-import { copilotWorkspaceProjectPath, UAI_COPILOT_WORKSPACE_SECTION_PATH } from "../../paths.js";
+import {
+    copilotWorkspaceProjectPath,
+    navigateToWorkspacePath,
+    UAI_COPILOT_WORKSPACE_SECTION_PATH,
+} from "../../paths.js";
 
 // The workspace views + Save action + Delete are contributed via manifests; importing them keeps
 // their tabs available even though this element mounts the workspace context directly.
@@ -55,7 +59,7 @@ export class UaiCopilotWorkspaceProjectWorkspaceEditorElement extends UmbFormCon
         this.observe(this.#context.unique, (unique) => {
             if (this.create && !this.#didNavigateForCreate && unique && unique !== UAI_EMPTY_GUID) {
                 this.#didNavigateForCreate = true;
-                window.history.pushState({}, "", copilotWorkspaceProjectPath(unique));
+                navigateToWorkspacePath(copilotWorkspaceProjectPath(unique));
             }
         });
 
@@ -115,11 +119,14 @@ export class UaiCopilotWorkspaceProjectWorkspaceEditorElement extends UmbFormCon
 
                 ${when(
                     !this._isNew,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
 
                 <div slot="footer-info" id="footer">
-                    <a href=${UAI_COPILOT_WORKSPACE_SECTION_PATH}>${this.localize.term("uaiCopilotWorkspace_sectionLabel")}</a>
+                    <a href=${UAI_COPILOT_WORKSPACE_SECTION_PATH}
+                        >${this.localize.term("uaiCopilotWorkspace_sectionLabel")}</a
+                    >
                     / ${this._model.name || this.localize.term("uaiCopilotWorkspace_newProjectDefaultName")}
                 </div>
             </umb-workspace-editor>

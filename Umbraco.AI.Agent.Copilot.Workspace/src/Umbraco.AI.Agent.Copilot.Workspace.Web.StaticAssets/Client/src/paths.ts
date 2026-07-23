@@ -24,3 +24,13 @@ export function copilotWorkspaceProjectPath(projectId: string): string {
 export function copilotWorkspaceProjectCreatePath(): string {
     return `${UAI_COPILOT_WORKSPACE_SECTION_PATH}/project/create`;
 }
+
+/**
+ * Navigates the backoffice to an in-app path. The single place programmatic navigation happens, so all
+ * callers behave identically. Uses `history.pushState` (the section's `<umb-router-slot>` resolves the
+ * new location and the sidebar tracks it via the router's `navigationend` event — see
+ * `UaiCopilotWorkspaceSidebarContext`); centralized here so that contract lives in one documented spot.
+ */
+export function navigateToWorkspacePath(path: string): void {
+    window.history.pushState({}, "", path);
+}

@@ -1,9 +1,9 @@
 import { css, customElement, html, nothing, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiConversationRepository } from "../../../conversation/repository/conversation.repository.js";
-import { UaiProjectRepository } from "../../../project/repository/project.repository.js";
 import type { ConversationResponseModel } from "../../../conversation/types.js";
-import { copilotWorkspaceConversationPath } from "../../../paths.js";
+import { UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT } from "../../../sidebar/sidebar.context.js";
+import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../../../paths.js";
 import "../../../conversation/new-chat-button.element.js";
 
 const RECENT_LIMIT = 6;
@@ -17,15 +17,24 @@ const RECENT_LIMIT = 6;
 @customElement("uai-copilot-workspace-launcher")
 export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
     #conversationRepository = new UaiConversationRepository(this);
-    #projectRepository = new UaiProjectRepository(this);
 
     @state() private _recent: ConversationResponseModel[] = [];
     @state() private _projectNames = new Map<string, string>();
 
+    constructor() {
+        super();
+        // Project names come from the shared sidebar context (provided by the shell) — the launcher only
+        // needs them to label recent conversations, so there's no need for a separate project fetch.
+        this.consumeContext(UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT, (context) => {
+            this.observe(context?.projects, (projects) => {
+                this._projectNames = new Map((projects ?? []).map((p) => [p.projectId, p.name]));
+            });
+        });
+    }
+
     override connectedCallback() {
         super.connectedCallback();
         void this.#loadRecent();
-        void this.#loadProjects();
     }
 
     async #loadRecent() {
@@ -33,13 +42,8 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
         this._recent = data?.items ?? [];
     }
 
-    async #loadProjects() {
-        const { data } = await this.#projectRepository.requestCollection();
-        this._projectNames = new Map((data?.items ?? []).map((p) => [p.id, p.name]));
-    }
-
     #open(path: string) {
-        window.history.pushState({}, "", path);
+        navigateToWorkspacePath(path);
     }
 
     override render() {
@@ -63,7 +67,8 @@ export class UaiCopilotWorkspaceLauncherElement extends UmbLitElement {
                                       (c) => c.id,
                                       (c) => html`
                                           <uui-ref-node
-                                              name=${c.title?.trim() || this.localize.term("uaiCopilotWorkspace_untitledConversation")}
+                                              name=${c.title?.trim() ||
+                                              this.localize.term("uaiCopilotWorkspace_untitledConversation")}
                                               detail=${(c.projectId && this._projectNames.get(c.projectId)) || ""}
                                               @open=${() => this.#open(copilotWorkspaceConversationPath(c.id))}
                                               @click=${() => this.#open(copilotWorkspaceConversationPath(c.id))}

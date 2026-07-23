@@ -8,7 +8,7 @@ import { UaiConversationRepository } from "../conversation/repository/conversati
 import { UaiProjectRepository } from "../project/repository/project.repository.js";
 import { groupConversations, type UaiSidebarModel } from "../conversation/grouping.js";
 import type { ConversationResponseModel } from "../conversation/types.js";
-import { UAI_CONVERSATION_ENTITY_TYPE } from "../constants.js";
+import { UAI_CONVERSATION_ENTITY_TYPE, UAI_PROJECT_ENTITY_TYPE } from "../constants.js";
 
 const EMPTY_MODEL: UaiSidebarModel = { pinned: [], projects: [], recent: [], isEmpty: true };
 
@@ -44,19 +44,14 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
 
         window.addEventListener("navigationend", this.#onNavigationEnd);
 
-        // Conversations refresh via the shared action-event bus (projects via their reactive store).
+        // Both conversations and projects refresh off the shared action-event bus.
         this.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
-            context?.addEventListener(UaiEntityActionEvent.CREATED, this.#onConversationEvent as EventListener);
-            context?.addEventListener(UaiEntityActionEvent.UPDATED, this.#onConversationEvent as EventListener);
-            context?.addEventListener(UaiEntityActionEvent.DELETED, this.#onConversationEvent as EventListener);
+            context?.addEventListener(UaiEntityActionEvent.CREATED, this.#onEntityEvent as EventListener);
+            context?.addEventListener(UaiEntityActionEvent.UPDATED, this.#onEntityEvent as EventListener);
+            context?.addEventListener(UaiEntityActionEvent.DELETED, this.#onEntityEvent as EventListener);
         });
 
-        this.observe(this.#projectRepository.projectItems$, (projects) => {
-            this.#projectNames = new Map([...projects].map(([id, p]) => [id, p.name]));
-            this.#recompute();
-        });
-        void this.#projectRepository.initialize();
-
+        void this.#loadProjects();
         void this.#load();
     }
 
@@ -74,14 +69,22 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
         void this.#load();
     }
 
-    #onConversationEvent = (event: UaiEntityActionEvent) => {
-        if (event.getEntityType() === UAI_CONVERSATION_ENTITY_TYPE) void this.#load();
+    #onEntityEvent = (event: UaiEntityActionEvent) => {
+        const type = event.getEntityType();
+        if (type === UAI_CONVERSATION_ENTITY_TYPE) void this.#load();
+        else if (type === UAI_PROJECT_ENTITY_TYPE) void this.#loadProjects();
     };
 
     async #load(): Promise<void> {
         const search = this.#search.getValue();
         const { data } = await this.#conversationRepository.requestCollection({ search: search || undefined });
         this.#conversations = data?.items ?? [];
+        this.#recompute();
+    }
+
+    async #loadProjects(): Promise<void> {
+        const { data } = await this.#projectRepository.requestCollection();
+        this.#projectNames = new Map((data?.items ?? []).map((p) => [p.id, p.name]));
         this.#recompute();
     }
 

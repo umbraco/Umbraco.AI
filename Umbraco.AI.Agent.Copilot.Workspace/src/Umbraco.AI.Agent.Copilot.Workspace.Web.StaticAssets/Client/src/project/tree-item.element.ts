@@ -1,10 +1,10 @@
 import { css, customElement, html, nothing, property, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
-import type { UaiSidebarProject } from "../../conversation/grouping.js";
-import { UAI_PROJECT_ENTITY_TYPE } from "../../constants.js";
-import { copilotWorkspaceProjectPath } from "../../paths.js";
-import "./conversation-tree-item.element.js";
+import type { UaiSidebarProject } from "../conversation/grouping.js";
+import { UAI_PROJECT_ENTITY_TYPE } from "../constants.js";
+import { copilotWorkspaceProjectPath } from "../paths.js";
+import "../conversation/tree-item.element.js";
 
 /**
  * A collapsible project node in the sidebar tree. Uses `uui-menu-item` (the same chrome as

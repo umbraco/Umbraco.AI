@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { debounce } from "@umbraco-cms/backoffice/utils";
 import type { UUIInputElement } from "@umbraco-cms/backoffice/external/uui";
 import { UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT, type UaiCopilotWorkspaceSidebarContext } from "./sidebar.context.js";
-import { copilotWorkspaceProjectCreatePath } from "../paths.js";
+import { copilotWorkspaceProjectCreatePath, navigateToWorkspacePath } from "../paths.js";
 import "../conversation/new-chat-button.element.js";
 
 /**
@@ -32,7 +32,7 @@ export class UaiCopilotWorkspaceSidebarHeaderElement extends UmbLitElement {
     }
 
     #onNewProject() {
-        window.history.pushState({}, "", copilotWorkspaceProjectCreatePath());
+        navigateToWorkspacePath(copilotWorkspaceProjectCreatePath());
     }
 
     override render() {

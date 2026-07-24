@@ -1,13 +1,10 @@
-import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
-import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiContextPickerElement } from "@umbraco-ai/core";
-import { UaiConversationRepository } from "../../../conversation/repository/conversation.repository.js";
-import { UaiConversationUpdatedController } from "../../../conversation/conversation-updated.controller.js";
-import { UaiProjectRepository } from "../../../project/repository/project.repository.js";
-import type { ConversationResponseModel } from "../../../conversation/types.js";
-import type { ContextResourceModel, ProjectResponseModel } from "../../../project/types.js";
+import { UAI_CONVERSATION_WORKSPACE_CONTEXT, type UaiConversationWorkspaceContext } from "./conversation-workspace.context.js";
+import type { ConversationResponseModel } from "../types.js";
+import type { ContextResourceModel, ProjectResponseModel } from "../../project/types.js";
 
 /** Minimal structural type for the globally-registered (but not type-exported) `uai-resource-list`. */
 interface ResourceListElement extends HTMLElement {
@@ -15,96 +12,41 @@ interface ResourceListElement extends HTMLElement {
 }
 
 /**
- * Right region: the context panel. Shows the context the open conversation runs with, in two stacked
- * layers that mirror what the backend injects server-side:
+ * Right region of the conversation workspace: the context the open conversation runs with, in two
+ * stacked layers that mirror what the backend injects server-side:
  *  - <b>inherited from the project</b> (read-only) — its instructions, attached contexts, resources;
  *  - <b>this conversation</b> (editable) — contexts and resources attached to this conversation only,
  *    which stack on top of the project's rather than replacing them.
- * Each concept is its own auto-open collapsible block. Collapse/resize chrome and the open/close
- * toggle are owned by the shell; this element only renders the header title and the body.
  *
- * Driven by `conversationId` (conversation route) or `projectId` (project route), set by the shell
- * from the active route. A request token guards against out-of-order resolution when the user switches
- * conversations quickly.
+ * Purely reactive: it observes the workspace store (conversation + owning project) and routes its edits
+ * back through the store's writers — it never fetches or tracks the conversation itself. When the
+ * conversation is archived the whole panel is read-only.
  */
-@customElement("uai-copilot-workspace-context-panel")
-export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
-    #conversationRepository = new UaiConversationRepository(this);
-    #projectRepository = new UaiProjectRepository(this);
-    #requestToken = 0;
+@customElement("uai-copilot-workspace-conversation-context-panel")
+export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitElement {
+    #store?: UaiConversationWorkspaceContext;
 
-    @property({ type: String, attribute: false })
-    conversationId?: string;
-
-    @property({ type: String, attribute: false })
-    projectId?: string;
-
-    @state()
-    private _loading = false;
-
-    @state()
-    private _project?: ProjectResponseModel;
-
-    @state()
-    private _conversation?: ConversationResponseModel;
+    @state() private _resolved = false;
+    @state() private _project?: ProjectResponseModel;
+    @state() private _conversation?: ConversationResponseModel;
 
     constructor() {
         super();
-        // Reflect an archive/unarchive of the open conversation (triggered elsewhere) so the panel
-        // locks/unlocks in place. A lightweight re-fetch — no loader flash, unlike a full #resolve().
-        new UaiConversationUpdatedController(this, () => this.conversationId, () => void this.#refreshConversation());
-    }
-
-    async #refreshConversation(): Promise<void> {
-        if (!this.conversationId) return;
-        const { data } = await this.#conversationRepository.requestById(this.conversationId);
-        if (data && data.id === this.conversationId) {
-            this._conversation = data;
-        }
-    }
-
-    override willUpdate(changed: PropertyValues) {
-        if (changed.has("conversationId") || changed.has("projectId")) {
-            void this.#resolve();
-        }
-    }
-
-    async #resolve() {
-        const token = ++this.#requestToken;
-        this._loading = true;
-        this._project = undefined;
-        this._conversation = undefined;
-
-        // Conversation route: load the conversation first (carries its own contexts/resources), then
-        // resolve its owning project for the inherited layer.
-        if (this.conversationId) {
-            const { data } = await this.#conversationRepository.requestById(this.conversationId);
-            if (token !== this.#requestToken) return; // superseded by a newer request
-            this._conversation = data ?? undefined;
-        }
-
-        const projectId = this.projectId ?? this._conversation?.projectId ?? undefined;
-        if (projectId) {
-            const { data } = await this.#projectRepository.requestById(projectId);
-            if (token !== this.#requestToken) return;
-            this._project = data ?? undefined;
-        }
-
-        this._loading = false;
+        this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
+            this.#store = store;
+            this.observe(store?.conversation$, (c) => (this._conversation = c));
+            this.observe(store?.project$, (p) => (this._project = p));
+            this.observe(store?.isResolved$, (r) => (this._resolved = r ?? false));
+        });
     }
 
     #onContextsChange(event: Event) {
-        if (!this._conversation) return;
         const value = ((event.target as UaiContextPickerElement).value as string[] | undefined) ?? [];
-        this._conversation = { ...this._conversation, contextIds: value };
-        void this.#conversationRepository.setContextIds(this._conversation, value);
+        this.#store?.setContexts(value);
     }
 
     #onResourcesChange(event: Event) {
-        if (!this._conversation) return;
-        const items = [...(event.target as ResourceListElement).items];
-        this._conversation = { ...this._conversation, resources: items };
-        void this.#conversationRepository.setResources(this._conversation, items);
+        this.#store?.setResources([...(event.target as ResourceListElement).items]);
     }
 
     override render() {
@@ -117,7 +59,7 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
     }
 
     #renderBody() {
-        if (this._loading) {
+        if (!this._resolved) {
             return html`<uui-loader></uui-loader>`;
         }
         if (!this._conversation && !this._project) {
@@ -133,11 +75,11 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
         return html`
             ${project
                 ? this.#renderBlock(
-                "uaiCopilotWorkspace_contextInstructionsHeading",
-                    instructions
-                        ? html`<p class="instructions">${instructions}</p>`
-                        : this.#renderEmpty("uaiCopilotWorkspace_contextNoInstructions"),
-                )
+                      "uaiCopilotWorkspace_contextInstructionsHeading",
+                      instructions
+                          ? html`<p class="instructions">${instructions}</p>`
+                          : this.#renderEmpty("uaiCopilotWorkspace_contextNoInstructions"),
+                  )
                 : nothing}
             ${this.#renderBlock(
                 "uaiCopilotWorkspace_contextContextsHeading",
@@ -151,8 +93,8 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
     }
 
     // Contexts and resources render as a single list per block: the project's items are shown locked
-    // (read-only, no remove affordance) above the conversation's own editable items and a slim add
-    // control. No "from project"/"this conversation" labels — the missing remove button is the cue.
+    // (read-only) above the conversation's own editable items and a slim add control. The divider is only
+    // drawn when the editable picker actually has items (has-items class). When archived, all read-only.
     #renderContexts(projectContextIds: Array<string>, conversation?: ConversationResponseModel) {
         if (projectContextIds.length === 0 && !conversation) {
             return this.#renderEmpty("uaiCopilotWorkspace_contextNoContexts");
@@ -233,15 +175,14 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
                 height: 100%;
                 background: var(--uui-color-surface);
             }
-            /* Match the modal / workspace header (umb-body-layout): full header height,
-               surface background, h3 headline, bottom border in the standard border color. */
+            /* Match the modal / workspace header: full header height, surface background, h3 headline,
+               bottom border in the standard border color. */
             .header {
                 display: flex;
                 align-items: center;
                 box-sizing: border-box;
                 height: var(--umb-header-layout-height);
-                /* Left padding matches the body content so the title left-aligns with the blocks;
-                   right padding clears the shell's absolutely-positioned collapse toggle. */
+                /* Left padding matches the body content; right padding clears the layout's collapse toggle. */
                 padding: 0 2.5rem 0 var(--uui-size-space-4);
                 background: var(--uui-color-surface);
                 border-bottom: 1px solid var(--uui-color-border);
@@ -304,8 +245,7 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
             }
             /* Divider between the inherited (project) layer and the conversation's own layer. Only drawn
                when the second (editable) picker actually has items — an empty one shows just its add
-               control, where a boundary line would be noise. The has-items class is toggled reactively
-               by the panel as items are added/removed. */
+               control, where a boundary line would be noise. The has-items class is toggled reactively. */
             .block-body > uai-resource-list + uai-resource-list.has-items,
             .block-body > uai-context-picker + uai-context-picker.has-items {
                 border-top: 1px solid var(--uui-color-border);
@@ -323,4 +263,4 @@ export class UaiCopilotWorkspaceContextPanelElement extends UmbLitElement {
     ];
 }
 
-export default UaiCopilotWorkspaceContextPanelElement;
+export default UaiCopilotWorkspaceConversationContextPanelElement;

@@ -17,11 +17,15 @@ import {
 } from "@umbraco-ai/agent-ui";
 import { UaiConversationRepository } from "../conversation/repository/conversation.repository.js";
 import type { ConversationResponseModel } from "../conversation/types.js";
+import {
+    UAI_CONVERSATION_WORKSPACE_CONTEXT,
+    type UaiConversationTarget,
+    type UaiConversationWorkspaceContext,
+} from "../conversation/workspace/conversation-workspace.context.js";
 import { UaiServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
 import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
-import { stashPendingFirstMessage } from "./pending-first-message.js";
+import { stashPendingFirstMessage, takePendingFirstMessage } from "./pending-first-message.js";
 import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../paths.js";
-import { UaiConversationUpdatedController } from "../conversation/conversation-updated.controller.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
 const AUTO_AGENT: UaiAgentItem = { id: "auto", name: "Auto", alias: "auto" };
@@ -36,15 +40,21 @@ function deriveConversationTitle(content: string): string {
     return text.length > AUTO_TITLE_MAX_LENGTH ? `${text.slice(0, AUTO_TITLE_MAX_LENGTH).trimEnd()}…` : text;
 }
 
+/** A stable key for a workspace target, to skip re-initialising the run controller for the same one. */
+function targetKey(target: UaiConversationTarget): string {
+    return target.isDraft ? "draft" : (target.id ?? "none");
+}
+
 /**
- * Chat context for the Copilot Workspace section. Implements `UaiChatContextApi` so the shared
- * `<uai-chat>` subtree drives off it, wrapping a `UaiRunController` configured with the
- * server-persisted conversation strategy (durable history; the client sends only the new turn).
+ * Chat runtime for the Copilot Workspace. Implements `UaiChatContextApi` so the shared `<uai-chat>`
+ * subtree drives off it, wrapping a `UaiRunController` on the server-persisted conversation strategy
+ * (durable history; the client sends only the new turn).
  *
- * Differs from the contextual Copilot context: no entity/adapter context (system-wide chat), and the
- * active conversation is switchable via {@link setConversation}. The agent picker persists the user's
- * choice onto the conversation (`agentIdOrAlias`); the backend resolves the actual agent server-side,
- * so agent selection does NOT reset the run controller (which would wipe the loaded history).
+ * It is NOT the source of truth for *which* conversation is open — that is the workspace store
+ * ({@link UaiConversationWorkspaceContext}), which it consumes: it re-keys its thread reactively off the
+ * store's {@link UaiConversationWorkspaceContext.target$} and resolves the agent picker off
+ * `conversation$`. It owns only the chat mechanics: the run controller, the agent picker, sending, and
+ * draft→create-on-first-message promotion.
  */
 export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements UaiChatContextApi {
     public readonly IS_COPILOT_WORKSPACE_CONTEXT = true;
@@ -56,34 +66,22 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     #hitlContext: UaiHitlContext;
     #toolRendererManager: UaiToolRendererManager;
 
+    #store?: UaiConversationWorkspaceContext;
+
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
     #agentsLoading = new UmbBooleanState(false);
-    /** True when the open conversation is archived — the shared chat renders read-only in that case. */
-    #readonly = new UmbBooleanState(false);
-    /**
-     * False while a conversation's mode is still being resolved (its metadata is loading), so the chat
-     * can withhold the composer/read-only notice until it knows which to show — otherwise the composer
-     * flashes for the moment before an archived conversation resolves to read-only.
-     */
-    #ready = new UmbBooleanState(false);
 
-    #conversationId?: string;
+    /** Local mirror of the store's open conversation, for agent resolution + auto-titling. */
     #conversation?: ConversationResponseModel;
-
-    /** Draft mode: no conversation exists yet; it's created on the first sent message. */
-    #isDraft = false;
-    #draftProjectId?: string;
+    /** The target the run controller is currently keyed to (guards duplicate re-inits). */
+    #currentTargetKey?: string;
     /** Guards against a second send racing the create request during draft promotion. */
     #creating = false;
 
     readonly agents = this.#agents.asObservable();
     readonly selectedAgent = this.#selectedAgent.asObservable();
     readonly agentsLoading = this.#agentsLoading.asObservable();
-    /** Observable read-only flag: true while the open conversation is archived. */
-    readonly isReadonly$ = this.#readonly.asObservable();
-    /** Observable: true once the open conversation's mode (editable vs read-only) is known. */
-    readonly isReady$ = this.#ready.asObservable();
 
     get messages$() {
         return this.#runController.messages$;
@@ -127,11 +125,10 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
             interruptHandlers: [new UaiHitlInterruptHandler(this), new UaiDefaultInterruptHandler()],
         });
 
-        // Maintain the picker's agent list (with an "Auto" option when >1 agent), keeping the
-        // current selection valid as the catalog loads/changes. Agents load asynchronously and often
-        // arrive AFTER setConversation()/startDraft() have already run (with an empty list, leaving no
-        // selection), so default-select whenever there's no valid current pick — not only when an
-        // existing pick was invalidated. Otherwise the picker stays empty even though agents exist.
+        // Maintain the picker's agent list (with an "Auto" option when >1 agent), keeping the current
+        // selection valid as the catalog loads/changes. Agents load asynchronously and often arrive AFTER
+        // a conversation opens (empty list, no selection), so default-select whenever there's no valid
+        // current pick — otherwise the picker stays empty even though agents exist.
         this.observe(this.#agentRepository.agentItems$, (agents) => {
             const displayAgents = agents.length > 1 ? [AUTO_AGENT, ...agents] : [...agents];
             this.#agents.setValue(displayAgents);
@@ -146,23 +143,16 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.provideContext(UAI_CHAT_CONTEXT, this);
         this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
 
-        // React to the open conversation being archived/unarchived elsewhere (e.g. its sidebar ⋯ menu)
-        // so the view flips its read-only state in place, without reloading the chat history.
-        new UaiConversationUpdatedController(this, () => this.#conversationId, () => void this.#refreshReadonly());
-    }
-
-    /** Re-reads the open conversation's archived flag and flips read-only, leaving history untouched. */
-    async #refreshReadonly(): Promise<void> {
-        if (!this.#conversationId) return;
-        const { data } = await this.#conversationRepository.requestById(this.#conversationId);
-        if (!data || data.id !== this.#conversationId) return;
-        this.#applyLoadedConversation(data);
-    }
-
-    /** Applies a freshly-loaded conversation's metadata that affects presentation (read-only state). */
-    #applyLoadedConversation(data: ConversationResponseModel | undefined): void {
-        this.#conversation = data ?? undefined;
-        this.#readonly.setValue(data?.isArchived ?? false);
+        // React to the store: re-key the thread when the open target changes, and resync the agent
+        // picker when the loaded conversation (its stored agent choice) arrives/changes.
+        this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
+            this.#store = store;
+            this.observe(store?.target$, (target) => target && void this.#syncTarget(target));
+            this.observe(store?.conversation$, (conversation) => {
+                this.#conversation = conversation;
+                this.#selectedAgent.setValue(this.#resolveSelectedAgent(this.#agents.getValue()));
+            });
+        });
     }
 
     async loadAgents(): Promise<void> {
@@ -172,56 +162,38 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     }
 
     /**
-     * Opens a conversation: binds the strategy, (re)creates the conversation-keyed client (which
-     * resets the thread), syncs the agent picker from the stored choice, then seeds the thread with
-     * persisted history. Re-entrant/no-op for the already-open conversation.
+     * Re-keys the run controller to the store's current target — a persisted conversation (reset the
+     * thread to a conversation-scoped client, load its history, then replay a draft's stashed first turn)
+     * or a fresh draft (empty thread). No-op for the target already keyed. The real agent is resolved
+     * server-side, so a synthetic per-target agent id is only used to force a client/thread reset.
      */
-    async setConversation(conversationId: string): Promise<void> {
-        if (this.#conversationId === conversationId) return;
-        this.#conversationId = conversationId;
-        this.#isDraft = false;
-        this.#draftProjectId = undefined;
-        // Mode not yet known — withhold the composer until the conversation resolves (avoids a flash of
-        // the input before an archived conversation switches to read-only).
-        this.#ready.setValue(false);
-
-        this.#runController.abortRun();
-        this.#strategy.setConversationId(conversationId);
-
-        // A synthetic per-conversation agent id makes setAgent recreate the (conversation-keyed)
-        // client and reset the thread; the real agent is resolved server-side.
-        this.#runController.setAgent({ id: `conversation:${conversationId}`, name: "Workspace", alias: "workspace" });
-
-        const { data } = await this.#conversationRepository.requestById(conversationId);
-        this.#applyLoadedConversation(data ?? undefined);
-        this.#ready.setValue(true);
-        this.#selectedAgent.setValue(this.#resolveSelectedAgent(this.#agents.getValue()));
-
-        await this.#runController.loadInitialMessages();
-    }
-
-    /**
-     * Starts a new draft conversation: nothing is persisted yet. Presents an empty thread with a working
-     * agent picker; the conversation is created (and this context promoted) on the first sent message
-     * via {@link sendUserMessage}. An optional `projectId` pre-attaches the eventual conversation.
-     */
-    async startDraft(projectId?: string): Promise<void> {
-        this.#conversationId = undefined;
-        this.#conversation = undefined;
-        this.#isDraft = true;
-        this.#draftProjectId = projectId;
+    async #syncTarget(target: UaiConversationTarget): Promise<void> {
+        // The store's initial target is "nothing open yet" (not a draft, no id) — ignore it; the route
+        // sets a real target moments later.
+        if (!target.isDraft && !target.id) return;
+        const key = targetKey(target);
+        if (key === this.#currentTargetKey) return;
+        this.#currentTargetKey = key;
         this.#creating = false;
-        this.#readonly.setValue(false);
-        // A draft is always editable; its mode is known immediately (no metadata fetch).
-        this.#ready.setValue(true);
 
         this.#runController.abortRun();
-        this.#strategy.setConversationId(undefined);
-        // Fresh synthetic id → recreate the client and reset the thread to empty (no persisted history).
-        this.#runController.setAgent({ id: "conversation:new", name: "Workspace", alias: "workspace" });
-        this.#selectedAgent.setValue(this.#resolveSelectedAgent(this.#agents.getValue()));
 
+        if (target.isDraft) {
+            this.#strategy.setConversationId(undefined);
+            this.#runController.setAgent({ id: "conversation:new", name: "Workspace", alias: "workspace" });
+            await this.#runController.loadInitialMessages();
+            return;
+        }
+
+        const id = target.id!;
+        this.#strategy.setConversationId(id);
+        this.#runController.setAgent({ id: `conversation:${id}`, name: "Workspace", alias: "workspace" });
         await this.#runController.loadInitialMessages();
+
+        // If this open is the promotion of a draft, replay the turn stashed before navigation, now that
+        // the (empty) history has loaded so the send appends onto it.
+        const pending = takePendingFirstMessage(id);
+        if (pending) await this.sendUserMessage(pending.content, pending.contentParts);
     }
 
     /** Resolves which picker option should be selected from the conversation's stored agent choice. */
@@ -238,12 +210,10 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         const agent = agentId ? this.#agents.getValue().find((a) => a.id === agentId) : undefined;
         this.#selectedAgent.setValue(agent);
 
-        // Persist the choice onto the conversation so the server resolves it on the next turn.
-        const conversation = this.#conversation;
-        if (!conversation) return;
-        const agentIdOrAlias = !agent || agent.id === AUTO_AGENT.id ? "auto" : agent.id;
-        this.#conversation = { ...conversation, agentIdOrAlias };
-        void this.#conversationRepository.setAgentIdOrAlias(conversation, agentIdOrAlias);
+        // Persist the choice onto the conversation (via the store) so the server resolves it next turn.
+        // A draft has no conversation yet; the pick is applied when it's created (see the handoff below).
+        if (!this.#conversation) return;
+        this.#store?.setAgentIdOrAlias(!agent || agent.id === AUTO_AGENT.id ? "auto" : agent.id);
     }
 
     respondToHitl(response: string): void {
@@ -253,7 +223,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     async sendUserMessage(content: string, contentParts?: UaiInputContent[]): Promise<void> {
         // A draft has no conversation yet — create it now (only the first message persists a conversation),
         // then hand the turn to the freshly-opened real view to stream.
-        if (this.#isDraft) {
+        if (this.#store?.isDraft()) {
             await this.#createFromDraftAndHandoff(content, contentParts);
             return;
         }
@@ -264,11 +234,10 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     }
 
     /**
-     * Persists the draft on its first message: creates the conversation (with a title derived from the
-     * message and the picked agent/project applied up front, so it never shows as "Untitled"), stashes
-     * the turn, and navigates to the real conversation. Opening that route remounts the view with a fresh
-     * context that replays the stashed turn — so the turn streams through the normal path, not this
-     * about-to-be-discarded draft context.
+     * Persists the draft on its first message: creates the conversation (title derived from the message,
+     * the picked agent/project applied up front), stashes the turn, and navigates to the real conversation.
+     * Opening that route re-keys this context (via the store target) and replays the stashed turn — so it
+     * streams through the normal path.
      */
     async #createFromDraftAndHandoff(content: string, contentParts?: UaiInputContent[]): Promise<void> {
         if (this.#creating) return;
@@ -278,7 +247,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         const agentIdOrAlias = selected && selected.id !== AUTO_AGENT.id ? selected.id : undefined;
 
         const { data } = await this.#conversationRepository.create({
-            projectId: this.#draftProjectId,
+            projectId: this.#store?.getDraftProjectId(),
             title: deriveConversationTitle(content) || undefined,
             agentIdOrAlias,
         });
@@ -289,25 +258,19 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
             return;
         }
 
-        this.#isDraft = false;
         stashPendingFirstMessage(data.id, { content, contentParts });
         navigateToWorkspacePath(copilotWorkspaceConversationPath(data.id));
     }
 
     /**
-     * On the first message of an untitled conversation, derives a title from it, persists it, and
-     * signals the sidebar to refresh. Sets the local title synchronously so a rapid second send
-     * doesn't re-title.
+     * On the first message of an untitled conversation, derives a title from it and persists it via the
+     * store (which updates the shared conversation state → the menu refreshes). Guards against re-titling.
      */
     #maybeAutoTitle(content: string): void {
         const conversation = this.#conversation;
         if (!conversation || conversation.title?.trim()) return;
         const title = deriveConversationTitle(content);
-        if (!title) return;
-
-        this.#conversation = { ...conversation, title };
-        // rename() dispatches a UaiEntityActionEvent on the shared bus → the sidebar refreshes.
-        void this.#conversationRepository.rename(conversation, title);
+        if (title) this.#store?.rename(title);
     }
 
     abortRun(): void {

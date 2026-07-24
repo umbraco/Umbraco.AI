@@ -107,13 +107,17 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         });
 
         // Maintain the picker's agent list (with an "Auto" option when >1 agent), keeping the
-        // current selection valid as the catalog loads/changes.
+        // current selection valid as the catalog loads/changes. Agents load asynchronously and often
+        // arrive AFTER setConversation() has already run (with an empty list, leaving no selection),
+        // so default-select whenever there's no valid current pick — not only when an existing pick
+        // was invalidated. Otherwise the picker stays empty even though agents exist.
         this.observe(this.#agentRepository.agentItems$, (agents) => {
             const displayAgents = agents.length > 1 ? [AUTO_AGENT, ...agents] : [...agents];
             this.#agents.setValue(displayAgents);
 
             const selected = this.#selectedAgent.getValue();
-            if (selected && !displayAgents.find((a) => a.id === selected.id)) {
+            const stillValid = selected && displayAgents.some((a) => a.id === selected.id);
+            if (!stillValid && displayAgents.length > 0) {
                 this.#selectedAgent.setValue(this.#resolveSelectedAgent(displayAgents));
             }
         });

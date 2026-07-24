@@ -197,19 +197,6 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<UaiItemPicker
                 flex-direction: column;
                 gap: var(--uui-size-space-5);
             }
-            uui-ref-node {
-                padding-top: calc(var(--uui-size-2, 6px) + 5px);
-                padding-bottom: calc(var(--uui-size-2, 6px) + 5px);
-            }
-            //uui-ref-node:first-child{
-            //    padding-top: 0;
-            //}
-            //uui-ref-node:last-child{
-            //    padding-bottom: 0;
-            //}
-            uui-ref-node::before {
-                border-top: 1px solid var(--uui-color-divider-standalone);
-            }
             uui-input {
                 width: 100%;
             }

@@ -13,11 +13,25 @@ import {
 import type { AgentTransport } from "./types.js";
 
 /**
+ * Performs the actual AG-UI stream request for a built request body, returning the SSE stream. The
+ * default targets the agent-keyed endpoint (`AgentsService.streamAgentAGUI({agentIdOrAlias})`).
+ * Surfaces with a different backend endpoint — e.g. the persisted Copilot Workspace
+ * `POST /conversations/{id}/stream-agui` — inject a runner via {@link UaiHttpAgentConfig.runner} so
+ * they reuse all of this class's AG-UI body/tool/context/resume conversion instead of duplicating it.
+ */
+export type AGUIStreamRunner = (
+    body: AGUIRunRequestModel,
+    signal: AbortSignal,
+) => Promise<{ stream: AsyncIterable<unknown> }>;
+
+/**
  * Configuration for the UaiHttpAgent.
  */
 export interface UaiHttpAgentConfig {
-    /** The agent ID to connect to */
+    /** The agent ID to connect to (also used as the AG-UI agent identity + clone key). */
     agentId: string;
+    /** Optional override for the stream call. Defaults to the agent-keyed AgentsService endpoint. */
+    runner?: AGUIStreamRunner;
 }
 
 /**
@@ -27,11 +41,13 @@ export interface UaiHttpAgentConfig {
  */
 export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     #agentId: string;
+    #runner?: AGUIStreamRunner;
     #abortController?: AbortController;
 
     constructor(config: UaiHttpAgentConfig) {
         super({ agentId: config.agentId });
         this.#agentId = config.agentId;
+        this.#runner = config.runner;
     }
 
     /**
@@ -92,11 +108,13 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             forwardedProps: Object.keys(otherForwardedProps).length > 0 ? otherForwardedProps : undefined,
         };
 
-        const result = await AgentsService.streamAgentAGUI({
-            path: { agentIdOrAlias: this.#agentId },
-            body,
-            signal,
-        });
+        const result = this.#runner
+            ? await this.#runner(body, signal)
+            : await AgentsService.streamAgentAGUI({
+                  path: { agentIdOrAlias: this.#agentId },
+                  body,
+                  signal,
+              });
 
         // Iterate over the SSE stream and emit events
         for await (const event of result.stream) {
@@ -197,6 +215,6 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
      * Create a clone of this agent.
      */
     clone(): UaiHttpAgent {
-        return new UaiHttpAgent({ agentId: this.#agentId });
+        return new UaiHttpAgent({ agentId: this.#agentId, runner: this.#runner });
     }
 }

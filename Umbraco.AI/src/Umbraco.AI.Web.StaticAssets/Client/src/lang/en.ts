@@ -166,6 +166,16 @@ export default {
         textContentLabel: "Content",
         textContentDescription: "The text content (plain text or markdown)",
 
+        // Content resource fields
+        contentContentIdLabel: "Content node",
+        contentContentIdDescription:
+            "The content node to ground the AI with. Its current values are injected at request time, respecting your read permissions.",
+
+        // Media resource fields
+        mediaMediaLabel: "Media item",
+        mediaMediaDescription:
+            "The media item to ground the AI with. Its details are injected at request time, respecting your read permissions.",
+
         // Brand Voice resource fields
         brandVoiceToneDescriptionLabel: "Tone",
         brandVoiceToneDescriptionDescription: 'Description of the tone to use (e.g., "Professional but approachable")',

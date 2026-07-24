@@ -255,11 +255,14 @@ public static partial class UmbracoBuilderExtensions
         // Context resolution - pluggable resolver system
         // Order: Profile -> Content (content can override profile-level context) -> KnowledgeSet
         // (knowledge-set GUIDs are namespaced so they never collide with user contexts; order only
-        // controls prompt sequence, not override).
+        // controls prompt sequence, not override) -> AdditionalResources (later resolvers override
+        // earlier ones; caller-owned ad-hoc resources take precedence and are a no-op unless the caller
+        // sets them).
         builder.AIContextResolvers()
             .Append<ProfileContextResolver>()
             .Append<ContentContextResolver>()
-            .Append<KnowledgeSetContextResolver>();
+            .Append<KnowledgeSetContextResolver>()
+            .Append<AdditionalResourcesContextResolver>();
         services.AddSingleton<IAIContextResolutionService, AIContextResolutionService>();
 
         // Guardrail system

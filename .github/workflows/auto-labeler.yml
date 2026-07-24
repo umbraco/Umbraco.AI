@@ -24,6 +24,7 @@ jobs:
                         "Umbraco.AI.Anthropic": "component/provider-anthropic",
                         "Umbraco.AI.Prompt": "component/prompt",
                         "Umbraco.AI.Agent.Copilot": "component/copilot",
+                        "Umbraco.AI.Agent.Copilot.Workspace": "component/copilot-workspace",
                         "Umbraco.AI.Agent": "component/agent",
                         "Other / Not sure": "component/other"
                       };

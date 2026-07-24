@@ -81,6 +81,10 @@ parameters:
           - name: Umbraco.AI.Agent.Copilot
             changeVar: AgentCopilotChanged
             hasNpm: true
+          # Copilot Workspace (frontend consumes Agent UI npm types; ships Conversations backend sub-packages)
+          - name: Umbraco.AI.Agent.Copilot.Workspace
+            changeVar: AgentCopilotWorkspaceChanged
+            hasNpm: true
     # Queue-time override: pack dev builds with NuGet version ranges instead of
     # project references. Dev normally packs with project references, which pins
     # dependencies to the exact preview versions computed at build time - those

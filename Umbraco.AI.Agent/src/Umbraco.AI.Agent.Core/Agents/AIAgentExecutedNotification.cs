@@ -67,4 +67,16 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     /// Null when <see cref="IsSuccess"/> is true or when the failure did not surface as an exception.
     /// </summary>
     public Exception? Exception { get; init; }
+
+    /// <summary>
+    /// Gets the id of the surface that drove this execution (e.g. the Copilot Workspace surface), if any.
+    /// Null for executions with no associated surface. Additive; existing consumers are unaffected.
+    /// </summary>
+    public string? ExecutionSurfaceId { get; init; }
+
+    /// <summary>
+    /// Gets the id of the persisted conversation this execution belonged to, if any. Populated for
+    /// surfaces with server-side conversation persistence (Copilot Workspace); null otherwise.
+    /// </summary>
+    public Guid? ConversationId { get; init; }
 }

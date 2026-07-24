@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+    <PropertyGroup>
+        <Title>Umbraco AI Copilot Workspace Static Assets</Title>
+        <Description>Backoffice UI for Umbraco AI Copilot Workspace</Description>
+        <StaticWebAssetBasePath>App_Plugins/UmbracoAICopilotWorkspace</StaticWebAssetBasePath>
+        <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Dont include the client folder as part of packaging nuget build -->
+        <Content Remove="Client\**" />
+        <Content Include="Client\package.json" Pack="false" />
+        <Content Include="Client\tsconfig.json" Pack="false" />
+
+        <!-- However make the Umbraco-package.json included for dotnet pack or nuget package and visible to the solution -->
+        <None Include="Client\public\umbraco-package.json" Pack="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Client\src\api\" />
+        <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <Target Name="UpdatePackageManifestVersion" BeforeTargets="CoreCompile"
+            Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != '' AND '$(ContinuousIntegrationBuild)' == 'true'">
+        <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
+        <ItemGroup>
+            <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
+        </ItemGroup>
+        <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+        <Exec Command="node &quot;$(RepoRoot)scripts/build/version-package-manifest.js&quot; &quot;$(PackageVersion)&quot; &quot;%(_PackageManifestFiles.FullPath)&quot;" />
+    </Target>
+</Project>

@@ -4,7 +4,7 @@
 
 // Client
 export { UaiAgentClient, type UaiAgentClientConfig } from "./uai-agent-client.js";
-export { UaiHttpAgent, type UaiHttpAgentConfig } from "./uai-http-agent.js";
+export { UaiHttpAgent, type UaiHttpAgentConfig, type AGUIStreamRunner } from "./uai-http-agent.js";
 
 // Domain types
 export type {

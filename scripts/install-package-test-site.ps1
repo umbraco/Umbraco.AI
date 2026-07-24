@@ -199,6 +199,9 @@ Install-Package "Umbraco.AI.Search"
 # Agent Copilot (frontend-only static assets)
 Install-Package "Umbraco.AI.Agent.Copilot"
 
+# Agent Copilot Workspace (full-section persisted chat; pulls the Conversations backend)
+Install-Package "Umbraco.AI.Agent.Copilot.Workspace"
+
 Pop-Location
 
 Write-Host ""

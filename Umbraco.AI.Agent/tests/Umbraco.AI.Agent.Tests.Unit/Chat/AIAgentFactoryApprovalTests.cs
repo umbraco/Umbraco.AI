@@ -148,7 +148,39 @@ public class AIAgentFactoryApprovalTests
         chatOptions.AllowMultipleToolCalls.ShouldBeNull();
     }
 
-    private static AIAgentFactory CreateFactory(IEnumerable<IAITool> tools)
+    [Fact]
+    public async Task CreateAgentAsync_CopiesTemperatureAndMaxTokensFromProfileSettings()
+    {
+        IAITool[] tools = [new TestTool { Id = "get-thing", Name = "get-thing", IsDestructive = false }];
+
+        var factory = CreateFactory(
+            tools,
+            new AIChatProfileSettings { Temperature = 0.5f, MaxTokens = 64000 });
+        var agent = CreateAgent(["get-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent);
+
+        var chatOptions = ExtractChatOptions(result);
+        chatOptions!.Temperature.ShouldBe(0.5f);
+        chatOptions.MaxOutputTokens.ShouldBe(64000);
+    }
+
+    [Fact]
+    public async Task CreateAgentAsync_WithNoChatSettings_LeavesInferenceOptionsNull()
+    {
+        IAITool[] tools = [new TestTool { Id = "get-thing", Name = "get-thing", IsDestructive = false }];
+
+        var factory = CreateFactory(tools);
+        var agent = CreateAgent(["get-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent);
+
+        var chatOptions = ExtractChatOptions(result);
+        chatOptions!.Temperature.ShouldBeNull();
+        chatOptions.MaxOutputTokens.ShouldBeNull();
+    }
+
+    private static AIAgentFactory CreateFactory(IEnumerable<IAITool> tools, IAIProfileSettings? profileSettings = null)
     {
         var toolCollection = new AIToolCollection(() => tools);
         var scopeCollection = new AIToolScopeCollection(() => []);
@@ -175,6 +207,7 @@ public class AIAgentFactoryApprovalTests
             Alias = "test",
             Name = "Test",
             ConnectionId = Guid.Empty,
+            Settings = profileSettings,
         };
 
         var profileServiceMock = new Mock<IAIProfileService>();

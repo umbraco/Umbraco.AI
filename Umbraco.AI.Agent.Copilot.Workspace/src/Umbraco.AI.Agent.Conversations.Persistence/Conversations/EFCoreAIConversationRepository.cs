@@ -99,6 +99,18 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         return (result.items.Select(e => _factory.BuildDomain(e, [])).ToList(), result.total);
     }
 
+    public async Task<bool> ExistsByProjectAsync(Guid userKey, Guid projectId, CancellationToken cancellationToken = default)
+    {
+        using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        var exists = await scope.ExecuteWithContextAsync(async db =>
+            // Archived conversations count too — they are still project-linked and would otherwise be
+            // left with a dangling project reference.
+            await db.Conversations.AsNoTracking()
+                .AnyAsync(c => c.UserKey == userKey && c.ProjectId == projectId, cancellationToken));
+        scope.Complete();
+        return exists;
+    }
+
     public async Task<AIConversation> CreateAsync(AIConversation conversation, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;

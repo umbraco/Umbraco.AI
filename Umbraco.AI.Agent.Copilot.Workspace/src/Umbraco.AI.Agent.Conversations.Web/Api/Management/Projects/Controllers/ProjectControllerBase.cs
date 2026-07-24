@@ -20,4 +20,13 @@ public abstract class ProjectControllerBase : ConversationsManagementControllerB
         Detail = "The specified project could not be found for the current user.",
         Status = StatusCodes.Status404NotFound,
     });
+
+    /// <summary>Returns a 400 Bad Request response for a project that cannot be deleted while in use.</summary>
+    protected IActionResult ProjectInUse() => BadRequest(new ProblemDetails
+    {
+        Title = "Project in use",
+        Detail = "The project cannot be deleted because it still contains one or more conversations. " +
+                 "Move or delete its conversations first.",
+        Status = StatusCodes.Status400BadRequest,
+    });
 }

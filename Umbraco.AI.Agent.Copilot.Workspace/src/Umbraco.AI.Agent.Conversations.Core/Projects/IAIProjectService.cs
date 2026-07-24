@@ -21,8 +21,9 @@ public interface IAIProjectService
     Task<AIProject> SaveProjectAsync(AIProject project, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes one of the acting user's projects. Its directly-attached resources cascade-delete;
-    /// conversations in the project are orphaned (their <c>ProjectId</c> is set null), not deleted.
+    /// Deletes one of the acting user's projects. Its directly-attached resources cascade-delete. The
+    /// delete is blocked (via <see cref="AIProjectDeletingNotification"/>) if the project still owns any
+    /// conversations — they must be moved to another project or deleted first.
     /// </summary>
     Task DeleteProjectAsync(Guid id, CancellationToken cancellationToken = default);
 }

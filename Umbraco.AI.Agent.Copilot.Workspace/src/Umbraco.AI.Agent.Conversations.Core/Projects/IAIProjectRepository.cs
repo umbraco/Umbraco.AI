@@ -24,8 +24,9 @@ internal interface IAIProjectRepository
     Task<AIProject> SaveAsync(AIProject project, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a project. Its directly-attached resources cascade-delete; conversations are orphaned
-    /// (their <c>ProjectId</c> is set null) rather than deleted.
+    /// Deletes a project. Its directly-attached resources cascade-delete. Callers block deletion of a
+    /// project that still owns conversations at the service layer; the conversation FK's
+    /// <c>SetNull</c> behaviour remains only as a DB-level backstop.
     /// </summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

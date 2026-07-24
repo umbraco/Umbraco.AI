@@ -20,6 +20,12 @@ public interface IAIConversationService
         bool includeArchived = false,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns true if the acting user has any conversation (archived included) in the given project.
+    /// Used to block deletion of a project that still owns conversations.
+    /// </summary>
+    Task<bool> ConversationsExistInProjectAsync(Guid projectId, CancellationToken cancellationToken = default);
+
     /// <summary>Creates a conversation owned by the acting user.</summary>
     Task<AIConversation> CreateConversationAsync(AIConversation conversation, CancellationToken cancellationToken = default);
 

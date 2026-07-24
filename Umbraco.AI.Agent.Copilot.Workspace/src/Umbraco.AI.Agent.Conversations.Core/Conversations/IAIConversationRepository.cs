@@ -25,6 +25,12 @@ internal interface IAIConversationRepository
         bool includeArchived = false,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns true if the user has any conversation (archived included) attached to the given project.
+    /// Used to block deletion of a project that still owns conversations.
+    /// </summary>
+    Task<bool> ExistsByProjectAsync(Guid userKey, Guid projectId, CancellationToken cancellationToken = default);
+
     /// <summary>Creates a conversation.</summary>
     Task<AIConversation> CreateAsync(AIConversation conversation, CancellationToken cancellationToken = default);
 

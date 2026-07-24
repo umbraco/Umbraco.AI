@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Agent.Conversations.Extensions;
 
@@ -34,6 +35,9 @@ public static class UmbracoBuilderExtensions
         // persistence layer). Controllers and the stream endpoint go through these, never the repos.
         builder.Services.AddScoped<IAIConversationService, AIConversationService>();
         builder.Services.AddScoped<IAIProjectService, AIProjectService>();
+
+        // Block deleting a project that still owns conversations (mirrors the connection/profile guard).
+        builder.AddNotificationAsyncHandler<AIProjectDeletingNotification, AIProjectDeletingNotificationHandler>();
 
         return builder;
     }

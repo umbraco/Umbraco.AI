@@ -168,7 +168,9 @@ internal sealed class EFCoreAIProjectRepository : IAIProjectRepository
             var entity = await db.Projects.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
             if (entity is not null)
             {
-                // Resources cascade-delete; conversations are orphaned (ProjectId set null) per the model.
+                // Resources cascade-delete. Deletion of a project that still owns conversations is
+                // blocked at the service layer (AIProjectDeletingNotification), so the conversation FK's
+                // SetNull behaviour is only a DB-level backstop and should not fire in normal operation.
                 db.Projects.Remove(entity);
                 return await db.SaveChangesAsync(cancellationToken);
             }

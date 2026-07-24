@@ -1,3 +1,5 @@
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Agent.Conversations.Core.Projects;
@@ -9,13 +11,16 @@ internal sealed class AIProjectService : IAIProjectService
 {
     private readonly IAIProjectRepository _repository;
     private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIProjectService(
         IAIProjectRepository repository,
-        IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
+        IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
+        IEventAggregator eventAggregator)
     {
         _repository = repository;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
+        _eventAggregator = eventAggregator;
     }
 
     public async Task<AIProject?> GetProjectAsync(Guid id, CancellationToken cancellationToken = default)
@@ -60,7 +65,23 @@ internal sealed class AIProjectService : IAIProjectService
 
         // Never trust a client-supplied UserKey — the acting user owns what they save.
         project.UserKey = userKey;
-        return await _repository.SaveAsync(project, cancellationToken);
+
+        // Publish the (cancelable) saving notification before persisting.
+        var messages = new EventMessages();
+        var savingNotification = new AIProjectSavingNotification(project, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Project save cancelled: {errorMessages}");
+        }
+
+        var saved = await _repository.SaveAsync(project, cancellationToken);
+
+        var savedNotification = new AIProjectSavedNotification(saved, messages).WithStateFrom(savingNotification);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return saved;
     }
 
     public async Task DeleteProjectAsync(Guid id, CancellationToken cancellationToken = default)
@@ -72,7 +93,23 @@ internal sealed class AIProjectService : IAIProjectService
             throw new InvalidOperationException($"Project '{id}' was not found for the acting user.");
         }
 
+        // Publish the (cancelable) deleting notification. A project that still owns conversations is
+        // blocked here (mirrors the connection/profile "in use" guard) so conversations are never left
+        // with a dangling project reference.
+        var messages = new EventMessages();
+        var deletingNotification = new AIProjectDeletingNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
+
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Project delete cancelled: {errorMessages}");
+        }
+
         await _repository.DeleteAsync(id, cancellationToken);
+
+        var deletedNotification = new AIProjectDeletedNotification(id, messages).WithStateFrom(deletingNotification);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
     }
 
     private Guid? GetActingUserKeyOrNull()

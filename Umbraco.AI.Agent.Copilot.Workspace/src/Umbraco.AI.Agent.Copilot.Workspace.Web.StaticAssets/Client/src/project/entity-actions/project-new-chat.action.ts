@@ -1,10 +1,9 @@
 import { UmbEntityActionBase, type UmbEntityActionArgs } from "@umbraco-cms/backoffice/entity-action";
-import { UaiConversationRepository } from "../../conversation/repository/conversation.repository.js";
-import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../../paths.js";
+import { copilotWorkspaceConversationCreatePath, navigateToWorkspacePath } from "../../paths.js";
 
 /**
- * "New chat in this project" entity action (shown in the project workspace ⋯ menu). Creates a
- * conversation attached to the project and opens it.
+ * "New chat in this project" entity action (shown in the project workspace ⋯ menu). Opens a draft
+ * conversation pre-attached to the project; it's only persisted once the first message is sent.
  */
 export class UaiCopilotWorkspaceProjectNewChatAction extends UmbEntityActionBase<never> {
     constructor(
@@ -17,10 +16,7 @@ export class UaiCopilotWorkspaceProjectNewChatAction extends UmbEntityActionBase
     override async execute(): Promise<void> {
         const projectId = this.args.unique;
         if (!projectId) return;
-        const { data } = await new UaiConversationRepository(this).create({ projectId });
-        if (data?.id) {
-            navigateToWorkspacePath(copilotWorkspaceConversationPath(data.id));
-        }
+        navigateToWorkspacePath(copilotWorkspaceConversationCreatePath(projectId));
     }
 }
 

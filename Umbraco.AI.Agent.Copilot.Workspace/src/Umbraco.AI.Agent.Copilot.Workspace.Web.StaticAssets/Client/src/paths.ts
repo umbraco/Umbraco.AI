@@ -15,6 +15,17 @@ export function copilotWorkspaceConversationPath(conversationId: string): string
     return `${UAI_COPILOT_WORKSPACE_SECTION_PATH}/conversation/${encodeURIComponent(conversationId)}`;
 }
 
+/**
+ * Deep link to a *new* (not-yet-persisted) conversation. Opening this starts a draft: the conversation
+ * is only created server-side when the user sends their first message (see the chat context's draft
+ * handling), so navigating here and leaving persists nothing. An optional `projectId` pre-attaches the
+ * draft to a project.
+ */
+export function copilotWorkspaceConversationCreatePath(projectId?: string): string {
+    const base = `${UAI_COPILOT_WORKSPACE_SECTION_PATH}/conversation/create`;
+    return projectId ? `${base}?projectId=${encodeURIComponent(projectId)}` : base;
+}
+
 /** Deep link to a project within the workspace. */
 export function copilotWorkspaceProjectPath(projectId: string): string {
     return `${UAI_COPILOT_WORKSPACE_SECTION_PATH}/project/${encodeURIComponent(projectId)}`;

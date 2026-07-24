@@ -1,6 +1,7 @@
 import { css, customElement, html, property, query } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiCopilotWorkspaceChatContext } from "./copilot-workspace-chat.context.js";
+import { takePendingFirstMessage } from "./pending-first-message.js";
 
 /**
  * Center-region view for an open conversation. Hosts a {@link UaiCopilotWorkspaceChatContext} (which
@@ -28,12 +29,34 @@ export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
         this.#conversationId = value;
         if (value && value !== previous) {
             this.#ensureAgentsLoaded();
-            void this.#context.setConversation(value);
+            void this.#openConversation(value);
             // Focus the composer on every open/switch (the view is reused across conversations, so
             // the input doesn't remount — its own first-mount focus wouldn't fire on a switch).
             this.updateComplete.then(() => this._chat?.focusComposer?.());
         }
         this.requestUpdate("conversationId", previous);
+    }
+
+    /**
+     * Starts a new draft conversation (nothing persisted until the first message). Called by the shell's
+     * `conversation/create` route in place of setting a `conversationId`.
+     */
+    startDraft(projectId?: string): void {
+        this.#conversationId = undefined;
+        this.#ensureAgentsLoaded();
+        void this.#context.startDraft(projectId);
+        this.updateComplete.then(() => this._chat?.focusComposer?.());
+    }
+
+    /**
+     * Opens a persisted conversation, then replays a stashed first turn if this open is the promotion of
+     * a draft (created in the previous view, handed off across the navigation). Load must complete before
+     * replaying so the send appends onto the (empty) loaded history.
+     */
+    async #openConversation(id: string): Promise<void> {
+        await this.#context.setConversation(id);
+        const pending = takePendingFirstMessage(id);
+        if (pending) await this.#context.sendUserMessage(pending.content, pending.contentParts);
     }
 
     #ensureAgentsLoaded() {

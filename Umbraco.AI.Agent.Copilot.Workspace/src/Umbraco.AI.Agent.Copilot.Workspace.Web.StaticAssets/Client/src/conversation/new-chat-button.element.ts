@@ -2,33 +2,29 @@ import { css, customElement, html, query, state } from "@umbraco-cms/backoffice/
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { umbOpenModal } from "@umbraco-cms/backoffice/modal";
 import type { UUIPopoverContainerElement } from "@umbraco-cms/backoffice/external/uui";
-import { UaiConversationRepository } from "./repository/conversation.repository.js";
 import { UaiProjectRepository } from "../project/repository/project.repository.js";
 import { UAI_PROJECT_PICKER_MODAL } from "./modal/project-picker-modal.token.js";
-import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../paths.js";
+import { copilotWorkspaceConversationCreatePath, navigateToWorkspacePath } from "../paths.js";
 
 /**
  * The primary "New chat" affordance — a CMS-style split button (à la Save and publish): the main
  * button starts a loose conversation, and the caret opens "New chat in a project", which pops a
  * central project picker and starts the conversation in the chosen project. Self-contained (owns its
  * repositories + navigation) so it can be dropped into both the sidebar header and the launcher.
+ *
+ * Opening a new chat only navigates to a draft — the conversation isn't persisted until the first
+ * message is sent (see the chat context), so no empty "Untitled" conversations accumulate.
  */
 @customElement("uai-copilot-workspace-new-chat-button")
 export class UaiCopilotWorkspaceNewChatButtonElement extends UmbLitElement {
-    #conversationRepository = new UaiConversationRepository(this);
     #projectRepository = new UaiProjectRepository(this);
 
     @state() private _open = false;
 
     @query("#new-chat-menu") private _popover?: UUIPopoverContainerElement;
 
-    #navigate(id: string) {
-        navigateToWorkspacePath(copilotWorkspaceConversationPath(id));
-    }
-
-    async #newChat() {
-        const { data } = await this.#conversationRepository.create({});
-        if (data?.id) this.#navigate(data.id);
+    #newChat() {
+        navigateToWorkspacePath(copilotWorkspaceConversationCreatePath());
     }
 
     async #newChatInProject() {
@@ -45,8 +41,7 @@ export class UaiCopilotWorkspaceNewChatButtonElement extends UmbLitElement {
         }).catch(() => undefined);
         if (!chosen) return;
 
-        const { data: conversation } = await this.#conversationRepository.create({ projectId: chosen.projectId });
-        if (conversation?.id) this.#navigate(conversation.id);
+        navigateToWorkspacePath(copilotWorkspaceConversationCreatePath(chosen.projectId ?? undefined));
     }
 
     override render() {

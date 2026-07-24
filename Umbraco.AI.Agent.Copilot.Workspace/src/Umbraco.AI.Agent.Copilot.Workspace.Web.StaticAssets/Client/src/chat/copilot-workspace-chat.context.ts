@@ -19,6 +19,8 @@ import { UaiConversationRepository } from "../conversation/repository/conversati
 import type { ConversationResponseModel } from "../conversation/types.js";
 import { UaiServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
 import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
+import { stashPendingFirstMessage } from "./pending-first-message.js";
+import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../paths.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
 const AUTO_AGENT: UaiAgentItem = { id: "auto", name: "Auto", alias: "auto" };
@@ -59,6 +61,12 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
     #conversationId?: string;
     #conversation?: ConversationResponseModel;
+
+    /** Draft mode: no conversation exists yet; it's created on the first sent message. */
+    #isDraft = false;
+    #draftProjectId?: string;
+    /** Guards against a second send racing the create request during draft promotion. */
+    #creating = false;
 
     readonly agents = this.#agents.asObservable();
     readonly selectedAgent = this.#selectedAgent.asObservable();
@@ -108,9 +116,9 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
         // Maintain the picker's agent list (with an "Auto" option when >1 agent), keeping the
         // current selection valid as the catalog loads/changes. Agents load asynchronously and often
-        // arrive AFTER setConversation() has already run (with an empty list, leaving no selection),
-        // so default-select whenever there's no valid current pick — not only when an existing pick
-        // was invalidated. Otherwise the picker stays empty even though agents exist.
+        // arrive AFTER setConversation()/startDraft() have already run (with an empty list, leaving no
+        // selection), so default-select whenever there's no valid current pick — not only when an
+        // existing pick was invalidated. Otherwise the picker stays empty even though agents exist.
         this.observe(this.#agentRepository.agentItems$, (agents) => {
             const displayAgents = agents.length > 1 ? [AUTO_AGENT, ...agents] : [...agents];
             this.#agents.setValue(displayAgents);
@@ -140,6 +148,8 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     async setConversation(conversationId: string): Promise<void> {
         if (this.#conversationId === conversationId) return;
         this.#conversationId = conversationId;
+        this.#isDraft = false;
+        this.#draftProjectId = undefined;
 
         this.#runController.abortRun();
         this.#strategy.setConversationId(conversationId);
@@ -150,6 +160,27 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
         const { data } = await this.#conversationRepository.requestById(conversationId);
         this.#conversation = data ?? undefined;
+        this.#selectedAgent.setValue(this.#resolveSelectedAgent(this.#agents.getValue()));
+
+        await this.#runController.loadInitialMessages();
+    }
+
+    /**
+     * Starts a new draft conversation: nothing is persisted yet. Presents an empty thread with a working
+     * agent picker; the conversation is created (and this context promoted) on the first sent message
+     * via {@link sendUserMessage}. An optional `projectId` pre-attaches the eventual conversation.
+     */
+    async startDraft(projectId?: string): Promise<void> {
+        this.#conversationId = undefined;
+        this.#conversation = undefined;
+        this.#isDraft = true;
+        this.#draftProjectId = projectId;
+        this.#creating = false;
+
+        this.#runController.abortRun();
+        this.#strategy.setConversationId(undefined);
+        // Fresh synthetic id → recreate the client and reset the thread to empty (no persisted history).
+        this.#runController.setAgent({ id: "conversation:new", name: "Workspace", alias: "workspace" });
         this.#selectedAgent.setValue(this.#resolveSelectedAgent(this.#agents.getValue()));
 
         await this.#runController.loadInitialMessages();
@@ -182,10 +213,47 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     }
 
     async sendUserMessage(content: string, contentParts?: UaiInputContent[]): Promise<void> {
+        // A draft has no conversation yet — create it now (only the first message persists a conversation),
+        // then hand the turn to the freshly-opened real view to stream.
+        if (this.#isDraft) {
+            await this.#createFromDraftAndHandoff(content, contentParts);
+            return;
+        }
         // Title an untitled conversation from its first message (fire-and-forget; doesn't delay the send).
         this.#maybeAutoTitle(content);
         // Project context is injected server-side from the conversation; no client context needed.
         this.#runController.sendUserMessage(content, [], contentParts);
+    }
+
+    /**
+     * Persists the draft on its first message: creates the conversation (with a title derived from the
+     * message and the picked agent/project applied up front, so it never shows as "Untitled"), stashes
+     * the turn, and navigates to the real conversation. Opening that route remounts the view with a fresh
+     * context that replays the stashed turn — so the turn streams through the normal path, not this
+     * about-to-be-discarded draft context.
+     */
+    async #createFromDraftAndHandoff(content: string, contentParts?: UaiInputContent[]): Promise<void> {
+        if (this.#creating) return;
+        this.#creating = true;
+
+        const selected = this.#selectedAgent.getValue();
+        const agentIdOrAlias = selected && selected.id !== AUTO_AGENT.id ? selected.id : undefined;
+
+        const { data } = await this.#conversationRepository.create({
+            projectId: this.#draftProjectId,
+            title: deriveConversationTitle(content) || undefined,
+            agentIdOrAlias,
+        });
+
+        if (!data?.id) {
+            // Create failed — stay in draft so the user can retry (matches the prior new-chat behaviour).
+            this.#creating = false;
+            return;
+        }
+
+        this.#isDraft = false;
+        stashPendingFirstMessage(data.id, { content, contentParts });
+        navigateToWorkspacePath(copilotWorkspaceConversationPath(data.id));
     }
 
     /**

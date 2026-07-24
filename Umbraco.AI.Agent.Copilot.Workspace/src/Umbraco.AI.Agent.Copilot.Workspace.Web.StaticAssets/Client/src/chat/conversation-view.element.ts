@@ -1,4 +1,4 @@
-import { css, customElement, html, property, query } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, query, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiCopilotWorkspaceChatContext } from "./copilot-workspace-chat.context.js";
 import { takePendingFirstMessage } from "./pending-first-message.js";
@@ -14,11 +14,25 @@ export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
     #context = new UaiCopilotWorkspaceChatContext(this);
     #agentsLoaded = false;
 
+    /** True while the open conversation is archived — the chat renders read-only. */
+    @state()
+    private _readonly = false;
+
+    /** False until the open conversation's mode is resolved — gates the composer to avoid a flash. */
+    @state()
+    private _ready = false;
+
     /** The shared chat element; used to focus its composer when the conversation changes. */
     @query("uai-chat")
     private _chat?: HTMLElement & { focusComposer?: () => void };
 
     #conversationId?: string;
+
+    constructor() {
+        super();
+        this.observe(this.#context.isReadonly$, (value) => (this._readonly = value ?? false));
+        this.observe(this.#context.isReady$, (value) => (this._ready = value ?? false));
+    }
 
     @property({ type: String })
     get conversationId(): string | undefined {
@@ -66,7 +80,14 @@ export class UaiCopilotWorkspaceConversationViewElement extends UmbLitElement {
     }
 
     override render() {
-        return html`<uai-chat></uai-chat>`;
+        // Property bindings (not `?attr`): `ready` defaults to true on the element, and a boolean-attribute
+        // binding of `false` only removes the attribute — which is a no-op when it was never set, leaving
+        // the property at its true default and flashing the composer. Setting the property is unambiguous.
+        return html`<uai-chat
+            .ready=${this._ready}
+            .readonly=${this._readonly}
+            readonly-notice=${this.localize.term("uaiCopilotWorkspace_readOnlyNotice")}
+        ></uai-chat>`;
     }
 
     static override styles = [

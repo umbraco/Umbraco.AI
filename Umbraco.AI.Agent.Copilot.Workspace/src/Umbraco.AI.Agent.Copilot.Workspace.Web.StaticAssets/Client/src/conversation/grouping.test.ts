@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupConversations } from "./grouping.js";
+import { groupConversations, buildArchivedList } from "./grouping.js";
 import type { ConversationResponseModel } from "./types.js";
 
 // Fixed reference time: 2026-07-21T12:00:00 local (only used to derive relative timestamps).
@@ -117,5 +117,34 @@ describe("groupConversations", () => {
         );
         expect(model.projects).toEqual([]);
         expect(model.recent.map((c) => c.id)).toEqual(["x"]);
+    });
+});
+
+describe("buildArchivedList", () => {
+    it("keeps only archived conversations, most-recent-first", () => {
+        const list = buildArchivedList(
+            [
+                conv({ id: "active", isArchived: false, lastMessageAt: daysAgo(0) }),
+                conv({ id: "old", isArchived: true, lastMessageAt: daysAgo(30) }),
+                conv({ id: "new", isArchived: true, lastMessageAt: daysAgo(1) }),
+            ],
+            new Map(),
+        );
+        expect(list.map((a) => a.conversation.id)).toEqual(["new", "old"]);
+    });
+
+    it("resolves the project name as a chip, leaving loose/unknown-project entries undefined", () => {
+        const list = buildArchivedList(
+            [
+                conv({ id: "in-project", projectId: "A", isArchived: true, lastMessageAt: daysAgo(1) }),
+                conv({ id: "loose", isArchived: true, lastMessageAt: daysAgo(2) }),
+                conv({ id: "orphan", projectId: "gone", isArchived: true, lastMessageAt: daysAgo(3) }),
+            ],
+            new Map([["A", "Alpha"]]),
+        );
+        const byId = new Map(list.map((a) => [a.conversation.id, a.projectName]));
+        expect(byId.get("in-project")).toBe("Alpha");
+        expect(byId.get("loose")).toBeUndefined();
+        expect(byId.get("orphan")).toBeUndefined();
     });
 });

@@ -56,7 +56,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         api: action("UaiConversationPinAction"),
         ...forConversation,
         meta: { icon: "icon-pushpin", label: "#uaiCopilotWorkspace_actionPin" },
-        conditions: [stateCondition("notPinned")],
+        conditions: [stateCondition("notPinned"), stateCondition("notArchived")],
     },
     {
         type: "entityAction",
@@ -67,7 +67,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         api: action("UaiConversationUnpinAction"),
         ...forConversation,
         meta: { icon: "icon-pushpin", label: "#uaiCopilotWorkspace_actionUnpin" },
-        conditions: [stateCondition("pinned")],
+        conditions: [stateCondition("pinned"), stateCondition("notArchived")],
     },
     {
         type: "entityAction",
@@ -78,6 +78,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         api: action("UaiConversationRenameAction"),
         ...forConversation,
         meta: { icon: "icon-edit", label: "#uaiCopilotWorkspace_actionRename" },
+        conditions: [stateCondition("notArchived")],
     },
     {
         type: "entityAction",
@@ -88,6 +89,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         api: action("UaiConversationMoveAction"),
         ...forConversation,
         meta: { icon: "icon-enter", label: "#uaiCopilotWorkspace_actionMoveToProject" },
+        conditions: [stateCondition("notArchived")],
     },
     {
         type: "entityAction",
@@ -104,11 +106,11 @@ export const conversationManifests: UmbExtensionManifest[] = [
         type: "entityAction",
         kind: "default",
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Unarchive",
-        name: "Unarchive Conversation Entity Action",
+        name: "Restore Conversation Entity Action",
         weight: 300,
         api: action("UaiConversationUnarchiveAction"),
         ...forConversation,
-        meta: { icon: "icon-box", label: "#uaiCopilotWorkspace_actionUnarchive" },
+        meta: { icon: "icon-undo", label: "#uaiCopilotWorkspace_actionRestore" },
         conditions: [stateCondition("archived")],
     },
     {

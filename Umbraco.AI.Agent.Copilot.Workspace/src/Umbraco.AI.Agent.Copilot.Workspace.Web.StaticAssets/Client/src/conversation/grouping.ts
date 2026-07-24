@@ -23,6 +23,16 @@ export interface UaiSidebarModel {
     isEmpty: boolean;
 }
 
+/**
+ * An archived conversation as shown in the sidebar's Archived (recycle-bin) node: a flat entry that has
+ * left its project grouping but carries the project's display name as a chip so the "where it came from"
+ * signal survives. `projectName` is undefined for loose conversations or a project still loading/deleted.
+ */
+export interface UaiArchivedConversation {
+    conversation: ConversationResponseModel;
+    projectName?: string;
+}
+
 /** Effective activity timestamp for ordering (newest signal wins). */
 function activityTime(c: ConversationResponseModel): number {
     const stamp = c.lastMessageAt ?? c.dateModified ?? c.dateCreated;
@@ -89,4 +99,23 @@ export function groupConversations(
         recent,
         isEmpty: pinned.length === 0 && projects.length === 0 && recent.length === 0,
     };
+}
+
+/**
+ * Shapes archived conversations for the sidebar's Archived (recycle-bin) node: keeps only the archived
+ * ones, orders them most-recently-active first (a flat list — the recycle-bin model deliberately drops
+ * project grouping), and resolves each one's project display name for its chip. `conversations` may be
+ * the raw fetched set; non-archived entries are filtered out here so callers don't have to.
+ */
+export function buildArchivedList(
+    conversations: readonly ConversationResponseModel[],
+    projectNames: ReadonlyMap<string, string>,
+): UaiArchivedConversation[] {
+    return conversations
+        .filter((c) => c.isArchived)
+        .sort(byActivityDesc)
+        .map((conversation) => ({
+            conversation,
+            projectName: conversation.projectId ? projectNames.get(conversation.projectId) : undefined,
+        }));
 }

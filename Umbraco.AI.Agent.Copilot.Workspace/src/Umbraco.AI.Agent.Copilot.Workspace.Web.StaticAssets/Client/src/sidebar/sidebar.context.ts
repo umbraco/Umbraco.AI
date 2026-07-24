@@ -1,16 +1,24 @@
 import { UmbContextBase } from "@umbraco-cms/backoffice/class-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
-import { UmbObjectState, UmbStringState } from "@umbraco-cms/backoffice/observable-api";
+import { UmbArrayState, UmbObjectState, UmbStringState } from "@umbraco-cms/backoffice/observable-api";
 import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
 import { UaiEntityActionEvent } from "@umbraco-ai/core";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiConversationRepository } from "../conversation/repository/conversation.repository.js";
 import { UaiProjectRepository } from "../project/repository/project.repository.js";
-import { groupConversations, type UaiSidebarModel } from "../conversation/grouping.js";
+import {
+    buildArchivedList,
+    groupConversations,
+    type UaiArchivedConversation,
+    type UaiSidebarModel,
+} from "../conversation/grouping.js";
 import type { ConversationResponseModel } from "../conversation/types.js";
 import { UAI_CONVERSATION_ENTITY_TYPE, UAI_PROJECT_ENTITY_TYPE } from "../constants.js";
 
 const EMPTY_MODEL: UaiSidebarModel = { pinned: [], projects: [], recent: [], isEmpty: true };
+
+/** Upper bound on the archived conversations fetched for the recycle-bin node (single, unpaged load). */
+const ARCHIVED_TAKE = 200;
 
 /**
  * Section-scoped sidebar data context (provided by the shell). Owns conversation + project loading,
@@ -23,9 +31,12 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
     #projectRepository = new UaiProjectRepository(this);
 
     #conversations: ConversationResponseModel[] = [];
+    /** Raw archived conversations (from a dedicated fetch), independent of the active search. */
+    #archivedRaw: ConversationResponseModel[] = [];
     #projectNames = new Map<string, string>();
 
     #model = new UmbObjectState<UaiSidebarModel>(EMPTY_MODEL);
+    #archived = new UmbArrayState<UaiArchivedConversation>([], (a) => a.conversation.id);
     #search = new UmbStringState("");
     #activePath = new UmbStringState(window.location.pathname);
 
@@ -33,6 +44,8 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
     readonly pinned = this.#model.asObservablePart((m) => m.pinned);
     readonly projects = this.#model.asObservablePart((m) => m.projects);
     readonly recent = this.#model.asObservablePart((m) => m.recent);
+    /** Archived conversations for the recycle-bin node — flat, most-recent-first, project name resolved. */
+    readonly archived = this.#archived.asObservable();
     readonly search = this.#search.asObservable();
     /** Current router path, for active highlighting across all group menus. */
     readonly activePath = this.#activePath.asObservable();
@@ -53,6 +66,7 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
 
         void this.#loadProjects();
         void this.#load();
+        void this.#loadArchived();
     }
 
     override destroy(): void {
@@ -71,8 +85,14 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
 
     #onEntityEvent = (event: UaiEntityActionEvent) => {
         const type = event.getEntityType();
-        if (type === UAI_CONVERSATION_ENTITY_TYPE) void this.#load();
-        else if (type === UAI_PROJECT_ENTITY_TYPE) void this.#loadProjects();
+        if (type === UAI_CONVERSATION_ENTITY_TYPE) {
+            // A conversation change may cross the active/archived boundary (archive, restore, delete),
+            // so refresh both lists.
+            void this.#load();
+            void this.#loadArchived();
+        } else if (type === UAI_PROJECT_ENTITY_TYPE) {
+            void this.#loadProjects();
+        }
     };
 
     async #load(): Promise<void> {
@@ -82,10 +102,27 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
         this.#recompute();
     }
 
+    /**
+     * Loads the archived conversations for the recycle-bin node. Deliberately independent of the active
+     * search (the bin always shows all archived), fetched with `includeArchived` and filtered to the
+     * archived subset in {@link buildArchivedList}.
+     */
+    async #loadArchived(): Promise<void> {
+        const { data } = await this.#conversationRepository.requestCollection({
+            includeArchived: true,
+            take: ARCHIVED_TAKE,
+        });
+        // buildArchivedList filters to the archived subset itself, so store the raw page as-is.
+        this.#archivedRaw = data?.items ?? [];
+        this.#recomputeArchived();
+    }
+
     async #loadProjects(): Promise<void> {
         const { data } = await this.#projectRepository.requestCollection();
         this.#projectNames = new Map((data?.items ?? []).map((p) => [p.id, p.name]));
         this.#recompute();
+        // Archived chips resolve their project name from this map, so rebuild them too.
+        this.#recomputeArchived();
     }
 
     #recompute(): void {
@@ -94,6 +131,10 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
         this.#model.setValue(
             groupConversations(this.#conversations, this.#projectNames, { includeEmptyProjects: !searching }),
         );
+    }
+
+    #recomputeArchived(): void {
+        this.#archived.setValue(buildArchivedList(this.#archivedRaw, this.#projectNames));
     }
 }
 

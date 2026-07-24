@@ -35,6 +35,7 @@ export default {
         groupPrevious7Days: "Previous 7 days",
         groupOlder: "Older",
         groupUnknownProject: "Project",
+        groupArchived: "Archived",
 
         // Per-conversation actions
         actionPin: "Pin",
@@ -44,11 +45,14 @@ export default {
         moveHeadline: "Move to project",
         moveNoProject: "No project",
         actionArchive: "Archive",
-        actionUnarchive: "Unarchive",
+        actionRestore: "Restore",
         actionDelete: "Delete",
         renamePrompt: "Conversation title",
         deleteConfirmTitle: "Delete conversation",
         deleteConfirmMessage: "Are you sure you want to delete this conversation? This cannot be undone.",
+
+        // Read-only (archived) conversation
+        readOnlyNotice: "This conversation is archived. Restore it to continue chatting.",
 
         // Projects
         newProject: "New project",

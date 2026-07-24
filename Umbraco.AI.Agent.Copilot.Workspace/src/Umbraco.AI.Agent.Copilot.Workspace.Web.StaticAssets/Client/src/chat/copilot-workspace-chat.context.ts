@@ -21,6 +21,7 @@ import { UaiServerPersistedConversationStrategy } from "./server-persisted-conve
 import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
 import { stashPendingFirstMessage } from "./pending-first-message.js";
 import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../paths.js";
+import { UaiConversationUpdatedController } from "../conversation/conversation-updated.controller.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
 const AUTO_AGENT: UaiAgentItem = { id: "auto", name: "Auto", alias: "auto" };
@@ -58,6 +59,14 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
     #agentsLoading = new UmbBooleanState(false);
+    /** True when the open conversation is archived — the shared chat renders read-only in that case. */
+    #readonly = new UmbBooleanState(false);
+    /**
+     * False while a conversation's mode is still being resolved (its metadata is loading), so the chat
+     * can withhold the composer/read-only notice until it knows which to show — otherwise the composer
+     * flashes for the moment before an archived conversation resolves to read-only.
+     */
+    #ready = new UmbBooleanState(false);
 
     #conversationId?: string;
     #conversation?: ConversationResponseModel;
@@ -71,6 +80,10 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     readonly agents = this.#agents.asObservable();
     readonly selectedAgent = this.#selectedAgent.asObservable();
     readonly agentsLoading = this.#agentsLoading.asObservable();
+    /** Observable read-only flag: true while the open conversation is archived. */
+    readonly isReadonly$ = this.#readonly.asObservable();
+    /** Observable: true once the open conversation's mode (editable vs read-only) is known. */
+    readonly isReady$ = this.#ready.asObservable();
 
     get messages$() {
         return this.#runController.messages$;
@@ -132,6 +145,24 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
         this.provideContext(UAI_CHAT_CONTEXT, this);
         this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
+
+        // React to the open conversation being archived/unarchived elsewhere (e.g. its sidebar ⋯ menu)
+        // so the view flips its read-only state in place, without reloading the chat history.
+        new UaiConversationUpdatedController(this, () => this.#conversationId, () => void this.#refreshReadonly());
+    }
+
+    /** Re-reads the open conversation's archived flag and flips read-only, leaving history untouched. */
+    async #refreshReadonly(): Promise<void> {
+        if (!this.#conversationId) return;
+        const { data } = await this.#conversationRepository.requestById(this.#conversationId);
+        if (!data || data.id !== this.#conversationId) return;
+        this.#applyLoadedConversation(data);
+    }
+
+    /** Applies a freshly-loaded conversation's metadata that affects presentation (read-only state). */
+    #applyLoadedConversation(data: ConversationResponseModel | undefined): void {
+        this.#conversation = data ?? undefined;
+        this.#readonly.setValue(data?.isArchived ?? false);
     }
 
     async loadAgents(): Promise<void> {
@@ -150,6 +181,9 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.#conversationId = conversationId;
         this.#isDraft = false;
         this.#draftProjectId = undefined;
+        // Mode not yet known — withhold the composer until the conversation resolves (avoids a flash of
+        // the input before an archived conversation switches to read-only).
+        this.#ready.setValue(false);
 
         this.#runController.abortRun();
         this.#strategy.setConversationId(conversationId);
@@ -159,7 +193,8 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.#runController.setAgent({ id: `conversation:${conversationId}`, name: "Workspace", alias: "workspace" });
 
         const { data } = await this.#conversationRepository.requestById(conversationId);
-        this.#conversation = data ?? undefined;
+        this.#applyLoadedConversation(data ?? undefined);
+        this.#ready.setValue(true);
         this.#selectedAgent.setValue(this.#resolveSelectedAgent(this.#agents.getValue()));
 
         await this.#runController.loadInitialMessages();
@@ -176,6 +211,9 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.#isDraft = true;
         this.#draftProjectId = projectId;
         this.#creating = false;
+        this.#readonly.setValue(false);
+        // A draft is always editable; its mode is known immediately (no metadata fetch).
+        this.#ready.setValue(true);
 
         this.#runController.abortRun();
         this.#strategy.setConversationId(undefined);

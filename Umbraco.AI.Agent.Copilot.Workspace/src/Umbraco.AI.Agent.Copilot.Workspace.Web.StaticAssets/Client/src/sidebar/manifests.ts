@@ -83,4 +83,15 @@ export const sidebarManifests: UmbExtensionManifest[] = [
         meta: { label: "#uaiCopilotWorkspace_treeRecentHeading", menu: UAI_RECENT_MENU_ALIAS },
         conditions: [sectionCondition, { alias: UAI_SIDEBAR_GROUP_NOT_EMPTY_CONDITION, match: "recent" }],
     },
+
+    // Archived (recycle-bin) foot: a single self-gating custom element (renders nothing when there are
+    // no archived conversations), so it needs no group-not-empty condition. Lowest weight → sits last.
+    {
+        type: "sectionSidebarApp",
+        alias: "Uai.CopilotWorkspace.SidebarApp.Archived",
+        name: "Copilot Workspace Archived Footer",
+        weight: 100,
+        element: () => import("./menu/archived-footer.element.js"),
+        conditions: [sectionCondition],
+    },
 ];

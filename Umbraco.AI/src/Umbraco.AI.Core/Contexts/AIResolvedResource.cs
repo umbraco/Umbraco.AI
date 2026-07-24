@@ -44,4 +44,11 @@ public sealed class AIResolvedResource
     /// The name of the context this resource came from.
     /// </summary>
     public required string ContextName { get; init; }
+
+    /// <summary>
+    /// Optional description of the context this resource came from. Surfaced as a group
+    /// heading alongside <see cref="ContextName"/> so the model can tell which context a
+    /// resource belongs to (e.g. which installed package a knowledge set shipped with).
+    /// </summary>
+    public string? ContextDescription { get; init; }
 }

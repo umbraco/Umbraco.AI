@@ -176,7 +176,8 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         }
 
         // Get profile - use default Chat profile if not specified
-        var chatClient = await CreateChatClientAsync(agent, cancellationToken);
+        var profile = await ResolveProfileAsync(agent, cancellationToken);
+        var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
         var config = agent.GetStandardConfig();
 
@@ -187,13 +188,20 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
         // Build ChatOptions — always needed for instructions and tools,
         // plus output schema response format if configured.
+        // Inference settings (Temperature, MaxOutputTokens) are copied from the
+        // resolved profile so the agent runtime honors the same profile settings as
+        // the core chat path (AIChatService.MergeOptions); otherwise MaxOutputTokens
+        // reaches the provider as null and responses truncate at the SDK default.
         // When approval is required, disable multi-call turns so each destructive
         // tool call is presented individually for approval (MEAI limitation).
+        var chatSettings = profile.Settings as AIChatProfileSettings;
         var chatOptions = new ChatOptions
         {
             Instructions = config?.Instructions,
             Tools = tools,
             AllowMultipleToolCalls = requiresApproval ? false : null,
+            Temperature = chatSettings?.Temperature,
+            MaxOutputTokens = chatSettings?.MaxTokens,
         };
 
         if (config?.OutputSchema is JsonElement schema)
@@ -236,22 +244,17 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         return mafWorkflow.AsAIAgent(config.WorkflowId);
     }
 
-    private async Task<IChatClient> CreateChatClientAsync(
+    private async Task<AIProfile> ResolveProfileAsync(
         UmbracoAIAgent agent,
         CancellationToken cancellationToken)
     {
-        AIProfile profile;
         if (agent.ProfileId.HasValue)
         {
-            profile = await _profileService.GetProfileAsync(agent.ProfileId.Value, cancellationToken)
+            return await _profileService.GetProfileAsync(agent.ProfileId.Value, cancellationToken)
                 ?? throw new InvalidOperationException($"Profile with ID '{agent.ProfileId}' not found.");
         }
-        else
-        {
-            profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
-        }
 
-        return await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
+        return await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
     }
 
     /// <summary>

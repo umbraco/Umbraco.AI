@@ -10,6 +10,7 @@ using Umbraco.AI.Core.Guardrails.Middleware;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.KnowledgeSets;
 using Umbraco.AI.Core.Contexts.Middleware;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.Contexts.ResourceTypes;
@@ -145,6 +146,10 @@ public static partial class UmbracoBuilderExtensions
         builder.AIPropertyValueHandlers()
             .Add(() => builder.TypeLoader.GetTypes<IAIPropertyValueHandler>());
 
+        // Simplified value transformers - simplified LLM schema + expand-to-write transform, per editor
+        builder.AISimplifiedPropertyValueTransformers()
+            .Add(() => builder.TypeLoader.GetTypes<IAISimplifiedPropertyValueTransformer>());
+
         // Tool scope infrastructure - auto-discover scopes via [AIToolScope] attribute
         builder.AIToolScopes()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIToolScope, AIToolScopeAttribute>(cache: true));
@@ -233,7 +238,14 @@ public static partial class UmbracoBuilderExtensions
         // Context resource type infrastructure - auto-discover via [AIContextResourceType] attribute
         services.AddSingleton<IAIContextResourceTypeInfrastructure, AIContextResourceTypeInfrastructure>();
         builder.AIContextResourceTypes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true))
+            // The Core-internal knowledge-content resource type has no [AIContextResourceType] attribute
+            // (it is invisible to authors and the resource-type picker), so it is registered explicitly.
+            .Add<KnowledgeContentResourceType>();
+
+        // Knowledge sets - code-defined, package-embeddable knowledge, auto-discover via [AIKnowledgeSet] attribute
+        builder.AIKnowledgeSets()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIKnowledgeSet, AIKnowledgeSetAttribute>(cache: true));
 
         // Context system
         services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
@@ -242,11 +254,15 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIContextAccessor, AIContextAccessor>();
 
         // Context resolution - pluggable resolver system
-        // Order: Profile -> Content -> AdditionalResources (later resolvers override earlier ones;
-        // caller-owned ad-hoc resources take precedence and are a no-op unless the caller sets them).
+        // Order: Profile -> Content -> KnowledgeSet -> AdditionalResources. Later resolvers override
+        // earlier ones. Content can override profile-level context; knowledge-set GUIDs are namespaced
+        // so they never collide with user contexts (order only controls their prompt sequence, not
+        // override); caller-owned ad-hoc resources take precedence and stay last (a no-op unless the
+        // caller sets them).
         builder.AIContextResolvers()
             .Append<ProfileContextResolver>()
             .Append<ContentContextResolver>()
+            .Append<KnowledgeSetContextResolver>()
             .Append<AdditionalResourcesContextResolver>();
         services.AddSingleton<IAIContextResolutionService, AIContextResolutionService>();
 

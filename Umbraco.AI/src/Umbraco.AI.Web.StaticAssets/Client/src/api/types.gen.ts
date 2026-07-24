@@ -390,6 +390,33 @@ export type KeyValuePairOfstringAndstring = {
     value: null | string;
 };
 
+export type KnowledgeSetDetailResponseModel = {
+    id: string;
+    name: string;
+    description?: null | string;
+    icon?: null | string;
+    items: Array<KnowledgeSetItemModel>;
+};
+
+export type KnowledgeSetItemContentResponseModel = {
+    key: string;
+    content: string;
+};
+
+export type KnowledgeSetItemModel = {
+    key: string;
+    name: string;
+    description?: null | string;
+};
+
+export type KnowledgeSetResponseModel = {
+    id: string;
+    name: string;
+    description?: null | string;
+    icon?: null | string;
+    itemCount: number;
+};
+
 export type ModelDescriptorResponseModel = {
     model: null | ModelRefModel;
     name: string;
@@ -2019,6 +2046,92 @@ export type GenerateResponses = {
 };
 
 export type GenerateResponse = GenerateResponses[keyof GenerateResponses];
+
+export type GetAllKnowledgeSetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/knowledge-sets';
+};
+
+export type GetAllKnowledgeSetsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllKnowledgeSetsResponses = {
+    /**
+     * OK
+     */
+    200: Array<KnowledgeSetResponseModel>;
+};
+
+export type GetAllKnowledgeSetsResponse = GetAllKnowledgeSetsResponses[keyof GetAllKnowledgeSetsResponses];
+
+export type GetKnowledgeSetByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/knowledge-sets/{id}';
+};
+
+export type GetKnowledgeSetByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetKnowledgeSetByIdError = GetKnowledgeSetByIdErrors[keyof GetKnowledgeSetByIdErrors];
+
+export type GetKnowledgeSetByIdResponses = {
+    /**
+     * OK
+     */
+    200: KnowledgeSetDetailResponseModel;
+};
+
+export type GetKnowledgeSetByIdResponse = GetKnowledgeSetByIdResponses[keyof GetKnowledgeSetByIdResponses];
+
+export type GetKnowledgeSetItemContentData = {
+    body?: never;
+    path: {
+        id: string;
+        key: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/knowledge-sets/{id}/item/{key}';
+};
+
+export type GetKnowledgeSetItemContentErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetKnowledgeSetItemContentError = GetKnowledgeSetItemContentErrors[keyof GetKnowledgeSetItemContentErrors];
+
+export type GetKnowledgeSetItemContentResponses = {
+    /**
+     * OK
+     */
+    200: KnowledgeSetItemContentResponseModel;
+};
+
+export type GetKnowledgeSetItemContentResponse = GetKnowledgeSetItemContentResponses[keyof GetKnowledgeSetItemContentResponses];
 
 export type GetAllProfilesData = {
     body?: never;

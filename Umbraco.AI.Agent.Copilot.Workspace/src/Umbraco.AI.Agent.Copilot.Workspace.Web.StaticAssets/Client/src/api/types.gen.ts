@@ -402,6 +402,10 @@ export type Delete2Errors = {
      */
     401: unknown;
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;

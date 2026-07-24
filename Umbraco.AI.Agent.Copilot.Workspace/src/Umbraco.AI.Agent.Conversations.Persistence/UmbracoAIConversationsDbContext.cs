@@ -143,7 +143,9 @@ public class UmbracoAIConversationsDbContext : DbContext
             entity.HasIndex(e => e.ProjectId);
             entity.HasIndex(e => e.LastMessageAt);
 
-            // Project delete orphans conversations (ProjectId set null) rather than cascade-deleting.
+            // Deleting a project that still owns conversations is blocked at the service layer
+            // (AIProjectDeletingNotification). SetNull is kept only as a DB-level backstop so a stray
+            // delete degrades to orphaning rather than an FK violation; it should not fire normally.
             entity.HasOne<AIProjectEntity>()
                 .WithMany()
                 .HasForeignKey(e => e.ProjectId)

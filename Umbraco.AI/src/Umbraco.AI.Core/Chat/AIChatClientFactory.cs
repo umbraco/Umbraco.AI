@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -13,19 +14,22 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly IAIEditableModelResolver _modelResolver;
 
     public AIChatClientFactory(
         IAIConnectionService connectionService,
         AIChatMiddlewareCollection middleware,
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors,
+        IAIEditableModelResolver modelResolver)
     {
         _connectionService = connectionService;
         _middleware = middleware;
         _runtimeContextAccessor = runtimeContextAccessor;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
+        _modelResolver = modelResolver;
     }
 
     public async Task<IChatClient> CreateClientAsync(AIProfile profile, CancellationToken cancellationToken = default)
@@ -33,8 +37,19 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
         // Get configured provider with resolved settings
         var (chatCapability, provider) = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
 
-        // Create base client from provider with the profile's model
-        var chatClient = await chatCapability.CreateClientAsync(profile.Model.ModelId, cancellationToken);
+        // Resolve the provider-declared profile settings (e.g. reasoning effort) through the same
+        // editable-model pipeline connections use ($-config resolution + validation + typing), so the
+        // provider receives a strongly-typed, resolved object rather than a raw stored bag.
+        var resolvedProfileSettings = _modelResolver.ResolveProfileSettingsForCapability(
+            provider,
+            profile.Capability,
+            profile.ProviderSettings);
+
+        // Create base client from provider with the profile's model and resolved profile settings
+        var chatClient = await chatCapability.CreateClientAsync(
+            resolvedProfileSettings,
+            profile.Model.ModelId,
+            cancellationToken);
 
         // Wrap innermost so SDK exceptions are classified against the originating provider before
         // any middleware sees them (and every model round-trip inside function-invoking middleware

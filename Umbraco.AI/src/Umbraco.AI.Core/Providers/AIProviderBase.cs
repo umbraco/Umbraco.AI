@@ -104,6 +104,21 @@ public abstract class AIProviderBase : IAIProvider
     }
 
     /// <inheritdoc />
+    public virtual AIEditableModelSchema? GetProfileSettingsSchema(AICapability capability)
+    {
+        // A capability declares its profile-settings type via IAICapability.ProfileSettingsType
+        // (set by the two-parameter AIChatCapabilityBase<TSettings, TProfileSettings>). Build the
+        // schema with the same builder used for connection settings.
+        var profileSettingsType = Capabilities
+            .FirstOrDefault(c => c.Kind == capability)?
+            .ProfileSettingsType;
+
+        return profileSettingsType is null
+            ? null
+            : Infrastructure.SchemaBuilder.BuildForType(profileSettingsType, Id);
+    }
+
+    /// <inheritdoc />
     /// <remarks>
     /// Default implementation recognises the common transport exception types via
     /// <see cref="ProviderErrorMapping.FromException"/>. Providers whose SDK surfaces errors

@@ -220,6 +220,7 @@ export type CreateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: null | ProfileSettingsModel;
+    providerSettings?: unknown;
     tags: Array<string>;
 };
 
@@ -491,6 +492,7 @@ export type ProfileResponseModel = {
     model?: null | ModelRefModel;
     connectionId: string;
     settings?: null | ProfileSettingsModel;
+    providerSettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -533,6 +535,9 @@ export type ProviderResponseModel = {
     name: string;
     capabilities: Array<string>;
     settingsSchema?: null | EditableModelSchemaModel;
+    profileSettingsSchemas: {
+        [key: string]: EditableModelSchemaModel;
+    };
 };
 
 export type RunTestBatchRequestModel = {
@@ -845,6 +850,7 @@ export type UpdateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: null | ProfileSettingsModel;
+    providerSettings?: unknown;
     tags: Array<string>;
 };
 

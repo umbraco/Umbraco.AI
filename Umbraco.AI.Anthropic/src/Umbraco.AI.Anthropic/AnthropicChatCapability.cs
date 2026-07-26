@@ -9,7 +9,8 @@ namespace Umbraco.AI.Anthropic;
 /// <summary>
 /// AI chat capability for Anthropic provider.
 /// </summary>
-public class AnthropicChatCapability(AnthropicProvider provider) : AIChatCapabilityBase<AnthropicProviderSettings>(provider)
+public class AnthropicChatCapability(AnthropicProvider provider)
+    : AIChatCapabilityBase<AnthropicProviderSettings, AnthropicChatProfileSettings>(provider)
 {
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
     
@@ -42,6 +43,22 @@ public class AnthropicChatCapability(AnthropicProvider provider) : AIChatCapabil
     protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
         => AnthropicProvider.CreateAnthropicClient(settings)
             .Beta.AsIChatClient(modelId);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Enables Claude's extended thinking with the configured token budget. The Anthropic
+    /// (tryAGI) Microsoft.Extensions.AI adapter reads the <c>"thinking"</c> entry from
+    /// <see cref="ChatOptions.AdditionalProperties"/> when building the request.
+    /// </remarks>
+    protected override void ApplyProfileSettings(AnthropicChatProfileSettings profileSettings, ChatOptions options)
+    {
+        if (profileSettings.ThinkingBudgetTokens is not { } budgetTokens || budgetTokens <= 0)
+        {
+            return;
+        }
+
+        (options.AdditionalProperties ??= new AdditionalPropertiesDictionary())["thinking"] = budgetTokens;
+    }
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId));

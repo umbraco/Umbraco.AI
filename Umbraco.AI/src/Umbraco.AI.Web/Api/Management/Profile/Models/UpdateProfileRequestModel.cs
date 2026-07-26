@@ -38,6 +38,12 @@ public class UpdateProfileRequestModel
     public ProfileSettingsModel? Settings { get; init; }
 
     /// <summary>
+    /// Provider-declared, profile-level settings (e.g. reasoning effort). Shape is described by the
+    /// provider's profile-settings schema for this profile's capability.
+    /// </summary>
+    public object? ProviderSettings { get; init; }
+
+    /// <summary>
     /// Tags associated with the profile.
     /// </summary>
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();

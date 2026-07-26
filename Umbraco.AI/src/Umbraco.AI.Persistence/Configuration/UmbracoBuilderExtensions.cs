@@ -56,6 +56,9 @@ public static class UmbracoBuilderExtensions
         // Connection factory for entity/domain mapping with encryption support
         builder.Services.AddSingleton<IAIConnectionFactory, AIConnectionFactory>();
 
+        // Profile factory for entity/domain mapping with provider-declared profile-settings encryption support
+        builder.Services.AddSingleton<IAIProfileFactory, AIProfileFactory>();
+
         // Context and guardrail factories for entity/domain mapping with encryption support
         builder.Services.AddSingleton<IAIContextFactory, AIContextFactory>();
         builder.Services.AddSingleton<IAIGuardrailFactory, AIGuardrailFactory>();

@@ -11,13 +11,17 @@ namespace Umbraco.AI.Persistence.Profiles;
 internal class EFCoreAIProfileRepository : IAIProfileRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
+    private readonly IAIProfileFactory _factory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EFCoreAIProfileRepository"/>.
     /// </summary>
-    public EFCoreAIProfileRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
+    public EFCoreAIProfileRepository(
+        IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
+        IAIProfileFactory factory)
     {
         _scopeProvider = scopeProvider;
+        _factory = factory;
     }
 
     /// <inheritdoc />
@@ -29,7 +33,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
             await db.Profiles.FirstOrDefaultAsync(p => p.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AIProfileFactory.BuildDomain(entity);
+        return entity is null ? null : _factory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -44,7 +48,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
                 cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AIProfileFactory.BuildDomain(entity);
+        return entity is null ? null : _factory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -56,7 +60,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
             await db.Profiles.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AIProfileFactory.BuildDomain);
+        return entities.Select(_factory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -71,7 +75,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AIProfileFactory.BuildDomain);
+        return entities.Select(_factory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -115,7 +119,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AIProfileFactory.BuildDomain), result.total);
+        return (result.items.Select(_factory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
@@ -135,7 +139,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
                 profile.CreatedByUserId = userId;
                 profile.ModifiedByUserId = userId;
 
-                AIProfileEntity newEntity = AIProfileFactory.BuildEntity(profile);
+                AIProfileEntity newEntity = _factory.BuildEntity(profile);
                 db.Profiles.Add(newEntity);
             }
             else
@@ -146,7 +150,7 @@ internal class EFCoreAIProfileRepository : IAIProfileRepository
                 profile.DateModified = DateTime.UtcNow;
                 profile.ModifiedByUserId = userId;
 
-                AIProfileFactory.UpdateEntity(existing, profile);
+                _factory.UpdateEntity(existing, profile);
             }
 
             await db.SaveChangesAsync(cancellationToken);

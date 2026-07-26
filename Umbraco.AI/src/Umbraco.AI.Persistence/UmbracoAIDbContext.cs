@@ -222,6 +222,8 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.Settings);
 
+            entity.Property(e => e.ProviderSettings);
+
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 

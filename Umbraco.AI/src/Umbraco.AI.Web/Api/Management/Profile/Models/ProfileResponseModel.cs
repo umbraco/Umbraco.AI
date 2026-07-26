@@ -49,6 +49,13 @@ public class ProfileResponseModel
     public ProfileSettingsModel? Settings { get; set; }
 
     /// <summary>
+    /// Provider-declared, profile-level settings (e.g. reasoning effort). Shape is described by the
+    /// provider's profile-settings schema for this profile's capability
+    /// (<see cref="Provider.Models.ProviderResponseModel.ProfileSettingsSchemas"/>).
+    /// </summary>
+    public object? ProviderSettings { get; set; }
+
+    /// <summary>
     /// Tags associated with the profile.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = [];

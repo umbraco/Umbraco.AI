@@ -35,7 +35,15 @@ public interface IAIProvider : IDiscoverable
     /// </summary>
     /// <returns>The settings schema, or null if the provider has no settings.</returns>
     AIEditableModelSchema? GetSettingsSchema();
-    
+
+    /// <summary>
+    /// Gets the schema describing the provider-declared, profile-level settings for the given
+    /// capability (e.g. reasoning effort). Used by the UI to render extra fields on the profile editor.
+    /// </summary>
+    /// <param name="capability">The capability whose profile-settings schema is requested.</param>
+    /// <returns>The schema, or null if the capability is not supported or declares no profile settings.</returns>
+    AIEditableModelSchema? GetProfileSettingsSchema(AICapability capability) => null;
+
     /// <summary>
     /// Gets all capabilities supported by this provider.
     /// </summary>

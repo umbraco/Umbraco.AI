@@ -1,16 +1,20 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using OpenAI.Responses;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
+
+#pragma warning disable OPENAI001 // OpenAI Responses API (reasoning options) is experimental in the SDK
 
 namespace Umbraco.AI.OpenAI;
 
 /// <summary>
 /// AI chat capability for OpenAI provider.
 /// </summary>
-public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
+public class OpenAIChatCapability(OpenAIProvider provider)
+    : AIChatCapabilityBase<OpenAIProviderSettings, OpenAIChatProfileSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
 
@@ -58,6 +62,42 @@ public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBas
         => OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
             .AsIChatClient(modelId ?? DefaultChatModel);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Translates the profile's reasoning-effort setting into the Responses API's
+    /// <see cref="ResponseReasoningOptions.ReasoningEffortLevel"/> via
+    /// <see cref="ChatOptions.RawRepresentationFactory"/>. Any existing factory is preserved.
+    /// </remarks>
+    protected override void ApplyProfileSettings(OpenAIChatProfileSettings profileSettings, ChatOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(profileSettings.ReasoningEffort))
+        {
+            return;
+        }
+
+        ResponseReasoningEffortLevel? effort = profileSettings.ReasoningEffort.Trim().ToLowerInvariant() switch
+        {
+            "low" => ResponseReasoningEffortLevel.Low,
+            "medium" => ResponseReasoningEffortLevel.Medium,
+            "high" => ResponseReasoningEffortLevel.High,
+            _ => null
+        };
+
+        if (effort is null)
+        {
+            return;
+        }
+
+        var previousFactory = options.RawRepresentationFactory;
+        options.RawRepresentationFactory = client =>
+        {
+            var raw = previousFactory?.Invoke(client) as ResponseCreationOptions ?? new ResponseCreationOptions();
+            raw.ReasoningOptions ??= new ResponseReasoningOptions();
+            raw.ReasoningOptions.ReasoningEffortLevel = effort;
+            return raw;
+        };
+    }
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId))

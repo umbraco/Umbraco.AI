@@ -10,6 +10,10 @@ import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
+import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
+import type { UaiProviderDetailModel } from "../../../../provider/types.js";
+import type { UaiEditableModelSchemaModel } from "../../../../core/types.js";
+import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
 
 /**
  * Workspace view for Profile details.
@@ -20,9 +24,13 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_PROFILE_WORKSPACE_CONTEXT.TYPE;
     #connectionRepository = new UaiConnectionCapabilityRepository(this);
     #connectionModelsRepository = new UaiConnectionModelsRepository(this);
+    #providerDetailRepository = new UaiProviderDetailRepository(this);
 
     @state()
     private _model?: UaiProfileDetailModel;
+
+    @state()
+    private _provider?: UaiProviderDetailModel;
 
     @state()
     private _connections: UaiConnectionItemModel[] = [];
@@ -63,11 +71,26 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (data) {
             this._connections = data;
 
-            // If a connection is already selected, load its models
+            // If a connection is already selected, load its models and the provider's profile-settings schema
             if (connectionId) {
                 await this.#loadModelsForConnection(connectionId, capability);
+                await this.#loadProviderDetail(connectionId);
             }
         }
+    }
+
+    /**
+     * Loads the provider detail (for its profile-settings schema) for the selected connection's provider.
+     */
+    async #loadProviderDetail(connectionId: string | undefined) {
+        const providerId = this._connections.find((c) => c.unique === connectionId)?.providerId;
+        if (!providerId) {
+            this._provider = undefined;
+            return;
+        }
+
+        const { data } = await this.#providerDetailRepository.requestById(providerId);
+        this._provider = data;
     }
 
     async #loadModelsForConnection(connectionId: string, capability: string) {
@@ -91,14 +114,21 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #onConnectionChange(event: UUISelectEvent) {
         event.stopPropagation();
         const connectionId = event.target.value as string;
+        // Changing connection can change the provider, so clear any previously entered
+        // provider-specific settings to avoid carrying an incompatible bag across providers.
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ connectionId, model: null }, "connectionId"),
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>(
+                { connectionId, model: null, providerSettings: null },
+                "connectionId",
+            ),
         );
-        // Load models for the new connection
+        // Load models and provider profile-settings schema for the new connection
         if (connectionId && this._model?.capability) {
             this.#loadModelsForConnection(connectionId, this._model.capability);
+            this.#loadProviderDetail(connectionId);
         } else {
             this._availableModels = [];
+            this._provider = undefined;
         }
     }
 
@@ -448,6 +478,47 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         `;
     }
 
+    /**
+     * Gets the provider-declared profile-settings schema for the current capability, if any.
+     * Keyed by capability name (e.g. "Chat"); matched case-insensitively.
+     */
+    #getProfileSettingsSchema(): UaiEditableModelSchemaModel | undefined {
+        const capability = this._model?.capability;
+        const schemas = this._provider?.profileSettingsSchemas;
+        if (!capability || !schemas) return undefined;
+
+        const key = Object.keys(schemas).find((k) => k.toLowerCase() === capability.toLowerCase());
+        return key ? schemas[key] : undefined;
+    }
+
+    #onProviderSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+        e.stopPropagation();
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ providerSettings: e.detail.model }, "providerSettings"),
+        );
+    }
+
+    /**
+     * Renders the provider-declared, profile-level settings (e.g. reasoning effort) using the
+     * shared schema-driven model editor. Renders nothing when the provider declares no extras.
+     */
+    #renderProviderSettings() {
+        const schema = this.#getProfileSettingsSchema();
+        if (!schema || schema.fields.length === 0) return nothing;
+
+        return html`
+            <uui-box headline="Provider settings">
+                <uai-model-editor
+                    .schema=${schema}
+                    .model=${this._model?.providerSettings ?? undefined}
+                    empty-message="This provider has no additional settings."
+                    @change=${this.#onProviderSettingsChange}
+                >
+                </uai-model-editor>
+            </uui-box>
+        `;
+    }
+
     #getCurrentModelValue(): string {
         if (!this._model?.model) return "";
         return `${this._model.model.providerId}|${this._model.model.modelId}`;
@@ -525,6 +596,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             ${this.#renderCapabilitySettings()}
+            ${this.#renderProviderSettings()}
             ${this._model.tags.length > 0
                 ? html`
                       <uui-box headline="Tags">

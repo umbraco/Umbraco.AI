@@ -1,4 +1,5 @@
 using System.Linq;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.Core.EditableModels;
@@ -38,5 +39,44 @@ public static class AIEditableModelResolverExtensions
 
         // Provider doesn't have settings, return null
         return null;
+    }
+
+    /// <summary>
+    /// Resolves the provider-declared, profile-level settings (e.g. reasoning effort) for a given
+    /// capability into a typed instance. Mirrors <see cref="ResolveSettingsForProvider"/> but reads the
+    /// settings type/schema from the capability rather than the provider, so it can apply the same
+    /// <c>$</c>-config resolution and validation the connection settings get.
+    /// </summary>
+    /// <param name="resolver">The resolver instance.</param>
+    /// <param name="provider">The provider that owns the capability.</param>
+    /// <param name="capability">The capability whose profile settings should be resolved.</param>
+    /// <param name="profileSettings">The stored (untyped) profile-settings bag to resolve.</param>
+    /// <returns>
+    /// A typed profile-settings instance as <see cref="object"/>, or null if the bag was null or the
+    /// capability declares no profile settings.
+    /// </returns>
+    public static object? ResolveProfileSettingsForCapability(
+        this IAIEditableModelResolver resolver,
+        IAIProvider provider,
+        AICapability capability,
+        object? profileSettings)
+    {
+        if (profileSettings is null)
+        {
+            return null;
+        }
+
+        var profileSettingsType = provider
+            .GetCapabilities()
+            .FirstOrDefault(c => c.Kind == capability)?
+            .ProfileSettingsType;
+
+        if (profileSettingsType is null)
+        {
+            return null;
+        }
+
+        var schema = provider.GetProfileSettingsSchema(capability);
+        return resolver.ResolveModel(profileSettingsType, profileSettings, schema);
     }
 }

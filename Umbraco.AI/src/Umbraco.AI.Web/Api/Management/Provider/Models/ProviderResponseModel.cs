@@ -31,4 +31,13 @@ public class ProviderResponseModel
     /// The settings schema for this provider.
     /// </summary>
     public EditableModelSchemaModel? SettingsSchema { get; set; }
+
+    /// <summary>
+    /// The provider-declared profile-level settings schemas (e.g. reasoning effort), keyed by
+    /// capability name (e.g. "Chat"). Only capabilities that declare extra profile settings appear.
+    /// Used by the UI to render additional fields on the profile editor.
+    /// </summary>
+    [Required]
+    public IReadOnlyDictionary<string, EditableModelSchemaModel> ProfileSettingsSchemas { get; set; }
+        = new Dictionary<string, EditableModelSchemaModel>();
 }

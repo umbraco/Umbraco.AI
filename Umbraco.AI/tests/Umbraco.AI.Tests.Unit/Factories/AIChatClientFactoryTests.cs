@@ -478,8 +478,9 @@ public class AIChatClientFactoryTests
         // Assert - factory wraps with FunctionInvokingChatClient; verify inner client is accessible
         client.ShouldNotBeNull();
         client.GetService<FakeChatClient>().ShouldBe(fakeChatClient);
-        // Verify that CreateClient was called on the configured capability with the model ID from the profile
-        configuredCapabilityMock.Verify(c => c.CreateClientAsync("gpt-4", It.IsAny<CancellationToken>()), Times.Once);
+        // Verify that CreateClient was called on the configured capability with the model ID from the
+        // profile, via the profile-settings-aware overload the factory invokes.
+        configuredCapabilityMock.Verify(c => c.CreateClientAsync(It.IsAny<object?>(), "gpt-4", It.IsAny<CancellationToken>()), Times.Once);
         // Verify that GetConfiguredProviderAsync was called (which handles settings resolution)
         _connectionServiceMock.Verify(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);
     }

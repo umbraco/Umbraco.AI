@@ -6,7 +6,7 @@ namespace Umbraco.AI.OpenAI;
 /// Provider-declared, profile-level chat settings for OpenAI (surfaced on the profile editor and
 /// applied to each request).
 /// </summary>
-public class OpenAIChatProfileSettings
+public class OpenAIChatCapabilitySettings
 {
     /// <summary>
     /// Constrains the reasoning effort for reasoning-capable models (o-series, gpt-5). Leave empty

@@ -50,33 +50,33 @@ public static class AIEditableModelResolverExtensions
     /// <param name="resolver">The resolver instance.</param>
     /// <param name="provider">The provider that owns the capability.</param>
     /// <param name="capability">The capability whose profile settings should be resolved.</param>
-    /// <param name="profileSettings">The stored (untyped) profile-settings bag to resolve.</param>
+    /// <param name="capabilitySettings">The stored (untyped) profile-settings bag to resolve.</param>
     /// <returns>
     /// A typed profile-settings instance as <see cref="object"/>, or null if the bag was null or the
     /// capability declares no profile settings.
     /// </returns>
-    public static object? ResolveProfileSettingsForCapability(
+    public static object? ResolveCapabilitySettings(
         this IAIEditableModelResolver resolver,
         IAIProvider provider,
         AICapability capability,
-        object? profileSettings)
+        object? capabilitySettings)
     {
-        if (profileSettings is null)
+        if (capabilitySettings is null)
         {
             return null;
         }
 
-        var profileSettingsType = provider
+        var capabilitySettingsType = provider
             .GetCapabilities()
             .FirstOrDefault(c => c.Kind == capability)?
-            .ProfileSettingsType;
+            .CapabilitySettingsType;
 
-        if (profileSettingsType is null)
+        if (capabilitySettingsType is null)
         {
             return null;
         }
 
-        var schema = provider.GetProfileSettingsSchema(capability);
-        return resolver.ResolveModel(profileSettingsType, profileSettings, schema);
+        var schema = provider.GetCapabilitySettingsSchema(capability);
+        return resolver.ResolveModel(capabilitySettingsType, capabilitySettings, schema);
     }
 }

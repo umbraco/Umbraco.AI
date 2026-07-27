@@ -51,9 +51,9 @@ public class ProfileResponseModel
     /// <summary>
     /// Provider-declared, profile-level settings (e.g. reasoning effort). Shape is described by the
     /// provider's profile-settings schema for this profile's capability
-    /// (<see cref="Provider.Models.ProviderResponseModel.ProfileSettingsSchemas"/>).
+    /// (<see cref="Provider.Models.ProviderResponseModel.CapabilitySettingsSchemas"/>).
     /// </summary>
-    public object? ProviderSettings { get; set; }
+    public object? CapabilitySettings { get; set; }
 
     /// <summary>
     /// Tags associated with the profile.

@@ -38,6 +38,6 @@ public class ProviderResponseModel
     /// Used by the UI to render additional fields on the profile editor.
     /// </summary>
     [Required]
-    public IReadOnlyDictionary<string, EditableModelSchemaModel> ProfileSettingsSchemas { get; set; }
+    public IReadOnlyDictionary<string, EditableModelSchemaModel> CapabilitySettingsSchemas { get; set; }
         = new Dictionary<string, EditableModelSchemaModel>();
 }

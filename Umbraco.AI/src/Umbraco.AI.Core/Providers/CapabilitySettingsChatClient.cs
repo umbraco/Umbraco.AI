@@ -7,24 +7,24 @@ namespace Umbraco.AI.Core.Providers;
 /// effort) onto each request's <see cref="ChatOptions"/> before delegating to the inner client.
 /// </summary>
 /// <remarks>
-/// Created by <see cref="AIChatCapabilityBase{TSettings, TProfileSettings}"/> with the resolved,
+/// Created by <see cref="AIChatCapabilityBase{TSettings, TCapabilitySettings}"/> with the resolved,
 /// typed profile settings baked in. The caller's <see cref="ChatOptions"/> instance is never mutated;
 /// a per-request copy is used.
 /// </remarks>
-/// <typeparam name="TProfileSettings">The provider-declared profile settings type.</typeparam>
-internal sealed class ProfileSettingsChatClient<TProfileSettings> : DelegatingChatClient
-    where TProfileSettings : class
+/// <typeparam name="TCapabilitySettings">The provider-declared profile settings type.</typeparam>
+internal sealed class CapabilitySettingsChatClient<TCapabilitySettings> : DelegatingChatClient
+    where TCapabilitySettings : class
 {
-    private readonly TProfileSettings _profileSettings;
-    private readonly Action<TProfileSettings, ChatOptions> _apply;
+    private readonly TCapabilitySettings _capabilitySettings;
+    private readonly Action<TCapabilitySettings, ChatOptions> _apply;
 
-    public ProfileSettingsChatClient(
+    public CapabilitySettingsChatClient(
         IChatClient innerClient,
-        TProfileSettings profileSettings,
-        Action<TProfileSettings, ChatOptions> apply)
+        TCapabilitySettings capabilitySettings,
+        Action<TCapabilitySettings, ChatOptions> apply)
         : base(innerClient)
     {
-        _profileSettings = profileSettings;
+        _capabilitySettings = capabilitySettings;
         _apply = apply;
     }
 
@@ -46,7 +46,7 @@ internal sealed class ProfileSettingsChatClient<TProfileSettings> : DelegatingCh
     {
         // Clone so the caller's options instance is never mutated.
         var effective = options?.Clone() ?? new ChatOptions();
-        _apply(_profileSettings, effective);
+        _apply(_capabilitySettings, effective);
         return effective;
     }
 }

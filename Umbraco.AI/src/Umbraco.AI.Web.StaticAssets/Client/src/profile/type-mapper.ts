@@ -29,7 +29,7 @@ export const UaiProfileTypeMapper = {
             model: response.model ? { providerId: response.model.providerId, modelId: response.model.modelId } : null,
             connectionId: response.connectionId,
             settings: this.mapResponseSettings(response),
-            providerSettings: (response.providerSettings as Record<string, unknown> | null | undefined) ?? null,
+            capabilitySettings: (response.capabilitySettings as Record<string, unknown> | null | undefined) ?? null,
             tags: response.tags ?? [],
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -57,7 +57,7 @@ export const UaiProfileTypeMapper = {
             model: model.model!,
             connectionId: model.connectionId,
             settings: this.mapRequestSettings(model.settings),
-            providerSettings: model.providerSettings ?? undefined,
+            capabilitySettings: model.capabilitySettings ?? undefined,
             tags: model.tags,
         };
     },
@@ -69,7 +69,7 @@ export const UaiProfileTypeMapper = {
             model: model.model!,
             connectionId: model.connectionId,
             settings: this.mapRequestSettings(model.settings),
-            providerSettings: model.providerSettings ?? undefined,
+            capabilitySettings: model.capabilitySettings ?? undefined,
             tags: model.tags,
         };
     },

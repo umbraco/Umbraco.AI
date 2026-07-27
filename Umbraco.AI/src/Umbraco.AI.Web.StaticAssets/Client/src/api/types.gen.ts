@@ -220,7 +220,7 @@ export type CreateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: null | ProfileSettingsModel;
-    providerSettings?: unknown;
+    capabilitySettings?: unknown;
     tags: Array<string>;
 };
 
@@ -492,7 +492,7 @@ export type ProfileResponseModel = {
     model?: null | ModelRefModel;
     connectionId: string;
     settings?: null | ProfileSettingsModel;
-    providerSettings?: unknown;
+    capabilitySettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -535,7 +535,7 @@ export type ProviderResponseModel = {
     name: string;
     capabilities: Array<string>;
     settingsSchema?: null | EditableModelSchemaModel;
-    profileSettingsSchemas: {
+    capabilitySettingsSchemas: {
         [key: string]: EditableModelSchemaModel;
     };
 };
@@ -850,7 +850,7 @@ export type UpdateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: null | ProfileSettingsModel;
-    providerSettings?: unknown;
+    capabilitySettings?: unknown;
     tags: Array<string>;
 };
 

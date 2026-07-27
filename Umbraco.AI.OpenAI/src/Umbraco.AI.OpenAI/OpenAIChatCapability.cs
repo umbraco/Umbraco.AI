@@ -14,7 +14,7 @@ namespace Umbraco.AI.OpenAI;
 /// AI chat capability for OpenAI provider.
 /// </summary>
 public class OpenAIChatCapability(OpenAIProvider provider)
-    : AIChatCapabilityBase<OpenAIProviderSettings, OpenAIChatProfileSettings>(provider)
+    : AIChatCapabilityBase<OpenAIProviderSettings, OpenAIChatCapabilitySettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
 
@@ -69,14 +69,14 @@ public class OpenAIChatCapability(OpenAIProvider provider)
     /// <see cref="ResponseReasoningOptions.ReasoningEffortLevel"/> via
     /// <see cref="ChatOptions.RawRepresentationFactory"/>. Any existing factory is preserved.
     /// </remarks>
-    protected override void ApplyProfileSettings(OpenAIChatProfileSettings profileSettings, ChatOptions options)
+    protected override void ApplyCapabilitySettings(OpenAIChatCapabilitySettings capabilitySettings, ChatOptions options)
     {
-        if (string.IsNullOrWhiteSpace(profileSettings.ReasoningEffort))
+        if (string.IsNullOrWhiteSpace(capabilitySettings.ReasoningEffort))
         {
             return;
         }
 
-        ResponseReasoningEffortLevel? effort = profileSettings.ReasoningEffort.Trim().ToLowerInvariant() switch
+        ResponseReasoningEffortLevel? effort = capabilitySettings.ReasoningEffort.Trim().ToLowerInvariant() switch
         {
             "low" => ResponseReasoningEffortLevel.Low,
             "medium" => ResponseReasoningEffortLevel.Medium,
@@ -92,7 +92,7 @@ public class OpenAIChatCapability(OpenAIProvider provider)
         var previousFactory = options.RawRepresentationFactory;
         options.RawRepresentationFactory = client =>
         {
-            var raw = previousFactory?.Invoke(client) as ResponseCreationOptions ?? new ResponseCreationOptions();
+            var raw = previousFactory?.Invoke(client) as CreateResponseOptions ?? new CreateResponseOptions();
             raw.ReasoningOptions ??= new ResponseReasoningOptions();
             raw.ReasoningOptions.ReasoningEffortLevel = effort;
             return raw;

@@ -13,9 +13,9 @@ export const UaiProviderTypeMapper = {
     },
 
     toDetailModel(response: ProviderResponseModel): UaiProviderDetailModel {
-        const profileSettingsSchemas: Record<string, UaiEditableModelSchemaModel> = {};
-        for (const [capability, schema] of Object.entries(response.profileSettingsSchemas ?? {})) {
-            profileSettingsSchemas[capability] = UaiCommonTypeMapper.toEditableModelSchemaModel(schema);
+        const capabilitySettingsSchemas: Record<string, UaiEditableModelSchemaModel> = {};
+        for (const [capability, schema] of Object.entries(response.capabilitySettingsSchemas ?? {})) {
+            capabilitySettingsSchemas[capability] = UaiCommonTypeMapper.toEditableModelSchemaModel(schema);
         }
 
         return {
@@ -23,7 +23,7 @@ export const UaiProviderTypeMapper = {
             name: response.name,
             capabilities: response.capabilities,
             settingsSchema: UaiCommonTypeMapper.toEditableModelSchemaModel(response.settingsSchema ?? { fields: [] }),
-            profileSettingsSchemas,
+            capabilitySettingsSchemas,
         };
     },
 };

@@ -7,7 +7,7 @@ namespace Umbraco.AI.Anthropic;
 /// Provider-declared, profile-level chat settings for Anthropic (surfaced on the profile editor and
 /// applied to each request).
 /// </summary>
-public class AnthropicChatProfileSettings
+public class AnthropicChatCapabilitySettings
 {
     /// <summary>
     /// Token budget for Claude's extended thinking on supported models. Leave empty to use the

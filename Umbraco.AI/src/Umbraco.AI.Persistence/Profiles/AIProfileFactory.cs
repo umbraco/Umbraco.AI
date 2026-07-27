@@ -10,7 +10,7 @@ namespace Umbraco.AI.Persistence.Profiles;
 /// </summary>
 /// <remarks>
 /// Capability-specific <see cref="AIProfile.Settings"/> continue to use the plain
-/// <see cref="AIProfileSettingsSerializer"/>. Provider-declared <see cref="AIProfile.ProviderSettings"/>
+/// <see cref="AIProfileSettingsSerializer"/>. Provider-declared <see cref="AIProfile.CapabilitySettings"/>
 /// go through the editable-model serializer with the provider's profile-settings schema so sensitive
 /// fields are encrypted at rest — consistent with how connection settings are handled.
 /// </remarks>
@@ -36,12 +36,12 @@ internal sealed class AIProfileFactory : IAIProfileFactory
 
         var capability = (AICapability)entity.Capability;
 
-        object? providerSettings = null;
-        if (!string.IsNullOrEmpty(entity.ProviderSettings))
+        object? capabilitySettings = null;
+        if (!string.IsNullOrEmpty(entity.CapabilitySettings))
         {
             // Deserialize with automatic decryption of encrypted values (returns a JsonElement bag);
             // resolution/typing happens later at request time via IAIEditableModelResolver.
-            providerSettings = _serializer.Deserialize(entity.ProviderSettings);
+            capabilitySettings = _serializer.Deserialize(entity.CapabilitySettings);
         }
 
         return new AIProfile
@@ -53,7 +53,7 @@ internal sealed class AIProfileFactory : IAIProfileFactory
             Model = new AIModelRef(entity.ProviderId, entity.ModelId),
             ConnectionId = entity.ConnectionId,
             Settings = AIProfileSettingsSerializer.Deserialize(capability, entity.Settings),
-            ProviderSettings = providerSettings,
+            CapabilitySettings = capabilitySettings,
             Tags = tags,
             Version = entity.Version,
             DateCreated = entity.DateCreated,
@@ -76,7 +76,7 @@ internal sealed class AIProfileFactory : IAIProfileFactory
             ModelId = profile.Model.ModelId,
             ConnectionId = profile.ConnectionId,
             Settings = AIProfileSettingsSerializer.Serialize(profile.Settings),
-            ProviderSettings = _serializer.Serialize(profile.ProviderSettings, GetProfileSettingsSchema(profile)),
+            CapabilitySettings = _serializer.Serialize(profile.CapabilitySettings, GetCapabilitySettingsSchema(profile)),
             Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null,
             Version = profile.Version,
             DateCreated = profile.DateCreated,
@@ -96,7 +96,7 @@ internal sealed class AIProfileFactory : IAIProfileFactory
         entity.ModelId = profile.Model.ModelId;
         entity.ConnectionId = profile.ConnectionId;
         entity.Settings = AIProfileSettingsSerializer.Serialize(profile.Settings);
-        entity.ProviderSettings = _serializer.Serialize(profile.ProviderSettings, GetProfileSettingsSchema(profile));
+        entity.CapabilitySettings = _serializer.Serialize(profile.CapabilitySettings, GetCapabilitySettingsSchema(profile));
         entity.Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null;
         entity.Version = profile.Version;
         entity.DateModified = profile.DateModified;
@@ -104,9 +104,9 @@ internal sealed class AIProfileFactory : IAIProfileFactory
         // DateCreated and CreatedByUserId are intentionally not updated
     }
 
-    private AIEditableModelSchema? GetProfileSettingsSchema(AIProfile profile)
+    private AIEditableModelSchema? GetCapabilitySettingsSchema(AIProfile profile)
     {
         var provider = _providers.GetById(profile.Model.ProviderId);
-        return provider?.GetProfileSettingsSchema(profile.Capability);
+        return provider?.GetCapabilitySettingsSchema(profile.Capability);
     }
 }

@@ -50,7 +50,7 @@ internal class AIProfileEntity
     /// Serialized via the editable-model serializer using the provider's profile-settings schema,
     /// so <c>[AIField(IsSensitive = true)]</c> fields are encrypted at rest.
     /// </summary>
-    public string? ProviderSettings { get; set; }
+    public string? CapabilitySettings { get; set; }
 
     /// <summary>
     /// Tags array serialized as a comma-separated string.

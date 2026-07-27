@@ -660,7 +660,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("ProviderSettings")
+                    b.Property<string>("CapabilitySettings")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Settings")

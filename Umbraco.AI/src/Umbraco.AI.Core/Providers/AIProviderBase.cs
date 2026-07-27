@@ -104,18 +104,18 @@ public abstract class AIProviderBase : IAIProvider
     }
 
     /// <inheritdoc />
-    public virtual AIEditableModelSchema? GetProfileSettingsSchema(AICapability capability)
+    public virtual AIEditableModelSchema? GetCapabilitySettingsSchema(AICapability capability)
     {
-        // A capability declares its profile-settings type via IAICapability.ProfileSettingsType
-        // (set by the two-parameter AIChatCapabilityBase<TSettings, TProfileSettings>). Build the
+        // A capability declares its profile-settings type via IAICapability.CapabilitySettingsType
+        // (set by the two-parameter AIChatCapabilityBase<TSettings, TCapabilitySettings>). Build the
         // schema with the same builder used for connection settings.
-        var profileSettingsType = Capabilities
+        var capabilitySettingsType = Capabilities
             .FirstOrDefault(c => c.Kind == capability)?
-            .ProfileSettingsType;
+            .CapabilitySettingsType;
 
-        return profileSettingsType is null
+        return capabilitySettingsType is null
             ? null
-            : Infrastructure.SchemaBuilder.BuildForType(profileSettingsType, Id);
+            : Infrastructure.SchemaBuilder.BuildForType(capabilitySettingsType, Id);
     }
 
     /// <inheritdoc />

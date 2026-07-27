@@ -10,7 +10,7 @@ namespace Umbraco.AI.Anthropic;
 /// AI chat capability for Anthropic provider.
 /// </summary>
 public class AnthropicChatCapability(AnthropicProvider provider)
-    : AIChatCapabilityBase<AnthropicProviderSettings, AnthropicChatProfileSettings>(provider)
+    : AIChatCapabilityBase<AnthropicProviderSettings, AnthropicChatCapabilitySettings>(provider)
 {
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
     
@@ -50,9 +50,9 @@ public class AnthropicChatCapability(AnthropicProvider provider)
     /// (tryAGI) Microsoft.Extensions.AI adapter reads the <c>"thinking"</c> entry from
     /// <see cref="ChatOptions.AdditionalProperties"/> when building the request.
     /// </remarks>
-    protected override void ApplyProfileSettings(AnthropicChatProfileSettings profileSettings, ChatOptions options)
+    protected override void ApplyCapabilitySettings(AnthropicChatCapabilitySettings capabilitySettings, ChatOptions options)
     {
-        if (profileSettings.ThinkingBudgetTokens is not { } budgetTokens || budgetTokens <= 0)
+        if (capabilitySettings.ThinkingBudgetTokens is not { } budgetTokens || budgetTokens <= 0)
         {
             return;
         }

@@ -52,7 +52,7 @@ public sealed class AIProfile : IAIVersionableEntity
     /// storage, or the value supplied by the API). Resolved into a typed instance at request time via
     /// the provider's profile-settings schema.
     /// </summary>
-    public object? ProviderSettings { get; set; }
+    public object? CapabilitySettings { get; set; }
 
     /// <summary>
     /// A list of tags associated with the AI profile for categorization and filtering.

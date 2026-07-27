@@ -40,14 +40,14 @@ internal sealed class AIChatClientFactory : IAIChatClientFactory
         // Resolve the provider-declared profile settings (e.g. reasoning effort) through the same
         // editable-model pipeline connections use ($-config resolution + validation + typing), so the
         // provider receives a strongly-typed, resolved object rather than a raw stored bag.
-        var resolvedProfileSettings = _modelResolver.ResolveProfileSettingsForCapability(
+        var resolvedCapabilitySettings = _modelResolver.ResolveCapabilitySettings(
             provider,
             profile.Capability,
-            profile.ProviderSettings);
+            profile.CapabilitySettings);
 
         // Create base client from provider with the profile's model and resolved profile settings
         var chatClient = await chatCapability.CreateClientAsync(
-            resolvedProfileSettings,
+            resolvedCapabilitySettings,
             profile.Model.ModelId,
             cancellationToken);
 

@@ -47,7 +47,7 @@ public class ProviderMapDefinition : IMapDefinition
         target.SettingsSchema = source.SettingsType is not null
             ? context.Map<EditableModelSchemaModel>(source.GetSettingsSchema())
             : null;
-        target.ProfileSettingsSchemas = MapProfileSettingsSchemas(source, context);
+        target.CapabilitySettingsSchemas = MapCapabilitySettingsSchemas(source, context);
     }
 
     private IEnumerable<string> MapCapabilities(IAIProvider source)
@@ -55,7 +55,7 @@ public class ProviderMapDefinition : IMapDefinition
             .Where(c => _experimentalFeatures.IsCapabilityEnabled(c.Kind))
             .Select(c => c.Kind.ToString());
 
-    private IReadOnlyDictionary<string, EditableModelSchemaModel> MapProfileSettingsSchemas(
+    private IReadOnlyDictionary<string, EditableModelSchemaModel> MapCapabilitySettingsSchemas(
         IAIProvider source,
         MapperContext context)
     {
@@ -63,7 +63,7 @@ public class ProviderMapDefinition : IMapDefinition
         foreach (var capability in source.GetCapabilities()
                      .Where(c => _experimentalFeatures.IsCapabilityEnabled(c.Kind)))
         {
-            var schema = source.GetProfileSettingsSchema(capability.Kind);
+            var schema = source.GetCapabilitySettingsSchema(capability.Kind);
             if (schema is null)
             {
                 continue;

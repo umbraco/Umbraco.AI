@@ -42,7 +42,7 @@ public interface IAIProvider : IDiscoverable
     /// </summary>
     /// <param name="capability">The capability whose profile-settings schema is requested.</param>
     /// <returns>The schema, or null if the capability is not supported or declares no profile settings.</returns>
-    AIEditableModelSchema? GetProfileSettingsSchema(AICapability capability) => null;
+    AIEditableModelSchema? GetCapabilitySettingsSchema(AICapability capability) => null;
 
     /// <summary>
     /// Gets all capabilities supported by this provider.

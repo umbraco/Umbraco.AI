@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.AI.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
     public partial class UmbracoAI_AddProfileProviderSettings : Migration
@@ -11,9 +11,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "ProviderSettings",
+                name: "CapabilitySettings",
                 table: "umbracoAIProfile",
-                type: "TEXT",
+                type: "nvarchar(max)",
                 nullable: true);
         }
 
@@ -21,7 +21,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ProviderSettings",
+                name: "CapabilitySettings",
                 table: "umbracoAIProfile");
         }
     }

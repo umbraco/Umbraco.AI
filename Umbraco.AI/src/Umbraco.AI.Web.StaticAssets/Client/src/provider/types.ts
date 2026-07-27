@@ -24,5 +24,5 @@ export interface UaiProviderDetailModel {
      * Provider-declared profile-level settings schemas (e.g. reasoning effort), keyed by capability
      * name (e.g. "Chat"). Only capabilities that declare extra profile settings appear.
      */
-    profileSettingsSchemas: Record<string, UaiEditableModelSchemaModel>;
+    capabilitySettingsSchemas: Record<string, UaiEditableModelSchemaModel>;
 }

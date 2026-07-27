@@ -54,7 +54,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = new AIModelRef(source.Model.ProviderId, source.Model.ModelId);
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
-        target.ProviderSettings = source.ProviderSettings;
+        target.CapabilitySettings = source.CapabilitySettings;
         target.Tags = source.Tags;
     }
 
@@ -67,7 +67,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = new AIModelRef(source.Model.ProviderId, source.Model.ModelId);
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
-        target.ProviderSettings = source.ProviderSettings;
+        target.CapabilitySettings = source.CapabilitySettings;
         target.Tags = source.Tags;
     }
 
@@ -81,7 +81,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Capability = source.Capability.ToString();
         target.Model = context.Map<ModelRefModel>(source.Model);
         target.Settings = MapSettingsToResponse(source);
-        target.ProviderSettings = source.ProviderSettings;
+        target.CapabilitySettings = source.CapabilitySettings;
         target.Tags = source.Tags;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;

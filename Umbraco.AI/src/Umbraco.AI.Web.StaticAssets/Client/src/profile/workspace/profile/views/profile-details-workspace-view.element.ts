@@ -118,7 +118,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         // provider-specific settings to avoid carrying an incompatible bag across providers.
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiProfileDetailModel>(
-                { connectionId, model: null, providerSettings: null },
+                { connectionId, model: null, capabilitySettings: null },
                 "connectionId",
             ),
         );
@@ -302,7 +302,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     /**
      * Renders capability-specific settings based on the profile's capability.
      */
-    #renderCapabilitySettings() {
+    #renderProfileSettings() {
         if (!this._model) return nothing;
 
         const capability = this._model.capability.toLowerCase();
@@ -482,19 +482,19 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
      * Gets the provider-declared profile-settings schema for the current capability, if any.
      * Keyed by capability name (e.g. "Chat"); matched case-insensitively.
      */
-    #getProfileSettingsSchema(): UaiEditableModelSchemaModel | undefined {
+    #getCapabilitySettingsSchema(): UaiEditableModelSchemaModel | undefined {
         const capability = this._model?.capability;
-        const schemas = this._provider?.profileSettingsSchemas;
+        const schemas = this._provider?.capabilitySettingsSchemas;
         if (!capability || !schemas) return undefined;
 
         const key = Object.keys(schemas).find((k) => k.toLowerCase() === capability.toLowerCase());
         return key ? schemas[key] : undefined;
     }
 
-    #onProviderSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+    #onCapabilitySettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
         e.stopPropagation();
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ providerSettings: e.detail.model }, "providerSettings"),
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ capabilitySettings: e.detail.model }, "capabilitySettings"),
         );
     }
 
@@ -502,17 +502,17 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
      * Renders the provider-declared, profile-level settings (e.g. reasoning effort) using the
      * shared schema-driven model editor. Renders nothing when the provider declares no extras.
      */
-    #renderProviderSettings() {
-        const schema = this.#getProfileSettingsSchema();
+    #renderCapabilitySettings() {
+        const schema = this.#getCapabilitySettingsSchema();
         if (!schema || schema.fields.length === 0) return nothing;
 
         return html`
             <uui-box headline="Provider settings">
                 <uai-model-editor
                     .schema=${schema}
-                    .model=${this._model?.providerSettings ?? undefined}
+                    .model=${this._model?.capabilitySettings ?? undefined}
                     empty-message="This provider has no additional settings."
-                    @change=${this.#onProviderSettingsChange}
+                    @change=${this.#onCapabilitySettingsChange}
                 >
                 </uai-model-editor>
             </uui-box>
@@ -595,8 +595,8 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
+            ${this.#renderProfileSettings()}
             ${this.#renderCapabilitySettings()}
-            ${this.#renderProviderSettings()}
             ${this._model.tags.length > 0
                 ? html`
                       <uui-box headline="Tags">

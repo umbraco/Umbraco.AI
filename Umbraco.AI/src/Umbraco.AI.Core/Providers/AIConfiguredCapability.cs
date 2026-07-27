@@ -19,8 +19,8 @@ internal sealed class AIConfiguredChatCapability(IAIChatCapability inner, object
         => inner.CreateClientAsync(settings, modelId, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IChatClient> CreateClientAsync(object? profileSettings, string? modelId, CancellationToken cancellationToken)
-        => inner.CreateClientAsync(settings, profileSettings, modelId, cancellationToken);
+    public Task<IChatClient> CreateClientAsync(object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => inner.CreateClientAsync(settings, capabilitySettings, modelId, cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)

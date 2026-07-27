@@ -270,7 +270,7 @@ public class AIProviderBaseTests
 
     #endregion
 
-    #region GetProfileSettingsSchema
+    #region GetCapabilitySettingsSchema
 
     [Fact]
     public void GetProfileSettingsSchema_CapabilityWithProfileSettingsType_BuildsFromCapabilityType()
@@ -284,22 +284,22 @@ public class AIProviderBaseTests
             });
 
         _capabilityFactoryMock
-            .Setup(x => x.Create<ProfileSettingsChatCapability>(It.IsAny<IAIProvider>()))
-            .Returns(new ProfileSettingsChatCapability());
+            .Setup(x => x.Create<CapabilitySettingsChatCapability>(It.IsAny<IAIProvider>()))
+            .Returns(new CapabilitySettingsChatCapability());
 
         _schemaBuilderMock
-            .Setup(x => x.BuildForType(typeof(FakeProviderSettings), "profile-settings-provider"))
+            .Setup(x => x.BuildForType(typeof(FakeProviderSettings), "capability-settings-provider"))
             .Returns(expectedSchema);
 
-        var provider = new ProviderWithProfileSettingsCapability(_infrastructureMock.Object);
+        var provider = new ProviderWithCapabilitySettingsCapability(_infrastructureMock.Object);
 
         // Act
-        var schema = provider.GetProfileSettingsSchema(AICapability.Chat);
+        var schema = provider.GetCapabilitySettingsSchema(AICapability.Chat);
 
         // Assert
         schema.ShouldBe(expectedSchema);
         _schemaBuilderMock.Verify(
-            x => x.BuildForType(typeof(FakeProviderSettings), "profile-settings-provider"),
+            x => x.BuildForType(typeof(FakeProviderSettings), "capability-settings-provider"),
             Times.Once);
     }
 
@@ -314,7 +314,7 @@ public class AIProviderBaseTests
         var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
 
         // Act & Assert - FakeChatCapability declares no profile settings type
-        provider.GetProfileSettingsSchema(AICapability.Chat).ShouldBeNull();
+        provider.GetCapabilitySettingsSchema(AICapability.Chat).ShouldBeNull();
     }
 
     [Fact]
@@ -324,7 +324,7 @@ public class AIProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object); // no capabilities
 
         // Act & Assert
-        provider.GetProfileSettingsSchema(AICapability.Chat).ShouldBeNull();
+        provider.GetCapabilitySettingsSchema(AICapability.Chat).ShouldBeNull();
     }
 
     #endregion
@@ -376,25 +376,25 @@ public class AIProviderBaseTests
         { }
     }
 
-    [AIProvider("profile-settings-provider", "Profile Settings Provider")]
-    private class ProviderWithProfileSettingsCapability : AIProviderBase
+    [AIProvider("capability-settings-provider", "Capability Settings Provider")]
+    private class ProviderWithCapabilitySettingsCapability : AIProviderBase
     {
-        public ProviderWithProfileSettingsCapability(IAIProviderInfrastructure infrastructure)
+        public ProviderWithCapabilitySettingsCapability(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         {
-            WithCapability<ProfileSettingsChatCapability>();
+            WithCapability<CapabilitySettingsChatCapability>();
         }
     }
 
     /// <summary>
-    /// A chat capability that declares a profile-settings type (via the <see cref="IAICapability.ProfileSettingsType"/>
+    /// A chat capability that declares a profile-settings type (via the <see cref="IAICapability.CapabilitySettingsType"/>
     /// hook the two-parameter base sets), used to verify schema generation without a real provider SDK.
     /// </summary>
-    private sealed class ProfileSettingsChatCapability : IAIChatCapability
+    private sealed class CapabilitySettingsChatCapability : IAIChatCapability
     {
         public AICapability Kind => AICapability.Chat;
 
-        public Type? ProfileSettingsType => typeof(FakeProviderSettings);
+        public Type? CapabilitySettingsType => typeof(FakeProviderSettings);
 
         public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<AIModelDescriptor>>(Array.Empty<AIModelDescriptor>());

@@ -11,18 +11,11 @@ internal static class OpenAIModelUtilities
     /// Model families that accept the sampling parameters (<c>temperature</c>, <c>top_p</c>).
     /// </summary>
     /// <remarks>
-    /// <para>
     /// OpenAI's reasoning models (the <c>o</c>-series and the GPT-5 family) restrict the sampling
-    /// parameters — a non-default <c>temperature</c> is rejected rather than ignored. This is an
-    /// <em>allow</em>-list of the families that accept them rather than a deny-list of the ones that
-    /// don't, because the set of already-released models is closed and will never change, whereas a
-    /// deny-list would need updating on every OpenAI release just to stay correct.
-    /// </para>
-    /// <para>
-    /// The failure modes are asymmetric, and that is the whole point: a stale allow-list silently drops a
-    /// value on a brand-new model that would have honoured it (degraded, but the request succeeds), while
-    /// a stale deny-list sends a parameter to a model that rejects it (the request fails outright).
-    /// </para>
+    /// parameters — a non-default <c>temperature</c> is rejected rather than ignored. Deliberately an
+    /// allow-list rather than a deny-list, so that it fails safe: a stale allow-list degrades a request
+    /// by dropping a value the model would have honoured, whereas a stale deny-list fails one outright.
+    /// It also only has to be accurate about models that already exist, which is a closed set.
     /// </remarks>
     private static readonly Regex[] SamplingParameterModelPatterns =
     [

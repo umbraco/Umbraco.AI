@@ -59,17 +59,10 @@ public class AmazonSamplingParameterChatClientTests
         inner.ReceivedOptions.Temperature.ShouldBeNull();
         inner.ReceivedOptions.TopP.ShouldBeNull();
         inner.ReceivedOptions.TopK.ShouldBeNull();
-    }
 
-    [Fact]
-    public async Task GetResponseAsync_ModelRejectsSampling_PreservesMaxOutputTokens()
-    {
-        var (client, inner) = CreateClient("us.anthropic.claude-opus-4-8-v1:0");
-        var options = new ChatOptions { Temperature = 0.3f, MaxOutputTokens = 64000 };
-
-        await client.GetResponseAsync(Messages, options);
-
-        inner.ReceivedOptions!.MaxOutputTokens.ShouldBe(64000);
+        // MaxOutputTokens is accepted by every model and is the setting #256 was actually about —
+        // filtering must not take it with the sampling parameters.
+        inner.ReceivedOptions.MaxOutputTokens.ShouldBe(4096);
     }
 
     [Fact]
@@ -85,14 +78,26 @@ public class AmazonSamplingParameterChatClientTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_BoundModelUsedWhenOptionsHaveNoModelId()
+    public async Task GetResponseAsync_OptionsModelIdOverridesBoundModel()
     {
-        var (client, inner) = CreateClient("us.anthropic.claude-opus-4-8-v1:0");
-        var options = new ChatOptions { Temperature = 0.3f };
+        // A caller-supplied ModelId wins over the model the client was bound to.
+        var (client, inner) = CreateClient("amazon.nova-pro-v1:0");
+        var options = new ChatOptions { ModelId = "anthropic.claude-opus-4-8-v1:0", Temperature = 0.3f };
 
         await client.GetResponseAsync(Messages, options);
 
         inner.ReceivedOptions!.Temperature.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_NullOptions_StaysNull()
+    {
+        var (client, inner) = CreateClient("anthropic.claude-opus-4-8-v1:0");
+
+        await client.GetResponseAsync(Messages);
+
+        inner.WasCalled.ShouldBeTrue();
+        inner.ReceivedOptions.ShouldBeNull();
     }
 
     [Fact]

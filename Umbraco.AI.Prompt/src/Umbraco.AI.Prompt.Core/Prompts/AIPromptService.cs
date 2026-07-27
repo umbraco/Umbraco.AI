@@ -3,7 +3,9 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.InlineChat;
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
@@ -34,6 +36,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIPromptPropertyValueSchemaResolver _propertyValueSchemaResolver;
+    private readonly AISimplifiedPropertyValueTransformerCollection _transformers;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -47,6 +50,7 @@ internal sealed class AIPromptService : IAIPromptService
         AIRuntimeContextContributorCollection contextContributors,
         IEventAggregator eventAggregator,
         IAIPromptPropertyValueSchemaResolver propertyValueSchemaResolver,
+        AISimplifiedPropertyValueTransformerCollection transformers,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -60,6 +64,7 @@ internal sealed class AIPromptService : IAIPromptService
         _contextContributors = contextContributors;
         _eventAggregator = eventAggregator;
         _propertyValueSchemaResolver = propertyValueSchemaResolver;
+        _transformers = transformers;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -354,16 +359,45 @@ internal sealed class AIPromptService : IAIPromptService
             }
         }
 
-        // 9. Resolve the target property's own value schema (when its editor exposes one via
-        // IPropertyEditorSchemaService) so generation can be constrained to the exact shape the
-        // property expects (e.g. a ColorPicker's {value,label}) instead of assuming a plain string.
-        // Editors that don't expose a schema fall back to the string-only shapes below.
-        JsonObject? propertyValueSchema = prompt.OptionCount >= 1
-            ? await _propertyValueSchemaResolver.ResolveValueSchemaAsync(
+        // 9. Resolve the schema generation should be constrained to for the target property.
+        // A registered IAISimplifiedPropertyValueTransformer wins (a simplified, strict-representable
+        // schema the LLM generates against, later transformed back to the editor's write value);
+        // otherwise the editor's own write schema (e.g. a ColorPicker's {value,label}); otherwise the
+        // string-only shapes below. TipTapTool prompts insert markup at the cursor, so they run in
+        // plain-text output mode — skip the schema/transformer/guard entirely and use the string model.
+        var plainTextOutput = prompt.DisplayMode == AIPromptDisplayMode.TipTapTool;
+
+        AIPromptPropertyValueSchemaResolution? resolution = !plainTextOutput && prompt.OptionCount >= 1
+            ? await _propertyValueSchemaResolver.ResolvePropertyValueSchemaAsync(
                 request.ContentTypeAlias,
                 request.ElementType ?? request.EntityType,
                 request.PropertyAlias,
                 cancellationToken)
+            : null;
+
+        JsonObject? propertyValueSchema = resolution?.Schema;
+
+        // A schema that isn't strict-representable (e.g. a block editor's unconstrained `{}` value node)
+        // would be rejected by strict providers like OpenAI with an opaque HTTP 400. Run the check on
+        // whichever schema is used — including a simplified one, so a mis-behaving transformer that
+        // returns a non-strict schema fails fast cleanly rather than reintroducing the 400. Falling back
+        // to the string model here would silently produce a value the editor can't consume. Editors that
+        // expose no schema (propertyValueSchema is null) still fall through to the string-based models.
+        if (propertyValueSchema is not null &&
+            !AIPromptSchemaCompatibility.IsStrictRepresentable(propertyValueSchema))
+        {
+            throw new InvalidOperationException(
+                $"AI Prompt generation is not supported for property '{request.PropertyAlias}': its editor " +
+                "produces a value that cannot be constrained for structured generation (for example Block " +
+                "List or Block Grid). Scope this prompt to properties whose editors expose a constrainable value.");
+        }
+
+        // For a simplified schema, the LLM value must be transformed back into the editor's write value.
+        // The current write-shape value (needed so the transform can preserve e.g. existing inline blocks)
+        // is already in the runtime context as the serialized entity/element that also feeds the
+        // "currentValue" template variable — reuse it (structured) rather than re-sending it.
+        JsonNode? currentPropertyValue = resolution?.IsSimplified == true
+            ? ExtractCurrentPropertyValue(runtimeContext, request.PropertyAlias)
             : null;
 
         // 10. Execute and build result based on option count.
@@ -403,18 +437,26 @@ internal sealed class AIPromptService : IAIPromptService
                     response.TryGetResult(out JsonElement structuredResult) &&
                     structuredResult.TryGetProperty("value", out var valueElement))
                 {
-                    value = valueElement;
+                    // DisplayValue reflects the raw (simplified) value; ValueChange gets the transformed
+                    // write value when a simplified transformer produced the schema.
                     displayValue = FormatDisplayValue(valueElement);
+                    value = resolution?.IsSimplified == true
+                        ? await TransformLlmValueAsync(resolution, ToJsonNode(valueElement), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                        : valueElement;
                 }
                 else if (response.TryGetResult<SingleValueResponse>(out var parsed))
                 {
-                    value = parsed.Value;
                     displayValue = parsed.Value;
+                    value = resolution?.IsSimplified == true
+                        ? await TransformLlmValueAsync(resolution, JsonValue.Create(parsed.Value), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                        : parsed.Value;
                 }
                 else
                 {
-                    value = responseText;
                     displayValue = responseText;
+                    value = resolution?.IsSimplified == true
+                        ? await TransformLlmValueAsync(resolution, JsonValue.Create(responseText), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                        : responseText;
                 }
 
                 result = new AIPromptExecutionResult
@@ -454,7 +496,7 @@ internal sealed class AIPromptService : IAIPromptService
                 var responseText = response.Text ?? string.Empty;
 
                 var structuredOptions = propertyValueSchema is not null
-                    ? TryParseStructuredMultiOptionResult(response, request)
+                    ? await TryParseStructuredMultiOptionResultAsync(response, request, resolution, currentPropertyValue, cancellationToken)
                     : null;
 
                 if (structuredOptions is { Count: > 0 })
@@ -469,12 +511,16 @@ internal sealed class AIPromptService : IAIPromptService
                 }
                 else if (response.TryGetResult<MultiOptionResponse>(out var parsed) && parsed.Options is { Count: > 0 })
                 {
-                    result = new AIPromptExecutionResult
+                    var mappedOptions = new List<AIPromptExecutionResult.AIPromptResultOption>();
+                    foreach (var option in parsed.Options)
                     {
-                        Content = responseText,
-                        Usage = response.Usage,
-                        Messages = messages,
-                        ResultOptions = parsed.Options.Select(option => new AIPromptExecutionResult.AIPromptResultOption
+                        // DisplayValue is the raw (simplified) string; ValueChange gets the transformed
+                        // write value when a simplified transformer produced the schema.
+                        object? optionValue = resolution?.IsSimplified == true
+                            ? await TransformLlmValueAsync(resolution, JsonValue.Create(option.Value), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                            : option.Value;
+
+                        mappedOptions.Add(new AIPromptExecutionResult.AIPromptResultOption
                         {
                             Label = option.Label,
                             DisplayValue = option.Value,
@@ -482,11 +528,19 @@ internal sealed class AIPromptService : IAIPromptService
                             ValueChange = new AIValueChange
                             {
                                 Path = request.PropertyAlias,
-                                Value = option.Value,
+                                Value = optionValue,
                                 Culture = request.Culture,
                                 Segment = request.Segment
                             }
-                        }).ToList()
+                        });
+                    }
+
+                    result = new AIPromptExecutionResult
+                    {
+                        Content = responseText,
+                        Usage = response.Usage,
+                        Messages = messages,
+                        ResultOptions = mappedOptions
                     };
                 }
                 else
@@ -740,10 +794,15 @@ internal sealed class AIPromptService : IAIPromptService
     /// Parses a multi-option response constrained to a dynamic property value schema
     /// (<see cref="AIPromptDynamicResponseSchemas.BuildMultiOptionSchema"/>). Unlike
     /// <see cref="MultiOptionResponse"/>, each option's value may be any JSON shape, not just a string.
+    /// When <paramref name="resolution"/> is simplified, each option's value is transformed back into
+    /// the editor's write value; a single option whose transform fails is skipped, not fatal.
     /// </summary>
-    private static IReadOnlyList<AIPromptExecutionResult.AIPromptResultOption>? TryParseStructuredMultiOptionResult(
+    private async Task<IReadOnlyList<AIPromptExecutionResult.AIPromptResultOption>?> TryParseStructuredMultiOptionResultAsync(
         ChatResponse response,
-        AIPromptExecutionRequest request)
+        AIPromptExecutionRequest request,
+        AIPromptPropertyValueSchemaResolution? resolution,
+        JsonNode? currentPropertyValue,
+        CancellationToken cancellationToken)
     {
         if (!response.TryGetResult(out JsonElement structuredResult) ||
             !structuredResult.TryGetProperty("options", out var optionsElement) ||
@@ -766,6 +825,25 @@ internal sealed class AIPromptService : IAIPromptService
                     ? descriptionElement.GetString()
                     : null;
 
+            // DisplayValue reflects the raw (simplified) value; ValueChange gets the transformed write
+            // value. Isolate per-option failures so one bad option doesn't discard its siblings.
+            object? optionValue;
+            if (resolution?.IsSimplified == true)
+            {
+                try
+                {
+                    optionValue = await TransformLlmValueAsync(resolution, ToJsonNode(valueElement), currentPropertyValue, request.PropertyAlias, cancellationToken);
+                }
+                catch (InvalidOperationException)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                optionValue = valueElement;
+            }
+
             options.Add(new AIPromptExecutionResult.AIPromptResultOption
             {
                 Label = labelElement.GetString() ?? "Option",
@@ -774,7 +852,7 @@ internal sealed class AIPromptService : IAIPromptService
                 ValueChange = new AIValueChange
                 {
                     Path = request.PropertyAlias,
-                    Value = valueElement,
+                    Value = optionValue,
                     Culture = request.Culture,
                     Segment = request.Segment
                 }
@@ -783,6 +861,95 @@ internal sealed class AIPromptService : IAIPromptService
 
         return options;
     }
+
+    /// <summary>
+    /// Transforms a value the LLM generated against a simplified schema back into the editor's write
+    /// value, via the registered <see cref="IAISimplifiedPropertyValueTransformer"/>. A transform failure
+    /// is surfaced as a clean <see cref="InvalidOperationException"/> (→ HTTP 400), never an opaque error.
+    /// </summary>
+    private async Task<object?> TransformLlmValueAsync(
+        AIPromptPropertyValueSchemaResolution resolution,
+        JsonNode? llmValue,
+        JsonNode? currentPropertyValue,
+        string propertyAlias,
+        CancellationToken cancellationToken)
+    {
+        var transformer = _transformers.GetByEditorSchemaAlias(resolution.EditorAlias);
+        if (transformer is null)
+        {
+            return llmValue;
+        }
+
+        try
+        {
+            return await transformer.TransformToWriteValueAsync(llmValue, currentPropertyValue, resolution.DataTypeKey, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"AI Prompt could not prepare the generated value for property '{propertyAlias}': {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Extracts the target property's current write-shape value (structured) from the serialized
+    /// entity/element already in the runtime context — the same source that feeds the "currentValue"
+    /// template variable. Prefers the element (block) context, then the entity. Returns <c>null</c> when
+    /// no entity context is present or the property has no value.
+    /// </summary>
+    private static JsonNode? ExtractCurrentPropertyValue(AIRuntimeContext runtimeContext, string propertyAlias)
+    {
+        foreach (var key in new[] { CoreConstants.ContextKeys.SerializedElement, CoreConstants.ContextKeys.SerializedEntity })
+        {
+            if (runtimeContext.Data.TryGetValue(key, out var stored) &&
+                stored is AISerializedEntity entity &&
+                TryGetSerializedPropertyValue(entity, propertyAlias, out var value))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryGetSerializedPropertyValue(AISerializedEntity entity, string propertyAlias, out JsonNode? value)
+    {
+        value = null;
+
+        if (entity.Data.ValueKind != JsonValueKind.Object ||
+            !entity.Data.TryGetProperty("properties", out var propertiesElement) ||
+            propertiesElement.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        JsonElement? match = null;
+        foreach (var propElement in propertiesElement.EnumerateArray())
+        {
+            if (propElement.ValueKind == JsonValueKind.Object &&
+                propElement.TryGetProperty("alias", out var aliasElement) &&
+                aliasElement.ValueKind == JsonValueKind.String &&
+                string.Equals(aliasElement.GetString(), propertyAlias, StringComparison.Ordinal))
+            {
+                // Mirror AIEntityContextHelper's "last entry wins" per alias so client and server agree.
+                match = propElement;
+            }
+        }
+
+        if (match is null || !match.Value.TryGetProperty("value", out var valueElement) ||
+            valueElement.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
+        {
+            return false;
+        }
+
+        value = ToJsonNode(valueElement);
+        return true;
+    }
+
+    /// <summary>
+    /// Converts a <see cref="JsonElement"/> to a <see cref="JsonNode"/> for transformer input.
+    /// </summary>
+    private static JsonNode? ToJsonNode(JsonElement element) => JsonSerializer.SerializeToNode(element);
 
     /// <summary>
     /// Formats a structured value for display — strings render as-is, everything else as compact JSON.

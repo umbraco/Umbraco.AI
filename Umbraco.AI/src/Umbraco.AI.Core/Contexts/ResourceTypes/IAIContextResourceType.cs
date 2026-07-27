@@ -34,6 +34,17 @@ public interface IAIContextResourceType : IDiscoverable
     string? Icon { get; }
 
     /// <summary>
+    /// Gets a value indicating whether this resource type is Core-internal and should be hidden from
+    /// author-facing surfaces (the resource-type listing API and the Context resource-type picker).
+    /// </summary>
+    /// <remarks>
+    /// Defaults to <c>false</c> so existing and author-shipped resource types remain visible. Internal
+    /// seams such as knowledge-set content set this to <c>true</c> so they never appear as a pickable
+    /// resource type, even though they are still registered and resolvable at runtime.
+    /// </remarks>
+    bool IsInternal => false;
+
+    /// <summary>
     /// Gets the type that represents the settings model for this resource type.
     /// </summary>
     Type? SettingsType { get; }

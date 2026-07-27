@@ -57,16 +57,31 @@ internal sealed class AIContextProcessor : IAIContextProcessor
             sb.AppendLine("The following context resources are available. Use the `get_context_resource` tool with the resource ID to retrieve the full content when needed:");
             sb.AppendLine();
 
-            foreach (var resource in context.OnDemandResources)
+            // Group by the context each resource came from so the model can tell which context
+            // (e.g. which installed package's knowledge set) a resource belongs to. Grouping is
+            // stable — GroupBy preserves the first-seen order of both groups and their members.
+            var groups = context.OnDemandResources.GroupBy(r => r.ContextName);
+            foreach (var group in groups)
             {
-                sb.AppendLine($"- **{resource.Name}** (ID: `{resource.Id}`)");
-                if (!string.IsNullOrWhiteSpace(resource.Description))
+                sb.AppendLine($"### {group.Key}");
+                var contextDescription = group.First().ContextDescription;
+                if (!string.IsNullOrWhiteSpace(contextDescription))
                 {
-                    sb.AppendLine($"  {resource.Description}");
+                    sb.AppendLine(contextDescription);
                 }
-            }
+                sb.AppendLine();
 
-            sb.AppendLine();
+                foreach (var resource in group)
+                {
+                    sb.AppendLine($"- **{resource.Name}** (ID: `{resource.Id}`)");
+                    if (!string.IsNullOrWhiteSpace(resource.Description))
+                    {
+                        sb.AppendLine($"  {resource.Description}");
+                    }
+                }
+
+                sb.AppendLine();
+            }
         }
 
         return sb.ToString().TrimEnd();

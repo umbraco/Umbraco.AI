@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.1.1...Umbraco.AI@17.2.0) (2026-07-27)
+
+### feat
+
+* Add embeddable knowledge sets for LLM integration (v17 backport) (#253) ([6e87b44](https://github.com/umbraco/Umbraco.AI/commit/6e87b44d8548532c0edbaeaff6e1826880c169e0)), closes [#253](https://github.com/umbraco/Umbraco.AI/issues/253) [#252](https://github.com/umbraco/Umbraco.AI/issues/252)
+* **core,prompt:** Simplified property value transformers for AI Prompt generation ([9203299](https://github.com/umbraco/Umbraco.AI/commit/92032996fb04596a240279b1fe9ce7aa9152f8a4)), closes [#249](https://github.com/umbraco/Umbraco.AI/issues/249)
+
 ## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.1.0...Umbraco.AI@17.1.1) (2026-07-13)
 
 ### fix

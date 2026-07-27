@@ -60,7 +60,8 @@ internal sealed class AIContextResolutionService : IAIContextResolutionService
                     Settings = resource.Settings,
                     InjectionMode = resource.InjectionMode,
                     Source = resolverTypeName,
-                    ContextName = resource.ContextName
+                    ContextName = resource.ContextName,
+                    ContextDescription = resource.ContextDescription
                 });
             }
         }

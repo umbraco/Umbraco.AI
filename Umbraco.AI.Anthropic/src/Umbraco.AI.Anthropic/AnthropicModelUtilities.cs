@@ -8,15 +8,22 @@ namespace Umbraco.AI.Extensions;
 internal static class AnthropicModelUtilities
 {
     /// <summary>
-    /// Model families that reject an explicit extended-thinking token budget with a 400, the same way
-    /// they reject the sampling parameters: Opus 4.7, Opus 4.8, Opus 5 and Sonnet 5.
+    /// The models that accept manual extended thinking (<c>thinking.type: "enabled"</c> with
+    /// <c>budget_tokens</c>).
     /// </summary>
-    private static readonly Regex[] NoThinkingBudgetPatterns =
+    /// <remarks>
+    /// A closed set: Claude 4.7 and later reject <c>type: "enabled"</c> with a 400 and use adaptive
+    /// thinking with <c>output_config.effort</c> instead, so no future model joins this list. The 4.6
+    /// generation still accepts a budget but is deprecated.
+    /// </remarks>
+    private static readonly Regex[] ExtendedThinkingModelPatterns =
     [
-        new(@"^claude-opus-4-7", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-opus-4-8", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-opus-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-sonnet-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-3-7-sonnet", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-(opus|sonnet)-4-\d{8}", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-4-1", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-(opus|sonnet|haiku)-4-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-(opus|sonnet)-4-6", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-mythos-preview", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     /// <summary>
@@ -25,13 +32,15 @@ internal static class AnthropicModelUtilities
     /// </summary>
     /// <param name="modelId">The model ID, or null when unresolved.</param>
     /// <remarks>
-    /// A deny list, so a Claude model released after this package ships is treated as supporting a
-    /// budget. That is the right default here: the budget is the long-standing behaviour and only the
-    /// newest families restrict it.
+    /// An allow-list, because the set that accepts a budget is the closed one: Anthropic's docs state
+    /// that Claude 4.7 and later reject <c>thinking.type: "enabled"</c> outright, so every model
+    /// released from here on rejects it. A model this package has not heard of therefore reads as not
+    /// accepting a budget, which suppresses the setting in the editor and skips sending it rather than
+    /// producing a 400.
     /// </remarks>
     public static bool SupportsThinkingBudget(string? modelId)
-        => string.IsNullOrWhiteSpace(modelId)
-           || !NoThinkingBudgetPatterns.Any(p => p.IsMatch(modelId));
+        => !string.IsNullOrWhiteSpace(modelId)
+           && ExtendedThinkingModelPatterns.Any(p => p.IsMatch(modelId));
 
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.

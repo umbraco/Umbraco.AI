@@ -8,7 +8,8 @@ namespace Umbraco.AI.Extensions;
 internal static class OpenAIModelUtilities
 {
     /// <summary>
-    /// Model families that accept a reasoning effort: the o-series and GPT-5.
+    /// Model families that accept a reasoning effort: the o-series and the GPT-5 line, whose current
+    /// members use dotted minors (gpt-5.4, gpt-5.5, gpt-5.6 and its sol/terra/luna variants).
     /// </summary>
     private static readonly Regex[] ReasoningModelPatterns =
     [
@@ -19,11 +20,12 @@ internal static class OpenAIModelUtilities
     ];
 
     /// <summary>
-    /// GPT-5 variants that are not reasoning models despite the family prefix.
+    /// GPT-5 variants that are not reasoning models despite the family prefix. Matches both the
+    /// undotted (<c>gpt-5-chat-latest</c>) and dotted (<c>gpt-5.6-chat</c>) naming.
     /// </summary>
     private static readonly Regex[] NonReasoningExceptionPatterns =
     [
-        new(@"^gpt-5-chat", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^gpt-5[\d.]*-chat", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     /// <summary>

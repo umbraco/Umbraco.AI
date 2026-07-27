@@ -41,9 +41,10 @@ public class AnthropicChatCapability(AnthropicProvider provider)
 
     /// <inheritdoc />
     /// <remarks>
-    /// The newest Claude families reject an explicit thinking budget, so it is declared per model —
-    /// otherwise the profile editor would offer a setting whose only effect is a 400. The stable set here
-    /// is the restricted families, so the predicate is written as a deny-list.
+    /// Claude 4.7 and later reject an explicit thinking budget, so it is declared per model — otherwise
+    /// the profile editor would offer a setting whose only effect is a 400 on every current frontier
+    /// model. The set that accepts a budget is the closed one (4.6 and earlier), so the predicate is
+    /// written as an allow-list and unknown models read as unsupported.
     /// </remarks>
     public override AIModelSettingSupport GetSettingSupport(string modelId)
         => AnthropicModelUtilities.SupportsThinkingBudget(modelId)

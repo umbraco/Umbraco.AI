@@ -18,6 +18,8 @@ import type {
     UaiSerializedProperty,
 } from "../types.js";
 import { resolveAndPrepareValue } from "../value-preparers/resolver.js";
+import { resolveEditorSchemaAlias } from "../resolve-editor-schema-alias.js";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { pickValueForVariant, type ActiveVariantInfo } from "./variant-selection.js";
 
 // Supported text-based property editors for initial implementation
@@ -85,11 +87,8 @@ interface DocumentWorkspaceContextLike {
 /**
  * Resolve the active variant from the workspace's split-view manager.
  * Returns null when none can be determined (invariant document, missing API,
- * mocked context). When multiple variants are focused (split view), the first
- * is used since the AI prompt is triggered against a single editing context.
- *
- * TODO: revisit when invoking from the second pane of a split view —
- * `getActiveVariants()[0]` always picks the leftmost pane today.
+ * mocked context). Falls back to the first active variant when the caller
+ * does not supply an override (single-pane editing, invariant content).
  */
 function getActiveVariant(ctx: DocumentWorkspaceContextLike): ActiveVariantInfo | null {
     const active = ctx.splitView?.getActiveVariants?.();
@@ -218,13 +217,16 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
      * for properties that don't vary, so prompt template variables like
      * `{{header}}` resolve to the active culture's value.
      */
-    async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
+    async serializeForLlm(
+        workspaceContext: unknown,
+        activeVariant?: { culture: string | null; segment: string | null },
+    ): Promise<UaiSerializedEntity> {
         const ctx = workspaceContext as DocumentWorkspaceContextLike;
 
         const unique = ctx.getUnique();
         const contentType = ctx.getContentTypeUnique();
         const values = ctx.getValues() ?? [];
-        const active = getActiveVariant(ctx);
+        const active = activeVariant ?? getActiveVariant(ctx);
 
         // Pick the active variant's name when available so the LLM sees the
         // name from the variant the editor is on, matching the property values.
@@ -350,8 +352,11 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         // Build variant ID from culture/segment (undefined = invariant)
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
-        // Prepare value for the target editor type
-        const valueToSet = await resolveAndPrepareValue(change.value, existingValue?.editorAlias, existingValue?.value);
+        // Prepare value for the target editor type. Resolve the editor alias (falling back to the
+        // data type when the field is empty and has no existing value entry) so preparers still run.
+        const editorAlias = await resolveEditorSchemaAlias(
+            ctx as unknown as UmbControllerHost, existingValue?.editorAlias, property?.dataType?.unique);
+        const valueToSet = await resolveAndPrepareValue(change.value, editorAlias, existingValue?.value);
 
         try {
             await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);

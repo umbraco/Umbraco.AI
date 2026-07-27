@@ -241,23 +241,31 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
 
         const contextItems: UaiPromptContextItem[] = [];
 
+        // Derive the active variant from the property context so split-view serializes
+        // the correct pane's values. The property context's variantId reflects the pane
+        // the action was triggered from; without this, getActiveVariants()[0] always wins.
+        const variantId = this.#propertyContext?.getVariantId?.();
+        const activeVariant = variantId
+            ? { culture: variantId.culture ?? null, segment: variantId.segment ?? null }
+            : undefined;
+
         try {
             if (this.#isBlockWorkspace) {
-                // Block: serialize block as element context
+                // Block: serialize block as element context (block derives its own variant via getVariantId)
                 const serializedElement = await adapter.serializeForLlm(this.#workspaceContext);
                 contextItems.push(createElementContextItem(serializedElement));
 
-                // Serialize parent document as entity context
+                // Serialize parent document as entity context, passing the active variant override
                 if (this.#parentDocumentContext) {
                     const docAdapter = await resolveEntityAdapterByType("document");
                     if (docAdapter?.canHandle(this.#parentDocumentContext)) {
-                        const serializedEntity = await docAdapter.serializeForLlm(this.#parentDocumentContext);
+                        const serializedEntity = await docAdapter.serializeForLlm(this.#parentDocumentContext, activeVariant);
                         contextItems.push(createEntityContextItem(serializedEntity));
                     }
                 }
             } else {
-                // Document/media: serialize as entity context (as before)
-                const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
+                // Document/media: serialize as entity context, passing the active variant override
+                const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext, activeVariant);
                 contextItems.push(createEntityContextItem(serializedEntity));
             }
         } catch {

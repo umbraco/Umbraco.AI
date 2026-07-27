@@ -185,4 +185,22 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AIPropertyValueHandlerCollectionBuilder AIPropertyValueHandlers(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIPropertyValueHandlerCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the collection builder for AI simplified property value transformers.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI simplified property value transformer collection builder.</returns>
+    /// <remarks>
+    /// Use this to add or exclude AI simplified property value transformers. Transformers are
+    /// auto-discovered via <see cref="Umbraco.Cms.Core.Composing.IDiscoverable"/> and registered
+    /// against an editor schema alias (e.g. <c>Umbraco.RichText</c>).
+    /// <code>
+    /// builder.AISimplifiedPropertyValueTransformers()
+    ///     .Add&lt;CustomEditorSimplifiedPropertyValueTransformer&gt;()
+    ///     .Exclude&lt;RichTextSimplifiedPropertyValueTransformer&gt;();
+    /// </code>
+    /// </remarks>
+    public static AISimplifiedPropertyValueTransformerCollectionBuilder AISimplifiedPropertyValueTransformers(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AISimplifiedPropertyValueTransformerCollectionBuilder>();
 }

@@ -27,6 +27,7 @@
         "watch:agent": "npm run watch -w @umbraco-ai/agent",
         "watch:agent-ui": "npm run watch -w @umbraco-ai/agent-ui",
         "watch:copilot": "npm run watch -w @umbraco-ai/agent-copilot",
+        "test:copilot": "npm run test -w @umbraco-ai/agent-copilot",
         "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
         "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
         "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
@@ -55,10 +56,10 @@
         }
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^17.1.1",
-        "@umbraco-ai/agent": "^17.1.0",
+        "@umbraco-ai/core": "^17.2.0",
+        "@umbraco-ai/agent": "^17.1.1",
         "@umbraco-ai/agent-ui": "^17.0.1",
-        "@umbraco-ai/agent-copilot": "^17.0.0",
+        "@umbraco-ai/agent-copilot": "^17.0.1",
         "@umbraco-cms/backoffice": "^17.4.0"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."

@@ -96,3 +96,6 @@ refs/
 
 # Auto Claude data directory
 .auto-claude/
+
+# Riptide artifacts (cloud-synced)
+.humanlayer/tasks/

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.0.0...Umbraco.AI.Agent.Copilot@17.0.1) (2026-07-27)
+
+### fix
+
+* **copilot:** stage invariant/shared properties with null culture (v17) (#248) ([3f0fd0c](https://github.com/umbraco/Umbraco.AI/commit/3f0fd0c47ec4f408497c495f891dab4ec067d5ca)), closes [#248](https://github.com/umbraco/Umbraco.AI/issues/248)
+
 ## [17.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.1...Umbraco.AI.Agent.Copilot@17.0.0) (2026-06-22)
 
 ### Internal

@@ -6,7 +6,7 @@ import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
 import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
-import { UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand, getCapabilitySettingSupport } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -144,7 +144,39 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         const [providerId, modelId] = value.split("|");
         const model: UaiModelRef = { providerId, modelId };
-        this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model }, "model"));
+        // Drop any stored provider settings the newly selected model doesn't accept. Without this they
+        // stay persisted but invisible in the editor, and still get sent on every request.
+        const capabilitySettings = this.#pruneCapabilitySettings(modelId);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model, capabilitySettings }, "model"),
+        );
+    }
+
+    /**
+     * Returns the stored capability settings with the entries the given model declares unsupported
+     * removed, or `undefined` when nothing needs to change (which the partial update command skips).
+     */
+    #pruneCapabilitySettings(modelId: string): Record<string, unknown> | null | undefined {
+        const current = this._model?.capabilitySettings;
+        if (!current) return undefined;
+
+        const metadata = this.#getModelMetadata(modelId);
+        const entries = Object.entries(current).filter(
+            ([key]) => getCapabilitySettingSupport(metadata, key) !== "unsupported",
+        );
+
+        if (entries.length === Object.keys(current).length) return undefined;
+
+        return entries.length > 0 ? Object.fromEntries(entries) : null;
+    }
+
+    /**
+     * Gets the metadata for a model from the loaded model list, which carries the provider's per-model
+     * settings declarations alongside the display name.
+     */
+    #getModelMetadata(modelId: string | undefined): Record<string, string> | undefined {
+        if (!modelId) return undefined;
+        return this._availableModels.find((m) => m.model.modelId === modelId)?.metadata;
     }
 
     #onTemperatureChange(event: Event) {
@@ -481,6 +513,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     /**
      * Gets the provider-declared profile-settings schema for the current capability, if any.
      * Keyed by capability name (e.g. "Chat"); matched case-insensitively.
+     *
+     * Fields the selected model declares unsupported are filtered out — support for these settings
+     * varies by model (reasoning effort is an o-series/GPT-5 knob; a thinking budget is rejected by the
+     * newest Claude models), and the declarations ride along on the already-loaded model list.
      */
     #getCapabilitySettingsSchema(): UaiEditableModelSchemaModel | undefined {
         const capability = this._model?.capability;
@@ -488,7 +524,15 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (!capability || !schemas) return undefined;
 
         const key = Object.keys(schemas).find((k) => k.toLowerCase() === capability.toLowerCase());
-        return key ? schemas[key] : undefined;
+        const schema = key ? schemas[key] : undefined;
+        if (!schema) return undefined;
+
+        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
+        const fields = schema.fields.filter(
+            (field) => getCapabilitySettingSupport(metadata, field.key) !== "unsupported",
+        );
+
+        return fields.length === schema.fields.length ? schema : { ...schema, fields };
     }
 
     #onCapabilitySettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {

@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Umbraco.AI.Extensions;
 
 /// <summary>
@@ -5,6 +7,32 @@ namespace Umbraco.AI.Extensions;
 /// </summary>
 internal static class AnthropicModelUtilities
 {
+    /// <summary>
+    /// Model families that reject an explicit extended-thinking token budget with a 400, the same way
+    /// they reject the sampling parameters: Opus 4.7, Opus 4.8, Opus 5 and Sonnet 5.
+    /// </summary>
+    private static readonly Regex[] NoThinkingBudgetPatterns =
+    [
+        new(@"^claude-opus-4-7", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-4-8", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-sonnet-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Whether the model accepts an explicit extended-thinking token budget
+    /// (<c>thinking.budget_tokens</c>).
+    /// </summary>
+    /// <param name="modelId">The model ID, or null when unresolved.</param>
+    /// <remarks>
+    /// A deny list, so a Claude model released after this package ships is treated as supporting a
+    /// budget. That is the right default here: the budget is the long-standing behaviour and only the
+    /// newest families restrict it.
+    /// </remarks>
+    public static bool SupportsThinkingBudget(string? modelId)
+        => string.IsNullOrWhiteSpace(modelId)
+           || !NoThinkingBudgetPatterns.Any(p => p.IsMatch(modelId));
+
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.
     /// </summary>

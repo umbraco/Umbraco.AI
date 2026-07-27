@@ -16,15 +16,18 @@ internal sealed class CapabilitySettingsChatClient<TCapabilitySettings> : Delega
     where TCapabilitySettings : class
 {
     private readonly TCapabilitySettings _capabilitySettings;
-    private readonly Action<TCapabilitySettings, ChatOptions> _apply;
+    private readonly string? _boundModelId;
+    private readonly Action<TCapabilitySettings, string?, ChatOptions> _apply;
 
     public CapabilitySettingsChatClient(
         IChatClient innerClient,
         TCapabilitySettings capabilitySettings,
-        Action<TCapabilitySettings, ChatOptions> apply)
+        string? boundModelId,
+        Action<TCapabilitySettings, string?, ChatOptions> apply)
         : base(innerClient)
     {
         _capabilitySettings = capabilitySettings;
+        _boundModelId = boundModelId;
         _apply = apply;
     }
 
@@ -46,7 +49,11 @@ internal sealed class CapabilitySettingsChatClient<TCapabilitySettings> : Delega
     {
         // Clone so the caller's options instance is never mutated.
         var effective = options?.Clone() ?? new ChatOptions();
-        _apply(_capabilitySettings, effective);
+
+        // Resolve the model the request will actually run against so the provider can gate settings the
+        // model rejects. The bound fallback is load-bearing, not defensive: the agent runtime builds its
+        // ChatOptions without a ModelId, so the creation-time model is the only signal on that path.
+        _apply(_capabilitySettings, effective.ModelId ?? _boundModelId, effective);
         return effective;
     }
 }

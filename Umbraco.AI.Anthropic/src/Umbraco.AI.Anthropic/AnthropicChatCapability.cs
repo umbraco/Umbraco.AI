@@ -40,6 +40,22 @@ public class AnthropicChatCapability(AnthropicProvider provider)
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The newest Claude families reject an explicit thinking budget, so it is declared per model —
+    /// otherwise the profile editor would offer a setting whose only effect is a 400.
+    /// </remarks>
+    public override AIModelSettingSupport GetSettingSupport(string modelId)
+        => AnthropicModelUtilities.SupportsThinkingBudget(modelId)
+            ? new AIModelSettingSupport
+            {
+                SupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.ThinkingBudgetTokens)],
+            }
+            : new AIModelSettingSupport
+            {
+                UnsupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.ThinkingBudgetTokens)],
+            };
+
+    /// <inheritdoc />
     protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
         => AnthropicProvider.CreateAnthropicClient(settings)
             .Beta.AsIChatClient(modelId);
@@ -49,10 +65,20 @@ public class AnthropicChatCapability(AnthropicProvider provider)
     /// Enables Claude's extended thinking with the configured token budget. The Anthropic
     /// (tryAGI) Microsoft.Extensions.AI adapter reads the <c>"thinking"</c> entry from
     /// <see cref="ChatOptions.AdditionalProperties"/> when building the request.
+    /// Skipped on models that reject a budget — the same predicate that drives
+    /// <see cref="GetSettingSupport"/> — so a profile carrying a stale value cannot fail the request.
     /// </remarks>
-    protected override void ApplyCapabilitySettings(AnthropicChatCapabilitySettings capabilitySettings, ChatOptions options)
+    protected override void ApplyCapabilitySettings(
+        AnthropicChatCapabilitySettings capabilitySettings,
+        string? modelId,
+        ChatOptions options)
     {
         if (capabilitySettings.ThinkingBudgetTokens is not { } budgetTokens || budgetTokens <= 0)
+        {
+            return;
+        }
+
+        if (!AnthropicModelUtilities.SupportsThinkingBudget(modelId ?? DefaultChatModel))
         {
             return;
         }

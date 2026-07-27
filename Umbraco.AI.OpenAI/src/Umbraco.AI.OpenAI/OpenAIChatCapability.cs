@@ -57,6 +57,22 @@ public class OpenAIChatCapability(OpenAIProvider provider)
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Reasoning effort applies to the o-series and GPT-5 only, so it is declared per model rather than
+    /// per provider — otherwise the profile editor would offer it on a gpt-4o profile.
+    /// </remarks>
+    public override AIModelSettingSupport GetSettingSupport(string modelId)
+        => OpenAIModelUtilities.SupportsReasoningEffort(modelId)
+            ? new AIModelSettingSupport
+            {
+                SupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
+            }
+            : new AIModelSettingSupport
+            {
+                UnsupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
+            };
+
+    /// <inheritdoc />
     [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
         => OpenAIProvider.CreateOpenAIClient(settings)
@@ -68,10 +84,20 @@ public class OpenAIChatCapability(OpenAIProvider provider)
     /// Translates the profile's reasoning-effort setting into the Responses API's
     /// <see cref="ResponseReasoningOptions.ReasoningEffortLevel"/> via
     /// <see cref="ChatOptions.RawRepresentationFactory"/>. Any existing factory is preserved.
+    /// Skipped entirely on models that do not accept a reasoning effort — the same predicate that drives
+    /// <see cref="GetSettingSupport"/> — so a profile carrying a stale value cannot fail the request.
     /// </remarks>
-    protected override void ApplyCapabilitySettings(OpenAIChatCapabilitySettings capabilitySettings, ChatOptions options)
+    protected override void ApplyCapabilitySettings(
+        OpenAIChatCapabilitySettings capabilitySettings,
+        string? modelId,
+        ChatOptions options)
     {
         if (string.IsNullOrWhiteSpace(capabilitySettings.ReasoningEffort))
+        {
+            return;
+        }
+
+        if (!OpenAIModelUtilities.SupportsReasoningEffort(modelId ?? DefaultChatModel))
         {
             return;
         }

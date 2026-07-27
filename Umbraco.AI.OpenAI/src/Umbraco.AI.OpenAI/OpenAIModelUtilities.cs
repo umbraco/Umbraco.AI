@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Umbraco.AI.Extensions;
 
 /// <summary>
@@ -5,6 +7,39 @@ namespace Umbraco.AI.Extensions;
 /// </summary>
 internal static class OpenAIModelUtilities
 {
+    /// <summary>
+    /// Model families that accept a reasoning effort: the o-series and GPT-5.
+    /// </summary>
+    private static readonly Regex[] ReasoningModelPatterns =
+    [
+        new(@"^o1", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^o3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^o4", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^gpt-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// GPT-5 variants that are not reasoning models despite the family prefix.
+    /// </summary>
+    private static readonly Regex[] NonReasoningExceptionPatterns =
+    [
+        new(@"^gpt-5-chat", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Whether the model accepts a reasoning effort (<c>reasoning.effort</c> on the Responses API).
+    /// </summary>
+    /// <param name="modelId">The model ID, or null when unresolved.</param>
+    /// <remarks>
+    /// A positive list: a reasoning family released after this package ships reads as unsupported until
+    /// the list is updated. That only suppresses the setting in the editor and skips sending it — it
+    /// never produces a failed request — which is the safe direction for an unknown model.
+    /// </remarks>
+    public static bool SupportsReasoningEffort(string? modelId)
+        => !string.IsNullOrWhiteSpace(modelId)
+           && ReasoningModelPatterns.Any(p => p.IsMatch(modelId))
+           && !NonReasoningExceptionPatterns.Any(p => p.IsMatch(modelId));
+
     /// <summary>
     /// Formats a model ID into a human-readable display name.
     /// </summary>

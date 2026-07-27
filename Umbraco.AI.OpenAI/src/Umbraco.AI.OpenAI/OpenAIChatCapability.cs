@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
@@ -10,7 +11,14 @@ namespace Umbraco.AI.OpenAI;
 /// <summary>
 /// AI chat capability for OpenAI provider.
 /// </summary>
-public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
+/// <remarks>
+/// The <paramref name="logger"/> is optional so the capability can still be constructed directly (in tests,
+/// or by a caller that predates it) without a DI container supplying one.
+/// </remarks>
+public class OpenAIChatCapability(
+    OpenAIProvider provider,
+    ILogger<OpenAIChatCapability>? logger = null)
+    : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
 
@@ -55,9 +63,17 @@ public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBas
     /// <inheritdoc />
     [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
-        => OpenAIProvider.CreateOpenAIClient(settings)
+    {
+        var resolvedModelId = modelId ?? DefaultChatModel;
+
+        var inner = OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
-            .AsIChatClient(modelId ?? DefaultChatModel);
+            .AsIChatClient(resolvedModelId);
+
+        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
+        // which caller assembled the ChatOptions. See OpenAISamplingParameterChatClient.
+        return new OpenAISamplingParameterChatClient(inner, resolvedModelId, logger);
+    }
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId))

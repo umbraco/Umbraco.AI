@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Umbraco.AI.Extensions;
 
 /// <summary>
@@ -5,6 +7,81 @@ namespace Umbraco.AI.Extensions;
 /// </summary>
 internal static class AmazonModelUtilities
 {
+    /// <summary>
+    /// Strips the optional region prefix (<c>eu.</c>, <c>us.</c>, <c>apac.</c>) that inference profile IDs
+    /// carry, and the trailing Bedrock version suffix (<c>-v1:0</c>).
+    /// </summary>
+    private static readonly Regex BedrockIdDecorations =
+        new(@"^(eu|us|apac)\.|-v\d+:\d+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>
+    /// Vendor-qualified model families that accept the sampling parameters (<c>temperature</c>,
+    /// <c>top_p</c>, <c>top_k</c>), matched against the region- and version-stripped model ID.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Bedrock fronts other vendors' models, so support is inherited from whoever built the model rather
+    /// than being an Amazon property: a Bedrock-hosted <c>anthropic.claude-opus-4-8</c> rejects the
+    /// sampling parameters for exactly the same reason the first-party Anthropic model does. The vendor
+    /// and family are both present in the ID, so they can be matched directly.
+    /// </para>
+    /// <para>
+    /// Because provider packages cannot reference each other, the Claude rules below are a deliberate
+    /// duplicate of the ones in <c>Umbraco.AI.Anthropic</c>. Keeping a local copy is preferable to a shared
+    /// table in core, which would couple core releases to vendor model launches. If the two copies drift,
+    /// the worst case is a dropped temperature on a Bedrock-hosted Claude that would have accepted it.
+    /// </para>
+    /// <para>
+    /// As with the other providers this is an <em>allow</em>-list, so anything unrecognised — a vendor we
+    /// don't enumerate, or a family newer than this list — fails safe by dropping the parameters.
+    /// </para>
+    /// </remarks>
+    private static readonly Regex[] SamplingParameterModelPatterns =
+    [
+        // Amazon's own models.
+        new(@"^amazon\.nova-", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+
+        // Mistral and Meta Llama accept the sampling parameters across their Bedrock catalogue.
+        new(@"^mistral\.", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^meta\.llama", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+
+        // Claude — mirrors Umbraco.AI.Anthropic. Claude 3, 3.5 and 3.7.
+        new(@"^anthropic\.claude-3(-|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+
+        // Claude 4 with no minor version (the trailing 8-digit group is a release date).
+        new(@"^anthropic\.claude-(opus|sonnet|haiku)-4(-\d{8})?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+
+        // Claude 4.0 / 4.1 / 4.5 / 4.6. 4.7 and 4.8 are deliberately excluded.
+        new(@"^anthropic\.claude-(opus|sonnet|haiku)-4-[0156](-\d{8})?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Determines whether a Bedrock model accepts the sampling parameters (<c>temperature</c>,
+    /// <c>top_p</c>, <c>top_k</c>).
+    /// </summary>
+    /// <param name="modelId">
+    /// The Bedrock model or inference profile ID, with or without a region prefix and version suffix
+    /// (e.g. <c>us.anthropic.claude-opus-4-8-v1:0</c>).
+    /// </param>
+    /// <returns>
+    /// <c>true</c> when the model is a known family that accepts them; otherwise <c>false</c>. Unknown and
+    /// unresolved models return <c>false</c> so the parameters are dropped rather than risking a rejected
+    /// request — see the remarks on <see cref="SamplingParameterModelPatterns"/>.
+    /// </returns>
+    public static bool SupportsSamplingParameters(string? modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId))
+        {
+            return false;
+        }
+
+        var normalised = BedrockIdDecorations.Replace(modelId, string.Empty);
+
+        return SamplingParameterModelPatterns.Any(p => p.IsMatch(normalised));
+    }
+
     /// <summary>
     /// Formats a Bedrock model ID or inference profile ID into a human-readable display name.
     /// </summary>

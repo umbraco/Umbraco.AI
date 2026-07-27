@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
@@ -9,7 +10,14 @@ namespace Umbraco.AI.Anthropic;
 /// <summary>
 /// AI chat capability for Anthropic provider.
 /// </summary>
-public class AnthropicChatCapability(AnthropicProvider provider) : AIChatCapabilityBase<AnthropicProviderSettings>(provider)
+/// <remarks>
+/// The <paramref name="logger"/> is optional so the capability can still be constructed directly (in tests,
+/// or by a caller that predates it) without a DI container supplying one.
+/// </remarks>
+public class AnthropicChatCapability(
+    AnthropicProvider provider,
+    ILogger<AnthropicChatCapability>? logger = null)
+    : AIChatCapabilityBase<AnthropicProviderSettings>(provider)
 {
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
     
@@ -40,8 +48,14 @@ public class AnthropicChatCapability(AnthropicProvider provider) : AIChatCapabil
 
     /// <inheritdoc />
     protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
-        => AnthropicProvider.CreateAnthropicClient(settings)
+    {
+        var inner = AnthropicProvider.CreateAnthropicClient(settings)
             .Beta.AsIChatClient(modelId);
+
+        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
+        // which caller assembled the ChatOptions. See AnthropicSamplingParameterChatClient.
+        return new AnthropicSamplingParameterChatClient(inner, modelId, logger);
+    }
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId));

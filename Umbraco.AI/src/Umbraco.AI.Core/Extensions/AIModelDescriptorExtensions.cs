@@ -8,33 +8,33 @@ namespace Umbraco.AI.Extensions;
 public static class AIModelDescriptorExtensions
 {
     /// <summary>
-    /// Whether the capability declared that this model rejects a provider-declared capability setting,
-    /// via <see cref="Core.Providers.IAICapability.GetSettingSupport"/>.
+    /// Whether a provider-declared capability setting applies to this model, per the capability's
+    /// declaration via <see cref="Core.Providers.IAICapability.GetSettingSupport"/>.
     /// </summary>
     /// <param name="model">The model descriptor.</param>
     /// <param name="fieldKey">The schema field key (or property name) of the setting.</param>
     /// <returns>
-    /// <c>true</c> only when the setting was explicitly declared unsupported. A capability declares
-    /// nothing for settings it has no knowledge of, so the absence of a declaration means the setting
-    /// applies.
+    /// <c>false</c> only when the capability explicitly declared that this model rejects the setting.
+    /// Declarations are negative — a capability says nothing about models it has no knowledge of — so
+    /// this is "not known to be rejected" rather than an affirmative claim of support.
     /// </returns>
-    public static bool IsCapabilitySettingUnsupported(this AIModelDescriptor model, string fieldKey)
+    public static bool IsCapabilitySettingSupported(this AIModelDescriptor model, string fieldKey)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         if (string.IsNullOrWhiteSpace(fieldKey))
         {
-            return false;
+            return true;
         }
 
         if (!model.Metadata.TryGetValue(AIModelMetadataKeys.CapabilitySettingsUnsupported, out var declared))
         {
-            return false;
+            return true;
         }
 
         var key = fieldKey.Trim().ToCamelCase();
 
-        return declared
+        return !declared
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
     }

@@ -28,7 +28,7 @@ public class CapabilitySettingSupportTests
         // Assert
         var plain = models.Single(m => m.Model.ModelId == "plain-model");
         plain.Metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("reasoningEffort");
-        plain.IsCapabilitySettingUnsupported("reasoningEffort").ShouldBeTrue();
+        plain.IsCapabilitySettingSupported("reasoningEffort").ShouldBeFalse();
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class CapabilitySettingSupportTests
         // Assert — silence, not a positive claim: the key is simply absent
         var supporting = models.Single(m => m.Model.ModelId == "reasoning-model");
         supporting.Metadata.ContainsKey(AIModelMetadataKeys.CapabilitySettingsUnsupported).ShouldBeFalse();
-        supporting.IsCapabilitySettingUnsupported("reasoningEffort").ShouldBeFalse();
+        supporting.IsCapabilitySettingSupported("reasoningEffort").ShouldBeTrue();
     }
 
     [Fact]
@@ -95,30 +95,30 @@ public class CapabilitySettingSupportTests
     #region Reading declarations back
 
     [Fact]
-    public void IsCapabilitySettingUnsupported_NoMetadata_ReturnsFalse()
+    public void IsCapabilitySettingSupported_NoMetadata_ReturnsTrue()
     {
         var model = new AIModelDescriptor(new AIModelRef("test", "some-model"), "Some Model");
 
-        model.IsCapabilitySettingUnsupported("reasoningEffort").ShouldBeFalse();
+        model.IsCapabilitySettingSupported("reasoningEffort").ShouldBeTrue();
     }
 
     [Fact]
-    public void IsCapabilitySettingUnsupported_DifferentKeyDeclared_ReturnsFalse()
+    public void IsCapabilitySettingSupported_DifferentKeyDeclared_ReturnsTrue()
     {
         var model = Describe("thinkingBudgetTokens");
 
-        model.IsCapabilitySettingUnsupported("reasoningEffort").ShouldBeFalse();
+        model.IsCapabilitySettingSupported("reasoningEffort").ShouldBeTrue();
     }
 
     [Theory]
     [InlineData("reasoningEffort")]
     [InlineData("ReasoningEffort")]
     [InlineData(" reasoningEffort ")]
-    public void IsCapabilitySettingUnsupported_KeyCasingAndWhitespace_StillMatches(string fieldKey)
+    public void IsCapabilitySettingSupported_DeclaredKeyRegardlessOfCasingOrWhitespace_ReturnsFalse(string fieldKey)
     {
         var model = Describe("verbosity, reasoningEffort");
 
-        model.IsCapabilitySettingUnsupported(fieldKey).ShouldBeTrue();
+        model.IsCapabilitySettingSupported(fieldKey).ShouldBeFalse();
     }
 
     #endregion

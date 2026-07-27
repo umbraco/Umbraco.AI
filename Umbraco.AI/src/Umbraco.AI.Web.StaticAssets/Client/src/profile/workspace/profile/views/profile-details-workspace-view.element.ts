@@ -6,7 +6,7 @@ import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
 import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
-import { UaiPartialUpdateCommand, isCapabilitySettingUnsupported } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand, isCapabilitySettingSupported } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -161,7 +161,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (!current) return undefined;
 
         const metadata = this.#getModelMetadata(modelId);
-        const entries = Object.entries(current).filter(([key]) => !isCapabilitySettingUnsupported(metadata, key));
+        const entries = Object.entries(current).filter(([key]) => isCapabilitySettingSupported(metadata, key));
 
         if (entries.length === Object.keys(current).length) return undefined;
 
@@ -526,7 +526,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (!schema) return undefined;
 
         const metadata = this.#getModelMetadata(this._model?.model?.modelId);
-        const fields = schema.fields.filter((field) => !isCapabilitySettingUnsupported(metadata, field.key));
+        const fields = schema.fields.filter((field) => isCapabilitySettingSupported(metadata, field.key));
 
         return fields.length === schema.fields.length ? schema : { ...schema, fields };
     }

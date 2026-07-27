@@ -56,10 +56,10 @@
         }
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^17.1.1",
-        "@umbraco-ai/agent": "^17.1.0",
+        "@umbraco-ai/core": "^17.2.0",
+        "@umbraco-ai/agent": "^17.1.1",
         "@umbraco-ai/agent-ui": "^17.0.1",
-        "@umbraco-ai/agent-copilot": "^17.0.0",
+        "@umbraco-ai/agent-copilot": "^17.0.1",
         "@umbraco-cms/backoffice": "^17.4.0"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."

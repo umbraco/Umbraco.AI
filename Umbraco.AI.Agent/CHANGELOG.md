@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.0...Umbraco.AI.Agent@17.1.1) (2026-07-27)
+
+### fix
+
+* **agent:** Apply profile Temperature and MaxTokens to agent runtime (#256) (#258) ([daa00fe](https://github.com/umbraco/Umbraco.AI/commit/daa00fe7de991ebaa618e6e331c96d95dbdea128)), closes [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#258](https://github.com/umbraco/Umbraco.AI/issues/258) [#257](https://github.com/umbraco/Umbraco.AI/issues/257)
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.0.0...Umbraco.AI.Agent@17.1.0) (2026-07-06)
 
 ### feat

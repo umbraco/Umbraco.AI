@@ -52,16 +52,16 @@ public interface IAICapability
     Type? CapabilitySettingsType => null;
 
     /// <summary>
-    /// Declares which settings apply to the given model. Defaults to an empty declaration (everything
-    /// <see cref="AISettingSupport.Unknown"/>).
+    /// Declares which settings the given model does not accept. Defaults to
+    /// <see cref="AIModelSettingSupport.Default"/> — nothing declared, so every setting applies.
     /// </summary>
     /// <param name="modelId">The model ID to describe.</param>
     /// <remarks>
     /// <para>
     /// Support for a setting usually varies by model, not by provider, so this is where a capability
-    /// says "reasoning effort applies to the o-series and GPT-5, not to gpt-4o". The capability bases
-    /// project the result into <see cref="AIModelDescriptor.Metadata"/> as the model list is built, so
-    /// the backoffice can hide inapplicable settings without a second round trip.
+    /// says "reasoning effort does not apply to gpt-4o". The capability bases project the result into
+    /// <see cref="AIModelDescriptor.Metadata"/> as the model list is built, so the backoffice can hide
+    /// inapplicable settings without a second round trip.
     /// </para>
     /// <para>
     /// Must be a cheap, local, synchronous decision — it runs once per model in the list. The same

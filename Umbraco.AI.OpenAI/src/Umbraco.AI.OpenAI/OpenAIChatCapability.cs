@@ -59,14 +59,13 @@ public class OpenAIChatCapability(OpenAIProvider provider)
     /// <inheritdoc />
     /// <remarks>
     /// Reasoning effort applies to the o-series and GPT-5 only, so it is declared per model rather than
-    /// per provider — otherwise the profile editor would offer it on a gpt-4o profile.
+    /// per provider — otherwise the profile editor would offer it on a gpt-4o profile. The stable set
+    /// here is the list of reasoning families, so the predicate is written as an allow-list and inverted
+    /// into the declaration.
     /// </remarks>
     public override AIModelSettingSupport GetSettingSupport(string modelId)
         => OpenAIModelUtilities.SupportsReasoningEffort(modelId)
-            ? new AIModelSettingSupport
-            {
-                SupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
-            }
+            ? AIModelSettingSupport.Default
             : new AIModelSettingSupport
             {
                 UnsupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],

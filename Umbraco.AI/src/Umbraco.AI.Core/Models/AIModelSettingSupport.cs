@@ -3,29 +3,7 @@ using Umbraco.AI.Extensions;
 namespace Umbraco.AI.Core.Models;
 
 /// <summary>
-/// Whether a setting applies to a specific model.
-/// </summary>
-public enum AISettingSupport
-{
-    /// <summary>
-    /// The capability made no statement about this setting for this model. Consumers should render
-    /// the setting normally — a capability only ever declares what it positively knows.
-    /// </summary>
-    Unknown = 0,
-
-    /// <summary>
-    /// The model accepts this setting.
-    /// </summary>
-    Supported = 1,
-
-    /// <summary>
-    /// The model rejects or ignores this setting.
-    /// </summary>
-    Unsupported = 2,
-}
-
-/// <summary>
-/// A capability's declaration of which settings apply to a given model.
+/// A capability's declaration of which settings a given model does not accept.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -33,8 +11,15 @@ public enum AISettingSupport
 /// effort applies to the o-series and GPT-5 but not to gpt-4o; Anthropic's thinking budget is rejected
 /// by the newest Claude models. A capability returns this from
 /// <see cref="Providers.IAICapability.GetSettingSupport"/> and the core capability bases project it into
-/// <see cref="AIModelDescriptor.Metadata"/> when the model list is built, so the backoffice can render only
-/// the settings that apply to the selected model without an extra round trip.
+/// <see cref="AIModelDescriptor.Metadata"/> when the model list is built, so the backoffice can hide the
+/// settings that don't apply to the selected model without an extra round trip.
+/// </para>
+/// <para>
+/// Declarations are negative only: a capability names the settings a model rejects and says nothing
+/// otherwise, so <see cref="Default"/> means "nothing to declare" and the setting renders. Whether the
+/// capability arrives at that by keeping an allow-list of models that support the setting or a deny-list
+/// of models that don't is its own business — write whichever set is more stable and convert at this
+/// boundary.
 /// </para>
 /// <para>
 /// This is the declaration channel for the <em>UI</em>. It is not an enforcement mechanism: the model
@@ -51,14 +36,10 @@ public enum AISettingSupport
 public sealed class AIModelSettingSupport
 {
     /// <summary>
-    /// An empty declaration — every setting is <see cref="AISettingSupport.Unknown"/>.
+    /// An empty declaration — the capability has nothing to say about this model, so every setting
+    /// applies.
     /// </summary>
     public static readonly AIModelSettingSupport Default = new();
-
-    /// <summary>
-    /// The provider-declared capability settings this model accepts.
-    /// </summary>
-    public IReadOnlyCollection<string> SupportedCapabilitySettings { get; init; } = [];
 
     /// <summary>
     /// The provider-declared capability settings this model rejects or ignores.
@@ -68,33 +49,22 @@ public sealed class AIModelSettingSupport
     /// <summary>
     /// Whether this declaration says anything at all.
     /// </summary>
-    internal bool IsEmpty => SupportedCapabilitySettings.Count == 0 && UnsupportedCapabilitySettings.Count == 0;
+    internal bool IsEmpty => UnsupportedCapabilitySettings.Count == 0;
 
     /// <summary>
     /// Projects the declaration into the metadata entries carried by <see cref="AIModelDescriptor.Metadata"/>.
-    /// Only non-empty collections produce an entry.
     /// </summary>
     internal IReadOnlyDictionary<string, string> ToMetadata()
-    {
-        var metadata = new Dictionary<string, string>();
-
-        if (SupportedCapabilitySettings.Count > 0)
-        {
-            metadata[AIModelMetadataKeys.CapabilitySettingsSupported] = Join(SupportedCapabilitySettings);
-        }
-
-        if (UnsupportedCapabilitySettings.Count > 0)
-        {
-            metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported] = Join(UnsupportedCapabilitySettings);
-        }
-
-        return metadata;
-    }
-
-    // Normalise to the same camelCase key the schema builder derives from the property name, so a
-    // declaration written as nameof(TSettings.ReasoningEffort) matches the field key "reasoningEffort".
-    private static string Join(IReadOnlyCollection<string> keys)
-        => string.Join(
-            ',',
-            keys.Where(k => !string.IsNullOrWhiteSpace(k)).Select(k => k.Trim().ToCamelCase()));
+        => IsEmpty
+            ? new Dictionary<string, string>()
+            : new Dictionary<string, string>
+            {
+                // Normalise to the same camelCase key the schema builder derives from the property name,
+                // so a declaration written as nameof(TSettings.ReasoningEffort) matches the field key.
+                [AIModelMetadataKeys.CapabilitySettingsUnsupported] = string.Join(
+                    ',',
+                    UnsupportedCapabilitySettings
+                        .Where(k => !string.IsNullOrWhiteSpace(k))
+                        .Select(k => k.Trim().ToCamelCase())),
+            };
 }

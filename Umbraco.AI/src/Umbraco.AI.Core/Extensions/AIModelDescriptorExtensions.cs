@@ -8,39 +8,35 @@ namespace Umbraco.AI.Extensions;
 public static class AIModelDescriptorExtensions
 {
     /// <summary>
-    /// Reads whether a provider-declared capability setting applies to this model, as declared by the
-    /// capability via <see cref="Core.Providers.IAICapability.GetSettingSupport"/>.
+    /// Whether the capability declared that this model rejects a provider-declared capability setting,
+    /// via <see cref="Core.Providers.IAICapability.GetSettingSupport"/>.
     /// </summary>
     /// <param name="model">The model descriptor.</param>
     /// <param name="fieldKey">The schema field key (or property name) of the setting.</param>
     /// <returns>
-    /// <see cref="AISettingSupport.Unsupported"/> when the capability declared the setting unsupported,
-    /// <see cref="AISettingSupport.Supported"/> when it declared it supported, otherwise
-    /// <see cref="AISettingSupport.Unknown"/>.
+    /// <c>true</c> only when the setting was explicitly declared unsupported. A capability declares
+    /// nothing for settings it has no knowledge of, so the absence of a declaration means the setting
+    /// applies.
     /// </returns>
-    /// <remarks>
-    /// Unsupported takes precedence, so a capability that (incorrectly) lists a key in both collections
-    /// gets the safer answer.
-    /// </remarks>
-    public static AISettingSupport GetCapabilitySettingSupport(this AIModelDescriptor model, string fieldKey)
+    public static bool IsCapabilitySettingUnsupported(this AIModelDescriptor model, string fieldKey)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         if (string.IsNullOrWhiteSpace(fieldKey))
         {
-            return AISettingSupport.Unknown;
+            return false;
+        }
+
+        if (!model.Metadata.TryGetValue(AIModelMetadataKeys.CapabilitySettingsUnsupported, out var declared))
+        {
+            return false;
         }
 
         var key = fieldKey.Trim().ToCamelCase();
 
-        if (Contains(model, AIModelMetadataKeys.CapabilitySettingsUnsupported, key))
-        {
-            return AISettingSupport.Unsupported;
-        }
-
-        return Contains(model, AIModelMetadataKeys.CapabilitySettingsSupported, key)
-            ? AISettingSupport.Supported
-            : AISettingSupport.Unknown;
+        return declared
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -66,10 +62,4 @@ public static class AIModelDescriptorExtensions
 
         return new AIModelDescriptor(model.Model, model.Name, merged);
     }
-
-    private static bool Contains(AIModelDescriptor model, string metadataKey, string fieldKey)
-        => model.Metadata.TryGetValue(metadataKey, out var value)
-           && value
-               .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-               .Any(k => string.Equals(k, fieldKey, StringComparison.OrdinalIgnoreCase));
 }

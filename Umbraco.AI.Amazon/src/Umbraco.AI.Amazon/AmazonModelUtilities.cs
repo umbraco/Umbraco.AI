@@ -32,8 +32,9 @@ internal static class AmazonModelUtilities
     /// the worst case is a dropped temperature on a Bedrock-hosted Claude that would have accepted it.
     /// </para>
     /// <para>
-    /// As with the other providers this is an <em>allow</em>-list, so anything unrecognised — a vendor we
-    /// don't enumerate, or a family newer than this list — fails safe by dropping the parameters.
+    /// As with the other providers this is an allow-list rather than a deny-list, so anything
+    /// unrecognised — a vendor we don't enumerate, or a family newer than this list — fails safe by
+    /// dropping the parameters instead of risking a rejected request.
     /// </para>
     /// </remarks>
     private static readonly Regex[] SamplingParameterModelPatterns =
@@ -48,12 +49,9 @@ internal static class AmazonModelUtilities
         // Claude — mirrors Umbraco.AI.Anthropic. Claude 3, 3.5 and 3.7.
         new(@"^anthropic\.claude-3(-|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
 
-        // Claude 4 with no minor version (the trailing 8-digit group is a release date).
-        new(@"^anthropic\.claude-(opus|sonnet|haiku)-4(-\d{8})?$",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled),
-
-        // Claude 4.0 / 4.1 / 4.5 / 4.6. 4.7 and 4.8 are deliberately excluded.
-        new(@"^anthropic\.claude-(opus|sonnet|haiku)-4-[0156](-\d{8})?$",
+        // Claude 4, and 4.0 / 4.1 / 4.5 / 4.6. The optional trailing 8-digit group is a release date,
+        // not a minor version. 4.7 and 4.8 are deliberately excluded from the minor versions.
+        new(@"^anthropic\.claude-(opus|sonnet|haiku)-4(-[0156])?(-\d{8})?$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 

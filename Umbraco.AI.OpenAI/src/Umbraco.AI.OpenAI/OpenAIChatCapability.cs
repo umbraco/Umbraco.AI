@@ -11,15 +11,24 @@ namespace Umbraco.AI.OpenAI;
 /// <summary>
 /// AI chat capability for OpenAI provider.
 /// </summary>
-/// <remarks>
-/// The <paramref name="logger"/> is optional so the capability can still be constructed directly (in tests,
-/// or by a caller that predates it) without a DI container supplying one.
-/// </remarks>
 public class OpenAIChatCapability(
     OpenAIProvider provider,
-    ILogger<OpenAIChatCapability>? logger = null)
+    ILogger<OpenAIChatCapability>? logger)
     : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained so adding the logger parameter stays binary compatible. An optional parameter would not
+    /// achieve that — the compiler emits a single constructor and bakes the default in at each call site,
+    /// so assemblies compiled against the previous signature would fail to bind.
+    /// </remarks>
+    public OpenAIChatCapability(OpenAIProvider provider)
+        : this(provider, null)
+    {
+    }
+
     private const string DefaultChatModel = "gpt-4o";
 
     private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;

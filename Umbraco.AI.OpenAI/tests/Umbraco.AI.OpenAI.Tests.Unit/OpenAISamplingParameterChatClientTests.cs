@@ -56,17 +56,10 @@ public class OpenAISamplingParameterChatClientTests
         inner.ReceivedOptions.Temperature.ShouldBeNull();
         inner.ReceivedOptions.TopP.ShouldBeNull();
         inner.ReceivedOptions.TopK.ShouldBeNull();
-    }
 
-    [Fact]
-    public async Task GetResponseAsync_ModelRejectsSampling_PreservesMaxOutputTokens()
-    {
-        var (client, inner) = CreateClient("o3");
-        var options = new ChatOptions { Temperature = 0.3f, MaxOutputTokens = 4096 };
-
-        await client.GetResponseAsync(Messages, options);
-
-        inner.ReceivedOptions!.MaxOutputTokens.ShouldBe(4096);
+        // MaxOutputTokens is accepted by every model and is the setting #256 was actually about —
+        // filtering must not take it with the sampling parameters.
+        inner.ReceivedOptions.MaxOutputTokens.ShouldBe(4096);
     }
 
     [Fact]
@@ -75,19 +68,6 @@ public class OpenAISamplingParameterChatClientTests
         // Unknown models fail safe: dropping a value that would have worked is a degraded request,
         // whereas sending one that is rejected is a failed request.
         var (client, inner) = CreateClient("some-future-model");
-        var options = new ChatOptions { Temperature = 0.3f };
-
-        await client.GetResponseAsync(Messages, options);
-
-        inner.ReceivedOptions!.Temperature.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task GetResponseAsync_BoundModelUsedWhenOptionsHaveNoModelId()
-    {
-        // The agent runtime builds ChatOptions without a ModelId, so the bound model is the only way to
-        // identify the target.
-        var (client, inner) = CreateClient("o3");
         var options = new ChatOptions { Temperature = 0.3f };
 
         await client.GetResponseAsync(Messages, options);

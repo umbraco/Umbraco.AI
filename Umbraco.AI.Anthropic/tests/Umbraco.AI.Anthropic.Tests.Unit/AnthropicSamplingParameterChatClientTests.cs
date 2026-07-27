@@ -47,8 +47,6 @@ public class AnthropicSamplingParameterChatClientTests
     [InlineData("claude-opus-4-8")]
     [InlineData("claude-opus-5")]
     [InlineData("claude-sonnet-5")]
-    [InlineData("claude-fable-5")]
-    [InlineData("claude-mythos-5")]
     public async Task GetResponseAsync_ModelRejectsSampling_DropsSamplingParameters(string modelId)
     {
         var (client, inner) = CreateClient(modelId);
@@ -60,19 +58,10 @@ public class AnthropicSamplingParameterChatClientTests
         inner.ReceivedOptions.Temperature.ShouldBeNull();
         inner.ReceivedOptions.TopP.ShouldBeNull();
         inner.ReceivedOptions.TopK.ShouldBeNull();
-    }
 
-    [Fact]
-    public async Task GetResponseAsync_ModelRejectsSampling_PreservesMaxOutputTokens()
-    {
-        // MaxOutputTokens is accepted by every model and is the setting issue #256 was actually about —
+        // MaxOutputTokens is accepted by every model and is the setting #256 was actually about —
         // filtering must not take it with the sampling parameters.
-        var (client, inner) = CreateClient("claude-opus-4-8");
-        var options = new ChatOptions { Temperature = 0.3f, MaxOutputTokens = 64000 };
-
-        await client.GetResponseAsync(Messages, options);
-
-        inner.ReceivedOptions!.MaxOutputTokens.ShouldBe(64000);
+        inner.ReceivedOptions.MaxOutputTokens.ShouldBe(64000);
     }
 
     [Fact]

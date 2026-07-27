@@ -11,15 +11,24 @@ namespace Umbraco.AI.Amazon;
 /// <summary>
 /// AI chat capability for Amazon Bedrock provider.
 /// </summary>
-/// <remarks>
-/// The <paramref name="logger"/> is optional so the capability can still be constructed directly (in tests,
-/// or by a caller that predates it) without a DI container supplying one.
-/// </remarks>
 public class AmazonChatCapability(
     AmazonProvider provider,
-    ILogger<AmazonChatCapability>? logger = null)
+    ILogger<AmazonChatCapability>? logger)
     : AIChatCapabilityBase<AmazonProviderSettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained so adding the logger parameter stays binary compatible. An optional parameter would not
+    /// achieve that — the compiler emits a single constructor and bakes the default in at each call site,
+    /// so assemblies compiled against the previous signature would fail to bind.
+    /// </remarks>
+    public AmazonChatCapability(AmazonProvider provider)
+        : this(provider, null)
+    {
+    }
+
     /// <summary>
     /// Optional region prefix pattern for inference profile IDs (e.g., "eu.", "us.", "apac.").
     /// </summary>

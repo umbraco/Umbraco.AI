@@ -30,13 +30,12 @@ internal static class AnthropicModelUtilities
         // Claude 3, 3.5 and 3.7 — e.g. claude-3-opus-20240229, claude-3-5-sonnet-20241022.
         new(@"^claude-3(-|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
 
-        // Claude 4 with no minor version — e.g. claude-sonnet-4-20250514, claude-opus-4-20250514.
-        // The trailing 8-digit group is a release date, not a minor version.
-        new(@"^claude-(opus|sonnet|haiku)-4(-\d{8})?$", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-
-        // Claude 4.0 / 4.1 / 4.5 / 4.6 — e.g. claude-opus-4-1-20250805, claude-sonnet-4-6.
-        // 4.7 and 4.8 are deliberately excluded: they reject the sampling parameters.
-        new(@"^claude-(opus|sonnet|haiku)-4-[0156](-\d{8})?$", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        // Claude 4, and 4.0 / 4.1 / 4.5 / 4.6 — e.g. claude-sonnet-4-20250514,
+        // claude-opus-4-1-20250805, claude-sonnet-4-6. The optional trailing 8-digit group is a
+        // release date, not a minor version. 4.7 and 4.8 are deliberately excluded from the minor
+        // versions: they reject the sampling parameters.
+        new(@"^claude-(opus|sonnet|haiku)-4(-[0156])?(-\d{8})?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     /// <summary>

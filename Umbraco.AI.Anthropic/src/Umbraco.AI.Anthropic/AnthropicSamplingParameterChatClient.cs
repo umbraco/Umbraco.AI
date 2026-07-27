@@ -23,10 +23,6 @@ namespace Umbraco.AI.Anthropic;
 /// agent runtime builds its <see cref="ChatOptions"/> without a <c>ModelId</c>, so the bound value is the
 /// only way to identify the model on that path — which is the path the original report came in on.
 /// </para>
-/// <para>
-/// The caller's <see cref="ChatOptions"/> is never mutated; a clone is taken only when something actually
-/// needs removing, so the common case allocates nothing.
-/// </para>
 /// </remarks>
 internal sealed class AnthropicSamplingParameterChatClient(
     IChatClient innerClient,
@@ -50,9 +46,10 @@ internal sealed class AnthropicSamplingParameterChatClient(
 
     /// <summary>
     /// Returns the options to send, with the sampling parameters removed when the resolved model
-    /// does not accept them. Returns the original instance untouched when there is nothing to remove.
+    /// does not accept them. Returns the original instance untouched when there is nothing to remove,
+    /// so the caller's <see cref="ChatOptions"/> is never mutated.
     /// </summary>
-    internal ChatOptions? FilterOptions(ChatOptions? options)
+    private ChatOptions? FilterOptions(ChatOptions? options)
     {
         if (options is null)
         {

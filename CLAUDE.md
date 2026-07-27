@@ -216,6 +216,11 @@ When a fix or feature applies to an older supported version:
 
 Do **not** forward-merge `vN/dev` into a newer version's `dev` — each version line is maintained independently.
 
+When backporting **worktree/tooling config**, note that some files hardcode the version line and must
+be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/feature/..."`) and
+`.worktreeinclude` (demo path `demos/v18/`). Leaving `v18` in place makes worktrees use the wrong branch
+prefix and PRs target the wrong `vN/dev` base.
+
 ## Release Management
 
 ### Skills Overview
@@ -391,6 +396,14 @@ Controller/OtherService -> EntityService -> EntityRepository (internal)
 ### Extension Methods
 
 All extension methods in `Umbraco.AI.Extensions` namespace (or product-specific: `Umbraco.AI.Prompt.Extensions`).
+
+### Public API Backwards Compatibility
+
+Never break a public API. When a new method replaces an old one, keep the old signature and have it
+**proxy to the new method**, resolving any new parameters via service locator (e.g.
+`StaticServiceProvider.Instance.GetRequiredService<T>()`). Mark the old method `[Obsolete]` with the
+message `"Will be removed in vX"`, where **X = current major version + 2** (currently v18, so
+`"Will be removed in v20"`). This gives consumers two major versions to migrate.
 
 ## Excluded Folders
 

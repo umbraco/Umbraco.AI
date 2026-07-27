@@ -1,0 +1,14 @@
+{
+  "disabled": false,
+  "pathTemplate": "~/.humanlayer/workspaces/{{ TASKSLUG }}/{{ REPOBASENAME }}",
+  "branchTemplate": "v18/feature/{{ TASKSLUG }}",
+  "repos": [
+    {
+      "localPath": ".",
+      "description": "Selected repository",
+      "sourceRef": "HEAD",
+      "copyGlobs": [],
+      "setupCommand": "MAIN=$(dirname \"$(git rev-parse --git-common-dir)\"); if [ -f \"$MAIN/.worktreeinclude\" ]; then git -C \"$MAIN\" ls-files -z --others --ignored --exclude-from=\"$MAIN/.worktreeinclude\" | tar -C \"$MAIN\" --null -T - -cf - | tar -xf -; else echo 'No .worktreeinclude found - skipping file copy'; fi"
+    }
+  ]
+}

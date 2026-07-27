@@ -165,8 +165,13 @@ export interface UaiEntityAdapterApi extends UmbApi {
 
     /**
      * Serialize the entity for LLM context.
+     * @param activeVariant When provided, overrides variant detection in the adapter so values are
+     * read from the correct culture/segment (e.g. the right pane in split-view).
      */
-    serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity>;
+    serializeForLlm(
+        workspaceContext: unknown,
+        activeVariant?: { culture: string | null; segment: string | null },
+    ): Promise<UaiSerializedEntity>;
 
     /**
      * Apply a value change to the workspace (staged, not persisted).

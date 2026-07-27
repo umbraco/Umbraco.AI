@@ -11,6 +11,13 @@ internal static class OpenAIModelUtilities
     /// Model families that accept a reasoning effort: the o-series and the GPT-5 line, whose current
     /// members use dotted minors (gpt-5.4, gpt-5.5, gpt-5.6 and its sol/terra/luna variants).
     /// </summary>
+    /// <remarks>
+    /// The o-series is a closed set, not a snapshot: the naming was retired in favour of GPT-5, there is
+    /// no o5, and o1/o3 are scheduled for shutdown on 23 October 2026 (o3-deep-research on 11 December
+    /// 2026) with gpt-5.6-sol as the replacement. Those entries can be dropped once the shutdowns land;
+    /// they are kept for accounts that still have access. Future reasoning models arrive as gpt-5 minors,
+    /// which <c>^gpt-5</c> already covers — a further naming change is what would need a new pattern.
+    /// </remarks>
     private static readonly Regex[] ReasoningModelPatterns =
     [
         new(@"^o1", RegexOptions.IgnoreCase | RegexOptions.Compiled),

@@ -63,6 +63,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
     #propertyAlias: string | null = null;
     #propertyEditorUiAlias: string | null = null;
+    #propertyContext?: typeof UMB_PROPERTY_CONTEXT.TYPE;
     #contentTypeAliases: string[] = [];
     #workspaceContext?: WorkspaceContextLike;
     #parentDocumentContext?: WorkspaceContextLike;
@@ -74,6 +75,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
         this.consumeContext(UMB_PROPERTY_CONTEXT, (context) => {
             if (!context) return;
+            this.#propertyContext = context;
             this.#propertyAlias = context.getAlias() ?? null;
             this.observe(context.editorManifest, (manifest) => {
                 this.#propertyEditorUiAlias = manifest?.alias ?? null;
@@ -324,26 +326,34 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
         const contextItems: UaiPromptContextItem[] = [];
 
+        // Derive the active variant from the property context so split-view serializes
+        // the correct pane's values. The property context's variantId reflects the pane
+        // the toolbar lives in; without this, getActiveVariants()[0] always wins.
+        const variantId = this.#propertyContext?.getVariantId?.();
+        const activeVariant = variantId
+            ? { culture: variantId.culture ?? null, segment: variantId.segment ?? null }
+            : undefined;
+
         try {
             const adapter = await resolveEntityAdapterByType(entityType);
             if (!adapter?.canHandle(this.#workspaceContext)) return undefined;
 
             if (this.#isBlockWorkspace) {
-                // Block: serialize block as element context
+                // Block: serialize block as element context (block derives its own variant via getVariantId)
                 const serializedElement = await adapter.serializeForLlm(this.#workspaceContext);
                 contextItems.push(createElementContextItem(serializedElement));
 
-                // Serialize parent document as entity context
+                // Serialize parent document as entity context, passing the active variant override
                 if (this.#parentDocumentContext) {
                     const docAdapter = await resolveEntityAdapterByType('document');
                     if (docAdapter?.canHandle(this.#parentDocumentContext)) {
-                        const serializedEntity = await docAdapter.serializeForLlm(this.#parentDocumentContext);
+                        const serializedEntity = await docAdapter.serializeForLlm(this.#parentDocumentContext, activeVariant);
                         contextItems.push(createEntityContextItem(serializedEntity));
                     }
                 }
             } else {
-                // Document/media: serialize as entity context
-                const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
+                // Document/media: serialize as entity context, passing the active variant override
+                const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext, activeVariant);
                 contextItems.push(createEntityContextItem(serializedEntity));
             }
         } catch {

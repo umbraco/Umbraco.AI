@@ -9,10 +9,17 @@ internal static class AmazonModelUtilities
 {
     /// <summary>
     /// Strips the optional region prefix (<c>eu.</c>, <c>us.</c>, <c>apac.</c>) that inference profile IDs
-    /// carry, and the trailing Bedrock version suffix (<c>-v1:0</c>).
+    /// carry, and the trailing Bedrock version suffix.
     /// </summary>
+    /// <remarks>
+    /// The version suffix appears in two shapes and both must be handled: most IDs carry a minor version
+    /// (<c>anthropic.claude-opus-4-5-20251101-v1:0</c>), but some carry the major alone
+    /// (<c>anthropic.claude-opus-4-6-v1</c>). Matching only the first shape leaves the <c>-v1</c> attached,
+    /// which drops the model off the allow-list below and silently strips a temperature the model would
+    /// have accepted.
+    /// </remarks>
     private static readonly Regex BedrockIdDecorations =
-        new(@"^(eu|us|apac)\.|-v\d+:\d+$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        new(@"^(eu|us|apac)\.|-v\d+(:\d+)?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     /// <summary>
     /// Vendor-qualified model families that accept the sampling parameters (<c>temperature</c>,

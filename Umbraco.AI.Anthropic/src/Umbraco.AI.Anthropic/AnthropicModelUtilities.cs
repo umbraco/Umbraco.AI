@@ -46,8 +46,14 @@ internal static class AnthropicModelUtilities
     /// reading the models endpoint's per-model <c>capabilities.effort</c>.
     /// </remarks>
     public static bool SupportsEffortLevel(string? modelId, string level)
-        => SupportsEffort(modelId)
-           && level.Trim().ToLowerInvariant() is "low" or "medium" or "high";
+        => SupportsEffort(modelId) && IsKnownEffortLevel(level);
+
+    /// <summary>
+    /// Whether the effort level is one this package offers, independent of any model.
+    /// </summary>
+    /// <param name="level">The effort level (case-insensitive).</param>
+    public static bool IsKnownEffortLevel(string level)
+        => level.Trim().ToLowerInvariant() is "low" or "medium" or "high";
 
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.

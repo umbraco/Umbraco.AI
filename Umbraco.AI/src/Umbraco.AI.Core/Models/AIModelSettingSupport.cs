@@ -54,7 +54,13 @@ public sealed class AIModelSettingSupport
     /// <summary>
     /// Projects the declaration into the metadata entries carried by <see cref="AIModelDescriptor.Metadata"/>.
     /// </summary>
-    internal IReadOnlyDictionary<string, string> ToMetadata()
+    /// <remarks>
+    /// The capability bases call this for you when they project
+    /// <see cref="Providers.IAICapability.GetSettingSupport"/> over a model list. It is public for the other
+    /// route: a capability whose vendor reports support as data (Anthropic's models endpoint does) can build
+    /// its descriptors with the declaration already attached instead of implementing the hook.
+    /// </remarks>
+    public IReadOnlyDictionary<string, string> ToMetadata()
         => IsEmpty
             ? new Dictionary<string, string>()
             : new Dictionary<string, string>

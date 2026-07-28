@@ -94,7 +94,7 @@ public class AnthropicModelCapabilityTests
     {
         // Arrange
         var (provider, settings, _) = CreateProvider(TwoModelsPage);
-        var capability = new AnthropicChatCapability(provider);
+        var capability = new AnthropicChatCapability(provider, logger: null);
 
         // Act
         var descriptors = await ((Core.Providers.IAICapability)capability).GetModelsAsync(settings);

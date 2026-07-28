@@ -54,6 +54,32 @@ export function isProfileSettingSupported(
     return isSettingSupported(metadata, UAI_METADATA_PROFILE_SETTINGS_UNSUPPORTED, fieldKey);
 }
 
+/**
+ * Well-known model metadata key listing the image sizes a model accepts.
+ * @public
+ */
+export const UAI_METADATA_IMAGE_SUPPORTED_SIZES = "image.supportedSizes";
+
+/**
+ * The image sizes a model accepts, each as `"{width}x{height}"`.
+ *
+ * Returns an empty array when the provider declared none, which means "unknown" rather than "none
+ * supported" — a caller should keep accepting a free-typed size rather than blocking every model a provider
+ * happens not to describe.
+ *
+ * @param metadata - The selected model descriptor's metadata.
+ * @public
+ */
+export function getSupportedImageSizes(metadata: Record<string, string> | undefined): string[] {
+    const declared = metadata?.[UAI_METADATA_IMAGE_SUPPORTED_SIZES];
+    if (!declared) return [];
+
+    return declared
+        .split(",")
+        .map((size) => size.trim())
+        .filter((size) => size.length > 0);
+}
+
 function isSettingSupported(
     metadata: Record<string, string> | undefined,
     metadataKey: string,

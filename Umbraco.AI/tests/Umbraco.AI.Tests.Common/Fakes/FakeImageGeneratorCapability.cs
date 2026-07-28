@@ -25,8 +25,8 @@ public class FakeImageGeneratorCapability : IAIImageGeneratorCapability
                 "GPT Image 1",
                 new Dictionary<string, string>
                 {
-                    ["image.supportedSizes"] = "1024x1024,1024x1536,1536x1024",
-                    ["image.maxEdge"] = "1536",
+                    [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024,1024x1536,1536x1024",
+                    [AIModelMetadataKeys.ImageMaxEdge] = "1536",
                 }),
         };
     }

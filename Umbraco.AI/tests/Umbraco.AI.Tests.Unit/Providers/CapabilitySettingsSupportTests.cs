@@ -10,7 +10,7 @@ namespace Umbraco.AI.Tests.Unit.Providers;
 /// Covers the per-model setting declarations: a capability names the settings a model rejects, the bases
 /// project that into the model list's metadata, and consumers read it back.
 /// </summary>
-public class CapabilitySettingSupportTests
+public class CapabilitySettingsSupportTests
 {
     private static readonly FakeProviderSettings Settings = new();
 
@@ -137,10 +137,10 @@ public class CapabilitySettingSupportTests
         : AIChatCapabilityBase<FakeProviderSettings, DeclaringChatCapability.CapabilitySettings>(
             new FakeAIProvider())
     {
-        public override AIModelSettingSupport GetSettingSupport(string modelId)
+        public override AIModelSettingsSupport GetSettingsSupport(string modelId)
             => modelId == "reasoning-model"
-                ? AIModelSettingSupport.Default
-                : new AIModelSettingSupport
+                ? AIModelSettingsSupport.Default
+                : new AIModelSettingsSupport
                 {
                     UnsupportedCapabilitySettings = [nameof(CapabilitySettings.ReasoningEffort)],
                 };

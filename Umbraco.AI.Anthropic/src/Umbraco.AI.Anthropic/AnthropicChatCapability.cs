@@ -59,7 +59,7 @@ public class AnthropicChatCapability(
     /// <inheritdoc />
     /// <remarks>
     /// The declaration of which settings each model accepts is written here rather than through
-    /// <see cref="IAICapability.GetSettingSupport"/>, because Anthropic's models endpoint reports it as
+    /// <see cref="IAICapability.GetSettingsSupport"/>, because Anthropic's models endpoint reports it as
     /// data: <c>capabilities.effort.supported</c> per model. Only models the API says nothing about fall
     /// back to inferring support from the ID.
     /// </remarks>
@@ -83,10 +83,10 @@ public class AnthropicChatCapability(
     /// Turns a model's reported capabilities into the settings declaration the profile editor reads,
     /// falling back to the ID-based predicate when the API reported nothing for the model.
     /// </summary>
-    private static AIModelSettingSupport BuildSettingSupport(AnthropicModelCapability model)
+    private static AIModelSettingsSupport BuildSettingSupport(AnthropicModelCapability model)
         => (model.SupportsEffort ?? AnthropicModelUtilities.SupportsEffort(model.Id))
-            ? AIModelSettingSupport.Default
-            : new AIModelSettingSupport
+            ? AIModelSettingsSupport.Default
+            : new AIModelSettingsSupport
             {
                 UnsupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.Effort)],
             };
@@ -140,7 +140,7 @@ public class AnthropicChatCapability(
     /// </para>
     /// <para>
     /// Skipped when the model does not accept effort at all, or does not accept the configured level —
-    /// the same predicates that drive <see cref="GetSettingSupport"/> — so a profile carrying a value the
+    /// the same predicates that drive <see cref="GetSettingsSupport"/> — so a profile carrying a value the
     /// model rejects cannot fail the request.
     /// </para>
     /// </remarks>

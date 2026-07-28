@@ -9,7 +9,7 @@ public static class AIModelDescriptorExtensions
 {
     /// <summary>
     /// Whether a provider-declared capability setting applies to this model, per the capability's
-    /// declaration via <see cref="Core.Providers.IAICapability.GetSettingSupport"/>.
+    /// declaration via <see cref="Core.Providers.IAICapability.GetSettingsSupport"/>.
     /// </summary>
     /// <param name="model">The model descriptor.</param>
     /// <param name="fieldKey">The schema field key (or property name) of the setting.</param>

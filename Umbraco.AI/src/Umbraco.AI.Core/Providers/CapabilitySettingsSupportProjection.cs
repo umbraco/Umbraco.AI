@@ -11,9 +11,9 @@ namespace Umbraco.AI.Core.Providers;
 /// <remarks>
 /// Applied by the capability bases around the provider's own <c>GetModelsAsync</c>, which keeps
 /// providers free of the metadata convention — they implement
-/// <see cref="IAICapability.GetSettingSupport"/> and nothing else.
+/// <see cref="IAICapability.GetSettingsSupport"/> and nothing else.
 /// </remarks>
-internal static class CapabilitySettingSupportProjection
+internal static class CapabilitySettingsSupportProjection
 {
     internal static IReadOnlyList<AIModelDescriptor> Apply(
         IAICapability capability,
@@ -29,7 +29,7 @@ internal static class CapabilitySettingSupportProjection
         for (var i = 0; i < models.Count; i++)
         {
             var model = models[i];
-            var support = capability.GetSettingSupport(model.Model.ModelId);
+            var support = capability.GetSettingsSupport(model.Model.ModelId);
             if (support.IsEmpty)
             {
                 projected?.Add(model);

@@ -53,7 +53,7 @@ public interface IAICapability
 
     /// <summary>
     /// Declares which settings the given model does not accept. Defaults to
-    /// <see cref="AIModelSettingSupport.Default"/> — nothing declared, so every setting applies.
+    /// <see cref="AIModelSettingsSupport.Default"/> — nothing declared, so every setting applies.
     /// </summary>
     /// <param name="modelId">The model ID to describe.</param>
     /// <remarks>
@@ -66,10 +66,10 @@ public interface IAICapability
     /// <para>
     /// Must be a cheap, local, synchronous decision — it runs once per model in the list. The same
     /// predicate should also gate what the capability actually sends, since this declaration only
-    /// reaches the UI (see <see cref="AIModelSettingSupport"/>).
+    /// reaches the UI (see <see cref="AIModelSettingsSupport"/>).
     /// </para>
     /// </remarks>
-    AIModelSettingSupport GetSettingSupport(string modelId) => AIModelSettingSupport.Default;
+    AIModelSettingsSupport GetSettingsSupport(string modelId) => AIModelSettingsSupport.Default;
 
     /// <summary>
     /// Gets the available AI models for this capability.
@@ -190,7 +190,7 @@ public abstract class AICapabilityBase(IAIProvider provider) : IAICapability
     public virtual Type? CapabilitySettingsType => null;
 
     /// <inheritdoc />
-    public virtual AIModelSettingSupport GetSettingSupport(string modelId) => AIModelSettingSupport.Default;
+    public virtual AIModelSettingsSupport GetSettingsSupport(string modelId) => AIModelSettingsSupport.Default;
 
     /// <summary>
     /// Gets the available AI models for this capability.
@@ -205,7 +205,7 @@ public abstract class AICapabilityBase(IAIProvider provider) : IAICapability
 
         // Fold the capability's per-model setting declarations into each descriptor's metadata so the
         // model list doubles as the applicability source for the profile editor.
-        return CapabilitySettingSupportProjection.Apply(this, models);
+        return CapabilitySettingsSupportProjection.Apply(this, models);
     }
 }
 
@@ -234,7 +234,7 @@ public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICap
     public virtual Type? CapabilitySettingsType => null;
 
     /// <inheritdoc />
-    public virtual AIModelSettingSupport GetSettingSupport(string modelId) => AIModelSettingSupport.Default;
+    public virtual AIModelSettingsSupport GetSettingsSupport(string modelId) => AIModelSettingsSupport.Default;
 
     /// <summary>
     /// Gets the available AI models for this capability.
@@ -253,7 +253,7 @@ public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICap
 
         // Fold the capability's per-model setting declarations into each descriptor's metadata so the
         // model list doubles as the applicability source for the profile editor.
-        return CapabilitySettingSupportProjection.Apply(this, models);
+        return CapabilitySettingsSupportProjection.Apply(this, models);
     }
 }
 
@@ -364,7 +364,7 @@ public abstract class AIChatCapabilityBase<TSettings, TCapabilitySettings>(IAIPr
     /// <param name="options">The chat options for the current request (safe to mutate; it is a per-request copy).</param>
     /// <remarks>
     /// Gate on <paramref name="modelId"/> with the same predicate used by
-    /// <see cref="IAICapability.GetSettingSupport"/>: hiding a setting in the editor does not stop a
+    /// <see cref="IAICapability.GetSettingsSupport"/>: hiding a setting in the editor does not stop a
     /// profile saved before a model change, an alias-driven API caller, or a direct
     /// <see cref="IChatClient"/> consumer from reaching here with a value the model rejects.
     /// </remarks>

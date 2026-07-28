@@ -5,7 +5,7 @@ namespace Umbraco.AI.Core.Models;
 /// </summary>
 /// <remarks>
 /// Metadata is a string dictionary so it can travel to the backoffice with the model list. This
-/// constant (plus <see cref="AIModelSettingSupport"/> for writing and the
+/// constant (plus <see cref="AIModelSettingsSupport"/> for writing and the
 /// <c>IsCapabilitySettingSupported</c> extension for reading) keeps the convention in one place
 /// rather than repeated as literals across provider packages and the frontend.
 /// </remarks>

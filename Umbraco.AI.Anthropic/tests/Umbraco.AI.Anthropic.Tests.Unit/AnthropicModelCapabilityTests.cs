@@ -146,7 +146,7 @@ public class AnthropicModelCapabilityTests
         HttpMessageHandler handler)
         : AnthropicProvider(infrastructure, cache)
     {
-        internal override global::Anthropic.AnthropicClient CreateModelListClient(
+        internal override global::Anthropic.AnthropicClient CreateSdkClient(
             AnthropicProviderSettings settings)
             => new()
             {

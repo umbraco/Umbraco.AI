@@ -92,23 +92,12 @@ public class AnthropicChatCapability(
             };
 
     /// <inheritdoc />
-    protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
-    {
-        var inner = AnthropicProvider.CreateAnthropicClient(settings)
-            .Beta.AsIChatClient(modelId);
-
-        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
-        // which caller assembled the ChatOptions. See AnthropicSamplingParameterChatClient.
-        return new AnthropicSamplingParameterChatClient(inner, modelId, logger);
-    }
-
-    /// <inheritdoc />
     /// <remarks>
     /// <para>
-    /// Fetches the model list (cached) before handing back the client, so the per-request settings hook can
-    /// read the target model's reported capabilities synchronously. Both interface entry points route
-    /// through here rather than the synchronous <see cref="CreateClient"/>, so the prefetch cannot be
-    /// bypassed from outside the capability.
+    /// Fetches the model list (cached) before building the client, so the per-request settings hook can
+    /// read the target model's reported capabilities synchronously. This is the capability's only creation
+    /// method: the synchronous <c>CreateClient</c> hook is left unimplemented because every path that
+    /// reaches it would skip the prefetch, and both interface entry points route through here anyway.
     /// </para>
     /// <para>
     /// A failure is not fatal — capability data refines the decision but is not required to make a request,
@@ -134,7 +123,12 @@ public class AnthropicChatCapability(
                 + "is unavailable, so setting support will be inferred from the model ID instead.");
         }
 
-        return CreateClient(settings, modelId);
+        var inner = Provider.CreateSdkClient(settings)
+            .Beta.AsIChatClient(modelId);
+
+        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
+        // which caller assembled the ChatOptions. See AnthropicSamplingParameterChatClient.
+        return new AnthropicSamplingParameterChatClient(inner, modelId, logger);
     }
 
     /// <inheritdoc />

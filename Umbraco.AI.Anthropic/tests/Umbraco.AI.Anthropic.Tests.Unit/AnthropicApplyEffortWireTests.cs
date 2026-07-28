@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text;
 using Anthropic;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Caching.Memory;
@@ -29,14 +31,14 @@ public class AnthropicApplyEffortWireTests
     public async Task ApplyCapabilitySettings_SendsEffortAndNothingElseInOutputConfig()
     {
         // Arrange
-        var chatHandler = new CapturingHttpMessageHandler();
-        var chatClient = await CreateConfiguredClientAsync(chatHandler, effort: "medium");
+        var handler = new AnthropicApiHandler(ModelsResponse);
+        var chatClient = await CreateConfiguredClientAsync(handler, effort: "medium");
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient);
 
         // Assert — exactly one key inside output_config
-        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        var body = handler.ChatRequestBodies.ShouldHaveSingleItem();
         body.ShouldContain("\"output_config\":{\"effort\":\"medium\"}");
         body.ShouldNotContain("task_budget");
         body.ShouldNotContain("format");
@@ -46,14 +48,14 @@ public class AnthropicApplyEffortWireTests
     public async Task ApplyCapabilitySettings_NoEffortConfigured_SendsNoOutputConfig()
     {
         // Arrange
-        var chatHandler = new CapturingHttpMessageHandler();
-        var chatClient = await CreateConfiguredClientAsync(chatHandler, effort: null);
+        var handler = new AnthropicApiHandler(ModelsResponse);
+        var chatClient = await CreateConfiguredClientAsync(handler, effort: null);
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient);
 
         // Assert
-        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        var body = handler.ChatRequestBodies.ShouldHaveSingleItem();
         body.ShouldNotContain("output_config");
     }
 
@@ -61,14 +63,14 @@ public class AnthropicApplyEffortWireTests
     public async Task ApplyCapabilitySettings_LevelTheModelDoesNotAccept_SendsNoOutputConfig()
     {
         // Arrange — xhigh is not offered, so a value stored by an API caller must not be forwarded
-        var chatHandler = new CapturingHttpMessageHandler();
-        var chatClient = await CreateConfiguredClientAsync(chatHandler, effort: "xhigh");
+        var handler = new AnthropicApiHandler(ModelsResponse);
+        var chatClient = await CreateConfiguredClientAsync(handler, effort: "xhigh");
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient);
 
         // Assert
-        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        var body = handler.ChatRequestBodies.ShouldHaveSingleItem();
         body.ShouldNotContain("output_config");
     }
 
@@ -76,18 +78,17 @@ public class AnthropicApplyEffortWireTests
     public async Task ModelListUnavailable_StillSendsEffortByInferringFromTheModelId()
     {
         // Arrange — the models call fails, so there are no reported capabilities to consult
-        var chatHandler = new CapturingHttpMessageHandler();
+        var handler = new AnthropicApiHandler(modelsResponse: null);
         var provider = new StubbedAnthropicProvider(
             new FakeProviderInfrastructure(),
             new MemoryCache(new MemoryCacheOptions()),
-            new FailingHttpMessageHandler());
+            handler);
 
-        IAIChatCapability capability = new StubbedChatCapability(provider, chatHandler);
-        var settings = new AnthropicProviderSettings { ApiKey = "test-key" };
+        IAIChatCapability capability = new AnthropicChatCapability(provider, logger: null);
 
         // Act — client creation must not fail, and the ID predicate says Opus 5 accepts effort
         var chatClient = await capability.CreateClientAsync(
-            settings,
+            new AnthropicProviderSettings { ApiKey = "test-key" },
             new AnthropicChatCapabilitySettings { Effort = "medium" },
             "claude-opus-5",
             default);
@@ -95,7 +96,7 @@ public class AnthropicApplyEffortWireTests
         await SendAndIgnoreFailureAsync(chatClient);
 
         // Assert
-        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        var body = handler.ChatRequestBodies.ShouldHaveSingleItem();
         body.ShouldContain("\"output_config\":{\"effort\":\"medium\"}");
     }
 
@@ -103,13 +104,13 @@ public class AnthropicApplyEffortWireTests
     public async Task ModelListUnavailable_ModelTheIdPredicateRejects_SendsNoOutputConfig()
     {
         // Arrange — the fallback must still refuse a model known not to accept effort
-        var chatHandler = new CapturingHttpMessageHandler();
+        var handler = new AnthropicApiHandler(modelsResponse: null);
         var provider = new StubbedAnthropicProvider(
             new FakeProviderInfrastructure(),
             new MemoryCache(new MemoryCacheOptions()),
-            new FailingHttpMessageHandler());
+            handler);
 
-        IAIChatCapability capability = new StubbedChatCapability(provider, chatHandler);
+        IAIChatCapability capability = new AnthropicChatCapability(provider, logger: null);
 
         // Act
         var chatClient = await capability.CreateClientAsync(
@@ -121,20 +122,20 @@ public class AnthropicApplyEffortWireTests
         await SendAndIgnoreFailureAsync(chatClient);
 
         // Assert
-        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        var body = handler.ChatRequestBodies.ShouldHaveSingleItem();
         body.ShouldNotContain("output_config");
     }
 
     private static async Task<IChatClient> CreateConfiguredClientAsync(
-        CapturingHttpMessageHandler chatHandler,
+        AnthropicApiHandler handler,
         string? effort)
     {
         var provider = new StubbedAnthropicProvider(
             new FakeProviderInfrastructure(),
             new MemoryCache(new MemoryCacheOptions()),
-            new StubHttpMessageHandler(ModelsResponse));
+            handler);
 
-        IAIChatCapability capability = new StubbedChatCapability(provider, chatHandler);
+        IAIChatCapability capability = new AnthropicChatCapability(provider, logger: null);
         var settings = new AnthropicProviderSettings { ApiKey = "test-key" };
         var capabilitySettings = effort is null ? new AnthropicChatCapabilitySettings() : new() { Effort = effort };
 
@@ -153,22 +154,6 @@ public class AnthropicApplyEffortWireTests
         }
     }
 
-    /// <summary>
-    /// The real capability with its chat client pointed at a capturing handler, so the representation it
-    /// builds is exercised through the SDK's own serialization.
-    /// </summary>
-    private sealed class StubbedChatCapability(AnthropicProvider provider, HttpMessageHandler handler)
-        : AnthropicChatCapability(provider, logger: null)
-    {
-        protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
-            => new AnthropicClient
-            {
-                ApiKey = "test-key",
-                MaxRetries = 0,
-                HttpClient = new HttpClient(handler),
-            }.Beta.AsIChatClient(modelId);
-    }
-
     [AIProvider("anthropic", "Anthropic")]
     private sealed class StubbedAnthropicProvider(
         IAIProviderInfrastructure infrastructure,
@@ -176,7 +161,7 @@ public class AnthropicApplyEffortWireTests
         HttpMessageHandler handler)
         : AnthropicProvider(infrastructure, cache)
     {
-        internal override AnthropicClient CreateModelListClient(AnthropicProviderSettings settings)
+        internal override AnthropicClient CreateSdkClient(AnthropicProviderSettings settings)
             => new()
             {
                 ApiKey = "test-key",
@@ -186,13 +171,37 @@ public class AnthropicApplyEffortWireTests
     }
 
     /// <summary>
-    /// Fails every request, standing in for a models endpoint that cannot be reached.
+    /// Stands in for the Anthropic API: serves the models call from a canned response (or fails it, when
+    /// none is given) and captures chat request bodies.
     /// </summary>
-    private sealed class FailingHttpMessageHandler : HttpMessageHandler
+    private sealed class AnthropicApiHandler(string? modelsResponse) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(
+        public List<string> ChatRequestBodies { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
-            => throw new HttpRequestException("models endpoint unreachable");
+        {
+            if (request.RequestUri?.AbsolutePath.Contains("/models", StringComparison.Ordinal) == true)
+            {
+                return modelsResponse is null
+                    ? throw new HttpRequestException("models endpoint unreachable")
+                    : new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(modelsResponse, Encoding.UTF8, "application/json"),
+                    };
+            }
+
+            if (request.Content is not null)
+            {
+                ChatRequestBodies.Add(await request.Content.ReadAsStringAsync(cancellationToken));
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent(
+                    """{"type":"error","error":{"type":"invalid_request_error","message":"captured"}}"""),
+            };
+        }
     }
 }

@@ -6,7 +6,12 @@ import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
 import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
-import { UaiPartialUpdateCommand, isCapabilitySettingSupported, isProfileSettingSupported } from "../../../../core/index.js";
+import {
+    UaiPartialUpdateCommand,
+    isCapabilitySettingSupported,
+    isProfileSettingSupported,
+    getSupportedImageSizes,
+} from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -217,19 +222,33 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     /**
-     * Returns the stored capability settings with the core settings the given model declares unsupported
-     * cleared, or `undefined` when nothing needs to change (which the partial update command skips).
+     * Returns the stored core profile settings with anything the given model cannot accept cleared, or
+     * `undefined` when nothing needs to change (which the partial update command skips).
      *
-     * Same reasoning as {@link #pruneCapabilitySettings}: a temperature the model rejects would sit in the
-     * profile with no field to show it and be dropped on every request.
+     * Same reasoning as {@link #pruneCapabilitySettings}: a value the model rejects would otherwise sit in
+     * the profile with no field showing it, and be dropped or rejected on every request.
      */
-    #pruneProfileSettings(modelId: string): UaiChatProfileSettings | undefined {
+    #pruneProfileSettings(modelId: string): UaiChatProfileSettings | UaiImageGenerationProfileSettings | undefined {
+        const metadata = this.#getModelMetadata(modelId);
+
         const chatSettings = this.#getChatSettings();
-        if (chatSettings?.temperature === null || chatSettings?.temperature === undefined) return undefined;
+        if (chatSettings?.temperature !== null && chatSettings?.temperature !== undefined) {
+            return isProfileSettingSupported(metadata, UAI_TEMPERATURE_FIELD_KEY)
+                ? undefined
+                : { ...chatSettings, temperature: null };
+        }
 
-        if (isProfileSettingSupported(this.#getModelMetadata(modelId), UAI_TEMPERATURE_FIELD_KEY)) return undefined;
+        const imageSettings = this.#getImageGenerationSettings();
+        if (imageSettings?.size) {
+            // Only prune against a model that actually declares its sizes. An empty list is silence, and
+            // clearing a deliberate size because a provider described nothing would be worse than keeping it.
+            const sizes = getSupportedImageSizes(metadata);
+            return sizes.length === 0 || sizes.includes(imageSettings.size)
+                ? undefined
+                : { ...imageSettings, size: null };
+        }
 
-        return { ...chatSettings, temperature: null };
+        return undefined;
     }
 
     /**
@@ -361,6 +380,81 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const target = event.target as HTMLInputElement;
         this.#updateImageGenerationSettings({ size: target.value || null });
     }
+
+    /**
+     * Renders the image size as a dropdown of the sizes the selected model declares, falling back to free
+     * text when it declares none.
+     *
+     * The sizes have been travelling on the model list since image generation shipped, with nothing reading
+     * them, so a size the model rejects saved cleanly and failed at generation time. The fallback matters as
+     * much as the dropdown: declarations are negative, so a model a provider says nothing about must stay
+     * typeable rather than being restricted to an empty list.
+     */
+    #renderImageSize(imageSettings: UaiImageGenerationProfileSettings | null) {
+        const sizes = getSupportedImageSizes(this.#getModelMetadata(this._model?.model?.modelId));
+        const size = imageSettings?.size ?? "";
+
+        return html`
+            <umb-property-layout
+                label="Size"
+                description=${sizes.length > 0
+                    ? "Default image size. Leave empty for the provider default."
+                    : 'Default image size as "{width}x{height}" (e.g. "1024x1024"). Leave empty for the provider default.'}
+            >
+                ${sizes.length > 0
+                    ? html`
+                        <uui-select
+                            slot="editor"
+                            .options=${this.#getImageSizeOptions(sizes, size)}
+                            @change=${this.#onImageSizeChange}
+                        ></uui-select>
+                    `
+                    : html`
+                        <uui-input
+                            slot="editor"
+                            type="text"
+                            .value=${size}
+                            @input=${this.#onImageSizeChange}
+                            placeholder="Provider default"
+                        ></uui-input>
+                    `}
+            </umb-property-layout>
+        `;
+    }
+
+    /**
+     * Builds the size options, cached against the inputs that decide them.
+     *
+     * A fresh array on every render pushes a new config into the CMS dropdown, which rebuilds its derived
+     * state and loses the empty "provider default" entry — the same trap the capability-settings schema
+     * works around.
+     */
+    #getImageSizeOptions(sizes: string[], selected: string): Array<{ name: string; value: string; selected?: boolean }> {
+        const cacheKey = `${sizes.join(",")}|${selected}`;
+        if (this.#cachedImageSizeOptionsKey === cacheKey) return this.#cachedImageSizeOptions!;
+
+        // A model that declares sizes can still be left unset, so the profile falls back to the provider's
+        // own default — the same three-state thinking as temperature.
+        const options = [
+            { name: "Provider default", value: "", selected: selected === "" },
+            ...sizes.map((s) => ({ name: s, value: s, selected: s === selected })),
+        ];
+
+        // A stored size the model doesn't list would otherwise vanish from the dropdown and read as unset.
+        // Pruning on model change handles the normal path; this covers a value saved before a declaration
+        // existed, or one a provider has since dropped.
+        if (selected !== "" && !sizes.includes(selected)) {
+            options.push({ name: `${selected} (not listed for this model)`, value: selected, selected: true });
+        }
+
+        this.#cachedImageSizeOptionsKey = cacheKey;
+        this.#cachedImageSizeOptions = options;
+
+        return options;
+    }
+
+    #cachedImageSizeOptionsKey?: string;
+    #cachedImageSizeOptions?: Array<{ name: string; value: string; selected?: boolean }>;
 
     #onImageQualityChange(event: Event) {
         event.stopPropagation();
@@ -568,18 +662,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="System Settings">
-                <umb-property-layout
-                    label="Size"
-                    description="Default image size as &quot;{width}x{height}&quot; (e.g. &quot;1024x1024&quot;). Leave empty for the provider default."
-                >
-                    <uui-input
-                        slot="editor"
-                        type="text"
-                        .value=${imageSettings?.size ?? ""}
-                        @input=${this.#onImageSizeChange}
-                        placeholder="Provider default"
-                    ></uui-input>
-                </umb-property-layout>
+                ${this.#renderImageSize(imageSettings)}
 
                 <umb-property-layout label="Media Type" description="Output image encoding (e.g. &quot;image/png&quot;, &quot;image/jpeg&quot;, &quot;image/webp&quot;). Supported values vary by model.">
                     <uui-input

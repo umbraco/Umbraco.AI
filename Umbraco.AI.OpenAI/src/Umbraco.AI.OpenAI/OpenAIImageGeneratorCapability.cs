@@ -103,10 +103,10 @@ public class OpenAIImageGeneratorCapability(
         {
             return new Dictionary<string, string>
             {
-                ["image.supportedSizes"] = "1024x1024,1024x1536,1536x1024",
-                ["image.maxEdge"] = "1536",
-                ["image.supportsEdit"] = "true",
-                ["image.supportsMask"] = "true",
+                [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024,1024x1536,1536x1024",
+                [AIModelMetadataKeys.ImageMaxEdge] = "1536",
+                [AIModelMetadataKeys.ImageSupportsEdit] = "true",
+                [AIModelMetadataKeys.ImageSupportsMask] = "true",
             };
         }
 
@@ -114,10 +114,10 @@ public class OpenAIImageGeneratorCapability(
         {
             return new Dictionary<string, string>
             {
-                ["image.supportedSizes"] = "1024x1024,1792x1024,1024x1792",
-                ["image.maxEdge"] = "1792",
-                ["image.supportsEdit"] = "false",
-                ["image.supportsMask"] = "false",
+                [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024,1792x1024,1024x1792",
+                [AIModelMetadataKeys.ImageMaxEdge] = "1792",
+                [AIModelMetadataKeys.ImageSupportsEdit] = "false",
+                [AIModelMetadataKeys.ImageSupportsMask] = "false",
             };
         }
 
@@ -125,10 +125,10 @@ public class OpenAIImageGeneratorCapability(
         {
             return new Dictionary<string, string>
             {
-                ["image.supportedSizes"] = "256x256,512x512,1024x1024",
-                ["image.maxEdge"] = "1024",
-                ["image.supportsEdit"] = "true",
-                ["image.supportsMask"] = "true",
+                [AIModelMetadataKeys.ImageSupportedSizes] = "256x256,512x512,1024x1024",
+                [AIModelMetadataKeys.ImageMaxEdge] = "1024",
+                [AIModelMetadataKeys.ImageSupportsEdit] = "true",
+                [AIModelMetadataKeys.ImageSupportsMask] = "true",
             };
         }
 

@@ -653,6 +653,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CapabilitySettings")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Settings")
                         .HasColumnType("TEXT");
 

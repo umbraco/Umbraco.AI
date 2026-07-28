@@ -456,18 +456,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #cachedImageSizeOptionsKey?: string;
     #cachedImageSizeOptions?: Array<{ name: string; value: string; selected?: boolean }>;
 
-    #onImageQualityChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#updateImageGenerationSettings({ quality: target.value || null });
-    }
-
-    #onImageStyleChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#updateImageGenerationSettings({ style: target.value || null });
-    }
-
     #onImageMediaTypeChange(event: Event) {
         event.stopPropagation();
         const target = event.target as HTMLInputElement;
@@ -481,8 +469,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             : {
                 $type: "imageGeneration",
                 size: updates.size ?? null,
-                quality: updates.quality ?? null,
-                style: updates.style ?? null,
                 mediaType: updates.mediaType ?? null,
             };
 
@@ -670,26 +656,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         type="text"
                         .value=${imageSettings?.mediaType ?? ""}
                         @input=${this.#onImageMediaTypeChange}
-                        placeholder="Provider default"
-                    ></uui-input>
-                </umb-property-layout>
-
-                <umb-property-layout label="Quality" description="Provider-specific quality hint (e.g. &quot;hd&quot; for DALL·E 3, &quot;high&quot; for gpt-image-1). Values vary by model.">
-                    <uui-input
-                        slot="editor"
-                        type="text"
-                        .value=${imageSettings?.quality ?? ""}
-                        @input=${this.#onImageQualityChange}
-                        placeholder="Provider default"
-                    ></uui-input>
-                </umb-property-layout>
-
-                <umb-property-layout label="Style" description="Provider-specific style hint (e.g. &quot;vivid&quot;, &quot;natural&quot; for DALL·E 3). Values vary by model.">
-                    <uui-input
-                        slot="editor"
-                        type="text"
-                        .value=${imageSettings?.style ?? ""}
-                        @input=${this.#onImageStyleChange}
                         placeholder="Provider default"
                     ></uui-input>
                 </umb-property-layout>

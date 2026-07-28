@@ -10,12 +10,15 @@ namespace Umbraco.AI.OpenAI;
 /// OpenAI SDK options the request is actually built from.
 /// </summary>
 /// <remarks>
-/// Wrapped outside the M.E.AI adapter but inside everything else, so the hints are translated no matter which
-/// caller assembled the <see cref="ImageGenerationOptions"/> — the profile's own settings, or a direct
-/// <see cref="IImageGenerator"/> consumer. Without it the hints are silently dropped; see
-/// <see cref="OpenAIImageHints"/>.
+/// Covers a direct <see cref="IImageGenerator"/> consumer that passes hints as additional properties, which
+/// the adapter ignores. A profile's own settings arrive typed through the capability's
+/// <c>ApplyCapabilitySettings</c> hook and are already a raw representation by the time they reach here, so
+/// this leaves them alone. See <see cref="OpenAIImageHints"/>.
 /// </remarks>
-internal sealed class OpenAIImageHintGenerator(IImageGenerator innerGenerator, ILogger? logger)
+internal sealed class OpenAIImageHintGenerator(
+    IImageGenerator innerGenerator,
+    string? boundModelId,
+    ILogger? logger)
     : DelegatingImageGenerator(innerGenerator)
 {
     /// <inheritdoc />
@@ -23,5 +26,5 @@ internal sealed class OpenAIImageHintGenerator(IImageGenerator innerGenerator, I
         ImageGenerationRequest request,
         ImageGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
-        => base.GenerateAsync(request, OpenAIImageHints.Apply(options, logger), cancellationToken);
+        => base.GenerateAsync(request, OpenAIImageHints.Apply(options, boundModelId, logger), cancellationToken);
 }

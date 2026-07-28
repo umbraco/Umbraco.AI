@@ -179,14 +179,12 @@ public class AnthropicChatCapability(
         {
             var existing = previousFactory?.Invoke(client) as MessageCreateParams;
 
-            // OutputConfig is init-only, so an existing representation is copied with the effort applied
-            // and any sibling output settings preserved.
-            var outputConfig = new BetaOutputConfig
-            {
-                Effort = effort,
-                Format = existing?.OutputConfig?.Format,
-                TaskBudget = existing?.OutputConfig?.TaskBudget,
-            };
+            // Copy an existing output config rather than rebuilding it: assigning a sibling property marks
+            // it present in the payload even when the value is null, and the API rejects the ones it does
+            // not expect ("output_config.task_budget: Extra inputs are not permitted"). Only effort is set.
+            var outputConfig = existing?.OutputConfig is { } priorOutputConfig
+                ? priorOutputConfig with { Effort = effort }
+                : new BetaOutputConfig { Effort = effort };
 
             return existing is null
                 ? new MessageCreateParams

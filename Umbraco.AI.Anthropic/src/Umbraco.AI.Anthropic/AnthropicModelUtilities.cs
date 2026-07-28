@@ -34,24 +34,16 @@ internal static class AnthropicModelUtilities
            && !NoEffortPatterns.Any(p => p.IsMatch(modelId));
 
     /// <summary>
-    /// Whether the model accepts the given effort level.
-    /// </summary>
-    /// <param name="modelId">The model ID, or null when unresolved.</param>
-    /// <param name="level">The effort level (case-insensitive).</param>
-    /// <remarks>
-    /// Only <c>low</c>, <c>medium</c> and <c>high</c> are recognised: those are accepted by every model
-    /// that accepts effort at all, so no per-model list is needed. Anthropic's <c>xhigh</c> and <c>max</c>
-    /// reach a subset that a hard-coded list cannot track — the set with <c>xhigh</c> grows with each
-    /// release — so they are treated as unrecognised and skipped rather than guessed at. Adding them means
-    /// reading the models endpoint's per-model <c>capabilities.effort</c>.
-    /// </remarks>
-    public static bool SupportsEffortLevel(string? modelId, string level)
-        => SupportsEffort(modelId) && IsKnownEffortLevel(level);
-
-    /// <summary>
     /// Whether the effort level is one this package offers, independent of any model.
     /// </summary>
     /// <param name="level">The effort level (case-insensitive).</param>
+    /// <remarks>
+    /// Only <c>low</c>, <c>medium</c> and <c>high</c>: those are accepted by every model that accepts
+    /// effort at all, so no per-model list is needed. Anthropic's <c>xhigh</c> and <c>max</c> reach a
+    /// subset that a hard-coded list cannot track — the set with <c>xhigh</c> grows with each release —
+    /// so they are treated as unrecognised and skipped rather than guessed at. Offering them means
+    /// reading the per-level flags the models endpoint already reports.
+    /// </remarks>
     public static bool IsKnownEffortLevel(string level)
         => level.Trim().ToLowerInvariant() is "low" or "medium" or "high";
 

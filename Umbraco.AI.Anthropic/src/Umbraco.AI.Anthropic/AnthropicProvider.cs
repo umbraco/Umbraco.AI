@@ -48,21 +48,6 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
         => AnthropicErrorMapping.TryClassify(exception) ?? base.ClassifyError(exception);
 
     /// <summary>
-    /// Gets all available model IDs from the Anthropic API with caching.
-    /// </summary>
-    /// <param name="settings">The provider settings containing API credentials.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of all available model IDs.</returns>
-    internal async Task<IReadOnlyList<string>> GetAvailableModelIdsAsync(
-        AnthropicProviderSettings settings,
-        CancellationToken cancellationToken = default)
-    {
-        var models = await GetAvailableModelsAsync(settings, cancellationToken).ConfigureAwait(false);
-
-        return models.Select(m => m.Id).OrderBy(id => id).ToList();
-    }
-
-    /// <summary>
     /// Gets all available models from the Anthropic API with caching, including the per-model capability
     /// facts the API reports.
     /// </summary>

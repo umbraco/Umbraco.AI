@@ -47,38 +47,25 @@ public class AnthropicEffortSupportTests
     }
 
     [Theory]
-    [InlineData("claude-opus-5", "low")]
-    [InlineData("claude-opus-5", "medium")]
-    [InlineData("claude-opus-5", "high")]
-    [InlineData("claude-opus-4-5-20251101", "high")]
-    [InlineData("claude-sonnet-4-6", "medium")]
-    public void SupportsEffortLevel_BaseLevelsOnAnEffortModel_ReturnsTrue(string modelId, string level)
+    [InlineData("low")]
+    [InlineData("medium")]
+    [InlineData("high")]
+    [InlineData("HIGH")]
+    [InlineData(" high ")]
+    public void IsKnownEffortLevel_OfferedLevel_ReturnsTrue(string level)
     {
-        AnthropicModelUtilities.SupportsEffortLevel(modelId, level).ShouldBeTrue();
+        AnthropicModelUtilities.IsKnownEffortLevel(level).ShouldBeTrue();
     }
 
     [Theory]
     [InlineData("xhigh")]
     [InlineData("max")]
-    public void SupportsEffortLevel_XhighOrMax_ReturnsFalseEvenOnModelsThatAcceptThem(string level)
+    [InlineData("turbo")]
+    [InlineData("")]
+    public void IsKnownEffortLevel_LevelNotOffered_ReturnsFalse(string level)
     {
-        // Neither level is offered: which models accept them cannot be tracked with a hard-coded list —
-        // the set with xhigh grows with each release — so a stored value is skipped rather than guessed at.
-        // Adding them means reading the models endpoint's per-model capabilities.effort.
-        AnthropicModelUtilities.SupportsEffortLevel("claude-opus-5", level).ShouldBeFalse();
-    }
-
-    [Theory]
-    [InlineData("claude-haiku-4-5-20251001", "high")]
-    [InlineData("claude-sonnet-4-5-20250929", "low")]
-    public void SupportsEffortLevel_ModelWithoutEffort_ReturnsFalseForEveryLevel(string modelId, string level)
-    {
-        AnthropicModelUtilities.SupportsEffortLevel(modelId, level).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void SupportsEffortLevel_UnrecognisedLevel_ReturnsFalse()
-    {
-        AnthropicModelUtilities.SupportsEffortLevel("claude-opus-5", "turbo").ShouldBeFalse();
+        // xhigh and max reach a subset of models that a hard-coded list cannot track, so a value stored
+        // by an API caller is skipped rather than guessed at.
+        AnthropicModelUtilities.IsKnownEffortLevel(level).ShouldBeFalse();
     }
 }

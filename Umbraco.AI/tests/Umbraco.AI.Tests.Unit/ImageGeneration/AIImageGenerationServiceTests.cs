@@ -266,7 +266,7 @@ public class AIImageGenerationServiceTests
             .ReturnsAsync(new List<AIModelDescriptor>
             {
                 new(new AIModelRef("fake-provider", "gpt-image-1"), "GPT Image 1",
-                    new Dictionary<string, string> { ["image.supportedSizes"] = "1024x1024" }),
+                    new Dictionary<string, string> { [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024" }),
             });
 
         var configuredProvider = new Mock<IAIConfiguredProvider>();
@@ -284,6 +284,8 @@ public class AIImageGenerationServiceTests
 
         result.ModelId.ShouldBe("gpt-image-1");
         result.Models.Count.ShouldBe(1);
+        // Deliberately the literal rather than the constant: this is the key that travels to the backoffice,
+        // so a change to the constant's value should fail here rather than silently rename the contract.
         result.Models[0].Metadata.ContainsKey("image.supportedSizes").ShouldBeTrue();
     }
 }

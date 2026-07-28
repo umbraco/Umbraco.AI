@@ -115,8 +115,6 @@ export const UaiProfileTypeMapper = {
             return {
                 $type: "imageGeneration",
                 size: img.size ?? null,
-                quality: img.quality ?? null,
-                style: img.style ?? null,
                 mediaType: img.mediaType ?? null,
             } as UaiImageGenerationProfileSettings;
         }
@@ -166,8 +164,6 @@ export const UaiProfileTypeMapper = {
             return {
                 $type: "imageGeneration",
                 size: settings.size,
-                quality: settings.quality,
-                style: settings.style,
                 mediaType: settings.mediaType,
             } as ImageGenerationProfileSettingsModel;
         }

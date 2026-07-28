@@ -7,20 +7,20 @@ using SdkImageGenerationOptions = OpenAI.Images.ImageGenerationOptions;
 namespace Umbraco.AI.OpenAI;
 
 /// <summary>
-/// Translates the provider-specific image hints (<c>quality</c>, <c>style</c>) into the OpenAI SDK's own
-/// options, which is the only channel that reaches the request.
+/// Translates the provider-specific image hints (quality, style) into the OpenAI SDK's own options, which
+/// is the only channel that reaches the request, and holds which models accept which values.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The hints travel as <see cref="ImageGenerationOptions.AdditionalProperties"/> because
-/// Microsoft.Extensions.AI has no first-class property for either. The OpenAI adapter ignores that
-/// dictionary entirely — <c>OpenAIImageOptionsWireTests</c> pins both halves of that: the hints are absent
-/// from the body when passed as additional properties, and present when passed as a raw representation.
+/// Microsoft.Extensions.AI has no first-class property for either hint, and the OpenAI adapter ignores
+/// <see cref="ImageGenerationOptions.AdditionalProperties"/> entirely —
+/// <c>OpenAIImageOptionsWireTests</c> pins both halves of that. So the hints have to be handed over as a
+/// raw representation.
 /// </para>
 /// <para>
-/// Kept separate from the decorator that calls it so the same translation can be reused when these hints
-/// move to provider-declared capability settings, where the value arrives typed instead of as a loose
-/// dictionary entry.
+/// Two callers share this. The profile's capability settings arrive typed and gated per model; a direct
+/// <c>IImageGenerator</c> consumer can still pass them as additional properties, handled by
+/// <see cref="OpenAIImageHintGenerator"/>. One translation, so the two cannot drift.
 /// </para>
 /// </remarks>
 internal static class OpenAIImageHints
@@ -29,98 +29,167 @@ internal static class OpenAIImageHints
     internal const string StyleKey = "style";
 
     /// <summary>
-    /// The wire values the SDK understands. Which subset a given model accepts differs (<c>hd</c> and
-    /// <c>standard</c> are DALL·E 3; <c>low</c>, <c>medium</c>, <c>high</c> and <c>auto</c> are gpt-image),
-    /// so this is a spelling check rather than a support check — the API rejects a valid value sent to the
-    /// wrong model, and says so clearly.
+    /// Quality vocabularies by model family. DALL·E 2 accepts only <c>standard</c>, DALL·E 3 adds
+    /// <c>hd</c>, and gpt-image uses a different scale entirely.
     /// </summary>
-    private static readonly HashSet<string> KnownQualities =
-        new(StringComparer.OrdinalIgnoreCase) { "hd", "standard", "low", "medium", "high", "auto" };
+    private static readonly Dictionary<string, HashSet<string>> QualitiesByFamily =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["gpt-image"] = new(StringComparer.OrdinalIgnoreCase) { "auto", "low", "medium", "high" },
+            ["dall-e-3"] = new(StringComparer.OrdinalIgnoreCase) { "standard", "hd" },
+            ["dall-e-2"] = new(StringComparer.OrdinalIgnoreCase) { "standard" },
+        };
+
+    /// <summary>
+    /// Every value any known family accepts, used when the model itself is unrecognised — we cannot know
+    /// what it takes, so a deliberate value is passed through rather than dropped.
+    /// </summary>
+    private static readonly HashSet<string> AllKnownQualities =
+        new(QualitiesByFamily.Values.SelectMany(v => v), StringComparer.OrdinalIgnoreCase);
 
     private static readonly HashSet<string> KnownStyles =
         new(StringComparer.OrdinalIgnoreCase) { "vivid", "natural" };
 
     /// <summary>
-    /// Returns options carrying the hints as a raw representation, or the options unchanged when there is
-    /// nothing to translate.
+    /// Whether the model supports a style hint. DALL·E 3 only.
+    /// </summary>
+    /// <remarks>
+    /// Drives both the per-model declaration the editor reads and the request-time gate, so the field the
+    /// user sees and the value actually sent cannot disagree.
+    /// </remarks>
+    public static bool SupportsStyle(string? modelId)
+        => modelId?.StartsWith("dall-e-3", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Builds a raw-representation factory carrying the given hints, or <c>null</c> when neither survives
+    /// gating.
+    /// </summary>
+    /// <param name="quality">The requested quality, or <c>null</c>.</param>
+    /// <param name="style">The requested style, or <c>null</c>.</param>
+    /// <param name="modelId">The model the request will run against, used to gate the values.</param>
+    /// <param name="logger">Optional logger, used when a hint is dropped.</param>
+    public static Func<IImageGenerator, object?>? CreateRawFactory(
+        string? quality,
+        string? style,
+        string? modelId,
+        ILogger? logger)
+    {
+        var resolvedQuality = ResolveQuality(quality, modelId, logger);
+        var resolvedStyle = ResolveStyle(style, modelId, logger);
+
+        if (resolvedQuality is null && resolvedStyle is null)
+        {
+            return null;
+        }
+
+        return _ =>
+        {
+            var raw = new SdkImageGenerationOptions();
+
+            if (resolvedQuality is not null)
+            {
+                raw.Quality = new global::OpenAI.Images.GeneratedImageQuality(resolvedQuality);
+            }
+
+            if (resolvedStyle is not null)
+            {
+                raw.Style = new global::OpenAI.Images.GeneratedImageStyle(resolvedStyle);
+            }
+
+            return raw;
+        };
+    }
+
+    /// <summary>
+    /// Returns options carrying any hints found in <see cref="ImageGenerationOptions.AdditionalProperties"/>
+    /// as a raw representation, or the options unchanged when there is nothing to translate.
     /// </summary>
     /// <param name="options">The caller's options. Never mutated.</param>
-    /// <param name="logger">Optional logger, used when a hint is skipped.</param>
-    public static ImageGenerationOptions? Apply(ImageGenerationOptions? options, ILogger? logger)
+    /// <param name="boundModelId">The model the generator was created for.</param>
+    /// <param name="logger">Optional logger, used when a hint is dropped.</param>
+    public static ImageGenerationOptions? Apply(
+        ImageGenerationOptions? options,
+        string? boundModelId,
+        ILogger? logger)
     {
         if (options?.AdditionalProperties is null)
         {
             return options;
         }
 
-        var quality = Read(options.AdditionalProperties, QualityKey, KnownQualities, logger);
-        var style = Read(options.AdditionalProperties, StyleKey, KnownStyles, logger);
-
-        if (quality is null && style is null)
-        {
-            return options;
-        }
-
         if (options.RawRepresentationFactory is not null)
         {
-            // A caller that has gone to the trouble of building the SDK options itself is more specific than
-            // a profile-level hint, and overwriting it would silently drop whatever else it set.
+            // Whoever built the SDK options — a caller directly, or the profile's capability settings
+            // upstream of here — is more specific than a loose dictionary entry, and overwriting the factory
+            // would drop whatever else it set.
             logger?.LogDebug(
-                "Image quality/style hints were ignored because the caller supplied its own raw representation.");
+                "Image hints in additional properties were ignored because a raw representation is already set.");
             return options;
         }
 
-        // Clone so the caller's instance is never mutated, then hand the SDK its own options type. The
-        // adapter fills everything the representation leaves empty (model, n, output format).
-        var effective = options.Clone();
-        effective.RawRepresentationFactory = _ =>
+        var factory = CreateRawFactory(
+            Read(options.AdditionalProperties, QualityKey),
+            Read(options.AdditionalProperties, StyleKey),
+            options.ModelId ?? boundModelId,
+            logger);
+
+        if (factory is null)
         {
-            var raw = new SdkImageGenerationOptions();
+            return options;
+        }
 
-            if (quality is not null)
-            {
-                raw.Quality = new global::OpenAI.Images.GeneratedImageQuality(quality);
-            }
-
-            if (style is not null)
-            {
-                raw.Style = new global::OpenAI.Images.GeneratedImageStyle(style);
-            }
-
-            return raw;
-        };
-
+        // Clone so the caller's instance is never mutated.
+        var effective = options.Clone();
+        effective.RawRepresentationFactory = factory;
         return effective;
     }
 
-    private static string? Read(
-        AdditionalPropertiesDictionary additionalProperties,
-        string key,
-        HashSet<string> known,
-        ILogger? logger)
+    private static string? ResolveQuality(string? value, string? modelId, ILogger? logger)
     {
-        if (!additionalProperties.TryGetValue(key, out var raw))
+        var quality = value?.Trim();
+        if (string.IsNullOrEmpty(quality))
         {
             return null;
         }
 
-        var value = (raw as string)?.Trim();
-        if (string.IsNullOrEmpty(value))
-        {
-            return null;
-        }
+        var family = QualitiesByFamily
+            .FirstOrDefault(f => modelId?.StartsWith(f.Key, StringComparison.OrdinalIgnoreCase) == true);
+        var accepted = family.Value ?? AllKnownQualities;
 
-        if (!known.Contains(value))
+        if (!accepted.Contains(quality))
         {
-            // Skipped rather than sent: an unrecognised spelling would fail the request outright, and a
-            // profile that has been saved with one should still be able to generate an image.
+            // Dropped rather than sent: the API rejects the whole request for a quality the model does not
+            // know, and a profile carried across models should degrade instead of failing outright.
             logger?.LogDebug(
-                "Ignoring unrecognised image {Hint} value '{Value}'.",
-                key,
-                value);
+                "Ignoring image quality '{Quality}', which model '{ModelId}' does not accept.",
+                quality,
+                modelId);
             return null;
         }
 
-        return value.ToLowerInvariant();
+        return quality.ToLowerInvariant();
     }
+
+    private static string? ResolveStyle(string? value, string? modelId, ILogger? logger)
+    {
+        var style = value?.Trim();
+        if (string.IsNullOrEmpty(style))
+        {
+            return null;
+        }
+
+        if (!KnownStyles.Contains(style) || !SupportsStyle(modelId))
+        {
+            logger?.LogDebug(
+                "Ignoring image style '{Style}' for model '{ModelId}'.",
+                style,
+                modelId);
+            return null;
+        }
+
+        return style.ToLowerInvariant();
+    }
+
+    private static string? Read(AdditionalPropertiesDictionary additionalProperties, string key)
+        => additionalProperties.TryGetValue(key, out var raw) ? raw as string : null;
 }

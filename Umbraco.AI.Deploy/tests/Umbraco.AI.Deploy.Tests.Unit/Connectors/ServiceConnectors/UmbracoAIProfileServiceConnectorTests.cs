@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -251,5 +252,87 @@ public class UmbracoAIProfileServiceConnectorTests
         settings.MaxTokens.ShouldBe(1000);
         settings.SystemPromptTemplate.ShouldBe("You are helpful.");
         settings.GuardrailIds.ShouldBe([guardrailId]);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ProfileWithCapabilitySettings_RoundTripsThem()
+    {
+        // Arrange — provider-declared settings must survive a transfer, or the target environment
+        // silently loses the configured value
+        var connectionId = Guid.NewGuid();
+        var profile = new AIProfile
+        {
+            Alias = "chat-profile",
+            Name = "Chat Profile",
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-5.6"),
+            ConnectionId = connectionId,
+            CapabilitySettings = JsonSerializer.Deserialize<JsonElement>("""{"reasoningEffort":"high"}"""),
+        };
+
+        var udi = new GuidUdi("umbraco-ai-profile", profile.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, profile);
+        artifact.ShouldNotBeNull();
+        artifact.CapabilitySettings.ShouldNotBeNull();
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIConnection { Alias = "conn", Name = "Conn", ProviderId = "openai" });
+
+        AIProfile? savedProfile = null;
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AIProfile>(), It.IsAny<CancellationToken>()))
+            .Callback<AIProfile, CancellationToken>((p, _) => savedProfile = p)
+            .ReturnsAsync((AIProfile p, CancellationToken _) => p);
+
+        var state = new ArtifactDeployState<AIProfileArtifact, AIProfile>(artifact, null, _connector, 2);
+
+        // Act
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 2);
+
+        // Assert
+        savedProfile.ShouldNotBeNull();
+        var restored = savedProfile.CapabilitySettings.ShouldBeOfType<JsonElement>();
+        restored.GetProperty("reasoningEffort").GetString().ShouldBe("high");
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ProfileWithoutCapabilitySettings_RoundTripsAsNull()
+    {
+        // Arrange — every profile created before providers could declare settings, and every profile whose
+        // provider declares none
+        var connectionId = Guid.NewGuid();
+        var profile = new AIProfile
+        {
+            Alias = "plain-profile",
+            Name = "Plain Profile",
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4o"),
+            ConnectionId = connectionId,
+        };
+
+        var udi = new GuidUdi("umbraco-ai-profile", profile.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, profile);
+        artifact.ShouldNotBeNull();
+        artifact.CapabilitySettings.ShouldBeNull();
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIConnection { Alias = "conn", Name = "Conn", ProviderId = "openai" });
+
+        AIProfile? savedProfile = null;
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AIProfile>(), It.IsAny<CancellationToken>()))
+            .Callback<AIProfile, CancellationToken>((p, _) => savedProfile = p)
+            .ReturnsAsync((AIProfile p, CancellationToken _) => p);
+
+        var state = new ArtifactDeployState<AIProfileArtifact, AIProfile>(artifact, null, _connector, 2);
+
+        // Act
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 2);
+
+        // Assert
+        savedProfile.ShouldNotBeNull();
+        savedProfile.CapabilitySettings.ShouldBeNull();
     }
 }

@@ -37,6 +37,12 @@ public class AIProfileArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? dep
     public JsonElement? Settings { get; set; }
 
     /// <summary>
+    /// Provider-declared capability settings (e.g. reasoning effort) serialized as JSON, or null when the
+    /// profile has none — including every profile created before providers could declare them.
+    /// </summary>
+    public JsonElement? CapabilitySettings { get; set; }
+
+    /// <summary>
     /// Tags for categorizing the profile.
     /// </summary>
     public IEnumerable<string> Tags { get; set; } = [];

@@ -77,9 +77,11 @@
   <Folder Name="/Providers/" />
   <Folder Name="/Providers/Amazon/">
     <Project Path="Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" />
+    <Project Path="Umbraco.AI.Amazon/tests/Umbraco.AI.Amazon.Tests.Unit/Umbraco.AI.Amazon.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/Anthropic/">
     <Project Path="Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" />
+    <Project Path="Umbraco.AI.Anthropic/tests/Umbraco.AI.Anthropic.Tests.Unit/Umbraco.AI.Anthropic.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/DeepSeek/">
     <Project Path="Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" />
@@ -101,6 +103,7 @@
   </Folder>
   <Folder Name="/Providers/OpenAI/">
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
+    <Project Path="Umbraco.AI.OpenAI/tests/Umbraco.AI.OpenAI.Tests.Unit/Umbraco.AI.OpenAI.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/TogetherAI/">
     <Project Path="Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" />

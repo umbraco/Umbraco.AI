@@ -28,6 +28,7 @@ public class OpenAIChatCapability(OpenAIProvider provider)
         new(@"^gpt-", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         new(@"^o1", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         new(@"^o3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^o4", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         new(@"^chatgpt-", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 

@@ -75,7 +75,7 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
             return cached;
         }
 
-        var client = CreateModelListClient(settings);
+        var client = CreateSdkClient(settings);
         var models = new List<AnthropicModelCapability>();
 
         var page = await client.Models.List(new ModelListParams { Limit = ModelPageSize }, cancellationToken);
@@ -140,11 +140,12 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
     }
 
     /// <summary>
-    /// Creates the client used to list models. Overridable so a test can serve canned responses without
-    /// reaching the API; production behaviour is <see cref="CreateAnthropicClient"/>.
+    /// Creates the Anthropic SDK client, for both the models call and chat. Overridable so a test can
+    /// serve canned responses without reaching the API; production behaviour is
+    /// <see cref="CreateAnthropicClient"/>.
     /// </summary>
     /// <param name="settings">The provider settings containing API credentials.</param>
-    internal virtual AnthropicClient CreateModelListClient(AnthropicProviderSettings settings)
+    internal virtual AnthropicClient CreateSdkClient(AnthropicProviderSettings settings)
         => CreateAnthropicClient(settings);
 
     /// <summary>

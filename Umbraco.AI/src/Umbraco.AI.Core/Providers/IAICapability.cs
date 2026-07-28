@@ -133,6 +133,23 @@ public interface IAISpeechToTextCapability : IAICapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured speech-to-text client.</returns>
     Task<ISpeechToTextClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a speech-to-text client with the provided connection settings and resolved,
+    /// provider-declared capability settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(object?, string?, CancellationToken)"/> so existing capabilities keep working.
+    /// The two-parameter <c>AISpeechToTextCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
+    /// </remarks>
+    Task<ISpeechToTextClient> CreateClientAsync(object? settings, object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(settings, modelId, cancellationToken);
 }
 
 /// <summary>
@@ -148,6 +165,27 @@ public interface IAIEmbeddingCapability : IAICapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured embedding generator.</returns>
     Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(object? settings, string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an embedding generator with the provided connection settings and resolved,
+    /// provider-declared capability settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured embedding generator.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateGeneratorAsync(object?, string?, CancellationToken)"/> so existing capabilities keep working.
+    /// The two-parameter <c>AIEmbeddingCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
+    /// </remarks>
+    Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => CreateGeneratorAsync(settings, modelId, cancellationToken);
 }
 
 /// <summary>
@@ -164,6 +202,27 @@ public interface IAIImageGeneratorCapability : IAICapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured image generator.</returns>
     Task<IImageGenerator> CreateGeneratorAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an image generator with the provided connection settings and resolved, provider-declared
+    /// capability settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured image generator.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateGeneratorAsync(object?, string?, CancellationToken)"/> so existing capabilities keep working.
+    /// The two-parameter <c>AIImageGeneratorCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
+    /// </remarks>
+    Task<IImageGenerator> CreateGeneratorAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => CreateGeneratorAsync(settings, modelId, cancellationToken);
 }
 
 /// <summary>
@@ -473,6 +532,71 @@ public abstract class AIEmbeddingCapabilityBase<TSettings>(IAIProvider provider)
 }
 
 /// <summary>
+/// Base implementation of an AI embedding capability with both provider-specific connection settings and
+/// provider-declared capability settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <remarks>
+/// Derive from this (instead of <see cref="AIEmbeddingCapabilityBase{TSettings}"/>) to let a provider
+/// surface extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>)
+/// and applies the resolved settings to every request's <see cref="EmbeddingGenerationOptions"/> via
+/// <see cref="ApplyCapabilitySettings"/>; the provider implements only that typed translation.
+/// </remarks>
+public abstract class AIEmbeddingCapabilityBase<TSettings, TCapabilitySettings>(IAIProvider provider)
+    : AIEmbeddingCapabilityBase<TSettings>(provider), IAIEmbeddingCapability
+    where TSettings : class
+    where TCapabilitySettings : class, new()
+{
+    /// <inheritdoc />
+    public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
+
+    /// <summary>
+    /// Applies the resolved capability settings onto a request's <see cref="EmbeddingGenerationOptions"/>.
+    /// Called for every request. Implementations should no-op when a value is not set.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
+    /// <param name="modelId">
+    /// The model the request will run against — the caller's <see cref="EmbeddingGenerationOptions.ModelId"/>
+    /// when set, otherwise the model the generator was created for. <c>null</c> only when neither is known.
+    /// </param>
+    /// <param name="options">The options for the current request (safe to mutate; it is a per-request copy).</param>
+    /// <remarks>
+    /// Gate on <paramref name="modelId"/> with the same predicate used by
+    /// <see cref="IAICapability.GetSettingsSupport"/>: hiding a setting in the editor does not stop a
+    /// profile saved before a model change, or a direct
+    /// <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> consumer, from reaching here with a value the
+    /// model rejects.
+    /// </remarks>
+    protected abstract void ApplyCapabilitySettings(
+        TCapabilitySettings capabilitySettings,
+        string? modelId,
+        EmbeddingGenerationOptions options);
+
+    /// <inheritdoc />
+    async Task<IEmbeddingGenerator<string, Embedding<float>>> IAIEmbeddingCapability.CreateGeneratorAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
+        CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateGenerator));
+
+        // Build the underlying generator from connection settings only (unchanged provider path).
+        var inner = await CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Wrap so the provider-declared capability settings are applied to every request. When the
+        // profile declares none (or a different capability's settings), return the generator untouched.
+        return capabilitySettings is TCapabilitySettings typed
+            ? new CapabilitySettingsEmbeddingGenerator<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
+            : inner;
+    }
+}
+
+/// <summary>
 /// Base implementation of an AI speech-to-text capability.
 /// </summary>
 public abstract class AISpeechToTextCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAISpeechToTextCapability
@@ -544,6 +668,70 @@ public abstract class AISpeechToTextCapabilityBase<TSettings>(IAIProvider provid
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
         return CreateClientAsync((TSettings)settings, modelId, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI speech-to-text capability with both provider-specific connection settings
+/// and provider-declared capability settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <remarks>
+/// Derive from this (instead of <see cref="AISpeechToTextCapabilityBase{TSettings}"/>) to let a provider
+/// surface extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>)
+/// and applies the resolved settings to every request's <see cref="SpeechToTextOptions"/> via
+/// <see cref="ApplyCapabilitySettings"/>; the provider implements only that typed translation.
+/// </remarks>
+public abstract class AISpeechToTextCapabilityBase<TSettings, TCapabilitySettings>(IAIProvider provider)
+    : AISpeechToTextCapabilityBase<TSettings>(provider), IAISpeechToTextCapability
+    where TSettings : class
+    where TCapabilitySettings : class, new()
+{
+    /// <inheritdoc />
+    public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
+
+    /// <summary>
+    /// Applies the resolved capability settings onto a request's <see cref="SpeechToTextOptions"/>.
+    /// Called for every request. Implementations should no-op when a value is not set.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
+    /// <param name="modelId">
+    /// The model the request will run against — the caller's <see cref="SpeechToTextOptions.ModelId"/> when
+    /// set, otherwise the model the client was created for. <c>null</c> only when neither is known.
+    /// </param>
+    /// <param name="options">The options for the current request (safe to mutate; it is a per-request copy).</param>
+    /// <remarks>
+    /// Gate on <paramref name="modelId"/> with the same predicate used by
+    /// <see cref="IAICapability.GetSettingsSupport"/>: hiding a setting in the editor does not stop a
+    /// profile saved before a model change, or a direct <see cref="ISpeechToTextClient"/> consumer, from
+    /// reaching here with a value the model rejects.
+    /// </remarks>
+    protected abstract void ApplyCapabilitySettings(
+        TCapabilitySettings capabilitySettings,
+        string? modelId,
+        SpeechToTextOptions options);
+
+    /// <inheritdoc />
+    async Task<ISpeechToTextClient> IAISpeechToTextCapability.CreateClientAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateClient));
+
+        // Build the underlying client from connection settings only (unchanged provider path).
+        var inner = await CreateClientAsync((TSettings)settings, modelId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Wrap so the provider-declared capability settings are applied to every request. When the
+        // profile declares none (or a different capability's settings), return the client untouched.
+        return capabilitySettings is TCapabilitySettings typed
+            ? new CapabilitySettingsSpeechToTextClient<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
+            : inner;
     }
 }
 
@@ -621,5 +809,70 @@ public abstract class AIImageGeneratorCapabilityBase<TSettings>(IAIProvider prov
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
         return CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI image-generation capability with both provider-specific connection
+/// settings and provider-declared capability settings (e.g. a quality or style hint).
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <remarks>
+/// Derive from this (instead of <see cref="AIImageGeneratorCapabilityBase{TSettings}"/>) to let a provider
+/// surface extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>)
+/// and applies the resolved settings to every request's <see cref="ImageGenerationOptions"/> via
+/// <see cref="ApplyCapabilitySettings"/>; the provider implements only that typed translation.
+/// </remarks>
+[Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
+public abstract class AIImageGeneratorCapabilityBase<TSettings, TCapabilitySettings>(IAIProvider provider)
+    : AIImageGeneratorCapabilityBase<TSettings>(provider), IAIImageGeneratorCapability
+    where TSettings : class
+    where TCapabilitySettings : class, new()
+{
+    /// <inheritdoc />
+    public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
+
+    /// <summary>
+    /// Applies the resolved capability settings onto a request's <see cref="ImageGenerationOptions"/>.
+    /// Called for every request. Implementations should no-op when a value is not set.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
+    /// <param name="modelId">
+    /// The model the request will run against — the caller's <see cref="ImageGenerationOptions.ModelId"/>
+    /// when set, otherwise the model the generator was created for. <c>null</c> only when neither is known.
+    /// </param>
+    /// <param name="options">The options for the current request (safe to mutate; it is a per-request copy).</param>
+    /// <remarks>
+    /// Gate on <paramref name="modelId"/> with the same predicate used by
+    /// <see cref="IAICapability.GetSettingsSupport"/>: hiding a setting in the editor does not stop a
+    /// profile saved before a model change, or a direct <see cref="IImageGenerator"/> consumer, from
+    /// reaching here with a value the model rejects.
+    /// </remarks>
+    protected abstract void ApplyCapabilitySettings(
+        TCapabilitySettings capabilitySettings,
+        string? modelId,
+        ImageGenerationOptions options);
+
+    /// <inheritdoc />
+    async Task<IImageGenerator> IAIImageGeneratorCapability.CreateGeneratorAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
+        CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateGenerator));
+
+        // Build the underlying generator from connection settings only (unchanged provider path).
+        var inner = await CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Wrap so the provider-declared capability settings are applied to every request. When the
+        // profile declares none (or a different capability's settings), return the generator untouched.
+        return capabilitySettings is TCapabilitySettings typed
+            ? new CapabilitySettingsImageGenerator<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
+            : inner;
     }
 }

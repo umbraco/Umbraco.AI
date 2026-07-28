@@ -75,7 +75,7 @@ public class AnthropicChatCapability(
             .Select(m => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, m.Id),
                 AnthropicModelUtilities.FormatDisplayName(m.Id),
-                BuildSettingSupport(m).ToMetadata()))
+                BuildSettingsSupport(m).ToMetadata()))
             .ToList();
     }
 
@@ -83,7 +83,7 @@ public class AnthropicChatCapability(
     /// Turns a model's reported capabilities into the settings declaration the profile editor reads,
     /// falling back to the ID-based predicate when the API reported nothing for the model.
     /// </summary>
-    private static AIModelSettingsSupport BuildSettingSupport(AnthropicModelCapability model)
+    private static AIModelSettingsSupport BuildSettingsSupport(AnthropicModelCapability model)
         => (model.SupportsEffort ?? AnthropicModelUtilities.SupportsEffort(model.Id))
             ? AIModelSettingsSupport.Default
             : new AIModelSettingsSupport

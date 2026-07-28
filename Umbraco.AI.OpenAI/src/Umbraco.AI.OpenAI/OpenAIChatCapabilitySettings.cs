@@ -9,14 +9,20 @@ namespace Umbraco.AI.OpenAI;
 public class OpenAIChatCapabilitySettings
 {
     /// <summary>
-    /// Constrains the reasoning effort for reasoning-capable models (o-series, gpt-5). Leave empty
-    /// for the model default. Ignored by non-reasoning models.
+    /// Constrains the reasoning effort for reasoning-capable models (the o-series and the GPT-5 line).
+    /// Leave empty for the model default.
     /// </summary>
+    /// <remarks>
+    /// The levels offered are the ones the pinned OpenAI SDK can express through
+    /// <c>ResponseReasoningEffortLevel</c>. The API also accepts <c>xhigh</c> and <c>max</c> on some
+    /// models; those need an SDK that exposes them and are deliberately not offered here rather than
+    /// silently dropped.
+    /// </remarks>
     [AIField(
         Label = "Reasoning effort",
-        Description = "Constrains reasoning effort for reasoning-capable models (o-series, gpt-5). Leave empty for the model default.",
+        Description = "Constrains reasoning effort for reasoning-capable models (the o-series and the GPT-5 line). Leave empty for the model default.",
         EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"low\",\"medium\",\"high\"]}]",
+        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"none\",\"minimal\",\"low\",\"medium\",\"high\"]}]",
         SortOrder = 1)]
     public string? ReasoningEffort { get; set; }
 }

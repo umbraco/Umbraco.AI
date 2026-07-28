@@ -11,7 +11,7 @@ namespace Umbraco.AI.Persistence.Profiles;
 /// <remarks>
 /// Capability-specific <see cref="AIProfile.Settings"/> continue to use the plain
 /// <see cref="AIProfileSettingsSerializer"/>. Provider-declared <see cref="AIProfile.CapabilitySettings"/>
-/// go through the editable-model serializer with the provider's profile-settings schema so sensitive
+/// go through the editable-model serializer with the provider's capability-settings schema so sensitive
 /// fields are encrypted at rest — consistent with how connection settings are handled.
 /// </remarks>
 internal sealed class AIProfileFactory : IAIProfileFactory

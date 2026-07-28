@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Anthropic.Models.Beta.Messages;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
@@ -13,6 +14,12 @@ public class AnthropicChatCapability(AnthropicProvider provider)
     : AIChatCapabilityBase<AnthropicProviderSettings, AnthropicChatCapabilitySettings>(provider)
 {
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
+
+    /// <summary>
+    /// The max-tokens value the SDK's Microsoft.Extensions.AI adapter sends when the caller sets none.
+    /// Mirrored here because a raw representation must supply the value itself.
+    /// </summary>
+    private const int AdapterDefaultMaxTokens = 1024;
     
     private new AnthropicProvider Provider => (AnthropicProvider)base.Provider;
 
@@ -41,17 +48,17 @@ public class AnthropicChatCapability(AnthropicProvider provider)
 
     /// <inheritdoc />
     /// <remarks>
-    /// Claude 4.7 and later reject an explicit thinking budget, so it is declared per model — otherwise
-    /// the profile editor would offer a setting whose only effect is a 400 on every current frontier
-    /// model. The set that accepts a budget is the closed one (4.6 and earlier), so the predicate is
-    /// written as an allow-list and unknown models read as unsupported.
+    /// Effort is not accepted by Claude 3.x, the base Claude 4 models, Opus 4.1, Sonnet 4.5 or Haiku 4.5,
+    /// so it is declared per model — otherwise the profile editor would offer it on a model that rejects
+    /// it. That legacy set is closed, so the predicate is a deny-list and an unrecognised model is treated
+    /// as supporting effort.
     /// </remarks>
     public override AIModelSettingSupport GetSettingSupport(string modelId)
-        => AnthropicModelUtilities.SupportsThinkingBudget(modelId)
+        => AnthropicModelUtilities.SupportsEffort(modelId)
             ? AIModelSettingSupport.Default
             : new AIModelSettingSupport
             {
-                UnsupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.ThinkingBudgetTokens)],
+                UnsupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.Effort)],
             };
 
     /// <inheritdoc />
@@ -61,28 +68,81 @@ public class AnthropicChatCapability(AnthropicProvider provider)
 
     /// <inheritdoc />
     /// <remarks>
-    /// Enables Claude's extended thinking with the configured token budget. The Anthropic
-    /// (tryAGI) Microsoft.Extensions.AI adapter reads the <c>"thinking"</c> entry from
-    /// <see cref="ChatOptions.AdditionalProperties"/> when building the request.
-    /// Skipped on models that reject a budget — the same predicate that drives
-    /// <see cref="GetSettingSupport"/> — so a profile carrying a stale value cannot fail the request.
+    /// <para>
+    /// Sets <c>output_config.effort</c> through <see cref="ChatOptions.RawRepresentationFactory"/>, the
+    /// only channel the SDK's Microsoft.Extensions.AI adapter reads — values placed in
+    /// <see cref="ChatOptions.AdditionalProperties"/> are dropped before the request is built.
+    /// </para>
+    /// <para>
+    /// The adapter treats the factory's result as the request base and overwrites only the messages, so
+    /// the model and max-tokens values have to be carried into it here or the request would be sent with
+    /// whatever this method put there. <c>AnthropicEffortWireTests</c> pins both behaviours down.
+    /// </para>
+    /// <para>
+    /// Skipped when the model does not accept effort at all, or does not accept the configured level —
+    /// the same predicates that drive <see cref="GetSettingSupport"/> — so a profile carrying a value the
+    /// model rejects cannot fail the request.
+    /// </para>
     /// </remarks>
     protected override void ApplyCapabilitySettings(
         AnthropicChatCapabilitySettings capabilitySettings,
         string? modelId,
         ChatOptions options)
     {
-        if (capabilitySettings.ThinkingBudgetTokens is not { } budgetTokens || budgetTokens <= 0)
+        if (string.IsNullOrWhiteSpace(capabilitySettings.Effort))
         {
             return;
         }
 
-        if (!AnthropicModelUtilities.SupportsThinkingBudget(modelId ?? DefaultChatModel))
+        var model = modelId ?? DefaultChatModel;
+        var level = capabilitySettings.Effort.Trim().ToLowerInvariant();
+
+        if (!AnthropicModelUtilities.SupportsEffortLevel(model, level))
         {
             return;
         }
 
-        (options.AdditionalProperties ??= new AdditionalPropertiesDictionary())["thinking"] = budgetTokens;
+        var effort = level switch
+        {
+            "low" => Effort.Low,
+            "medium" => Effort.Medium,
+            "high" => Effort.High,
+            "xhigh" => Effort.Xhigh,
+            "max" => Effort.Max,
+            _ => (Effort?)null,
+        };
+
+        if (effort is null)
+        {
+            return;
+        }
+
+        var previousFactory = options.RawRepresentationFactory;
+        var maxTokens = options.MaxOutputTokens ?? AdapterDefaultMaxTokens;
+
+        options.RawRepresentationFactory = client =>
+        {
+            var existing = previousFactory?.Invoke(client) as MessageCreateParams;
+
+            // OutputConfig is init-only, so an existing representation is copied with the effort applied
+            // and any sibling output settings preserved.
+            var outputConfig = new BetaOutputConfig
+            {
+                Effort = effort,
+                Format = existing?.OutputConfig?.Format,
+                TaskBudget = existing?.OutputConfig?.TaskBudget,
+            };
+
+            return existing is null
+                ? new MessageCreateParams
+                {
+                    Model = model,
+                    MaxTokens = maxTokens,
+                    Messages = [],
+                    OutputConfig = outputConfig,
+                }
+                : existing with { OutputConfig = outputConfig };
+        };
     }
 
     private static bool IsChatModel(string modelId)

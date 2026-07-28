@@ -42,7 +42,7 @@ public interface IAIConfiguredChatCapability : IAIConfiguredCapability
     /// Creates a chat client with the baked-in connection settings and resolved, provider-declared
     /// profile settings (e.g. reasoning effort).
     /// </summary>
-    /// <param name="capabilitySettings">The resolved, typed profile settings, or <c>null</c> when the profile declares none.</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none.</param>
     /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>

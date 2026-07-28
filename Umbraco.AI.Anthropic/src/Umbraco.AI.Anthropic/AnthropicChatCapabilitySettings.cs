@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Umbraco.AI.Core.EditableModels;
 
 namespace Umbraco.AI.Anthropic;
@@ -10,13 +9,19 @@ namespace Umbraco.AI.Anthropic;
 public class AnthropicChatCapabilitySettings
 {
     /// <summary>
-    /// Token budget for Claude's extended thinking on supported models. Leave empty to use the
-    /// model default (extended thinking off). Anthropic requires a budget of at least 1024 tokens.
+    /// How many tokens Claude spends on a response, including thinking and tool calls. Leave empty for
+    /// the model default (high).
     /// </summary>
+    /// <remarks>
+    /// Maps to <c>output_config.effort</c>. Supported on Claude Opus 4.5 and everything from the 4.6
+    /// generation onwards; the <c>xhigh</c> and <c>max</c> levels are available on fewer models than the
+    /// rest, and a level the selected model does not accept is dropped rather than sent.
+    /// </remarks>
     [AIField(
-        Label = "Thinking budget (tokens)",
-        Description = "Token budget for Claude's extended thinking on supported models. Leave empty to disable. Must be at least 1024 when set.",
+        Label = "Effort",
+        Description = "How many tokens Claude spends on a response, including thinking and tool calls. Leave empty for the model default (high). The xhigh and max levels are only available on newer models.",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"low\",\"medium\",\"high\",\"xhigh\",\"max\"]}]",
         SortOrder = 1)]
-    [Range(1024, int.MaxValue)]
-    public int? ThinkingBudgetTokens { get; set; }
+    public string? Effort { get; set; }
 }

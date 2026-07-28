@@ -96,7 +96,7 @@ public class AIChatClientFactoryTests
         var fakeChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(fakeChatClient);
-        // Factory calls the profile-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
+        // Factory calls the capability-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -354,7 +354,7 @@ public class AIChatClientFactoryTests
 
         var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(baseChatClient);
-        // Factory calls the profile-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
+        // Factory calls the capability-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -403,7 +403,7 @@ public class AIChatClientFactoryTests
         var baseChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(baseChatClient);
-        // Factory calls the profile-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
+        // Factory calls the capability-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -453,7 +453,7 @@ public class AIChatClientFactoryTests
         var fakeChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(fakeChatClient);
-        // Factory calls the profile-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
+        // Factory calls the capability-settings-aware overload; set up both so the test is robust to how the default interface method is dispatched.
         configuredCapabilityMock.Setup(x => x.CreateClientAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -479,7 +479,7 @@ public class AIChatClientFactoryTests
         client.ShouldNotBeNull();
         client.GetService<FakeChatClient>().ShouldBe(fakeChatClient);
         // Verify that CreateClient was called on the configured capability with the model ID from the
-        // profile, via the profile-settings-aware overload the factory invokes.
+        // profile, via the capability-settings-aware overload the factory invokes.
         configuredCapabilityMock.Verify(c => c.CreateClientAsync(It.IsAny<object?>(), "gpt-4", It.IsAny<CancellationToken>()), Times.Once);
         // Verify that GetConfiguredProviderAsync was called (which handles settings resolution)
         _connectionServiceMock.Verify(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);

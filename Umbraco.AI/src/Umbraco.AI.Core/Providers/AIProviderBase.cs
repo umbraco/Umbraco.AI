@@ -106,7 +106,7 @@ public abstract class AIProviderBase : IAIProvider
     /// <inheritdoc />
     public virtual AIEditableModelSchema? GetCapabilitySettingsSchema(AICapability capability)
     {
-        // A capability declares its profile-settings type via IAICapability.CapabilitySettingsType
+        // A capability declares its capability-settings type via IAICapability.CapabilitySettingsType
         // (set by the two-parameter AIChatCapabilityBase<TSettings, TCapabilitySettings>). Build the
         // schema with the same builder used for connection settings.
         var capabilitySettingsType = Capabilities

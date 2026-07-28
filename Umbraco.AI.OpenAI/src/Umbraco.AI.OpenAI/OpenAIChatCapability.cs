@@ -104,9 +104,13 @@ public class OpenAIChatCapability(OpenAIProvider provider)
 
         ResponseReasoningEffortLevel? effort = capabilitySettings.ReasoningEffort.Trim().ToLowerInvariant() switch
         {
+            "none" => ResponseReasoningEffortLevel.None,
+            "minimal" => ResponseReasoningEffortLevel.Minimal,
             "low" => ResponseReasoningEffortLevel.Low,
             "medium" => ResponseReasoningEffortLevel.Medium,
             "high" => ResponseReasoningEffortLevel.High,
+            // Unrecognised values (including xhigh/max, which the pinned SDK cannot express) are skipped
+            // rather than sent, so a stored value can never fail the request.
             _ => null
         };
 

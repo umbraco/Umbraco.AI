@@ -50,9 +50,9 @@ public static class AIEditableModelResolverExtensions
     /// <param name="resolver">The resolver instance.</param>
     /// <param name="provider">The provider that owns the capability.</param>
     /// <param name="capability">The capability whose profile settings should be resolved.</param>
-    /// <param name="capabilitySettings">The stored (untyped) profile-settings bag to resolve.</param>
+    /// <param name="capabilitySettings">The stored (untyped) capability-settings bag to resolve.</param>
     /// <returns>
-    /// A typed profile-settings instance as <see cref="object"/>, or null if the bag was null or the
+    /// A typed capability-settings instance as <see cref="object"/>, or null if the bag was null or the
     /// capability declares no profile settings.
     /// </returns>
     public static object? ResolveCapabilitySettings(

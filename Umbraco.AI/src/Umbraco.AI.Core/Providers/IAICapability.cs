@@ -40,7 +40,7 @@ public interface IAICapability
     AICapability Kind { get; }
 
     /// <summary>
-    /// Gets the type that represents the provider-declared, profile-level settings for this
+    /// Gets the type that represents the provider-declared capability settings for this
     /// capability (e.g. reasoning effort), or <c>null</c> if the capability declares no such extras.
     /// </summary>
     /// <remarks>
@@ -107,7 +107,7 @@ public interface IAIChatCapability : IAICapability
     /// profile settings (e.g. reasoning effort).
     /// </summary>
     /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
-    /// <param name="capabilitySettings">The resolved, typed profile settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
     /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>
@@ -334,10 +334,10 @@ public abstract class AIChatCapabilityBase<TSettings>(IAIProvider provider) : AI
 
 /// <summary>
 /// Base implementation of an AI chat capability with both provider-specific connection settings and
-/// provider-declared, profile-level settings (e.g. reasoning effort).
+/// provider-declared capability settings (e.g. reasoning effort).
 /// </summary>
 /// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
-/// <typeparam name="TCapabilitySettings">The provider-declared profile settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
 /// <remarks>
 /// Derive from this (instead of <see cref="AIChatCapabilityBase{TSettings}"/>) to let a provider surface
 /// extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>) and
@@ -353,10 +353,10 @@ public abstract class AIChatCapabilityBase<TSettings, TCapabilitySettings>(IAIPr
     public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
 
     /// <summary>
-    /// Applies the resolved profile settings onto a request's <see cref="ChatOptions"/>.
+    /// Applies the resolved capability settings onto a request's <see cref="ChatOptions"/>.
     /// Called for every request. Implementations should no-op when a value is not set.
     /// </summary>
-    /// <param name="capabilitySettings">The resolved, typed profile settings for the profile.</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
     /// <param name="modelId">
     /// The model the request will run against — the caller's <see cref="ChatOptions.ModelId"/> when set,
     /// otherwise the model the client was created for. <c>null</c> only when neither is known.
@@ -388,7 +388,7 @@ public abstract class AIChatCapabilityBase<TSettings, TCapabilitySettings>(IAIPr
         var inner = await CreateClientAsync((TSettings)settings, modelId, cancellationToken)
             .ConfigureAwait(false);
 
-        // Wrap so the provider-declared profile settings are applied to every request. When the
+        // Wrap so the provider-declared capability settings are applied to every request. When the
         // profile declares none (or a different capability's settings), return the client untouched.
         return capabilitySettings is TCapabilitySettings typed
             ? new CapabilitySettingsChatClient<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)

@@ -68,7 +68,7 @@ export interface UaiProfileDetailModel extends UmbEntityModel {
     settings: UaiProfileSettings | null;
     /**
      * Provider-declared, profile-level settings (e.g. reasoning effort). Shape is described by the
-     * provider's profile-settings schema for this profile's capability.
+     * provider's capability-settings schema for this profile's capability.
      */
     capabilitySettings: Record<string, unknown> | null;
     tags: string[];

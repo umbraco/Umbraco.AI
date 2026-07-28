@@ -45,7 +45,7 @@ public class CreateProfileRequestModel
 
     /// <summary>
     /// Provider-declared, profile-level settings (e.g. reasoning effort). Shape is described by the
-    /// provider's profile-settings schema for this profile's capability.
+    /// provider's capability-settings schema for this profile's capability.
     /// </summary>
     public object? CapabilitySettings { get; init; }
 

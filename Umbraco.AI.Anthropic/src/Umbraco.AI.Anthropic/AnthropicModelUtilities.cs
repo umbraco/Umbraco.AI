@@ -8,39 +8,68 @@ namespace Umbraco.AI.Extensions;
 internal static class AnthropicModelUtilities
 {
     /// <summary>
-    /// The models that accept manual extended thinking (<c>thinking.type: "enabled"</c> with
-    /// <c>budget_tokens</c>).
+    /// Models that do not accept <c>output_config.effort</c>: Claude 3.x, the base Claude 4 models,
+    /// Opus 4.1, Sonnet 4.5 and Haiku 4.5.
     /// </summary>
     /// <remarks>
-    /// A closed set: Claude 4.7 and later reject <c>type: "enabled"</c> with a 400 and use adaptive
-    /// thinking with <c>output_config.effort</c> instead, so no future model joins this list. The 4.6
-    /// generation still accepts a budget but is deprecated.
+    /// A closed set of legacy models. Effort is supported on Opus 4.5 and everything from the 4.6
+    /// generation onwards, so every model released from here on supports it and an unrecognised model is
+    /// treated as supporting it.
     /// </remarks>
-    private static readonly Regex[] ExtendedThinkingModelPatterns =
+    private static readonly Regex[] NoEffortPatterns =
     [
-        new(@"^claude-3-7-sonnet", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         new(@"^claude-(opus|sonnet)-4-\d{8}", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         new(@"^claude-opus-4-1", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-(opus|sonnet|haiku)-4-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-(opus|sonnet)-4-6", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-mythos-preview", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-sonnet-4-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-haiku-4-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     /// <summary>
-    /// Whether the model accepts an explicit extended-thinking token budget
-    /// (<c>thinking.budget_tokens</c>).
+    /// Models that accept the <c>xhigh</c> effort level: Fable 5, Mythos 5, Opus 5, Opus 4.8, Opus 4.7
+    /// and Sonnet 5. Fewer models support it than support effort itself.
+    /// </summary>
+    private static readonly Regex[] XhighEffortPatterns =
+    [
+        new(@"^claude-fable-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-mythos-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-4-8", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-4-7", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-sonnet-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Whether the model accepts <c>output_config.effort</c> at all.
     /// </summary>
     /// <param name="modelId">The model ID, or null when unresolved.</param>
-    /// <remarks>
-    /// An allow-list, because the set that accepts a budget is the closed one: Anthropic's docs state
-    /// that Claude 4.7 and later reject <c>thinking.type: "enabled"</c> outright, so every model
-    /// released from here on rejects it. A model this package has not heard of therefore reads as not
-    /// accepting a budget, which suppresses the setting in the editor and skips sending it rather than
-    /// producing a 400.
-    /// </remarks>
-    public static bool SupportsThinkingBudget(string? modelId)
+    public static bool SupportsEffort(string? modelId)
         => !string.IsNullOrWhiteSpace(modelId)
-           && ExtendedThinkingModelPatterns.Any(p => p.IsMatch(modelId));
+           && !NoEffortPatterns.Any(p => p.IsMatch(modelId));
+
+    /// <summary>
+    /// Whether the model accepts a specific effort level. The <c>xhigh</c> and <c>max</c> levels are
+    /// available on fewer models than <c>low</c>/<c>medium</c>/<c>high</c>: <c>xhigh</c> on the Opus 4.7+
+    /// and 5 families, <c>max</c> on the 4.6 generation onwards (so not on Opus 4.5).
+    /// </summary>
+    /// <param name="modelId">The model ID, or null when unresolved.</param>
+    /// <param name="level">The effort level (case-insensitive).</param>
+    public static bool SupportsEffortLevel(string? modelId, string level)
+    {
+        if (!SupportsEffort(modelId))
+        {
+            return false;
+        }
+
+        return level.Trim().ToLowerInvariant() switch
+        {
+            "low" or "medium" or "high" => true,
+            "xhigh" => XhighEffortPatterns.Any(p => p.IsMatch(modelId!)),
+            // max arrived with the 4.6 generation; Opus 4.5 is the one effort-capable model without it.
+            "max" => !modelId!.StartsWith("claude-opus-4-5", StringComparison.OrdinalIgnoreCase),
+            _ => false,
+        };
+    }
 
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.

@@ -50,7 +50,7 @@ public sealed class AIProfile : IAIVersionableEntity
     /// the provider for this profile's <see cref="Capability"/>. Mirrors <see cref="Connections.AIConnection.Settings"/>:
     /// holds the provider-specific bag (a raw <see cref="System.Text.Json.JsonElement"/> when read from
     /// storage, or the value supplied by the API). Resolved into a typed instance at request time via
-    /// the provider's profile-settings schema.
+    /// the provider's capability-settings schema.
     /// </summary>
     public object? CapabilitySettings { get; set; }
 

@@ -71,7 +71,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (data) {
             this._connections = data;
 
-            // If a connection is already selected, load its models and the provider's profile-settings schema
+            // If a connection is already selected, load its models and the provider's capability-settings schema
             if (connectionId) {
                 await this.#loadModelsForConnection(connectionId, capability);
                 await this.#loadProviderDetail(connectionId);
@@ -80,7 +80,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     /**
-     * Loads the provider detail (for its profile-settings schema) for the selected connection's provider.
+     * Loads the provider detail (for its capability-settings schema) for the selected connection's provider.
      */
     async #loadProviderDetail(connectionId: string | undefined) {
         const providerId = this._connections.find((c) => c.unique === connectionId)?.providerId;
@@ -122,7 +122,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 "connectionId",
             ),
         );
-        // Load models and provider profile-settings schema for the new connection
+        // Load models and provider capability-settings schema for the new connection
         if (connectionId && this._model?.capability) {
             this.#loadModelsForConnection(connectionId, this._model.capability);
             this.#loadProviderDetail(connectionId);
@@ -509,7 +509,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     /**
-     * Gets the provider-declared profile-settings schema for the current capability, if any.
+     * Gets the provider-declared capability-settings schema for the current capability, if any.
      * Keyed by capability name (e.g. "Chat"); matched case-insensitively.
      *
      * Fields the selected model declares unsupported are filtered out — support for these settings

@@ -273,7 +273,7 @@ public class AIProviderBaseTests
     #region GetCapabilitySettingsSchema
 
     [Fact]
-    public void GetProfileSettingsSchema_CapabilityWithProfileSettingsType_BuildsFromCapabilityType()
+    public void GetCapabilitySettingsSchema_CapabilityWithSettingsType_BuildsFromCapabilityType()
     {
         // Arrange
         var expectedSchema = new AIEditableModelSchema(
@@ -304,7 +304,7 @@ public class AIProviderBaseTests
     }
 
     [Fact]
-    public void GetProfileSettingsSchema_CapabilityWithoutProfileSettings_ReturnsNull()
+    public void GetCapabilitySettingsSchema_CapabilityWithoutSettings_ReturnsNull()
     {
         // Arrange
         _capabilityFactoryMock
@@ -313,12 +313,12 @@ public class AIProviderBaseTests
 
         var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
 
-        // Act & Assert - FakeChatCapability declares no profile settings type
+        // Act & Assert - FakeChatCapability declares no capability settings type
         provider.GetCapabilitySettingsSchema(AICapability.Chat).ShouldBeNull();
     }
 
     [Fact]
-    public void GetProfileSettingsSchema_CapabilityNotSupported_ReturnsNull()
+    public void GetCapabilitySettingsSchema_CapabilityNotSupported_ReturnsNull()
     {
         // Arrange
         var provider = new TestProvider(_infrastructureMock.Object); // no capabilities
@@ -387,7 +387,7 @@ public class AIProviderBaseTests
     }
 
     /// <summary>
-    /// A chat capability that declares a profile-settings type (via the <see cref="IAICapability.CapabilitySettingsType"/>
+    /// A chat capability that declares a capability-settings type (via the <see cref="IAICapability.CapabilitySettingsType"/>
     /// hook the two-parameter base sets), used to verify schema generation without a real provider SDK.
     /// </summary>
     private sealed class CapabilitySettingsChatCapability : IAIChatCapability

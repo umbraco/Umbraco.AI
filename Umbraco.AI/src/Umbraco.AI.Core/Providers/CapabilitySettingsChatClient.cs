@@ -3,15 +3,15 @@ using Microsoft.Extensions.AI;
 namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
-/// Chat client decorator that applies provider-declared, profile-level settings (e.g. reasoning
+/// Chat client decorator that applies provider-declared capability settings (e.g. reasoning
 /// effort) onto each request's <see cref="ChatOptions"/> before delegating to the inner client.
 /// </summary>
 /// <remarks>
 /// Created by <see cref="AIChatCapabilityBase{TSettings, TCapabilitySettings}"/> with the resolved,
-/// typed profile settings baked in. The caller's <see cref="ChatOptions"/> instance is never mutated;
+/// typed capability settings baked in. The caller's <see cref="ChatOptions"/> instance is never mutated;
 /// a per-request copy is used.
 /// </remarks>
-/// <typeparam name="TCapabilitySettings">The provider-declared profile settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type.</typeparam>
 internal sealed class CapabilitySettingsChatClient<TCapabilitySettings> : DelegatingChatClient
     where TCapabilitySettings : class
 {

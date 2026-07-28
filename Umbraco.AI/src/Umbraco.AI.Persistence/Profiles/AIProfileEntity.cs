@@ -47,7 +47,7 @@ internal class AIProfileEntity
 
     /// <summary>
     /// JSON-serialized, provider-declared profile-level settings (e.g. reasoning effort).
-    /// Serialized via the editable-model serializer using the provider's profile-settings schema,
+    /// Serialized via the editable-model serializer using the provider's capability-settings schema,
     /// so <c>[AIField(IsSensitive = true)]</c> fields are encrypted at rest.
     /// </summary>
     public string? CapabilitySettings { get; set; }

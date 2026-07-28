@@ -26,20 +26,6 @@ internal static class AnthropicModelUtilities
     ];
 
     /// <summary>
-    /// Models that accept the <c>xhigh</c> effort level: Fable 5, Mythos 5, Opus 5, Opus 4.8, Opus 4.7
-    /// and Sonnet 5. Fewer models support it than support effort itself.
-    /// </summary>
-    private static readonly Regex[] XhighEffortPatterns =
-    [
-        new(@"^claude-fable-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-mythos-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-opus-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-opus-4-8", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-opus-4-7", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"^claude-sonnet-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-    ];
-
-    /// <summary>
     /// Whether the model accepts <c>output_config.effort</c> at all.
     /// </summary>
     /// <param name="modelId">The model ID, or null when unresolved.</param>
@@ -48,28 +34,20 @@ internal static class AnthropicModelUtilities
            && !NoEffortPatterns.Any(p => p.IsMatch(modelId));
 
     /// <summary>
-    /// Whether the model accepts a specific effort level. The <c>xhigh</c> and <c>max</c> levels are
-    /// available on fewer models than <c>low</c>/<c>medium</c>/<c>high</c>: <c>xhigh</c> on the Opus 4.7+
-    /// and 5 families, <c>max</c> on the 4.6 generation onwards (so not on Opus 4.5).
+    /// Whether the model accepts the given effort level.
     /// </summary>
     /// <param name="modelId">The model ID, or null when unresolved.</param>
     /// <param name="level">The effort level (case-insensitive).</param>
+    /// <remarks>
+    /// Only <c>low</c>, <c>medium</c> and <c>high</c> are recognised: those are accepted by every model
+    /// that accepts effort at all, so no per-model list is needed. Anthropic's <c>xhigh</c> and <c>max</c>
+    /// reach a subset that a hard-coded list cannot track — the set with <c>xhigh</c> grows with each
+    /// release — so they are treated as unrecognised and skipped rather than guessed at. Adding them means
+    /// reading the models endpoint's per-model <c>capabilities.effort</c>.
+    /// </remarks>
     public static bool SupportsEffortLevel(string? modelId, string level)
-    {
-        if (!SupportsEffort(modelId))
-        {
-            return false;
-        }
-
-        return level.Trim().ToLowerInvariant() switch
-        {
-            "low" or "medium" or "high" => true,
-            "xhigh" => XhighEffortPatterns.Any(p => p.IsMatch(modelId!)),
-            // max arrived with the 4.6 generation; Opus 4.5 is the one effort-capable model without it.
-            "max" => !modelId!.StartsWith("claude-opus-4-5", StringComparison.OrdinalIgnoreCase),
-            _ => false,
-        };
-    }
+        => SupportsEffort(modelId)
+           && level.Trim().ToLowerInvariant() is "low" or "medium" or "high";
 
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.

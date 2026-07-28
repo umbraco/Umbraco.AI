@@ -3,10 +3,9 @@ using Umbraco.AI.Extensions;
 namespace Umbraco.AI.Anthropic.Tests.Unit;
 
 /// <summary>
-/// <c>output_config.effort</c> is not accepted by the older Claude models, and its <c>xhigh</c> and
-/// <c>max</c> levels are accepted by fewer models than the rest. These predicates are the single source
-/// for both the per-model declaration surfaced to the profile editor and the decision to send a level at
-/// all, so they are worth pinning down.
+/// <c>output_config.effort</c> is not accepted by the older Claude models. These predicates are the single
+/// source for both the per-model declaration surfaced to the profile editor and the decision to send a
+/// level at all, so they are worth pinning down.
 /// </summary>
 /// <remarks>
 /// Model IDs and per-model support taken from Anthropic's models overview and effort docs (July 2026).
@@ -59,38 +58,14 @@ public class AnthropicEffortSupportTests
     }
 
     [Theory]
-    [InlineData("claude-opus-4-7")]
-    [InlineData("claude-opus-4-8")]
-    [InlineData("claude-opus-5")]
-    [InlineData("claude-sonnet-5")]
-    [InlineData("claude-fable-5")]
-    [InlineData("claude-mythos-5")]
-    public void SupportsEffortLevel_Xhigh_OnModelsThatHaveIt_ReturnsTrue(string modelId)
+    [InlineData("xhigh")]
+    [InlineData("max")]
+    public void SupportsEffortLevel_XhighOrMax_ReturnsFalseEvenOnModelsThatAcceptThem(string level)
     {
-        AnthropicModelUtilities.SupportsEffortLevel(modelId, "xhigh").ShouldBeTrue();
-    }
-
-    [Theory]
-    [InlineData("claude-opus-4-5-20251101")]
-    [InlineData("claude-opus-4-6")]
-    [InlineData("claude-sonnet-4-6")]
-    [InlineData("claude-mythos-preview")]
-    public void SupportsEffortLevel_Xhigh_OnModelsWithoutIt_ReturnsFalse(string modelId)
-    {
-        // xhigh is newer than effort itself: some models that support max don't support xhigh.
-        AnthropicModelUtilities.SupportsEffortLevel(modelId, "xhigh").ShouldBeFalse();
-    }
-
-    [Theory]
-    [InlineData("claude-opus-4-6", true)]
-    [InlineData("claude-sonnet-4-6", true)]
-    [InlineData("claude-opus-5", true)]
-    [InlineData("claude-mythos-preview", true)]
-    [InlineData("claude-opus-4-5-20251101", false)]
-    public void SupportsEffortLevel_Max_FollowsTheFourSixCutoff(string modelId, bool expected)
-    {
-        // max arrived with the 4.6 generation, so Opus 4.5 is the one effort-capable model without it.
-        AnthropicModelUtilities.SupportsEffortLevel(modelId, "max").ShouldBe(expected);
+        // Neither level is offered: which models accept them cannot be tracked with a hard-coded list —
+        // the set with xhigh grows with each release — so a stored value is skipped rather than guessed at.
+        // Adding them means reading the models endpoint's per-model capabilities.effort.
+        AnthropicModelUtilities.SupportsEffortLevel("claude-opus-5", level).ShouldBeFalse();
     }
 
     [Theory]

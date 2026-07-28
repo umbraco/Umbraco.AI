@@ -107,8 +107,8 @@ public class AnthropicChatCapability(AnthropicProvider provider)
             "low" => Effort.Low,
             "medium" => Effort.Medium,
             "high" => Effort.High,
-            "xhigh" => Effort.Xhigh,
-            "max" => Effort.Max,
+            // xhigh and max are not offered: which models accept them cannot be tracked with a list, so a
+            // stored value for either is skipped rather than sent.
             _ => (Effort?)null,
         };
 

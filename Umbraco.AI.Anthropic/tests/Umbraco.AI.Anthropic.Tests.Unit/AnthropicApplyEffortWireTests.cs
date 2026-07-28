@@ -72,6 +72,59 @@ public class AnthropicApplyEffortWireTests
         body.ShouldNotContain("output_config");
     }
 
+    [Fact]
+    public async Task ModelListUnavailable_StillSendsEffortByInferringFromTheModelId()
+    {
+        // Arrange — the models call fails, so there are no reported capabilities to consult
+        var chatHandler = new CapturingHttpMessageHandler();
+        var provider = new StubbedAnthropicProvider(
+            new FakeProviderInfrastructure(),
+            new MemoryCache(new MemoryCacheOptions()),
+            new FailingHttpMessageHandler());
+
+        IAIChatCapability capability = new StubbedChatCapability(provider, chatHandler);
+        var settings = new AnthropicProviderSettings { ApiKey = "test-key" };
+
+        // Act — client creation must not fail, and the ID predicate says Opus 5 accepts effort
+        var chatClient = await capability.CreateClientAsync(
+            settings,
+            new AnthropicChatCapabilitySettings { Effort = "medium" },
+            "claude-opus-5",
+            default);
+
+        await SendAndIgnoreFailureAsync(chatClient);
+
+        // Assert
+        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        body.ShouldContain("\"output_config\":{\"effort\":\"medium\"}");
+    }
+
+    [Fact]
+    public async Task ModelListUnavailable_ModelTheIdPredicateRejects_SendsNoOutputConfig()
+    {
+        // Arrange — the fallback must still refuse a model known not to accept effort
+        var chatHandler = new CapturingHttpMessageHandler();
+        var provider = new StubbedAnthropicProvider(
+            new FakeProviderInfrastructure(),
+            new MemoryCache(new MemoryCacheOptions()),
+            new FailingHttpMessageHandler());
+
+        IAIChatCapability capability = new StubbedChatCapability(provider, chatHandler);
+
+        // Act
+        var chatClient = await capability.CreateClientAsync(
+            new AnthropicProviderSettings { ApiKey = "test-key" },
+            new AnthropicChatCapabilitySettings { Effort = "medium" },
+            "claude-haiku-4-5-20251001",
+            default);
+
+        await SendAndIgnoreFailureAsync(chatClient);
+
+        // Assert
+        var body = chatHandler.RequestBodies.ShouldHaveSingleItem();
+        body.ShouldNotContain("output_config");
+    }
+
     private static async Task<IChatClient> CreateConfiguredClientAsync(
         CapturingHttpMessageHandler chatHandler,
         string? effort)
@@ -130,5 +183,16 @@ public class AnthropicApplyEffortWireTests
                 MaxRetries = 0,
                 HttpClient = new HttpClient(handler),
             };
+    }
+
+    /// <summary>
+    /// Fails every request, standing in for a models endpoint that cannot be reached.
+    /// </summary>
+    private sealed class FailingHttpMessageHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+            => throw new HttpRequestException("models endpoint unreachable");
     }
 }

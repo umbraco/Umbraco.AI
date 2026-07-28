@@ -104,10 +104,18 @@ public class AnthropicChatCapability(
 
     /// <inheritdoc />
     /// <remarks>
+    /// <para>
     /// Fetches the model list (cached) before handing back the client, so the per-request settings hook can
-    /// read the target model's reported capabilities synchronously. A failure here is swallowed: capability
-    /// data refines the decision but is not required to make a request, and losing the model list must not
-    /// stop chat from working.
+    /// read the target model's reported capabilities synchronously. Both interface entry points route
+    /// through here rather than the synchronous <see cref="CreateClient"/>, so the prefetch cannot be
+    /// bypassed from outside the capability.
+    /// </para>
+    /// <para>
+    /// A failure is not fatal — capability data refines the decision but is not required to make a request,
+    /// and losing the model list must not stop chat from working — so it degrades to inferring support from
+    /// the model ID, and logs, because that fallback is less accurate and otherwise invisible. Cancellation
+    /// is not caught: if the caller has given up, this should too rather than continue building a client.
+    /// </para>
     /// </remarks>
     protected override async Task<IChatClient> CreateClientAsync(
         AnthropicProviderSettings settings,
@@ -118,9 +126,12 @@ public class AnthropicChatCapability(
         {
             await Provider.GetAvailableModelsAsync(settings, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Fall back to inferring support from the model ID.
+            logger?.LogDebug(
+                ex,
+                "Could not list Anthropic models while creating a chat client. Per-model capability data "
+                + "is unavailable, so setting support will be inferred from the model ID instead.");
         }
 
         return CreateClient(settings, modelId);

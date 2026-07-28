@@ -105,7 +105,7 @@ public class AnthropicApplyEffortWireTests
     /// builds is exercised through the SDK's own serialization.
     /// </summary>
     private sealed class StubbedChatCapability(AnthropicProvider provider, HttpMessageHandler handler)
-        : AnthropicChatCapability(provider)
+        : AnthropicChatCapability(provider, logger: null)
     {
         protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
             => new AnthropicClient

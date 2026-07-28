@@ -1,11 +1,13 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenAI.Responses;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.DependencyInjection;
 
 #pragma warning disable OPENAI001 // OpenAI Responses API (reasoning options) is experimental in the SDK
 
@@ -26,9 +28,16 @@ public class OpenAIChatCapability(
     /// Retained so adding the logger parameter stays binary compatible. An optional parameter would not
     /// achieve that — the compiler emits a single constructor and bakes the default in at each call site,
     /// so assemblies compiled against the previous signature would fail to bind.
+    /// <para>
+    /// The logger is resolved through the service locator, following the same approach as
+    /// <c>AIGuardrailEvaluatorBase</c>, so a consumer still on this signature gets real logging rather than
+    /// none. Null-conditional because the locator is unset before startup and in unit tests, and logging is
+    /// optional here — unlike the required services that pattern usually resolves.
+    /// </para>
     /// </remarks>
+    [Obsolete("Use the constructor that accepts a logger. Will be removed in v20.")]
     public OpenAIChatCapability(OpenAIProvider provider)
-        : this(provider, null)
+        : this(provider, StaticServiceProvider.Instance?.GetService<ILogger<OpenAIChatCapability>>())
     {
     }
 

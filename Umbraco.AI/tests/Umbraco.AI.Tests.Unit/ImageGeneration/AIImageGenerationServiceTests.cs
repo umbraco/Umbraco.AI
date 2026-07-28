@@ -122,6 +122,35 @@ public class AIImageGenerationServiceTests
     }
 
     [Fact]
+    public async Task GenerateImagesAsync_ForwardsProfileHintsUnderTheKeysProvidersRead()
+    {
+        // Quality and style have no first-class option property, so they cross into the provider as
+        // additional properties. That makes the key names a contract: the OpenAI provider reads exactly
+        // these to translate them into its SDK options, and a rename on either side would put the hints
+        // back to silently doing nothing — which is what they did before that translation existed.
+        var generator = new FakeImageGenerator();
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.ImageGeneration)
+            .WithModel("fake-provider", "dall-e-3")
+            .WithSettings(new AIImageGenerationProfileSettings { Quality = "hd", Style = "vivid" })
+            .Build();
+
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.ImageGeneration, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _factoryMock
+            .Setup(x => x.CreateGeneratorAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(generator);
+
+        await _service.GenerateImagesAsync(b => b.WithAlias("hints"), "a cat");
+
+        var options = generator.ReceivedOptions.ShouldHaveSingleItem();
+        options!.AdditionalProperties.ShouldNotBeNull();
+        options.AdditionalProperties["quality"].ShouldBe("hd");
+        options.AdditionalProperties["style"].ShouldBe("vivid");
+    }
+
+    [Fact]
     public async Task GenerateImagesAsync_WithOriginalImages_FlowsThroughToGenerator()
     {
         var generator = new FakeImageGenerator();

@@ -1,8 +1,0 @@
-{
-    "include": [
-        "Umbraco.AI.Amazon",
-        "Umbraco.AI.Anthropic",
-        "Umbraco.AI.OpenAI"
-    ],
-    "exclude": []
-}

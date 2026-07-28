@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Amazon.BedrockRuntime;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
@@ -10,8 +11,24 @@ namespace Umbraco.AI.Amazon;
 /// <summary>
 /// AI chat capability for Amazon Bedrock provider.
 /// </summary>
-public class AmazonChatCapability(AmazonProvider provider) : AIChatCapabilityBase<AmazonProviderSettings>(provider)
+public class AmazonChatCapability(
+    AmazonProvider provider,
+    ILogger<AmazonChatCapability>? logger)
+    : AIChatCapabilityBase<AmazonProviderSettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained so adding the logger parameter stays binary compatible. An optional parameter would not
+    /// achieve that — the compiler emits a single constructor and bakes the default in at each call site,
+    /// so assemblies compiled against the previous signature would fail to bind.
+    /// </remarks>
+    public AmazonChatCapability(AmazonProvider provider)
+        : this(provider, null)
+    {
+    }
+
     /// <summary>
     /// Optional region prefix pattern for inference profile IDs (e.g., "eu.", "us.", "apac.").
     /// </summary>
@@ -64,7 +81,10 @@ public class AmazonChatCapability(AmazonProvider provider) : AIChatCapabilityBas
         }
 
         var client = AmazonProvider.CreateBedrockRuntimeClient(settings);
-        return client.AsIChatClient(modelId);
+
+        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
+        // which caller assembled the ChatOptions. See AmazonSamplingParameterChatClient.
+        return new AmazonSamplingParameterChatClient(client.AsIChatClient(modelId), modelId, logger);
     }
 
     private static bool IsChatModel(string modelId)

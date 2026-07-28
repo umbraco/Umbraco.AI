@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Anthropic.Models.Beta.Messages;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
@@ -10,9 +11,24 @@ namespace Umbraco.AI.Anthropic;
 /// <summary>
 /// AI chat capability for Anthropic provider.
 /// </summary>
-public class AnthropicChatCapability(AnthropicProvider provider)
+public class AnthropicChatCapability(
+    AnthropicProvider provider,
+    ILogger<AnthropicChatCapability>? logger)
     : AIChatCapabilityBase<AnthropicProviderSettings, AnthropicChatCapabilitySettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained so adding the logger parameter stays binary compatible. An optional parameter would not
+    /// achieve that — the compiler emits a single constructor and bakes the default in at each call site,
+    /// so assemblies compiled against the previous signature would fail to bind.
+    /// </remarks>
+    public AnthropicChatCapability(AnthropicProvider provider)
+        : this(provider, null)
+    {
+    }
+
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
 
     /// <summary>
@@ -68,8 +84,14 @@ public class AnthropicChatCapability(AnthropicProvider provider)
 
     /// <inheritdoc />
     protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
-        => AnthropicProvider.CreateAnthropicClient(settings)
+    {
+        var inner = AnthropicProvider.CreateAnthropicClient(settings)
             .Beta.AsIChatClient(modelId);
+
+        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
+        // which caller assembled the ChatOptions. See AnthropicSamplingParameterChatClient.
+        return new AnthropicSamplingParameterChatClient(inner, modelId, logger);
+    }
 
     /// <inheritdoc />
     /// <remarks>

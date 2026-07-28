@@ -159,4 +159,42 @@ public class AnthropicEffortWireTests
         body.ShouldContain("\"top_p\":0.8999999");
         body.ShouldContain("be terse");
     }
+
+    [Fact]
+    public async Task SamplingFilterAndEffort_Together_BothTakeEffect()
+    {
+        // Arrange — the shape the chat capability actually builds: the capability-settings client wraps the
+        // sampling-parameter filter, which clones ChatOptions. If that clone dropped the raw representation
+        // the effort would vanish whenever a model rejects temperature, which is every effort-capable model.
+        var handler = new CapturingHttpMessageHandler();
+        var inner = new AnthropicClient
+        {
+            ApiKey = "test-key",
+            MaxRetries = 0,
+            HttpClient = new HttpClient(handler),
+        }.Beta.AsIChatClient("claude-opus-5");
+
+        var chatClient = new AnthropicSamplingParameterChatClient(inner, "claude-opus-5", logger: null);
+
+        var options = new ChatOptions
+        {
+            Temperature = 0.5f,
+            MaxOutputTokens = 128,
+            RawRepresentationFactory = _ => new MessageCreateParams
+            {
+                Model = "claude-opus-5",
+                MaxTokens = 128,
+                Messages = [],
+                OutputConfig = new BetaOutputConfig { Effort = Effort.Medium },
+            },
+        };
+
+        // Act
+        await SendAndIgnoreFailureAsync(chatClient, options);
+
+        // Assert — effort sent, temperature filtered out
+        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        body.ShouldContain("\"output_config\":{\"effort\":\"medium\"}");
+        body.ShouldNotContain("temperature");
+    }
 }

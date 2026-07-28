@@ -55,6 +55,49 @@ internal static class AnthropicModelUtilities
     public static bool IsKnownEffortLevel(string level)
         => level.Trim().ToLowerInvariant() is "low" or "medium" or "high";
 
+    /// Model families that accept the sampling parameters (<c>temperature</c>, <c>top_p</c>, <c>top_k</c>).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Anthropic removed the sampling parameters from Claude Opus 4.7 onwards — sending any of them to a
+    /// newer model is rejected with <c>400 invalid_request_error: `temperature` is deprecated for this
+    /// model.</c> This is an <em>allow</em>-list of the older families that still accept them rather than a
+    /// deny-list of the newer ones, because the set of already-released models is closed and will never
+    /// change, whereas a deny-list would need updating on every Anthropic release just to stay correct.
+    /// </para>
+    /// <para>
+    /// The failure modes are asymmetric, and that is the whole point: a stale allow-list silently drops a
+    /// value on a brand-new model that would have honoured it (degraded, but the request succeeds), while a
+    /// stale deny-list sends a parameter to a model that rejects it (the request fails outright). This list
+    /// therefore fails safe, and only needs to be accurate about models that already exist.
+    /// </para>
+    /// </remarks>
+    private static readonly Regex[] SamplingParameterModelPatterns =
+    [
+        // Claude 3, 3.5 and 3.7 — e.g. claude-3-opus-20240229, claude-3-5-sonnet-20241022.
+        new(@"^claude-3(-|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+
+        // Claude 4, and 4.0 / 4.1 / 4.5 / 4.6 — e.g. claude-sonnet-4-20250514,
+        // claude-opus-4-1-20250805, claude-sonnet-4-6. The optional trailing 8-digit group is a
+        // release date, not a minor version. 4.7 and 4.8 are deliberately excluded from the minor
+        // versions: they reject the sampling parameters.
+        new(@"^claude-(opus|sonnet|haiku)-4(-[0156])?(-\d{8})?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Determines whether a Claude model accepts the sampling parameters (<c>temperature</c>,
+    /// <c>top_p</c>, <c>top_k</c>).
+    /// </summary>
+    /// <param name="modelId">The model ID, or <c>null</c> if no model has been resolved.</param>
+    /// <returns>
+    /// <c>true</c> when the model is a known family that accepts them; otherwise <c>false</c>. Unknown and
+    /// unresolved models return <c>false</c> so the parameters are dropped rather than risking a rejected
+    /// request — see the remarks on <see cref="SamplingParameterModelPatterns"/>.
+    /// </returns>
+    public static bool SupportsSamplingParameters(string? modelId)
+        => !string.IsNullOrWhiteSpace(modelId)
+           && SamplingParameterModelPatterns.Any(p => p.IsMatch(modelId));
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.
     /// </summary>

@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.Amazon.Tests.Unit/Umbraco.AI.Amazon.Tests.Unit.csproj" />
+  </Folder>
 </Solution>

@@ -129,6 +129,56 @@ public class AIChatClientFactoryTests
     #region CreateClientAsync - Empty connection ID
 
     [Fact]
+    public async Task CreateClientAsync_ProfileWithNoCapabilitySettings_PassesNullThroughAndReturnsClient()
+    {
+        // Arrange — every profile saved before providers could declare settings has a null column, so this
+        // is the shape an upgraded installation resolves on its first request
+        var connectionId = Guid.NewGuid();
+        var connection = new AIConnectionBuilder()
+            .WithId(connectionId)
+            .WithProviderId("fake-provider")
+            .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
+            .IsActive(true)
+            .Build();
+
+        var profile = new AIProfileBuilder()
+            .WithConnectionId(connectionId)
+            .WithModel("fake-provider", "gpt-4")
+            .WithCapability(AICapability.Chat)
+            .Build();
+
+        profile.CapabilitySettings.ShouldBeNull();
+
+        var fakeChatClient = new FakeChatClient();
+        object? observedCapabilitySettings = "not-called";
+        var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
+        configuredCapabilityMock
+            .Setup(x => x.CreateClientAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback<object?, string?, CancellationToken>((settings, _, _) => observedCapabilitySettings = settings)
+            .ReturnsAsync(fakeChatClient);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
+
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
+        var configuredProviderMock = CreateConfiguredProviderMock(fakeProvider, configuredCapabilityMock.Object);
+
+        var factory = CreateFactory();
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+        _connectionServiceMock
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
+
+        // Act
+        var client = await factory.CreateClientAsync(profile);
+
+        // Assert — resolution yields null rather than throwing, and the provider still gets a client built
+        client.ShouldNotBeNull();
+        observedCapabilitySettings.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task CreateClientAsync_WithEmptyConnectionId_ThrowsInvalidOperationException()
     {
         // Arrange

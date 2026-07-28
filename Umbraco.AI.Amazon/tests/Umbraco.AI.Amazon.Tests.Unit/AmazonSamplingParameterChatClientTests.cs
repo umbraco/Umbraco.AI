@@ -30,6 +30,10 @@ public class AmazonSamplingParameterChatClientTests
     [InlineData("anthropic.claude-sonnet-4-20250514-v1:0")]
     [InlineData("us.anthropic.claude-opus-4-5-20251101-v1:0")]
     [InlineData("eu.anthropic.claude-sonnet-4-6-v1:0")]
+    // Bedrock publishes two version-suffix shapes. Opus 4.6 carries the major alone (-v1) rather than
+    // the usual -v1:0, so it regressed when only the -vN:N form was stripped.
+    [InlineData("anthropic.claude-opus-4-6-v1")]
+    [InlineData("us.anthropic.claude-opus-4-6-v1")]
     public async Task GetResponseAsync_ModelSupportsSampling_ForwardsTemperature(string modelId)
     {
         var (client, inner) = CreateClient(modelId);

@@ -32,29 +32,34 @@ public class AnthropicChatCapability(AnthropicProvider provider)
     ];
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The declaration of which settings each model accepts is written here rather than through
+    /// <see cref="IAICapability.GetSettingSupport"/>, because Anthropic's models endpoint reports it as
+    /// data: <c>capabilities.effort.supported</c> per model. Only models the API says nothing about fall
+    /// back to inferring support from the ID.
+    /// </remarks>
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AnthropicProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
+        var allModels = await Provider.GetAvailableModelsAsync(settings, cancellationToken);
 
         return allModels
-            .Where(IsChatModel)
-            .Select(id => new AIModelDescriptor(
-                new AIModelRef(Provider.Id, id),
-                AnthropicModelUtilities.FormatDisplayName(id)))
+            .Where(m => IsChatModel(m.Id))
+            .OrderBy(m => m.Id)
+            .Select(m => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, m.Id),
+                AnthropicModelUtilities.FormatDisplayName(m.Id),
+                BuildSettingSupport(m).ToMetadata()))
             .ToList();
     }
 
-    /// <inheritdoc />
-    /// <remarks>
-    /// Effort is not accepted by Claude 3.x, the base Claude 4 models, Opus 4.1, Sonnet 4.5 or Haiku 4.5,
-    /// so it is declared per model — otherwise the profile editor would offer it on a model that rejects
-    /// it. That legacy set is closed, so the predicate is a deny-list and an unrecognised model is treated
-    /// as supporting effort.
-    /// </remarks>
-    public override AIModelSettingSupport GetSettingSupport(string modelId)
-        => AnthropicModelUtilities.SupportsEffort(modelId)
+    /// <summary>
+    /// Turns a model's reported capabilities into the settings declaration the profile editor reads,
+    /// falling back to the ID-based predicate when the API reported nothing for the model.
+    /// </summary>
+    private static AIModelSettingSupport BuildSettingSupport(AnthropicModelCapability model)
+        => (model.SupportsEffort ?? AnthropicModelUtilities.SupportsEffort(model.Id))
             ? AIModelSettingSupport.Default
             : new AIModelSettingSupport
             {
@@ -65,6 +70,30 @@ public class AnthropicChatCapability(AnthropicProvider provider)
     protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
         => AnthropicProvider.CreateAnthropicClient(settings)
             .Beta.AsIChatClient(modelId);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Fetches the model list (cached) before handing back the client, so the per-request settings hook can
+    /// read the target model's reported capabilities synchronously. A failure here is swallowed: capability
+    /// data refines the decision but is not required to make a request, and losing the model list must not
+    /// stop chat from working.
+    /// </remarks>
+    protected override async Task<IChatClient> CreateClientAsync(
+        AnthropicProviderSettings settings,
+        string? modelId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await Provider.GetAvailableModelsAsync(settings, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Fall back to inferring support from the model ID.
+        }
+
+        return CreateClient(settings, modelId);
+    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -97,7 +126,11 @@ public class AnthropicChatCapability(AnthropicProvider provider)
         var model = modelId ?? DefaultChatModel;
         var level = capabilitySettings.Effort.Trim().ToLowerInvariant();
 
-        if (!AnthropicModelUtilities.SupportsEffortLevel(model, level))
+        // Prefer what the API reported for this model; fall back to the ID predicate when it is unknown.
+        var supportsEffort = Provider.TryGetModelCapability(model)?.SupportsEffort
+                             ?? AnthropicModelUtilities.SupportsEffort(model);
+
+        if (!supportsEffort || !AnthropicModelUtilities.IsKnownEffortLevel(level))
         {
             return;
         }

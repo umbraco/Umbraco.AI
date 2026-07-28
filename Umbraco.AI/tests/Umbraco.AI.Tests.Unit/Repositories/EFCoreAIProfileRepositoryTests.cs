@@ -1,5 +1,7 @@
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Persistence;
 using Umbraco.AI.Persistence.Connections;
 using Umbraco.AI.Persistence.Profiles;
@@ -20,7 +22,17 @@ public class EFCoreAIProfileRepositoryTests : IClassFixture<EFCoreTestFixture>
     private EFCoreAIProfileRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEFCoreScopeProvider(() => context);
-        return new EFCoreAIProfileRepository(scopeProvider);
+        return new EFCoreAIProfileRepository(scopeProvider, CreateFactory());
+    }
+
+    // The profile mapping assertions rely on the real factory logic (Settings/Tags serialization,
+    // model-ref mapping). None of these tests exercise provider-declared CapabilitySettings, so the
+    // editable-model serializer and provider collection are stubbed/empty and never invoked.
+    private static IAIProfileFactory CreateFactory()
+    {
+        var serializer = new Mock<IAIEditableModelSerializer>().Object;
+        var providers = new AIProviderCollection(Enumerable.Empty<IAIProvider>);
+        return new AIProfileFactory(serializer, providers);
     }
 
     private async Task<Guid> EnsureConnectionExists(UmbracoAIDbContext context)

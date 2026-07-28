@@ -40,6 +40,38 @@ public interface IAICapability
     AICapability Kind { get; }
 
     /// <summary>
+    /// Gets the type that represents the provider-declared capability settings for this
+    /// capability (e.g. reasoning effort), or <c>null</c> if the capability declares no such extras.
+    /// </summary>
+    /// <remarks>
+    /// This is the profile-level analogue of <see cref="IAIProvider.SettingsType"/> (which describes
+    /// connection settings). It is a reflection hook read by the provider/registry to build a schema
+    /// and to resolve the stored bag into a typed object; providers do not implement it directly but
+    /// instead derive their capability from the two-parameter <c>AIChatCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c>.
+    /// </remarks>
+    Type? CapabilitySettingsType => null;
+
+    /// <summary>
+    /// Declares which settings the given model does not accept. Defaults to
+    /// <see cref="AIModelSettingSupport.Default"/> — nothing declared, so every setting applies.
+    /// </summary>
+    /// <param name="modelId">The model ID to describe.</param>
+    /// <remarks>
+    /// <para>
+    /// Support for a setting usually varies by model, not by provider, so this is where a capability
+    /// says "reasoning effort does not apply to gpt-4o". The capability bases project the result into
+    /// <see cref="AIModelDescriptor.Metadata"/> as the model list is built, so the backoffice can hide
+    /// inapplicable settings without a second round trip.
+    /// </para>
+    /// <para>
+    /// Must be a cheap, local, synchronous decision — it runs once per model in the list. The same
+    /// predicate should also gate what the capability actually sends, since this declaration only
+    /// reaches the UI (see <see cref="AIModelSettingSupport"/>).
+    /// </para>
+    /// </remarks>
+    AIModelSettingSupport GetSettingSupport(string modelId) => AIModelSettingSupport.Default;
+
+    /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
     /// <param name="settings"></param>
@@ -69,6 +101,23 @@ public interface IAIChatCapability : IAICapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>
     Task<IChatClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a chat client with the provided connection settings and resolved, provider-declared
+    /// profile settings (e.g. reasoning effort).
+    /// </summary>
+    /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured chat client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(object?, string?, CancellationToken)"/> so existing capabilities keep working.
+    /// The two-parameter <c>AIChatCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
+    /// </remarks>
+    Task<IChatClient> CreateClientAsync(object? settings, object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(settings, modelId, cancellationToken);
 }
 
 /// <summary>
@@ -132,6 +181,17 @@ public abstract class AICapabilityBase(IAIProvider provider) : IAICapability
     /// </summary>
     public abstract AICapability Kind { get; }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Implements the interface member as a real virtual class member (rather than relying on the
+    /// interface default) so the two-parameter capability bases can <c>override</c> it and interface
+    /// dispatch resolves to that override. Defaults to <c>null</c> (no profile settings).
+    /// </remarks>
+    public virtual Type? CapabilitySettingsType => null;
+
+    /// <inheritdoc />
+    public virtual AIModelSettingSupport GetSettingSupport(string modelId) => AIModelSettingSupport.Default;
+
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
@@ -139,8 +199,14 @@ public abstract class AICapabilityBase(IAIProvider provider) : IAICapability
     /// <returns></returns>
     protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
-        => GetModelsAsync(cancellationToken);
+    async Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
+    {
+        var models = await GetModelsAsync(cancellationToken).ConfigureAwait(false);
+
+        // Fold the capability's per-model setting declarations into each descriptor's metadata so the
+        // model list doubles as the applicability source for the profile editor.
+        return CapabilitySettingSupportProjection.Apply(this, models);
+    }
 }
 
 /// <summary>
@@ -159,6 +225,17 @@ public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICap
     /// </summary>
     public abstract AICapability Kind { get; }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Implements the interface member as a real virtual class member (rather than relying on the
+    /// interface default) so the two-parameter capability bases can <c>override</c> it and interface
+    /// dispatch resolves to that override. Defaults to <c>null</c> (no profile settings).
+    /// </remarks>
+    public virtual Type? CapabilitySettingsType => null;
+
+    /// <inheritdoc />
+    public virtual AIModelSettingSupport GetSettingSupport(string modelId) => AIModelSettingSupport.Default;
+
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
@@ -167,11 +244,16 @@ public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICap
     /// <returns></returns>
     protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
+    async Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(GetModelsAsync));
-        return GetModelsAsync((TSettings)settings, cancellationToken);
+
+        var models = await GetModelsAsync((TSettings)settings, cancellationToken).ConfigureAwait(false);
+
+        // Fold the capability's per-model setting declarations into each descriptor's metadata so the
+        // model list doubles as the applicability source for the profile editor.
+        return CapabilitySettingSupportProjection.Apply(this, models);
     }
 }
 
@@ -247,6 +329,70 @@ public abstract class AIChatCapabilityBase<TSettings>(IAIProvider provider) : AI
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
         return CreateClientAsync((TSettings)settings, modelId, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI chat capability with both provider-specific connection settings and
+/// provider-declared capability settings (e.g. reasoning effort).
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <remarks>
+/// Derive from this (instead of <see cref="AIChatCapabilityBase{TSettings}"/>) to let a provider surface
+/// extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>) and
+/// applies the resolved settings to every request's <see cref="ChatOptions"/> via <see cref="ApplyCapabilitySettings"/>;
+/// the provider implements only that typed translation.
+/// </remarks>
+public abstract class AIChatCapabilityBase<TSettings, TCapabilitySettings>(IAIProvider provider)
+    : AIChatCapabilityBase<TSettings>(provider), IAIChatCapability
+    where TSettings : class
+    where TCapabilitySettings : class, new()
+{
+    /// <inheritdoc />
+    public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
+
+    /// <summary>
+    /// Applies the resolved capability settings onto a request's <see cref="ChatOptions"/>.
+    /// Called for every request. Implementations should no-op when a value is not set.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
+    /// <param name="modelId">
+    /// The model the request will run against — the caller's <see cref="ChatOptions.ModelId"/> when set,
+    /// otherwise the model the client was created for. <c>null</c> only when neither is known.
+    /// </param>
+    /// <param name="options">The chat options for the current request (safe to mutate; it is a per-request copy).</param>
+    /// <remarks>
+    /// Gate on <paramref name="modelId"/> with the same predicate used by
+    /// <see cref="IAICapability.GetSettingSupport"/>: hiding a setting in the editor does not stop a
+    /// profile saved before a model change, an alias-driven API caller, or a direct
+    /// <see cref="IChatClient"/> consumer from reaching here with a value the model rejects.
+    /// </remarks>
+    protected abstract void ApplyCapabilitySettings(
+        TCapabilitySettings capabilitySettings,
+        string? modelId,
+        ChatOptions options);
+
+    /// <inheritdoc />
+    async Task<IChatClient> IAIChatCapability.CreateClientAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateClient));
+
+        // Build the underlying client from connection settings only (unchanged provider path).
+        var inner = await CreateClientAsync((TSettings)settings, modelId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Wrap so the provider-declared capability settings are applied to every request. When the
+        // profile declares none (or a different capability's settings), return the client untouched.
+        return capabilitySettings is TCapabilitySettings typed
+            ? new CapabilitySettingsChatClient<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
+            : inner;
     }
 }
 

@@ -166,13 +166,49 @@ export class UaiModelEditorElement extends UmbLitElement {
         );
     }
 
-    #toPropertyConfig(config: unknown): Array<{ alias: string; value: unknown }> {
+    /**
+     * Per-field caches for the objects handed to `umb-property`, keyed by the field's own config/validation
+     * source so a cached value is only reused while its input is unchanged.
+     *
+     * Identity matters here, not just contents: `umb-property` forwards `config` to the property editor UI,
+     * and some editors rebuild derived state from scratch whenever the setter runs. The CMS dropdown, for
+     * example, adds its empty "clear the value" option in `firstUpdated` but rebuilds its options list in
+     * the `config` setter — so handing it a freshly constructed array on every render makes that option
+     * appear or disappear depending on render order.
+     */
+    #propertyConfigCache = new Map<string, { source: unknown; value: Array<{ alias: string; value: unknown }> }>();
+    #validationCache = new Map<string, { mandatory: boolean; mandatoryMessage: string | undefined }>();
+
+    #toPropertyConfig(field: UaiEditableModelFieldModel): Array<{ alias: string; value: unknown }> {
+        const cached = this.#propertyConfigCache.get(field.key);
+        if (cached && cached.source === field.editorConfig) return cached.value;
+
+        const value = this.#convertPropertyConfig(field.editorConfig);
+        this.#propertyConfigCache.set(field.key, { source: field.editorConfig, value });
+
+        return value;
+    }
+
+    #convertPropertyConfig(config: unknown): Array<{ alias: string; value: unknown }> {
         if (!config) return [];
         // If it's already an array of alias-value pairs, return as is
         if (Array.isArray(config)) return config as Array<{ alias: string; value: unknown }>;
         // If it's an object, convert its entries to alias-value pairs
         if (typeof config !== "object") return [];
         return Object.entries(config).map(([alias, value]) => ({ alias, value }));
+    }
+
+    #toValidation(field: UaiEditableModelFieldModel) {
+        const cached = this.#validationCache.get(field.key);
+        if (cached && cached.mandatory === field.isRequired) return cached;
+
+        const value = {
+            mandatory: field.isRequired,
+            mandatoryMessage: field.isRequired ? this.localize.string("This field is required") : undefined,
+        };
+        this.#validationCache.set(field.key, value);
+
+        return value;
     }
 
     /**
@@ -216,13 +252,8 @@ export class UaiModelEditorElement extends UmbLitElement {
                 description=${this.localize.string(field.description ?? "")}
                 alias=${field.key}
                 property-editor-ui-alias=${field.editorUiAlias ?? "Umb.PropertyEditorUi.TextBox"}
-                .config=${field.editorConfig ? this.#toPropertyConfig(field.editorConfig) : []}
-                .validation=${{
-                    mandatory: field.isRequired,
-                    mandatoryMessage: field.isRequired
-                        ? this.localize.string("This field is required")
-                        : undefined,
-                }}
+                .config=${this.#toPropertyConfig(field)}
+                .validation=${this.#toValidation(field)}
             >
             </umb-property>
         `;

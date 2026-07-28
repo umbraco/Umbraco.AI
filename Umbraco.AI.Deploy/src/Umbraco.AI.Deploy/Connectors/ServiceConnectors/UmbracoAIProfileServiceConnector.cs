@@ -91,6 +91,11 @@ public class UmbracoAIProfileServiceConnector(
             // Serialize against the runtime type (Settings is declared as the marker interface
             // IAIProfileSettings, which would otherwise serialize as an empty object) using the
             // core serializer options so the artifact round-trips through AIProfileSettingsSerializer.
+            // The provider-declared bag is already shaped by the provider's schema, so it round-trips as
+            // whatever it holds — a JsonElement read from storage, or the object the API supplied.
+            CapabilitySettings = entity.CapabilitySettings != null
+                ? JsonSerializer.SerializeToElement(entity.CapabilitySettings, entity.CapabilitySettings.GetType(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
+                : null,
             Settings = entity.Settings != null
                 ? JsonSerializer.SerializeToElement(entity.Settings, entity.Settings.GetType(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
                 : null,
@@ -163,6 +168,7 @@ public class UmbracoAIProfileServiceConnector(
         profile.ConnectionId = connection.Id;
         profile.Model = modelRef;
         profile.Settings = settings;
+        profile.CapabilitySettings = artifact.CapabilitySettings;
         profile.Tags = artifact.Tags.ToList();
 
         state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);

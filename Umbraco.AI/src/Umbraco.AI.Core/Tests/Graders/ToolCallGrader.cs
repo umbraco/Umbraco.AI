@@ -1,5 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.Core.Tests.Graders;
 
@@ -27,6 +29,7 @@ public class ToolCallGraderConfig
         EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
         EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"Any\",\"All\",\"Exact\",\"None\"]}]",
         SortOrder = 2)]
+    [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string ValidationMode { get; set; } = "Any";
 
     /// <summary>

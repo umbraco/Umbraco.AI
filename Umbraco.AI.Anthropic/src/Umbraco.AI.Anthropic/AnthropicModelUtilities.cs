@@ -8,6 +8,45 @@ namespace Umbraco.AI.Extensions;
 internal static class AnthropicModelUtilities
 {
     /// <summary>
+    /// Models that do not accept <c>output_config.effort</c>: Claude 3.x, the base Claude 4 models,
+    /// Opus 4.1, Sonnet 4.5 and Haiku 4.5.
+    /// </summary>
+    /// <remarks>
+    /// A closed set of legacy models. Effort is supported on Opus 4.5 and everything from the 4.6
+    /// generation onwards, so every model released from here on supports it and an unrecognised model is
+    /// treated as supporting it.
+    /// </remarks>
+    private static readonly Regex[] NoEffortPatterns =
+    [
+        new(@"^claude-3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-(opus|sonnet)-4-\d{8}", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-opus-4-1", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-sonnet-4-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^claude-haiku-4-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Whether the model accepts <c>output_config.effort</c> at all.
+    /// </summary>
+    /// <param name="modelId">The model ID, or null when unresolved.</param>
+    public static bool SupportsEffort(string? modelId)
+        => !string.IsNullOrWhiteSpace(modelId)
+           && !NoEffortPatterns.Any(p => p.IsMatch(modelId));
+
+    /// <summary>
+    /// Whether the effort level is one this package offers, independent of any model.
+    /// </summary>
+    /// <param name="level">The effort level (case-insensitive).</param>
+    /// <remarks>
+    /// Only <c>low</c>, <c>medium</c> and <c>high</c>: those are accepted by every model that accepts
+    /// effort at all, so no per-model list is needed. Anthropic's <c>xhigh</c> and <c>max</c> reach a
+    /// subset that a hard-coded list cannot track — the set with <c>xhigh</c> grows with each release —
+    /// so they are treated as unrecognised and skipped rather than guessed at. Offering them means
+    /// reading the per-level flags the models endpoint already reports.
+    /// </remarks>
+    public static bool IsKnownEffortLevel(string level)
+        => level.Trim().ToLowerInvariant() is "low" or "medium" or "high";
+
     /// Model families that accept the sampling parameters (<c>temperature</c>, <c>top_p</c>, <c>top_k</c>).
     /// </summary>
     /// <remarks>
@@ -51,7 +90,6 @@ internal static class AnthropicModelUtilities
     public static bool SupportsSamplingParameters(string? modelId)
         => !string.IsNullOrWhiteSpace(modelId)
            && SamplingParameterModelPatterns.Any(p => p.IsMatch(modelId));
-
     /// <summary>
     /// Formats a Claude model ID into a human-readable display name.
     /// </summary>

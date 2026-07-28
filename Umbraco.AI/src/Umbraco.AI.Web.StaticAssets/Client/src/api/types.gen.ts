@@ -227,6 +227,7 @@ export type CreateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    capabilitySettings?: unknown;
     tags: Array<string>;
 };
 
@@ -497,6 +498,7 @@ export type ProfileResponseModel = {
     model?: ModelRefModel | null;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    capabilitySettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -533,6 +535,9 @@ export type ProviderResponseModel = {
     name: string;
     capabilities: Array<string>;
     settingsSchema?: EditableModelSchemaModel | null;
+    capabilitySettingsSchemas: {
+        [key: string]: EditableModelSchemaModel;
+    };
 };
 
 export type RunTestBatchRequestModel = {
@@ -843,6 +848,7 @@ export type UpdateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    capabilitySettings?: unknown;
     tags: Array<string>;
 };
 

@@ -6,7 +6,7 @@ import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
 import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
-import { UaiPartialUpdateCommand, isCapabilitySettingSupported } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand, isCapabilitySettingSupported, isProfileSettingSupported } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -14,6 +14,11 @@ import { UaiProviderDetailRepository } from "../../../../provider/repository/det
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
 import type { UaiEditableModelSchemaModel } from "../../../../core/types.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
+
+/**
+ * Field key of the core temperature setting, as providers declare it in the model metadata.
+ */
+const UAI_TEMPERATURE_FIELD_KEY = "temperature";
 
 /**
  * Workspace view for Profile details.
@@ -41,6 +46,28 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _loadingModels = false;
 
+    #observedTemperatureEditor?: Element;
+    #observedTemperatureEditorWidth = 0;
+
+    /**
+     * Keeps the temperature slider's step markers aligned with its track.
+     *
+     * `uui-slider` measures the track once, when it first renders, and thereafter only when the window
+     * resizes — so any later width change leaves the markers spaced for the old width, running past the
+     * end of the track. A scrollbar appearing as the editor fills out is enough to trigger it. Re-firing
+     * the event the slider already listens for is the supported way to make it measure again.
+     *
+     * The container is observed rather than the slider itself: `umb-input-slider` declares no display on
+     * its host, so it is an inline element, and a ResizeObserver reports nothing for those.
+     */
+    #temperatureResizeObserver = new ResizeObserver((entries) => {
+        const width = Math.round(entries[0]?.contentRect.width ?? 0);
+        if (width === 0 || width === this.#observedTemperatureEditorWidth) return;
+
+        this.#observedTemperatureEditorWidth = width;
+        window.dispatchEvent(new Event("resize"));
+    });
+
     constructor() {
         super();
         this.consumeContext(UAI_PROFILE_WORKSPACE_CONTEXT, (context) => {
@@ -61,6 +88,26 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 });
             }
         });
+    }
+
+    override disconnectedCallback() {
+        this.#temperatureResizeObserver.disconnect();
+        super.disconnectedCallback();
+    }
+
+    protected override updated(changedProperties: Map<string, unknown>) {
+        super.updated(changedProperties);
+
+        const editor = this.shadowRoot?.querySelector(".temperature-editor") ?? undefined;
+        if (editor === this.#observedTemperatureEditor) return;
+
+        if (this.#observedTemperatureEditor) {
+            this.#temperatureResizeObserver.unobserve(this.#observedTemperatureEditor);
+        }
+
+        this.#observedTemperatureEditor = editor;
+        this.#observedTemperatureEditorWidth = 0;
+        if (editor) this.#temperatureResizeObserver.observe(editor);
     }
 
     /**
@@ -147,8 +194,9 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         // Drop any stored provider settings the newly selected model doesn't accept. Without this they
         // stay persisted but invisible in the editor, and still get sent on every request.
         const capabilitySettings = this.#pruneCapabilitySettings(modelId);
+        const settings = this.#pruneProfileSettings(modelId);
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model, capabilitySettings }, "model"),
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model, capabilitySettings, settings }, "model"),
         );
     }
 
@@ -169,6 +217,22 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     /**
+     * Returns the stored capability settings with the core settings the given model declares unsupported
+     * cleared, or `undefined` when nothing needs to change (which the partial update command skips).
+     *
+     * Same reasoning as {@link #pruneCapabilitySettings}: a temperature the model rejects would sit in the
+     * profile with no field to show it and be dropped on every request.
+     */
+    #pruneProfileSettings(modelId: string): UaiChatProfileSettings | undefined {
+        const chatSettings = this.#getChatSettings();
+        if (chatSettings?.temperature === null || chatSettings?.temperature === undefined) return undefined;
+
+        if (isProfileSettingSupported(this.#getModelMetadata(modelId), UAI_TEMPERATURE_FIELD_KEY)) return undefined;
+
+        return { ...chatSettings, temperature: null };
+    }
+
+    /**
      * Gets the metadata for a model from the loaded model list, which carries the provider's per-model
      * settings declarations alongside the display name.
      */
@@ -182,6 +246,14 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const target = event.target as HTMLInputElement;
         const temperature = target.value ? parseFloat(target.value) : null;
         this.#updateChatSettings({ temperature });
+    }
+
+    /**
+     * Returns temperature to unset, so the provider's own default applies again.
+     */
+    #onTemperatureClear(event: Event) {
+        event.stopPropagation();
+        this.#updateChatSettings({ temperature: null });
     }
 
     #onMaxTokensChange(event: Event) {
@@ -364,20 +436,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="System Settings">
-                <umb-property-layout
-                    label="Temperature"
-                    description="Controls randomness (0.0 = deterministic, 2.0 = very random)"
-                >
-                    <umb-input-slider
-                        slot="editor"
-                        label="Temperature"
-                        .valueLow=${chatSettings?.temperature ?? 1}
-                        .min=${0}
-                        .max=${2}
-                        .step=${0.1}
-                        @change=${this.#onTemperatureChange}
-                    ></umb-input-slider>
-                </umb-property-layout>
+                ${this.#renderTemperature(chatSettings)}
 
                 <umb-property-layout label="Max Tokens" description="Maximum number of tokens to generate">
                     <uui-input
@@ -410,6 +469,53 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
             </uui-box>
+        `;
+    }
+
+    /**
+     * Renders the temperature control, in the same two states the provider-declared settings use: absent
+     * when the selected model rejects the setting, otherwise editable.
+     *
+     * An editable slider cannot express "unset" on its own — with no value it parks at its minimum, which
+     * reads as a deliberate 0 — so an unset slider is dimmed, and the clear button beside it is how the
+     * value gets given back. Nothing is stored until the slider is moved, so an untouched profile keeps its
+     * null. Any value already stored is cleared when a model that rejects it is selected, so hiding the
+     * field never hides a value that is still being sent.
+     */
+    #renderTemperature(chatSettings: UaiChatProfileSettings | null) {
+        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
+        if (!isProfileSettingSupported(metadata, UAI_TEMPERATURE_FIELD_KEY)) {
+            return nothing;
+        }
+
+        const temperature = chatSettings?.temperature ?? null;
+
+        return html`
+            <umb-property-layout
+                label="Temperature"
+                description="Controls randomness (0.0 = deterministic, 2.0 = very random). Clear it to use the provider's default."
+            >
+                <div slot="editor" class="temperature-editor">
+                    <umb-input-slider
+                        class=${temperature === null ? "unset" : ""}
+                        label="Temperature"
+                        .valueLow=${temperature ?? undefined}
+                        .min=${0}
+                        .max=${2}
+                        .step=${0.1}
+                        @change=${this.#onTemperatureChange}
+                    ></umb-input-slider>
+                    <uui-button
+                        compact
+                        look="secondary"
+                        label="Clear temperature"
+                        title="Clear temperature"
+                        @click=${this.#onTemperatureClear}
+                    >
+                        <uui-icon name="icon-trash"></uui-icon>
+                    </uui-button>
+                </div>
+            </umb-property-layout>
         `;
     }
 
@@ -696,6 +802,28 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             uui-input,
             umb-input-slider {
                 width: 100%;
+            }
+
+            /* The clear button is taken out of flow with room reserved for it, rather than laid out as a
+               flex sibling: the slider measures its own width to decide whether the step markers fit, it
+               does that once before a flex row has settled, and only ever recomputes on a window resize —
+               so a slider sized by flex loses its markers. A plain full-width slider measures correctly. */
+            .temperature-editor {
+                position: relative;
+                padding-right: calc(30px + var(--uui-size-space-2));
+            }
+            .temperature-editor uui-button {
+                position: absolute;
+                right: 0;
+                /* Centred on the track, which sits at the top of the slider's box above the row it
+                   reserves for step labels — not on the box itself. */
+                top: 9px;
+                transform: translateY(-50%);
+            }
+            /* Dimmed while no value is stored, so the slider's resting position at its minimum doesn't
+               read as the profile's temperature. */
+            .temperature-editor umb-input-slider.unset {
+                opacity: 0.5;
             }
 
             uui-textarea {

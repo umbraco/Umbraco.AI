@@ -541,21 +541,26 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     /**
      * Renders the provider-declared, profile-level settings (e.g. reasoning effort) using the
      * shared schema-driven model editor. Renders nothing when the provider declares no extras.
+     *
+     * Also renders nothing until a model is selected: which of these settings apply is a per-model fact,
+     * so with no model chosen there is nothing to filter against and every field would be offered —
+     * including ones the model about to be picked rejects.
      */
     #renderCapabilitySettings() {
+        if (!this._model?.model?.modelId) return nothing;
+
         const schema = this.#getCapabilitySettingsSchema();
         if (!schema || schema.fields.length === 0) return nothing;
 
         return html`
-            <uui-box headline="Provider settings">
-                <uai-model-editor
-                    .schema=${schema}
-                    .model=${this._model?.capabilitySettings ?? undefined}
-                    empty-message="This provider has no additional settings."
-                    @change=${this.#onCapabilitySettingsChange}
-                >
-                </uai-model-editor>
-            </uui-box>
+            <uai-model-editor
+                .schema=${schema}
+                .model=${this._model?.capabilitySettings ?? undefined}
+                empty-message="This provider has no additional settings."
+                default-group="Provider settings"
+                @change=${this.#onCapabilitySettingsChange}
+            >
+            </uai-model-editor>
         `;
     }
 
@@ -621,7 +626,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                     <div slot="editor">
                         ${this._loadingModels ? html`<uui-loader-bar></uui-loader-bar>` : nothing}
                         <uui-select
-                            name="model" 
+                            name="model"
                             .value=${this.#getCurrentModelValue()}
                             .options=${this.#getModelOptions()}
                             @change=${this.#onModelChange}
@@ -629,7 +634,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                             ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
                             required
                             ${umbBindToValidation(this, "$.model", this._model.model)}
-                            class="${this._loadingModels ? "hidden" : ""}" 
+                            class="${this._loadingModels ? "hidden" : ""}"
                         ></uui-select>
                     </div>
                 </umb-property-layout>
@@ -660,7 +665,8 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child) {
+            uui-box:not(:first-child),
+            uai-model-editor:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
             }
 

@@ -119,6 +119,11 @@
           "Asp.Versioning.Mvc": "8.1.1"
         }
       },
+      "AWSSDK.Core": {
+        "type": "Transitive",
+        "resolved": "4.0.9.4",
+        "contentHash": "bpxzv4e0WjOVmKiYkjkNWeKvwyzoIVFS+u5zYnsryM2qTyhkfeLGQ4LPqDo+m/7OIJlGWr6V9zkc3V9bb0QmYg=="
+      },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
         "resolved": "2.6.2",
@@ -1642,10 +1647,12 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "umbraco.ai.anthropic": {
+      "umbraco.ai.amazon": {
         "type": "Project",
         "dependencies": {
-          "Anthropic": "[12.29.1, 12.999.999)",
+          "AWSSDK.Bedrock": "[4.0.30.4, 4.999.999)",
+          "AWSSDK.BedrockRuntime": "[4.0.21.1, 4.999.999)",
+          "AWSSDK.Extensions.Bedrock.MEAI": "[4.0.8.12, 4.999.999)",
           "Umbraco.AI.Core": "[1.0.0, )"
         }
       },
@@ -1665,12 +1672,32 @@
           "Umbraco.Cms.Web.Common": "[17.4.0, 17.999.999)"
         }
       },
-      "Anthropic": {
+      "AWSSDK.Bedrock": {
         "type": "CentralTransitive",
-        "requested": "[12.29.1, 12.999.999)",
-        "resolved": "12.29.1",
-        "contentHash": "EVq7ygOtMejWNXW+Dz+vv/ie50JgZB4jFc4gT2TTpBZXtp64zWRR7DqdGhbEaYThyMuaevN4ZRGUWBrSrb0+rg==",
+        "requested": "[4.0.30.4, 4.999.999)",
+        "resolved": "4.0.30.4",
+        "contentHash": "2BRrOrk5H4tLdkTnmqhGuuwwfthXW1ndN7CSHkf7fhk3EEVZ12Kl32yB/lNbnFVSsjCArnMRvQEB+ATv9op0Vw==",
         "dependencies": {
+          "AWSSDK.Core": "[4.0.9.4, 5.0.0)"
+        }
+      },
+      "AWSSDK.BedrockRuntime": {
+        "type": "CentralTransitive",
+        "requested": "[4.0.21.1, 4.999.999)",
+        "resolved": "4.0.21.1",
+        "contentHash": "ec1uHKBW3JusA4HzBqk9OlDDMlnq0bDUj/JWSrTFV8goQHD4ysx95bIYPwhJmJ1T+Q6IgpWDVsuViRNoR+3KkQ==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.0.9.4, 5.0.0)"
+        }
+      },
+      "AWSSDK.Extensions.Bedrock.MEAI": {
+        "type": "CentralTransitive",
+        "requested": "[4.0.8.12, 4.999.999)",
+        "resolved": "4.0.8.12",
+        "contentHash": "Qfsmm+jJJH80eb7uUyFOOruRWmnplggpRZuDrxkukV5YQPyJ9fD9PC1VNX25WaTTDyvvpIMSdMsYwh3f05yDFA==",
+        "dependencies": {
+          "AWSSDK.BedrockRuntime": "4.0.21.1",
+          "AWSSDK.Core": "4.0.9.4",
           "Microsoft.Extensions.AI.Abstractions": "10.5.1"
         }
       },

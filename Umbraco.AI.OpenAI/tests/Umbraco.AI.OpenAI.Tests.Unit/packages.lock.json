@@ -979,6 +979,14 @@
         "resolved": "6.2.0",
         "contentHash": "DRx593fF5CJZ8pj94StWdZsE9/iXkJKp3L2xp6Y9EAliHf4+e1y4QvWL/jJmeZ7zb8NKpwyf6tq1CZDS2mQwAA=="
       },
+      "OpenAI": {
+        "type": "Transitive",
+        "resolved": "2.11.0",
+        "contentHash": "f0y5zOZVNhuc/gPQUHGkiljZlDUq2SddGOkGTPLHnjQC5mCiTCXq1BqxZ+xxxHU6bY0mEtFQJj1RlB2BpwD7Lw==",
+        "dependencies": {
+          "System.ClientModel": "1.10.0"
+        }
+      },
       "OpenIddict": {
         "type": "Transitive",
         "resolved": "7.4.0",
@@ -1440,8 +1448,8 @@
       },
       "System.Memory.Data": {
         "type": "Transitive",
-        "resolved": "8.0.1",
-        "contentHash": "BVYuec3jV23EMRDeR7Dr1/qhx7369dZzJ9IWy2xylvb4YfXsrUxspWc4UWYid/tj4zZK58uGZqn2WQiaDMhmAg=="
+        "resolved": "10.0.3",
+        "contentHash": "MaGhRfGunmrj/nHjtsi9XkhlYJ/ERGWrbA+BiSKNtGnAjc9XlG5EhAvak6VRcX5LYzPF6pBO8nJ613dTgzabig=="
       },
       "System.Numerics.Tensors": {
         "type": "Transitive",
@@ -1642,13 +1650,6 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "umbraco.ai.anthropic": {
-        "type": "Project",
-        "dependencies": {
-          "Anthropic": "[12.29.1, 12.999.999)",
-          "Umbraco.AI.Core": "[1.0.0, )"
-        }
-      },
       "umbraco.ai.core": {
         "type": "Project",
         "dependencies": {
@@ -1665,13 +1666,11 @@
           "Umbraco.Cms.Web.Common": "[17.4.0, 17.999.999)"
         }
       },
-      "Anthropic": {
-        "type": "CentralTransitive",
-        "requested": "[12.29.1, 12.999.999)",
-        "resolved": "12.29.1",
-        "contentHash": "EVq7ygOtMejWNXW+Dz+vv/ie50JgZB4jFc4gT2TTpBZXtp64zWRR7DqdGhbEaYThyMuaevN4ZRGUWBrSrb0+rg==",
+      "umbraco.ai.openai": {
+        "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.AI.Abstractions": "10.5.1"
+          "Microsoft.Extensions.AI.OpenAI": "[10.7.0, 10.999.999)",
+          "Umbraco.AI.Core": "[1.0.0, )"
         }
       },
       "DocumentFormat.OpenXml": {
@@ -1694,6 +1693,16 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.9",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.9",
           "System.Numerics.Tensors": "10.0.9"
+        }
+      },
+      "Microsoft.Extensions.AI.OpenAI": {
+        "type": "CentralTransitive",
+        "requested": "[10.7.0, 10.999.999)",
+        "resolved": "10.7.0",
+        "contentHash": "K/xC0SRJeQiHJNNx+ZIYq9liAB5Uy/wUGjHPljEtRW63TCyGWEBkNVU7/UwizTxQk0Tm9pclDEoNmKTw7xtKfg==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.7.0",
+          "OpenAI": "2.11.0"
         }
       },
       "Microsoft.Extensions.Caching.Memory": {
@@ -1737,11 +1746,13 @@
       "System.ClientModel": {
         "type": "CentralTransitive",
         "requested": "[1.5.0, 1.999.999)",
-        "resolved": "1.5.0",
-        "contentHash": "nyQUynSbLh8IVyETF2tN14IQwBYgif3gIBt2LAL3FSl0W5FIEJIog3sposTxdz23EqDN78LAQFpUxbaj1EsRJw==",
+        "resolved": "1.10.0",
+        "contentHash": "lBEWs54F5Y5pZ9hC+8z4S/X76957ex+DPk7WecRHlbIHtrPfbRMMlOgI3iDn4Jpb3bSxvBnKaaHoD59auFjlBA==",
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.3",
-          "System.Memory.Data": "8.0.1"
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.3",
+          "System.Memory.Data": "10.0.3"
         }
       },
       "Umbraco.Cms.Api.Management": {

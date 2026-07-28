@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
@@ -10,8 +11,24 @@ namespace Umbraco.AI.OpenAI;
 /// <summary>
 /// AI chat capability for OpenAI provider.
 /// </summary>
-public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
+public class OpenAIChatCapability(
+    OpenAIProvider provider,
+    ILogger<OpenAIChatCapability>? logger)
+    : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained so adding the logger parameter stays binary compatible. An optional parameter would not
+    /// achieve that — the compiler emits a single constructor and bakes the default in at each call site,
+    /// so assemblies compiled against the previous signature would fail to bind.
+    /// </remarks>
+    public OpenAIChatCapability(OpenAIProvider provider)
+        : this(provider, null)
+    {
+    }
+
     private const string DefaultChatModel = "gpt-4o";
 
     private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;
@@ -55,9 +72,17 @@ public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBas
     /// <inheritdoc />
     [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
-        => OpenAIProvider.CreateOpenAIClient(settings)
+    {
+        var resolvedModelId = modelId ?? DefaultChatModel;
+
+        var inner = OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
-            .AsIChatClient(modelId ?? DefaultChatModel);
+            .AsIChatClient(resolvedModelId);
+
+        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
+        // which caller assembled the ChatOptions. See OpenAISamplingParameterChatClient.
+        return new OpenAISamplingParameterChatClient(inner, resolvedModelId, logger);
+    }
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId))

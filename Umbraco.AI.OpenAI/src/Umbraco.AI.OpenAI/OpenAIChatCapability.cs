@@ -89,10 +89,10 @@ public class OpenAIChatCapability(
     /// here is the list of reasoning families, so the predicate is written as an allow-list and inverted
     /// into the declaration.
     /// </remarks>
-    public override AIModelSettingSupport GetSettingSupport(string modelId)
+    public override AIModelSettingsSupport GetSettingsSupport(string modelId)
         => OpenAIModelUtilities.SupportsReasoningEffort(modelId)
-            ? AIModelSettingSupport.Default
-            : new AIModelSettingSupport
+            ? AIModelSettingsSupport.Default
+            : new AIModelSettingsSupport
             {
                 UnsupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
             };
@@ -118,7 +118,7 @@ public class OpenAIChatCapability(
     /// <see cref="ResponseReasoningOptions.ReasoningEffortLevel"/> via
     /// <see cref="ChatOptions.RawRepresentationFactory"/>. Any existing factory is preserved.
     /// Skipped entirely on models that do not accept a reasoning effort — the same predicate that drives
-    /// <see cref="GetSettingSupport"/> — so a profile carrying a stale value cannot fail the request.
+    /// <see cref="GetSettingsSupport"/> — so a profile carrying a stale value cannot fail the request.
     /// </remarks>
     protected override void ApplyCapabilitySettings(
         OpenAIChatCapabilitySettings capabilitySettings,

@@ -10,7 +10,7 @@ namespace Umbraco.AI.Core.Models;
 /// Support for a setting usually varies by <em>model</em> rather than by provider — OpenAI's reasoning
 /// effort applies to the o-series and GPT-5 but not to gpt-4o; Anthropic's thinking budget is rejected
 /// by the newest Claude models. A capability returns this from
-/// <see cref="Providers.IAICapability.GetSettingSupport"/> and the core capability bases project it into
+/// <see cref="Providers.IAICapability.GetSettingsSupport"/> and the core capability bases project it into
 /// <see cref="AIModelDescriptor.Metadata"/> when the model list is built, so the backoffice can hide the
 /// settings that don't apply to the selected model without an extra round trip.
 /// </para>
@@ -33,13 +33,13 @@ namespace Umbraco.AI.Core.Models;
 /// keys; both are normalised to the schema's camelCase key, so they cannot drift from the settings type.
 /// </para>
 /// </remarks>
-public sealed class AIModelSettingSupport
+public sealed class AIModelSettingsSupport
 {
     /// <summary>
     /// An empty declaration — the capability has nothing to say about this model, so every setting
     /// applies.
     /// </summary>
-    public static readonly AIModelSettingSupport Default = new();
+    public static readonly AIModelSettingsSupport Default = new();
 
     /// <summary>
     /// The provider-declared capability settings this model rejects or ignores.
@@ -56,7 +56,7 @@ public sealed class AIModelSettingSupport
     /// </summary>
     /// <remarks>
     /// The capability bases call this for you when they project
-    /// <see cref="Providers.IAICapability.GetSettingSupport"/> over a model list. It is public for the other
+    /// <see cref="Providers.IAICapability.GetSettingsSupport"/> over a model list. It is public for the other
     /// route: a capability whose vendor reports support as data (Anthropic's models endpoint does) can build
     /// its descriptors with the declaration already attached instead of implementing the hook.
     /// </remarks>

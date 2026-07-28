@@ -1,8 +1,10 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Serialization;
 using Umbraco.AI.Tests.Common.Fakes;
 
 namespace Umbraco.AI.Tests.Unit.Settings;
@@ -536,6 +538,43 @@ public class AIEditableModelResolverTests
         result.ShouldNotBeNull();
         result.ShouldBeOfType<FakeProviderSettings>();
         ((FakeProviderSettings)result!).ApiKey.ShouldBe("provider-key");
+    }
+
+    #endregion
+
+    #region Dropdown-shaped values
+
+    [Fact]
+    public void ResolveModel_DropdownValueStoredAsArray_BindsToTheStringProperty()
+    {
+        // The backoffice dropdown saves its value as an array even as a single select, so a profile
+        // configured through the editor stores ["low"] against a string property. Without the converter
+        // on the property this threw: "The JSON value could not be converted to System.String".
+        var resolver = new AIEditableModelResolver(_configuration);
+        var data = JsonSerializer.Deserialize<JsonElement>("""{"choice":["low"]}""");
+
+        var result = resolver.ResolveModel<DropdownSettings>(data);
+
+        result.ShouldNotBeNull();
+        result!.Choice.ShouldBe("low");
+    }
+
+    [Fact]
+    public void ResolveModel_DropdownValueStoredAsEmptyArray_BindsToNull()
+    {
+        var resolver = new AIEditableModelResolver(_configuration);
+        var data = JsonSerializer.Deserialize<JsonElement>("""{"choice":[]}""");
+
+        var result = resolver.ResolveModel<DropdownSettings>(data);
+
+        result.ShouldNotBeNull();
+        result!.Choice.ShouldBeNull();
+    }
+
+    private sealed class DropdownSettings
+    {
+        [JsonConverter(typeof(DropdownStringJsonConverter))]
+        public string? Choice { get; set; }
     }
 
     #endregion

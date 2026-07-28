@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.OpenAI;
 
@@ -24,5 +26,6 @@ public class OpenAIChatCapabilitySettings
         EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
         EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"none\",\"minimal\",\"low\",\"medium\",\"high\"]}]",
         SortOrder = 1)]
+    [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? ReasoningEffort { get; set; }
 }

@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Serialization;
 
 namespace Umbraco.AI.Anthropic;
 
@@ -29,5 +31,6 @@ public class AnthropicChatCapabilitySettings
         EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
         EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"low\",\"medium\",\"high\"]}]",
         SortOrder = 1)]
+    [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? Effort { get; set; }
 }

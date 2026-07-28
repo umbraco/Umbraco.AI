@@ -4,7 +4,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OpenAI;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
@@ -22,9 +25,25 @@ namespace Umbraco.AI.OpenAI;
 /// provider-native client for masked outpainting (Tier 3) while picking their own model/size at call time.
 /// </remarks>
 [Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
-public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
+public class OpenAIImageGeneratorCapability(
+    OpenAIProvider provider,
+    ILogger<OpenAIImageGeneratorCapability>? logger)
     : AIImageGeneratorCapabilityBase<OpenAIProviderSettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained for construction paths that pass only the provider (the capability factory resolves the rest
+    /// from DI, but plain activation does not). The logger is resolved through the service locator, following
+    /// the same approach as the chat capability, so those paths still get real logging rather than none.
+    /// Null-conditional because the locator is unset before startup and in unit tests.
+    /// </remarks>
+    public OpenAIImageGeneratorCapability(OpenAIProvider provider)
+        : this(provider, StaticServiceProvider.Instance?.GetService<ILogger<OpenAIImageGeneratorCapability>>())
+    {
+    }
+
     private const string DefaultImageModel = "gpt-image-1";
 
     private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;
@@ -62,7 +81,11 @@ public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
 
         // Wrap so consumers can also resolve the un-bound OpenAIClient (the stock adapter only exposes the
         // bound ImageClient), enabling provider-native masked outpainting via GetService.
-        return new OpenAIImageGenerator(inner, client);
+        var generator = new OpenAIImageGenerator(inner, client);
+
+        // Wrapped outside that, so the quality/style hints are translated no matter which caller assembled
+        // the options — the adapter ignores them otherwise. See OpenAIImageHintGenerator.
+        return new OpenAIImageHintGenerator(generator, logger);
     }
 
     private static bool IsImageModel(string modelId)

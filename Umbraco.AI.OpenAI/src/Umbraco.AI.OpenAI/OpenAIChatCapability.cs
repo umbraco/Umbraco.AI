@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenAI.Responses;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -84,18 +85,38 @@ public class OpenAIChatCapability(
 
     /// <inheritdoc />
     /// <remarks>
+    /// <para>
     /// Reasoning effort applies to the o-series and GPT-5 only, so it is declared per model rather than
     /// per provider — otherwise the profile editor would offer it on a gpt-4o profile. The stable set
     /// here is the list of reasoning families, so the predicate is written as an allow-list and inverted
     /// into the declaration.
+    /// </para>
+    /// <para>
+    /// Those same reasoning models reject <c>temperature</c>, which
+    /// <see cref="OpenAISamplingParameterChatClient"/> already drops at request time. Declaring it from
+    /// the same predicate turns that silent drop into something the editor can show.
+    /// </para>
     /// </remarks>
     public override AIModelSettingsSupport GetSettingsSupport(string modelId)
-        => OpenAIModelUtilities.SupportsReasoningEffort(modelId)
-            ? AIModelSettingsSupport.Default
-            : new AIModelSettingsSupport
-            {
-                UnsupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
-            };
+    {
+        var supportsReasoningEffort = OpenAIModelUtilities.SupportsReasoningEffort(modelId);
+        var supportsSampling = OpenAIModelUtilities.SupportsSamplingParameters(modelId);
+
+        if (supportsReasoningEffort && supportsSampling)
+        {
+            return AIModelSettingsSupport.Default;
+        }
+
+        return new AIModelSettingsSupport
+        {
+            UnsupportedCapabilitySettings = supportsReasoningEffort
+                ? []
+                : [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
+            UnsupportedProfileSettings = supportsSampling
+                ? []
+                : [nameof(AIChatProfileSettings.Temperature)],
+        };
+    }
 
     /// <inheritdoc />
     [Experimental("OPENAI001")]

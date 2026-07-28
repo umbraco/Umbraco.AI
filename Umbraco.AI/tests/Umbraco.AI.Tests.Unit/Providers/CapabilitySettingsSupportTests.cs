@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Tests.Common.Fakes;
@@ -90,6 +91,52 @@ public class CapabilitySettingsSupportTests
         plain.Metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("reasoningEffort");
     }
 
+    [Fact]
+    public async Task GetModelsAsync_ModelRejectsCoreProfileSetting_ProjectsItSeparately()
+    {
+        // Arrange
+        IAICapability capability = new DeclaringChatCapability();
+
+        // Act
+        var models = await capability.GetModelsAsync(Settings);
+
+        // Assert — the two declarations travel under their own keys, so neither implies the other
+        var restricted = models.Single(m => m.Model.ModelId == "no-temperature-model");
+        restricted.Metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature");
+        restricted.Metadata.ContainsKey(AIModelMetadataKeys.CapabilitySettingsUnsupported).ShouldBeFalse();
+        restricted.IsProfileSettingSupported("temperature").ShouldBeFalse();
+        restricted.IsCapabilitySettingSupported("reasoningEffort").ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task GetModelsAsync_ModelRejectsBoth_ProjectsBothKeys()
+    {
+        // Arrange
+        IAICapability capability = new DeclaringChatCapability();
+
+        // Act
+        var models = await capability.GetModelsAsync(Settings);
+
+        // Assert
+        var restricted = models.Single(m => m.Model.ModelId == "restricted-model");
+        restricted.Metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("reasoningEffort");
+        restricted.Metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature");
+    }
+
+    [Fact]
+    public void ToMetadata_DeclarationHoldsOnlyBlanks_EmitsNoKey()
+    {
+        // A list of blanks is silence, not a claim that nothing is supported — emitting the key with an
+        // empty value would leave consumers splitting an empty string.
+        var support = new AIModelSettingsSupport
+        {
+            UnsupportedCapabilitySettings = ["  "],
+            UnsupportedProfileSettings = [""],
+        };
+
+        support.ToMetadata().ShouldBeEmpty();
+    }
+
     #endregion
 
     #region Reading declarations back
@@ -121,6 +168,30 @@ public class CapabilitySettingsSupportTests
         model.IsCapabilitySettingSupported(fieldKey).ShouldBeFalse();
     }
 
+    [Fact]
+    public void IsProfileSettingSupported_ReadsItsOwnKeyOnly()
+    {
+        // A capability-settings declaration says nothing about the core settings, and vice versa
+        var model = Describe("temperature");
+
+        model.IsCapabilitySettingSupported("temperature").ShouldBeFalse();
+        model.IsProfileSettingSupported("temperature").ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("temperature")]
+    [InlineData("Temperature")]
+    [InlineData(" temperature ")]
+    public void IsProfileSettingSupported_DeclaredKeyRegardlessOfCasingOrWhitespace_ReturnsFalse(string fieldKey)
+    {
+        var model = new AIModelDescriptor(
+            new AIModelRef("test", "some-model"),
+            "Some Model",
+            new Dictionary<string, string> { [AIModelMetadataKeys.ProfileSettingsUnsupported] = "temperature" });
+
+        model.IsProfileSettingSupported(fieldKey).ShouldBeFalse();
+    }
+
     #endregion
 
     private static AIModelDescriptor Describe(string unsupported)
@@ -130,20 +201,34 @@ public class CapabilitySettingsSupportTests
             new Dictionary<string, string> { [AIModelMetadataKeys.CapabilitySettingsUnsupported] = unsupported });
 
     /// <summary>
-    /// A capability that rejects reasoning effort on one of its two models, exercising the projection
-    /// performed by <see cref="AICapabilityBase{TSettings}"/>.
+    /// A capability whose four models cover each combination of declaration — neither setting, a
+    /// provider-declared one, a core one, and both — exercising the projection performed by
+    /// <see cref="AICapabilityBase{TSettings}"/>.
     /// </summary>
     private sealed class DeclaringChatCapability()
         : AIChatCapabilityBase<FakeProviderSettings, DeclaringChatCapability.CapabilitySettings>(
             new FakeAIProvider())
     {
         public override AIModelSettingsSupport GetSettingsSupport(string modelId)
-            => modelId == "reasoning-model"
-                ? AIModelSettingsSupport.Default
-                : new AIModelSettingsSupport
-                {
-                    UnsupportedCapabilitySettings = [nameof(CapabilitySettings.ReasoningEffort)],
-                };
+        {
+            var rejectsReasoningEffort = modelId is "plain-model" or "restricted-model";
+            var rejectsTemperature = modelId is "no-temperature-model" or "restricted-model";
+
+            if (!rejectsReasoningEffort && !rejectsTemperature)
+            {
+                return AIModelSettingsSupport.Default;
+            }
+
+            return new AIModelSettingsSupport
+            {
+                UnsupportedCapabilitySettings = rejectsReasoningEffort
+                    ? [nameof(CapabilitySettings.ReasoningEffort)]
+                    : [],
+                UnsupportedProfileSettings = rejectsTemperature
+                    ? [nameof(AIChatProfileSettings.Temperature)]
+                    : [],
+            };
+        }
 
         protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
             FakeProviderSettings settings,
@@ -155,6 +240,8 @@ public class CapabilitySettingsSupportTests
                     new AIModelRef("test", "plain-model"),
                     "Plain Model",
                     new Dictionary<string, string> { ["custom.key"] = "custom-value" }),
+                new AIModelDescriptor(new AIModelRef("test", "no-temperature-model"), "No Temperature Model"),
+                new AIModelDescriptor(new AIModelRef("test", "restricted-model"), "Restricted Model"),
             ]);
 
         protected override IChatClient CreateClient(FakeProviderSettings settings, string? modelId)

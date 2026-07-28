@@ -16,4 +16,12 @@ public static class AIModelMetadataKeys
     /// Absent when the capability has nothing to declare for the model.
     /// </summary>
     public const string CapabilitySettingsUnsupported = "capabilitySettings.unsupported";
+
+    /// <summary>
+    /// Comma-separated field keys of the core profile settings this model rejects or ignores — the
+    /// built-in settings every provider shares (<c>temperature</c> and friends), as opposed to the
+    /// provider-declared ones in <see cref="CapabilitySettingsUnsupported"/>.
+    /// Absent when the capability has nothing to declare for the model.
+    /// </summary>
+    public const string ProfileSettingsUnsupported = "profileSettings.unsupported";
 }

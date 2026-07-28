@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -83,13 +84,31 @@ public class AnthropicChatCapability(
     /// Turns a model's reported capabilities into the settings declaration the profile editor reads,
     /// falling back to the ID-based predicate when the API reported nothing for the model.
     /// </summary>
+    /// <remarks>
+    /// The sampling half has no equivalent in the API's response, so it comes from the ID predicate that
+    /// <see cref="AnthropicSamplingParameterChatClient"/> already enforces at request time — one predicate
+    /// behind both the dropped parameter and the editor's account of it.
+    /// </remarks>
     private static AIModelSettingsSupport BuildSettingsSupport(AnthropicModelCapability model)
-        => (model.SupportsEffort ?? AnthropicModelUtilities.SupportsEffort(model.Id))
-            ? AIModelSettingsSupport.Default
-            : new AIModelSettingsSupport
-            {
-                UnsupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.Effort)],
-            };
+    {
+        var supportsEffort = model.SupportsEffort ?? AnthropicModelUtilities.SupportsEffort(model.Id);
+        var supportsSampling = AnthropicModelUtilities.SupportsSamplingParameters(model.Id);
+
+        if (supportsEffort && supportsSampling)
+        {
+            return AIModelSettingsSupport.Default;
+        }
+
+        return new AIModelSettingsSupport
+        {
+            UnsupportedCapabilitySettings = supportsEffort
+                ? []
+                : [nameof(AnthropicChatCapabilitySettings.Effort)],
+            UnsupportedProfileSettings = supportsSampling
+                ? []
+                : [nameof(AIChatProfileSettings.Temperature)],
+        };
+    }
 
     /// <inheritdoc />
     /// <remarks>

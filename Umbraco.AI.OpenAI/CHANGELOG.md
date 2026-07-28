@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.1.1...Umbraco.AI.OpenAI@17.1.2) (2026-07-28)
+
+### fix
+
+* **anthropic,openai,amazon:** Drop sampling parameters on models that reject them (#267) ([6066b04](https://github.com/umbraco/Umbraco.AI/commit/6066b040ba1d6beb491c5daf04466dc4dcfa5c00)), closes [#267](https://github.com/umbraco/Umbraco.AI/issues/267)
+
+## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.1.0...Umbraco.AI.OpenAI@17.1.1) (2026-07-27)
+
+### Internal
+
+* Bump to align with Umbraco.AI 17.2.0.
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.0.0...Umbraco.AI.OpenAI@17.1.0) (2026-07-06)
 
 ### feat

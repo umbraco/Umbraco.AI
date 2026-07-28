@@ -1,3 +1,4 @@
+using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.EditableModels;
@@ -269,6 +270,65 @@ public class AIProviderBaseTests
 
     #endregion
 
+    #region GetCapabilitySettingsSchema
+
+    [Fact]
+    public void GetCapabilitySettingsSchema_CapabilityWithSettingsType_BuildsFromCapabilityType()
+    {
+        // Arrange
+        var expectedSchema = new AIEditableModelSchema(
+            typeof(FakeProviderSettings),
+            new List<AIEditableModelField>
+            {
+                new() { PropertyName = "ApiKey", Key = "api-key", Label = "API Key" }
+            });
+
+        _capabilityFactoryMock
+            .Setup(x => x.Create<CapabilitySettingsChatCapability>(It.IsAny<IAIProvider>()))
+            .Returns(new CapabilitySettingsChatCapability());
+
+        _schemaBuilderMock
+            .Setup(x => x.BuildForType(typeof(FakeProviderSettings), "capability-settings-provider"))
+            .Returns(expectedSchema);
+
+        var provider = new ProviderWithCapabilitySettingsCapability(_infrastructureMock.Object);
+
+        // Act
+        var schema = provider.GetCapabilitySettingsSchema(AICapability.Chat);
+
+        // Assert
+        schema.ShouldBe(expectedSchema);
+        _schemaBuilderMock.Verify(
+            x => x.BuildForType(typeof(FakeProviderSettings), "capability-settings-provider"),
+            Times.Once);
+    }
+
+    [Fact]
+    public void GetCapabilitySettingsSchema_CapabilityWithoutSettings_ReturnsNull()
+    {
+        // Arrange
+        _capabilityFactoryMock
+            .Setup(x => x.Create<IAIChatCapability>(It.IsAny<IAIProvider>()))
+            .Returns(new FakeChatCapability());
+
+        var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
+
+        // Act & Assert - FakeChatCapability declares no capability settings type
+        provider.GetCapabilitySettingsSchema(AICapability.Chat).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetCapabilitySettingsSchema_CapabilityNotSupported_ReturnsNull()
+    {
+        // Arrange
+        var provider = new TestProvider(_infrastructureMock.Object); // no capabilities
+
+        // Act & Assert
+        provider.GetCapabilitySettingsSchema(AICapability.Chat).ShouldBeNull();
+    }
+
+    #endregion
+
     #region Test providers
 
     [AIProvider("test-provider", "Test Provider")]
@@ -314,6 +374,33 @@ public class AIProviderBaseTests
         public TypedSettingsProvider(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         { }
+    }
+
+    [AIProvider("capability-settings-provider", "Capability Settings Provider")]
+    private class ProviderWithCapabilitySettingsCapability : AIProviderBase
+    {
+        public ProviderWithCapabilitySettingsCapability(IAIProviderInfrastructure infrastructure)
+            : base(infrastructure)
+        {
+            WithCapability<CapabilitySettingsChatCapability>();
+        }
+    }
+
+    /// <summary>
+    /// A chat capability that declares a capability-settings type (via the <see cref="IAICapability.CapabilitySettingsType"/>
+    /// hook the two-parameter base sets), used to verify schema generation without a real provider SDK.
+    /// </summary>
+    private sealed class CapabilitySettingsChatCapability : IAIChatCapability
+    {
+        public AICapability Kind => AICapability.Chat;
+
+        public Type? CapabilitySettingsType => typeof(FakeProviderSettings);
+
+        public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<AIModelDescriptor>>(Array.Empty<AIModelDescriptor>());
+
+        public Task<IChatClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
     }
 
     #endregion

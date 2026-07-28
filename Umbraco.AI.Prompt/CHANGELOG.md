@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.1.0...Umbraco.AI.Prompt@17.2.0) (2026-07-27)
+
+### feat
+
+* **core,prompt:** Simplified property value transformers for AI Prompt generation ([9203299](https://github.com/umbraco/Umbraco.AI/commit/92032996fb04596a240279b1fe9ce7aa9152f8a4)), closes [#249](https://github.com/umbraco/Umbraco.AI/issues/249)
+
+### fix
+
+* **prompt:** Fail fast when property schema can't be constrained for structured output ([a7e88ca](https://github.com/umbraco/Umbraco.AI/commit/a7e88cad12c751d29eff97291207472282f73c9c)), closes [#249](https://github.com/umbraco/Umbraco.AI/issues/249)
+* **prompt:** Serialize correct culture in split-view property actions (#264) ([8e5faf7](https://github.com/umbraco/Umbraco.AI/commit/8e5faf75519ec213d370b2b6a3df49187ea642df)), closes [#264](https://github.com/umbraco/Umbraco.AI/issues/264) [#202](https://github.com/umbraco/Umbraco.AI/issues/202)
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.0.1...Umbraco.AI.Prompt@17.1.0) (2026-07-13)
 
 ### feat

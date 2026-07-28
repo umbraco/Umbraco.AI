@@ -104,6 +104,21 @@ public abstract class AIProviderBase : IAIProvider
     }
 
     /// <inheritdoc />
+    public virtual AIEditableModelSchema? GetCapabilitySettingsSchema(AICapability capability)
+    {
+        // A capability declares its capability-settings type via IAICapability.CapabilitySettingsType
+        // (set by the two-parameter AIChatCapabilityBase<TSettings, TCapabilitySettings>). Build the
+        // schema with the same builder used for connection settings.
+        var capabilitySettingsType = Capabilities
+            .FirstOrDefault(c => c.Kind == capability)?
+            .CapabilitySettingsType;
+
+        return capabilitySettingsType is null
+            ? null
+            : Infrastructure.SchemaBuilder.BuildForType(capabilitySettingsType, Id);
+    }
+
+    /// <inheritdoc />
     /// <remarks>
     /// Default implementation recognises the common transport exception types via
     /// <see cref="ProviderErrorMapping.FromException"/>. Providers whose SDK surfaces errors

@@ -37,6 +37,21 @@ public interface IAIConfiguredChatCapability : IAIConfiguredCapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured chat client.</returns>
     Task<IChatClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a chat client with the baked-in connection settings and resolved, provider-declared
+    /// profile settings (e.g. reasoning effort).
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none.</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured chat client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(string?, CancellationToken)"/> so existing callers/implementations keep working.
+    /// </remarks>
+    Task<IChatClient> CreateClientAsync(object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(modelId, cancellationToken);
 }
 
 /// <summary>

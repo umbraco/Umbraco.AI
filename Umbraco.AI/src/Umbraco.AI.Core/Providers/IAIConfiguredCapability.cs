@@ -66,6 +66,24 @@ public interface IAIConfiguredEmbeddingCapability : IAIConfiguredCapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured embedding generator.</returns>
     Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an embedding generator with the baked-in connection settings and resolved,
+    /// provider-declared capability settings.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none.</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured embedding generator.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateGeneratorAsync(string?, CancellationToken)"/> so existing callers/implementations keep working.
+    /// </remarks>
+    Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => CreateGeneratorAsync(modelId, cancellationToken);
 }
 
 /// <summary>
@@ -80,6 +98,24 @@ public interface IAIConfiguredSpeechToTextCapability : IAIConfiguredCapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured speech-to-text client.</returns>
     Task<ISpeechToTextClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a speech-to-text client with the baked-in connection settings and resolved,
+    /// provider-declared capability settings.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none.</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured speech-to-text client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(string?, CancellationToken)"/> so existing callers/implementations keep working.
+    /// </remarks>
+    Task<ISpeechToTextClient> CreateClientAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => CreateClientAsync(modelId, cancellationToken);
 }
 
 /// <summary>
@@ -95,4 +131,22 @@ public interface IAIConfiguredImageGeneratorCapability : IAIConfiguredCapability
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured image generator.</returns>
     Task<IImageGenerator> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an image generator with the baked-in connection settings and resolved, provider-declared
+    /// capability settings.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none.</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured image generator.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateGeneratorAsync(string?, CancellationToken)"/> so existing callers/implementations keep working.
+    /// </remarks>
+    Task<IImageGenerator> CreateGeneratorAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => CreateGeneratorAsync(modelId, cancellationToken);
 }

@@ -157,8 +157,6 @@ public class UmbracoAIProfileServiceConnectorTests
             Settings = new AIImageGenerationProfileSettings
             {
                 Size = "1024x1024",
-                Quality = "hd",
-                Style = "vivid",
                 MediaType = "image/png"
             }
         };
@@ -192,8 +190,6 @@ public class UmbracoAIProfileServiceConnectorTests
         savedProfile.ShouldNotBeNull();
         var settings = savedProfile.Settings.ShouldBeOfType<AIImageGenerationProfileSettings>();
         settings.Size.ShouldBe("1024x1024");
-        settings.Quality.ShouldBe("hd");
-        settings.Style.ShouldBe("vivid");
         settings.MediaType.ShouldBe("image/png");
     }
 

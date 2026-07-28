@@ -333,19 +333,6 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
             options.MediaType = settings.MediaType;
         }
 
-        // Forward provider-specific hints for adapters that read them.
-        if (!string.IsNullOrWhiteSpace(settings?.Quality))
-        {
-            options.AdditionalProperties ??= new AdditionalPropertiesDictionary();
-            options.AdditionalProperties["quality"] = settings.Quality;
-        }
-
-        if (!string.IsNullOrWhiteSpace(settings?.Style))
-        {
-            options.AdditionalProperties ??= new AdditionalPropertiesDictionary();
-            options.AdditionalProperties["style"] = settings.Style;
-        }
-
         return options;
     }
 

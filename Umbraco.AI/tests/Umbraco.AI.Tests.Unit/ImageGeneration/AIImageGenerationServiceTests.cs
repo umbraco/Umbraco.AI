@@ -122,17 +122,17 @@ public class AIImageGenerationServiceTests
     }
 
     [Fact]
-    public async Task GenerateImagesAsync_ForwardsProfileHintsUnderTheKeysProvidersRead()
+    public async Task GenerateImagesAsync_DoesNotInventProviderHints()
     {
-        // Quality and style have no first-class option property, so they cross into the provider as
-        // additional properties. That makes the key names a contract: the OpenAI provider reads exactly
-        // these to translate them into its SDK options, and a rename on either side would put the hints
-        // back to silently doing nothing — which is what they did before that translation existed.
+        // Quality and style used to travel from here as additional properties, which the OpenAI adapter
+        // ignored — so they did nothing at all. They are now provider-declared capability settings, applied
+        // by the provider itself. This holds the core side of that move: nothing here fabricates a hint,
+        // so there is only ever one place those values come from.
         var generator = new FakeImageGenerator();
         var profile = new AIProfileBuilder()
             .WithCapability(AICapability.ImageGeneration)
             .WithModel("fake-provider", "dall-e-3")
-            .WithSettings(new AIImageGenerationProfileSettings { Quality = "hd", Style = "vivid" })
+            .WithSettings(new AIImageGenerationProfileSettings { Size = "1024x1024", MediaType = "image/png" })
             .Build();
 
         _profileServiceMock
@@ -145,9 +145,11 @@ public class AIImageGenerationServiceTests
         await _service.GenerateImagesAsync(b => b.WithAlias("hints"), "a cat");
 
         var options = generator.ReceivedOptions.ShouldHaveSingleItem();
-        options!.AdditionalProperties.ShouldNotBeNull();
-        options.AdditionalProperties["quality"].ShouldBe("hd");
-        options.AdditionalProperties["style"].ShouldBe("vivid");
+        // The first-class settings still flow, because M.E.AI models them.
+        options!.ImageSize.ShouldNotBeNull();
+        options.MediaType.ShouldBe("image/png");
+        options.AdditionalProperties?.ContainsKey("quality").ShouldNotBe(true);
+        options.AdditionalProperties?.ContainsKey("style").ShouldNotBe(true);
     }
 
     [Fact]

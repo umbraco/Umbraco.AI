@@ -2,6 +2,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.OpenAI.Tests.Unit.Fakes;
 
+#pragma warning disable UMBRACOAI_IMAGEGEN // Covers the experimental image capability's declarations
+
 namespace Umbraco.AI.OpenAI.Tests.Unit;
 
 /// <summary>
@@ -45,7 +47,33 @@ public class OpenAISettingsDeclarationTests
         metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature");
     }
 
+    [Fact]
+    public void ImageGetSettingsSupport_DallE3_DeclaresNothing()
+    {
+        // Style is a DALL·E 3 feature, so it is the one family where the field should render.
+        CreateImageCapability().GetSettingsSupport("dall-e-3").ToMetadata().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("gpt-image-1")]
+    [InlineData("dall-e-2")]
+    [InlineData("some-future-image-model")]
+    public void ImageGetSettingsSupport_ModelWithoutStyle_DeclaresStyleUnsupported(string modelId)
+    {
+        var metadata = CreateImageCapability().GetSettingsSupport(modelId).ToMetadata();
+
+        metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("style");
+        // Quality applies to every family, just with different values, so it is never declared unsupported —
+        // the per-request gate handles the vocabulary difference.
+        metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldNotContain("quality");
+    }
+
     private static OpenAIChatCapability CreateCapability()
+        => new(
+            new OpenAIProvider(new FakeProviderInfrastructure(), new MemoryCache(new MemoryCacheOptions())),
+            logger: null);
+
+    private static OpenAIImageGeneratorCapability CreateImageCapability()
         => new(
             new OpenAIProvider(new FakeProviderInfrastructure(), new MemoryCache(new MemoryCacheOptions())),
             logger: null);

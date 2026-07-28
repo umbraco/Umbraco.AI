@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -78,6 +79,21 @@ public class AmazonChatCapability(
                 AmazonModelUtilities.FormatDisplayName(id)))
             .ToList();
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Bedrock fronts other vendors' models, so it inherits their restrictions: the Claude families that
+    /// reject <c>temperature</c> reject it here too. <see cref="AmazonSamplingParameterChatClient"/>
+    /// already drops it at request time from the predicate used here, so declaring it lets the editor
+    /// account for the drop instead of leaving the profile with a value that does nothing.
+    /// </remarks>
+    public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+        => AmazonModelUtilities.SupportsSamplingParameters(modelId)
+            ? AIModelSettingsSupport.Default
+            : new AIModelSettingsSupport
+            {
+                UnsupportedProfileSettings = [nameof(AIChatProfileSettings.Temperature)],
+            };
 
     /// <inheritdoc />
     protected override IChatClient CreateClient(AmazonProviderSettings settings, string? modelId)

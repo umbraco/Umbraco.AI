@@ -363,7 +363,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const chatSettings = this.#getChatSettings();
 
         return html`
-            <uui-box headline="Settings">
+            <uui-box headline="System Settings">
                 <umb-property-layout
                     label="Temperature"
                     description="Controls randomness (0.0 = deterministic, 2.0 = very random)"
@@ -417,7 +417,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const embeddingSettings = this.#getEmbeddingSettings();
 
         return html`
-            <uui-box headline="Settings">
+            <uui-box headline="System Settings">
                 <umb-property-layout
                     label="Dimensions"
                     description="Number of dimensions for generated embeddings. Leave empty to use the model's default."
@@ -440,7 +440,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const sttSettings = this.#getSpeechToTextSettings();
 
         return html`
-            <uui-box headline="Settings">
+            <uui-box headline="System Settings">
                 <umb-property-layout
                     label="Language"
                     description="BCP-47 language hint for transcription (e.g., &quot;en&quot;, &quot;de&quot;, &quot;ja&quot;). Leave empty for auto-detection."
@@ -461,7 +461,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const imageSettings = this.#getImageGenerationSettings();
 
         return html`
-            <uui-box headline="Settings">
+            <uui-box headline="System Settings">
                 <umb-property-layout
                     label="Size"
                     description="Default image size as &quot;{width}x{height}&quot; (e.g. &quot;1024x1024&quot;). Leave empty for the provider default."
@@ -521,15 +521,34 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const schemas = this._provider?.capabilitySettingsSchemas;
         if (!capability || !schemas) return undefined;
 
+        const modelId = this._model?.model?.modelId;
+
+        // Filtering produces a new schema object, so the result is cached against the inputs that decide it.
+        // A fresh object on every render would push a new config into each property editor, and some rebuild
+        // derived state when that happens — the CMS dropdown loses its empty "clear the value" option.
+        const cacheKey = `${capability}|${modelId ?? ""}|${schemas === this.#cachedSchemas ? "same" : "new"}`;
+        if (this.#cachedSchemaKey === cacheKey) return this.#cachedSchema;
+
         const key = Object.keys(schemas).find((k) => k.toLowerCase() === capability.toLowerCase());
         const schema = key ? schemas[key] : undefined;
-        if (!schema) return undefined;
 
-        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
-        const fields = schema.fields.filter((field) => isCapabilitySettingSupported(metadata, field.key));
+        let result: UaiEditableModelSchemaModel | undefined;
+        if (schema) {
+            const metadata = this.#getModelMetadata(modelId);
+            const fields = schema.fields.filter((field) => isCapabilitySettingSupported(metadata, field.key));
+            result = fields.length === schema.fields.length ? schema : { ...schema, fields };
+        }
 
-        return fields.length === schema.fields.length ? schema : { ...schema, fields };
+        this.#cachedSchemas = schemas;
+        this.#cachedSchemaKey = cacheKey;
+        this.#cachedSchema = result;
+
+        return result;
     }
+
+    #cachedSchemas?: Record<string, UaiEditableModelSchemaModel>;
+    #cachedSchemaKey?: string;
+    #cachedSchema?: UaiEditableModelSchemaModel;
 
     #onCapabilitySettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
         e.stopPropagation();

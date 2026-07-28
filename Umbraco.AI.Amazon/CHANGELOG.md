@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Amazon will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Amazon@17.0.1...Umbraco.AI.Amazon@17.0.2) (2026-07-28)
+
+### fix
+
+* **amazon:** Strip Bedrock version suffixes that carry no minor version ([4d07203](https://github.com/umbraco/Umbraco.AI/commit/4d07203b43dbd583997c6f8aa50e73fce0f25d52))
+* **anthropic,openai,amazon:** Drop sampling parameters on models that reject them (#267) ([6066b04](https://github.com/umbraco/Umbraco.AI/commit/6066b040ba1d6beb491c5daf04466dc4dcfa5c00)), closes [#267](https://github.com/umbraco/Umbraco.AI/issues/267)
+
 ## [17.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Amazon@17.0.0...Umbraco.AI.Amazon@17.0.1) (2026-07-27)
 
 ### Internal

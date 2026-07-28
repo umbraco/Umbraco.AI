@@ -26,7 +26,9 @@ namespace Umbraco.AI.Core.Models;
 /// list is fetched from the vendor and cannot be consulted per request, so a capability that declares a
 /// setting unsupported must also refrain from sending it (see
 /// <c>AIChatCapabilityBase&lt;TSettings, TCapabilitySettings&gt;.ApplyCapabilitySettings</c>, which receives
-/// the resolved model ID for exactly that purpose). Declare and enforce from one shared predicate.
+/// the resolved model ID for exactly that purpose). For the core settings in
+/// <see cref="UnsupportedProfileSettings"/> the enforcement already exists as the provider's own
+/// request-time filter. Either way: declare and enforce from one shared predicate.
 /// </para>
 /// <para>
 /// Entries may be given as property names (<c>nameof(MySettings.ReasoningEffort)</c>) or as schema field
@@ -47,9 +49,21 @@ public sealed class AIModelSettingsSupport
     public IReadOnlyCollection<string> UnsupportedCapabilitySettings { get; init; } = [];
 
     /// <summary>
+    /// The core profile settings this model rejects or ignores, named from the capability's own settings
+    /// type (e.g. <c>nameof(AIChatProfileSettings.Temperature)</c>).
+    /// </summary>
+    /// <remarks>
+    /// These are the built-in settings every provider shares, so a model that rejects one is the case a
+    /// user is most likely to hit: the field is a permanent fixture of the profile editor rather than
+    /// something a provider opted into rendering. Declaring it lets the editor say so instead of saving a
+    /// value that is silently dropped on every request.
+    /// </remarks>
+    public IReadOnlyCollection<string> UnsupportedProfileSettings { get; init; } = [];
+
+    /// <summary>
     /// Whether this declaration says anything at all.
     /// </summary>
-    internal bool IsEmpty => UnsupportedCapabilitySettings.Count == 0;
+    internal bool IsEmpty => UnsupportedCapabilitySettings.Count == 0 && UnsupportedProfileSettings.Count == 0;
 
     /// <summary>
     /// Projects the declaration into the metadata entries carried by <see cref="AIModelDescriptor.Metadata"/>.
@@ -61,16 +75,28 @@ public sealed class AIModelSettingsSupport
     /// its descriptors with the declaration already attached instead of implementing the hook.
     /// </remarks>
     public IReadOnlyDictionary<string, string> ToMetadata()
-        => IsEmpty
-            ? new Dictionary<string, string>()
-            : new Dictionary<string, string>
+    {
+        var metadata = new Dictionary<string, string>();
+
+        Add(AIModelMetadataKeys.CapabilitySettingsUnsupported, UnsupportedCapabilitySettings);
+        Add(AIModelMetadataKeys.ProfileSettingsUnsupported, UnsupportedProfileSettings);
+
+        return metadata;
+
+        // Normalise to the same camelCase key the schema builder derives from the property name, so a
+        // declaration written as nameof(TSettings.ReasoningEffort) matches the field key. A declaration
+        // holding only blanks is silence, not an empty list, so the key stays absent.
+        void Add(string key, IReadOnlyCollection<string> declared)
+        {
+            var keys = declared
+                .Where(k => !string.IsNullOrWhiteSpace(k))
+                .Select(k => k.Trim().ToCamelCase())
+                .ToList();
+
+            if (keys.Count > 0)
             {
-                // Normalise to the same camelCase key the schema builder derives from the property name,
-                // so a declaration written as nameof(TSettings.ReasoningEffort) matches the field key.
-                [AIModelMetadataKeys.CapabilitySettingsUnsupported] = string.Join(
-                    ',',
-                    UnsupportedCapabilitySettings
-                        .Where(k => !string.IsNullOrWhiteSpace(k))
-                        .Select(k => k.Trim().ToCamelCase())),
-            };
+                metadata[key] = string.Join(',', keys);
+            }
+        }
+    }
 }

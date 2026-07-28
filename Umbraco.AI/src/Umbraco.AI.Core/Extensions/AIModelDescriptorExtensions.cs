@@ -19,6 +19,23 @@ public static class AIModelDescriptorExtensions
     /// this is "not known to be rejected" rather than an affirmative claim of support.
     /// </returns>
     public static bool IsCapabilitySettingSupported(this AIModelDescriptor model, string fieldKey)
+        => IsSettingSupported(model, AIModelMetadataKeys.CapabilitySettingsUnsupported, fieldKey);
+
+    /// <summary>
+    /// Whether a core profile setting (e.g. <c>temperature</c>) applies to this model, per the
+    /// capability's declaration via <see cref="Core.Providers.IAICapability.GetSettingsSupport"/>.
+    /// </summary>
+    /// <param name="model">The model descriptor.</param>
+    /// <param name="fieldKey">The field key (or property name) of the setting.</param>
+    /// <returns>
+    /// <c>false</c> only when the capability explicitly declared that this model rejects the setting.
+    /// Declarations are negative, so this is "not known to be rejected" rather than an affirmative claim
+    /// of support.
+    /// </returns>
+    public static bool IsProfileSettingSupported(this AIModelDescriptor model, string fieldKey)
+        => IsSettingSupported(model, AIModelMetadataKeys.ProfileSettingsUnsupported, fieldKey);
+
+    private static bool IsSettingSupported(AIModelDescriptor model, string metadataKey, string fieldKey)
     {
         ArgumentNullException.ThrowIfNull(model);
 
@@ -27,7 +44,7 @@ public static class AIModelDescriptorExtensions
             return true;
         }
 
-        if (!model.Metadata.TryGetValue(AIModelMetadataKeys.CapabilitySettingsUnsupported, out var declared))
+        if (!model.Metadata.TryGetValue(metadataKey, out var declared))
         {
             return true;
         }

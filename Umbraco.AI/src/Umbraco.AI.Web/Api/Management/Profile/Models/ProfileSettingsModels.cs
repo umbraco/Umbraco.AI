@@ -79,15 +79,7 @@ public class ImageGenerationProfileSettingsModel : ProfileSettingsModel
     /// </summary>
     public string? Size { get; init; }
 
-    /// <summary>
-    /// Provider-specific quality hint (e.g. "hd", "high"). Varies by model.
-    /// </summary>
-    public string? Quality { get; init; }
 
-    /// <summary>
-    /// Provider-specific style hint (e.g. "vivid", "natural"). Varies by model.
-    /// </summary>
-    public string? Style { get; init; }
 
     /// <summary>
     /// Default output media type (MIME) of the generated images (e.g. "image/png"). Varies by model.

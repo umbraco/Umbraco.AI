@@ -123,8 +123,6 @@ public class ProfileMapDefinition : IMapDefinition
             AIImageGenerationProfileSettings imageGeneration => new ImageGenerationProfileSettingsModel
             {
                 Size = imageGeneration.Size,
-                Quality = imageGeneration.Quality,
-                Style = imageGeneration.Style,
                 MediaType = imageGeneration.MediaType
             },
             _ => null
@@ -157,8 +155,6 @@ public class ProfileMapDefinition : IMapDefinition
             AICapability.ImageGeneration when settings is ImageGenerationProfileSettingsModel imageGeneration => new AIImageGenerationProfileSettings
             {
                 Size = imageGeneration.Size,
-                Quality = imageGeneration.Quality,
-                Style = imageGeneration.Style,
                 MediaType = imageGeneration.MediaType
             },
             AICapability.ImageGeneration => new AIImageGenerationProfileSettings(),

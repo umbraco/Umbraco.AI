@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -16,19 +17,22 @@ internal sealed class AIImageGeneratorFactory : IAIImageGeneratorFactory
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly IAIEditableModelResolver _modelResolver;
 
     public AIImageGeneratorFactory(
         IAIConnectionService connectionService,
         AIImageGenerationMiddlewareCollection middleware,
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors,
+        IAIEditableModelResolver modelResolver)
     {
         _connectionService = connectionService;
         _middleware = middleware;
         _runtimeContextAccessor = runtimeContextAccessor;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
+        _modelResolver = modelResolver;
     }
 
     public async Task<IImageGenerator> CreateGeneratorAsync(
@@ -38,8 +42,19 @@ internal sealed class AIImageGeneratorFactory : IAIImageGeneratorFactory
         // Get configured provider with resolved settings
         var (imageGeneratorCapability, provider) = await GetConfiguredImageGeneratorCapabilityAsync(profile, cancellationToken);
 
-        // Create base generator from provider with the profile's model
-        var generator = await imageGeneratorCapability.CreateGeneratorAsync(profile.Model.ModelId, cancellationToken);
+        // Resolve any provider-declared capability settings through the same editable-model pipeline
+        // connections use ($-config resolution + validation + typing), so the provider receives a
+        // strongly-typed, resolved object rather than a raw stored bag.
+        var resolvedCapabilitySettings = _modelResolver.ResolveCapabilitySettings(
+            provider,
+            profile.Capability,
+            profile.CapabilitySettings);
+
+        // Create base generator from provider with the profile's model and resolved capability settings
+        var generator = await imageGeneratorCapability.CreateGeneratorAsync(
+            resolvedCapabilitySettings,
+            profile.Model.ModelId,
+            cancellationToken);
 
         // Wrap innermost so SDK exceptions are classified against the originating provider before
         // any middleware sees them.

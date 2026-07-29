@@ -69,6 +69,28 @@ internal static class OpenAIModelUtilities
     ];
 
     /// <summary>
+    /// Embedding models that accept a <c>dimensions</c> request parameter.
+    /// </summary>
+    /// <remarks>
+    /// Shortening an embedding is a <c>text-embedding-3</c> feature; <c>ada-002</c> predates it. Written as
+    /// an allow-list so a model this package has not heard of is treated as not supporting it, which drops
+    /// the parameter rather than risking a rejected request — the same failure direction the sampling
+    /// predicate chooses, and for the same reason.
+    /// </remarks>
+    private static readonly Regex[] DimensionsModelPatterns =
+    [
+        new(@"^text-embedding-3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Determines whether an OpenAI embedding model accepts a <c>dimensions</c> parameter.
+    /// </summary>
+    /// <param name="modelId">The model ID, or <c>null</c> if no model has been resolved.</param>
+    public static bool SupportsDimensions(string? modelId)
+        => !string.IsNullOrWhiteSpace(modelId)
+           && DimensionsModelPatterns.Any(p => p.IsMatch(modelId));
+
+    /// <summary>
     /// Determines whether an OpenAI model accepts the sampling parameters (<c>temperature</c>,
     /// <c>top_p</c>).
     /// </summary>

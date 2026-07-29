@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenAI.Responses;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Extensions;
@@ -85,18 +86,37 @@ public class OpenAIChatCapability(
 
     /// <inheritdoc />
     /// <remarks>
+    /// <para>
     /// Reasoning effort applies to the o-series and GPT-5 only, so it is declared per model rather than
     /// per provider — otherwise the profile editor would offer it on a gpt-4o profile. The stable set
     /// here is the list of reasoning families, so the predicate is written as an allow-list and inverted
     /// into the declaration.
+    /// </para>
+    /// <para>
+    /// Those same reasoning models reject the sampling parameters, so they are declared here too. The
+    /// base strips whatever this declares, so one predicate drives both the editor and the request.
+    /// </para>
     /// </remarks>
     public override AIModelSettingsSupport GetSettingsSupport(string modelId)
-        => OpenAIModelUtilities.SupportsReasoningEffort(modelId)
-            ? AIModelSettingsSupport.Default
-            : new AIModelSettingsSupport
-            {
-                UnsupportedCapabilitySettings = [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
-            };
+    {
+        var supportsReasoningEffort = OpenAIModelUtilities.SupportsReasoningEffort(modelId);
+        var supportsSampling = OpenAIModelUtilities.SupportsSamplingParameters(modelId);
+
+        if (supportsReasoningEffort && supportsSampling)
+        {
+            return AIModelSettingsSupport.Default;
+        }
+
+        return new AIModelSettingsSupport
+        {
+            UnsupportedCapabilitySettings = supportsReasoningEffort
+                ? []
+                : [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
+            UnsupportedProfileSettings = supportsSampling
+                ? []
+                : AIProfileSettingKeys.Sampling,
+        };
+    }
 
     /// <inheritdoc />
     [Experimental("OPENAI001")]
@@ -104,18 +124,19 @@ public class OpenAIChatCapability(
     {
         var resolvedModelId = modelId ?? DefaultChatModel;
 
+        // The declaration above is enforced by the base, which wraps this client so the sampling
+        // parameters are stripped for a model that rejects them no matter which caller assembled the
+        // ChatOptions. See DeclaredSettingsChatClient.
         var inner = OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
             .AsIChatClient(resolvedModelId);
 
-        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
-        // which caller assembled the ChatOptions. See OpenAISamplingParameterChatClient.
-        var client = new OpenAISamplingParameterChatClient(inner, resolvedModelId, logger);
-
         // Run statelessly (no server-side Responses storage) when the caller manages history itself,
         // so an attached ChatHistoryProvider stays the single source of truth. No-op otherwise.
+        // Innermost, and it chains any existing RawRepresentationFactory, so the reasoning effort the
+        // capability-settings decorator sets further out still reaches the request.
         var runtimeContextAccessor = StaticServiceProvider.Instance.GetRequiredService<IAIRuntimeContextAccessor>();
-        return new ClientManagedHistoryChatClient(client, runtimeContextAccessor);
+        return new ClientManagedHistoryChatClient(inner, runtimeContextAccessor);
     }
 
     /// <inheritdoc />

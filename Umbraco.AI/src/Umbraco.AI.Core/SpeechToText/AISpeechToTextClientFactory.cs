@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
@@ -15,19 +16,22 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly IAIEditableModelResolver _modelResolver;
 
     public AISpeechToTextClientFactory(
         IAIConnectionService connectionService,
         AISpeechToTextMiddlewareCollection middleware,
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors,
+        IAIEditableModelResolver modelResolver)
     {
         _connectionService = connectionService;
         _middleware = middleware;
         _runtimeContextAccessor = runtimeContextAccessor;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
+        _modelResolver = modelResolver;
     }
 
     public async Task<ISpeechToTextClient> CreateClientAsync(
@@ -37,8 +41,19 @@ internal sealed class AISpeechToTextClientFactory : IAISpeechToTextClientFactory
         // Get configured provider with resolved settings
         var (speechToTextCapability, provider) = await GetConfiguredSpeechToTextCapabilityAsync(profile, cancellationToken);
 
-        // Create base client from provider with the profile's model
-        var client = await speechToTextCapability.CreateClientAsync(profile.Model.ModelId, cancellationToken);
+        // Resolve any provider-declared capability settings through the same editable-model pipeline
+        // connections use ($-config resolution + validation + typing), so the provider receives a
+        // strongly-typed, resolved object rather than a raw stored bag.
+        var resolvedCapabilitySettings = _modelResolver.ResolveCapabilitySettings(
+            provider,
+            profile.Capability,
+            profile.CapabilitySettings);
+
+        // Create base client from provider with the profile's model and resolved capability settings
+        var client = await speechToTextCapability.CreateClientAsync(
+            resolvedCapabilitySettings,
+            profile.Model.ModelId,
+            cancellationToken);
 
         // Wrap innermost so SDK exceptions are classified against the originating provider before
         // any middleware sees them.

@@ -92,9 +92,8 @@ public class OpenAIChatCapability(
     /// into the declaration.
     /// </para>
     /// <para>
-    /// Those same reasoning models reject <c>temperature</c>, which
-    /// <see cref="OpenAISamplingParameterChatClient"/> already drops at request time. Declaring it from
-    /// the same predicate turns that silent drop into something the editor can show.
+    /// Those same reasoning models reject the sampling parameters, so they are declared here too. The
+    /// base strips whatever this declares, so one predicate drives both the editor and the request.
     /// </para>
     /// </remarks>
     public override AIModelSettingsSupport GetSettingsSupport(string modelId)
@@ -114,7 +113,7 @@ public class OpenAIChatCapability(
                 : [nameof(OpenAIChatCapabilitySettings.ReasoningEffort)],
             UnsupportedProfileSettings = supportsSampling
                 ? []
-                : [nameof(AIChatProfileSettings.Temperature)],
+                : AIProfileSettingKeys.Sampling,
         };
     }
 
@@ -124,13 +123,12 @@ public class OpenAIChatCapability(
     {
         var resolvedModelId = modelId ?? DefaultChatModel;
 
-        var inner = OpenAIProvider.CreateOpenAIClient(settings)
+        // The declaration above is enforced by the base, which wraps this client so the sampling
+        // parameters are stripped for a model that rejects them no matter which caller assembled the
+        // ChatOptions. See DeclaredSettingsChatClient.
+        return OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
             .AsIChatClient(resolvedModelId);
-
-        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
-        // which caller assembled the ChatOptions. See OpenAISamplingParameterChatClient.
-        return new OpenAISamplingParameterChatClient(inner, resolvedModelId, logger);
     }
 
     /// <inheritdoc />

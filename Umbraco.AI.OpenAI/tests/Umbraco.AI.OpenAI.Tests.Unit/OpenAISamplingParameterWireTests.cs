@@ -9,42 +9,24 @@ using OpenAI;
 namespace Umbraco.AI.OpenAI.Tests.Unit;
 
 /// <summary>
-/// End-to-end checks that the filtered sampling parameters really do not reach the API, asserted against
-/// a captured request body rather than the <see cref="ChatOptions"/> handed to the inner client.
+/// Holds the fact the sampling filter depends on: that the Microsoft.Extensions.AI OpenAI adapter reads
+/// <see cref="ChatOptions.Temperature"/> and <see cref="ChatOptions.TopP"/> and puts them on the wire.
 /// </summary>
 /// <remarks>
-/// <see cref="OpenAISamplingParameterChatClientTests"/> covers the filter's own behaviour by recording what
-/// it passes down, which is the right shape for testing the decorator. These tests close the gap that
-/// approach leaves: the filter is only effective while the Microsoft.Extensions.AI adapter reads
-/// <see cref="ChatOptions.Temperature"/> in the first place, and a recording test would stay green if it
-/// stopped. Asserting on the serialized request keeps both halves honest — removed on a model that rejects
-/// them, genuinely sent on a model that accepts them.
+/// Filtering itself is core's job now, driven by this capability's per-model declaration, and is covered by
+/// the core enforcement tests plus an end-to-end wire test on the Anthropic provider (whose SDK client can
+/// be redirected to a capturing handler, where OpenAI's is built through a static factory). What remains
+/// worth pinning here is the premise: strip these options and the request loses them, which is only true
+/// while the adapter reads them at all. A recording test would stay green if it stopped.
 /// </remarks>
 public class OpenAISamplingParameterWireTests
 {
     [Fact]
-    public async Task ModelRejectingSamplingParameters_TheyDoNotReachTheRequest()
+    public async Task SamplingParameters_AreCarriedToTheRequestByTheAdapter()
     {
-        // Arrange — the GPT-5 line restricts the sampling parameters
+        // Arrange — gpt-4o accepts them, and this is the premise the declaration filter relies on
         var handler = new CapturingHandler();
-        var chatClient = CreateFilteredChatClient(handler, "gpt-5.6");
-
-        // Act
-        await SendAndIgnoreFailureAsync(chatClient, new ChatOptions { Temperature = 0.5f, TopP = 0.9f });
-
-        // Assert
-        var body = handler.RequestBodies.ShouldHaveSingleItem();
-        body.ShouldNotContain("temperature");
-        body.ShouldNotContain("top_p");
-        body.ShouldContain("hello");
-    }
-
-    [Fact]
-    public async Task ModelAcceptingSamplingParameters_TheyReachTheRequest()
-    {
-        // Arrange — gpt-4o still accepts them, so the filter must leave them alone
-        var handler = new CapturingHandler();
-        var chatClient = CreateFilteredChatClient(handler, "gpt-4o");
+        var chatClient = CreateChatClient(handler, "gpt-4o");
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient, new ChatOptions { Temperature = 0.5f, TopP = 0.9f });
@@ -55,9 +37,9 @@ public class OpenAISamplingParameterWireTests
         body.ShouldContain("\"top_p\":0.9");
     }
 
-    private static IChatClient CreateFilteredChatClient(CapturingHandler handler, string modelId)
+    private static IChatClient CreateChatClient(CapturingHandler handler, string modelId)
     {
-        var inner = new OpenAIClient(
+        return new OpenAIClient(
                 new ApiKeyCredential("test-key"),
                 new OpenAIClientOptions
                 {
@@ -66,9 +48,6 @@ public class OpenAISamplingParameterWireTests
                 })
             .GetResponsesClient()
             .AsIChatClient(modelId);
-
-        // The same wrapping the chat capability applies.
-        return new OpenAISamplingParameterChatClient(inner, modelId, logger: null);
     }
 
     private static async Task SendAndIgnoreFailureAsync(IChatClient chatClient, ChatOptions options)

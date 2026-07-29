@@ -66,6 +66,22 @@ public sealed class AIModelSettingsSupport
     internal bool IsEmpty => UnsupportedCapabilitySettings.Count == 0 && UnsupportedProfileSettings.Count == 0;
 
     /// <summary>
+    /// <see cref="UnsupportedProfileSettings"/> normalised to comparable field keys, so a declaration
+    /// written as <c>nameof(AIChatProfileSettings.Temperature)</c> matches
+    /// <see cref="AIProfileSettingKeys.Temperature"/>.
+    /// </summary>
+    /// <remarks>
+    /// Used by the capability bases to enforce the declaration per request. Normalising in one place is
+    /// what lets a provider write the declaration in whichever form reads best without the enforcement
+    /// quietly missing it.
+    /// </remarks>
+    internal ISet<string> AsProfileSettingKeys()
+        => UnsupportedProfileSettings
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .Select(k => k.Trim().ToCamelCase())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Projects the declaration into the metadata entries carried by <see cref="AIModelDescriptor.Metadata"/>.
     /// </summary>
     /// <remarks>

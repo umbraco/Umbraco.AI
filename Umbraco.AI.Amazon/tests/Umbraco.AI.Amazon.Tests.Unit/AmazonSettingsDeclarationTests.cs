@@ -15,11 +15,11 @@ public class AmazonSettingsDeclarationTests
     [InlineData("anthropic.claude-opus-4-8-v1:0")]
     [InlineData("us.anthropic.claude-opus-4-7-v1:0")]
     [InlineData("anthropic.claude-opus-5-v1:0")]
-    public void GetSettingsSupport_ModelRejectingSamplingParameters_DeclaresTemperatureUnsupported(string modelId)
+    public void GetSettingsSupport_ModelRejectingSamplingParameters_DeclaresTheSamplingGroup(string modelId)
     {
         var metadata = CreateCapability().GetSettingsSupport(modelId).ToMetadata();
 
-        metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature");
+        metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature,topP,topK,frequencyPenalty,presencePenalty");
     }
 
     [Theory]

@@ -21,9 +21,10 @@ import type { UaiEditableModelSchemaModel } from "../../../../core/types.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
 
 /**
- * Field key of the core temperature setting, as providers declare it in the model metadata.
+ * Field keys of the core settings providers declare per model in the model metadata.
  */
 const UAI_TEMPERATURE_FIELD_KEY = "temperature";
+const UAI_DIMENSIONS_FIELD_KEY = "dimensions";
 
 /**
  * Workspace view for Profile details.
@@ -228,7 +229,9 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
      * Same reasoning as {@link #pruneCapabilitySettings}: a value the model rejects would otherwise sit in
      * the profile with no field showing it, and be dropped or rejected on every request.
      */
-    #pruneProfileSettings(modelId: string): UaiChatProfileSettings | UaiImageGenerationProfileSettings | undefined {
+    #pruneProfileSettings(
+        modelId: string,
+    ): UaiChatProfileSettings | UaiEmbeddingProfileSettings | UaiImageGenerationProfileSettings | undefined {
         const metadata = this.#getModelMetadata(modelId);
 
         const chatSettings = this.#getChatSettings();
@@ -236,6 +239,13 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             return isProfileSettingSupported(metadata, UAI_TEMPERATURE_FIELD_KEY)
                 ? undefined
                 : { ...chatSettings, temperature: null };
+        }
+
+        const embeddingSettings = this.#getEmbeddingSettings();
+        if (embeddingSettings?.dimensions !== null && embeddingSettings?.dimensions !== undefined) {
+            return isProfileSettingSupported(metadata, UAI_DIMENSIONS_FIELD_KEY)
+                ? undefined
+                : { ...embeddingSettings, dimensions: null };
         }
 
         const imageSettings = this.#getImageGenerationSettings();
@@ -601,6 +611,13 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
     #renderEmbeddingSettings() {
         const embeddingSettings = this.#getEmbeddingSettings();
+        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
+
+        // Shortened embeddings are a text-embedding-3 feature, so the field does not apply to older models.
+        // Hidden rather than disabled, matching how the provider-declared settings behave.
+        if (!isProfileSettingSupported(metadata, UAI_DIMENSIONS_FIELD_KEY)) {
+            return nothing;
+        }
 
         return html`
             <uui-box headline="System Settings">

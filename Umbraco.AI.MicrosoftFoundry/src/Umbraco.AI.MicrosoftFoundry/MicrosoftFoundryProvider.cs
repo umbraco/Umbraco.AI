@@ -28,6 +28,13 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     private const string AiFoundryScope = "https://ai.azure.com/.default";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
+    /// <summary>
+    /// Key prefix for the per-model listing entries read by <see cref="TryGetModelInfo"/>. Internal so a
+    /// test can prime the cache the provider was constructed with, rather than standing up Entra ID auth
+    /// and the deployments endpoint to reach the same state.
+    /// </summary>
+    internal const string ModelInfoCacheKeyPrefix = "MicrosoftFoundry_ModelInfo_";
+
     private readonly IMemoryCache _cache;
     private CancellationTokenSource _cacheEvictionSource = new();
     private readonly IHttpClientFactory _httpClientFactory;
@@ -102,8 +109,41 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             .AddExpirationToken(new Microsoft.Extensions.Primitives.CancellationChangeToken(_cacheEvictionSource.Token));
         _cache.Set(cacheKey, models, cacheOptions);
 
+        // Also cache each model on its own key, which is what lets the per-request path read what a
+        // deployment fronts without any I/O — see TryGetModelInfo. The same eviction token is used, so
+        // these never outlive the listing they came from.
+        foreach (var model in models)
+        {
+            _cache.Set(ModelInfoCacheKeyPrefix + model.Id, model, cacheOptions);
+        }
+
         return models;
     }
+
+    /// <summary>
+    /// Reads a model's cached listing entry, or <c>null</c> when the model has not been fetched.
+    /// </summary>
+    /// <param name="modelId">The model ID, which on the deployments API path is the deployment name.</param>
+    /// <remarks>
+    /// <para>
+    /// Warm by construction on the request path: a client cannot exist without the capability having
+    /// fetched the model list first. Returns <c>null</c> for a model absent from that list, where callers
+    /// fall back to reasoning from the ID alone.
+    /// </para>
+    /// <para>
+    /// Keyed by model ID rather than per connection, because the per-request hook that reads this is given
+    /// only a model ID. Two connections on the same Foundry provider can therefore collide if they use the
+    /// same deployment name for different models, and the most recent listing wins. The consequence is
+    /// bounded: a wrong entry can only cause the same silently-dropped parameter, or the same 400, that
+    /// would happen without any of this metadata — never a new failure.
+    /// </para>
+    /// </remarks>
+    internal MicrosoftFoundryModelInfo? TryGetModelInfo(string? modelId)
+        => string.IsNullOrWhiteSpace(modelId)
+            ? null
+            : _cache.TryGetValue<MicrosoftFoundryModelInfo>(ModelInfoCacheKeyPrefix + modelId, out var cached)
+                ? cached
+                : null;
 
     /// <summary>
     /// Creates an <see cref="AzureOpenAIClient"/> configured with the provided settings.
@@ -246,25 +286,45 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             var deploymentsResponse = await response.Content
                 .ReadFromJsonAsync<MicrosoftFoundryDeploymentsResponse>(cancellationToken);
 
-            if (deploymentsResponse?.Value is null || deploymentsResponse.Value.Count == 0)
-            {
-                return [];
-            }
-
-            return deploymentsResponse.Value
-                .Select(d => new MicrosoftFoundryModelInfo
-                {
-                    // Use the deployment name as the model ID (this is what gets passed to the API)
-                    Id = d.Name,
-                })
-                .OrderBy(m => m.Id)
-                .ToList();
+            return MapDeployments(deploymentsResponse);
         }
         catch (Exception ex) when (ex is HttpRequestException or Azure.Identity.AuthenticationFailedException)
         {
             _logger.LogWarning(ex, "Failed to fetch deployments from API.");
             return [];
         }
+    }
+
+    /// <summary>
+    /// Projects a deployments API response into the listing entries the capabilities consume.
+    /// </summary>
+    /// <remarks>
+    /// Separate from the fetch so it can be exercised without a live Foundry resource: everything above it
+    /// in <see cref="FetchDeploymentsFromApiAsync"/> is Entra ID token acquisition and HTTP.
+    /// </remarks>
+    internal static IReadOnlyList<MicrosoftFoundryModelInfo> MapDeployments(
+        MicrosoftFoundryDeploymentsResponse? response)
+    {
+        if (response?.Value is null || response.Value.Count == 0)
+        {
+            return [];
+        }
+
+        return response.Value
+            .Select(d => new MicrosoftFoundryModelInfo
+            {
+                // Use the deployment name as the model ID (this is what gets passed to the API)
+                Id = d.Name,
+
+                // What the deployment actually fronts. A deployment name is user-chosen and can say
+                // nothing about the model behind it, so this is the only reliable basis for deciding
+                // which settings the model accepts, and for labelling it in the model picker.
+                ModelName = d.ModelName,
+                ModelVersion = d.ModelVersion,
+                ModelPublisher = d.ModelPublisher,
+            })
+            .OrderBy(m => m.Id)
+            .ToList();
     }
 
     private async Task<IReadOnlyList<MicrosoftFoundryModelInfo>> FetchModelsFromApiAsync(

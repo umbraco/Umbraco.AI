@@ -102,9 +102,14 @@ parameters:
     # touched. Tick this to get a full set of installable packages out of a feature
     # branch - e.g. to hand-publish a nightly of in-progress work for testing.
     #
-    # Leave project references on (packWithNuGetRanges off) when using this: packing the
-    # whole dependency chain in one build is exactly the case project-reference pinning
-    # needs, so every preview version resolves against its siblings from the same run.
+    # Implies preview-style packing (project references), the same mode vN/dev uses,
+    # unless packWithNuGetRanges is also ticked. That is required rather than merely
+    # preferable: ranged packing recompiles each product against its declared dependency
+    # floor resolved from a feed, and a feature branch's computed version is a prerelease
+    # that a [X.Y.0, X.999.999) range will not accept - so restore silently falls back to
+    # the newest published stable and the product compiles against a Core that predates
+    # whatever the branch is adding. Packing the whole chain from source in one run is
+    # exactly the case project-reference pinning is for.
     - name: forcePackAll
       displayName: Pack all products (allows packing a feature branch)
       type: boolean
@@ -559,7 +564,7 @@ stages:
                       product: Umbraco.AI
                       # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
                       # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
-                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
+                      useProjectReferences: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
 
                 - template: .azure-pipelines/templates/upload-packages.yml
                   parameters:
@@ -611,7 +616,7 @@ stages:
                       product: $(product)
                       # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
                       # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
-                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
+                      useProjectReferences: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml
@@ -669,7 +674,7 @@ stages:
                       product: $(product)
                       # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
                       # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
-                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
+                      useProjectReferences: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml
@@ -732,7 +737,7 @@ stages:
                       product: $(product)
                       # Use project references on vN/dev (preview releases), NuGet packages on vN/release, vN/hotfix, vN/main (validate ranges).
                       # packWithNuGetRanges (queue-time) forces NuGet ranges on vN/dev too.
-                      useProjectReferences: ${{ and(endsWith(variables['Build.SourceBranch'], '/dev'), not(parameters.packWithNuGetRanges)) }}
+                      useProjectReferences: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
                       condition: eq(variables['check.shouldPack'], 'true')
 
                 - template: .azure-pipelines/templates/upload-packages.yml

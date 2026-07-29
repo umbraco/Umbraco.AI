@@ -1,4 +1,7 @@
-import { isProfileSettingSupported } from "../../../../../core/index.js";
+// Imported from the module rather than the core barrel: this file holds pure functions, and reaching
+// through the barrel pulls the whole component library (and therefore uui) into anything that imports it,
+// including the tests.
+import { isProfileSettingSupported } from "../../../../../core/utils/model-settings.utils.js";
 import type { UaiProfileSettings } from "../../../../types.js";
 
 /**

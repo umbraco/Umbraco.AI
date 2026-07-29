@@ -9,8 +9,12 @@ import "./conversation-context-panel.element.js";
  * The conversation workspace — mounted by the `conversation/*` routes. It provides the reactive
  * {@link UaiConversationWorkspaceContext} store (the single source of truth for the open conversation)
  * and lays out its two regions via the reusable slide-out layout: the chat in `main`, the context panel
- * in `aside`. The router reuses this element across conversations, so the setter/`startDraft` rebind the
- * store; the panel slide-out/resize mechanics belong entirely to the layout.
+ * in `aside`. The panel slide-out/resize mechanics belong entirely to the layout.
+ *
+ * The router constructs a **fresh** instance of this element per navigation and destroys the outgoing one
+ * (`resolvePageComponent` news the module default; `router-slot` calls `destroy()` on the old child), so
+ * each conversation gets its own store and a draft's buffered state cannot survive the move to the real
+ * conversation. That is why the store persists a draft *before* pushing the new path.
  */
 @customElement("uai-copilot-workspace-conversation-workspace")
 export class UaiCopilotWorkspaceConversationWorkspaceElement extends UmbLitElement {

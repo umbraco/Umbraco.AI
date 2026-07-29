@@ -31,6 +31,7 @@
         "watch:copilot": "npm run watch -w @umbraco-ai/agent-copilot",
         "watch:copilot-workspace": "npm run watch -w @umbraco-ai/agent-copilot-workspace",
         "test:copilot": "npm run test -w @umbraco-ai/agent-copilot",
+        "test:copilot-workspace": "npm run test -w @umbraco-ai/agent-copilot-workspace",
         "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
         "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
         "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
@@ -42,7 +43,7 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "test:core": "npm run test -w @umbraco-ai/core",
-        "test": "npm run test:core && npm run test:copilot"
+        "test": "npm run test:core && npm run test:copilot && npm run test:copilot-workspace"
     },
     "devDependencies": {
         "@commitlint/cli": "^20.3.1",

@@ -16,7 +16,7 @@ import {
     type UaiInputContent,
 } from "@umbraco-ai/agent-ui";
 import { UaiConversationRepository } from "../conversation/repository/conversation.repository.js";
-import type { ConversationResponseModel } from "../conversation/types.js";
+import type { UaiConversationDetailModel } from "../conversation/types.js";
 import {
     UAI_CONVERSATION_WORKSPACE_CONTEXT,
     type UaiConversationTarget,
@@ -72,12 +72,14 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
     #agentsLoading = new UmbBooleanState(false);
 
-    /** Local mirror of the store's open conversation, for agent resolution + auto-titling. */
-    #conversation?: ConversationResponseModel;
+    /** Local mirror of the store's conversation (draft or persisted), for agent resolution + auto-titling. */
+    #conversation?: UaiConversationDetailModel;
     /** The target the run controller is currently keyed to (guards duplicate re-inits). */
     #currentTargetKey?: string;
     /** Guards against a second send racing the create request during draft promotion. */
     #creating = false;
+    /** Set once this context is torn down, so an in-flight promotion doesn't navigate after the user left. */
+    #destroyed = false;
 
     readonly agents = this.#agents.asObservable();
     readonly selectedAgent = this.#selectedAgent.asObservable();
@@ -191,9 +193,17 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         await this.#runController.loadInitialMessages();
 
         // If this open is the promotion of a draft, replay the turn stashed before navigation, now that
-        // the (empty) history has loaded so the send appends onto it.
+        // the (empty) history has loaded so the send appends onto it. Caught rather than left to reject:
+        // #syncTarget is called with `void`, so a throw here would surface as an unhandled rejection, and
+        // the user's message is already in the thread and can be regenerated.
         const pending = takePendingFirstMessage(id);
-        if (pending) await this.sendUserMessage(pending.content, pending.contentParts);
+        if (pending) {
+            try {
+                await this.sendUserMessage(pending.content, pending.contentParts);
+            } catch (error) {
+                console.error("[CopilotWorkspace] Failed to replay the draft's first message.", error);
+            }
+        }
     }
 
     /** Resolves which picker option should be selected from the conversation's stored agent choice. */
@@ -210,9 +220,8 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         const agent = agentId ? this.#agents.getValue().find((a) => a.id === agentId) : undefined;
         this.#selectedAgent.setValue(agent);
 
-        // Persist the choice onto the conversation (via the store) so the server resolves it next turn.
-        // A draft has no conversation yet; the pick is applied when it's created (see the handoff below).
-        if (!this.#conversation) return;
+        // Write the choice onto the conversation so the server resolves it next turn. No draft special
+        // case: the store buffers it on a draft and PUTs it on a saved conversation.
         this.#store?.setAgentIdOrAlias(!agent || agent.id === AUTO_AGENT.id ? "auto" : agent.id);
     }
 
@@ -234,32 +243,28 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     }
 
     /**
-     * Persists the draft on its first message: creates the conversation (title derived from the message,
-     * the picked agent/project applied up front), stashes the turn, and navigates to the real conversation.
-     * Opening that route re-keys this context (via the store target) and replays the stashed turn — so it
+     * Promotes the draft on its first message: the store persists everything buffered on it (project,
+     * agent, and its own contexts and resources) in one create, then the turn — the only thing that
+     * *can't* be persisted — is stashed across the navigation. Opening that route remounts the workspace,
+     * re-keys a fresh chat context via the store target, and replays the stashed turn, so the message
      * streams through the normal path.
      */
     async #createFromDraftAndHandoff(content: string, contentParts?: UaiInputContent[]): Promise<void> {
         if (this.#creating) return;
         this.#creating = true;
 
-        const selected = this.#selectedAgent.getValue();
-        const agentIdOrAlias = selected && selected.id !== AUTO_AGENT.id ? selected.id : undefined;
-
-        const { data } = await this.#conversationRepository.create({
-            projectId: this.#store?.getDraftProjectId(),
-            title: deriveConversationTitle(content) || undefined,
-            agentIdOrAlias,
-        });
-
-        if (!data?.id) {
-            // Create failed — stay in draft so the user can retry (matches the prior new-chat behaviour).
+        const id = await this.#store?.commitDraft(deriveConversationTitle(content) || undefined);
+        if (!id) {
+            // Create failed — stay in draft so the user can retry with what they attached still intact.
             this.#creating = false;
             return;
         }
 
-        stashPendingFirstMessage(data.id, { content, contentParts });
-        navigateToWorkspacePath(copilotWorkspaceConversationPath(data.id));
+        // The user navigated away while the create was in flight; don't yank them back to it.
+        if (this.#destroyed) return;
+
+        stashPendingFirstMessage(id, { content, contentParts });
+        navigateToWorkspacePath(copilotWorkspaceConversationPath(id));
     }
 
     /**
@@ -279,6 +284,13 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
     regenerateLastMessage(): void {
         this.#runController.regenerateLastMessage();
+    }
+
+    override destroy(): void {
+        // Flagged before the base tears the controllers down, so a draft promotion still in flight knows
+        // the user has left and skips its navigation.
+        this.#destroyed = true;
+        super.destroy();
     }
 }
 

@@ -50,14 +50,15 @@ internal sealed class ConversationMapDefinition : IMapDefinition
         target.DateCreated = source.DateCreated;
     }
 
-    // Umbraco.Code.MapAll -Id -UserKey -ContextIds -Resources -IsPinned -IsArchived -DateCreated -DateModified -LastMessageAt -Version
+    // Umbraco.Code.MapAll -Id -UserKey -IsPinned -IsArchived -DateCreated -DateModified -LastMessageAt -Version
     private static void MapFromCreate(CreateConversationRequestModel source, AIConversation target, MapperContext context)
     {
-        // A new conversation starts with no context/resource overrides of its own.
         target.ProjectId = source.ProjectId;
         target.Title = source.Title;
         target.AgentIdOrAlias = source.AgentIdOrAlias;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds.ToList();
+        target.Resources = context.MapEnumerable<ContextResourceModel, AIAttachedResource>(source.Resources);
     }
 
     // Umbraco.Code.MapAll -Id -UserKey -DateCreated -DateModified -LastMessageAt -Version

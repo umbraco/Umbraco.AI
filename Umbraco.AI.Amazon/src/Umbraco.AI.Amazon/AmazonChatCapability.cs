@@ -83,16 +83,15 @@ public class AmazonChatCapability(
     /// <inheritdoc />
     /// <remarks>
     /// Bedrock fronts other vendors' models, so it inherits their restrictions: the Claude families that
-    /// reject <c>temperature</c> reject it here too. <see cref="AmazonSamplingParameterChatClient"/>
-    /// already drops it at request time from the predicate used here, so declaring it lets the editor
-    /// account for the drop instead of leaving the profile with a value that does nothing.
+    /// reject the sampling parameters reject them here too. The base strips whatever this declares, so
+    /// the editor and the request are driven by the one predicate below.
     /// </remarks>
     public override AIModelSettingsSupport GetSettingsSupport(string modelId)
         => AmazonModelUtilities.SupportsSamplingParameters(modelId)
             ? AIModelSettingsSupport.Default
             : new AIModelSettingsSupport
             {
-                UnsupportedProfileSettings = [nameof(AIChatProfileSettings.Temperature)],
+                UnsupportedProfileSettings = AIProfileSettingKeys.Sampling,
             };
 
     /// <inheritdoc />
@@ -107,9 +106,9 @@ public class AmazonChatCapability(
 
         var client = AmazonProvider.CreateBedrockRuntimeClient(settings);
 
-        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
-        // which caller assembled the ChatOptions. See AmazonSamplingParameterChatClient.
-        return new AmazonSamplingParameterChatClient(client.AsIChatClient(modelId), modelId, logger);
+        // The declaration above is enforced by the base, which wraps this client so the sampling
+        // parameters are stripped for a model that rejects them. See DeclaredSettingsChatClient.
+        return client.AsIChatClient(modelId);
     }
 
     private static bool IsChatModel(string modelId)

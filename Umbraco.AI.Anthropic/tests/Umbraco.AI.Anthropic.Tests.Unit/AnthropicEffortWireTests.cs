@@ -1,6 +1,7 @@
 using Anthropic;
 using Anthropic.Models.Beta.Messages;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Anthropic.Tests.Unit.Fakes;
 
 namespace Umbraco.AI.Anthropic.Tests.Unit;
@@ -163,18 +164,18 @@ public class AnthropicEffortWireTests
     [Fact]
     public async Task SamplingFilterAndEffort_Together_BothTakeEffect()
     {
-        // Arrange — the shape the chat capability actually builds: the capability-settings client wraps the
-        // sampling-parameter filter, which clones ChatOptions. If that clone dropped the raw representation
-        // the effort would vanish whenever a model rejects temperature, which is every effort-capable model.
+        // Arrange — built through the capability, which is the shape production uses: the declaration
+        // filter clones ChatOptions on a model that rejects temperature. If that clone dropped the raw
+        // representation the effort would vanish on every effort-capable model, since those are the same
+        // models. Hence going through the real wiring rather than assembling decorators here.
         var handler = new CapturingHttpMessageHandler();
-        var inner = new AnthropicClient
-        {
-            ApiKey = "test-key",
-            MaxRetries = 0,
-            HttpClient = new HttpClient(handler),
-        }.Beta.AsIChatClient("claude-opus-5");
+        var provider = new StubbedAnthropicProvider(
+            new FakeProviderInfrastructure(),
+            new MemoryCache(new MemoryCacheOptions()),
+            handler);
 
-        var chatClient = new AnthropicSamplingParameterChatClient(inner, "claude-opus-5", logger: null);
+        var chatClient = await ((Core.Providers.IAIChatCapability)new AnthropicChatCapability(provider, logger: null))
+            .CreateClientAsync(new AnthropicProviderSettings { ApiKey = "test-key" }, "claude-opus-5", CancellationToken.None);
 
         var options = new ChatOptions
         {

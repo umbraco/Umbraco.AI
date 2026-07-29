@@ -17,11 +17,13 @@ public class OpenAISettingsDeclarationTests
     [Theory]
     [InlineData("o3-mini")]
     [InlineData("gpt-5.6")]
-    public void GetSettingsSupport_ReasoningModel_DeclaresTemperatureUnsupportedOnly(string modelId)
+    public void GetSettingsSupport_ReasoningModel_DeclaresTheSamplingGroupUnsupportedOnly(string modelId)
     {
         var metadata = CreateCapability().GetSettingsSupport(modelId).ToMetadata();
 
-        metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature");
+        // The whole group, not just the field the editor renders: core strips exactly what is declared,
+        // and these models reject top_p and the penalties too.
+        metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature,topP,topK,frequencyPenalty,presencePenalty");
         metadata.ContainsKey(AIModelMetadataKeys.CapabilitySettingsUnsupported).ShouldBeFalse();
     }
 
@@ -44,7 +46,7 @@ public class OpenAISettingsDeclarationTests
         var metadata = CreateCapability().GetSettingsSupport("gpt-6").ToMetadata();
 
         metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("reasoningEffort");
-        metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature");
+        metadata[AIModelMetadataKeys.ProfileSettingsUnsupported].ShouldBe("temperature,topP,topK,frequencyPenalty,presencePenalty");
     }
 
     [Fact]
@@ -67,6 +69,30 @@ public class OpenAISettingsDeclarationTests
         // the per-request gate handles the vocabulary difference.
         metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldNotContain("quality");
     }
+
+    [Theory]
+    [InlineData("text-embedding-3-small")]
+    [InlineData("text-embedding-3-large")]
+    public void EmbeddingGetSettingsSupport_ModelWithShortening_DeclaresNothing(string modelId)
+    {
+        CreateEmbeddingCapability().GetSettingsSupport(modelId).ToMetadata().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("text-embedding-ada-002")]
+    [InlineData("text-embedding-4-experimental")]
+    public void EmbeddingGetSettingsSupport_ModelWithoutShortening_DeclaresDimensionsUnsupported(string modelId)
+    {
+        // ada-002 predates shortened embeddings. An unrecognised model is treated the same way, so a value
+        // is dropped rather than risking a rejected request — the same failure direction as sampling.
+        CreateEmbeddingCapability()
+            .GetSettingsSupport(modelId)
+            .ToMetadata()[AIModelMetadataKeys.ProfileSettingsUnsupported]
+            .ShouldBe("dimensions");
+    }
+
+    private static OpenAIEmbeddingCapability CreateEmbeddingCapability()
+        => new(new OpenAIProvider(new FakeProviderInfrastructure(), new MemoryCache(new MemoryCacheOptions())));
 
     private static OpenAIChatCapability CreateCapability()
         => new(

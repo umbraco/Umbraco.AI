@@ -1,17 +1,21 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
-import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings, UaiEmbeddingProfileSettings, UaiSpeechToTextProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
+import type { UaiProfileDetailModel, UaiModelRef, UaiProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
 import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
+import { UaiPartialUpdateCommand, isCapabilitySettingSupported, getSupportedImageSizes } from "../../../../core/index.js";
+// Imported for the custom-element registrations as well as the rules: these live in this view's own chunk
+// rather than the global barrel, so they load with the view that uses them.
 import {
-    UaiPartialUpdateCommand,
-    isCapabilitySettingSupported,
-    isProfileSettingSupported,
-    getSupportedImageSizes,
-} from "../../../../core/index.js";
+    UAI_CHAT_SETTING_RULES,
+    UAI_EMBEDDING_SETTING_RULES,
+    UAI_IMAGE_GENERATION_SETTING_RULES,
+    UAI_SPEECH_TO_TEXT_SETTING_RULES,
+    pruneDeclaredSettings,
+} from "./settings/index.js";
+import type { UaiProfileSettingsChangeEventDetail } from "./settings/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -19,14 +23,6 @@ import { UaiProviderDetailRepository } from "../../../../provider/repository/det
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
 import type { UaiEditableModelSchemaModel } from "../../../../core/types.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
-
-/**
- * Field keys of the core settings providers declare per model in the model metadata.
- */
-const UAI_TEMPERATURE_FIELD_KEY = "temperature";
-const UAI_DIMENSIONS_FIELD_KEY = "dimensions";
-const UAI_LANGUAGE_FIELD_KEY = "language";
-const UAI_MEDIA_TYPE_FIELD_KEY = "mediaType";
 
 /**
  * Workspace view for Profile details.
@@ -54,27 +50,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _loadingModels = false;
 
-    #observedTemperatureEditor?: Element;
-    #observedTemperatureEditorWidth = 0;
 
-    /**
-     * Keeps the temperature slider's step markers aligned with its track.
-     *
-     * `uui-slider` measures the track once, when it first renders, and thereafter only when the window
-     * resizes — so any later width change leaves the markers spaced for the old width, running past the
-     * end of the track. A scrollbar appearing as the editor fills out is enough to trigger it. Re-firing
-     * the event the slider already listens for is the supported way to make it measure again.
-     *
-     * The container is observed rather than the slider itself: `umb-input-slider` declares no display on
-     * its host, so it is an inline element, and a ResizeObserver reports nothing for those.
-     */
-    #temperatureResizeObserver = new ResizeObserver((entries) => {
-        const width = Math.round(entries[0]?.contentRect.width ?? 0);
-        if (width === 0 || width === this.#observedTemperatureEditorWidth) return;
-
-        this.#observedTemperatureEditorWidth = width;
-        window.dispatchEvent(new Event("resize"));
-    });
 
     constructor() {
         super();
@@ -98,25 +74,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         });
     }
 
-    override disconnectedCallback() {
-        this.#temperatureResizeObserver.disconnect();
-        super.disconnectedCallback();
-    }
 
-    protected override updated(changedProperties: Map<string, unknown>) {
-        super.updated(changedProperties);
-
-        const editor = this.shadowRoot?.querySelector(".temperature-editor") ?? undefined;
-        if (editor === this.#observedTemperatureEditor) return;
-
-        if (this.#observedTemperatureEditor) {
-            this.#temperatureResizeObserver.unobserve(this.#observedTemperatureEditor);
-        }
-
-        this.#observedTemperatureEditor = editor;
-        this.#observedTemperatureEditorWidth = 0;
-        if (editor) this.#temperatureResizeObserver.observe(editor);
-    }
 
     /**
      * Loads connections for the current capability, then loads models if a connection is selected.
@@ -225,58 +183,52 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     /**
-     * Returns the stored core profile settings with anything the given model cannot accept cleared, or
-     * `undefined` when nothing needs to change (which the partial update command skips).
+     * Returns the stored core profile settings with anything the given model declares unsupported cleared,
+     * or `undefined` when nothing needs to change (which the partial update command skips).
      *
-     * Same reasoning as {@link #pruneCapabilitySettings}: a value the model rejects would otherwise sit in
-     * the profile with no field showing it, and be dropped or rejected on every request.
+     * Reads the same rule lists the settings elements render from, so a field that hides and a value that
+     * clears cannot get out of step — they did once, and two settings were left with only the first.
      */
-    #pruneProfileSettings(
-        modelId: string,
-    ):
-        | UaiChatProfileSettings
-        | UaiEmbeddingProfileSettings
-        | UaiSpeechToTextProfileSettings
-        | UaiImageGenerationProfileSettings
-        | undefined {
+    #pruneProfileSettings(modelId: string): UaiProfileSettings | undefined {
         const metadata = this.#getModelMetadata(modelId);
+        const settings = this._model?.settings ?? null;
 
-        const chatSettings = this.#getChatSettings();
-        if (chatSettings?.temperature !== null && chatSettings?.temperature !== undefined) {
-            return isProfileSettingSupported(metadata, UAI_TEMPERATURE_FIELD_KEY)
-                ? undefined
-                : { ...chatSettings, temperature: null };
+        if (isChatSettings(settings)) {
+            return pruneDeclaredSettings(settings, metadata, UAI_CHAT_SETTING_RULES);
         }
 
-        const embeddingSettings = this.#getEmbeddingSettings();
-        if (embeddingSettings?.dimensions !== null && embeddingSettings?.dimensions !== undefined) {
-            return isProfileSettingSupported(metadata, UAI_DIMENSIONS_FIELD_KEY)
-                ? undefined
-                : { ...embeddingSettings, dimensions: null };
+        if (isEmbeddingSettings(settings)) {
+            return pruneDeclaredSettings(settings, metadata, UAI_EMBEDDING_SETTING_RULES);
         }
 
-        const sttSettings = this.#getSpeechToTextSettings();
-        if (sttSettings?.language) {
-            return isProfileSettingSupported(metadata, UAI_LANGUAGE_FIELD_KEY)
-                ? undefined
-                : { ...sttSettings, language: null };
+        if (isSpeechToTextSettings(settings)) {
+            return pruneDeclaredSettings(settings, metadata, UAI_SPEECH_TO_TEXT_SETTING_RULES);
         }
 
-        const imageSettings = this.#getImageGenerationSettings();
-        if (imageSettings?.mediaType && !isProfileSettingSupported(metadata, UAI_MEDIA_TYPE_FIELD_KEY)) {
-            return { ...imageSettings, mediaType: null };
-        }
-
-        if (imageSettings?.size) {
-            // Only prune against a model that actually declares its sizes. An empty list is silence, and
-            // clearing a deliberate size because a provider described nothing would be worse than keeping it.
-            const sizes = getSupportedImageSizes(metadata);
-            return sizes.length === 0 || sizes.includes(imageSettings.size)
-                ? undefined
-                : { ...imageSettings, size: null };
+        if (isImageGenerationSettings(settings)) {
+            // Size is absent from the rules on purpose: its support is described by enumerating what a model
+            // accepts, so a stored size is checked against that list instead.
+            const pruned = pruneDeclaredSettings(settings, metadata, UAI_IMAGE_GENERATION_SETTING_RULES);
+            return this.#pruneImageSize(pruned ?? settings, metadata) ?? pruned;
         }
 
         return undefined;
+    }
+
+    /**
+     * Clears a stored image size the given model does not list. An empty list is silence, not a refusal, so
+     * a deliberate size survives a model that describes nothing.
+     */
+    #pruneImageSize(
+        settings: UaiImageGenerationProfileSettings,
+        metadata: Record<string, string> | undefined,
+    ): UaiImageGenerationProfileSettings | undefined {
+        if (!settings.size) return undefined;
+
+        const sizes = getSupportedImageSizes(metadata);
+        if (sizes.length === 0 || sizes.includes(settings.size)) return undefined;
+
+        return { ...settings, size: null };
     }
 
     /**
@@ -288,432 +240,94 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         return this._availableModels.find((m) => m.model.modelId === modelId)?.metadata;
     }
 
-    #onTemperatureChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        const temperature = target.value ? parseFloat(target.value) : null;
-        this.#updateChatSettings({ temperature });
-    }
 
-    /**
-     * Returns temperature to unset, so the provider's own default applies again.
-     */
-    #onTemperatureClear(event: Event) {
-        event.stopPropagation();
-        this.#updateChatSettings({ temperature: null });
-    }
 
-    #onMaxTokensChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        const value = target.value;
-        const maxTokens = value ? parseInt(value, 10) : null;
-        this.#updateChatSettings({ maxTokens });
-    }
 
-    #onSystemPromptChange(event: Event) {
-        event.stopPropagation();
-        const value = (event.target as HTMLTextAreaElement).value;
-        const systemPromptTemplate = value || null;
-        this.#updateChatSettings({ systemPromptTemplate });
-    }
 
-    #onContextIdsChange(event: UmbChangeEvent) {
-        event.stopPropagation();
-        const picker = event.target as HTMLElement & { value: string[] | undefined };
-        this.#updateChatSettings({ contextIds: picker.value });
-    }
 
-    /**
-     * Updates chat-specific settings while preserving other settings values.
-     */
-    #updateChatSettings(updates: Partial<UaiChatProfileSettings>) {
-        const currentSettings = this._model?.settings ?? null;
-        const chatSettings: UaiChatProfileSettings = isChatSettings(currentSettings)
-            ? { ...currentSettings, ...updates }
-            : {
-                $type: "chat",
-                temperature: updates.temperature ?? null,
-                maxTokens: updates.maxTokens ?? null,
-                systemPromptTemplate: updates.systemPromptTemplate ?? null,
-                contextIds: updates.contextIds ?? [],
-                guardrailIds: updates.guardrailIds ?? [],
-            };
 
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings"),
-        );
-    }
 
-    #onDimensionsChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        const value = target.value;
-        const dimensions = value ? parseInt(value, 10) : null;
-        this.#updateEmbeddingSettings({ dimensions });
-    }
 
-    #updateEmbeddingSettings(updates: Partial<UaiEmbeddingProfileSettings>) {
-        const currentSettings = this._model?.settings ?? null;
-        const embeddingSettings: UaiEmbeddingProfileSettings = isEmbeddingSettings(currentSettings)
-            ? { ...currentSettings, ...updates }
-            : {
-                $type: "embedding",
-                dimensions: updates.dimensions ?? null,
-            };
 
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: embeddingSettings }, "settings"),
-        );
-    }
 
-    /**
-     * Gets the current chat settings, or null if not a chat profile.
-     */
-    #getChatSettings(): UaiChatProfileSettings | null {
-        return isChatSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiChatProfileSettings) : null;
-    }
 
-    #getEmbeddingSettings(): UaiEmbeddingProfileSettings | null {
-        return isEmbeddingSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiEmbeddingProfileSettings) : null;
-    }
 
-    #onLanguageChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        const language = target.value || null;
-        this.#updateSpeechToTextSettings({ language });
-    }
 
-    #updateSpeechToTextSettings(updates: Partial<UaiSpeechToTextProfileSettings>) {
-        const currentSettings = this._model?.settings ?? null;
-        const sttSettings: UaiSpeechToTextProfileSettings = isSpeechToTextSettings(currentSettings)
-            ? { ...currentSettings, ...updates }
-            : {
-                $type: "speechToText",
-                language: updates.language ?? null,
-            };
 
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: sttSettings }, "settings"),
-        );
-    }
 
-    #getSpeechToTextSettings(): UaiSpeechToTextProfileSettings | null {
-        return isSpeechToTextSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiSpeechToTextProfileSettings) : null;
-    }
 
-    #onImageSizeChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#updateImageGenerationSettings({ size: target.value || null });
-    }
 
-    /**
-     * Renders the image size as a dropdown of the sizes the selected model declares, falling back to free
-     * text when it declares none.
-     *
-     * The sizes have been travelling on the model list since image generation shipped, with nothing reading
-     * them, so a size the model rejects saved cleanly and failed at generation time. The fallback matters as
-     * much as the dropdown: declarations are negative, so a model a provider says nothing about must stay
-     * typeable rather than being restricted to an empty list.
-     */
-    #renderImageSize(imageSettings: UaiImageGenerationProfileSettings | null) {
-        const sizes = getSupportedImageSizes(this.#getModelMetadata(this._model?.model?.modelId));
-        const size = imageSettings?.size ?? "";
 
-        return html`
-            <umb-property-layout
-                label="Size"
-                description=${sizes.length > 0
-                    ? "Default image size. Leave empty for the provider default."
-                    : 'Default image size as "{width}x{height}" (e.g. "1024x1024"). Leave empty for the provider default.'}
-            >
-                ${sizes.length > 0
-                    ? html`
-                        <uui-select
-                            slot="editor"
-                            .options=${this.#getImageSizeOptions(sizes, size)}
-                            @change=${this.#onImageSizeChange}
-                        ></uui-select>
-                    `
-                    : html`
-                        <uui-input
-                            slot="editor"
-                            type="text"
-                            .value=${size}
-                            @input=${this.#onImageSizeChange}
-                            placeholder="Provider default"
-                        ></uui-input>
-                    `}
-            </umb-property-layout>
-        `;
-    }
 
-    /**
-     * Builds the size options, cached against the inputs that decide them.
-     *
-     * A fresh array on every render pushes a new config into the CMS dropdown, which rebuilds its derived
-     * state and loses the empty "provider default" entry — the same trap the capability-settings schema
-     * works around.
-     */
-    #getImageSizeOptions(sizes: string[], selected: string): Array<{ name: string; value: string; selected?: boolean }> {
-        const cacheKey = `${sizes.join(",")}|${selected}`;
-        if (this.#cachedImageSizeOptionsKey === cacheKey) return this.#cachedImageSizeOptions!;
-
-        // A model that declares sizes can still be left unset, so the profile falls back to the provider's
-        // own default — the same three-state thinking as temperature.
-        const options = [
-            { name: "Provider default", value: "", selected: selected === "" },
-            ...sizes.map((s) => ({ name: s, value: s, selected: s === selected })),
-        ];
-
-        // A stored size the model doesn't list would otherwise vanish from the dropdown and read as unset.
-        // Pruning on model change handles the normal path; this covers a value saved before a declaration
-        // existed, or one a provider has since dropped.
-        if (selected !== "" && !sizes.includes(selected)) {
-            options.push({ name: `${selected} (not listed for this model)`, value: selected, selected: true });
-        }
-
-        this.#cachedImageSizeOptionsKey = cacheKey;
-        this.#cachedImageSizeOptions = options;
-
-        return options;
-    }
-
-    #cachedImageSizeOptionsKey?: string;
-    #cachedImageSizeOptions?: Array<{ name: string; value: string; selected?: boolean }>;
-
-    #onImageMediaTypeChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#updateImageGenerationSettings({ mediaType: target.value || null });
-    }
-
-    #updateImageGenerationSettings(updates: Partial<UaiImageGenerationProfileSettings>) {
-        const currentSettings = this._model?.settings ?? null;
-        const imageSettings: UaiImageGenerationProfileSettings = isImageGenerationSettings(currentSettings)
-            ? { ...currentSettings, ...updates }
-            : {
-                $type: "imageGeneration",
-                size: updates.size ?? null,
-                mediaType: updates.mediaType ?? null,
-            };
-
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: imageSettings }, "settings"),
-        );
-    }
-
-    #getImageGenerationSettings(): UaiImageGenerationProfileSettings | null {
-        return isImageGenerationSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiImageGenerationProfileSettings) : null;
-    }
 
     /**
      * Renders capability-specific settings based on the profile's capability.
      */
+    /**
+     * Renders the capability's own settings element, handing it the stored settings and the selected model's
+     * declarations. Each element owns its fields, including which of them a declaration hides.
+     */
     #renderProfileSettings() {
         if (!this._model) return nothing;
 
-        const capability = this._model.capability.toLowerCase();
+        const metadata = this.#getModelMetadata(this._model.model?.modelId);
+        const settings = this._model.settings ?? null;
 
-        if (capability === "chat") {
-            return this.#renderChatSettings();
+        switch (this._model.capability.toLowerCase()) {
+            case "chat":
+                return html`
+                    <uai-chat-profile-settings
+                        .settings=${isChatSettings(settings) ? settings : null}
+                        .metadata=${metadata}
+                        @uai-profile-settings-change=${this.#onProfileSettingsChange}
+                    ></uai-chat-profile-settings>
+                `;
+            case "embedding":
+                return html`
+                    <uai-embedding-profile-settings
+                        .settings=${isEmbeddingSettings(settings) ? settings : null}
+                        .metadata=${metadata}
+                        @uai-profile-settings-change=${this.#onProfileSettingsChange}
+                    ></uai-embedding-profile-settings>
+                `;
+            case "speechtotext":
+                return html`
+                    <uai-speech-to-text-profile-settings
+                        .settings=${isSpeechToTextSettings(settings) ? settings : null}
+                        .metadata=${metadata}
+                        @uai-profile-settings-change=${this.#onProfileSettingsChange}
+                    ></uai-speech-to-text-profile-settings>
+                `;
+            case "imagegeneration":
+                return html`
+                    <uai-image-generation-profile-settings
+                        .settings=${isImageGenerationSettings(settings) ? settings : null}
+                        .metadata=${metadata}
+                        @uai-profile-settings-change=${this.#onProfileSettingsChange}
+                    ></uai-image-generation-profile-settings>
+                `;
+            default:
+                return nothing;
         }
-
-        if (capability === "embedding") {
-            return this.#renderEmbeddingSettings();
-        }
-
-        if (capability === "speechtotext") {
-            return this.#renderSpeechToTextSettings();
-        }
-
-        if (capability === "imagegeneration") {
-            return this.#renderImageGenerationSettings();
-        }
-
-        return nothing;
     }
 
     /**
-     * Renders chat-specific settings (temperature, max tokens, system prompt).
+     * Stores whatever the capability's settings element hands back. The element sends its settings complete,
+     * so this does not need to know which field moved.
      */
-    #renderChatSettings() {
-        const chatSettings = this.#getChatSettings();
+    #onProfileSettingsChange(event: CustomEvent<UaiProfileSettingsChangeEventDetail>) {
+        event.stopPropagation();
 
-        return html`
-            <uui-box headline="System Settings">
-                ${this.#renderTemperature(chatSettings)}
-
-                <umb-property-layout label="Max Tokens" description="Maximum number of tokens to generate">
-                    <uui-input
-                        slot="editor"
-                        type="number"
-                        min="1"
-                        .value=${chatSettings?.maxTokens?.toString() ?? ""}
-                        @input=${this.#onMaxTokensChange}
-                        placeholder="Default"
-                    ></uui-input>
-                </umb-property-layout>
-
-                <umb-property-layout label="System Prompt" description="System prompt template for this profile">
-                    <uui-textarea
-                        slot="editor"
-                        .value=${chatSettings?.systemPromptTemplate ?? ""}
-                        @input=${this.#onSystemPromptChange}
-                        placeholder="Enter system prompt template..."
-                        rows="6"
-                    ></uui-textarea>
-                </umb-property-layout>
-
-                <umb-property-layout label="Contexts" description="Predefined contexts to include in chat sessions">
-                    <uai-context-picker
-                        slot="editor"
-                        multiple
-                        .value=${chatSettings?.contextIds}
-                        @change=${this.#onContextIdsChange}
-                    ></uai-context-picker>
-                </umb-property-layout>
-
-            </uui-box>
-        `;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: event.detail.settings }, "settings"),
+        );
     }
 
-    /**
-     * Renders the temperature control, in the same two states the provider-declared settings use: absent
-     * when the selected model rejects the setting, otherwise editable.
-     *
-     * An editable slider cannot express "unset" on its own — with no value it parks at its minimum, which
-     * reads as a deliberate 0 — so an unset slider is dimmed, and the clear button beside it is how the
-     * value gets given back. Nothing is stored until the slider is moved, so an untouched profile keeps its
-     * null. Any value already stored is cleared when a model that rejects it is selected, so hiding the
-     * field never hides a value that is still being sent.
-     */
-    #renderTemperature(chatSettings: UaiChatProfileSettings | null) {
-        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
-        if (!isProfileSettingSupported(metadata, UAI_TEMPERATURE_FIELD_KEY)) {
-            return nothing;
-        }
 
-        const temperature = chatSettings?.temperature ?? null;
 
-        return html`
-            <umb-property-layout
-                label="Temperature"
-                description="Controls randomness (0.0 = deterministic, 2.0 = very random). Clear it to use the provider's default."
-            >
-                <div slot="editor" class="temperature-editor">
-                    <umb-input-slider
-                        class=${temperature === null ? "unset" : ""}
-                        label="Temperature"
-                        .valueLow=${temperature ?? undefined}
-                        .min=${0}
-                        .max=${2}
-                        .step=${0.1}
-                        @change=${this.#onTemperatureChange}
-                    ></umb-input-slider>
-                    <uui-button
-                        compact
-                        look="secondary"
-                        label="Clear temperature"
-                        title="Clear temperature"
-                        @click=${this.#onTemperatureClear}
-                    >
-                        <uui-icon name="icon-trash"></uui-icon>
-                    </uui-button>
-                </div>
-            </umb-property-layout>
-        `;
-    }
 
-    #renderEmbeddingSettings() {
-        const embeddingSettings = this.#getEmbeddingSettings();
-        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
 
-        // Shortened embeddings are a text-embedding-3 feature, so the field does not apply to older models.
-        // Hidden rather than disabled, matching how the provider-declared settings behave.
-        if (!isProfileSettingSupported(metadata, UAI_DIMENSIONS_FIELD_KEY)) {
-            return nothing;
-        }
 
-        return html`
-            <uui-box headline="System Settings">
-                <umb-property-layout
-                    label="Dimensions"
-                    description="Number of dimensions for generated embeddings. Leave empty to use the model's default."
-                >
-                    <uui-input
-                        slot="editor"
-                        type="number"
-                        min="1"
-                        max="1998"
-                        .value=${embeddingSettings?.dimensions?.toString() ?? ""}
-                        @input=${this.#onDimensionsChange}
-                        placeholder="Default"
-                    ></uui-input>
-                </umb-property-layout>
-            </uui-box>
-        `;
-    }
-
-    #renderSpeechToTextSettings() {
-        const sttSettings = this.#getSpeechToTextSettings();
-        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
-
-        // Not every transcription model takes a language hint. Language is the only setting in this panel,
-        // so hiding the field hides the panel rather than leaving an empty box.
-        if (!isProfileSettingSupported(metadata, UAI_LANGUAGE_FIELD_KEY)) {
-            return nothing;
-        }
-
-        return html`
-            <uui-box headline="System Settings">
-                <umb-property-layout
-                    label="Language"
-                    description="BCP-47 language hint for transcription (e.g., &quot;en&quot;, &quot;de&quot;, &quot;ja&quot;). Leave empty for auto-detection."
-                >
-                    <uui-input
-                        slot="editor"
-                        type="text"
-                        .value=${sttSettings?.language ?? ""}
-                        @input=${this.#onLanguageChange}
-                        placeholder="Auto-detect"
-                    ></uui-input>
-                </umb-property-layout>
-            </uui-box>
-        `;
-    }
-
-    #renderImageGenerationSettings() {
-        const imageSettings = this.#getImageGenerationSettings();
-        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
-
-        // output_format is a gpt-image parameter with no DALL·E equivalent, so a provider can declare it
-        // unsupported. Size is described by enumeration instead, and always renders.
-        const showMediaType = isProfileSettingSupported(metadata, UAI_MEDIA_TYPE_FIELD_KEY);
-
-        return html`
-            <uui-box headline="System Settings">
-                ${this.#renderImageSize(imageSettings)}
-                ${showMediaType ? this.#renderImageMediaType(imageSettings) : nothing}
-            </uui-box>
-        `;
-    }
-
-    #renderImageMediaType(imageSettings: UaiImageGenerationProfileSettings | null) {
-        return html`
-            <umb-property-layout label="Media Type" description="Output image encoding (e.g. &quot;image/png&quot;, &quot;image/jpeg&quot;, &quot;image/webp&quot;). Supported values vary by model.">
-                <uui-input
-                    slot="editor"
-                    type="text"
-                    .value=${imageSettings?.mediaType ?? ""}
-                    @input=${this.#onImageMediaTypeChange}
-                    placeholder="Provider default"
-                ></uui-input>
-            </umb-property-layout>
-        `;
-    }
 
     /**
      * Gets the provider-declared capability-settings schema for the current capability, if any.

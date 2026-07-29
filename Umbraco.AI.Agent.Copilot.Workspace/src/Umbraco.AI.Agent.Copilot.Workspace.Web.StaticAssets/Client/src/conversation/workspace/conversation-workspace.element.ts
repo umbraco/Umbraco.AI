@@ -21,7 +21,7 @@ export class UaiCopilotWorkspaceConversationWorkspaceElement extends UmbLitEleme
         if (value) void this.#store.setConversationId(value);
     }
 
-    /** Starts a draft (set by the `conversation/new` route); an optional project pre-attaches it. */
+    /** Starts a draft (set by the `conversation/create` route); an optional project pre-attaches it. */
     startDraft(projectId?: string): void {
         void this.#store.startDraft(projectId);
     }

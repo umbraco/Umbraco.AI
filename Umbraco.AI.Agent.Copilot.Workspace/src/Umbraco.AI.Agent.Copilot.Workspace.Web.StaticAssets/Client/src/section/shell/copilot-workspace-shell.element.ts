@@ -36,9 +36,9 @@ export class UaiCopilotWorkspaceShellElement extends UmbLitElement implements Um
     @state()
     private _routes: UmbRoute[] = [
         {
-            // Must precede "conversation/:id" so "new" isn't captured as an id. Starts a draft — no
+            // Must precede "conversation/:id" so "create" isn't captured as an id. Starts a draft — no
             // conversation is persisted until the first message is sent (see the chat context).
-            path: "conversation/new",
+            path: "conversation/create",
             component: () => import("../../conversation/workspace/conversation-workspace.element.js"),
             setup: (component) => {
                 const projectId = new URLSearchParams(window.location.search).get("projectId") ?? undefined;

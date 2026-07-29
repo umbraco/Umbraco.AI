@@ -14,7 +14,12 @@
 param(
     [string]$SourceBranch = $env:BUILD_SOURCEBRANCH,
     [string]$SourceVersion = $env:BUILD_SOURCEVERSION,
-    [string]$RootPath = (Get-Location).Path
+    [string]$RootPath = (Get-Location).Path,
+
+    # Mark every product as changed, skipping git comparison entirely. Set by the pipeline's
+    # forcePackAll parameter, for when a full set of packages is wanted regardless of what the
+    # branch touched - e.g. hand-publishing a nightly of in-progress work from a feature branch.
+    [switch]$ForceAll
 )
 
 $ErrorActionPreference = "Stop"
@@ -405,11 +410,20 @@ function Get-ChangedProducts {
     #>
     param(
         [hashtable]$Products,
-        [string]$SourceBranch
+        [string]$SourceBranch,
+        [bool]$ForceAll = $false
     )
 
     $changed = @{}
     $Products.Keys | ForEach-Object { $changed[$_] = $false }
+
+    # Explicit queue-time override: pack the lot, no git comparison. Deliberately checked before
+    # any branch handling so it behaves the same everywhere it is allowed.
+    if ($ForceAll) {
+        Write-Host "ForceAll requested - marking every product as changed" -ForegroundColor Yellow
+        $Products.Keys | ForEach-Object { $changed[$_] = $true }
+        return $changed
+    }
 
     # Git diff-based detection with intelligent base selection
     Write-Host "Git diff-based detection" -ForegroundColor Cyan
@@ -927,7 +941,15 @@ Write-Host ""
 Write-Host "Source Branch: $SourceBranch"
 Write-Host "Source Version: $SourceVersion"
 Write-Host "Root Path: $RootPath"
+Write-Host "Force all: $ForceAll"
 Write-Host ""
+
+# A forced pack list must never reach a release branch: publishing is irreversible, and the whole
+# point of the manifest there is that the pack list is reviewed rather than assumed. Fail loudly
+# instead of silently packing something nobody agreed to release.
+if ($ForceAll -and $SourceBranch -match '^refs/heads/v\d+/release/') {
+    throw "forcePackAll cannot be used on a release branch - the pack list must come from release-manifest.json"
+}
 
 # 1. Discover products
 $discovery = Get-UmbracoAIProducts -RootPath $RootPath
@@ -941,11 +963,16 @@ Get-AllProductDependencies -Products $products -ProductsByName $productsByName -
 $buildLevels = Get-BuildLevels -Products $products
 
 # 4. Detect changes
-$changedProducts = Get-ChangedProducts -Products $products -SourceBranch $SourceBranch
+$changedProducts = Get-ChangedProducts -Products $products -SourceBranch $SourceBranch -ForceAll:$ForceAll
 
 # 5. Release/hotfix branch manifest enforcement
+# Skipped under ForceAll, which would otherwise be narrowed straight back down by the manifest
+# override below. Release branches never get here - they throw above.
 $manifestPath = Join-Path $RootPath "release-manifest.json"
-if ($SourceBranch -match '^refs/heads/v\d+/release/') {
+if ($ForceAll) {
+    Write-Host "ForceAll requested - skipping release-manifest.json enforcement" -ForegroundColor Yellow
+}
+elseif ($SourceBranch -match '^refs/heads/v\d+/release/') {
     Write-Host "Release branch detected - enforcing release-manifest.json" -ForegroundColor Cyan
 
     $manifest = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName

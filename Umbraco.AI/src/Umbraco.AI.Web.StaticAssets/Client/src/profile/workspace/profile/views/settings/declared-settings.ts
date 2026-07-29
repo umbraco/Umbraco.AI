@@ -1,4 +1,8 @@
-import { isProfileSettingSupported } from "../../../../../core/index.js";
+// Imported from the module rather than the core barrel: this file holds pure functions, and reaching
+// through the barrel pulls the whole component library (and therefore uui) into anything that imports it,
+// including the tests. On the v17 line that broke the suite outright, because the uui version resolved
+// there has a directory import Node cannot resolve — this line passes only by luck of its resolved version.
+import { isProfileSettingSupported } from "../../../../../core/utils/model-settings.utils.js";
 import type { UaiProfileSettings } from "../../../../types.js";
 
 /**

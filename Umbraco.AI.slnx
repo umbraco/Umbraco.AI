@@ -90,6 +90,7 @@
   </Folder>
   <Folder Name="/Providers/MicrosoftFoundry/">
     <Project Path="Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj" />
+    <Project Path="Umbraco.AI.MicrosoftFoundry/tests/Umbraco.AI.MicrosoftFoundry.Tests.Unit/Umbraco.AI.MicrosoftFoundry.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/Mistral/">
     <Project Path="Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" />

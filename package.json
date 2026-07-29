@@ -40,7 +40,9 @@
         "changelog:all": "node scripts/generate-all-changelogs.js",
         "commit-options": "node scripts/list-commit-options.js",
         "format": "prettier --write .",
-        "format:check": "prettier --check ."
+        "format:check": "prettier --check .",
+        "test:core": "npm run test -w @umbraco-ai/core",
+        "test": "npm run test:core && npm run test:copilot"
     },
     "devDependencies": {
         "@commitlint/cli": "^20.3.1",

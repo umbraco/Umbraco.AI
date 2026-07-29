@@ -4,7 +4,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OpenAI;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
@@ -22,9 +25,25 @@ namespace Umbraco.AI.OpenAI;
 /// provider-native client for masked outpainting (Tier 3) while picking their own model/size at call time.
 /// </remarks>
 [Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
-public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
-    : AIImageGeneratorCapabilityBase<OpenAIProviderSettings>(provider)
+public class OpenAIImageGeneratorCapability(
+    OpenAIProvider provider,
+    ILogger<OpenAIImageGeneratorCapability>? logger)
+    : AIImageGeneratorCapabilityBase<OpenAIProviderSettings, OpenAIImageCapabilitySettings>(provider)
 {
+    /// <summary>
+    /// Initializes a new instance without a logger.
+    /// </summary>
+    /// <remarks>
+    /// Retained for construction paths that pass only the provider (the capability factory resolves the rest
+    /// from DI, but plain activation does not). The logger is resolved through the service locator, following
+    /// the same approach as the chat capability, so those paths still get real logging rather than none.
+    /// Null-conditional because the locator is unset before startup and in unit tests.
+    /// </remarks>
+    public OpenAIImageGeneratorCapability(OpenAIProvider provider)
+        : this(provider, StaticServiceProvider.Instance?.GetService<ILogger<OpenAIImageGeneratorCapability>>())
+    {
+    }
+
     private const string DefaultImageModel = "gpt-image-1";
 
     private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;
@@ -62,7 +81,56 @@ public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
 
         // Wrap so consumers can also resolve the un-bound OpenAIClient (the stock adapter only exposes the
         // bound ImageClient), enabling provider-native masked outpainting via GetService.
-        return new OpenAIImageGenerator(inner, client);
+        var generator = new OpenAIImageGenerator(inner, client);
+
+        // Wrapped outside that, so hints passed as additional properties by a direct consumer are still
+        // translated — the adapter ignores them otherwise. A profile's own settings arrive typed through
+        // ApplyCapabilitySettings instead. See OpenAIImageHintGenerator.
+        return new OpenAIImageHintGenerator(generator, modelId ?? DefaultImageModel, logger);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Style is DALL·E 3 only, so it is declared unsupported elsewhere and the profile editor drops the
+    /// field. Quality applies to every family but with different vocabularies, which
+    /// <see cref="ApplyCapabilitySettings"/> gates per request — a per-model list of allowed *values* would
+    /// need a declaration channel the model metadata does not have yet.
+    /// </remarks>
+    public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+        => OpenAIImageHints.SupportsStyle(modelId)
+            ? AIModelSettingsSupport.Default
+            : new AIModelSettingsSupport
+            {
+                UnsupportedCapabilitySettings = [nameof(OpenAIImageCapabilitySettings.Style)],
+            };
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Translates the profile's hints into the SDK's own options, which is the only channel the adapter
+    /// reads. Gated with the same predicates that drive <see cref="GetSettingsSupport"/>, so a profile
+    /// carrying a value the selected model rejects degrades rather than failing the request.
+    /// </remarks>
+    protected override void ApplyCapabilitySettings(
+        OpenAIImageCapabilitySettings capabilitySettings,
+        string? modelId,
+        ImageGenerationOptions options)
+    {
+        if (options.RawRepresentationFactory is not null)
+        {
+            // A caller that built the SDK options itself is more specific than a profile-level default.
+            return;
+        }
+
+        var factory = OpenAIImageHints.CreateRawFactory(
+            capabilitySettings.Quality,
+            capabilitySettings.Style,
+            modelId ?? DefaultImageModel,
+            logger);
+
+        if (factory is not null)
+        {
+            options.RawRepresentationFactory = factory;
+        }
     }
 
     private static bool IsImageModel(string modelId)
@@ -80,10 +148,10 @@ public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
         {
             return new Dictionary<string, string>
             {
-                ["image.supportedSizes"] = "1024x1024,1024x1536,1536x1024",
-                ["image.maxEdge"] = "1536",
-                ["image.supportsEdit"] = "true",
-                ["image.supportsMask"] = "true",
+                [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024,1024x1536,1536x1024",
+                [AIModelMetadataKeys.ImageMaxEdge] = "1536",
+                [AIModelMetadataKeys.ImageSupportsEdit] = "true",
+                [AIModelMetadataKeys.ImageSupportsMask] = "true",
             };
         }
 
@@ -91,10 +159,10 @@ public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
         {
             return new Dictionary<string, string>
             {
-                ["image.supportedSizes"] = "1024x1024,1792x1024,1024x1792",
-                ["image.maxEdge"] = "1792",
-                ["image.supportsEdit"] = "false",
-                ["image.supportsMask"] = "false",
+                [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024,1792x1024,1024x1792",
+                [AIModelMetadataKeys.ImageMaxEdge] = "1792",
+                [AIModelMetadataKeys.ImageSupportsEdit] = "false",
+                [AIModelMetadataKeys.ImageSupportsMask] = "false",
             };
         }
 
@@ -102,10 +170,10 @@ public class OpenAIImageGeneratorCapability(OpenAIProvider provider)
         {
             return new Dictionary<string, string>
             {
-                ["image.supportedSizes"] = "256x256,512x512,1024x1024",
-                ["image.maxEdge"] = "1024",
-                ["image.supportsEdit"] = "true",
-                ["image.supportsMask"] = "true",
+                [AIModelMetadataKeys.ImageSupportedSizes] = "256x256,512x512,1024x1024",
+                [AIModelMetadataKeys.ImageMaxEdge] = "1024",
+                [AIModelMetadataKeys.ImageSupportsEdit] = "true",
+                [AIModelMetadataKeys.ImageSupportsMask] = "true",
             };
         }
 

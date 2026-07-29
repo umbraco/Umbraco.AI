@@ -109,6 +109,30 @@ public class AnthropicModelCapabilityTests
     }
 
     [Fact]
+    public async Task GetModelsAsync_DeclaresTemperatureUnsupportedWhereTheModelRejectsIt()
+    {
+        // Arrange
+        var (provider, settings, _) = CreateProvider(TwoModelsPage);
+        var capability = new AnthropicChatCapability(provider, logger: null);
+
+        // Act
+        var descriptors = await ((Core.Providers.IAICapability)capability).GetModelsAsync(settings);
+
+        // Assert — Opus 5 rejects the sampling parameters but reports effort support, and Haiku 4.5 is the
+        // exact inverse, so the two declarations cannot be reading each other's source
+        var opus = descriptors.Single(d => d.Model.ModelId == "claude-opus-5");
+        // The whole sampling group is declared, not just the field the editor happens to render: core
+        // strips exactly what is declared, and these models reject top_p and top_k as well.
+        opus.Metadata[AIModelMetadataKeys.ProfileSettingsUnsupported]
+            .ShouldBe("temperature,topP,topK,frequencyPenalty,presencePenalty");
+        opus.Metadata.ContainsKey(AIModelMetadataKeys.CapabilitySettingsUnsupported).ShouldBeFalse();
+
+        var haiku = descriptors.Single(d => d.Model.ModelId == "claude-haiku-4-5-20251001");
+        haiku.Metadata.ContainsKey(AIModelMetadataKeys.ProfileSettingsUnsupported).ShouldBeFalse();
+        haiku.Metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("effort");
+    }
+
+    [Fact]
     public async Task TryGetModelCapability_AfterFetch_IsReadableWithoutIo()
     {
         // Arrange — this is what lets the per-request settings hook consult reported capabilities
@@ -133,26 +157,5 @@ public class AnthropicModelCapabilityTests
             handler);
 
         return (provider, new AnthropicProviderSettings { ApiKey = "test-key" }, handler);
-    }
-
-    /// <summary>
-    /// A real provider with the model-list client pointed at a stub handler, so the SDK's own
-    /// deserialization and paging are exercised against canned responses.
-    /// </summary>
-    [Core.Providers.AIProvider("anthropic", "Anthropic")]
-    private sealed class StubbedAnthropicProvider(
-        Core.Providers.IAIProviderInfrastructure infrastructure,
-        IMemoryCache cache,
-        HttpMessageHandler handler)
-        : AnthropicProvider(infrastructure, cache)
-    {
-        internal override global::Anthropic.AnthropicClient CreateSdkClient(
-            AnthropicProviderSettings settings)
-            => new()
-            {
-                ApiKey = "test-key",
-                MaxRetries = 0,
-                HttpClient = new HttpClient(handler),
-            };
     }
 }

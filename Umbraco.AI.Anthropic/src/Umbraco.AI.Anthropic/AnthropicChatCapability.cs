@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -58,10 +59,10 @@ public class AnthropicChatCapability(
 
     /// <inheritdoc />
     /// <remarks>
-    /// The declaration of which settings each model accepts is written here rather than through
-    /// <see cref="IAICapability.GetSettingsSupport"/>, because Anthropic's models endpoint reports it as
-    /// data: <c>capabilities.effort.supported</c> per model. Only models the API says nothing about fall
-    /// back to inferring support from the ID.
+    /// Declarations come from the same builder <see cref="GetSettingsSupport"/> uses, but with the API's
+    /// reported <c>capabilities.effort.supported</c> for each listed model passed in directly, rather than
+    /// read back from the provider's cache. Only models the API says nothing about fall back to inferring
+    /// support from the ID.
     /// </remarks>
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AnthropicProviderSettings settings,
@@ -75,21 +76,50 @@ public class AnthropicChatCapability(
             .Select(m => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, m.Id),
                 AnthropicModelUtilities.FormatDisplayName(m.Id),
-                BuildSettingsSupport(m).ToMetadata()))
+                BuildSettingsSupport(m.Id, m.SupportsEffort).ToMetadata()))
             .ToList();
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Also the request-time gate: the base enforces whatever this returns, so the model list, the editor
+    /// and the wire all read the same declaration. Effort support prefers what the API reported for the
+    /// model (cached from the last listing) and falls back to the ID predicate when it is unknown, which is
+    /// the same order <see cref="ApplyCapabilitySettings"/> uses.
+    /// </remarks>
+    public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+        => BuildSettingsSupport(
+            modelId,
+            Provider.TryGetModelCapability(modelId)?.SupportsEffort);
+
     /// <summary>
-    /// Turns a model's reported capabilities into the settings declaration the profile editor reads,
-    /// falling back to the ID-based predicate when the API reported nothing for the model.
+    /// Turns a model's reported capabilities into the settings declaration the editor reads and the base
+    /// enforces, falling back to the ID-based predicate when the API reported nothing for the model.
     /// </summary>
-    private static AIModelSettingsSupport BuildSettingsSupport(AnthropicModelCapability model)
-        => (model.SupportsEffort ?? AnthropicModelUtilities.SupportsEffort(model.Id))
-            ? AIModelSettingsSupport.Default
-            : new AIModelSettingsSupport
-            {
-                UnsupportedCapabilitySettings = [nameof(AnthropicChatCapabilitySettings.Effort)],
-            };
+    /// <remarks>
+    /// The sampling half has no equivalent in the API's response, so it comes from the ID predicate — one
+    /// predicate behind both the dropped parameter and the editor's account of it.
+    /// </remarks>
+    private static AIModelSettingsSupport BuildSettingsSupport(string modelId, bool? reportedEffortSupport)
+    {
+        var supportsEffort = reportedEffortSupport ?? AnthropicModelUtilities.SupportsEffort(modelId);
+        var supportsSampling = AnthropicModelUtilities.SupportsSamplingParameters(modelId);
+
+        if (supportsEffort && supportsSampling)
+        {
+            return AIModelSettingsSupport.Default;
+        }
+
+        return new AIModelSettingsSupport
+        {
+            UnsupportedCapabilitySettings = supportsEffort
+                ? []
+                : [nameof(AnthropicChatCapabilitySettings.Effort)],
+            UnsupportedProfileSettings = supportsSampling
+                ? []
+                : AIProfileSettingKeys.Sampling,
+        };
+    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -123,12 +153,10 @@ public class AnthropicChatCapability(
                 + "is unavailable, so setting support will be inferred from the model ID instead.");
         }
 
-        var inner = Provider.CreateSdkClient(settings)
+        // The declaration from GetSettingsSupport is enforced by the base, which wraps this client so the
+        // sampling parameters are stripped for a model that rejects them. See DeclaredSettingsChatClient.
+        return Provider.CreateSdkClient(settings)
             .Beta.AsIChatClient(modelId);
-
-        // Wrapped innermost, so the sampling parameters are filtered against the target model no matter
-        // which caller assembled the ChatOptions. See AnthropicSamplingParameterChatClient.
-        return new AnthropicSamplingParameterChatClient(inner, modelId, logger);
     }
 
     /// <inheritdoc />

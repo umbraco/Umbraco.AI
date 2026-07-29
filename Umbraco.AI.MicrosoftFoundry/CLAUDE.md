@@ -20,11 +20,10 @@ Umbraco.AI.MicrosoftFoundry is a provider plugin for Umbraco.AI that enables int
 
 ### Project Structure
 
-This provider uses a simplified structure (single project):
-
-| Project                       | Purpose                                             |
-| ----------------------------- | --------------------------------------------------- |
-| `Umbraco.AI.MicrosoftFoundry` | Provider implementation, capabilities, and settings |
+| Project                                  | Purpose                                             |
+| ---------------------------------------- | --------------------------------------------------- |
+| `Umbraco.AI.MicrosoftFoundry`            | Provider implementation, capabilities, and settings |
+| `Umbraco.AI.MicrosoftFoundry.Tests.Unit` | Unit tests                                          |
 
 ### Provider Implementation
 
@@ -73,6 +72,46 @@ Authentication is determined at runtime based on which settings fields are popul
 - Lists embedding models from the models/deployments API
 - Default model: `text-embedding-3-small`
 
+### Per-Model Setting Support
+
+Foundry is a **gateway**: it fronts other vendors' models and inherits their per-model restrictions without
+owning any of them. Both capabilities override `GetSettingsSupport`, which the core capability bases both
+project into the model list (so the profile editor hides what does not apply) and enforce per request (so a
+stale profile cannot send it). `MicrosoftFoundryModelUtilities` holds the predicates behind it.
+
+The gateway shape makes these predicates deliberately **different from the first-party provider packages**,
+and the difference is easy to get wrong:
+
+- **Unknown models are treated as supported**, the opposite of the allow-lists in `Umbraco.AI.OpenAI` and
+  `Umbraco.AI.Anthropic`. Those packages each own a closed set of models with a known restriction, so an
+  allow-list means an unrecognised model degrades rather than fails. Foundry's catalogue is mostly Mistral,
+  Llama, Cohere, Phi and Nova, almost none of which restrict anything, so the same allow-list would stop
+  sending a temperature that most of the catalogue honours today.
+- **Within a vendor known to restrict, allow-list semantics still apply.** A name that reads as OpenAI's or
+  Anthropic's but is unrecognised (a future `gpt-6`, a `claude-opus-4-9`) is treated as restricted, so the
+  fail-safe behaviour is kept exactly where it is warranted.
+- **A reported publisher can only rule a restriction out, never in** — a Llama deployment named `o3-llama`
+  must not inherit o3's restriction, but knowing only that a vendor is OpenAI is not enough to infer that a
+  given deployment is restricted.
+- **Azure spells GPT-3.5 without the dot** (`gpt-35-turbo`), because an Azure model name cannot contain one.
+  OpenAI's own `^gpt-3\.5` pattern never has to match that, so the undotted form is listed here separately.
+
+The family patterns duplicate a small part of `OpenAIModelUtilities` and `AnthropicModelUtilities`. That is
+intentional — sharing them would couple independently released packages, and lifting them into core would put
+vendor knowledge where it does not belong — so **a change to a vendor's restrictions needs the same edit in
+every package naming that vendor's families**.
+
+### Deployment Metadata
+
+The deployments API reports `modelName`, `modelVersion` and `modelPublisher` alongside the deployment name.
+This matters because **a deployment name is user-chosen and can say nothing about the model behind it**: a
+deployment called `prod-chat` may front `o3`. The provider carries all three onto `MicrosoftFoundryModelInfo`
+and caches each entry under its own key, so `TryGetModelInfo` can read them synchronously at request time.
+Both capabilities prefetch the (cached) model list when creating a client so that lookup is warm.
+
+They are `null` on the models API path, which reports only an ID, so every consumer has to cope with not
+knowing — that case falls back to reasoning from the ID, which keeps today's behaviour rather than guessing.
+
 ### Settings System
 
 Settings use the `[AIField]` attribute with groups for UI organization:
@@ -109,7 +148,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Umbraco:AI
 ### Model Listing Strategy
 
 - **API Key auth**: Calls `GET {endpoint}/openai/models?api-version=2024-10-21` — returns all models available in the catalog.
-- **Entra ID auth (with ProjectName)**: Calls `GET {endpoint}/api/projects/{ProjectName}/deployments?api-version=v1` using `https://ai.azure.com/.default` scope — returns only deployed models. Falls back to the models API if the deployments call fails. Requires `Azure AI Developer` RBAC role.
+- **Entra ID auth (with ProjectName)**: Calls `GET {endpoint}/api/projects/{ProjectName}/deployments?api-version=v1` using `https://ai.azure.com/.default` scope — returns only deployed models, and the only path that reports what each deployment fronts (see Deployment Metadata). Falls back to the models API if the deployments call fails. Requires `Azure AI Developer` RBAC role.
 - **Entra ID auth (without ProjectName)**: Falls back to the models API using `https://cognitiveservices.azure.com/.default` scope.
 
 ## Key Namespaces

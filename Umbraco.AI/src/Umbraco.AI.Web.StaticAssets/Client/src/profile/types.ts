@@ -49,8 +49,6 @@ export interface UaiSpeechToTextProfileSettings extends UaiProfileSettings {
 export interface UaiImageGenerationProfileSettings extends UaiProfileSettings {
     $type: "imageGeneration";
     size: string | null;
-    quality: string | null;
-    style: string | null;
     mediaType: string | null;
 }
 

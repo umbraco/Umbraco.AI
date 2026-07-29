@@ -40,6 +40,15 @@ public static class AIProfileSettingKeys
     /// <summary>Embedding output dimension count.</summary>
     public const string Dimensions = "dimensions";
 
+    /// <summary>Speech-to-text spoken-language hint.</summary>
+    public const string Language = "language";
+
+    /// <summary>Image output size.</summary>
+    public const string Size = "size";
+
+    /// <summary>Image output media type.</summary>
+    public const string MediaType = "mediaType";
+
     /// <summary>
     /// The sampling parameters, which providers typically restrict as a group: a model that rejects a
     /// temperature usually rejects the others too.

@@ -700,8 +700,12 @@ public abstract class AISpeechToTextCapabilityBase(IAIProvider provider) : AICap
         return Task.FromResult(CreateClient(modelId));
     }
 
-    Task<ISpeechToTextClient> IAISpeechToTextCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
-        => CreateClientAsync(modelId, cancellationToken);
+    async Task<ISpeechToTextClient> IAISpeechToTextCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        var inner = await CreateClientAsync(modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsSpeechToTextClient(inner, this, modelId, Logger);
+    }
 }
 
 /// <summary>
@@ -742,7 +746,21 @@ public abstract class AISpeechToTextCapabilityBase<TSettings>(IAIProvider provid
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
-        return CreateClientAsync((TSettings)settings, modelId, cancellationToken);
+        return CreateDeclarationEnforcingClientAsync((TSettings)settings, modelId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds the provider's client and wraps it so this capability's per-model declaration is enforced on
+    /// every request.
+    /// </summary>
+    internal async Task<ISpeechToTextClient> CreateDeclarationEnforcingClientAsync(
+        TSettings settings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        var inner = await CreateClientAsync(settings, modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsSpeechToTextClient(inner, this, modelId, Logger);
     }
 }
 
@@ -798,10 +816,9 @@ public abstract class AISpeechToTextCapabilityBase<TSettings, TCapabilitySetting
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
         CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateClient));
 
-        // Build the underlying client from connection settings only (unchanged provider path). No core
-        // filter here: speech-to-text has no cross-provider request option a capability can declare
-        // unsupported, so there is nothing for the declaration to strip.
-        var inner = await CreateClientAsync((TSettings)settings, modelId, cancellationToken)
+        // Build the underlying client from connection settings only (unchanged provider path), already
+        // wrapped so the per-model declaration is enforced.
+        var inner = await CreateDeclarationEnforcingClientAsync((TSettings)settings, modelId, cancellationToken)
             .ConfigureAwait(false);
 
         // Wrap so the provider-declared capability settings are applied to every request. When the
@@ -842,8 +859,12 @@ public abstract class AIImageGeneratorCapabilityBase(IAIProvider provider) : AIC
         return Task.FromResult(CreateGenerator(modelId));
     }
 
-    Task<IImageGenerator> IAIImageGeneratorCapability.CreateGeneratorAsync(object? settings, string? modelId, CancellationToken cancellationToken)
-        => CreateGeneratorAsync(modelId, cancellationToken);
+    async Task<IImageGenerator> IAIImageGeneratorCapability.CreateGeneratorAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        var inner = await CreateGeneratorAsync(modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsImageGenerator(inner, this, modelId, Logger);
+    }
 }
 
 /// <summary>
@@ -885,7 +906,21 @@ public abstract class AIImageGeneratorCapabilityBase<TSettings>(IAIProvider prov
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
-        return CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken);
+        return CreateDeclarationEnforcingGeneratorAsync((TSettings)settings, modelId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds the provider's generator and wraps it so this capability's per-model declaration is enforced
+    /// on every request.
+    /// </summary>
+    internal async Task<IImageGenerator> CreateDeclarationEnforcingGeneratorAsync(
+        TSettings settings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        var inner = await CreateGeneratorAsync(settings, modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsImageGenerator(inner, this, modelId, Logger);
     }
 }
 
@@ -942,10 +977,9 @@ public abstract class AIImageGeneratorCapabilityBase<TSettings, TCapabilitySetti
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
         CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateGenerator));
 
-        // Build the underlying generator from connection settings only (unchanged provider path). No core
-        // filter here: image sizes are enumerated per model rather than declared unsupported, so there is
-        // nothing for the declaration to strip.
-        var inner = await CreateGeneratorAsync((TSettings)settings, modelId, cancellationToken)
+        // Build the underlying generator from connection settings only (unchanged provider path), already
+        // wrapped so the per-model declaration is enforced.
+        var inner = await CreateDeclarationEnforcingGeneratorAsync((TSettings)settings, modelId, cancellationToken)
             .ConfigureAwait(false);
 
         // Wrap so the provider-declared capability settings are applied to every request. When the

@@ -26,8 +26,9 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
         this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
             this.observe(store?.isReadonly$, (value) => (this._readonly = value ?? false));
             this.observe(store?.isResolved$, (value) => (this._ready = value ?? false));
-            // Focus the composer on every open/switch (the view is reused across conversations, so the
-            // input doesn't remount — its own first-mount focus wouldn't fire on a switch).
+            // Focus the composer on every target the store is pointed at, not just this view's first
+            // mount — the store re-targets within a mount (a draft promoted to its real conversation),
+            // where the composer's own mount-time focus wouldn't fire.
             this.observe(store?.target$, () => {
                 this.updateComplete.then(() => this._chat?.focusComposer?.());
             });

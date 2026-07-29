@@ -3,7 +3,7 @@ import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import { UaiEntityActionEvent, dispatchActionEvent } from "@umbraco-ai/core";
 import { UaiConversationServerDataSource } from "./conversation.server.data-source.js";
 import { UAI_CONVERSATION_ENTITY_TYPE } from "../../constants.js";
-import type { ContextResourceModel } from "../../api/types.gen.js";
+import { toConversationDetailModel, toUpdateConversationRequestModel } from "../types.js";
 import type {
     ConversationResponseModel,
     CreateConversationRequestModel,
@@ -78,32 +78,13 @@ export class UaiConversationRepository extends UmbRepositoryBase {
         return this.update(conversation.id, { ...toUpdateModel(conversation), projectId });
     }
 
-    /** Sets the conversation's chosen agent (id/alias, or "auto"); the server resolves it on the next turn. */
-    setAgentIdOrAlias(conversation: ConversationResponseModel, agentIdOrAlias: string) {
-        return this.update(conversation.id, { ...toUpdateModel(conversation), agentIdOrAlias });
-    }
-
-    /** Sets the conversation's own attached context ids (stacked on top of its project's). */
-    setContextIds(conversation: ConversationResponseModel, contextIds: string[]) {
-        return this.update(conversation.id, { ...toUpdateModel(conversation), contextIds });
-    }
-
-    /** Sets the conversation's own attached resources (stacked on top of its project's). */
-    setResources(conversation: ConversationResponseModel, resources: ContextResourceModel[]) {
-        return this.update(conversation.id, { ...toUpdateModel(conversation), resources });
-    }
 }
 
-/** Projects the full mutable surface of a conversation into an update request. */
+/**
+ * Projects the full mutable surface of a conversation into an update request. Agent, context and resource
+ * edits don't go through here — the workspace store owns those and writes the whole detail model, so it
+ * can buffer them while the conversation is still an unsaved draft.
+ */
 function toUpdateModel(conversation: ConversationResponseModel): UpdateConversationRequestModel {
-    return {
-        title: conversation.title ?? null,
-        projectId: conversation.projectId ?? null,
-        agentIdOrAlias: conversation.agentIdOrAlias ?? null,
-        profileId: conversation.profileId ?? null,
-        contextIds: [...conversation.contextIds],
-        resources: [...conversation.resources],
-        isPinned: conversation.isPinned,
-        isArchived: conversation.isArchived,
-    };
+    return toUpdateConversationRequestModel(toConversationDetailModel(conversation));
 }

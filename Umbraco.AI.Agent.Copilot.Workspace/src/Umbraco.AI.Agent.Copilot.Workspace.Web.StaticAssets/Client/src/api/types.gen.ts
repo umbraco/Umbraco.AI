@@ -94,6 +94,8 @@ export type CreateConversationRequestModel = {
     title?: null | string;
     agentIdOrAlias?: null | string;
     profileId?: null | string;
+    contextIds: Array<string>;
+    resources: Array<ContextResourceModel>;
 };
 
 export type JsonElement = unknown;
@@ -398,13 +400,13 @@ export type Delete2Data = {
 
 export type Delete2Errors = {
     /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
      * Bad Request
      */
     400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
     /**
      * Not Found
      */

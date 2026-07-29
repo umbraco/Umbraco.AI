@@ -84,7 +84,6 @@ export default {
         contextTitle: "Context",
         contextCollapse: "Collapse context panel",
         contextExpand: "Show context panel",
-        contextNoProject: "This conversation isn't part of a project. Add it to a project to give it shared instructions and attachments.",
         contextInstructionsHeading: "Instructions",
         contextContextsHeading: "Contexts",
         contextResourcesHeading: "Resources",

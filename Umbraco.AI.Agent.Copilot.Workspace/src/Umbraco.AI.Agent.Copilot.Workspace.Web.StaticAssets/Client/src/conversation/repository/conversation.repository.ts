@@ -49,7 +49,10 @@ export class UaiConversationRepository extends UmbRepositoryBase {
     async update(id: string, request: UpdateConversationRequestModel) {
         const result = await this.#source.update(id, request);
         if (!result.error) {
-            dispatchActionEvent(this, UaiEntityActionEvent.updated(id, UAI_CONVERSATION_ENTITY_TYPE));
+            // Awaited, unlike the create/delete dispatches: the workspace store releases its self-write
+            // guard when this method settles, and the dispatch resolves a context first, so leaving it
+            // unawaited lands the event after the guard is gone and the store refetches its own write.
+            await dispatchActionEvent(this, UaiEntityActionEvent.updated(id, UAI_CONVERSATION_ENTITY_TYPE));
         }
         return result;
     }

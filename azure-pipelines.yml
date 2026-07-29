@@ -82,9 +82,13 @@ parameters:
             changeVar: AgentCopilotChanged
             hasNpm: true
           # Copilot Workspace (frontend consumes Agent UI npm types; ships Conversations backend sub-packages)
+          # hasNpm is false because this frontend *consumes* types rather than exporting any: its
+          # package.json has no "types" field, so pack-product.yml's auto-detect skips npm pack and no
+          # npm artifact is produced. Declaring true made the Collect stage try to download one that was
+          # never created. Flip this to true if the package ever starts exporting types.
           - name: Umbraco.AI.Agent.Copilot.Workspace
             changeVar: AgentCopilotWorkspaceChanged
-            hasNpm: true
+            hasNpm: false
     # Queue-time override: pack dev builds with NuGet version ranges instead of
     # project references. Dev normally packs with project references, which pins
     # dependencies to the exact preview versions computed at build time - those

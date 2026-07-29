@@ -1,25 +1,25 @@
-using System.Net;
-using Anthropic;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Caching.Memory;
+using Umbraco.AI.Anthropic.Tests.Unit.Fakes;
+using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.Anthropic.Tests.Unit;
 
 /// <summary>
-/// End-to-end checks that the filtered sampling parameters really do not reach the API, asserted against
-/// a captured request body rather than the <see cref="ChatOptions"/> handed to the inner client.
+/// End-to-end proof that a per-model declaration reaches the wire: the client is built the way production
+/// builds it, through the capability, and the assertion is on the serialized request body.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="AnthropicSamplingParameterChatClientTests"/> covers the filter's own behaviour by recording
-/// what it passes down, which is the right shape for testing the decorator. These tests close the gap that
-/// approach leaves: the filter is only effective while the SDK's Microsoft.Extensions.AI adapter reads
-/// <see cref="ChatOptions.Temperature"/> in the first place. If a future SDK version stopped doing so —
-/// as it already does for <see cref="ChatOptions.AdditionalProperties"/>, which it drops entirely — the
-/// recording tests would still pass while the parameter quietly stopped being sent at all.
+/// This is the shape of test that would have caught the original <c>temperature</c> 400 (#256). It now also
+/// covers the plumbing that replaced the provider's own filter: the capability declares which models reject
+/// the sampling parameters, and the core base installs the decorator that strips them. Nothing here
+/// constructs that decorator, so a base that stopped wrapping fails this rather than passing.
 /// </para>
 /// <para>
-/// Asserting on the serialized request keeps both halves honest: that the filter removes the parameters
-/// on a model which rejects them, and that they are genuinely sent on a model which accepts them.
+/// Asserting on the body rather than on the <see cref="ChatOptions"/> handed downstream is deliberate: the
+/// filter only matters while the Microsoft.Extensions.AI adapter reads
+/// <see cref="ChatOptions.Temperature"/> at all, and a recording test would stay green if it stopped.
 /// </para>
 /// </remarks>
 public class AnthropicSamplingParameterWireTests
@@ -27,15 +27,14 @@ public class AnthropicSamplingParameterWireTests
     [Fact]
     public async Task ModelRejectingSamplingParameters_TheyDoNotReachTheRequest()
     {
-        // Arrange — Opus 5 is past the Claude 4.7 cutoff, so temperature/top_p are rejected there
-        var handler = new CapturingHandler();
-        var chatClient = CreateFilteredChatClient(handler, "claude-opus-5");
+        // Arrange — Claude Opus 5 rejects the sampling parameters
+        var (chatClient, handler) = await CreateCapabilityClientAsync("claude-opus-5");
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient, new ChatOptions { Temperature = 0.5f, TopP = 0.9f });
 
         // Assert
-        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        var body = LastRequestBody(handler);
         body.ShouldNotContain("temperature");
         body.ShouldNotContain("top_p");
         body.ShouldContain("hello");
@@ -44,31 +43,61 @@ public class AnthropicSamplingParameterWireTests
     [Fact]
     public async Task ModelAcceptingSamplingParameters_TheyReachTheRequest()
     {
-        // Arrange — Sonnet 4.6 still accepts them, so the filter must leave them alone
-        var handler = new CapturingHandler();
-        var chatClient = CreateFilteredChatClient(handler, "claude-sonnet-4-6");
+        // Arrange — Sonnet 4.6 still accepts them, so nothing should be stripped
+        var (chatClient, handler) = await CreateCapabilityClientAsync("claude-sonnet-4-6");
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient, new ChatOptions { Temperature = 0.5f, TopP = 0.9f });
 
         // Assert
-        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        var body = LastRequestBody(handler);
         body.ShouldContain("\"temperature\":0.5");
+        // The float is serialised at double precision by the SDK, hence the truncated expectation.
         body.ShouldContain("\"top_p\":0.8999999");
     }
 
-    private static IChatClient CreateFilteredChatClient(CapturingHandler handler, string modelId)
+    [Fact]
+    public async Task CallerWithoutAModelId_StillFiltersAgainstTheBoundModel()
     {
-        var inner = new AnthropicClient
-        {
-            ApiKey = "test-key",
-            MaxRetries = 0,
-            HttpClient = new HttpClient(handler),
-        }.Beta.AsIChatClient(modelId);
+        // The agent runtime builds its ChatOptions without a ModelId, so the model the client was created
+        // for is the only signal on that path. This is the case a naive filter gets wrong.
+        var (chatClient, handler) = await CreateCapabilityClientAsync("claude-opus-5");
 
-        // The same wrapping the chat capability applies.
-        return new AnthropicSamplingParameterChatClient(inner, modelId, logger: null);
+        await SendAndIgnoreFailureAsync(chatClient, new ChatOptions { Temperature = 0.5f });
+
+        LastRequestBody(handler).ShouldNotContain("temperature");
     }
+
+    /// <summary>
+    /// Builds the chat client through the capability, which is where the base installs the declaration
+    /// filter, with the SDK pointed at a capturing handler.
+    /// </summary>
+    private static async Task<(IChatClient Client, CapturingHttpMessageHandler Handler)> CreateCapabilityClientAsync(
+        string modelId)
+    {
+        var handler = new CapturingHttpMessageHandler();
+        var provider = new StubbedAnthropicProvider(
+            new FakeProviderInfrastructure(),
+            new MemoryCache(new MemoryCacheOptions()),
+            handler);
+
+        var capability = new AnthropicChatCapability(provider, logger: null);
+        var settings = new AnthropicProviderSettings { ApiKey = "test-key" };
+
+        var client = await ((IAIChatCapability)capability)
+            .CreateClientAsync(settings, modelId, CancellationToken.None);
+
+        return (client, handler);
+    }
+
+    /// <summary>
+    /// The body of the last captured request. The capability prefetches the model list before building the
+    /// client, so more than one request can reach the handler.
+    /// </summary>
+    private static string LastRequestBody(CapturingHttpMessageHandler handler)
+        => handler.RequestBodies.Count > 0
+            ? handler.RequestBodies[^1]
+            : throw new InvalidOperationException("No request body was captured.");
 
     private static async Task SendAndIgnoreFailureAsync(IChatClient chatClient, ChatOptions options)
     {
@@ -79,31 +108,6 @@ public class AnthropicSamplingParameterWireTests
         catch (Exception)
         {
             // The capturing handler always fails the request; only the captured body matters here.
-        }
-    }
-
-    /// <summary>
-    /// Captures the body of every request and short-circuits with an error response, so the test can
-    /// assert on what would have gone over the wire without a real API call.
-    /// </summary>
-    private sealed class CapturingHandler : HttpMessageHandler
-    {
-        public List<string> RequestBodies { get; } = [];
-
-        protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            if (request.Content is not null)
-            {
-                RequestBodies.Add(await request.Content.ReadAsStringAsync(cancellationToken));
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.BadRequest)
-            {
-                Content = new StringContent(
-                    """{"type":"error","error":{"type":"invalid_request_error","message":"captured"}}"""),
-            };
         }
     }
 }

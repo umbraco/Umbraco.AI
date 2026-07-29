@@ -96,6 +96,20 @@ parameters:
       type: boolean
       default: false
 
+    # Queue-time override: pack every product regardless of what changed, and allow
+    # packing from a vN/feature/* branch. Feature branches normally build and test but
+    # never pack, and change detection normally narrows the pack list to what the branch
+    # touched. Tick this to get a full set of installable packages out of a feature
+    # branch - e.g. to hand-publish a nightly of in-progress work for testing.
+    #
+    # Leave project references on (packWithNuGetRanges off) when using this: packing the
+    # whole dependency chain in one build is exactly the case project-reference pinning
+    # needs, so every preview version resolves against its siblings from the same run.
+    - name: forcePackAll
+      displayName: Pack all products (allows packing a feature branch)
+      type: boolean
+      default: false
+
 trigger:
     branches:
         include:
@@ -421,14 +435,17 @@ stages:
       dependsOn:
           - Build
           - ValidateChangelogs
-      # Only pack on push (not PR) to vN/main, vN/dev, vN/hotfix/*, vN/release/* branches
-      # ValidateChangelogs may be skipped (on main/dev branches), which is OK
+      # Only pack on push (not PR) to vN/main, vN/dev, vN/hotfix/*, vN/release/* branches,
+      # or on any branch when forcePackAll is ticked at queue time - which is what lets a
+      # vN/feature/* branch produce a full set of packages to hand-publish.
+      # ValidateChangelogs may be skipped (on main/dev and feature branches), which is OK
       condition: |
           and(
             in(dependencies.Build.result, 'Succeeded'),
             in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
             ne(variables['Build.Reason'], 'PullRequest'),
             or(
+              eq('${{ parameters.forcePackAll }}', 'true'),
               contains(variables['Build.SourceBranch'], '/hotfix/'),
               contains(variables['Build.SourceBranch'], '/release/'),
               endsWith(variables['Build.SourceBranch'], '/main'),
@@ -453,6 +470,8 @@ stages:
                   inputs:
                       filePath: .azure-pipelines/scripts/detect-changes.ps1
                       pwsh: true
+                      ${{ if parameters.forcePackAll }}:
+                          arguments: -ForceAll
                   env:
                       # Required to query previous builds for vN/dev comparison base
                       SYSTEM_ACCESSTOKEN: $(System.AccessToken)

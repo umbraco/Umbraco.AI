@@ -25,6 +25,8 @@ import type { UaiModelEditorChangeEventDetail } from "../../../../core/component
  */
 const UAI_TEMPERATURE_FIELD_KEY = "temperature";
 const UAI_DIMENSIONS_FIELD_KEY = "dimensions";
+const UAI_LANGUAGE_FIELD_KEY = "language";
+const UAI_MEDIA_TYPE_FIELD_KEY = "mediaType";
 
 /**
  * Workspace view for Profile details.
@@ -231,7 +233,12 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
      */
     #pruneProfileSettings(
         modelId: string,
-    ): UaiChatProfileSettings | UaiEmbeddingProfileSettings | UaiImageGenerationProfileSettings | undefined {
+    ):
+        | UaiChatProfileSettings
+        | UaiEmbeddingProfileSettings
+        | UaiSpeechToTextProfileSettings
+        | UaiImageGenerationProfileSettings
+        | undefined {
         const metadata = this.#getModelMetadata(modelId);
 
         const chatSettings = this.#getChatSettings();
@@ -248,7 +255,18 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 : { ...embeddingSettings, dimensions: null };
         }
 
+        const sttSettings = this.#getSpeechToTextSettings();
+        if (sttSettings?.language) {
+            return isProfileSettingSupported(metadata, UAI_LANGUAGE_FIELD_KEY)
+                ? undefined
+                : { ...sttSettings, language: null };
+        }
+
         const imageSettings = this.#getImageGenerationSettings();
+        if (imageSettings?.mediaType && !isProfileSettingSupported(metadata, UAI_MEDIA_TYPE_FIELD_KEY)) {
+            return { ...imageSettings, mediaType: null };
+        }
+
         if (imageSettings?.size) {
             // Only prune against a model that actually declares its sizes. An empty list is silence, and
             // clearing a deliberate size because a provider described nothing would be worse than keeping it.
@@ -641,6 +659,13 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
     #renderSpeechToTextSettings() {
         const sttSettings = this.#getSpeechToTextSettings();
+        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
+
+        // Not every transcription model takes a language hint. Language is the only setting in this panel,
+        // so hiding the field hides the panel rather than leaving an empty box.
+        if (!isProfileSettingSupported(metadata, UAI_LANGUAGE_FIELD_KEY)) {
+            return nothing;
+        }
 
         return html`
             <uui-box headline="System Settings">
@@ -662,21 +687,31 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
     #renderImageGenerationSettings() {
         const imageSettings = this.#getImageGenerationSettings();
+        const metadata = this.#getModelMetadata(this._model?.model?.modelId);
+
+        // output_format is a gpt-image parameter with no DALL·E equivalent, so a provider can declare it
+        // unsupported. Size is described by enumeration instead, and always renders.
+        const showMediaType = isProfileSettingSupported(metadata, UAI_MEDIA_TYPE_FIELD_KEY);
 
         return html`
             <uui-box headline="System Settings">
                 ${this.#renderImageSize(imageSettings)}
-
-                <umb-property-layout label="Media Type" description="Output image encoding (e.g. &quot;image/png&quot;, &quot;image/jpeg&quot;, &quot;image/webp&quot;). Supported values vary by model.">
-                    <uui-input
-                        slot="editor"
-                        type="text"
-                        .value=${imageSettings?.mediaType ?? ""}
-                        @input=${this.#onImageMediaTypeChange}
-                        placeholder="Provider default"
-                    ></uui-input>
-                </umb-property-layout>
+                ${showMediaType ? this.#renderImageMediaType(imageSettings) : nothing}
             </uui-box>
+        `;
+    }
+
+    #renderImageMediaType(imageSettings: UaiImageGenerationProfileSettings | null) {
+        return html`
+            <umb-property-layout label="Media Type" description="Output image encoding (e.g. &quot;image/png&quot;, &quot;image/jpeg&quot;, &quot;image/webp&quot;). Supported values vary by model.">
+                <uui-input
+                    slot="editor"
+                    type="text"
+                    .value=${imageSettings?.mediaType ?? ""}
+                    @input=${this.#onImageMediaTypeChange}
+                    placeholder="Provider default"
+                ></uui-input>
+            </umb-property-layout>
         `;
     }
 

@@ -1,7 +1,11 @@
+using System.Drawing;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Tests.Common.Fakes;
+
+#pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
+#pragma warning disable UMBRACOAI_IMAGEGEN // Exercises the experimental image-generation capability
 
 namespace Umbraco.AI.Tests.Unit.Providers;
 
@@ -145,6 +149,67 @@ public class DeclaredSettingsEnforcementTests
         recorder.ReceivedOptions.ShouldHaveSingleItem()!.Dimensions.ShouldBe(256);
     }
 
+    [Fact]
+    public async Task SpeechToText_DeclaredUnsupportedLanguage_IsRemoved()
+    {
+        var recorder = new FakeSpeechToTextClient();
+        var capability = new DeclaringSpeechToTextCapability(recorder, "restricted-model");
+
+        var client = await ((IAISpeechToTextCapability)capability)
+            .CreateClientAsync(Settings, "restricted-model", CancellationToken.None);
+        await client.GetTextAsync(new MemoryStream([1, 2, 3]), new SpeechToTextOptions { SpeechLanguage = "en" });
+
+        recorder.ReceivedOptions.ShouldHaveSingleItem()!.SpeechLanguage.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SpeechToText_ModelThatAcceptsALanguage_KeepsIt()
+    {
+        var recorder = new FakeSpeechToTextClient();
+        var capability = new DeclaringSpeechToTextCapability(recorder, "restricted-model");
+
+        var client = await ((IAISpeechToTextCapability)capability)
+            .CreateClientAsync(Settings, "permissive-model", CancellationToken.None);
+        await client.GetTextAsync(new MemoryStream([1, 2, 3]), new SpeechToTextOptions { SpeechLanguage = "en" });
+
+        recorder.ReceivedOptions.ShouldHaveSingleItem()!.SpeechLanguage.ShouldBe("en");
+    }
+
+    [Fact]
+    public async Task ImageGeneration_DeclaredUnsupportedMediaType_IsRemoved()
+    {
+        // output_format is a gpt-image parameter with no DALL·E equivalent, so this is a real declaration
+        // rather than a hypothetical one.
+        var recorder = new FakeImageGenerator();
+        var capability = new DeclaringImageCapability(recorder, "restricted-model");
+
+        var generator = await ((IAIImageGeneratorCapability)capability)
+            .CreateGeneratorAsync(Settings, "restricted-model", CancellationToken.None);
+        await generator.GenerateAsync(
+            new ImageGenerationRequest { Prompt = "a cat" },
+            new ImageGenerationOptions { MediaType = "image/png", ImageSize = new Size(1024, 1024) });
+
+        var options = recorder.ReceivedOptions.ShouldHaveSingleItem();
+        options!.MediaType.ShouldBeNull();
+        // Only what was declared is stripped: size was not, so it survives.
+        options.ImageSize.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task ImageGeneration_ModelThatAcceptsMediaType_KeepsIt()
+    {
+        var recorder = new FakeImageGenerator();
+        var capability = new DeclaringImageCapability(recorder, "restricted-model");
+
+        var generator = await ((IAIImageGeneratorCapability)capability)
+            .CreateGeneratorAsync(Settings, "permissive-model", CancellationToken.None);
+        await generator.GenerateAsync(
+            new ImageGenerationRequest { Prompt = "a cat" },
+            new ImageGenerationOptions { MediaType = "image/png" });
+
+        recorder.ReceivedOptions.ShouldHaveSingleItem()!.MediaType.ShouldBe("image/png");
+    }
+
     private static Task<IChatClient> CreateClientAsync(IAIChatCapability capability, string modelId)
         => capability.CreateClientAsync(Settings, modelId, CancellationToken.None);
 
@@ -192,5 +257,37 @@ public class DeclaredSettingsEnforcementTests
             FakeProviderSettings settings,
             string? modelId)
             => inner;
+    }
+
+    private sealed class DeclaringSpeechToTextCapability(ISpeechToTextClient inner, string restrictedModelId)
+        : AISpeechToTextCapabilityBase<FakeProviderSettings>(new FakeAIProvider())
+    {
+        public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+            => modelId == restrictedModelId
+                ? new AIModelSettingsSupport { UnsupportedProfileSettings = [AIProfileSettingKeys.Language] }
+                : AIModelSettingsSupport.Default;
+
+        protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+            FakeProviderSettings settings,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<AIModelDescriptor>>([]);
+
+        protected override ISpeechToTextClient CreateClient(FakeProviderSettings settings, string? modelId) => inner;
+    }
+
+    private sealed class DeclaringImageCapability(IImageGenerator inner, string restrictedModelId)
+        : AIImageGeneratorCapabilityBase<FakeProviderSettings>(new FakeAIProvider())
+    {
+        public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+            => modelId == restrictedModelId
+                ? new AIModelSettingsSupport { UnsupportedProfileSettings = [AIProfileSettingKeys.MediaType] }
+                : AIModelSettingsSupport.Default;
+
+        protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+            FakeProviderSettings settings,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<AIModelDescriptor>>([]);
+
+        protected override IImageGenerator CreateGenerator(FakeProviderSettings settings, string? modelId) => inner;
     }
 }

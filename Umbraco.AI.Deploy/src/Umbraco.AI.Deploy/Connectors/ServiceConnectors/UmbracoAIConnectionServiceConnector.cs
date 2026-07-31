@@ -187,8 +187,12 @@ public class UmbracoAIConnectionServiceConnector(
                     return false;
                 }
 
-                // Check value characteristics
-                bool isConfigReference = value?.StartsWith("$") == true;
+                // Check value characteristics. Uses the shared definition so an escaped literal
+                // ($$foo — a real secret, not a pointer) is never waved through as a reference.
+                // No behaviour change today, since the only branch reading isConfigReference already
+                // requires an "ENC:" value and so can never see a "$" one; this keeps the rule from
+                // drifting if that changes.
+                bool isConfigReference = AIConfigurationReference.IsReference(value);
                 bool isEncryptedValue = value?.StartsWith("ENC:") == true;
 
                 // Layer 3: IgnoreEncrypted - block encrypted values but allow $ config references

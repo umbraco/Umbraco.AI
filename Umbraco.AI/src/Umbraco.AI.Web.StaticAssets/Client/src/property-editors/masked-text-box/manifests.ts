@@ -9,7 +9,6 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Masked Text Box",
         icon: "icon-lock",
         group: "Umbraco AI",
-        keywords: ["ai", "umbraco ai", "masked", "password", "secret", "sensitive", "api key"],
         settings: {
             properties: [
                 {

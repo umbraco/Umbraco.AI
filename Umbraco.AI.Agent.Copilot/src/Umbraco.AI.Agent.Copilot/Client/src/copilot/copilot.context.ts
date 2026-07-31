@@ -3,6 +3,12 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import {
+    Observable,
+    map,
+    distinctUntilChanged,
+    shareReplay,
+} from "@umbraco-cms/backoffice/external/rxjs";
+import {
     UaiRunController,
     UaiToolRendererManager,
     UaiFrontendToolManager,
@@ -24,6 +30,13 @@ import {
 } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
 import { UAI_ENTITY_ADAPTER_CONTEXT } from "./contexts/entity-adapter.context-token.js";
+
+// When leaving a supported workspace, "supported" flips to false only after this delay. The show
+// edge is immediate. Moving between two supported workspaces briefly empties the detected-entity
+// list as one workspace tears down before the next registers; this window lets the new detection
+// arrive and cancel the pending flip, so both the FAB and the sidebar stay put rather than
+// flickering (FAB) or auto-closing and wiping the conversation (sidebar).
+const SUPPORT_HIDE_DELAY_MS = 200;
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -101,6 +114,15 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         return this.#entityAdapterContext.detectedEntities$;
     }
 
+    /**
+     * Whether the current workspace(s) are supported by copilot — i.e. copilot has detected at least
+     * one entity it can act on. Derived from `detectedEntities$` with a debounced hide edge (see
+     * SUPPORT_HIDE_DELAY_MS). Both the FAB (visibility) and the sidebar (auto-close) consume this so
+     * they share one rule and one debounce. Assigned in the constructor once the entity adapter
+     * context exists.
+     */
+    readonly isSupportedWorkspace$: Observable<boolean>;
+
     get selectedEntity$() {
         return this.#entityAdapterContext.selectedEntity$;
     }
@@ -123,6 +145,36 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#entityAdapterContext = new UaiEntityAdapterContext(host);
         this.#entityContext = new UaiCopilotEntityContext(host, this.#entityAdapterContext);
         this.#requestContextCollector = new UaiRequestContextCollector(host);
+
+        // Emit `true` immediately when a workspace becomes supported, but delay the flip to `false`
+        // by SUPPORT_HIDE_DELAY_MS. A pending hide is cancelled if support returns within the window,
+        // so supported⇄supported hops (which briefly empty the detection list) never emit `false`.
+        const supported$ = this.#entityAdapterContext.detectedEntities$.pipe(
+            map((entities) => entities.length > 0),
+            distinctUntilChanged(),
+        );
+        this.isSupportedWorkspace$ = new Observable<boolean>((subscriber) => {
+            let hideTimer = 0;
+            let current: boolean | undefined;
+            const emit = (value: boolean) => {
+                if (current !== value) {
+                    current = value;
+                    subscriber.next(value);
+                }
+            };
+            const sub = supported$.subscribe((supported) => {
+                window.clearTimeout(hideTimer);
+                if (supported) {
+                    emit(true);
+                } else {
+                    hideTimer = window.setTimeout(() => emit(false), SUPPORT_HIDE_DELAY_MS);
+                }
+            });
+            return () => {
+                window.clearTimeout(hideTimer);
+                sub.unsubscribe();
+            };
+        }).pipe(shareReplay(1));
 
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,

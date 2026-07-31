@@ -2,16 +2,12 @@ import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
-import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
-import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
 import { agentClientReady } from "@umbraco-ai/agent";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
     #copilotContext?: UaiCopilotContext;
-    #sectionRegistry!: UaiCopilotSectionRegistry;
-    #compatibleSections: string[] = [];
 
     readonly #sidebarWidth = 450;
 
@@ -27,18 +23,6 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     constructor() {
         super();
 
-        // Initialize section registry
-        this.#sectionRegistry = new UaiCopilotSectionRegistry(this);
-
-        // Observe compatible sections
-        this.observe(
-            this.#sectionRegistry.compatibleSectionPathnames$,
-            (pathnames) => {
-                this.#compatibleSections = pathnames;
-            },
-            "_observeCompatibleSections"
-        );
-
         this.consumeContext(UAI_COPILOT_CONTEXT, async (context) => {
             if (context) {
                 this.#copilotContext = context;
@@ -52,22 +36,25 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                         this._showContent = true;
                     }
                 });
+
+                // Auto-close when navigating away from a supported workspace. Shares the copilot's
+                // debounced support signal with the FAB, so supported⇄supported hops neither hide the
+                // button nor close the panel (which would reset the conversation).
+                this.observe(
+                    context.isSupportedWorkspace$,
+                    (supported) => {
+                        if (!supported && this._isOpen) {
+                            context.close();
+                        }
+                    },
+                    "_observeSupportedWorkspace"
+                );
+
                 // Wait for agent package's client to be configured before loading agents
                 await agentClientReady;
                 context.loadAgents();
             }
         });
-
-        // Auto-close copilot when navigating to a section that doesn't support it
-        this.observe(
-            createSectionObservable(),
-            (pathname) => {
-                if (!isSectionAllowed(pathname, this.#compatibleSections)) {
-                    this.#copilotContext?.close();
-                }
-            },
-            "_observeSectionChanges"
-        );
     }
 
     override disconnectedCallback() {

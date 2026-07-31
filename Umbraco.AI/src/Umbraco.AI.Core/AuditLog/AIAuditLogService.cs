@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.TaskQueue;
+using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Core.AuditLog;
 
@@ -75,18 +76,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         CapturePromptSnapshot(audit, prompt);
 
-        if (response?.Usage is not null)
-        {
-            audit.InputTokens = response.Usage.InputTokenCount.HasValue
-                ? (int?)response.Usage.InputTokenCount.Value
-                : null;
-            audit.OutputTokens = response.Usage.OutputTokenCount.HasValue
-                ? (int?)response.Usage.OutputTokenCount.Value
-                : null;
-            audit.TotalTokens = response.Usage.TotalTokenCount.HasValue
-                ? (int?)response.Usage.TotalTokenCount.Value
-                : null;
-        }
+        CaptureUsage(audit, response);
 
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
@@ -196,18 +186,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         CapturePromptSnapshot(audit, prompt);
 
-        if (response?.Usage is not null)
-        {
-            audit.InputTokens = response.Usage.InputTokenCount.HasValue
-                ? (int?)response.Usage.InputTokenCount.Value
-                : null;
-            audit.OutputTokens = response.Usage.OutputTokenCount.HasValue
-                ? (int?)response.Usage.OutputTokenCount.Value
-                : null;
-            audit.TotalTokens = response.Usage.TotalTokenCount.HasValue
-                ? (int?)response.Usage.TotalTokenCount.Value
-                : null;
-        }
+        CaptureUsage(audit, response);
 
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
@@ -415,6 +394,27 @@ internal sealed class AIAuditLogService : IAIAuditLogService
             string text => text,
             _ => data.ToString()
         };
+    }
+
+    /// <summary>
+    /// Copies the reported token counts onto the audit entry, leaving them null when the response carried
+    /// no usage at all.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the synchronous and queued completion paths, which record the same thing and previously
+    /// held identical copies of this block.
+    /// </remarks>
+    private static void CaptureUsage(AIAuditLog audit, AIAuditResponse? response)
+    {
+        if (response?.Usage is null)
+        {
+            return;
+        }
+
+        audit.InputTokens = (int?)response.Usage.InputTokenCount;
+        audit.CachedInputTokens = (int?)response.Usage.GetCachedInputTokenCount();
+        audit.OutputTokens = (int?)response.Usage.OutputTokenCount;
+        audit.TotalTokens = (int?)response.Usage.TotalTokenCount;
     }
 
     private void CapturePromptSnapshot(AIAuditLog audit, AIAuditPrompt? prompt)

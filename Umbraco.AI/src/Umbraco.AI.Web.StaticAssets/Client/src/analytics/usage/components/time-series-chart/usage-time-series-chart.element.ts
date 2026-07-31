@@ -24,11 +24,24 @@ export class UaiUsageTimeSeriesChartElement extends UmbLitElement {
         return this.data.map((d) => ({
             timestamp: d.timestamp,
             inputTokens: d.inputTokens,
+            // The chart can only plot a number, so an unreported point becomes 0. Safe because the series
+            // itself is only shown when something in range reports caching - see _hasCachedTokenData.
+            cachedInputTokens: d.cachedInputTokens ?? 0,
             outputTokens: d.outputTokens,
             requestCount: d.requestCount,
             successCount: d.successCount,
             failureCount: d.failureCount,
         }));
+    }
+
+    /**
+     * Whether any point in range reports cached input tokens.
+     *
+     * Gates the series so an install whose providers never report caching sees the chart it had before,
+     * rather than a flat zero line implying caching is configured and achieving nothing.
+     */
+    private _hasCachedTokenData(): boolean {
+        return this.data?.some((d) => d.cachedInputTokens !== undefined && d.cachedInputTokens !== null) ?? false;
     }
 
     private _getTabs(): AnalyticsTimeSeriesTab[] {
@@ -43,6 +56,16 @@ export class UaiUsageTimeSeriesChartElement extends UmbLitElement {
                         backgroundColor: "rgb(27, 38, 79)",
                         borderColor: "rgb(27, 38, 79)",
                     },
+                    ...(this._hasCachedTokenData()
+                        ? [
+                              {
+                                  label: "Cached Input Tokens",
+                                  dataKey: "cachedInputTokens",
+                                  backgroundColor: "rgb(102, 132, 189)",
+                                  borderColor: "rgb(102, 132, 189)",
+                              },
+                          ]
+                        : []),
                     {
                         label: "Output Tokens",
                         dataKey: "outputTokens",

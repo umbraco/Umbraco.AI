@@ -13,6 +13,14 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
     @property({ type: String })
     label: string = "";
 
+    /**
+     * Optional secondary line under the label, for a figure that only means something next to the main
+     * value (e.g. how much of an input token total was served from cache). Omitted when empty, so a card
+     * without one keeps its original height.
+     */
+    @property({ type: String })
+    detail?: string;
+
     constructor() {
         super();
     }
@@ -23,6 +31,7 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
             <div class="card-content">
                 <div class="card-value">${this.value}</div>
                 <div class="card-label">${this.label}</div>
+                ${this.detail ? html`<div class="card-detail">${this.detail}</div>` : null}
             </div>
         </uui-card>`;
     }

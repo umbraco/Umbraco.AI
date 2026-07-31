@@ -82,11 +82,14 @@ export class UaiEntitySelectorElement extends UmbLitElement {
             return nothing;
         }
 
+        const workingOnLabel = this.localize.term("uaiCopilot_workingOnLabel");
+
         // Single entity: simple display
         if (this._detectedEntities.length === 1) {
             const entity = this._detectedEntities[0];
             return html`
-                <div class="entity-selector single">
+                <div class="entity-selector single" title=${entity.entityContext.entityType}>
+                    <span class="label">${workingOnLabel}</span>
                     <umb-icon name=${this.#getEntityIcon(entity)}></umb-icon>
                     <span class="entity-name">${entity.name}</span>
                 </div>
@@ -96,7 +99,7 @@ export class UaiEntitySelectorElement extends UmbLitElement {
         // Multiple entities: selectable chips
         return html`
             <div class="entity-selector multiple">
-                <span class="label">Context:</span>
+                <span class="label">${workingOnLabel}</span>
                 <div class="chips">
                     ${this._detectedEntities.map(
                         (entity) => html`

@@ -32,6 +32,17 @@ export class UaiChatElement extends UmbLitElement {
     @property({ type: Boolean })
     ready = true;
 
+    /** Placeholder for the message input. Falls back to the input's own default when unset. */
+    @property({ type: String })
+    placeholder?: string;
+
+    /**
+     * Message shown in the empty state, before any messages exist. Lets a surface explain what the
+     * chat is for (e.g. copilot's "editing this item" framing). Falls back to a generic prompt.
+     */
+    @property({ type: String, attribute: "empty-state-message" })
+    emptyStateMessage?: string;
+
     @state()
     private _agentName = "";
 
@@ -158,6 +169,7 @@ export class UaiChatElement extends UmbLitElement {
                 : ""}
             <uai-chat-input
                 ?disabled=${this._isRunning || !!this._pendingApproval}
+                placeholder=${this.placeholder ?? "Type a message..."}
                 @send=${this.#handleSendMessage}
             ></uai-chat-input>
         `;
@@ -177,7 +189,10 @@ export class UaiChatElement extends UmbLitElement {
                             ? html`
                                   <div class="empty-state">
                                       <uui-icon name="icon-chat"></uui-icon>
-                                      <p>Start a conversation with ${this._agentName || "an agent"}</p>
+                                      <p>
+                                          ${this.emptyStateMessage ??
+                                          `Start a conversation with ${this._agentName || "an agent"}`}
+                                      </p>
                                   </div>
                               `
                             : this.#renderMessages()}

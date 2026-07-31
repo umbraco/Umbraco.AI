@@ -30,11 +30,13 @@ function isConfigReference(value: unknown): boolean {
  * travels to the browser in full, so this guards against being read over someone's shoulder,
  * not against anyone who opens dev tools.
  *
- * Configuration references (`$Umbraco:AI:Secrets:ApiKey`) render unmasked: they are pointers,
+ * Configuration references (`$Umbraco:AI:Secrets:ApiKey`) start revealed: they are pointers,
  * not secrets, and hiding them makes it impossible to see which key a connection points at.
  *
- * The masked/plain decision is re-evaluated only while the field is unfocused, so typing a
- * leading `$` doesn't swap the input out from under the cursor.
+ * This drives `uui-input-password`'s type rather than swapping in a different element, so the
+ * masking keeps up with what is actually in the field as it is typed. Replacing the element
+ * would be the obvious way to drop the reveal toggle for a reference, but it destroys and
+ * recreates the input — which takes the caret with it mid-edit.
  */
 @customElement(elementName)
 export class UaiPropertyEditorUIMaskedTextBoxElement
@@ -57,16 +59,7 @@ export class UaiPropertyEditorUIMaskedTextBoxElement
     name?: string;
 
     @state()
-    private _isReference = false;
-
-    @state()
     private _placeholder?: string;
-
-    /**
-     * The inner input currently registered for validation. Tracked because switching between the
-     * masked and plain inputs replaces the element, and the stale one has to be unregistered.
-     */
-    #formControl?: UUIInputElement;
 
     public set config(config: UmbPropertyEditorConfigCollection | undefined) {
         if (!config) return;
@@ -74,64 +67,13 @@ export class UaiPropertyEditorUIMaskedTextBoxElement
         this._placeholder = this.localize.string(config.getValueByAlias<string>("placeholder") ?? "");
     }
 
-    override connectedCallback() {
-        super.connectedCallback();
-        this.addEventListener("focusout", this.#onFocusOut);
-    }
-
-    override disconnectedCallback() {
-        this.removeEventListener("focusout", this.#onFocusOut);
-        super.disconnectedCallback();
-    }
-
-    override willUpdate(changedProperties: Map<string, unknown>) {
-        super.willUpdate(changedProperties);
-
-        if (changedProperties.has("value")) {
-            this.#syncReferenceState();
-        }
-    }
-
-    override updated(changedProperties: Map<string, unknown>) {
-        super.updated(changedProperties);
-
-        // Re-point validation at the inner input whenever the masked/plain swap replaces it.
-        const input = this.shadowRoot?.querySelector<UUIInputElement>("uui-input, uui-input-password") ?? undefined;
-        if (input === this.#formControl) return;
-
-        if (this.#formControl) {
-            this.removeFormControlElement(this.#formControl);
-        }
-
-        this.#formControl = input;
-
-        if (input) {
-            this.addFormControlElement(input);
-        }
+    protected override firstUpdated(): void {
+        this.addFormControlElement(this.shadowRoot!.querySelector("uui-input-password")!);
     }
 
     override focus() {
-        return this.#formControl?.focus();
+        return this.shadowRoot?.querySelector<UUIInputElement>("uui-input-password")?.focus();
     }
-
-    /**
-     * Re-evaluates whether the current value is a configuration reference, but only while the
-     * field is unfocused — swapping the input mid-edit would drop the cursor.
-     *
-     * `:focus-within` is used rather than the `focusout` event's `relatedTarget` because the
-     * reveal toggle lives inside the input's own shadow root, where `relatedTarget` is retargeted.
-     */
-    #syncReferenceState() {
-        if (this.matches(":focus-within")) return;
-
-        this._isReference = isConfigReference(this.value);
-    }
-
-    #onFocusOut = () => {
-        // Deferred a frame so focus moving between the input and its reveal toggle — which fires
-        // focusout before the matching focusin — doesn't read as having left the field.
-        requestAnimationFrame(() => this.#syncReferenceState());
-    };
 
     #onInput(e: InputEvent) {
         const newValue = (e.target as HTMLInputElement).value;
@@ -142,40 +84,28 @@ export class UaiPropertyEditorUIMaskedTextBoxElement
     }
 
     override render() {
-        const label = this.localize.term("general_fieldFor", [this.name]);
+        // Only re-committed when the bound value itself changes, so a reveal the user toggled by
+        // hand survives further typing — Lit skips the property write while this stays the same.
+        const type = isConfigReference(this.value) ? "text" : "password";
 
-        return this._isReference
-            ? html`
-                  <uui-input
-                      .label=${label}
-                      .placeholder=${this._placeholder ?? ""}
-                      .requiredMessage=${this.mandatoryMessage}
-                      .value=${this.value ?? ""}
-                      ?readonly=${this.readonly}
-                      ?required=${this.mandatory}
-                      spellcheck="false"
-                      @input=${this.#onInput}
-                  >
-                  </uui-input>
-              `
-            : html`
-                  <uui-input-password
-                      .label=${label}
-                      .placeholder=${this._placeholder ?? ""}
-                      .requiredMessage=${this.mandatoryMessage}
-                      .value=${this.value ?? ""}
-                      ?readonly=${this.readonly}
-                      ?required=${this.mandatory}
-                      autocomplete="off"
-                      @input=${this.#onInput}
-                  >
-                  </uui-input-password>
-              `;
+        return html`
+            <uui-input-password
+                .label=${this.localize.term("general_fieldFor", [this.name])}
+                .placeholder=${this._placeholder ?? ""}
+                .requiredMessage=${this.mandatoryMessage}
+                .type=${type}
+                .value=${this.value ?? ""}
+                ?readonly=${this.readonly}
+                ?required=${this.mandatory}
+                autocomplete="off"
+                @input=${this.#onInput}
+            >
+            </uui-input-password>
+        `;
     }
 
     static override styles = [
         css`
-            uui-input,
             uui-input-password {
                 width: 100%;
             }

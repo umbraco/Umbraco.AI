@@ -286,6 +286,43 @@ public class AIEditableModelSerializerTests
     }
 
     [Fact]
+    public void Serialize_WithNonStringSensitiveField_SkipsItInsteadOfThrowing()
+    {
+        // Only strings can be protected. Reading a number- or bool-backed value as a string threw,
+        // and since nothing caught it the whole entity failed to save. The field is a declaration
+        // mistake either way — the schema builder warns about it — but it must not break saving.
+
+        // Arrange
+        var model = new NonStringSensitiveModel
+        {
+            RotationDays = 30,
+            Enabled = true,
+            Endpoint = "https://api.example.com"
+        };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "rotationDays",
+            Label = "Rotation Days",
+            IsSensitive = true
+        }, new AIEditableModelField
+        {
+            Key = "enabled",
+            Label = "Enabled",
+            IsSensitive = true
+        });
+
+        // Act
+        var result = Should.NotThrow(() => _serializer.Serialize(model, schema));
+
+        // Assert — values pass through untouched
+        result.ShouldNotBeNull();
+        result.ShouldContain("\"rotationDays\":30");
+        result.ShouldContain("\"enabled\":true");
+        result.ShouldContain("\"endpoint\":\"https://api.example.com\"");
+        _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void SerializeThenDeserialize_WithEscapedLiteral_RoundTripsUnchanged()
     {
         // Encrypting the escaped literal must not disturb what the resolver later sees, otherwise
@@ -480,6 +517,13 @@ public class AIEditableModelSerializerTests
         public string? AccessKeyId { get; set; }
         public string? SecretAccessKey { get; set; }
         public string? Region { get; set; }
+    }
+
+    private class NonStringSensitiveModel
+    {
+        public int RotationDays { get; set; }
+        public bool Enabled { get; set; }
+        public string? Endpoint { get; set; }
     }
 
     #endregion

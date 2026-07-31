@@ -146,6 +146,20 @@ stages:
                       npm run build
                   displayName: Build frontend
 
+                - script: npm test
+                  displayName: Test frontend
+
+                - task: PublishTestResults@2
+                  displayName: Publish frontend test results
+                  condition: always()
+                  inputs:
+                      testResultsFormat: JUnit
+                      testResultsFiles: "**/Client/test-results/junit.xml"
+                      searchFolder: $(Build.SourcesDirectory)
+                      mergeTestResults: true
+                      testRunTitle: Frontend
+                      failTaskOnMissingResultsFile: true
+
                 - script: |
                       attempt=1
                       max_attempts=3
@@ -169,7 +183,7 @@ stages:
                   displayName: Build
 
                 - script: dotnet test Umbraco.AI.slnx --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
-                  displayName: Test
+                  displayName: Test .NET
 
                 - task: PublishTestResults@2
                   displayName: Publish test results
@@ -178,6 +192,7 @@ stages:
                       testResultsFormat: VSTest
                       testResultsFiles: "$(Agent.TempDirectory)/TestResults/**/*.trx"
                       mergeTestResults: true
+                      testRunTitle: .NET
 
                 - task: PublishPipelineArtifact@1
                   displayName: Upload build outputs

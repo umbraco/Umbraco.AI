@@ -84,8 +84,8 @@
       },
       "AngleSharp": {
         "type": "Transitive",
-        "resolved": "1.4.0",
-        "contentHash": "6ph8mpaQx0KL0COYRt0kI8MB9gSp1PtKijKMhJU//+aVFgKAJLKDesG/+26JSaVCOrHNgPf12wpfoyRcMYOeXg=="
+        "resolved": "1.5.2",
+        "contentHash": "LVZ7rrr6GHbhERhTgVDarVygl1e6KwE96pronA90LBOMacDhxR4lB+xYLjn/vlnUu+xbOB2RM9fuCPEx5bdyWA=="
       },
       "Asp.Versioning.Abstractions": {
         "type": "Transitive",
@@ -1632,7 +1632,7 @@
           "Microsoft.Extensions.Caching.Memory": "[10.0.9, 10.999.999)",
           "Microsoft.Extensions.Options": "[10.0.9, 10.999.999)",
           "SixLabors.ImageSharp": "[3.1.12, 3.999.999)",
-          "SmartReader": "[0.11.0, 0.999.999)",
+          "SmartReader": "[0.11.1, 0.999.999)",
           "System.ClientModel": "[1.5.0, 1.999.999)",
           "Umbraco.Cms.Api.Management": "[18.0.0, 18.999.999)",
           "Umbraco.Cms.Core": "[18.0.0, 18.999.999)",
@@ -1711,11 +1711,11 @@
       },
       "SmartReader": {
         "type": "CentralTransitive",
-        "requested": "[0.11.0, 0.999.999)",
-        "resolved": "0.11.0",
-        "contentHash": "DSn2HErPhhaf+IIyFFQNAyPS1Z4Dv3EYLQlgHwdDlpDxolvB8RCDvTiQZGP3yg9tLMTT2eA9RIN7DbZLbiamhg==",
+        "requested": "[0.11.1, 0.999.999)",
+        "resolved": "0.11.1",
+        "contentHash": "hzhS0IVfSDuf0IghJ4+ODSuTZXSjwS+4NXSBiy5yH/FXdBkl4q3yMDAt7rkPHdLyBlealsk7aL2CcG+kPP5Ocg==",
         "dependencies": {
-          "AngleSharp": "1.4.0"
+          "AngleSharp": "1.5.2"
         }
       },
       "System.ClientModel": {

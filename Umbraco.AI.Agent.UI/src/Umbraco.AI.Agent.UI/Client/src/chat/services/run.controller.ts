@@ -122,7 +122,14 @@ export class UaiRunController extends UmbControllerBase {
         if (this.#agent?.id === agent.id) return;
         this.#agent = agent;
         this.#createClient();
-        this.resetConversation();
+        // Preserve the conversation across an agent switch — the thread belongs to the topic/item,
+        // not the agent, so switching who answers continues the same discussion. Only transient run
+        // state is cleared so the next turn starts cleanly.
+        this.#streamingContent.next("");
+        this.#agentState.next(undefined);
+        this.#currentToolCalls = [];
+        this.#currentAssistantMessageId = null;
+        this.#resolvedAgent.next(undefined);
     }
 
     /** Context items to include in the next request */
@@ -157,6 +164,11 @@ export class UaiRunController extends UmbControllerBase {
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
         this.#resolvedAgent.next(undefined);
+    }
+
+    /** Snapshot of the current conversation messages. */
+    get messages(): UaiChatMessage[] {
+        return this.#messages.value;
     }
 
     abortRun(): void {

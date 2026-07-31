@@ -155,15 +155,20 @@ public class AnthropicChatCapability(
 
         // The declaration from GetSettingsSupport is enforced by the base, which wraps this client so the
         // sampling parameters are stripped for a model that rejects them. See DeclaredSettingsChatClient.
-        return Provider.CreateSdkClient(settings)
+        var client = Provider.CreateSdkClient(settings)
             .Beta.AsIChatClient(modelId);
+
+        // Wrapped here, innermost, because it reads the underlying Anthropic response off the adapter's
+        // output — the only point where that is still attached.
+        return new AnthropicCachedTokenReportingChatClient(client);
     }
 
     /// <inheritdoc />
     /// <remarks>
     /// <para>
-    /// Sets <c>output_config.effort</c> through <see cref="ChatOptions.RawRepresentationFactory"/>, the
-    /// only channel the SDK's Microsoft.Extensions.AI adapter reads — values placed in
+    /// Sets <c>output_config.effort</c> and the top-level <c>cache_control</c> through
+    /// <see cref="ChatOptions.RawRepresentationFactory"/>, the only channel the SDK's
+    /// Microsoft.Extensions.AI adapter reads — values placed in
     /// <see cref="ChatOptions.AdditionalProperties"/> are dropped before the request is built.
     /// </para>
     /// <para>
@@ -172,9 +177,16 @@ public class AnthropicChatCapability(
     /// whatever this method put there. <c>AnthropicEffortWireTests</c> pins both behaviours down.
     /// </para>
     /// <para>
-    /// Skipped when the model does not accept effort at all, or does not accept the configured level —
-    /// the same predicates that drive <see cref="GetSettingsSupport"/> — so a profile carrying a value the
-    /// model rejects cannot fail the request.
+    /// Both settings contribute to a single composed representation, and each is applied only when the
+    /// profile actually carries it, so enabling one never sends the other's field. The per-setting
+    /// applicability rules live in <see cref="ResolveEffort"/> and <see cref="ResolveCacheControl"/>.
+    /// </para>
+    /// <para>
+    /// Caching deliberately marks the request's last cacheable block (what the top-level field does) rather
+    /// than the end of the system prompt and tool definitions. A block-level marker is not reachable from
+    /// here: the adapter <em>appends</em> the caller's instructions after any <c>System</c> blocks this
+    /// representation supplies, so a marker placed on one of them would sit ahead of the content worth
+    /// caching. <c>AnthropicPromptCachingWireTests</c> pins that down.
     /// </para>
     /// </remarks>
     protected override void ApplyCapabilitySettings(
@@ -182,34 +194,11 @@ public class AnthropicChatCapability(
         string? modelId,
         ChatOptions options)
     {
-        if (string.IsNullOrWhiteSpace(capabilitySettings.Effort))
-        {
-            return;
-        }
-
         var model = modelId ?? DefaultChatModel;
-        var level = capabilitySettings.Effort.Trim().ToLowerInvariant();
+        var effort = ResolveEffort(capabilitySettings.Effort, model);
+        var cacheControl = ResolveCacheControl(capabilitySettings.PromptCaching);
 
-        // Prefer what the API reported for this model; fall back to the ID predicate when it is unknown.
-        var supportsEffort = Provider.TryGetModelCapability(model)?.SupportsEffort
-                             ?? AnthropicModelUtilities.SupportsEffort(model);
-
-        if (!supportsEffort || !AnthropicModelUtilities.IsKnownEffortLevel(level))
-        {
-            return;
-        }
-
-        var effort = level switch
-        {
-            "low" => Effort.Low,
-            "medium" => Effort.Medium,
-            "high" => Effort.High,
-            // xhigh and max are not offered: which models accept them cannot be tracked with a list, so a
-            // stored value for either is skipped rather than sent.
-            _ => (Effort?)null,
-        };
-
-        if (effort is null)
+        if (effort is null && cacheControl is null)
         {
             return;
         }
@@ -221,24 +210,92 @@ public class AnthropicChatCapability(
         {
             var existing = previousFactory?.Invoke(client) as MessageCreateParams;
 
-            // Copy an existing output config rather than rebuilding it: assigning a sibling property marks
-            // it present in the payload even when the value is null, and the API rejects the ones it does
-            // not expect ("output_config.task_budget: Extra inputs are not permitted"). Only effort is set.
-            var outputConfig = existing?.OutputConfig is { } priorOutputConfig
-                ? priorOutputConfig with { Effort = effort }
-                : new BetaOutputConfig { Effort = effort };
+            var request = existing ?? new MessageCreateParams
+            {
+                Model = model,
+                MaxTokens = maxTokens,
+                Messages = [],
+            };
 
-            return existing is null
-                ? new MessageCreateParams
+            if (effort is not null)
+            {
+                // Copy an existing output config rather than rebuilding it: assigning a sibling property
+                // marks it present in the payload even when the value is null, and the API rejects the ones
+                // it does not expect ("output_config.task_budget: Extra inputs are not permitted"). Only
+                // effort is set. For the same reason each setting is applied only when it has a value,
+                // rather than assigned unconditionally from a nullable local.
+                request = request with
                 {
-                    Model = model,
-                    MaxTokens = maxTokens,
-                    Messages = [],
-                    OutputConfig = outputConfig,
-                }
-                : existing with { OutputConfig = outputConfig };
+                    OutputConfig = request.OutputConfig is { } priorOutputConfig
+                        ? priorOutputConfig with { Effort = effort }
+                        : new BetaOutputConfig { Effort = effort },
+                };
+            }
+
+            if (cacheControl is not null)
+            {
+                request = request with { CacheControl = cacheControl };
+            }
+
+            return request;
         };
     }
+
+    /// <summary>
+    /// Translates the stored effort level into the SDK's enum, or <c>null</c> when it is unset or the model
+    /// will not accept it.
+    /// </summary>
+    /// <remarks>
+    /// Skipped when the model does not accept effort at all, or does not accept the configured level — the
+    /// same predicates that drive <see cref="GetSettingsSupport"/> — so a profile carrying a value the model
+    /// rejects cannot fail the request.
+    /// </remarks>
+    private Effort? ResolveEffort(string? storedLevel, string model)
+    {
+        if (string.IsNullOrWhiteSpace(storedLevel))
+        {
+            return null;
+        }
+
+        var level = storedLevel.Trim().ToLowerInvariant();
+
+        // Prefer what the API reported for this model; fall back to the ID predicate when it is unknown.
+        var supportsEffort = Provider.TryGetModelCapability(model)?.SupportsEffort
+                             ?? AnthropicModelUtilities.SupportsEffort(model);
+
+        if (!supportsEffort || !AnthropicModelUtilities.IsKnownEffortLevel(level))
+        {
+            return null;
+        }
+
+        return level switch
+        {
+            "low" => Effort.Low,
+            "medium" => Effort.Medium,
+            "high" => Effort.High,
+            // xhigh and max are not offered: which models accept them cannot be tracked with a list, so a
+            // stored value for either is skipped rather than sent.
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Translates the stored prompt-caching TTL into a top-level cache-control marker, or <c>null</c> when
+    /// caching is off or the stored value is not one Anthropic accepts.
+    /// </summary>
+    /// <remarks>
+    /// No per-model gate: every Claude model supports caching, and a prefix below the model's minimum is
+    /// declined silently rather than rejected, so there is nothing to guard against. An unrecognised stored
+    /// value is dropped rather than sent, which keeps a hand-edited or future-dated profile from failing
+    /// the request.
+    /// </remarks>
+    private static BetaCacheControlEphemeral? ResolveCacheControl(string? storedTtl)
+        => storedTtl?.Trim().ToLowerInvariant() switch
+        {
+            "5m" => new BetaCacheControlEphemeral { Ttl = Ttl.Ttl5m },
+            "1h" => new BetaCacheControlEphemeral { Ttl = Ttl.Ttl1h },
+            _ => null,
+        };
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId));

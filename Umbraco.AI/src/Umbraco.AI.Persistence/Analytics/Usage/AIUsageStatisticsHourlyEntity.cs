@@ -81,6 +81,12 @@ internal class AIUsageStatisticsHourlyEntity
     public long InputTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the portion of <see cref="InputTokens"/> served from a provider's prompt cache.
+    /// Null when no provider in this bucket reports it.
+    /// </summary>
+    public long? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the total output tokens generated.
     /// </summary>
     public long OutputTokens { get; set; }

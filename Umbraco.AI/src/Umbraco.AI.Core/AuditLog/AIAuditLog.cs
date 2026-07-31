@@ -117,6 +117,15 @@ public sealed class AIAuditLog
     public int? InputTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the portion of <see cref="InputTokens"/> that was served from the provider's prompt
+    /// cache, or <c>null</c> when the provider does not report it.
+    /// </summary>
+    /// <remarks>
+    /// A subset of <see cref="InputTokens"/>, not an addition to it.
+    /// </remarks>
+    public int? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of output tokens generated.
     /// </summary>
     public int? OutputTokens { get; set; }

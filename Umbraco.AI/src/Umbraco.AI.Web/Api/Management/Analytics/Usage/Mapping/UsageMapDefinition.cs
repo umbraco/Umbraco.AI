@@ -23,6 +23,7 @@ public class UsageMapDefinition : IMapDefinition
     {
         target.TotalRequests = source.TotalRequests;
         target.InputTokens = source.InputTokens;
+        target.CachedInputTokens = source.CachedInputTokens;
         target.OutputTokens = source.OutputTokens;
         target.TotalTokens = source.TotalTokens;
         target.SuccessCount = source.SuccessCount;
@@ -37,6 +38,7 @@ public class UsageMapDefinition : IMapDefinition
         target.Timestamp = source.Timestamp;
         target.RequestCount = source.RequestCount;
         target.InputTokens = source.InputTokens;
+        target.CachedInputTokens = source.CachedInputTokens;
         target.OutputTokens = source.OutputTokens;
         target.TotalTokens = source.TotalTokens;
         target.SuccessCount = source.SuccessCount;
@@ -50,6 +52,7 @@ public class UsageMapDefinition : IMapDefinition
         target.DimensionName = source.DimensionName;
         target.RequestCount = source.RequestCount;
         target.TotalTokens = source.TotalTokens;
+        target.CachedInputTokens = source.CachedInputTokens;
         target.Percentage = source.Percentage;
     }
 }

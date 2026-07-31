@@ -72,8 +72,10 @@ public static class UmbracoBuilderExtensions
         // Register agent guardrail resolver (runs after profile resolver)
         builder.AIGuardrailResolvers().Append<AgentGuardrailResolver>();
 
-        // Register surface context contributor
+        // Register surface context contributor, then the contextual-editing guidance contributor
+        // (which reads the surface the former resolves — order matters).
         builder.AIRuntimeContextContributors().Append<SurfaceContextContributor>();
+        builder.AIRuntimeContextContributors().Append<ContextualEditingGuidanceContributor>();
 
         // Register tool reordering middleware before function invocation
         // This ensures server-side tools execute before frontend tools trigger termination

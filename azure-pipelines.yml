@@ -136,10 +136,10 @@ stages:
                   inputs:
                       useGlobalJson: true
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - script: |
                       npm ci --include=optional
@@ -224,10 +224,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:
@@ -249,10 +249,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:
@@ -274,10 +274,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:
@@ -299,10 +299,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:

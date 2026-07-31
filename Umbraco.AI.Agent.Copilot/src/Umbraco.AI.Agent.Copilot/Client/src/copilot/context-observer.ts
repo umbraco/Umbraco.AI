@@ -1,37 +1,25 @@
 /**
  * Context Observer
  *
- * Provides reactive observables for backoffice navigation context.
- * Monitors URL changes via browser navigation events (no polling).
+ * Provides a reactive observable of the current backoffice section, derived from
+ * the URL. Monitors changes via browser navigation events (no polling).
  *
- * Supports both section-only detection (backward compatible) and
- * full context detection (section + workspace) for advanced features.
+ * Used by the copilot agent repository to filter agents by section scope.
  */
 
-import { Observable, shareReplay, map, distinctUntilChanged } from "@umbraco-cms/backoffice/external/rxjs";
-
-export interface ContextInfo {
-	section: string | null;
-	workspace: string | null;
-}
+import { Observable, shareReplay, distinctUntilChanged } from "@umbraco-cms/backoffice/external/rxjs";
 
 /**
- * Extracts section and workspace from the current URL.
- * Pattern: /section/{section}/workspace/{workspace}/...
+ * Extracts the section pathname from the current URL.
+ * Pattern: /section/{section}/...
  */
-function getContextFromUrl(): ContextInfo {
-	const path = window.location.pathname;
-	const sectionMatch = path.match(/\/section\/([^/]+)/);
-	const workspaceMatch = path.match(/\/workspace\/([^/]+)/);
-
-	return {
-		section: sectionMatch?.[1] ?? null,
-		workspace: workspaceMatch?.[1] ?? null,
-	};
+function getSectionFromUrl(): string | null {
+	const match = window.location.pathname.match(/\/section\/([^/]+)/);
+	return match?.[1] ?? null;
 }
 
 // Module-level shared observable with refcounting
-let _sharedContextObservable$: Observable<ContextInfo> | null = null;
+let _sharedSectionObservable$: Observable<string | null> | null = null;
 let _originalPushState: typeof history.pushState | null = null;
 let _originalReplaceState: typeof history.replaceState | null = null;
 let _onPopState: (() => void) | null = null;
@@ -39,20 +27,20 @@ let _refCount = 0;
 
 /**
  * Internal shared implementation.
- * Only patches history API once, regardless of subscriber count.
+ * Only patches the history API once, regardless of subscriber count.
  */
-function createSharedContextObservable(): Observable<ContextInfo> {
-	if (!_sharedContextObservable$) {
-		_sharedContextObservable$ = new Observable<ContextInfo>((subscriber) => {
+function createSharedSectionObservable(): Observable<string | null> {
+	if (!_sharedSectionObservable$) {
+		_sharedSectionObservable$ = new Observable<string | null>((subscriber) => {
 			_refCount++;
 
 			if (_refCount === 1) {
 				// Emit initial value
-				subscriber.next(getContextFromUrl());
+				subscriber.next(getSectionFromUrl());
 
 				// Listen to browser back/forward navigation
 				_onPopState = () => {
-					subscriber.next(getContextFromUrl());
+					subscriber.next(getSectionFromUrl());
 				};
 
 				// Intercept pushState and replaceState for SPA navigation
@@ -61,12 +49,12 @@ function createSharedContextObservable(): Observable<ContextInfo> {
 
 				const wrappedPushState = function (this: History, ...args: Parameters<typeof history.pushState>) {
 					_originalPushState!.apply(this, args);
-					subscriber.next(getContextFromUrl());
+					subscriber.next(getSectionFromUrl());
 				};
 
 				const wrappedReplaceState = function (this: History, ...args: Parameters<typeof history.replaceState>) {
 					_originalReplaceState!.apply(this, args);
-					subscriber.next(getContextFromUrl());
+					subscriber.next(getSectionFromUrl());
 				};
 
 				window.addEventListener("popstate", _onPopState);
@@ -74,7 +62,7 @@ function createSharedContextObservable(): Observable<ContextInfo> {
 				history.replaceState = wrappedReplaceState;
 			} else {
 				// For subsequent subscribers, just emit current value
-				subscriber.next(getContextFromUrl());
+				subscriber.next(getSectionFromUrl());
 			}
 
 			// Cleanup on unsubscribe
@@ -95,45 +83,19 @@ function createSharedContextObservable(): Observable<ContextInfo> {
 						_originalReplaceState = null;
 					}
 
-					_sharedContextObservable$ = null;
+					_sharedSectionObservable$ = null;
 				}
 			};
 		}).pipe(shareReplay(1));
 	}
 
-	return _sharedContextObservable$;
+	return _sharedSectionObservable$;
 }
 
 /**
- * Creates an observable that emits section changes.
- * Backward compatible API for existing consumers.
+ * Creates an observable that emits the current section pathname, and again
+ * whenever it changes.
  */
 export function createSectionObservable(): Observable<string | null> {
-	return createSharedContextObservable().pipe(
-		map((ctx) => ctx.section),
-		distinctUntilChanged(),
-	);
-}
-
-/**
- * Creates an observable that emits full context (section + workspace).
- * Use this for thread persistence and context-aware features.
- */
-export function createContextObservable(): Observable<ContextInfo> {
-	return createSharedContextObservable();
-}
-
-/**
- * Extracts the section pathname from the current URL.
- * Backward compatibility wrapper for getContextFromUrl().
- */
-export function getSectionPathnameFromUrl(): string | null {
-	return getContextFromUrl().section;
-}
-
-/**
- * Checks if a section pathname is in the allowed list.
- */
-export function isSectionAllowed(pathname: string | null, allowedPathnames: string[]): boolean {
-	return pathname ? allowedPathnames.includes(pathname) : false;
+	return createSharedSectionObservable().pipe(distinctUntilChanged());
 }

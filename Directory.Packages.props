@@ -93,7 +93,9 @@
          in lockstep with the host CMS, not ahead of it. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="[10.0.6, 10.999.999)" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="[3.1.12, 3.999.999)" />
-    <PackageVersion Include="SmartReader" Version="[0.11.0, 0.999.999)" />
+    <!-- 0.11.1 floor: 0.11.0 pulls AngleSharp 1.4.0, which is vulnerable to mXSS
+         (GHSA-pgww-w46g-26qg, patched in 1.5.0). 0.11.1 depends on AngleSharp 1.5.2. -->
+    <PackageVersion Include="SmartReader" Version="[0.11.1, 0.999.999)" />
   </ItemGroup>
 
   <!-- Test dependencies -->

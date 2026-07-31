@@ -21,8 +21,6 @@ namespace Umbraco.AI.Core.EditableModels;
 /// </remarks>
 internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 {
-    private const string ConfigPrefix = "$";
-
     private readonly IConfiguration _configuration;
     private readonly IReadOnlyList<string> _allowedConfigKeyPrefixes;
     private readonly IReadOnlyList<string> _secretConfigKeyPrefixes;
@@ -124,8 +122,7 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 
     private object? ResolveConfigurationVariable(object? value, Type targetType, bool isSensitiveField)
     {
-        // Only handle string values with the $ prefix
-        if (value is not string strValue || !strValue.StartsWith(ConfigPrefix))
+        if (value is not string strValue)
         {
             return value;
         }
@@ -135,13 +132,18 @@ internal sealed class AIEditableModelResolver : IAIEditableModelResolver
         // Strip one '$' and return the remainder verbatim — no allow-list or lookup applied.
         // Note this only concerns values that START with '$'; a trailing '$' (e.g. a regex
         // end-of-line anchor) is never treated as a reference and needs no escaping.
-        if (strValue.StartsWith("$$", StringComparison.Ordinal))
+        if (AIConfigurationReference.IsEscapedLiteral(strValue))
         {
-            return strValue.Substring(1);
+            return AIConfigurationReference.Unescape(strValue);
+        }
+
+        if (!AIConfigurationReference.IsReference(strValue))
+        {
+            return value;
         }
 
         // Extract configuration key
-        var configKey = strValue.Substring(ConfigPrefix.Length);
+        var configKey = strValue.Substring(AIConfigurationReference.Prefix.Length);
 
         // Default-deny: only keys under an allowed prefix may be dereferenced. Checked
         // before the lookup so the rejection does not depend on whether the key exists.

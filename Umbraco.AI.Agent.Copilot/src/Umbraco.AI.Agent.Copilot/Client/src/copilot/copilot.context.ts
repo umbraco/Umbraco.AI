@@ -3,11 +3,11 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import {
-    Observable,
+    type Observable,
     map,
     distinctUntilChanged,
-    shareReplay,
 } from "@umbraco-cms/backoffice/external/rxjs";
+import { debouncedHide } from "./utils/debounced-hide.js";
 import {
     UaiRunController,
     UaiToolRendererManager,
@@ -146,35 +146,13 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#entityContext = new UaiCopilotEntityContext(host, this.#entityAdapterContext);
         this.#requestContextCollector = new UaiRequestContextCollector(host);
 
-        // Emit `true` immediately when a workspace becomes supported, but delay the flip to `false`
-        // by SUPPORT_HIDE_DELAY_MS. A pending hide is cancelled if support returns within the window,
-        // so supported⇄supported hops (which briefly empty the detection list) never emit `false`.
+        // "Supported" == copilot has detected at least one entity it can act on. Hold the hide edge
+        // (see debouncedHide) so supported⇄supported hops don't flip it to false.
         const supported$ = this.#entityAdapterContext.detectedEntities$.pipe(
             map((entities) => entities.length > 0),
             distinctUntilChanged(),
         );
-        this.isSupportedWorkspace$ = new Observable<boolean>((subscriber) => {
-            let hideTimer = 0;
-            let current: boolean | undefined;
-            const emit = (value: boolean) => {
-                if (current !== value) {
-                    current = value;
-                    subscriber.next(value);
-                }
-            };
-            const sub = supported$.subscribe((supported) => {
-                window.clearTimeout(hideTimer);
-                if (supported) {
-                    emit(true);
-                } else {
-                    hideTimer = window.setTimeout(() => emit(false), SUPPORT_HIDE_DELAY_MS);
-                }
-            });
-            return () => {
-                window.clearTimeout(hideTimer);
-                sub.unsubscribe();
-            };
-        }).pipe(shareReplay(1));
+        this.isSupportedWorkspace$ = debouncedHide(supported$, SUPPORT_HIDE_DELAY_MS);
 
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,

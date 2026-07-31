@@ -86,7 +86,11 @@ function createSharedSectionObservable(): Observable<string | null> {
 					_sharedSectionObservable$ = null;
 				}
 			};
-		}).pipe(shareReplay(1));
+		}).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+		// refCount:true so the history patch is torn down when the last subscriber leaves (see the
+		// teardown above) and re-applied on the next subscribe. With the default (refCount:false)
+		// shareReplay keeps the source subscribed forever, leaving history monkey-patched for the app
+		// lifetime and making that teardown dead code.
 	}
 
 	return _sharedSectionObservable$;

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Moq;
 using Shouldly;
 using Umbraco.AI.Core.EditableModels;
 
@@ -55,5 +57,39 @@ public class AIEditableModelSchemaBuilderTests
     {
         // Masking only substitutes for a text box. A type with its own editor keeps it.
         GetField("rotationDays").EditorUiAlias.ShouldBe("Umb.PropertyEditorUi.Integer");
+    }
+
+    [Fact]
+    public void BuildForType_WithSensitiveNonStringType_WarnsItCannotBeEncrypted()
+    {
+        // Only strings are encrypted at rest, so marking an int sensitive silently stores it in the
+        // clear. The serializer skips such a value rather than throwing, so this warning is the only
+        // thing standing between the mis-declaration and nobody noticing.
+
+        // Arrange
+        var loggerMock = new Mock<ILogger<AIEditableModelSchemaBuilder>>();
+        var builder = new AIEditableModelSchemaBuilder(loggerMock.Object);
+
+        // Act
+        builder.BuildForType<TestSettings>("test");
+
+        // Assert — once for RotationDays, and not for the sensitive string fields alongside it
+        loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("RotationDays")),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        loggerMock.Verify(
+            l => l.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }

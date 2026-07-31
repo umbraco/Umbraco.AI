@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Hosting;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Runtime;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.AI.Core.AuditLog;
 
@@ -13,7 +13,7 @@ namespace Umbraco.AI.Core.AuditLog;
 /// Background service that periodically cleans up old AI audit-log records
 /// based on the configured retention period.
 /// </summary>
-internal sealed class AIAuditLogCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIAuditLogCleanupBackgroundJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IOptionsMonitor<AIAuditLogOptions> _options;

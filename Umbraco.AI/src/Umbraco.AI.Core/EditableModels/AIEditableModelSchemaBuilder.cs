@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Serialization;
 using Umbraco.Extensions;
@@ -9,6 +11,11 @@ namespace Umbraco.AI.Core.EditableModels;
 
 internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuilder
 {
+    private readonly ILogger<AIEditableModelSchemaBuilder> _logger;
+
+    public AIEditableModelSchemaBuilder(ILogger<AIEditableModelSchemaBuilder>? logger = null)
+        => _logger = logger ?? NullLogger<AIEditableModelSchemaBuilder>.Instance;
+
     public AIEditableModelSchema BuildForType(Type modelType, string modelId)
     {
         var properties = modelType
@@ -30,6 +37,8 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
         var attr = property.GetCustomAttribute<AIEditableModelFieldAttribute>();
         var key = property.Name.ToCamelCase();
         var modelKey = modelId.ToCamelCase();
+
+        WarnIfSensitiveFieldCannotBeEncrypted(attr, property, modelId);
 
         // Read default value from the model instance's property initializer
         object? defaultValue = null;
@@ -63,6 +72,42 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
             Group = (attr?.Group).IsNullOrWhiteSpace() ? null :
                 attr.Group.StartsWith("#") ? attr.Group :  $"#uaiFieldGroups_{attr.Group.ToCamelCase()}Label"
         };
+    }
+
+    /// <summary>
+    /// Warns when a property is marked sensitive but holds a type the persistence layer cannot
+    /// protect.
+    /// </summary>
+    /// <remarks>
+    /// Encryption only covers strings, so such a field is stored in the clear. That used to surface
+    /// as an exception when saving the whole entity; the serializer now skips the value instead, and
+    /// this keeps the declaration mistake from disappearing with it. A warning rather than a throw
+    /// deliberately: schemas are built per provider, and one mis-declared field in a third-party
+    /// package should not take the AI section down.
+    /// </remarks>
+    private void WarnIfSensitiveFieldCannotBeEncrypted(
+        AIEditableModelFieldAttribute? attr,
+        PropertyInfo property,
+        string modelId)
+    {
+        if (attr?.IsSensitive != true)
+        {
+            return;
+        }
+
+        var underlyingType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+        if (underlyingType == typeof(string))
+        {
+            return;
+        }
+
+        _logger.LogWarning(
+            "{ModelId}.{PropertyName} is marked [AIField(IsSensitive = true)] but is of type {PropertyType}. " +
+            "Only string values are encrypted at rest, so this value will be stored unprotected. " +
+            "Either change the property to a string or drop IsSensitive.",
+            modelId,
+            property.Name,
+            underlyingType.Name);
     }
 
     /// <summary>

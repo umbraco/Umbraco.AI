@@ -1,7 +1,7 @@
 import { sidebarManifests } from "./sidebar/manifests.js";
-import { copilotFabManifests } from "./copilot-fab/manifests.js";
 
-// The global header-app button is disabled for now in favour of the contextual FAB
-// (copilotFabManifests, injected into supported workspaces). To restore it, re-add
+// The global header-app button is disabled for now in favour of the contextual FAB. The FAB is not
+// registered via a manifest — the sidebar entry point mounts it and UaiCopilotFabController drives
+// its visibility from the copilot's detected entities. To restore the header button, re-add
 // `...headerAppManifests` here (import from "./header-app/manifests.js") — the files are kept intact.
-export const componentManifests = [...sidebarManifests, ...copilotFabManifests];
+export const componentManifests = [...sidebarManifests];

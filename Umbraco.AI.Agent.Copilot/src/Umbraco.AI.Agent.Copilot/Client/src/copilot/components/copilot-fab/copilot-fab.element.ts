@@ -5,11 +5,11 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 /**
  * Presentational floating action button for the copilot — a fixed bottom-right overlay.
  *
- * Intentionally "dumb": the injector (UaiCopilotFabInjector) mounts/unmounts it and listens for
- * `click`. It slides/fades in when the `open` attribute is set (the injector sets it after mounting,
- * and removes it before un-mounting so it slides back out). Uses `<uui-icon name="icon-chat">` for
- * icon consistency with the rest of the backoffice (the FAB is mounted inside the app tree, so the
- * icon registry resolves).
+ * Intentionally "dumb": it is mounted once by the sidebar entry point, and UaiCopilotFabController
+ * listens for `click` and toggles its visibility. It slides/fades in when the `visible` attribute is
+ * set and slides back out when it is removed. Uses `<uui-icon name="icon-chat">` for icon
+ * consistency with the rest of the backoffice (the FAB is mounted inside the app tree, so the icon
+ * registry resolves).
  */
 @customElement("uai-copilot-fab")
 export class UaiCopilotFabElement extends UmbLitElement {
@@ -31,15 +31,15 @@ export class UaiCopilotFabElement extends UmbLitElement {
             bottom: calc(var(--umb-footer-layout-height, 70px) + var(--uui-size-space-5, 18px));
             /* Just BELOW the copilot sidebar (z-index 1000) so the sidebar occludes the FAB while open
                and reveals it as the sidebar animates out. Relies on the FAB being mounted in the same
-               stacking context as the sidebar (see the injector). */
+               stacking context as the sidebar (the sidebar entry point mounts both). */
             z-index: 999;
-            /* Off-screen (slid out to the right) until the injector sets [open]. */
+            /* Off-screen (slid out to the right) until the controller sets [visible]. */
             transform: translateX(calc(100% + 24px));
             opacity: 0;
             pointer-events: none;
             transition: transform 220ms ease, opacity 220ms ease;
         }
-        :host([open]) {
+        :host([visible]) {
             transform: translateX(0);
             opacity: 1;
             pointer-events: auto;

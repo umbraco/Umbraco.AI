@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Hosting;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Runtime;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.AI.Core.Versioning;
 
@@ -13,7 +13,7 @@ namespace Umbraco.AI.Core.Versioning;
 /// Background service that periodically cleans up old entity version records
 /// based on the configured cleanup policy.
 /// </summary>
-internal sealed class AIVersionCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIVersionCleanupBackgroundJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IOptionsMonitor<AIVersionCleanupPolicy> _options;

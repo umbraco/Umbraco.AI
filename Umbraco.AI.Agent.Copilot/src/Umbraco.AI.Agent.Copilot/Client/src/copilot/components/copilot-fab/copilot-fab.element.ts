@@ -1,4 +1,4 @@
-import { customElement } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 
@@ -6,16 +6,34 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * Presentational floating action button for the copilot — a fixed bottom-right overlay.
  *
  * Intentionally "dumb": it is mounted once by the sidebar entry point, and UaiCopilotFabController
- * listens for `click` and toggles its visibility. It slides/fades in when the `visible` attribute is
- * set and slides back out when it is removed. Uses `<uui-icon name="icon-chat">` for icon
- * consistency with the rest of the backoffice (the FAB is mounted inside the app tree, so the icon
- * registry resolves).
+ * listens for `click`, toggles its `visible` attribute, and mirrors the sidebar's open state onto
+ * `expanded`. It slides/fades in when `visible` is set and slides back out when it is removed. Uses
+ * `<uui-icon name="icon-chat">` for icon consistency with the rest of the backoffice (the FAB is
+ * mounted inside the app tree, so the icon registry resolves).
+ *
+ * `shadowRootOptions.delegatesFocus` lets the controller call `fab.focus()` (on the host) to move
+ * focus onto the inner button when the sidebar closes.
  */
 @customElement("uai-copilot-fab")
 export class UaiCopilotFabElement extends UmbLitElement {
+    static override readonly shadowRootOptions = {
+        ...UmbLitElement.shadowRootOptions,
+        delegatesFocus: true,
+    };
+
+    /** Reflects the copilot sidebar's open state — drives `aria-expanded` and the action label. */
+    @property({ type: Boolean, reflect: true })
+    expanded = false;
+
     override render() {
+        const label = this.localize.term(this.expanded ? "uaiCopilot_closeLabel" : "uaiCopilot_openLabel");
         return html`
-            <button type="button" class="fab" title="AI Assistant" aria-label="Open AI Assistant">
+            <button
+                type="button"
+                class="fab"
+                title=${this.localize.term("uaiCopilot_name")}
+                aria-label=${label}
+                aria-expanded=${this.expanded}>
                 <uui-icon name="icon-chat"></uui-icon>
             </button>`;
     }
@@ -33,16 +51,22 @@ export class UaiCopilotFabElement extends UmbLitElement {
                and reveals it as the sidebar animates out. Relies on the FAB being mounted in the same
                stacking context as the sidebar (the sidebar entry point mounts both). */
             z-index: 999;
-            /* Off-screen (slid out to the right) until the controller sets [visible]. */
+            /* Off-screen (slid out to the right) until the controller sets [visible]. visibility
+               hidden (delayed until the slide-out finishes) takes the button out of the tab order and
+               the accessibility tree while hidden — otherwise a keyboard/screen-reader user could reach
+               an invisible button in an unsupported workspace. */
             transform: translateX(calc(100% + 24px));
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
-            transition: transform 220ms ease, opacity 220ms ease;
+            transition: transform 220ms ease, opacity 220ms ease, visibility 0s linear 220ms;
         }
         :host([visible]) {
             transform: translateX(0);
             opacity: 1;
+            visibility: visible;
             pointer-events: auto;
+            transition: transform 220ms ease, opacity 220ms ease, visibility 0s linear 0s;
         }
         @media (prefers-reduced-motion: reduce) {
             :host {

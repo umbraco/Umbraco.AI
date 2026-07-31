@@ -1,4 +1,4 @@
-import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, state, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
@@ -8,6 +8,7 @@ import { agentClientReady } from "@umbraco-ai/agent";
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
     #copilotContext?: UaiCopilotContext;
+    #panelRef = createRef<HTMLElement>();
 
     readonly #sidebarWidth = 450;
 
@@ -34,6 +35,11 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                     // Show content immediately on open; on close, wait for slide-out transition
                     if (isOpen) {
                         this._showContent = true;
+                        // Move focus into the panel once its content has rendered. The chat input
+                        // self-focuses when the run controller enables it; focusing the panel here is
+                        // the reliable floor so keyboard/screen-reader users land inside the panel
+                        // (and ESC has somewhere to fire from) even if that doesn't happen.
+                        this.updateComplete.then(() => this.#panelRef.value?.focus());
                     }
                 });
 
@@ -66,6 +72,16 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
         this.#copilotContext?.close();
     }
 
+    #handleKeydown(e: KeyboardEvent) {
+        // ESC closes the panel. keydown is composed, so this fires even when focus is inside the chat
+        // input (a separate shadow tree). Stop propagation so it doesn't also trigger unrelated
+        // backoffice Escape handling. Focus returns to the button via UaiCopilotFabController.
+        if (e.key === "Escape" && this._isOpen) {
+            e.stopPropagation();
+            this.#copilotContext?.close();
+        }
+    }
+
     #handleTransitionEnd(e: TransitionEvent) {
         // Only react to the sidebar's own transform transition
         if (e.propertyName === "transform" && !this._isOpen) {
@@ -74,16 +90,26 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     }
 
     override render() {
+        const title = this.localize.term("uaiCopilot_sidebarTitle");
         return html`
             <aside
+                ${ref(this.#panelRef)}
                 class="sidebar ${this._isOpen ? "open" : ""}"
+                role="complementary"
+                aria-label=${title}
+                tabindex="-1"
+                @keydown=${this.#handleKeydown}
                 @transitionend=${this.#handleTransitionEnd}>
                 ${this._showContent ? html`
                     <header class="sidebar-header">
                         <div class="header-content">
-                            <h3 class="header-title">Umbraco Copilot</h3>
+                            <h3 class="header-title">${title}</h3>
                         </div>
-                        <uui-button compact look="default" @click=${this.#handleClose}>
+                        <uui-button
+                            compact
+                            look="default"
+                            label=${this.localize.term("uaiCopilot_closeLabel")}
+                            @click=${this.#handleClose}>
                             <uui-icon name="icon-delete"></uui-icon>
                         </uui-button>
                     </header>

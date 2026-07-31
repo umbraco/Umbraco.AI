@@ -23,6 +23,19 @@ export class UaiCopilotFabController extends UmbControllerBase {
         this.observe(copilot.isSupportedWorkspace$, (supported) => {
             fab.toggleAttribute("visible", supported);
         });
+
+        // Mirror the sidebar's open state onto the button (drives aria-expanded and the label), and
+        // return focus to the button when the panel closes. Only refocus on a genuine open->close
+        // while the button is still visible: on auto-close (leaving a supported workspace) the button
+        // is hidden, so we must not yank focus to it.
+        let wasOpen = false;
+        this.observe(copilot.isOpen, (isOpen) => {
+            fab.toggleAttribute("expanded", isOpen);
+            if (wasOpen && !isOpen && fab.hasAttribute("visible")) {
+                fab.focus();
+            }
+            wasOpen = isOpen;
+        });
     }
 }
 

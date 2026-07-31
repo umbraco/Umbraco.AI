@@ -52,7 +52,7 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
             PropertyType = property.PropertyType,
             Label = attr?.Label ?? $"#uaiFields_{modelKey}{property.Name}Label",
             Description = attr?.Description ?? $"#uaiFields_{modelKey}{property.Name}Description",
-            EditorUiAlias = attr?.EditorUiAlias ?? InferEditorUiAlias(property.PropertyType),
+            EditorUiAlias = attr?.EditorUiAlias ?? InferEditorUiAlias(property.PropertyType, attr?.IsSensitive ?? false),
             EditorConfig = attr?.EditorConfig != null
                 ? JsonSerializer.Deserialize<JsonElement>(attr.EditorConfig, Constants.DefaultJsonSerializerOptions)
                 : null,
@@ -65,12 +65,24 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
         };
     }
 
-    private static string InferEditorUiAlias(Type type)
+    /// <summary>
+    /// Picks the editor to render a field with when its <see cref="AIEditableModelFieldAttribute"/>
+    /// does not name one explicitly.
+    /// </summary>
+    /// <remarks>
+    /// Sensitive strings default to a masked editor (with a reveal toggle) so credentials are not
+    /// left on screen during screen shares and demos. This is inferred here rather than flagged to
+    /// the client, so <c>IsSensitive</c> never has to cross the API boundary — the same approach
+    /// already taken for <c>IsRequired</c>. A settings author who wants a sensitive field rendered
+    /// some other way sets <see cref="AIEditableModelFieldAttribute.EditorUiAlias"/>, which is
+    /// checked first by the caller and so always wins.
+    /// </remarks>
+    private static string InferEditorUiAlias(Type type, bool isSensitive)
     {
         var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
         if (underlyingType == typeof(string))
-            return "Umb.PropertyEditorUi.TextBox";
+            return isSensitive ? "Uai.PropertyEditorUi.MaskedTextBox" : "Umb.PropertyEditorUi.TextBox";
         if (underlyingType == typeof(int) || underlyingType == typeof(long))
             return "Umb.PropertyEditorUi.Integer";
         if (underlyingType == typeof(bool))
@@ -80,7 +92,8 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
         if (underlyingType == typeof(DateTime) || underlyingType == typeof(DateTimeOffset))
             return "Umb.PropertyEditorUi.DatePicker";
 
-        return "Umb.PropertyEditorUi.TextBox";
+        // Anything else also falls back to a text box, so keep the sensitive/masked pairing here too.
+        return isSensitive ? "Uai.PropertyEditorUi.MaskedTextBox" : "Umb.PropertyEditorUi.TextBox";
     }
 
     private static IEnumerable<ValidationAttribute> InferValidationAttributes(PropertyInfo property)

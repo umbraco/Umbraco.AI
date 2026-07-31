@@ -87,9 +87,11 @@ internal sealed class AIEditableModelSerializer : IAIEditableModelSerializer
                 var stringValue = jsonValue.GetValue<string>();
                 if (!string.IsNullOrEmpty(stringValue))
                 {
-                    // Skip encryption for configuration references (values starting with $)
-                    // These are pointers to IConfiguration, not actual secrets
-                    if (stringValue.StartsWith("$", StringComparison.Ordinal))
+                    // Skip encryption for configuration references. These are pointers to
+                    // IConfiguration, not actual secrets. An escaped literal ($$foo, meaning the
+                    // literal $foo) is NOT a reference and must still be encrypted — treating it as
+                    // one stored the secret in plaintext.
+                    if (AIConfigurationReference.IsReference(stringValue))
                     {
                         continue;
                     }

@@ -113,13 +113,14 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     override render() {
         const title = this.localize.term("uaiCopilot_sidebarTitle");
         // Frame the chat around the item in context when one is known; otherwise let uai-chat use its
-        // own generic defaults.
+        // own generic empty-state fallback.
         const placeholder = this._entityName
             ? this.localize.term("uaiCopilot_inputPlaceholder", this._entityName)
             : undefined;
-        const introMessage = this._entityName
-            ? this.localize.term("uaiCopilot_introMessage", this._entityName)
+        const introHeading = this._entityName
+            ? this.localize.term("uaiCopilot_introHeading", this._entityName)
             : undefined;
+        const introMessage = this.localize.term("uaiCopilot_introMessage");
         // Subtle, non-textual "chat is getting long" signal: a thin bar that fills toward a soft
         // threshold and shifts to a warning tint near it. No hard cap, no auto-trimming.
         const lengthRatio = Math.min(this._messageCount / this.#lengthSoftLimit, 1);
@@ -166,9 +167,15 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                         : nothing}
                     <uai-entity-selector></uai-entity-selector>
                     <div class="sidebar-content">
-                        <uai-chat
-                            placeholder=${placeholder ?? nothing}
-                            empty-state-message=${introMessage ?? nothing}></uai-chat>
+                        <uai-chat placeholder=${placeholder ?? nothing}>
+                            ${introHeading
+                                ? html`<div slot="empty-state" class="copilot-intro">
+                                          <uui-icon name="icon-chat"></uui-icon>
+                                          <h3>${introHeading}</h3>
+                                          <p>${introMessage}</p>
+                                      </div>`
+                                : nothing}
+                        </uai-chat>
                     </div>
                 ` : ''}
             </aside>
@@ -259,6 +266,32 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
         uai-chat {
             flex: 1;
             display: block;
+        }
+
+        /* Rich empty-state content projected into <uai-chat>'s "empty-state" slot: a friendly,
+           context-named greeting in place of the generic prompt. */
+        .copilot-intro {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: var(--uui-size-space-3);
+            color: var(--uui-color-text-alt);
+        }
+        .copilot-intro uui-icon {
+            font-size: 40px;
+            opacity: 0.5;
+        }
+        .copilot-intro h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: var(--uui-color-text);
+        }
+        .copilot-intro p {
+            margin: 0;
+            max-width: 32ch;
+            font-size: var(--uui-type-default-size);
         }
     `;
 }

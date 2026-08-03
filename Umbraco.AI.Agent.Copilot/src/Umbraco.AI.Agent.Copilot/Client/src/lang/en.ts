@@ -14,10 +14,9 @@ export default {
         lengthMeterTitle: "This chat is getting long. Consider clearing it to start fresh.",
         sidebarTitle: "Umbraco Copilot",
         // Context framing (which item the copilot is acting on)
-        workingOnLabel: "Working on",
         inputPlaceholder: "Ask about %0%…",
-        introMessage:
-            "I can help you edit %0%. I can search your whole site for reference, but I only make changes to this item.",
+        introHeading: "How can I help you with %0%?",
+        introMessage: "I can search your whole site for reference, but I only make changes to this item.",
     },
     // Copilot-specific tool localizations
     uaiTool: {

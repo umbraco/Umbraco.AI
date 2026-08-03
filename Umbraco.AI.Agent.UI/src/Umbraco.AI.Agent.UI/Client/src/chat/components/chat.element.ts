@@ -36,13 +36,6 @@ export class UaiChatElement extends UmbLitElement {
     @property({ type: String })
     placeholder?: string;
 
-    /**
-     * Message shown in the empty state, before any messages exist. Lets a surface explain what the
-     * chat is for (e.g. copilot's "editing this item" framing). Falls back to a generic prompt.
-     */
-    @property({ type: String, attribute: "empty-state-message" })
-    emptyStateMessage?: string;
-
     @state()
     private _agentName = "";
 
@@ -188,11 +181,10 @@ export class UaiChatElement extends UmbLitElement {
                         ${this._messages.length === 0
                             ? html`
                                   <div class="empty-state">
-                                      <uui-icon name="icon-chat"></uui-icon>
-                                      <p>
-                                          ${this.emptyStateMessage ??
-                                          `Start a conversation with ${this._agentName || "an agent"}`}
-                                      </p>
+                                      <slot name="empty-state">
+                                          <uui-icon name="icon-chat"></uui-icon>
+                                          <p>Start a conversation with ${this._agentName || "an agent"}</p>
+                                      </slot>
                                   </div>
                               `
                             : this.#renderMessages()}
@@ -264,6 +256,12 @@ export class UaiChatElement extends UmbLitElement {
             text-align: center;
             padding: var(--uui-size-space-5);
             box-sizing: border-box;
+        }
+
+        /* Let projected empty-state content (and the default fallback) participate directly in the
+           centered flex column above, rather than nesting inside an inline slot box. */
+        .empty-state slot {
+            display: contents;
         }
 
         .empty-state uui-icon {

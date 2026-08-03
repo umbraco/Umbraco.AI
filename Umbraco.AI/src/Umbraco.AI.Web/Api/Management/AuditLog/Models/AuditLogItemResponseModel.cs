@@ -108,6 +108,12 @@ public class AuditLogItemResponseModel
     public int? InputTokens { get; set; }
 
     /// <summary>
+    /// Portion of <see cref="InputTokens"/> served from the provider's prompt cache.
+    /// Null when the provider does not report it.
+    /// </summary>
+    public int? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Number of output tokens generated.
     /// </summary>
     public int? OutputTokens { get; set; }

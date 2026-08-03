@@ -50,6 +50,7 @@ export type AuditLogDetailResponseModel = {
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
+    cachedInputTokens?: number | null;
     outputTokens?: number | null;
     errorMessage?: string | null;
     endTime?: string | null;
@@ -81,6 +82,7 @@ export type AuditLogItemResponseModel = {
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
+    cachedInputTokens?: number | null;
     outputTokens?: number | null;
     errorMessage?: string | null;
 };
@@ -365,8 +367,6 @@ export type GuardrailRuleModel = {
 export type ImageGenerationProfileSettingsModel = ProfileSettingsModel & {
     $type: 'imageGeneration';
     size?: string | null;
-    quality?: string | null;
-    style?: string | null;
     mediaType?: string | null;
 };
 
@@ -879,6 +879,7 @@ export type UsageBreakdownItemModel = {
     dimensionName?: string | null;
     requestCount: number;
     totalTokens: number;
+    cachedInputTokens?: number | null;
     percentage: number;
 };
 
@@ -891,6 +892,7 @@ export type UsageModel = {
 export type UsageSummaryResponseModel = {
     totalRequests: number;
     inputTokens: number;
+    cachedInputTokens?: number | null;
     outputTokens: number;
     totalTokens: number;
     successCount: number;
@@ -904,6 +906,7 @@ export type UsageTimeSeriesPointModel = {
     requestCount: number;
     totalTokens: number;
     inputTokens: number;
+    cachedInputTokens?: number | null;
     outputTokens: number;
     successCount: number;
     failureCount: number;

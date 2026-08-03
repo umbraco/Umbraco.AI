@@ -22,6 +22,16 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
         return `${(num * 100).toFixed(1)}%`;
     }
 
+    /**
+     * Whether any row reports cached input tokens.
+     *
+     * Gates the column so an install whose providers never report caching keeps the table it had before,
+     * rather than gaining a column of dashes.
+     */
+    private _hasCachedTokenData(): boolean {
+        return this.data?.some((i) => i.cachedInputTokens !== undefined && i.cachedInputTokens !== null) ?? false;
+    }
+
     override render() {
         if (!this.data || this.data.length === 0) {
             return html`
@@ -31,6 +41,8 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
             `;
         }
 
+        const showCached = this._hasCachedTokenData();
+
         return html`
             <uui-box headline=${this.headline} class="breakdown-box">
                 <uui-table>
@@ -38,6 +50,9 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
                         <uui-table-head-cell>Name</uui-table-head-cell>
                         <uui-table-head-cell style="text-align: right;">Requests</uui-table-head-cell>
                         <uui-table-head-cell style="text-align: right;">Tokens</uui-table-head-cell>
+                        ${showCached
+                            ? html`<uui-table-head-cell style="text-align: right;">Cached</uui-table-head-cell>`
+                            : null}
                         <uui-table-head-cell style="text-align: right;">Share</uui-table-head-cell>
                     </uui-table-head>
                     ${this.data.map(
@@ -52,6 +67,14 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
                                 <uui-table-cell style="text-align: right;"
                                     >${this._formatNumber(item.totalTokens)}</uui-table-cell
                                 >
+                                ${showCached
+                                    ? html`<uui-table-cell style="text-align: right;"
+                                          >${item.cachedInputTokens !== undefined &&
+                                          item.cachedInputTokens !== null
+                                              ? this._formatNumber(item.cachedInputTokens)
+                                              : "—"}</uui-table-cell
+                                      >`
+                                    : null}
                                 <uui-table-cell style="text-align: right;"
                                     >${this._formatPercentage(item.percentage / 100)}</uui-table-cell
                                 >

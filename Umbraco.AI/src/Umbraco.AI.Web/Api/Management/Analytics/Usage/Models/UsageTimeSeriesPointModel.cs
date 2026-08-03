@@ -32,6 +32,12 @@ public class UsageTimeSeriesPointModel
     public long InputTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the portion of <see cref="InputTokens"/> served from a provider's prompt cache in
+    /// this time period. Null when no provider reports it.
+    /// </summary>
+    public long? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the output tokens consumed in this time period.
     /// </summary>
     [Required]

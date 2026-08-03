@@ -61,13 +61,16 @@ export class UaiUsageTimeSeriesChartElement extends UmbLitElement {
                               {
                                   label: "Cached Input Tokens",
                                   dataKey: "cachedInputTokens",
-                                  // --uui-palette-space-cadet-dimmed, the palette's own lighter companion
-                                  // to the space cadet used for Input Tokens above — cached tokens are a
-                                  // subset of that total, so they read as the same series' lesser part.
-                                  // Literal rather than the CSS variable because Chart.js takes colours as
-                                  // resolved strings, which is why the other series are literals too.
-                                  backgroundColor: "rgb(106, 117, 154)",
-                                  borderColor: "rgb(106, 117, 154)",
+                                  // Not a palette token: a lighter tint of the space cadet used for Input
+                                  // Tokens above, chosen because cached tokens are a subset of that total
+                                  // and should read as the same series' lesser part. The palette has no
+                                  // lighter companion that works here — space-cadet-light is darker than
+                                  // space-cadet-dimmed, dimmed reads too dark against the navy, and the
+                                  // malibu/violet-blue blues read as a separate measure rather than a
+                                  // subset. Literal rather than a CSS variable because Chart.js takes
+                                  // colours as resolved strings, as the other series do.
+                                  backgroundColor: "rgb(102, 132, 189)",
+                                  borderColor: "rgb(102, 132, 189)",
                               },
                           ]
                         : []),

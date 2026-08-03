@@ -61,8 +61,13 @@ export class UaiUsageTimeSeriesChartElement extends UmbLitElement {
                               {
                                   label: "Cached Input Tokens",
                                   dataKey: "cachedInputTokens",
-                                  backgroundColor: "rgb(102, 132, 189)",
-                                  borderColor: "rgb(102, 132, 189)",
+                                  // --uui-palette-space-cadet-dimmed, the palette's own lighter companion
+                                  // to the space cadet used for Input Tokens above — cached tokens are a
+                                  // subset of that total, so they read as the same series' lesser part.
+                                  // Literal rather than the CSS variable because Chart.js takes colours as
+                                  // resolved strings, which is why the other series are literals too.
+                                  backgroundColor: "rgb(106, 117, 154)",
+                                  borderColor: "rgb(106, 117, 154)",
                               },
                           ]
                         : []),

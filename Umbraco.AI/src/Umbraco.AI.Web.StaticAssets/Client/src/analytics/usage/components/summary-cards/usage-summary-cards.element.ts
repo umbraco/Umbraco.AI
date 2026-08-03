@@ -70,7 +70,7 @@ export class UaiUsageSummaryCardsElement extends UmbLitElement {
                 icon="icon-page-down"
                 label="Input Tokens"
                 .value=${this._formatIntWithK(inputTokens)}
-                .detail=${formatCachedTokenDetail(inputTokens, cachedInputTokens)}
+                .valueSuffix=${formatCachedTokenDetail(cachedInputTokens)}
             ></uai-analytics-summary-card>
 
             <uai-analytics-summary-card

@@ -8,23 +8,19 @@ import { formatCachedTokenDetail } from "./cached-token-detail.js";
  */
 describe("cached token detail", () => {
     it("says nothing when no provider reported a figure", () => {
-        expect(formatCachedTokenDetail(12_400, undefined)).toBeUndefined();
-        expect(formatCachedTokenDetail(12_400, null)).toBeUndefined();
+        expect(formatCachedTokenDetail(undefined)).toBeUndefined();
+        expect(formatCachedTokenDetail(null)).toBeUndefined();
     });
 
     it("distinguishes a reported zero from nothing reported", () => {
-        expect(formatCachedTokenDetail(12_400, 0)).toBe("none cached");
+        expect(formatCachedTokenDetail(0)).toBe("none cached");
     });
 
-    it("reports the amount and its share of the input total", () => {
-        expect(formatCachedTokenDetail(12_400, 9_800)).toBe("9.8k cached (79.0%)");
+    it("reports the amount in the same units as the value it sits beside", () => {
+        expect(formatCachedTokenDetail(14_300)).toBe("14.3k cached");
     });
 
     it("uses whole numbers below a thousand, matching the card above it", () => {
-        expect(formatCachedTokenDetail(800, 512)).toBe("512 cached (64.0%)");
-    });
-
-    it("omits the share rather than dividing by zero", () => {
-        expect(formatCachedTokenDetail(0, 512)).toBe("512 cached");
+        expect(formatCachedTokenDetail(512)).toBe("512 cached");
     });
 });

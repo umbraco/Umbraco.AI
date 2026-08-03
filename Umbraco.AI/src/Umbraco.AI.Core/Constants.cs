@@ -250,6 +250,12 @@ public static class Constants
         /// A subset of the reported input token count, not an addition to it — the input total stays the
         /// true total. Providers differ in how much they discount a cache read, so the split is stored and
         /// the weighting left to whoever presents or prices it.
+        /// <para>
+        /// Prefer <see cref="Microsoft.Extensions.AI.UsageDetails.CachedInputTokenCount"/>, which
+        /// Microsoft.Extensions.AI defines for this and the OpenAI and Anthropic adapters already populate.
+        /// This key is the fallback for a provider whose SDK leaves that property unset, and is read only
+        /// when it is — see <c>UsageDetailsExtensions.GetCachedInputTokenCount</c>.
+        /// </para>
         /// </remarks>
         public const string CachedInputTokens = "Umbraco.AI.CachedInputTokens";
     }

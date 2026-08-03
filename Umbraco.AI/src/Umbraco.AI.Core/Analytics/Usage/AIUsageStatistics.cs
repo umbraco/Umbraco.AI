@@ -83,6 +83,16 @@ public sealed class AIUsageStatistics
     public required long InputTokens { get; init; }
 
     /// <summary>
+    /// Gets the portion of <see cref="InputTokens"/> that was served from a provider's prompt cache.
+    /// </summary>
+    /// <remarks>
+    /// Aggregated from the records in this bucket, counting only those whose provider reported it, so a
+    /// bucket mixing cache-aware and cache-silent providers still totals what is known rather than
+    /// treating silence as zero.
+    /// </remarks>
+    public long? CachedInputTokens { get; init; }
+
+    /// <summary>
     /// Gets the total output tokens generated.
     /// </summary>
     public required long OutputTokens { get; init; }

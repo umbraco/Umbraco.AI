@@ -113,6 +113,12 @@ public sealed class AIUsageSummary
     public required long InputTokens { get; init; }
 
     /// <summary>
+    /// Gets the portion of <see cref="InputTokens"/> served from a provider's prompt cache, or
+    /// <c>null</c> when no provider in range reported it.
+    /// </summary>
+    public long? CachedInputTokens { get; init; }
+
+    /// <summary>
     /// Gets the total number of output tokens generated.
     /// </summary>
     public required long OutputTokens { get; init; }
@@ -169,6 +175,12 @@ public sealed class AIUsageTimeSeriesPoint
     public required long InputTokens { get; init; }
 
     /// <summary>
+    /// Gets the portion of <see cref="InputTokens"/> served from a provider's prompt cache in this time
+    /// period, or <c>null</c> when no provider reported it.
+    /// </summary>
+    public long? CachedInputTokens { get; init; }
+
+    /// <summary>
     /// Gets the output tokens consumed in this time period.
     /// </summary>
     public required long OutputTokens { get; init; }
@@ -209,6 +221,12 @@ public sealed class AIUsageBreakdownItem
     /// Gets the total tokens consumed for this dimension.
     /// </summary>
     public required long TotalTokens { get; init; }
+
+    /// <summary>
+    /// Gets the input tokens served from a provider's prompt cache for this dimension, or <c>null</c>
+    /// when no provider in this dimension reported it.
+    /// </summary>
+    public long? CachedInputTokens { get; init; }
 
     /// <summary>
     /// Gets the percentage of total requests represented by this dimension.

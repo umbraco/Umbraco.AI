@@ -10,14 +10,16 @@ using Umbraco.AI.Extensions;
 namespace Umbraco.AI.Anthropic.Tests.Unit;
 
 /// <summary>
-/// Pins down that the cache-read token count survives the trip from Anthropic's response to
-/// <see cref="UsageDetails.AdditionalCounts"/>, on both the buffered and streamed paths.
+/// Pins down that the cache-read token count survives the trip from Anthropic's response to the figure core
+/// persists, on both the buffered and streamed paths.
 /// </summary>
 /// <remarks>
 /// The SDK's Microsoft.Extensions.AI adapter sums Anthropic's three input figures into
-/// <see cref="UsageDetails.InputTokenCount"/> and forwards only the cache <em>write</em> count, dropping the
-/// read count that shows caching paying off. These assert the recovery, and the input total's meaning, so a
-/// future adapter change surfaces here rather than as a silently empty dashboard figure.
+/// <see cref="UsageDetails.InputTokenCount"/>, then reports the two halves of that total separately: the
+/// cache <em>read</em> count on <see cref="UsageDetails.CachedInputTokenCount"/> and the <em>write</em> count
+/// in <see cref="UsageDetails.AdditionalCounts"/>. Nothing in this package intervenes, so these assert the
+/// adapter's own behaviour and the input total's meaning — a future adapter change surfaces here rather than
+/// as a silently empty dashboard figure.
 /// </remarks>
 public class AnthropicCachedTokenReportingTests
 {
@@ -189,10 +191,21 @@ public class AnthropicCachedTokenReportingTests
     }
 
     /// <summary>
-    /// Guards the key the provider writes and core reads — they are in different assemblies, so a rename on
-    /// one side would otherwise only show up as a permanently null column.
+    /// Guards the split that lets the read count be read on its own: the adapter reports the two cache
+    /// figures in different places, so a change that merged them would otherwise inflate the cached figure
+    /// by the write count without failing anything.
     /// </summary>
     [Fact]
-    public void CachedInputTokensKey_IsTheWellKnownCoreConstant()
-        => Constants.UsageCounts.CachedInputTokens.ShouldBe("Umbraco.AI.CachedInputTokens");
+    public async Task NonStreaming_CacheWriteCountIsReportedSeparately()
+    {
+        // Arrange
+        var chatClient = await CreateClientAsync(new AnthropicApiHandler(NonStreamingBody(CacheReadTokens)));
+
+        // Act
+        var response = await chatClient.GetResponseAsync("hello", new ChatOptions { MaxOutputTokens = 64 });
+
+        // Assert
+        response.Usage?.AdditionalCounts?["CacheCreationInputTokens"].ShouldBe(CacheWriteTokens);
+        response.Usage.GetCachedInputTokenCount().ShouldBe(CacheReadTokens);
+    }
 }

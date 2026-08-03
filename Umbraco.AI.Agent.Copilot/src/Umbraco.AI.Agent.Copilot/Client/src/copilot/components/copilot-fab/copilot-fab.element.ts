@@ -8,8 +8,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  * Intentionally "dumb": it is mounted once by the sidebar entry point, and UaiCopilotFabController
  * listens for `click`, toggles its `visible` attribute, and mirrors the sidebar's open state onto
  * `expanded`. It slides/fades in when `visible` is set and slides back out when it is removed. Uses
- * `<uui-icon name="icon-chat">` for icon consistency with the rest of the backoffice (the FAB is
- * mounted inside the app tree, so the icon registry resolves).
+ * the "sparkles" AI glyph (inline SVG, `currentColor`); there is no built-in backoffice sparkles
+ * icon, so it is inlined here rather than resolved through the icon registry.
  *
  * `shadowRootOptions.delegatesFocus` lets the controller call `fab.focus()` (on the host) to move
  * focus onto the inner button when the sidebar closes.
@@ -34,7 +34,22 @@ export class UaiCopilotFabElement extends UmbLitElement {
                 title=${this.localize.term("uaiCopilot_name")}
                 aria-label=${label}
                 aria-expanded=${this.expanded}>
-                <uui-icon name="icon-chat"></uui-icon>
+                <svg
+                    class="fab-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path
+                        d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+                    <path d="M20 3v4"></path>
+                    <path d="M22 5h-4"></path>
+                    <path d="M4 17v2"></path>
+                    <path d="M5 18H3"></path>
+                </svg>
             </button>`;
     }
 
@@ -92,8 +107,9 @@ export class UaiCopilotFabElement extends UmbLitElement {
             background: var(--uui-color-default-emphasis, #283991);
             transform: translateY(-1px);
         }
-        uui-icon {
-            font-size: 22px;
+        .fab-icon {
+            width: 22px;
+            height: 22px;
         }
     `;
 }

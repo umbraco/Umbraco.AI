@@ -78,28 +78,15 @@ export class UaiEntitySelectorElement extends UmbLitElement {
     }
 
     override render() {
-        if (this._detectedEntities.length === 0) {
+        // A single (or no) detected entity needs no picker — the chat's intro names the item in
+        // context. Only when a screen exposes several entities do we show a way to switch between them.
+        if (this._detectedEntities.length <= 1) {
             return nothing;
         }
 
-        const workingOnLabel = this.localize.term("uaiCopilot_workingOnLabel");
-
-        // Single entity: simple display
-        if (this._detectedEntities.length === 1) {
-            const entity = this._detectedEntities[0];
-            return html`
-                <div class="entity-selector single" title=${entity.entityContext.entityType}>
-                    <span class="label">${workingOnLabel}</span>
-                    <umb-icon name=${this.#getEntityIcon(entity)}></umb-icon>
-                    <span class="entity-name">${entity.name}</span>
-                </div>
-            `;
-        }
-
-        // Multiple entities: selectable chips
+        // Multiple entities: selectable chips to choose which item the copilot acts on.
         return html`
             <div class="entity-selector multiple">
-                <span class="label">${workingOnLabel}</span>
                 <div class="chips">
                     ${this._detectedEntities.map(
                         (entity) => html`
@@ -131,25 +118,6 @@ export class UaiEntitySelectorElement extends UmbLitElement {
             align-items: center;
             gap: var(--uui-size-space-2);
             font-size: 0.875rem;
-        }
-
-        .entity-selector.single {
-            color: var(--uui-color-text-alt);
-        }
-
-        .entity-selector.single umb-icon {
-            font-size: 14px;
-        }
-
-        .entity-name {
-            font-weight: 500;
-        }
-
-        .label {
-            color: var(--uui-color-text-alt);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         .chips {

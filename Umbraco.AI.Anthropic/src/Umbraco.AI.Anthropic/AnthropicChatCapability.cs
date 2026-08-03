@@ -155,12 +155,12 @@ public class AnthropicChatCapability(
 
         // The declaration from GetSettingsSupport is enforced by the base, which wraps this client so the
         // sampling parameters are stripped for a model that rejects them. See DeclaredSettingsChatClient.
-        var client = Provider.CreateSdkClient(settings)
+        //
+        // Cache-read tokens need no wrapper here: the SDK's adapter already reports them on
+        // UsageDetails.CachedInputTokenCount, which is what core reads. See
+        // AnthropicCachedTokenReportingTests.
+        return Provider.CreateSdkClient(settings)
             .Beta.AsIChatClient(modelId);
-
-        // Wrapped here, innermost, because it reads the underlying Anthropic response off the adapter's
-        // output — the only point where that is still attached.
-        return new AnthropicCachedTokenReportingChatClient(client);
     }
 
     /// <inheritdoc />

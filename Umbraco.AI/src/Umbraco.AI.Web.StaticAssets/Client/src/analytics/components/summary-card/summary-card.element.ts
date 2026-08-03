@@ -80,11 +80,11 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
             }
 
             .card-value-suffix {
-                font-size: var(--uui-type-small-size);
-                font-weight: 500;
-                color: var(--uui-color-text-alt);
-                /* The suffix is one phrase ("14.3k cached"); breaking it across lines would defeat the
-                   point of keeping it on the value line. */
+                font-size: var(--uui-type-default-size);
+                font-weight: 700;
+                /* Colour is left to inherit from .card-value, so the suffix tracks the main value if that
+                   ever changes. Kept on one line because "14.3k cached" is a single phrase, and wrapping
+                   it would defeat the point of moving it onto the value line. */
                 white-space: nowrap;
             }
 

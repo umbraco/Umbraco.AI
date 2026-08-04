@@ -5,6 +5,19 @@ export default {
         copilotLabel: "Copilot",
         copilotDescription: "Enable Copilot features for this agent.",
     },
+    // Copilot chrome (floating button + sidebar)
+    uaiCopilot: {
+        name: "AI Assistant",
+        openLabel: "Open AI Assistant",
+        closeLabel: "Close AI Assistant",
+        clearLabel: "Clear chat",
+        lengthMeterTitle: "This chat is getting long. Consider clearing it to start fresh.",
+        sidebarTitle: "Umbraco Copilot",
+        // Context framing (which item the copilot is acting on)
+        inputPlaceholder: "Ask about %0%…",
+        introHeading: "How can I help you with %0%?",
+        introMessage: "I can search your whole site for reference, but I only make changes to this item.",
+    },
     // Copilot-specific tool localizations
     uaiTool: {
         setPropertyValueLabel: "Set Property Value",

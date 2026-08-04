@@ -32,6 +32,10 @@ export class UaiChatElement extends UmbLitElement {
     @property({ type: Boolean })
     ready = true;
 
+    /** Placeholder for the message input. Falls back to the input's own default when unset. */
+    @property({ type: String })
+    placeholder?: string;
+
     @state()
     private _agentName = "";
 
@@ -158,6 +162,7 @@ export class UaiChatElement extends UmbLitElement {
                 : ""}
             <uai-chat-input
                 ?disabled=${this._isRunning || !!this._pendingApproval}
+                placeholder=${this.placeholder ?? "Type a message..."}
                 @send=${this.#handleSendMessage}
             ></uai-chat-input>
         `;
@@ -176,8 +181,10 @@ export class UaiChatElement extends UmbLitElement {
                         ${this._messages.length === 0
                             ? html`
                                   <div class="empty-state">
-                                      <uui-icon name="icon-chat"></uui-icon>
-                                      <p>Start a conversation with ${this._agentName || "an agent"}</p>
+                                      <slot name="empty-state-message">
+                                          <uui-icon name="icon-chat"></uui-icon>
+                                          <p>Start a conversation with ${this._agentName || "an agent"}</p>
+                                      </slot>
                                   </div>
                               `
                             : this.#renderMessages()}
@@ -249,6 +256,12 @@ export class UaiChatElement extends UmbLitElement {
             text-align: center;
             padding: var(--uui-size-space-5);
             box-sizing: border-box;
+        }
+
+        /* Let projected empty-state content (and the default fallback) participate directly in the
+           centered flex column above, rather than nesting inside an inline slot box. */
+        .empty-state slot {
+            display: contents;
         }
 
         .empty-state uui-icon {

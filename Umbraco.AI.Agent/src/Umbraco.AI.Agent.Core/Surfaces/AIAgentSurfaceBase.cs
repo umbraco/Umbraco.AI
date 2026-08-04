@@ -28,6 +28,9 @@ public abstract class AIAgentSurfaceBase : IAIAgentSurface
     /// <inheritdoc />
     public IReadOnlyList<string> SupportedScopeDimensions { get; }
 
+    /// <inheritdoc />
+    public bool RestrictsDestructiveBackendTools { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentSurfaceBase"/> class.
     /// </summary>
@@ -43,5 +46,6 @@ public abstract class AIAgentSurfaceBase : IAIAgentSurface
         Id = attribute.Id;
         Icon = attribute.Icon;
         SupportedScopeDimensions = attribute.SupportedScopeDimensions ?? [];
+        RestrictsDestructiveBackendTools = attribute.RestrictsDestructiveBackendTools;
     }
 }

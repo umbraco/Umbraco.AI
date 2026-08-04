@@ -5,6 +5,8 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.RuntimeContext;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Profiles;
@@ -46,6 +48,17 @@ public class AIAgentFactoryApprovalTests
         public Task<object> ExecuteAsync(object? args, CancellationToken cancellationToken = default)
             => Task.FromResult<object>("result");
     }
+
+    private sealed class TestSurface : IAIAgentSurface
+    {
+        public required string Id { get; init; }
+        public string Icon => "icon-chat";
+        public IReadOnlyList<string> SupportedScopeDimensions => [];
+        public bool RestrictsDestructiveBackendTools { get; init; }
+    }
+
+    private static AIRequestContextItem SurfaceContextItem(string surfaceId)
+        => new() { Description = "surface", Value = $"{{\"surface\":\"{surfaceId}\"}}" };
 
     [Fact]
     public async Task CreateAgentAsync_DestructiveNonSystemTool_IsWrappedInApprovalRequired()
@@ -149,6 +162,67 @@ public class AIAgentFactoryApprovalTests
     }
 
     [Fact]
+    public async Task CreateAgentAsync_RestrictedSurface_DropsDestructiveBackendTool_KeepsReadTool()
+    {
+        IAITool[] tools =
+        [
+            new TestTool { Id = "delete-thing", Name = "delete-thing", IsDestructive = true },
+            new TestTool { Id = "get-thing",    Name = "get-thing",    IsDestructive = false },
+        ];
+
+        var factory = CreateFactory(
+            tools,
+            surfaces: [new TestSurface { Id = "copilot", RestrictsDestructiveBackendTools = true }],
+            contributors: [new SurfaceContextContributor()]);
+        var agent = CreateAgent(["delete-thing", "get-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent, contextItems: [SurfaceContextItem("copilot")]);
+
+        var chatOptions = ExtractChatOptions(result);
+        chatOptions!.Tools.ShouldNotBeNull();
+        // The destructive backend tool is withheld entirely on a restricted surface...
+        chatOptions.Tools!.ShouldNotContain(t => t.Name == "delete-thing");
+        // ...while non-destructive backend tools (reads/search) remain available.
+        chatOptions.Tools!.ShouldContain(t => t.Name == "get-thing");
+    }
+
+    [Fact]
+    public async Task CreateAgentAsync_UnrestrictedSurface_KeepsDestructiveBackendTool()
+    {
+        IAITool[] tools = [new TestTool { Id = "delete-thing", Name = "delete-thing", IsDestructive = true }];
+
+        var factory = CreateFactory(
+            tools,
+            surfaces: [new TestSurface { Id = "workspace", RestrictsDestructiveBackendTools = false }],
+            contributors: [new SurfaceContextContributor()]);
+        var agent = CreateAgent(["delete-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent, contextItems: [SurfaceContextItem("workspace")]);
+
+        // A surface that doesn't opt in keeps destructive tools (wrapped for approval by default).
+        var chatOptions = ExtractChatOptions(result);
+        chatOptions!.Tools!.Single(t => t.Name == "delete-thing").ShouldBeOfType<ApprovalRequiredAIFunction>();
+    }
+
+    [Fact]
+    public async Task CreateAgentAsync_NoSurfaceContext_KeepsDestructiveBackendTool()
+    {
+        // Belt-and-braces: with no surface context at all, the restriction never engages.
+        IAITool[] tools = [new TestTool { Id = "delete-thing", Name = "delete-thing", IsDestructive = true }];
+
+        var factory = CreateFactory(
+            tools,
+            surfaces: [new TestSurface { Id = "copilot", RestrictsDestructiveBackendTools = true }],
+            contributors: [new SurfaceContextContributor()]);
+        var agent = CreateAgent(["delete-thing"]);
+
+        var result = await factory.CreateAgentAsync(agent);
+
+        var chatOptions = ExtractChatOptions(result);
+        chatOptions!.Tools!.Single(t => t.Name == "delete-thing").ShouldBeOfType<ApprovalRequiredAIFunction>();
+    }
+
+    [Fact]
     public async Task CreateAgentAsync_CopiesTemperatureAndMaxTokensFromProfileSettings()
     {
         IAITool[] tools = [new TestTool { Id = "get-thing", Name = "get-thing", IsDestructive = false }];
@@ -180,12 +254,17 @@ public class AIAgentFactoryApprovalTests
         chatOptions.MaxOutputTokens.ShouldBeNull();
     }
 
-    private static AIAgentFactory CreateFactory(IEnumerable<IAITool> tools, IAIProfileSettings? profileSettings = null)
+    private static AIAgentFactory CreateFactory(
+        IEnumerable<IAITool> tools,
+        IAIProfileSettings? profileSettings = null,
+        IEnumerable<IAIAgentSurface>? surfaces = null,
+        IEnumerable<IAIRuntimeContextContributor>? contributors = null)
     {
         var toolCollection = new AIToolCollection(() => tools);
         var scopeCollection = new AIToolScopeCollection(() => []);
         var workflowCollection = new AIAgentWorkflowCollection(() => []);
-        var contributorCollection = new AIRuntimeContextContributorCollection(() => []);
+        var contributorCollection = new AIRuntimeContextContributorCollection(() => contributors ?? []);
+        var surfaceCollection = new AIAgentSurfaceCollection(() => surfaces ?? []);
 
         var functionFactoryMock = new Mock<IAIFunctionFactory>();
         functionFactoryMock
@@ -228,7 +307,8 @@ public class AIAgentFactoryApprovalTests
             toolCollection,
             scopeCollection,
             functionFactoryMock.Object,
-            workflowCollection);
+            workflowCollection,
+            surfaceCollection);
     }
 
     private static UmbracoAIAgent CreateAgent(IReadOnlyList<string> allowedToolIds)

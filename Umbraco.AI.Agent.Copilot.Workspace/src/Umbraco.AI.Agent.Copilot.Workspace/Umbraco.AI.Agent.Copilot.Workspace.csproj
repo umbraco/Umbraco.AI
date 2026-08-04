@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Copilot Workspace</Title>
+        <Description>Copilot Workspace for Umbraco AI — full-section persisted chat with projects and reusable context attachments</Description>
+        <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+        <PackageTags>umbraco ai copilot workspace umbraco-marketplace</PackageTags>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+        <IncludeReferencedProjects>true</IncludeReferencedProjects>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="..\..\README.md" Pack="true" PackagePath="docs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Startup\Umbraco.AI.Agent.Copilot.Workspace.Startup.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets\Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets.csproj" />
+    </ItemGroup>
+</Project>

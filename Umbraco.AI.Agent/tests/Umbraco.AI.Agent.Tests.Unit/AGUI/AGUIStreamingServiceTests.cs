@@ -563,6 +563,83 @@ public class AGUIStreamingServiceTests
         converterReturnList[0].Contents!.OfType<ToolApprovalResponseContent>().ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task StreamAgentAsync_WithApprovalResume_UncorrelatedCallId_SkipsInsteadOfSynthesisingEmptyCall()
+    {
+        // Arrange — the resume references an approval callId that is in NEITHER the client-supplied
+        // history NOR persisted history (a stale/prior-run entry). Previously this synthesised an empty
+        // FunctionCallContent, which FICC would then try (and fail) to invoke. It must now be skipped (B2).
+        var converterReturnList = new List<ChatMessage> { new(ChatRole.User, "hi") };
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "x" }],
+            Resume = [new()
+            {
+                InterruptId = "approval:call-ghost",
+                Status = AGUIResumeStatus.Resolved,
+                Payload = JsonSerializer.SerializeToElement(new { approved = true })
+            }]
+        };
+
+        // Act
+        await CollectEvents(agent, request);
+
+        // Assert — nothing appended; no (empty) ToolApprovalResponseContent synthesised.
+        converterReturnList.Count.ShouldBe(1);
+        converterReturnList
+            .SelectMany(m => m.Contents ?? [])
+            .OfType<ToolApprovalResponseContent>()
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithApprovalResume_CallOnlyInPersistedHistory_UsesRealToolCall()
+    {
+        // Arrange — resume-after-reload: the client history no longer holds the pending call (only the
+        // new turn), so it is recovered from persisted history via pendingApprovalCalls (B2).
+        var converterReturnList = new List<ChatMessage> { new(ChatRole.User, "approve please") };
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var realCall = new FunctionCallContent("call-del", "delete_thing",
+            new Dictionary<string, object?> { ["id"] = "42" });
+        var pending = new Dictionary<string, FunctionCallContent>(StringComparer.Ordinal) { ["call-del"] = realCall };
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "ok" }],
+            Resume = [new()
+            {
+                InterruptId = "approval:call-del",
+                Status = AGUIResumeStatus.Resolved,
+                Payload = JsonSerializer.SerializeToElement(new { approved = true })
+            }]
+        };
+
+        // Act
+        await CollectEvents(agent, request, pending);
+
+        // Assert — a ToolApprovalResponseContent is appended carrying the REAL call (from persisted history),
+        // not an empty synthesised one, so FICC can execute the approved function.
+        var approvalResponse = converterReturnList
+            .SelectMany(m => m.Contents ?? [])
+            .OfType<ToolApprovalResponseContent>()
+            .FirstOrDefault();
+        approvalResponse.ShouldNotBeNull();
+        approvalResponse!.Approved.ShouldBeTrue();
+        approvalResponse.ToolCall.CallId.ShouldBe("call-del");
+        approvalResponse.ToolCall.ShouldBeSameAs(realCall);
+    }
+
     #endregion
 
     #region Helper Methods
@@ -574,6 +651,19 @@ public class AGUIStreamingServiceTests
     {
         var events = new List<IAGUIEvent>();
         await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools, CancellationToken.None))
+        {
+            events.Add(evt);
+        }
+        return events;
+    }
+
+    private async Task<List<IAGUIEvent>> CollectEvents(
+        AIAgent agent,
+        AGUIRunRequest request,
+        IReadOnlyDictionary<string, FunctionCallContent> pendingApprovalCalls)
+    {
+        var events = new List<IAGUIEvent>();
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, CancellationToken.None))
         {
             events.Add(evt);
         }

@@ -219,15 +219,6 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
             #btn-add {
                 width: 100%;
             }
-
-            uui-ref-node {
-                padding: var(--uui-size-space-3);
-            }
-
-            uui-ref-node::before {
-                border-radius: var(--uui-border-radius);
-                border: 1px solid var(--uui-color-divider-standalone);
-            }
         `,
     ];
 }

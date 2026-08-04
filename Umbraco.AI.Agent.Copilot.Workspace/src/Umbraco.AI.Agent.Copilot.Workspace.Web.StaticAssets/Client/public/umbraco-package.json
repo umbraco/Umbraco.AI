@@ -1,0 +1,25 @@
+{
+    "$schema": "https://raw.githubusercontent.com/umbraco/Umbraco.CMS.Backoffice/main/umbraco-package-schema.json",
+    "id": "Umbraco.AI.Agent.Copilot.Workspace",
+    "name": "Umbraco AI Copilot Workspace",
+    "version": "1.0.0",
+    "extensions": [
+        {
+            "type": "bundle",
+            "alias": "Umbraco.AI.Agent.Copilot.Workspace.Bundle",
+            "name": "Umbraco AI Copilot Workspace Bundle",
+            "js": "/App_Plugins/UmbracoAICopilotWorkspace/umbraco-ai-agent-copilot-workspace-manifests.js"
+        },
+        {
+            "type": "backofficeEntryPoint",
+            "alias": "Umbraco.AI.Agent.Copilot.Workspace.BackofficeEntryPoint",
+            "name": "Umbraco AI Copilot Workspace Backoffice Entry Point",
+            "js": "/App_Plugins/UmbracoAICopilotWorkspace/umbraco-ai-agent-copilot-workspace-app.js"
+        }
+    ],
+    "importmap": {
+        "imports": {
+            "@umbraco-ai/agent-copilot-workspace": "/App_Plugins/UmbracoAICopilotWorkspace/umbraco-ai-agent-copilot-workspace-app.js"
+        }
+    }
+}

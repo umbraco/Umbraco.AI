@@ -29,6 +29,17 @@ public class AIAgentScopeValidator
         // Get the dimensions this surface cares about
         var relevantDimensions = surface?.SupportedScopeDimensions ?? Array.Empty<string>();
 
+        // A broad/unscoped surface (no relevant dimensions — e.g. copilot-workspace, or a null
+        // surface) cannot meaningfully apply dimension-based allow/deny rules: with no dimensions to
+        // check, every rule matches vacuously (IsRuleMatched falls through to true), which would deny
+        // every deny-scoped agent everywhere. Treat the agent as available; availability on such a
+        // surface is governed solely by SurfaceIds opt-in. This matches the IAIAgentSurface contract
+        // ("empty list means the surface doesn't perform scope-based filtering").
+        if (relevantDimensions.Count == 0)
+        {
+            return true;
+        }
+
         // Check deny rules first (they take precedence)
         if (IsAnyRuleMatched(agent.Scope.DenyRules, context, relevantDimensions))
         {

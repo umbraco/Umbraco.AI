@@ -22,6 +22,18 @@
     <Project Path="Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.csproj" />
     <Project Path="Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.csproj" />
   </Folder>
+  <Folder Name="/AddOns/CopilotWorkspace/">
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Conversations.Core/Umbraco.AI.Agent.Conversations.Core.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Conversations.Persistence/Umbraco.AI.Agent.Conversations.Persistence.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Conversations.Persistence.SqlServer/Umbraco.AI.Agent.Conversations.Persistence.SqlServer.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Conversations.Persistence.Sqlite/Umbraco.AI.Agent.Conversations.Persistence.Sqlite.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Conversations.Web/Umbraco.AI.Agent.Conversations.Web.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace.Core/Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace.Web/Umbraco.AI.Agent.Copilot.Workspace.Web.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets/Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace.Startup/Umbraco.AI.Agent.Copilot.Workspace.Startup.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace/Umbraco.AI.Agent.Copilot.Workspace.csproj" />
+  </Folder>
   <Folder Name="/AddOns/Prompt/">
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Core/Umbraco.AI.Prompt.Core.csproj" />
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence.Sqlite/Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />

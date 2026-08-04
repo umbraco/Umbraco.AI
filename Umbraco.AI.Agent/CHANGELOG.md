@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.1...Umbraco.AI.Agent@17.2.0-rc.1) (2026-08-04)
+
+### feat
+
+* **agent,copilot:** Lock destructive backend tools out of the contextual copilot surface ([6e4854b](https://github.com/umbraco/Umbraco.AI/commit/6e4854b5484768bddb9f88b8dd8eab0d1dd3fdfc))
+
+### fix
+
+* **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+* **core,agent:** Suppress execution-context flow for recurring hosted services ([dd3932a](https://github.com/umbraco/Umbraco.AI/commit/dd3932a970caaffe83743230cb57ca38eb244518)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+
 ## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.0...Umbraco.AI.Agent@17.1.1) (2026-07-27)
 
 ### fix

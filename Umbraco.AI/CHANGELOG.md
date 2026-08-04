@@ -5,6 +5,47 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.3.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.2.0...Umbraco.AI@17.3.0-rc.1) (2026-08-04)
+
+### ⚠ BREAKING CHANGE
+
+* **core,frontend,openai:** `AIImageGenerationProfileSettings.Quality` and `.Style` are removed, along
+with their
+API model properties and editor fields. Quality and Style now live under the provider's own
+settings
+on the profile editor. Values stored under the old shape are ignored and need re-entering
+there.
+Image generation is experimental — gated by `UMBRACOAI_IMAGEGEN` and the
+`Umbraco:AI:Experimental:ImageGeneration` flag — so this ships without an obsolete shim.
+
+No data migration: the target keys belong to a provider's schema, and a core migration
+writing
+provider-specific keys would put vendor knowledge in core, which is the coupling this whole
+design
+
+* Sensitive field follow-ups: non-string crash, dead Deploy condition (v17 backport) (#300) ([0b4490a](https://github.com/umbraco/Umbraco.AI/commit/0b4490a11f8a318d9a145a7431e89bb049d7000a)), closes [#300](https://github.com/umbraco/Umbraco.AI/issues/300)
+* Mask sensitive field values by default (v17 backport) (#294) ([e6d17f2](https://github.com/umbraco/Umbraco.AI/commit/e6d17f210f9631995ca339e31127d92409035c3f)), closes [#294](https://github.com/umbraco/Umbraco.AI/issues/294)
+
+### feat
+
+* **core,anthropic,frontend:** Add Anthropic prompt caching and cached-token reporting (v17 backport) (#296) ([42fe957](https://github.com/umbraco/Umbraco.AI/commit/42fe957f4e350ff7d83ea8e791d53ac54207c982)), closes [#296](https://github.com/umbraco/Umbraco.AI/issues/296) [#295](https://github.com/umbraco/Umbraco.AI/issues/295) [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,frontend,openai:** Drive the image size field from the model's declared sizes (#280) ([371cb53](https://github.com/umbraco/Umbraco.AI/commit/371cb5335ba4b53127e54bca26e0b0de55e3588f)), closes [#280](https://github.com/umbraco/Umbraco.AI/issues/280)
+* **core,frontend,openai:** Move image quality and style to capability settings (#282) ([b7f462a](https://github.com/umbraco/Umbraco.AI/commit/b7f462a3ce01190727dedf809738cafc0274127a)), closes [#282](https://github.com/umbraco/Umbraco.AI/issues/282) [#275](https://github.com/umbraco/Umbraco.AI/issues/275) [#277](https://github.com/umbraco/Umbraco.AI/issues/277)
+* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core [v17 backport] (#284) ([6c6ff0e](https://github.com/umbraco/Umbraco.AI/commit/6c6ff0effa14b232b0126e7957c1a08d9ab2f49e)), closes [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
+* **core,openai,anthropic:** Add provider-declared, model-aware capability settings (#270) ([a86199d](https://github.com/umbraco/Umbraco.AI/commit/a86199da8612ca03939ec7297934177f201861ef)), closes [#270](https://github.com/umbraco/Umbraco.AI/issues/270) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+* **core,providers:** Extend capability settings to every capability (#276) ([59e6548](https://github.com/umbraco/Umbraco.AI/commit/59e65486e9ac827abfb265e5ec4a1080c11713d4)), closes [#276](https://github.com/umbraco/Umbraco.AI/issues/276) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+
+### fix
+
+* **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+* **core,agent:** Suppress execution-context flow for recurring hosted services ([dd3932a](https://github.com/umbraco/Umbraco.AI/commit/dd3932a970caaffe83743230cb57ca38eb244518)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+* **core,anthropic,openai:** Read the cached input tokens adapters already report (v17 backport) ([40e0f34](https://github.com/umbraco/Umbraco.AI/commit/40e0f3443114bda9cd1082468df554d8e686b65e)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,copilot-workspace:** Stop the workspace store refetching its own write ([0924e94](https://github.com/umbraco/Umbraco.AI/commit/0924e94a444325846e1d3dcf6a51a1c0d44f8857))
+* **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#274) ([38de95d](https://github.com/umbraco/Umbraco.AI/commit/38de95db9f4c29f702f122faa868e24c5cafa93b)), closes [#274](https://github.com/umbraco/Umbraco.AI/issues/274) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
+* **core:** Encrypt escaped literals in sensitive fields (#298) ([f9f0b32](https://github.com/umbraco/Umbraco.AI/commit/f9f0b324ba14a370590cc6f61f041aa73c3cc5e5)), closes [#298](https://github.com/umbraco/Umbraco.AI/issues/298)
+* **frontend:** Space every sibling after a box on the profile editor ([367dbe7](https://github.com/umbraco/Umbraco.AI/commit/367dbe777192a135f98f51737e018602a23a4698))
+* **openai,imagegeneration:** Send the image quality and style hints (#278) ([978a0f3](https://github.com/umbraco/Umbraco.AI/commit/978a0f34949501eba35ae6d15ccffe4a7a37d3f7)), closes [#278](https://github.com/umbraco/Umbraco.AI/issues/278)
+
 ## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.1.1...Umbraco.AI@17.2.0) (2026-07-27)
 
 ### feat

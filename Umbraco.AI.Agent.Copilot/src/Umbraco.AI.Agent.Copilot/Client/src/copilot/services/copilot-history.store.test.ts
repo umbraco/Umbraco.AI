@@ -110,7 +110,7 @@ describe("UaiCopilotHistoryStore", () => {
     });
 
     it("does nothing (no throw) when no storage backend is available", () => {
-        const store = new UaiCopilotHistoryStore(undefined);
+        const store = new UaiCopilotHistoryStore(null);
         expect(() => store.save("document:a", [msg("1", "hi")])).not.toThrow();
         expect(store.load("document:a")).toBeUndefined();
         expect(store.has("document:a")).toBe(false);

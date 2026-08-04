@@ -43,8 +43,8 @@ export class UaiCopilotHistoryStore {
      * backend (or one that throws on access) disables persistence.
      * @param maxBytes Soft size cap for the serialized blob; injectable for testing.
      */
-    constructor(storage: Storage | undefined = safeLocalStorage(), maxBytes: number = MAX_BYTES) {
-        this.#storage = storage;
+    constructor(storage: Storage | null | undefined = safeLocalStorage(), maxBytes: number = MAX_BYTES) {
+        this.#storage = storage ?? undefined;
         this.#maxBytes = maxBytes;
     }
 

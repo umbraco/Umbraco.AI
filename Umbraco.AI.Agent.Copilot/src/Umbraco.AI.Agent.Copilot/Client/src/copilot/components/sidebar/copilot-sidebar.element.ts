@@ -169,7 +169,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                     <div class="sidebar-content">
                         <uai-chat placeholder=${placeholder ?? nothing}>
                             ${introHeading
-                                ? html`<div slot="empty-state" class="copilot-intro">
+                                ? html`<div slot="empty-state-message" class="copilot-intro">
                                           <uui-icon name="icon-chat"></uui-icon>
                                           <h3>${introHeading}</h3>
                                           <p>${introMessage}</p>
@@ -268,7 +268,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
             display: block;
         }
 
-        /* Rich empty-state content projected into <uai-chat>'s "empty-state" slot: a friendly,
+        /* Rich empty-state content projected into <uai-chat>'s "empty-state-message" slot: a friendly,
            context-named greeting in place of the generic prompt. */
         .copilot-intro {
             display: flex;

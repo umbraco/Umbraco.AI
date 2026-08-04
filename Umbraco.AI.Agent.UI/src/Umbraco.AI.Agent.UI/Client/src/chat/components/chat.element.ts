@@ -181,7 +181,7 @@ export class UaiChatElement extends UmbLitElement {
                         ${this._messages.length === 0
                             ? html`
                                   <div class="empty-state">
-                                      <slot name="empty-state">
+                                      <slot name="empty-state-message">
                                           <uui-icon name="icon-chat"></uui-icon>
                                           <p>Start a conversation with ${this._agentName || "an agent"}</p>
                                       </slot>

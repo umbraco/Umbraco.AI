@@ -3,7 +3,7 @@ using Umbraco.AI.Agent.Core.Surfaces;
 
 namespace Umbraco.AI.Agent.Copilot.Surface;
 
-[AIAgentSurface(SurfaceId, Icon = "icon-chat", SupportedScopeDimensions = [ Constants.AgentScopeDimensions.Section, Constants.AgentScopeDimensions.EntityType ])]
+[AIAgentSurface(SurfaceId, Icon = "icon-chat", SupportedScopeDimensions = [ Constants.AgentScopeDimensions.Section, Constants.AgentScopeDimensions.EntityType ], RestrictsDestructiveBackendTools = true)]
 public class CopilotAgentSurface : AIAgentSurfaceBase
 {
     /// <summary>

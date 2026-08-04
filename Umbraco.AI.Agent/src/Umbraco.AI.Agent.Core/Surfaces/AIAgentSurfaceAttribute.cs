@@ -60,6 +60,25 @@ public sealed class AIAgentSurfaceAttribute : Attribute
     public string[]? SupportedScopeDimensions { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether destructive backend tools must be withheld from
+    /// this surface.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A "contextual" surface (such as the copilot sidebar) is meant to act only on the item the
+    /// user currently has open, via its context-bound frontend tools. Backend tools that can mutate
+    /// arbitrary content by id would let such a surface edit things outside that context. When this
+    /// is <c>true</c>, the agent factory automatically drops every destructive backend tool for this
+    /// surface, regardless of the agent's granted tool ids/scopes. Non-destructive backend tools
+    /// (reads, search) are unaffected.
+    /// </para>
+    /// <para>
+    /// Defaults to <c>false</c> (no restriction), preserving behaviour for existing surfaces.
+    /// </para>
+    /// </remarks>
+    public bool RestrictsDestructiveBackendTools { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentSurfaceAttribute"/> class.
     /// </summary>
     /// <param name="id">The unique identifier for the surface.</param>

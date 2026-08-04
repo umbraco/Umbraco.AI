@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### What This Package Contains
 
 - Copilot sidebar container (chat interface in backoffice sidebar)
-- Header button (quick access from backoffice header)
+- Contextual floating action button (FAB) that appears in workspaces copilot can act on
 - AG-UI transport layer (streaming protocol implementation)
 - Copilot context (integrates with `UaiChatContextApi` from Agent.UI)
 - Entity context integration (connects copilot with entity-aware features)
@@ -50,7 +50,7 @@ Umbraco.AI.Agent.Copilot/
 │       │   │   ├── copilot/              # Main copilot module
 │       │   │   │   ├── components/       # Copilot-specific components
 │       │   │   │   │   ├── sidebar/      # Sidebar container
-│       │   │   │   │   └── header-app/   # Header button
+│       │   │   │   │   └── copilot-fab/  # Contextual floating action button
 │       │   │   │   ├── transport/        # AG-UI transport implementation
 │       │   │   │   │   └── uai-http-agent.ts
 │       │   │   │   ├── copilot.context.ts # Implements UaiChatContextApi
@@ -256,7 +256,7 @@ This package is frontend-only. Testing approaches:
 │            Umbraco.AI.Agent.Copilot                  │
 │  ┌──────────────────────────────────────────────────┤
 │  │         Copilot-Specific UI                      │
-│  │    - Sidebar, header button, AG-UI transport     │
+│  │    - Sidebar, contextual FAB, AG-UI transport    │
 │  └──────────────────────────────────────────────────┤
 └─────────────────────────────────────────────────────┘
 ```

@@ -1,4 +1,5 @@
-import { headerAppManifests } from "./header-app/manifests.js";
 import { sidebarManifests } from "./sidebar/manifests.js";
 
-export const componentManifests = [...headerAppManifests, ...sidebarManifests];
+// The contextual FAB is not registered via a manifest — the sidebar entry point mounts it and
+// UaiCopilotFabController drives its visibility from the copilot's detected entities.
+export const componentManifests = [...sidebarManifests];

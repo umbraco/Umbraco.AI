@@ -56,6 +56,8 @@ export class UaiChatInputElement extends UmbLitElement {
     #temporaryFileConfigRepository = new UmbTemporaryFileConfigRepository(this);
     #textareaRef = createRef<HTMLElement>();
     #fileInputRef = createRef<HTMLInputElement>();
+    /** Tracks the effective disabled state so we can refocus on the disabled -> enabled edge. */
+    #wasComposerDisabled = true;
 
     get #isDisabled(): boolean {
         return this.disabled || this._agents.length === 0;
@@ -86,13 +88,6 @@ export class UaiChatInputElement extends UmbLitElement {
         });
     }
 
-    override firstUpdated() {
-        // Focus the composer as soon as it mounts (e.g. opening a fresh chat) when it's ready to type.
-        if (!this.disabled) {
-            this.focusComposer();
-        }
-    }
-
     /** Focuses the message composer. Public so a host can focus it (e.g. after switching conversation). */
     focusComposer(): void {
         requestAnimationFrame(() => {
@@ -103,11 +98,15 @@ export class UaiChatInputElement extends UmbLitElement {
     override updated(changedProperties: PropertyValues) {
         super.updated(changedProperties);
 
-        if (changedProperties.has("disabled") && !this.disabled) {
-            requestAnimationFrame(() => {
-                this.#textareaRef.value?.focus();
-            });
+        // Focus the composer whenever it transitions from disabled to enabled. The textarea is disabled
+        // until the agents list resolves (see #isDisabled), so on a freshly opened chat the mount-time and
+        // host-driven focus attempts are no-ops — this refires once agents arrive. It also returns focus to
+        // the composer after a response finishes streaming (the disabled property toggling back off).
+        const isDisabled = this.#isDisabled;
+        if (this.#wasComposerDisabled && !isDisabled) {
+            this.focusComposer();
         }
+        this.#wasComposerDisabled = isDisabled;
     }
 
     #handleAgentChange(e: Event) {

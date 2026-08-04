@@ -5,6 +5,26 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.1...Umbraco.AI.Agent@18.2.0-rc.1) (2026-08-04)
+
+### feat
+
+* **agent, agent-ui:** Add pluggable conversation strategy to the run controller (B8) ([c13a55d](https://github.com/umbraco/Umbraco.AI/commit/c13a55d0c9b0af51e38251b4b7fadc69f14d4c09))
+* **agent,conversations:** Rehydrate HITL approvals from persisted history (B2) ([e741206](https://github.com/umbraco/Umbraco.AI/commit/e7412067d7b49155288414b31cdd04327cc23cca))
+* **agent,copilot:** Lock destructive backend tools out of the contextual copilot surface ([7ffa73d](https://github.com/umbraco/Umbraco.AI/commit/7ffa73dd92bf2b25e08b70aaf8502520304b61d7))
+* **agent:** Add ChatHistoryProvider attach overload to IAIAgentFactory (S1) ([33ecc2b](https://github.com/umbraco/Umbraco.AI/commit/33ecc2b25778a5a61f4d92355b7ac5d0190e4a84))
+* **agent:** Add surface/conversation seams for persisted chat (S19) ([df16d79](https://github.com/umbraco/Umbraco.AI/commit/df16d794d9680e593957d95c892192a9b7d6944a))
+* **agent:** Wire conversation-history binding through agent execution (A) ([8dc40f8](https://github.com/umbraco/Umbraco.AI/commit/8dc40f8ab935d6707e8e79e4437e307a06e5785e))
+* **openai,agent,core:** Run OpenAI statelessly when caller manages chat history ([db1b689](https://github.com/umbraco/Umbraco.AI/commit/db1b689d86cd14ce62dbed3f1f3e5c48ce86854a))
+
+### fix
+
+* **agent:** Treat dimensionless surfaces as unscoped in AIAgentScopeValidator ([45ca470](https://github.com/umbraco/Umbraco.AI/commit/45ca4701ac71424ee5104580a5dea11119cb4624)), closes [#4](https://github.com/umbraco/Umbraco.AI/issues/4)
+
+### refactor
+
+* **core,agent,copilot-workspace:** Render entity pickers as flat rows ([601fadb](https://github.com/umbraco/Umbraco.AI/commit/601fadb0b33aeb9c27fbde4b774bd000e0e4f5a6))
+
 ## [18.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.0...Umbraco.AI.Agent@18.1.1) (2026-07-27)
 
 ### fix

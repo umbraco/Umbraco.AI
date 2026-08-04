@@ -5,6 +5,21 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.1...Umbraco.AI.Agent.UI@18.1.0-rc.1) (2026-08-04)
+
+### feat
+
+* **agent-ui,copilot-workspace:** Add an archived-conversations recycle bin with read-only viewing ([af0e365](https://github.com/umbraco/Umbraco.AI/commit/af0e3659c67eda29f997049008c708a0fb4bd99c))
+* **agent-ui,copilot-workspace:** Move chat scrollbar to the edge, keep centered content ([cd49784](https://github.com/umbraco/Umbraco.AI/commit/cd4978406da4b070ea02586b4a519b025d71b7c4))
+* **agent, agent-ui:** Add pluggable conversation strategy to the run controller (B8) ([c13a55d](https://github.com/umbraco/Umbraco.AI/commit/c13a55d0c9b0af51e38251b4b7fadc69f14d4c09))
+* **copilot-workspace, agent-ui:** Conversation polish — move to project, auto-title, focus ([7e003c5](https://github.com/umbraco/Umbraco.AI/commit/7e003c5a6fcac5c74b6d72dfa2ca39ed624646bc))
+* **copilot,agent-ui:** Greet with the item name in the empty chat via an empty-state slot ([30b48b6](https://github.com/umbraco/Umbraco.AI/commit/30b48b65fc60aed2ccb97dac9454f524d7b5f576))
+* **copilot,agent-ui:** Refocus the contextual copilot with context framing and per-node history ([36669e8](https://github.com/umbraco/Umbraco.AI/commit/36669e85cd67b6f7c03db0ac58a4d3d19b19a117))
+
+### refactor
+
+* **agent-ui,copilot:** Rename the empty-state slot to empty-state-message ([7b7445a](https://github.com/umbraco/Umbraco.AI/commit/7b7445a7596686f1908273cbe4b7c1261f23117c))
+
 ## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.0...Umbraco.AI.Agent.UI@18.0.1) (2026-07-06)
 
 ### fix

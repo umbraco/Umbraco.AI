@@ -5,6 +5,24 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.2...Umbraco.AI.Agent.Copilot@18.1.0-rc.1) (2026-08-04)
+
+### feat
+
+* **agent,copilot:** Lock destructive backend tools out of the contextual copilot surface ([7ffa73d](https://github.com/umbraco/Umbraco.AI/commit/7ffa73dd92bf2b25e08b70aaf8502520304b61d7))
+* **copilot,agent-ui:** Greet with the item name in the empty chat via an empty-state slot ([30b48b6](https://github.com/umbraco/Umbraco.AI/commit/30b48b65fc60aed2ccb97dac9454f524d7b5f576))
+* **copilot,agent-ui:** Refocus the contextual copilot with context framing and per-node history ([36669e8](https://github.com/umbraco/Umbraco.AI/commit/36669e85cd67b6f7c03db0ac58a4d3d19b19a117))
+* **copilot:** Add contextual floating chat button in supported workspaces ([4d605f1](https://github.com/umbraco/Umbraco.AI/commit/4d605f1b9ba6d7c3574db30e64f9478f9eac1ce9))
+* **copilot:** Make the contextual trigger keyboard and screen-reader accessible ([cc03796](https://github.com/umbraco/Umbraco.AI/commit/cc03796ba77f069fa7ccc4fc7f4a63c976240b72))
+* **copilot:** Use the AI sparkles glyph on the contextual copilot button ([dfd8ec1](https://github.com/umbraco/Umbraco.AI/commit/dfd8ec14a316cd2cf00c5447e025c14f900f5d91))
+
+### refactor
+
+* **agent-ui,copilot:** Rename the empty-state slot to empty-state-message ([7b7445a](https://github.com/umbraco/Umbraco.AI/commit/7b7445a7596686f1908273cbe4b7c1261f23117c))
+* **copilot:** Centralise FAB ownership and derive support from adapters ([ff4e7eb](https://github.com/umbraco/Umbraco.AI/commit/ff4e7eb7f745be166c3dfeeaad019a92a5bce232))
+* **copilot:** Extract the hide-debounce and ref-count the section observable ([523eb29](https://github.com/umbraco/Umbraco.AI/commit/523eb2908ced5f95845428c65f6326bab28040f7))
+* **copilot:** Remove retired header-app section stack and unify trigger visibility ([758cde4](https://github.com/umbraco/Umbraco.AI/commit/758cde4d435f94496594886083574008607537c4))
+
 ## [18.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.1...Umbraco.AI.Agent.Copilot@18.0.2) (2026-07-27)
 
 ### fix

@@ -1,0 +1,20 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="src/Umbraco.AI.Agent.Conversations.Core/Umbraco.AI.Agent.Conversations.Core.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Conversations.Persistence/Umbraco.AI.Agent.Conversations.Persistence.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Conversations.Persistence.SqlServer/Umbraco.AI.Agent.Conversations.Persistence.SqlServer.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Conversations.Persistence.Sqlite/Umbraco.AI.Agent.Conversations.Persistence.Sqlite.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Conversations.Web/Umbraco.AI.Agent.Conversations.Web.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Copilot.Workspace.Core/Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Copilot.Workspace.Web/Umbraco.AI.Agent.Copilot.Workspace.Web.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets/Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Copilot.Workspace.Startup/Umbraco.AI.Agent.Copilot.Workspace.Startup.csproj" />
+  <Project Path="src/Umbraco.AI.Agent.Copilot.Workspace/Umbraco.AI.Agent.Copilot.Workspace.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

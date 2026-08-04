@@ -34,4 +34,16 @@ public sealed class AIAgentExecutingNotification : CancelableNotification
     /// Gets the chat messages for this execution.
     /// </summary>
     public IReadOnlyList<ChatMessage> ChatMessages { get; }
+
+    /// <summary>
+    /// Gets the id of the surface driving this execution (e.g. the Copilot Workspace surface), if any.
+    /// Null for executions with no associated surface. Additive; existing consumers are unaffected.
+    /// </summary>
+    public string? ExecutionSurfaceId { get; init; }
+
+    /// <summary>
+    /// Gets the id of the persisted conversation this execution belongs to, if any. Populated for
+    /// surfaces with server-side conversation persistence (Copilot Workspace); null otherwise.
+    /// </summary>
+    public Guid? ConversationId { get; init; }
 }

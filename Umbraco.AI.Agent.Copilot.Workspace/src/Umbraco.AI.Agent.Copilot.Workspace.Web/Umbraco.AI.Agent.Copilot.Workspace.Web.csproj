@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Copilot Workspace Web</Title>
+        <Description>Section-gated persisted stream and file endpoints for Copilot Workspace</Description>
+        <!-- Required for Microsoft.AspNetCore.OpenApi source-generated interceptors (AddOpenApi) in v18. -->
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Core\Umbraco.AI.Agent.Conversations.Core.csproj" />
+        <!-- Correct-direction dependency: the host binds the reusable Conversations web controllers into
+             its OpenAPI document + section policy via an application-model convention. -->
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Web\Umbraco.AI.Agent.Conversations.Web.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Core\Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit" />
+    </ItemGroup>
+</Project>

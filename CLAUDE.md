@@ -405,6 +405,17 @@ Never break a public API. When a new method replaces an old one, keep the old si
 message `"Will be removed in vX"`, where **X = current major version + 2** (currently v18, so
 `"Will be removed in v20"`). This gives consumers two major versions to migrate.
 
+### Backoffice UI: mirror an existing editor, don't hand-roll
+
+For any create/edit/list/detail surface, use the standard backoffice extension stack — **workspaces**
+(`<umb-workspace-editor>`, workspace views, `UmbSubmittableWorkspaceContextBase`, `UmbSubmitWorkspaceAction`),
+**collections**, **entity actions** (`UmbEntityActionBase`), and `umb-property-layout` for fields — never
+hand-rolled editor markup + state. **Before writing new editor/list UI, find the nearest existing
+implementation and mirror it** (e.g. the Context/Connection/Profile editors under
+`Umbraco.AI/src/*/Web.StaticAssets/Client/src/**/workspace/`). Custom elements are only for genuinely
+non-standard surfaces (e.g. a chat view) — and even then keep the standard workspace chrome and make only
+the inner view custom.
+
 ## Excluded Folders
 
 - `Ref/` - External reference projects

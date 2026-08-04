@@ -56,8 +56,19 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     }
 
     /// <inheritdoc />
+    public Task<MsAIAgent> CreateAgentAsync(
+        UmbracoAIAgent agent,
+        IEnumerable<AIRequestContextItem>? contextItems = null,
+        IEnumerable<AITool>? additionalTools = null,
+        IReadOnlyDictionary<string, object?>? additionalProperties = null,
+        AIApprovalPolicy approvalPolicy = AIApprovalPolicy.Interactive,
+        CancellationToken cancellationToken = default)
+        => CreateAgentAsync(agent, chatHistoryProvider: null, contextItems, additionalTools, additionalProperties, approvalPolicy, cancellationToken);
+
+    /// <inheritdoc />
     public async Task<MsAIAgent> CreateAgentAsync(
         UmbracoAIAgent agent,
+        ChatHistoryProvider? chatHistoryProvider,
         IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,
@@ -68,7 +79,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
         MsAIAgent innerAgent = agent.AgentType switch
         {
-            AIAgentType.Standard => await CreateStandardAgentAsync(agent, contextItems, additionalTools, approvalPolicy, cancellationToken),
+            AIAgentType.Standard => await CreateStandardAgentAsync(agent, chatHistoryProvider, contextItems, additionalTools, approvalPolicy, cancellationToken),
             AIAgentType.Orchestrated => await CreateOrchestratedAgentAsync(
                 agent,
                 agent.GetOrchestratedConfig()
@@ -92,6 +103,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
     private async Task<MsAIAgent> CreateStandardAgentAsync(
         UmbracoAIAgent agent,
+        ChatHistoryProvider? chatHistoryProvider,
         IEnumerable<AIRequestContextItem>? contextItems,
         IEnumerable<AITool>? additionalTools,
         AIApprovalPolicy approvalPolicy,
@@ -201,7 +213,14 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         {
             Name = agent.Name,
             Description = agent.Description,
-            ChatOptions = chatOptions
+            ChatOptions = chatOptions,
+
+            // Attach the custom history provider (durable Conversations store) when supplied. Null for
+            // non-persisted surfaces (e.g. contextual Copilot) → MAF defaults, byte-for-byte unchanged.
+            // Providers that can store history server-side must run statelessly when this is set (so the
+            // service returns no conversation id) — see ContextKeys.ClientManagedChatHistory and the
+            // OpenAI provider. If one doesn't, MAF's default conflict guard surfaces a clear error.
+            ChatHistoryProvider = chatHistoryProvider,
         });
     }
 

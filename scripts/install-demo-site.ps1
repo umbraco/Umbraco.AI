@@ -262,6 +262,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.UI" -SolutionFolder "Addons
 Write-Host "Adding Umbraco.AI.Agent.Copilot projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "Addons/Copilot"
 
+Write-Host "Adding Umbraco.AI.Agent.Copilot.Workspace projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot.Workspace" -SolutionFolder "Addons/CopilotWorkspace"
+
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Addons/Search"
 
@@ -360,6 +363,12 @@ if (Test-Path "Umbraco.AI.Agent.UI\src\Umbraco.AI.Agent.UI\Umbraco.AI.Agent.UI.c
 # Agent Copilot add-on (frontend-only static assets)
 if (Test-Path "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj"
+}
+
+# Agent Copilot Workspace add-on (full-section persisted chat; roll-up meta pulls the Conversations backend
+# + Startup composer transitively, so RunConversationsMigrationNotificationHandler creates its tables)
+if (Test-Path "Umbraco.AI.Agent.Copilot.Workspace\src\Umbraco.AI.Agent.Copilot.Workspace\Umbraco.AI.Agent.Copilot.Workspace.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Agent.Copilot.Workspace\src\Umbraco.AI.Agent.Copilot.Workspace\Umbraco.AI.Agent.Copilot.Workspace.csproj"
 }
 
 # Search add-on — excluded until Umbraco.Cms.Search.Core ships a v18-compatible release.

@@ -68,4 +68,12 @@ public class AIAgentExecutionOptions
     /// </para>
     /// </remarks>
     public IReadOnlyDictionary<string, object?>? AdditionalProperties { get; init; }
+
+    /// <summary>
+    /// Optional binding to a server-side conversation history store. When set, the agent is created
+    /// with the supplied MAF chat-history provider attached and the run is bound to the conversation,
+    /// so history is loaded/persisted through custom storage instead of the LLM service. Null (all
+    /// current callers) leaves execution unchanged.
+    /// </summary>
+    public AIConversationHistoryBinding? ConversationHistory { get; init; }
 }

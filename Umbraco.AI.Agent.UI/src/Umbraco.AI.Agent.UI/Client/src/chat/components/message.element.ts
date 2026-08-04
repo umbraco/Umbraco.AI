@@ -24,6 +24,10 @@ export class UaiChatMessageElement extends UmbLitElement {
     @property({ type: Boolean, attribute: "is-running" })
     isRunning = false;
 
+    /** Read-only mode (e.g. an archived conversation): suppresses the regenerate action. */
+    @property({ type: Boolean, attribute: "readonly" })
+    readonly = false;
+
     #renderAgentAttribution() {
         if (this.message.role !== "assistant" || !this.message.agentName) {
             return html``;
@@ -125,7 +129,7 @@ export class UaiChatMessageElement extends UmbLitElement {
 
         return html`
             <div class="message-actions ${visibilityClass}">
-                ${this.isLastAssistantMessage
+                ${this.isLastAssistantMessage && !this.readonly
                     ? html`<uai-message-regenerate-button></uai-message-regenerate-button>`
                     : ""}
                 <uai-message-copy-button .content=${this.message.content}></uai-message-copy-button>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Copilot Workspace Startup</Title>
+        <Description>Startup and DI registration for Umbraco AI Copilot Workspace</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Startup" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Core\Umbraco.AI.Agent.Conversations.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence.SqlServer\Umbraco.AI.Agent.Conversations.Persistence.SqlServer.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence.Sqlite\Umbraco.AI.Agent.Conversations.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Web\Umbraco.AI.Agent.Conversations.Web.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Core\Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Web\Umbraco.AI.Agent.Copilot.Workspace.Web.csproj" />
+    </ItemGroup>
+</Project>

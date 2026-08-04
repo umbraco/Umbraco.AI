@@ -86,6 +86,20 @@ export class UaiChatInputElement extends UmbLitElement {
         });
     }
 
+    override firstUpdated() {
+        // Focus the composer as soon as it mounts (e.g. opening a fresh chat) when it's ready to type.
+        if (!this.disabled) {
+            this.focusComposer();
+        }
+    }
+
+    /** Focuses the message composer. Public so a host can focus it (e.g. after switching conversation). */
+    focusComposer(): void {
+        requestAnimationFrame(() => {
+            this.#textareaRef.value?.focus();
+        });
+    }
+
     override updated(changedProperties: PropertyValues) {
         super.updated(changedProperties);
 

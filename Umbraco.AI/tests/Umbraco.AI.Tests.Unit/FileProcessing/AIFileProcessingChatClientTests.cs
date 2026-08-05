@@ -209,6 +209,31 @@ public class AIFileProcessingChatClientTests
         ((TextContent)contents[0]).Text.ShouldBe("Check this");
     }
 
+    [Fact]
+    public async Task GetResponseAsync_WithUnnamedDataContent_DoesNotUseDataUriAsFilename()
+    {
+        // Arrange — a DataContent built from bytes synthesizes a "data:...;base64,..." URI,
+        // which must never be mistaken for a filename.
+        var handler = new FakeHandler("text/csv", "extracted,data");
+        var (client, inner) = CreateClient(handler);
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.User, [new DataContent(new byte[] { 1, 2, 3 }, "text/csv")]),
+        };
+
+        // Act
+        await client.GetResponseAsync(messages);
+
+        // Assert
+        handler.LastFilename.ShouldBeNull();
+
+        var text = ((TextContent)inner.LastMessages![0].Contents[0]).Text;
+        text.ShouldBe("extracted,data");
+        text.ShouldNotContain("[File:");
+        text.ShouldNotContain("base64");
+    }
+
     #region Test Helpers
 
     private static (AIFileProcessingChatClient Client, CapturingChatClient Inner) CreateClient(
@@ -239,13 +264,18 @@ public class AIFileProcessingChatClientTests
             _content = content;
         }
 
+        public string? LastFilename { get; private set; }
+
         public Task<bool> CanHandleAsync(string mimeType, CancellationToken cancellationToken = default)
             => Task.FromResult(string.Equals(mimeType, _mimeType, StringComparison.OrdinalIgnoreCase));
 
         public Task<AIFileProcessingResult> ProcessAsync(
             ReadOnlyMemory<byte> data, string mimeType, string? filename,
             CancellationToken cancellationToken = default)
-            => Task.FromResult(new AIFileProcessingResult(_content, false));
+        {
+            LastFilename = filename;
+            return Task.FromResult(new AIFileProcessingResult(_content, false));
+        }
     }
 
     private sealed class CapturingChatClient : IChatClient

@@ -126,7 +126,7 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
         string threadId,
         CancellationToken cancellationToken)
     {
-        var filename = metadata is not null && metadata.TryGetValue(FilenameMetadataKey, out var fn) ? fn as string : null;
+        var filename = AGUIMetadata.GetString(metadata, FilenameMetadataKey);
 
         // Validate file extension against CMS content settings
         var extension = Path.GetExtension(filename)?.TrimStart('.');
@@ -169,7 +169,11 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
             return (original, original);
         }
 
-        var resolvedMetadata = WithMetadata(metadata, ResolvedDataMetadataKey, stored.Data);
+        // Follow-up turns may send only the file id, so fall back to the name we stored on upload.
+        var resolvedMetadata = AGUIMetadata.GetString(metadata, FilenameMetadataKey) is null && stored.Filename is not null
+            ? WithMetadata(metadata, ResolvedDataMetadataKey, stored.Data, FilenameMetadataKey, stored.Filename)
+            : WithMetadata(metadata, ResolvedDataMetadataKey, stored.Data);
+
         return (
             original,
             AGUIInputContentFactory.FromSource(urlSource, urlSource.MimeType, resolvedMetadata));

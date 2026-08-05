@@ -174,11 +174,15 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 continue;
             }
 
+            // The uploaded filename travels in metadata — carry it onto the content so file
+            // processing handlers receive a real name instead of falling back to the data URI.
+            var filename = GetFilename(media.Metadata);
+
             // Prefer resolved bytes attached by AGUIFileProcessor.
             var resolved = AGUIFileProcessor.GetResolvedBytes(media);
             if (resolved is { Length: > 0 })
             {
-                contents.Add(new DataContent(resolved, mimeType));
+                contents.Add(new DataContent(resolved, mimeType) { Name = filename });
                 continue;
             }
 
@@ -186,17 +190,21 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             {
                 case AGUIInputContentDataSource dataSource:
                     var bytes = Convert.FromBase64String(dataSource.Value);
-                    contents.Add(new DataContent(bytes, dataSource.MimeType));
+                    contents.Add(new DataContent(bytes, dataSource.MimeType) { Name = filename });
                     break;
 
                 case AGUIInputContentUrlSource urlSource:
-                    contents.Add(new DataContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
+                    // DataContent only accepts data URIs — a remote reference has to be UriContent.
+                    contents.Add(new UriContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
                     break;
             }
         }
 
         return new ChatMessage(role, contents);
     }
+
+    private static string? GetFilename(IReadOnlyDictionary<string, object?>? metadata)
+        => AGUIMetadata.GetString(metadata, AGUIFileProcessor.FilenameMetadataKey);
 
     private static ChatMessage ConvertAssistantMessageWithToolCalls(AGUIMessage message)
     {

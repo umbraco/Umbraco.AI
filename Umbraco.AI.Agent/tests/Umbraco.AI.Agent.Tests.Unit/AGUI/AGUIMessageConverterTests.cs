@@ -485,5 +485,78 @@ public class AGUIMessageConverterTests
         dataSource.Value.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void ConvertFromChatMessage_WithNamedDataContent_SetsFilenameMetadata()
+    {
+        // Arrange
+        var contents = new List<AIContent>
+        {
+            new DataContent(new byte[] { 1, 2, 3 }, "text/csv") { Name = "example.csv" }
+        };
+        var chatMessage = new ChatMessage(ChatRole.User, contents);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        var part = result.ContentParts!.Single().ShouldBeOfType<AGUIDocumentInputContent>();
+        part.Metadata.ShouldNotBeNull();
+        part.Metadata!["filename"].ShouldBe("example.csv");
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_WithUnnamedDataContent_LeavesMetadataNull()
+    {
+        // Arrange
+        var chatMessage = new ChatMessage(ChatRole.User, [new DataContent(new byte[] { 1, 2, 3 }, "text/csv")]);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        result.ContentParts!.Single().ShouldBeOfType<AGUIDocumentInputContent>().Metadata.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_WithUriContent_CreatesUrlSourcePart()
+    {
+        // Arrange
+        var contents = new List<AIContent>
+        {
+            new TextContent("Describe this"),
+            new UriContent(new Uri("https://example.com/chart.png"), "image/png")
+        };
+        var chatMessage = new ChatMessage(ChatRole.User, contents);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        result.ContentParts.ShouldNotBeNull();
+        result.ContentParts.Count.ShouldBe(2);
+
+        var urlPart = result.ContentParts[1].ShouldBeOfType<AGUIImageInputContent>();
+        var urlSource = urlPart.Source.ShouldBeOfType<AGUIInputContentUrlSource>();
+        urlSource.Value.ShouldBe("https://example.com/chart.png");
+        urlSource.MimeType.ShouldBe("image/png");
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_RoundTripsFilenameThroughBothDirections()
+    {
+        // Arrange
+        var original = new ChatMessage(ChatRole.User, [new DataContent(new byte[] { 1, 2, 3 }, "text/csv") { Name = "example.csv" }])
+        {
+            MessageId = "msg-1"
+        };
+
+        // Act
+        var aguiMessage = _converter.ConvertFromChatMessage(original);
+        var roundTripped = _converter.ConvertToChatMessage(aguiMessage);
+
+        // Assert
+        roundTripped.Contents.OfType<DataContent>().Single().Name.ShouldBe("example.csv");
+    }
+
     #endregion
 }

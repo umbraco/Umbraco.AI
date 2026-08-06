@@ -57,6 +57,11 @@ export class UaiConversationServerDataSource {
         return tryExecute(this.#host, ConversationsService.delete({ path: { id } }));
     }
 
+    async truncateAfterLastUserMessage(id: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.truncateAfterLastUserMessage({ path: { id } }));
+    }
+
     async getMessages(id: string, skip = 0, take = 500) {
         await copilotWorkspaceClientReady;
         return tryExecute(

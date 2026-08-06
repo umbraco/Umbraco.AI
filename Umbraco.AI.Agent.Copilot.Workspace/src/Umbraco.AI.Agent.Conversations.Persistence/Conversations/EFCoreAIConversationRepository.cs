@@ -10,6 +10,7 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.Conversations;
 internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
 {
     private const int MaxAppendRetries = 3;
+    private const string UserRole = "user";
 
     private readonly IEFCoreScopeProvider<UmbracoAIConversationsDbContext> _scopeProvider;
     private readonly AIConversationEntityFactory _factory;
@@ -248,6 +249,18 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         return entities.Select(AIMessageEntityFactory.BuildDomain).ToList();
     }
 
+    public async Task<string?> GetLastUserMessageTextAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        var text = await scope.ExecuteWithContextAsync(async db => await db.Messages.AsNoTracking()
+            .Where(m => m.ConversationId == conversationId && m.Role == UserRole)
+            .OrderByDescending(m => m.Sequence)
+            .Select(m => m.ContentText)
+            .FirstOrDefaultAsync(cancellationToken));
+        scope.Complete();
+        return text;
+    }
+
     public async Task<(IReadOnlyList<AIMessage> Items, int Total)> GetMessagesPagedAsync(
         Guid conversationId,
         int skip,
@@ -336,5 +349,51 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
             return 0;
         });
         scope.Complete();
+    }
+
+    public async Task<int> DeleteMessagesAfterLastUserMessageAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        var deleted = await scope.ExecuteWithContextAsync(async db =>
+        {
+            // Role is persisted as the M.E.AI ChatRole value, so the user turn is the literal "user".
+            var lastUserSequence = await db.Messages
+                .Where(m => m.ConversationId == conversationId && m.Role == UserRole)
+                .Select(m => (int?)m.Sequence)
+                .MaxAsync(cancellationToken);
+
+            if (lastUserSequence is null)
+            {
+                // Nothing to regenerate from — never truncate a conversation that holds only a
+                // system/assistant preamble.
+                return 0;
+            }
+
+            var toDelete = await db.Messages
+                .Where(m => m.ConversationId == conversationId && m.Sequence > lastUserSequence.Value)
+                .ToListAsync(cancellationToken);
+
+            if (toDelete.Count == 0)
+            {
+                return 0;
+            }
+
+            db.Messages.RemoveRange(toDelete);
+
+            // Only the tail is removed, so the surviving sequences stay contiguous and AddMessagesAsync's
+            // max+1 continues to line up. LastMessageAt is left alone: the conversation was just active,
+            // and the regenerated turn is about to refresh it anyway.
+            var conversation = await db.Conversations.FirstOrDefaultAsync(c => c.Id == conversationId, cancellationToken);
+            if (conversation is not null)
+            {
+                conversation.DateModified = DateTime.UtcNow;
+                conversation.Version++;
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            return toDelete.Count;
+        });
+        scope.Complete();
+        return deleted;
     }
 }

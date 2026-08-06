@@ -339,6 +339,35 @@ export type GetMessagesResponses = {
 
 export type GetMessagesResponse = GetMessagesResponses[keyof GetMessagesResponses];
 
+export type TruncateAfterLastUserMessageData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/conversations/{id}/messages/after-last-user';
+};
+
+export type TruncateAfterLastUserMessageErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type TruncateAfterLastUserMessageError = TruncateAfterLastUserMessageErrors[keyof TruncateAfterLastUserMessageErrors];
+
+export type TruncateAfterLastUserMessageResponses = {
+    /**
+     * No Content
+     */
+    204: unknown;
+};
+
 export type GetAll2Data = {
     body?: never;
     path?: never;

@@ -182,22 +182,44 @@ export class UaiRunController extends UmbControllerBase {
         this.#resolvedAgent.next(undefined);
     }
 
-    regenerateLastMessage(): void {
+    async regenerateLastMessage(): Promise<void> {
         if (!this.#client) return;
+
+        // Never regenerate mid-run, nor while an interrupt is still open: the outstanding approval or
+        // tool call lives in the very tail we are about to drop, so the resume would have nothing left to
+        // correlate against.
+        if (this.#agentState.value !== undefined) return;
 
         const messages = this.#messages.value;
 
-        let lastAssistantIndex = -1;
+        // Cut back to the user message being answered again, not merely the last assistant message. A
+        // tool-using turn leaves tool-call and tool-result entries in between, and a persisted strategy
+        // drops the whole trailing block server-side, so anything less leaves the two views out of step.
+        let lastUserIndex = -1;
         for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].role === "assistant") {
-                lastAssistantIndex = i;
+            if (messages[i].role === "user") {
+                lastUserIndex = i;
                 break;
             }
         }
 
-        if (lastAssistantIndex === -1) return;
+        // Nothing to answer, or nothing after it to replace.
+        if (lastUserIndex === -1 || lastUserIndex === messages.length - 1) return;
 
-        const truncatedMessages = messages.slice(0, lastAssistantIndex);
+        const truncatedMessages = messages.slice(0, lastUserIndex + 1);
+
+        this.#agentState.next({ status: "thinking" });
+
+        // Reconcile the durable store BEFORE touching the display: if the truncate fails the thread is
+        // left exactly as it was, rather than losing the old answer with no replacement coming.
+        try {
+            await this.#strategy.onTruncate?.(truncatedMessages);
+        } catch (error) {
+            console.error("Regenerate aborted: the stored conversation could not be truncated.", error);
+            this.#agentState.next(undefined);
+            return;
+        }
+
         this.#messages.next(truncatedMessages);
 
         this.#streamingContent.next("");
@@ -205,7 +227,6 @@ export class UaiRunController extends UmbControllerBase {
         this.#currentAssistantMessageId = null;
         this.#errorHandled = false;
 
-        this.#agentState.next({ status: "thinking" });
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client.sendMessage(this.#strategy.outbound(truncatedMessages), frontendTools, this.#pendingContext);
     }

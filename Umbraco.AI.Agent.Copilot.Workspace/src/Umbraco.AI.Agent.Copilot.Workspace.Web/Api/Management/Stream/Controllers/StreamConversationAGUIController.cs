@@ -134,11 +134,19 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             }
         }
 
+        // A regenerate re-runs the stored turn, so the request carries no inbound user message. Fall back
+        // to the persisted one, otherwise auto-selection would be handed an empty prompt and could route
+        // the regenerated answer to a different agent than the original.
         var lastUserMessage = request.Messages?
-            .LastOrDefault(m => m.Role == AGUIMessageRole.User)?.Content ?? string.Empty;
+            .LastOrDefault(m => m.Role == AGUIMessageRole.User)?.Content;
+
+        if (string.IsNullOrWhiteSpace(lastUserMessage))
+        {
+            lastUserMessage = await _conversationService.GetLastUserMessageTextAsync(conversation.Id, cancellationToken);
+        }
 
         var selected = await _agentService.SelectAgentForPromptAsync(
-            lastUserMessage,
+            lastUserMessage ?? string.Empty,
             CopilotWorkspaceAgentSurface.SurfaceId,
             new AgentAvailabilityContext { Surface = CopilotWorkspaceAgentSurface.SurfaceId },
             cancellationToken);

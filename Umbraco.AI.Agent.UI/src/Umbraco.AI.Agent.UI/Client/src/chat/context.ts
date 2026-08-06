@@ -50,8 +50,8 @@ export interface UaiChatContextApi extends UmbContextMinimal {
     /** Abort the current agent run. */
     abortRun(): void;
 
-    /** Regenerate the last assistant message. */
-    regenerateLastMessage(): void;
+    /** Regenerate the answer to the last user message, replacing the response that followed it. */
+    regenerateLastMessage(): Promise<void>;
 
     /** Select an agent by ID. */
     selectAgent(agentId: string | undefined): void;

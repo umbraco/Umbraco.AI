@@ -146,6 +146,32 @@ internal sealed class AIConversationService : IAIConversationService
         return await _repository.GetMessagesPagedAsync(conversationId, skip, take, cancellationToken);
     }
 
+    public async Task<string?> GetLastUserMessageTextAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        await GetOwnedOrThrowAsync(conversationId, cancellationToken);
+        return await _repository.GetLastUserMessageTextAsync(conversationId, cancellationToken);
+    }
+
+    public async Task<int> TruncateAfterLastUserMessageAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        var conversation = await GetOwnedOrThrowAsync(conversationId, cancellationToken);
+
+        var messages = new EventMessages();
+        var savingNotification = new AIConversationSavingNotification(conversation, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+        if (savingNotification.Cancel)
+        {
+            throw new InvalidOperationException($"Conversation save cancelled: {DescribeMessages(messages)}");
+        }
+
+        var deleted = await _repository.DeleteMessagesAfterLastUserMessageAsync(conversationId, cancellationToken);
+
+        var savedNotification = new AIConversationSavedNotification(conversation, messages).WithStateFrom(savingNotification);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return deleted;
+    }
+
     private async Task<AIConversation> GetOwnedOrThrowAsync(Guid id, CancellationToken cancellationToken)
     {
         var conversation = await GetConversationAsync(id, cancellationToken);

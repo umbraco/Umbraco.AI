@@ -9,7 +9,6 @@ import { map, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
 import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
     UaiEntityAdapterApi,
-    UaiEntityContext,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,
@@ -89,22 +88,6 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
         return ctx?.IS_BLOCK_WORKSPACE_CONTEXT === true;
     }
 
-    /**
-     * Extract entity identity from block workspace context.
-     */
-    extractEntityContext(workspaceContext: unknown): UaiEntityContext {
-        const ctx = workspaceContext as BlockWorkspaceContextLike;
-        let unique: string | null = null;
-        try {
-            unique = ctx.getUnique() ?? null;
-        } catch {
-            // getUnique() can throw if contentKey is not yet available
-        }
-        return {
-            entityType: "block",
-            unique,
-        };
-    }
 
     /**
      * Get the current display name for the block.

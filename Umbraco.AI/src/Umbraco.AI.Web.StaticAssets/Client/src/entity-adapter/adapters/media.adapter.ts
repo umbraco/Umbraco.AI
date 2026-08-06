@@ -15,7 +15,6 @@ import { map, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
 import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
     UaiEntityAdapterApi,
-    UaiEntityContext,
     UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
@@ -119,17 +118,6 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
             typeof ctx?.getUnique === "function" &&
             typeof ctx?.getValues === "function"
         );
-    }
-
-    /**
-     * Extract entity identity from media workspace context.
-     */
-    extractEntityContext(workspaceContext: unknown): UaiEntityContext {
-        const ctx = workspaceContext as MediaWorkspaceContextLike;
-        return {
-            entityType: "media",
-            unique: ctx.getUnique() ?? null,
-        };
     }
 
     /**

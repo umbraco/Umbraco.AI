@@ -10,7 +10,6 @@ import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import { UMB_DOCUMENT_PUBLISHING_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/document";
 import type {
     UaiEntityAdapterApi,
-    UaiEntityContext,
     UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
@@ -116,17 +115,6 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             typeof ctx?.getUnique === "function" &&
             typeof ctx?.getName === "function"
         );
-    }
-
-    /**
-     * Extract entity identity from document workspace context.
-     */
-    extractEntityContext(workspaceContext: unknown): UaiEntityContext {
-        const ctx = workspaceContext as DocumentWorkspaceContextLike;
-        return {
-            entityType: "document",
-            unique: ctx.getUnique() ?? null,
-        };
     }
 
     /**

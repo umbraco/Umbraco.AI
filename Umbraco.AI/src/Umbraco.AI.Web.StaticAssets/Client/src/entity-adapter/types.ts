@@ -131,11 +131,6 @@ export interface UaiEntityAdapterApi extends UmbApi {
     canHandle(workspaceContext: unknown): boolean;
 
     /**
-     * Extract entity identity from workspace context.
-     */
-    extractEntityContext(workspaceContext: unknown): UaiEntityContext;
-
-    /**
      * Get the current display name for the entity.
      * Used for initial name population.
      */

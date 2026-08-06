@@ -22,6 +22,7 @@ import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from ".
 import type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
+    UaiEntityContext,
     UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
@@ -264,8 +265,17 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
             const adapter = await this.#findAdapterAsync(entry.context);
 
             if (adapter) {
-                const entityContext = adapter.extractEntityContext(entry.context);
-                const key = `${entityContext.entityType}:${entityContext.unique ?? "new"}`;
+                // Identity (entityType + unique) is owned by the registry entry, where the workspace
+                // decorator has already captured both reactively from the workspace's `unique`
+                // observable. We deliberately do NOT read the workspace's synchronous getUnique() here:
+                // it reads a point-in-time value that can lag the observable and return undefined for a
+                // fully-loaded entity, which would key a saved item as the non-persistable ":new"
+                // sentinel and silently disable the copilot's per-node history. The decorator's captured
+                // value is the single, reliable source.
+                const entityType = entry.entityType ?? adapter.entityType;
+                const unique = entry.entityUnique ?? null;
+                const entityContext: UaiEntityContext = { entityType, unique };
+                const key = `${entityType}:${unique ?? "new"}`;
                 currentKeys.add(key);
 
                 detected.push({

@@ -26,6 +26,14 @@ export interface UaiConversationStrategy {
 
     /** Called after a run finishes successfully, so a persisted strategy can advance its boundary. */
     onTurnComplete?(allMessages: UaiChatMessage[]): void;
+
+    /**
+     * Called before a regenerate re-runs the last turn, with the messages that survive the cut (up to and
+     * including the user message being answered again). A persisted strategy uses this to drop the stale
+     * tail from its durable store, so the new answer replaces the old one instead of being appended after
+     * it. Awaited before the run starts, and a rejection cancels the regenerate with the thread untouched.
+     */
+    onTruncate?(remaining: UaiChatMessage[]): Promise<void>;
 }
 
 /**

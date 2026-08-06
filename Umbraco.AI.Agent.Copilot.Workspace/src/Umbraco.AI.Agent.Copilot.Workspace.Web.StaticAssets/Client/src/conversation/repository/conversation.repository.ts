@@ -61,6 +61,14 @@ export class UaiConversationRepository extends UmbRepositoryBase {
         return this.#source.getMessages(id);
     }
 
+    /**
+     * Drops the stored answer to the conversation's last user message so it can be regenerated. No entity
+     * action event: only the message thread changes, and the chat that asked for this already reflects it.
+     */
+    async truncateAfterLastUserMessage(id: string) {
+        return this.#source.truncateAfterLastUserMessage(id);
+    }
+
     async requestById(id: string) {
         return this.#source.getById(id);
     }

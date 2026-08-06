@@ -388,8 +388,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#runController.abortRun();
     }
 
-    regenerateLastMessage(): void {
-        this.#runController.regenerateLastMessage();
+    regenerateLastMessage(): Promise<void> {
+        return this.#runController.regenerateLastMessage();
     }
 }
 

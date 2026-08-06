@@ -72,4 +72,27 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
     onTurnComplete(allMessages: UaiChatMessage[]): void {
         this.#persisted = allMessages.length;
     }
+
+    /**
+     * Regenerate: drop the stored answer to the last user message before the re-run, so the new one
+     * replaces it instead of being appended after it. The cutoff is derived server-side — the display
+     * list can't address stored rows — so this sends no positions, just the intent.
+     *
+     * Resetting the boundary to what survives is what makes `outbound` transmit nothing for the re-run:
+     * the server answers the user message it already holds. A failed call throws, and the controller then
+     * cancels the regenerate with the thread untouched rather than losing the old answer for nothing.
+     */
+    async onTruncate(remaining: UaiChatMessage[]): Promise<void> {
+        const id = this.#conversationId;
+        if (!id) {
+            return;
+        }
+
+        const { error } = await this.#repository.truncateAfterLastUserMessage(id);
+        if (error) {
+            throw error instanceof Error ? error : new Error(String(error));
+        }
+
+        this.#persisted = remaining.length;
+    }
 }

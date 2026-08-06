@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { Create2Data, Create2Errors, Create2Responses, CreateData, CreateErrors, CreateResponses, Delete2Data, Delete2Errors, Delete2Responses, DeleteData, DeleteErrors, DeleteResponses, GetAll2Data, GetAll2Errors, GetAll2Responses, GetAllData, GetAllErrors, GetAllResponses, GetById2Data, GetById2Errors, GetById2Responses, GetByIdData, GetByIdErrors, GetByIdResponses, GetFileData, GetFileErrors, GetFileResponses, GetMessagesData, GetMessagesErrors, GetMessagesResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, Update2Data, Update2Errors, Update2Responses, UpdateData, UpdateErrors, UpdateResponses } from './types.gen';
+import type { Create2Data, Create2Errors, Create2Responses, CreateData, CreateErrors, CreateResponses, Delete2Data, Delete2Errors, Delete2Responses, DeleteData, DeleteErrors, DeleteResponses, GetAll2Data, GetAll2Errors, GetAll2Responses, GetAllData, GetAllErrors, GetAllResponses, GetById2Data, GetById2Errors, GetById2Responses, GetByIdData, GetByIdErrors, GetByIdResponses, GetFileData, GetFileErrors, GetFileResponses, GetMessagesData, GetMessagesErrors, GetMessagesResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, TruncateAfterLastUserMessageData, TruncateAfterLastUserMessageErrors, TruncateAfterLastUserMessageResponses, Update2Data, Update2Errors, Update2Responses, UpdateData, UpdateErrors, UpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -71,6 +71,14 @@ export class ConversationsService {
         return (options.client ?? client).get<GetMessagesResponses, GetMessagesErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/conversations/{id}/messages',
+            ...options
+        });
+    }
+    
+    public static truncateAfterLastUserMessage<ThrowOnError extends boolean = false>(options: Options<TruncateAfterLastUserMessageData, ThrowOnError>) {
+        return (options.client ?? client).delete<TruncateAfterLastUserMessageResponses, TruncateAfterLastUserMessageErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/conversations/{id}/messages/after-last-user',
             ...options
         });
     }

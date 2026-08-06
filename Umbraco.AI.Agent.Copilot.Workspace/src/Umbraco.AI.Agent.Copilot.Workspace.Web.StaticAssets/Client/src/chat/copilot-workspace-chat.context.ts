@@ -282,8 +282,8 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.#runController.abortRun();
     }
 
-    regenerateLastMessage(): void {
-        this.#runController.regenerateLastMessage();
+    regenerateLastMessage(): Promise<void> {
+        return this.#runController.regenerateLastMessage();
     }
 
     override destroy(): void {

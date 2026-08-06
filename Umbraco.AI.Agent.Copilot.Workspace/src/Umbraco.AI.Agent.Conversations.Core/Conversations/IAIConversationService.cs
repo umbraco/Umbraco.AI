@@ -41,4 +41,19 @@ public interface IAIConversationService
         int skip,
         int take,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the text of the conversation's most recent user message, or null when it has none
+    /// (ownership-checked). Used to prompt agent auto-selection on a run that carries no inbound user
+    /// message of its own.
+    /// </summary>
+    Task<string?> GetLastUserMessageTextAsync(Guid conversationId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Drops everything after the conversation's last user message (ownership-checked), so the next run
+    /// answers that turn afresh instead of appending a second reply. This is the server-side half of the
+    /// chat's regenerate action: the client truncates its own thread to match and then runs normally, so
+    /// the AG-UI stream stays untouched. Returns the number of messages removed.
+    /// </summary>
+    Task<int> TruncateAfterLastUserMessageAsync(Guid conversationId, CancellationToken cancellationToken = default);
 }

@@ -97,7 +97,8 @@ export class UaiChatElement extends UmbLitElement {
     }
 
     #handleRegenerate() {
-        this.#chatContext?.regenerateLastMessage();
+        // Fire-and-forget: the controller reports its own failures and leaves the thread untouched.
+        void this.#chatContext?.regenerateLastMessage();
     }
 
     #getLastAssistantMessageId(): string | undefined {

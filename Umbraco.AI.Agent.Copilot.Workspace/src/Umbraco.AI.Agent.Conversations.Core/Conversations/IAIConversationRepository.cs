@@ -45,6 +45,13 @@ internal interface IAIConversationRepository
     /// <summary>Loads all messages for a conversation in sequence order.</summary>
     Task<IReadOnlyList<AIMessage>> GetMessagesAsync(Guid conversationId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns the plain-text of the conversation's most recent user message, or null when it has none.
+    /// Used to prompt agent auto-selection on a run that carries no inbound user message of its own
+    /// (a regenerate re-runs the stored turn).
+    /// </summary>
+    Task<string?> GetLastUserMessageTextAsync(Guid conversationId, CancellationToken cancellationToken = default);
+
     /// <summary>Loads a page of messages for a conversation in sequence order.</summary>
     Task<(IReadOnlyList<AIMessage> Items, int Total)> GetMessagesPagedAsync(
         Guid conversationId,
@@ -65,4 +72,13 @@ internal interface IAIConversationRepository
     /// regenerate/edit (the server-owned <c>onTruncate</c> path).
     /// </summary>
     Task DeleteMessagesFromAsync(Guid conversationId, int fromSequence, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes everything after the conversation's last user message — the trailing assistant/tool block
+    /// of the most recent turn — and returns how many messages were removed. This is the regenerate
+    /// truncation: the cutoff is derived server-side because the client cannot address stored rows (its
+    /// display projection drops tool/system messages, and messages created live in a run carry
+    /// client-side ids that were never persisted). A conversation with no user message is left untouched.
+    /// </summary>
+    Task<int> DeleteMessagesAfterLastUserMessageAsync(Guid conversationId, CancellationToken cancellationToken = default);
 }

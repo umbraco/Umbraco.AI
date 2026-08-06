@@ -42,6 +42,15 @@ public static class Constants
         /// Identifies which UI surface the request originated from (e.g., "copilot", "workspace").
         /// </summary>
         public const string Surface = "Umbraco.AI.Agent.Surface";
+
+        /// <summary>
+        /// Key for the caller's already-resolved allowed tool IDs.
+        /// Set by <see cref="Agents.AIAgentService"/> so the agent factory builds its server-side
+        /// tool list from the same permission decision that filtered the frontend tools — including
+        /// any per-user-group allows and denies. Without it the factory would fall back to the
+        /// agent's own defaults and silently ignore user group permissions.
+        /// </summary>
+        public const string AllowedToolIds = "Umbraco.AI.Agent.AllowedToolIds";
     }
 
     /// <summary>

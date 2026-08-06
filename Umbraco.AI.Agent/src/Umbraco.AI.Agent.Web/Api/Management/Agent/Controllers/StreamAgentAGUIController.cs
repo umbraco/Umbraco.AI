@@ -3,8 +3,10 @@ using System.Runtime.CompilerServices;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI;
 using Umbraco.AI.AGUI.Events;
@@ -13,6 +15,7 @@ using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.Cms.Core.DependencyInjection;
 
 using AgentConstants = Umbraco.AI.Agent.Core.Constants;
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -46,6 +49,29 @@ public class StreamAgentAGUIController : AgentControllerBase
     private readonly IAGUIToolConverter _toolConverter;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly AIAgentScopeValidator _scopeValidator;
+    private readonly AIAgentSurfaceCollection _surfaceCollection;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StreamAgentAGUIController"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an AIAgentScopeValidator and AIAgentSurfaceCollection so that explicitly requested agents are checked against their scope rules. Will be removed in v20.")]
+    public StreamAgentAGUIController(
+        IAIAgentService agentService,
+        IAGUIContextConverter contextConverter,
+        IAGUIToolConverter toolConverter,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors)
+        : this(
+            agentService,
+            contextConverter,
+            toolConverter,
+            scopeProvider,
+            contributors,
+            StaticServiceProvider.Instance.GetRequiredService<AIAgentScopeValidator>(),
+            StaticServiceProvider.Instance.GetRequiredService<AIAgentSurfaceCollection>())
+    {
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamAgentAGUIController"/> class.
@@ -55,13 +81,17 @@ public class StreamAgentAGUIController : AgentControllerBase
         IAGUIContextConverter contextConverter,
         IAGUIToolConverter toolConverter,
         IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors,
+        AIAgentScopeValidator scopeValidator,
+        AIAgentSurfaceCollection surfaceCollection)
     {
         _agentService = agentService;
         _contextConverter = contextConverter;
         _toolConverter = toolConverter;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
+        _scopeValidator = scopeValidator;
+        _surfaceCollection = surfaceCollection;
     }
 
     /// <summary>
@@ -146,6 +176,30 @@ public class StreamAgentAGUIController : AgentControllerBase
                     Detail = "The specified agent could not be found.",
                     Status = StatusCodes.Status404NotFound
                 });
+            }
+
+            // Honour the agent's scope rules on this path too. The auto-selection branch above
+            // filters by scope via SelectAgentForPromptAsync, so without this an explicit agent ID
+            // was a way to reach an agent the surface had ruled out.
+            // Only enforced when the request actually declares a surface: scope rules are
+            // surface-relative, so a contextless programmatic caller has nothing to check against
+            // and must keep working as before.
+            var explicitContext = BuildAvailabilityContext(request.Context);
+            if (explicitContext.Surface is not null)
+            {
+                var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
+                var surface = _surfaceCollection.FirstOrDefault(
+                    s => string.Equals(s.Id, explicitContext.Surface, StringComparison.OrdinalIgnoreCase));
+
+                if (agent is not null && !_scopeValidator.IsAgentAvailable(agent, explicitContext, surface))
+                {
+                    return Results.NotFound(new ProblemDetails
+                    {
+                        Title = "AIAgent not available in this context",
+                        Detail = $"Agent '{agent.Alias}' is not available in the '{explicitContext.Surface}' surface for the current context.",
+                        Status = StatusCodes.Status404NotFound
+                    });
+                }
             }
         }
 

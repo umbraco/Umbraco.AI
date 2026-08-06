@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [17.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.1...Umbraco.AI.Agent@17.2.0-rc.1) (2026-08-04)
+## [17.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.1...Umbraco.AI.Agent@17.2.0-rc.2) (2026-08-06)
 
 ### feat
 
@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### fix
 
+* **agent:** Keep filenames and remote links when converting back to AG-UI ([58306cf](https://github.com/umbraco/Umbraco.AI/commit/58306cf81ee16cd143387bd3ebb26fc95b99eddc))
+* **core,agent:** Pass the real filename to file processing handlers ([85a9292](https://github.com/umbraco/Umbraco.AI/commit/85a92927c6f44bfb2182b6fed00fe464c2adeb28)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
 * **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
 * **core,agent:** Suppress execution-context flow for recurring hosted services ([dd3932a](https://github.com/umbraco/Umbraco.AI/commit/dd3932a970caaffe83743230cb57ca38eb244518)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
 

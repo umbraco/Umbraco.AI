@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [17.3.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.2.0...Umbraco.AI@17.3.0-rc.1) (2026-08-04)
+## [17.3.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.2.0...Umbraco.AI@17.3.0-rc.2) (2026-08-06)
 
 ### ⚠ BREAKING CHANGE
 
@@ -37,10 +37,12 @@ design
 
 ### fix
 
+* **core,agent:** Pass the real filename to file processing handlers ([85a9292](https://github.com/umbraco/Umbraco.AI/commit/85a92927c6f44bfb2182b6fed00fe464c2adeb28)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
 * **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
 * **core,agent:** Suppress execution-context flow for recurring hosted services ([dd3932a](https://github.com/umbraco/Umbraco.AI/commit/dd3932a970caaffe83743230cb57ca38eb244518)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
 * **core,anthropic,openai:** Read the cached input tokens adapters already report (v17 backport) ([40e0f34](https://github.com/umbraco/Umbraco.AI/commit/40e0f3443114bda9cd1082468df554d8e686b65e)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
 * **core,copilot-workspace:** Stop the workspace store refetching its own write ([0924e94](https://github.com/umbraco/Umbraco.AI/commit/0924e94a444325846e1d3dcf6a51a1c0d44f8857))
+* **core,copilot:** Persist contextual copilot history by keying on the reactive entity unique ([4b5c1fa](https://github.com/umbraco/Umbraco.AI/commit/4b5c1faf1439606f0ed8901ee69536570d73d61d))
 * **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#274) ([38de95d](https://github.com/umbraco/Umbraco.AI/commit/38de95db9f4c29f702f122faa868e24c5cafa93b)), closes [#274](https://github.com/umbraco/Umbraco.AI/issues/274) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
 * **core:** Encrypt escaped literals in sensitive fields (#298) ([f9f0b32](https://github.com/umbraco/Umbraco.AI/commit/f9f0b324ba14a370590cc6f61f041aa73c3cc5e5)), closes [#298](https://github.com/umbraco/Umbraco.AI/issues/298)
 * **frontend:** Space every sibling after a box on the profile editor ([367dbe7](https://github.com/umbraco/Umbraco.AI/commit/367dbe777192a135f98f51737e018602a23a4698))

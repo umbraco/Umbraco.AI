@@ -33,6 +33,7 @@
     <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets/Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets.csproj" />
     <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace.Startup/Umbraco.AI.Agent.Copilot.Workspace.Startup.csproj" />
     <Project Path="Umbraco.AI.Agent.Copilot.Workspace/src/Umbraco.AI.Agent.Copilot.Workspace/Umbraco.AI.Agent.Copilot.Workspace.csproj" />
+    <Project Path="Umbraco.AI.Agent.Copilot.Workspace/tests/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/AddOns/Prompt/">
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Core/Umbraco.AI.Prompt.Core.csproj" />

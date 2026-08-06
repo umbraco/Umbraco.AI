@@ -112,11 +112,11 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
         // Populate scope via contributors and set metadata
         PopulateScopeContext(scope.Context);
 
-        // Inject system message parts from populated context
-        var enhancedMessages = InjectSystemMessageParts(scope.Context, messages);
+        // Stage system message parts for injection at the chat-client boundary
+        StageSystemMessageParts(scope.Context);
 
         // Execute inner agent (which calls its RunCoreAsync internally)
-        return await InnerAgent.RunAsync(enhancedMessages, session, options, cancellationToken);
+        return await InnerAgent.RunAsync(messages, session, options, cancellationToken);
 
         // Scope automatically disposed by 'using' statement
     }
@@ -136,11 +136,11 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
         // Populate scope via contributors and set metadata
         PopulateScopeContext(scope.Context);
 
-        // Inject system message parts from populated context
-        var enhancedMessages = InjectSystemMessageParts(scope.Context, messages);
+        // Stage system message parts for injection at the chat-client boundary
+        StageSystemMessageParts(scope.Context);
 
         // Execute inner agent (streaming)
-        await foreach (var update in InnerAgent.RunStreamingAsync(enhancedMessages, session, options, cancellationToken))
+        await foreach (var update in InnerAgent.RunStreamingAsync(messages, session, options, cancellationToken))
         {
             yield return update;
         }
@@ -183,45 +183,27 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
     }
 
     /// <summary>
-    /// Injects system message parts from context into the message list.
+    /// Hands the composed runtime-context system prompt to
+    /// <see cref="AIAgentSystemMessageChatClient"/> instead of injecting it here.
     /// </summary>
+    /// <remarks>
+    /// The messages this agent receives are only the <em>new</em> turn on a surface whose history lives
+    /// server-side (Copilot Workspace): the stored history is prepended below this layer, so a message
+    /// inserted at index 0 here ends up in the middle of what the model actually sees — and slides one
+    /// place further along with every turn, which defeats provider prompt caching (each request needs the
+    /// same leading tokens as the last). Deferring the injection to the chat-client boundary, the first
+    /// point where history and the new turn are one list, puts it at index 0 of the real conversation and
+    /// keeps it there. It also keeps the block out of <c>RequestMessages</c>, so a persisting history
+    /// provider no longer stores a copy per turn.
+    /// </remarks>
     /// <param name="context">The runtime context containing system message parts.</param>
-    /// <param name="messages">The original message list.</param>
-    /// <returns>A new message list with system messages injected.</returns>
-    private static IEnumerable<ChatMessage> InjectSystemMessageParts(
-        AIRuntimeContext context,
-        IEnumerable<ChatMessage> messages)
+    private static void StageSystemMessageParts(AIRuntimeContext context)
     {
-        var messagesList = messages.ToList();
-
-        // Check if context has system message parts
         if (context.SystemMessageParts.Count == 0)
         {
-            return messagesList; // No injection needed
+            return;
         }
 
-        // Build system message from parts (matching streaming service pattern)
-        var systemPrompt = string.Join("\n\n", context.SystemMessageParts);
-
-        // Check if there's already a system message to combine with
-        var existingSystemIndex = messagesList.FindIndex(m => m.Role == ChatRole.System);
-
-        if (existingSystemIndex >= 0)
-        {
-            // Prepend to existing system message
-            var existingContent = messagesList[existingSystemIndex].Text ?? string.Empty;
-            var combinedContent = string.IsNullOrEmpty(existingContent)
-                ? systemPrompt
-                : $"{systemPrompt}\n\n{existingContent}";
-            messagesList[existingSystemIndex] = new ChatMessage(ChatRole.System, combinedContent);
-        }
-        else
-        {
-            // Insert new system message at the beginning
-            messagesList.Insert(0, new ChatMessage(ChatRole.System, systemPrompt));
-        }
-
-        return messagesList;
+        context.SetValue(Constants.ContextKeys.PendingSystemMessage, string.Join("\n\n", context.SystemMessageParts));
     }
-
 }

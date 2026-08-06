@@ -133,12 +133,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return;
         }
 
-        // The base InvokedCoreAsync has already filtered out messages that came from ProvideChatHistoryAsync,
-        // so RequestMessages here are only genuinely new inbound messages.
-        var newMessages = context.RequestMessages
-            .Concat(context.ResponseMessages ?? [])
-            .Select(ToDomain)
-            .ToList();
+        var newMessages = ToStoredMessages(context.RequestMessages, context.ResponseMessages);
 
         if (newMessages.Count == 0)
         {
@@ -147,6 +142,29 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
 
         await _repository.AddMessagesAsync(conversationId, newMessages, cancellationToken);
     }
+
+    /// <summary>
+    /// Selects what a finished run contributes to the durable history. The base <c>InvokedCoreAsync</c> has
+    /// already filtered out messages that came from <see cref="ProvideChatHistoryAsync"/>, so the request
+    /// messages here are only genuinely new inbound ones.
+    /// </summary>
+    /// <remarks>
+    /// System messages are deliberately dropped. The runtime context (current user, section, serialized
+    /// entity, editing guidance) is injected fresh into every run by the agent layer, so storing it would
+    /// append an identical block per turn and replay every one of them back to the model on the next turn —
+    /// token cost growing with the square of the turn count. Worse, a stored block is a snapshot of the
+    /// moment it was written, so an old section/entity context would be replayed alongside, and could
+    /// contradict, the current one. Nothing is lost by dropping them: every contributor to that block is
+    /// re-derived on the next run either way.
+    /// </remarks>
+    internal static IReadOnlyList<AIMessage> ToStoredMessages(
+        IEnumerable<ChatMessage> requestMessages,
+        IEnumerable<ChatMessage>? responseMessages)
+        => requestMessages
+            .Where(m => m.Role != ChatRole.System)
+            .Concat(responseMessages ?? [])
+            .Select(ToDomain)
+            .ToList();
 
     private static AIMessage ToDomain(ChatMessage message) => new()
     {

@@ -80,6 +80,11 @@ public static class UmbracoBuilderExtensions
         // This ensures server-side tools execute before frontend tools trigger termination
         builder.AIChatMiddleware().InsertBefore<AIFunctionInvokingChatMiddleware, AIToolReorderingChatMiddleware>();
 
+        // Register the agent system message middleware outermost (appended last), so the runtime-context
+        // block lands at index 0 of history + new turn, before the context injector looks for a system
+        // message to extend and before the audit log snapshots the prompt.
+        builder.AIChatMiddleware().Append<AIAgentSystemMessageChatMiddleware>();
+
         // Register versionable entity adapters for agents
         builder.AIVersionableEntityAdapters().Add<AIAgentVersionableEntityAdapter>();
 

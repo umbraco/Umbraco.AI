@@ -1,10 +1,8 @@
 using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Web.Api.Management.PropertyValueOperation.Models;
-using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.PropertyValueOperation.Controllers;
 
@@ -19,12 +17,20 @@ namespace Umbraco.AI.Web.Api.Management.PropertyValueOperation.Controllers;
 /// future server-side AI tools will call the dispatcher in-process.
 /// </para>
 /// <para>
-/// The auth boundary is <c>SectionAccessAI</c>; the same surface as other AI management APIs.
-/// Frontend tools delegate authorization to this policy and do not duplicate it client-side.
+/// The auth boundary is deliberately just <c>BackOfficeAccess</c>, inherited from the base
+/// controller — this endpoint does NOT carry the <c>SectionAccessAI</c> policy that the rest of the
+/// AI management API uses. Because the operation is a pure transform over a value the caller
+/// already supplied, granting it exposes no data the caller could not already read and no write
+/// the caller could not already perform: persistence happens later through the CMS content APIs,
+/// which enforce their own permissions on the document being saved.
+/// </para>
+/// <para>
+/// Do NOT add <c>SectionAccessAI</c> here. Gating this on the AI section would mean any editor
+/// using an AI feature in the content workspace (e.g. Copilot's <c>set_value</c> tool) would also
+/// need full access to Connections, Profiles, Agents and Guardrails administration. See issue #306.
 /// </para>
 /// </remarks>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public sealed class InvokePropertyValueOperationController : PropertyValueOperationControllerBase
 {
     private readonly IAIPropertyValueDispatcher _dispatcher;

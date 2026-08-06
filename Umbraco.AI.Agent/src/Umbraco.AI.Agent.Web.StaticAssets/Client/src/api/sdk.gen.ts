@@ -130,6 +130,10 @@ export class AgentsService {
 
 export class FilesService {
     public static getFile<ThrowOnError extends boolean = false>(options: Options<GetFileData, ThrowOnError>) {
-        return (options.client ?? client).get<GetFileResponses, GetFileErrors, ThrowOnError>({ url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}', ...options });
+        return (options.client ?? client).get<GetFileResponses, GetFileErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/files/{threadId}/{fileId}',
+            ...options
+        });
     }
 }

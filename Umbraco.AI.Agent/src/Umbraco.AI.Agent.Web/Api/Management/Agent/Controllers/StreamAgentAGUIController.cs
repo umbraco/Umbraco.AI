@@ -76,6 +76,13 @@ public class StreamAgentAGUIController : AgentControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamAgentAGUIController"/> class.
     /// </summary>
+    /// <remarks>
+    /// Marked as the activation constructor: MVC builds controllers through
+    /// <c>ActivatorUtilities</c>, which requires exactly one applicable constructor and throws when
+    /// it can satisfy more than one. Keeping the obsolete overload around for binary compatibility
+    /// means this attribute is what stops activation becoming ambiguous.
+    /// </remarks>
+    [ActivatorUtilitiesConstructor]
     public StreamAgentAGUIController(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,

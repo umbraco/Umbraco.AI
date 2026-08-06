@@ -18,6 +18,14 @@ public static class Constants
         public const string FrontendToolNames = "Umbraco.AI.Agent.FrontendToolNames";
 
         /// <summary>
+        /// Key for the runtime-context system prompt an agent run wants placed at the head of the
+        /// conversation. Set by <see cref="Chat.ScopedAIAgent"/> and consumed by
+        /// <see cref="Chat.AIAgentSystemMessageChatClient"/>, which is the first point that sees the
+        /// stored history and the new turn as one list.
+        /// </summary>
+        public const string PendingSystemMessage = "Umbraco.AI.Agent.PendingSystemMessage";
+
+        /// <summary>
         /// Key for agent ID in metadata collections.
         /// </summary>
         public const string AgentId = "Umbraco.AI.Agent.AgentId";

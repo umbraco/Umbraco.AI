@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.1.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.2...Umbraco.AI.Agent.Copilot@18.1.0-rc.1) (2026-08-04)
+## [18.1.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.2...Umbraco.AI.Agent.Copilot@18.1.0-rc.2) (2026-08-06)
 
 ### feat
 
@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **copilot:** Add contextual floating chat button in supported workspaces ([4d605f1](https://github.com/umbraco/Umbraco.AI/commit/4d605f1b9ba6d7c3574db30e64f9478f9eac1ce9))
 * **copilot:** Make the contextual trigger keyboard and screen-reader accessible ([cc03796](https://github.com/umbraco/Umbraco.AI/commit/cc03796ba77f069fa7ccc4fc7f4a63c976240b72))
 * **copilot:** Use the AI sparkles glyph on the contextual copilot button ([dfd8ec1](https://github.com/umbraco/Umbraco.AI/commit/dfd8ec14a316cd2cf00c5447e025c14f900f5d91))
+
+### fix
+
+* **core,copilot:** Persist contextual copilot history by keying on the reactive entity unique ([530c015](https://github.com/umbraco/Umbraco.AI/commit/530c0154f30db645577df004a0d1e820d893ba94))
 
 ### refactor
 

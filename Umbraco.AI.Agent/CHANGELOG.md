@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.1...Umbraco.AI.Agent@18.2.0-rc.1) (2026-08-04)
+## [18.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.1...Umbraco.AI.Agent@18.2.0-rc.2) (2026-08-06)
 
 ### feat
 
@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### fix
 
+* **agent:** Keep filenames and remote links when converting back to AG-UI ([9593301](https://github.com/umbraco/Umbraco.AI/commit/95933016359942e6ec0e9cbebae3bbc26806aeb0))
 * **agent:** Treat dimensionless surfaces as unscoped in AIAgentScopeValidator ([45ca470](https://github.com/umbraco/Umbraco.AI/commit/45ca4701ac71424ee5104580a5dea11119cb4624)), closes [#4](https://github.com/umbraco/Umbraco.AI/issues/4)
+* **core,agent:** Pass the real filename to file processing handlers ([ed64bfa](https://github.com/umbraco/Umbraco.AI/commit/ed64bfafd824d4f6dfaf446d50bd8a5b36a188c5)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
 
 ### refactor
 

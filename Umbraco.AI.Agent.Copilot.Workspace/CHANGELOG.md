@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1) (2026-08-04)
+## [18.0.0-rc.2](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.2) (2026-08-06)
 
 ### feat
 
@@ -76,3 +76,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **copilot-workspace:** Rename section alias to Uai.Section.CopilotWorkspace ([e9d8124](https://github.com/umbraco/Umbraco.AI/commit/e9d81247885d0dab117dadc67e9bdd65b76a897e))
 * **copilot-workspace:** Reorganize front-end topic-first and de-duplicate ([237beb0](https://github.com/umbraco/Umbraco.AI/commit/237beb03939b44c1c61cb46613d416a4d9bd1f15))
 * **core,agent,copilot-workspace:** Render entity pickers as flat rows ([601fadb](https://github.com/umbraco/Umbraco.AI/commit/601fadb0b33aeb9c27fbde4b774bd000e0e4f5a6))
+

@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.3.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.2.0...Umbraco.AI@18.3.0-rc.1) (2026-08-04)
+## [18.3.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.2.0...Umbraco.AI@18.3.0-rc.2) (2026-08-06)
 
 ### ⚠ BREAKING CHANGE
 
@@ -46,8 +46,10 @@ design
 
 ### fix
 
+* **core,agent:** Pass the real filename to file processing handlers ([ed64bfa](https://github.com/umbraco/Umbraco.AI/commit/ed64bfafd824d4f6dfaf446d50bd8a5b36a188c5)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
 * **core,anthropic,openai:** Read the cached input tokens every adapter already reports ([464d9f4](https://github.com/umbraco/Umbraco.AI/commit/464d9f47033ee6d0e6d78b633ce94a816c3e9328)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
 * **core,copilot-workspace:** Stop the workspace store refetching its own write ([c35c82e](https://github.com/umbraco/Umbraco.AI/commit/c35c82ede17017d0574e0ceee02ac06440ae3549))
+* **core,copilot:** Persist contextual copilot history by keying on the reactive entity unique ([530c015](https://github.com/umbraco/Umbraco.AI/commit/530c0154f30db645577df004a0d1e820d893ba94))
 * **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#273) ([f4a4d67](https://github.com/umbraco/Umbraco.AI/commit/f4a4d673810a8a96982eabe2328b0da5e6b69904)), closes [#273](https://github.com/umbraco/Umbraco.AI/issues/273) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
 * **core:** Encrypt escaped literals in sensitive fields (#297) ([7bf8fba](https://github.com/umbraco/Umbraco.AI/commit/7bf8fbaea07336b7d7e358e48e60e431720f2c8e)), closes [#297](https://github.com/umbraco/Umbraco.AI/issues/297)
 * **frontend:** Import the setting rules' helper directly rather than via the barrel (#285) ([d6e3b00](https://github.com/umbraco/Umbraco.AI/commit/d6e3b0091c0fb98735d57501c2f0c535acddb285)), closes [#285](https://github.com/umbraco/Umbraco.AI/issues/285) [#284](https://github.com/umbraco/Umbraco.AI/issues/284)

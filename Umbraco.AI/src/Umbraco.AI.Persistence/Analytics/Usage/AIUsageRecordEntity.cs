@@ -78,6 +78,12 @@ internal class AIUsageRecordEntity
     public long InputTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the portion of <see cref="InputTokens"/> served from the provider's prompt cache.
+    /// Null when the provider does not report it.
+    /// </summary>
+    public long? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of output tokens generated.
     /// </summary>
     public long OutputTokens { get; set; }

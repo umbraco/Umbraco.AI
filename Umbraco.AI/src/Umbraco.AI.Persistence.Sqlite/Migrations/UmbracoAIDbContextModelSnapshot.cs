@@ -15,13 +15,16 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
 
             modelBuilder.Entity("Umbraco.AI.Persistence.Analytics.Usage.AIUsageRecordEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("CachedInputTokens")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Capability")
                         .HasColumnType("INTEGER");
@@ -109,6 +112,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("CachedInputTokens")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Capability")
                         .HasColumnType("INTEGER");
 
@@ -192,6 +198,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("CachedInputTokens")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Capability")
                         .HasColumnType("INTEGER");
 
@@ -274,6 +283,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("CachedInputTokens")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Capability")
                         .HasColumnType("INTEGER");
@@ -623,6 +635,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<int>("Capability")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CapabilitySettings")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("TEXT");
 
@@ -651,9 +666,6 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<string>("ProviderId")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CapabilitySettings")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Settings")

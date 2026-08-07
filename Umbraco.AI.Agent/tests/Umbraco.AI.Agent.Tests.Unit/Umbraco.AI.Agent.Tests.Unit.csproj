@@ -31,6 +31,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Web\Umbraco.AI.Agent.Web.csproj" />
     </ItemGroup>
 
 </Project>

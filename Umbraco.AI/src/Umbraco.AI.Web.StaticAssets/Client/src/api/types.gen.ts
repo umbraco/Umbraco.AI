@@ -52,6 +52,7 @@ export type AuditLogDetailResponseModel = {
     featureVersion?: null | number;
     parentAuditLogId?: null | string;
     inputTokens?: null | number;
+    cachedInputTokens?: null | number;
     outputTokens?: null | number;
     errorMessage?: null | string;
 };
@@ -75,6 +76,7 @@ export type AuditLogItemResponseModel = {
     featureVersion?: null | number;
     parentAuditLogId?: null | string;
     inputTokens?: null | number;
+    cachedInputTokens?: null | number;
     outputTokens?: null | number;
     errorMessage?: null | string;
 };
@@ -362,8 +364,6 @@ export type IFormFile = Blob | File;
 export type ImageGenerationProfileSettingsModel = {
     $type: 'imageGeneration';
     size?: null | string;
-    quality?: null | string;
-    style?: null | string;
     mediaType?: null | string;
 };
 
@@ -881,6 +881,7 @@ export type UsageBreakdownItemModel = {
     dimensionName?: null | string;
     requestCount: number;
     totalTokens: number;
+    cachedInputTokens?: null | number;
     percentage: number;
 };
 
@@ -893,6 +894,7 @@ export type UsageModel = {
 export type UsageSummaryResponseModel = {
     totalRequests: number;
     inputTokens: number;
+    cachedInputTokens?: null | number;
     outputTokens: number;
     totalTokens: number;
     successCount: number;
@@ -906,6 +908,7 @@ export type UsageTimeSeriesPointModel = {
     requestCount: number;
     totalTokens: number;
     inputTokens: number;
+    cachedInputTokens?: null | number;
     outputTokens: number;
     successCount: number;
     failureCount: number;

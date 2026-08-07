@@ -1,43 +1,10 @@
-const fs = require("fs");
-const path = require("path");
+// Scope discovery lives in scripts/load-commit-scopes.js so `npm run commit-options`
+// reports exactly what this config validates against.
+const { loadScopes: loadAllScopes } = require("./scripts/load-commit-scopes");
 
 // Dynamically discover and load all scopes from product config files
 function loadScopes() {
-    const scopes = new Set();
-    const rootDir = __dirname;
-
-    // Find all Umbraco.AI* directories
-    const entries = fs.readdirSync(rootDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        if (!entry.name.startsWith("Umbraco.AI")) continue;
-
-        const configPath = path.join(rootDir, entry.name, "changelog.config.json");
-
-        // Load product scopes from changelog.config.json
-        if (fs.existsSync(configPath)) {
-            try {
-                const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-                if (config.scopes && Array.isArray(config.scopes)) {
-                    config.scopes.forEach((scope) => scopes.add(scope));
-                }
-            } catch (err) {
-                console.warn(`Warning: Could not load scopes from ${configPath}:`, err.message);
-            }
-        }
-    }
-
-    // Add common meta scopes
-    scopes.add("deps"); // Dependency updates
-    scopes.add("ci"); // CI/CD changes
-    scopes.add("docs"); // Documentation
-    scopes.add("release"); // Release-related changes
-    scopes.add("hooks"); // Git hooks
-    scopes.add("build"); // Build system
-    scopes.add("config"); // Configuration files
-
-    return Array.from(scopes).sort();
+    return loadAllScopes(__dirname);
 }
 
 module.exports = {

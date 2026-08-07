@@ -339,6 +339,106 @@ public class AGUIMessageConverterTests
     }
 
     [Fact]
+    public void ConvertToChatMessage_WithFilenameMetadata_SetsDataContentName()
+    {
+        // Arrange
+        var base64 = Convert.ToBase64String(new byte[] { 10, 20, 30 });
+        var message = new AGUIMessage
+        {
+            Id = Guid.NewGuid().ToString(),
+            Role = AGUIMessageRole.User,
+            ContentParts = new List<AGUIInputContent>
+            {
+                new AGUIDocumentInputContent
+                {
+                    Source = new AGUIInputContentDataSource { Value = base64, MimeType = "text/csv" },
+                    Metadata = new Dictionary<string, object?> { ["filename"] = "example.csv" }
+                }
+            }
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert
+        result.Contents.OfType<DataContent>().Single().Name.ShouldBe("example.csv");
+    }
+
+    [Fact]
+    public void ConvertToChatMessage_WithDeserializedFilenameMetadata_SetsDataContentName()
+    {
+        // Arrange — metadata deserialized from the wire holds JsonElement values, not strings.
+        var base64 = Convert.ToBase64String(new byte[] { 10, 20, 30 });
+        var json = """
+        {
+            "id": "msg-1",
+            "role": "user",
+            "content": [
+                {"type": "document", "source": {"type": "data", "value": "BASE64", "mimeType": "text/csv"}, "metadata": {"filename": "example.csv"}}
+            ]
+        }
+        """.Replace("BASE64", base64);
+        var message = JsonSerializer.Deserialize<AGUIMessage>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message!);
+
+        // Assert
+        result.Contents.OfType<DataContent>().Single().Name.ShouldBe("example.csv");
+    }
+
+    [Fact]
+    public void ConvertToChatMessage_WithoutFilenameMetadata_LeavesDataContentNameNull()
+    {
+        // Arrange
+        var base64 = Convert.ToBase64String(new byte[] { 10, 20, 30 });
+        var message = new AGUIMessage
+        {
+            Id = Guid.NewGuid().ToString(),
+            Role = AGUIMessageRole.User,
+            ContentParts = new List<AGUIInputContent>
+            {
+                new AGUIDocumentInputContent
+                {
+                    Source = new AGUIInputContentDataSource { Value = base64, MimeType = "text/csv" }
+                }
+            }
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert
+        result.Contents.OfType<DataContent>().Single().Name.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ConvertToChatMessage_WithUnresolvableUrlSource_CreatesUriContent()
+    {
+        // Arrange — an external URL we never stored, so there are no resolved bytes to attach.
+        var message = new AGUIMessage
+        {
+            Id = Guid.NewGuid().ToString(),
+            Role = AGUIMessageRole.User,
+            ContentParts = new List<AGUIInputContent>
+            {
+                new AGUIImageInputContent
+                {
+                    Source = new AGUIInputContentUrlSource { Value = "https://example.com/chart.png", MimeType = "image/png" }
+                }
+            }
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert
+        var uriContent = result.Contents.OfType<UriContent>().Single();
+        uriContent.Uri.ToString().ShouldBe("https://example.com/chart.png");
+        uriContent.MediaType.ShouldBe("image/png");
+    }
+
+    [Fact]
     public void ConvertToChatMessage_EmptyContentParts_FallsBackToContent()
     {
         // Arrange
@@ -383,6 +483,79 @@ public class AGUIMessageConverterTests
         var dataSource = binaryPart.Source.ShouldBeOfType<AGUIInputContentDataSource>();
         dataSource.MimeType.ShouldBe("image/jpeg");
         dataSource.Value.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_WithNamedDataContent_SetsFilenameMetadata()
+    {
+        // Arrange
+        var contents = new List<AIContent>
+        {
+            new DataContent(new byte[] { 1, 2, 3 }, "text/csv") { Name = "example.csv" }
+        };
+        var chatMessage = new ChatMessage(ChatRole.User, contents);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        var part = result.ContentParts!.Single().ShouldBeOfType<AGUIDocumentInputContent>();
+        part.Metadata.ShouldNotBeNull();
+        part.Metadata!["filename"].ShouldBe("example.csv");
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_WithUnnamedDataContent_LeavesMetadataNull()
+    {
+        // Arrange
+        var chatMessage = new ChatMessage(ChatRole.User, [new DataContent(new byte[] { 1, 2, 3 }, "text/csv")]);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        result.ContentParts!.Single().ShouldBeOfType<AGUIDocumentInputContent>().Metadata.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_WithUriContent_CreatesUrlSourcePart()
+    {
+        // Arrange
+        var contents = new List<AIContent>
+        {
+            new TextContent("Describe this"),
+            new UriContent(new Uri("https://example.com/chart.png"), "image/png")
+        };
+        var chatMessage = new ChatMessage(ChatRole.User, contents);
+
+        // Act
+        var result = _converter.ConvertFromChatMessage(chatMessage);
+
+        // Assert
+        result.ContentParts.ShouldNotBeNull();
+        result.ContentParts.Count.ShouldBe(2);
+
+        var urlPart = result.ContentParts[1].ShouldBeOfType<AGUIImageInputContent>();
+        var urlSource = urlPart.Source.ShouldBeOfType<AGUIInputContentUrlSource>();
+        urlSource.Value.ShouldBe("https://example.com/chart.png");
+        urlSource.MimeType.ShouldBe("image/png");
+    }
+
+    [Fact]
+    public void ConvertFromChatMessage_RoundTripsFilenameThroughBothDirections()
+    {
+        // Arrange
+        var original = new ChatMessage(ChatRole.User, [new DataContent(new byte[] { 1, 2, 3 }, "text/csv") { Name = "example.csv" }])
+        {
+            MessageId = "msg-1"
+        };
+
+        // Act
+        var aguiMessage = _converter.ConvertFromChatMessage(original);
+        var roundTripped = _converter.ConvertToChatMessage(aguiMessage);
+
+        // Assert
+        roundTripped.Contents.OfType<DataContent>().Single().Name.ShouldBe("example.csv");
     }
 
     #endregion

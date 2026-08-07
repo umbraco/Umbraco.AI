@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Core.Analytics.Usage;
@@ -93,6 +94,7 @@ internal sealed class AIUsageRecordFactory : IAIUsageRecordFactory
             EntityId = context.EntityId,
             EntityType = _options.CurrentValue.IncludeUsageEntityTypeDimension ? context.EntityType : null,
             InputTokens = result.Usage?.InputTokenCount ?? 0,
+            CachedInputTokens = result.Usage.GetCachedInputTokenCount(),
             OutputTokens = result.Usage?.OutputTokenCount ?? 0,
             TotalTokens = result.Usage?.TotalTokenCount ?? 0,
             DurationMs = result.DurationMs,

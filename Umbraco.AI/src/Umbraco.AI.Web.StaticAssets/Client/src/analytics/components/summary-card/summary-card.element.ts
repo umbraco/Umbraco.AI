@@ -13,6 +13,16 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
     @property({ type: String })
     label: string = "";
 
+    /**
+     * Optional smaller addition on the value line, for a figure that only means something next to the main
+     * value (e.g. how much of an input token total was served from cache).
+     *
+     * Rendered inline rather than as its own line so a card carrying one stays the same height as the rest
+     * of the row - a taller card in a grid of otherwise equal cards reads as a layout fault.
+     */
+    @property({ type: String })
+    valueSuffix?: string;
+
     constructor() {
         super();
     }
@@ -21,7 +31,11 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
         return html`<uui-card class="summary-card">
             <div class="card-icon"><uui-icon .name=${this.icon}></uui-icon></div>
             <div class="card-content">
-                <div class="card-value">${this.value}</div>
+                <div class="card-value">
+                    ${this.value}${this.valueSuffix
+                        ? html`<span class="card-value-suffix"> / ${this.valueSuffix}</span>`
+                        : null}
+                </div>
                 <div class="card-label">${this.label}</div>
             </div>
         </uui-card>`;
@@ -63,6 +77,15 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
                 font-size: var(--uui-type-h3-size);
                 font-weight: 700;
                 line-height: 1;
+            }
+
+            .card-value-suffix {
+                font-size: var(--uui-type-default-size);
+                font-weight: 700;
+                /* Colour is left to inherit from .card-value, so the suffix tracks the main value if that
+                   ever changes. Kept on one line because "14.3k cached" is a single phrase, and wrapping
+                   it would defeat the point of moving it onto the value line. */
+                white-space: nowrap;
             }
 
             .card-label {

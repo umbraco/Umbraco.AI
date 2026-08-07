@@ -27,6 +27,7 @@ using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
+using AgentConstants = Umbraco.AI.Agent.Core.Constants;
 using CoreConstants = Umbraco.AI.Core.Constants;
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
@@ -1019,6 +1020,12 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Build additional properties
         additionalProperties ??= new Dictionary<string, object?>();
+
+        // Hand the factory the permission decision we just made, so the server-side tool list is
+        // built from the same allowed set as the frontend tools above. The factory cannot resolve
+        // this itself without losing options.UserGroupIds, and recomputing from the agent's own
+        // defaults would drop every per-user-group allow and deny.
+        additionalProperties[AgentConstants.ContextKeys.AllowedToolIds] = allowedToolIds;
 
         if (options.ContextIdsOverride is not null)
         {

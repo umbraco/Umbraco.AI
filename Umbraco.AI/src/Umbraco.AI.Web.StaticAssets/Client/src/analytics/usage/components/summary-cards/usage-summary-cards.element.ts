@@ -2,6 +2,7 @@ import { css, html, customElement, property } from "@umbraco-cms/backoffice/exte
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UsageSummaryResponseModel } from "../../../../api";
+import { formatCachedTokenDetail } from "./cached-token-detail.js";
 
 @customElement("uai-usage-summary-cards")
 export class UaiUsageSummaryCardsElement extends UmbLitElement {
@@ -48,7 +49,15 @@ export class UaiUsageSummaryCardsElement extends UmbLitElement {
     override render() {
         if (!this.summary) return null;
 
-        const { totalRequests, totalTokens, inputTokens, outputTokens, successRate, averageDurationMs } = this.summary;
+        const {
+            totalRequests,
+            totalTokens,
+            inputTokens,
+            cachedInputTokens,
+            outputTokens,
+            successRate,
+            averageDurationMs,
+        } = this.summary;
 
         return html`
             <uai-analytics-summary-card
@@ -61,6 +70,7 @@ export class UaiUsageSummaryCardsElement extends UmbLitElement {
                 icon="icon-page-down"
                 label="Input Tokens"
                 .value=${this._formatIntWithK(inputTokens)}
+                .valueSuffix=${formatCachedTokenDetail(cachedInputTokens)}
             ></uai-analytics-summary-card>
 
             <uai-analytics-summary-card

@@ -33,9 +33,18 @@ public class AIEditableModelFieldAttribute : Attribute
     public int SortOrder { get; set; }
 
     /// <summary>
-    /// Indicates whether the field contains sensitive data that should be encrypted at rest.
-    /// When true, the field value will be encrypted during persistence and the UI may mask the value.
+    /// Indicates whether the field holds a secret (an API key, client secret, connection string).
     /// </summary>
+    /// <remarks>
+    /// Marking a field sensitive has four effects: the value is encrypted at rest, it is masked in
+    /// version-history diffs, it becomes the only kind of field allowed to reference a configuration
+    /// key under <c>Umbraco:AI:Secrets</c>, and it renders with a masked editor (with a reveal
+    /// toggle) instead of a plain text box.
+    ///
+    /// Set <see cref="EditorUiAlias"/> to opt out of the masked editor — masking a multi-line field,
+    /// for instance, would make it unusable. Sensitive values should be strings; the persistence
+    /// layer only encrypts string values.
+    /// </remarks>
     public bool IsSensitive { get; set; }
 
     /// <summary>

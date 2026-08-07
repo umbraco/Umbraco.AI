@@ -49,6 +49,15 @@ public static class Constants
         /// and notifications correlate a run with its durable conversation.
         /// </summary>
         public const string ConversationId = "Umbraco.AI.Agent.ConversationId";
+
+        /// <summary>
+        /// Key for the caller's already-resolved allowed tool IDs.
+        /// Set by <see cref="Agents.AIAgentService"/> so the agent factory builds its server-side
+        /// tool list from the same permission decision that filtered the frontend tools — including
+        /// any per-user-group allows and denies. Without it the factory would fall back to the
+        /// agent's own defaults and silently ignore user group permissions.
+        /// </summary>
+        public const string AllowedToolIds = "Umbraco.AI.Agent.AllowedToolIds";
     }
 
     /// <summary>

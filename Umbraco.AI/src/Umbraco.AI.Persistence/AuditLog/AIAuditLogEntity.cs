@@ -106,6 +106,12 @@ internal class AIAuditLogEntity
     public int? InputTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the portion of <see cref="InputTokens"/> served from the provider's prompt cache.
+    /// Null when the provider does not report it.
+    /// </summary>
+    public int? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of output tokens.
     /// </summary>
     public int? OutputTokens { get; set; }

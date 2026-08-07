@@ -505,9 +505,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child),
+            uui-box + *,
             uai-model-editor:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
+                display: block;
             }
 
             uui-select {

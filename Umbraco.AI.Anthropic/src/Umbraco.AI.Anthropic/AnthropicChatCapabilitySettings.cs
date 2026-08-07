@@ -33,4 +33,33 @@ public class AnthropicChatCapabilitySettings
         SortOrder = 1)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? Effort { get; set; }
+
+    /// <summary>
+    /// How long Anthropic keeps the reusable part of this profile's prompt in its cache. Leave empty to
+    /// send every request uncached.
+    /// </summary>
+    /// <remarks>
+    /// Maps to the request's top-level <c>cache_control</c>, which marks the last cacheable block and moves
+    /// that mark forward as a conversation grows — Anthropic's recommended shape for multi-turn use, and
+    /// the only one reachable here (see <c>AnthropicChatCapability.ApplyCapabilitySettings</c>).
+    /// <para>
+    /// Both offered values are the complete set Anthropic accepts. Off is the default because caching only
+    /// pays off when the prefix is genuinely reused: a write costs more than a plain request (1.25× base
+    /// input at 5m, 2× at 1h) and only a read is cheaper (0.1×). <c>5m</c> suits anything invoked
+    /// repeatedly, since a hit refreshes the entry for free; <c>1h</c> earns its higher write cost only for
+    /// a profile used less often than every five minutes.
+    /// </para>
+    /// <para>
+    /// Anthropic silently declines to cache a prefix below a model-dependent minimum (roughly 512–4,096
+    /// tokens), so enabling this on a short prompt is harmless but has no effect.
+    /// </para>
+    /// </remarks>
+    [AIField(
+        Label = "Prompt caching",
+        Description = "Reuse the stable start of this profile's prompt across requests, billed at a discount. Leave empty to disable. Has no effect on prompts below the model's minimum cacheable length.",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"5m\",\"1h\"]}]",
+        SortOrder = 2)]
+    [JsonConverter(typeof(DropdownStringJsonConverter))]
+    public string? PromptCaching { get; set; }
 }

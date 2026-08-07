@@ -32,6 +32,12 @@ public class UsageBreakdownItemModel
     public long TotalTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the input tokens served from a provider's prompt cache for this dimension.
+    /// Null when no provider in this dimension reports it.
+    /// </summary>
+    public long? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the percentage of total requests represented by this dimension.
     /// </summary>
     [Required]

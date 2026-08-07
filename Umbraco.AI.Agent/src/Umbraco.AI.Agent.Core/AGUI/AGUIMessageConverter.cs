@@ -68,6 +68,7 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
         // Single pass over Contents to bucket text / data / function-call / function-result.
         List<TextContent>? textContents = null;
         List<DataContent>? dataContents = null;
+        List<UriContent>? uriContents = null;
         List<FunctionCallContent>? functionCalls = null;
         FunctionResultContent? functionResult = null;
 
@@ -83,6 +84,9 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                     case DataContent d:
                         (dataContents ??= []).Add(d);
                         break;
+                    case UriContent u:
+                        (uriContents ??= []).Add(u);
+                        break;
                     case FunctionCallContent fc:
                         (functionCalls ??= []).Add(fc);
                         break;
@@ -93,10 +97,10 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             }
         }
 
-        if (dataContents is { Count: > 0 })
+        if (dataContents is { Count: > 0 } || uriContents is { Count: > 0 })
         {
             var contentParts = new List<AGUIInputContent>(
-                (textContents?.Count ?? 0) + dataContents.Count);
+                (textContents?.Count ?? 0) + (dataContents?.Count ?? 0) + (uriContents?.Count ?? 0));
 
             if (textContents is { Count: > 0 })
             {
@@ -106,7 +110,7 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 }
             }
 
-            foreach (var dataContent in dataContents)
+            foreach (var dataContent in dataContents ?? [])
             {
                 if (dataContent.Data.IsEmpty)
                 {
@@ -117,6 +121,17 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 var source = new AGUIInputContentDataSource
                 {
                     Value = Convert.ToBase64String(dataContent.Data.Span),
+                    MimeType = mimeType,
+                };
+                contentParts.Add(AGUIInputContentFactory.FromSource(source, mimeType, BuildFilenameMetadata(dataContent.Name)));
+            }
+
+            foreach (var uriContent in uriContents ?? [])
+            {
+                var mimeType = uriContent.MediaType ?? "application/octet-stream";
+                var source = new AGUIInputContentUrlSource
+                {
+                    Value = uriContent.Uri.ToString(),
                     MimeType = mimeType,
                 };
                 contentParts.Add(AGUIInputContentFactory.FromSource(source, mimeType));
@@ -174,11 +189,15 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
                 continue;
             }
 
+            // The uploaded filename travels in metadata — carry it onto the content so file
+            // processing handlers receive a real name instead of falling back to the data URI.
+            var filename = GetFilename(media.Metadata);
+
             // Prefer resolved bytes attached by AGUIFileProcessor.
             var resolved = AGUIFileProcessor.GetResolvedBytes(media);
             if (resolved is { Length: > 0 })
             {
-                contents.Add(new DataContent(resolved, mimeType));
+                contents.Add(new DataContent(resolved, mimeType) { Name = filename });
                 continue;
             }
 
@@ -186,17 +205,26 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             {
                 case AGUIInputContentDataSource dataSource:
                     var bytes = Convert.FromBase64String(dataSource.Value);
-                    contents.Add(new DataContent(bytes, dataSource.MimeType));
+                    contents.Add(new DataContent(bytes, dataSource.MimeType) { Name = filename });
                     break;
 
                 case AGUIInputContentUrlSource urlSource:
-                    contents.Add(new DataContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
+                    // DataContent only accepts data URIs — a remote reference has to be UriContent.
+                    contents.Add(new UriContent(new Uri(urlSource.Value, UriKind.RelativeOrAbsolute), urlSource.MimeType ?? mimeType));
                     break;
             }
         }
 
         return new ChatMessage(role, contents);
     }
+
+    private static string? GetFilename(IReadOnlyDictionary<string, object?>? metadata)
+        => AGUIMetadata.GetString(metadata, AGUIFileProcessor.FilenameMetadataKey);
+
+    private static IReadOnlyDictionary<string, object?>? BuildFilenameMetadata(string? filename)
+        => string.IsNullOrWhiteSpace(filename)
+            ? null
+            : new Dictionary<string, object?> { [AGUIFileProcessor.FilenameMetadataKey] = filename };
 
     private static ChatMessage ConvertAssistantMessageWithToolCalls(AGUIMessage message)
     {

@@ -82,14 +82,21 @@ internal sealed class AIEditableModelSerializer : IAIEditableModelSerializer
 
         foreach (var property in jsonObject.ToList())
         {
-            if (sensitiveKeys.Contains(property.Key) && property.Value is JsonValue jsonValue)
+            // Only string values can be protected. A sensitive field of another type is a
+            // declaration mistake, reported by the schema builder rather than thrown from here —
+            // GetValue<string> on a number- or bool-backed value throws, which took saving the whole
+            // connection down.
+            if (sensitiveKeys.Contains(property.Key)
+                && property.Value is JsonValue jsonValue
+                && jsonValue.TryGetValue<string>(out var stringValue))
             {
-                var stringValue = jsonValue.GetValue<string>();
                 if (!string.IsNullOrEmpty(stringValue))
                 {
-                    // Skip encryption for configuration references (values starting with $)
-                    // These are pointers to IConfiguration, not actual secrets
-                    if (stringValue.StartsWith("$", StringComparison.Ordinal))
+                    // Skip encryption for configuration references. These are pointers to
+                    // IConfiguration, not actual secrets. An escaped literal ($$foo, meaning the
+                    // literal $foo) is NOT a reference and must still be encrypted — treating it as
+                    // one stored the secret in plaintext.
+                    if (AIConfigurationReference.IsReference(stringValue))
                     {
                         continue;
                     }

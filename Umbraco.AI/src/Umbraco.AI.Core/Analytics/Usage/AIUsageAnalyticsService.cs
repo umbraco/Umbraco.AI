@@ -58,6 +58,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         {
             TotalRequests = totalRequests,
             InputTokens = statsList.Sum(s => s.InputTokens),
+            CachedInputTokens = AIUsageTokenAggregation.SumOrNull(statsList, s => s.CachedInputTokens),
             OutputTokens = statsList.Sum(s => s.OutputTokens),
             TotalTokens = statsList.Sum(s => s.TotalTokens),
             SuccessCount = successCount,
@@ -86,6 +87,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
                 RequestCount = g.Sum(s => s.RequestCount),
                 TotalTokens = g.Sum(s => s.TotalTokens),
                 InputTokens = g.Sum(s => s.InputTokens),
+                CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, s => s.CachedInputTokens),
                 OutputTokens = g.Sum(s => s.OutputTokens),
                 SuccessCount = g.Sum(s => s.SuccessCount),
                 FailureCount = g.Sum(s => s.FailureCount)
@@ -312,6 +314,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
                 SuccessCount = g.Count(r => r.Status == "Succeeded"),
                 FailureCount = g.Count(r => r.Status == "Failed"),
                 InputTokens = g.Sum(r => (long)r.InputTokens),
+                CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, r => r.CachedInputTokens),
                 OutputTokens = g.Sum(r => (long)r.OutputTokens),
                 TotalTokens = g.Sum(r => (long)r.TotalTokens),
                 TotalDurationMs = g.Sum(r => r.DurationMs),
@@ -388,6 +391,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
                 DimensionName = g.Key.Name,
                 RequestCount = g.Sum(s => s.RequestCount),
                 TotalTokens = g.Sum(s => s.TotalTokens),
+                CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, s => s.CachedInputTokens),
                 Percentage = totalRequests > 0
                     ? (double)g.Sum(s => s.RequestCount) / totalRequests * 100
                     : 0

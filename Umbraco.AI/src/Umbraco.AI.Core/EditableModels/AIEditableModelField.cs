@@ -61,8 +61,9 @@ public class AIEditableModelField
     public IEnumerable<ValidationAttribute> ValidationRules { get; set; } = Array.Empty<ValidationAttribute>();
 
     /// <summary>
-    /// Indicates whether the field contains sensitive data that should be encrypted at rest.
-    /// When true, the field value will be encrypted during persistence and the UI may mask the value.
+    /// Indicates whether the field holds a secret. When true the value is encrypted at rest, masked
+    /// in version-history diffs, and (unless <see cref="EditorUiAlias"/> says otherwise) rendered
+    /// with a masked editor. See <see cref="AIEditableModelFieldAttribute.IsSensitive"/>.
     /// </summary>
     public bool IsSensitive { get; set; }
 

@@ -20,6 +20,12 @@ public class UsageSummaryResponseModel
     public long InputTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the portion of <see cref="InputTokens"/> served from a provider's prompt cache.
+    /// Null when no provider in range reports it.
+    /// </summary>
+    public long? CachedInputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the total number of output tokens generated.
     /// </summary>
     [Required]

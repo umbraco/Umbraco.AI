@@ -17,7 +17,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -27,6 +27,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<long?>("CachedInputTokens")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Capability")
                         .HasColumnType("int");
@@ -114,6 +117,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<long?>("CachedInputTokens")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("Capability")
                         .HasColumnType("int");
 
@@ -198,6 +204,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<long?>("CachedInputTokens")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("Capability")
                         .HasColumnType("int");
 
@@ -281,6 +290,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("CachedInputTokens")
+                        .HasColumnType("int");
 
                     b.Property<int>("Capability")
                         .HasColumnType("int");
@@ -630,6 +642,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<int>("Capability")
                         .HasColumnType("int");
 
+                    b.Property<string>("CapabilitySettings")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -659,9 +674,6 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CapabilitySettings")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Settings")
                         .HasColumnType("nvarchar(max)");

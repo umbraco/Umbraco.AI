@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Agent.Core.Models;
+using Umbraco.AI.Core.Hosting;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Runtime;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.AI.Agent.Core.FileStore;
 
@@ -14,7 +14,7 @@ namespace Umbraco.AI.Agent.Core.FileStore;
 /// Thread directories whose files have not been modified within the configured
 /// <see cref="AIAgentOptions.FileRetentionHours"/> period are deleted.
 /// </summary>
-internal sealed class AIFileCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIFileCleanupBackgroundJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIFileStore _fileStore;
     private readonly IOptionsMonitor<AIAgentOptions> _options;

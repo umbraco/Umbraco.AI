@@ -12,6 +12,8 @@ using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.Security;
+using AgentConstants = Umbraco.AI.Agent.Core.Constants;
 using CoreConstants = Umbraco.AI.Core.Constants;
 using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
@@ -31,6 +33,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly AIToolScopeCollection _toolScopeCollection;
     private readonly IAIFunctionFactory _functionFactory;
     private readonly AIAgentWorkflowCollection _workflowCollection;
+    private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
@@ -43,8 +46,10 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         AIToolCollection toolCollection,
         AIToolScopeCollection toolScopeCollection,
         IAIFunctionFactory functionFactory,
-        AIAgentWorkflowCollection workflowCollection)
+        AIAgentWorkflowCollection workflowCollection,
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
         _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
@@ -79,7 +84,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
 
         MsAIAgent innerAgent = agent.AgentType switch
         {
-            AIAgentType.Standard => await CreateStandardAgentAsync(agent, chatHistoryProvider, contextItems, additionalTools, approvalPolicy, cancellationToken),
+            AIAgentType.Standard => await CreateStandardAgentAsync(agent, chatHistoryProvider, contextItems, additionalTools, additionalProperties, approvalPolicy, cancellationToken),
             AIAgentType.Orchestrated => await CreateOrchestratedAgentAsync(
                 agent,
                 agent.GetOrchestratedConfig()
@@ -106,11 +111,19 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         ChatHistoryProvider? chatHistoryProvider,
         IEnumerable<AIRequestContextItem>? contextItems,
         IEnumerable<AITool>? additionalTools,
+        IReadOnlyDictionary<string, object?>? additionalProperties,
         AIApprovalPolicy approvalPolicy,
         CancellationToken cancellationToken)
     {
-        // STEP 1: Get allowed tool IDs (permission check - existing logic)
-        var allowedToolIds = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
+        // STEP 1: Get allowed tool IDs (permission check)
+        //         Prefer the caller's already-resolved set: AIAgentService computes it with the
+        //         acting user's group permissions (and any explicit UserGroupIds override) and is
+        //         the only place that knows them. Recomputing here from the agent's own defaults
+        //         would silently drop every per-user-group allow and deny.
+        //         For direct callers that supply nothing, fall back to resolving the current
+        //         backoffice user's groups rather than ignoring group permissions altogether.
+        var allowedToolIds = GetSuppliedAllowedToolIds(additionalProperties)
+            ?? AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection, GetCurrentUserGroupIds());
 
         // STEP 2: Create runtime context and run contributors
         //         This provides context to the LLM via system messages (section, entity, user)
@@ -255,6 +268,35 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         }
 
         return await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
+    }
+
+    /// <summary>
+    /// Reads the caller's already-resolved allowed tool IDs out of the additional properties, if present.
+    /// </summary>
+    /// <returns>The supplied tool IDs, or <c>null</c> when the caller did not supply any.</returns>
+    private static IReadOnlyList<string>? GetSuppliedAllowedToolIds(
+        IReadOnlyDictionary<string, object?>? additionalProperties)
+    {
+        if (additionalProperties is null
+            || !additionalProperties.TryGetValue(AgentConstants.ContextKeys.AllowedToolIds, out var value))
+        {
+            return null;
+        }
+
+        return value as IReadOnlyList<string>;
+    }
+
+    /// <summary>
+    /// Resolves the current backoffice user's group IDs, used as a fallback when the caller did not
+    /// supply an already-resolved allowed tool set. Returns an empty list outside a backoffice
+    /// request (background jobs, programmatic runs), which leaves the agent's own defaults in force.
+    /// </summary>
+    private IReadOnlyList<Guid> GetCurrentUserGroupIds()
+    {
+        var user = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser;
+        return user is null
+            ? []
+            : user.Groups.Select(g => g.Key).ToList();
     }
 
     /// <summary>

@@ -102,11 +102,13 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
                     continue;
                 }
 
-                // Validate file extension against CMS content settings
+                // Name is the only place a real filename can come from: DataContent.Uri is always a
+                // data URI, so treating it as a path just yields the tail of the base64 payload.
                 var filename = !string.IsNullOrEmpty(dataContent.Name)
                     ? dataContent.Name
-                    : GetFilenameFromUri(dataContent.Uri);
+                    : null;
 
+                // Validate file extension against CMS content settings
                 if (filename is not null)
                 {
                     var extension = Path.GetExtension(filename)?.TrimStart('.');
@@ -168,7 +170,4 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
 
         return null;
     }
-
-    private static string? GetFilenameFromUri(string? uri)
-        => uri is null ? null : Path.GetFileName(uri);
 }

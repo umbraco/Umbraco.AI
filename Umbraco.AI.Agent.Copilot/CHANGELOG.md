@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.2...Umbraco.AI.Agent.Copilot@18.0.4) (2026-08-11)
+
+### fix
+
+* **copilot:** Make the header button transparent so it inherits header theming (#317) ([95c019b](https://github.com/umbraco/Umbraco.AI/commit/95c019bc6c5d57c7e0924aee6a07bd52290ce5eb)), closes [#317](https://github.com/umbraco/Umbraco.AI/issues/317) [#313](https://github.com/umbraco/Umbraco.AI/issues/313)
+
 ## [18.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.1...Umbraco.AI.Agent.Copilot@18.0.2) (2026-07-27)
 
 ### fix

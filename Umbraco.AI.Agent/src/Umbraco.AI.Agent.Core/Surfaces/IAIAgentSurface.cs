@@ -62,4 +62,22 @@ public interface IAIAgentSurface
     /// </remarks>
     /// <example>["section", "entityType"]</example>
     IReadOnlyList<string> SupportedScopeDimensions { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether destructive backend tools must be withheld from this surface.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A "contextual" surface (such as the copilot sidebar) acts only on the item the user currently
+    /// has open, through its context-bound frontend tools. Backend tools that can mutate arbitrary
+    /// content by id would let such a surface reach outside that context. When this is <c>true</c>,
+    /// the agent factory automatically drops every destructive backend tool for this surface,
+    /// regardless of the agent's granted tool ids/scopes; non-destructive backend tools (reads,
+    /// search) are unaffected.
+    /// </para>
+    /// <para>
+    /// Defaults to <c>false</c> so existing surfaces are unaffected.
+    /// </para>
+    /// </remarks>
+    bool RestrictsDestructiveBackendTools => false;
 }

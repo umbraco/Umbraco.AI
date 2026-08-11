@@ -3,6 +3,12 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import {
+    type Observable,
+    map,
+    distinctUntilChanged,
+} from "@umbraco-cms/backoffice/external/rxjs";
+import { debouncedHide } from "./utils/debounced-hide.js";
+import {
     UaiRunController,
     UaiToolRendererManager,
     UaiFrontendToolManager,
@@ -23,7 +29,24 @@ import {
     type UaiValueChangeResult,
 } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
+import { UaiCopilotHistoryStore } from "./services/copilot-history.store.js";
+import { UaiCopilotLocalHistoryStrategy } from "./services/copilot-local-history.strategy.js";
 import { UAI_ENTITY_ADAPTER_CONTEXT } from "./contexts/entity-adapter.context-token.js";
+
+/** A detected-entity key that has not been saved yet (no real unique) ends with this sentinel. */
+const NEW_ENTITY_KEY_SUFFIX = ":new";
+
+/** Whether a detected-entity key maps to a persistable thread (a saved item with a real unique). */
+function isPersistableEntityKey(key: string | undefined): key is string {
+    return !!key && !key.endsWith(NEW_ENTITY_KEY_SUFFIX);
+}
+
+// When leaving a supported workspace, "supported" flips to false only after this delay. The show
+// edge is immediate. Moving between two supported workspaces briefly empties the detected-entity
+// list as one workspace tears down before the next registers; this window lets the new detection
+// arrive and cancel the pending flip, so both the FAB and the sidebar stay put rather than
+// flickering (FAB) or auto-closing and wiping the conversation (sidebar).
+const SUPPORT_HIDE_DELAY_MS = 200;
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -46,6 +69,17 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
     #agentsLoading = new UmbBooleanState(false);
+
+    // ─── Per-node chat history ──────────────────────────────────────────────────
+    #historyStore = new UaiCopilotHistoryStore();
+    /** Storage key the in-memory conversation belongs to; undefined for an unsaved-new item. */
+    #activeHistoryKey?: string;
+    /** The detected-entity key the conversation is currently bound to (incl. ":new"). */
+    #boundEntityKey?: string;
+    /** Latest selected entity key, captured even before history binding starts. */
+    #pendingEntityKey?: string;
+    /** History binding defers until the first agent is set (so the first load runs on a ready controller). */
+    #historyBound = false;
 
     // ─── Panel State ───────────────────────────────────────────────────────────
 
@@ -101,6 +135,15 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         return this.#entityAdapterContext.detectedEntities$;
     }
 
+    /**
+     * Whether the current workspace(s) are supported by copilot — i.e. copilot has detected at least
+     * one entity it can act on. Derived from `detectedEntities$` with a debounced hide edge (see
+     * SUPPORT_HIDE_DELAY_MS). Both the FAB (visibility) and the sidebar (auto-close) consume this so
+     * they share one rule and one debounce. Assigned in the constructor once the entity adapter
+     * context exists.
+     */
+    readonly isSupportedWorkspace$: Observable<boolean>;
+
     get selectedEntity$() {
         return this.#entityAdapterContext.selectedEntity$;
     }
@@ -124,6 +167,14 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#entityContext = new UaiCopilotEntityContext(host, this.#entityAdapterContext);
         this.#requestContextCollector = new UaiRequestContextCollector(host);
 
+        // "Supported" == copilot has detected at least one entity it can act on. Hold the hide edge
+        // (see debouncedHide) so supported⇄supported hops don't flip it to false.
+        const supported$ = this.#entityAdapterContext.detectedEntities$.pipe(
+            map((entities) => entities.length > 0),
+            distinctUntilChanged(),
+        );
+        this.isSupportedWorkspace$ = debouncedHide(supported$, SUPPORT_HIDE_DELAY_MS);
+
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,
             frontendToolManager,
@@ -131,6 +182,13 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
                 new UaiHitlInterruptHandler(this),
                 new UaiDefaultInterruptHandler(),
             ],
+            // Client-owned conversation that also persists per node in localStorage. The strategy
+            // loads the active node's thread (loadInitial) and saves after each turn (onTurnComplete),
+            // keyed by whichever node is currently bound (see #activeHistoryKey / #handleEntitySelection).
+            conversationStrategy: new UaiCopilotLocalHistoryStrategy(
+                this.#historyStore,
+                () => this.#activeHistoryKey,
+            ),
         });
 
         this.observe(this.#agentRepository.agentItems$, (agents) => {
@@ -159,6 +217,21 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.observe(this.selectedAgent, (agent) => {
             if (agent) {
                 this.#runController.setAgent(agent);
+                // Do the first history bind once an agent exists, so restore runs against a ready
+                // controller. (setAgent now preserves the conversation across agent switches, so
+                // later switches won't disturb the restored thread.)
+                if (!this.#historyBound) {
+                    this.#historyBound = true;
+                    this.#handleEntitySelection(this.#pendingEntityKey);
+                }
+            }
+        });
+
+        // Track the selected entity and (once bound) swap the conversation to that item's thread.
+        this.observe(this.selectedEntity$, (entity) => {
+            this.#pendingEntityKey = entity?.key;
+            if (this.#historyBound) {
+                this.#handleEntitySelection(entity?.key);
             }
         });
 
@@ -212,8 +285,11 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
     close(): void {
         this.#isOpen.setValue(false);
+        // Closing (or auto-closing when leaving a workspace) only aborts an in-flight run — it no
+        // longer wipes the conversation. The thread stays in memory (and, for saved items, in local
+        // history, saved after each turn by the conversation strategy) so re-opening restores where
+        // the user left off.
         this.#runController.abortRun();
-        this.#runController.resetConversation();
     }
 
     toggle(): void {
@@ -221,8 +297,74 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#isOpen.setValue(!wasOpen);
         if (wasOpen) {
             this.#runController.abortRun();
-            this.#runController.resetConversation();
         }
+    }
+
+    /** Clears the current conversation and forgets its stored history. */
+    clearChat(): void {
+        this.#runController.abortRun();
+        this.#runController.resetConversation();
+        if (this.#activeHistoryKey) {
+            this.#historyStore.remove(this.#activeHistoryKey);
+        }
+    }
+
+    // ─── Per-node history plumbing ──────────────────────────────────────────────
+
+    /**
+     * Binds the conversation to the newly-selected entity's thread.
+     *
+     * The copilot can only observe that the selected entity's key changed; it cannot tell a "new item
+     * was just saved" (carry the chat over) apart from a "navigated to a different item" (switch
+     * threads), because both surface as `type:new` → `type:{guid}`. We resolve that with a heuristic:
+     * an unsaved-new conversation that has messages, moving to a persistable key that has no stored
+     * history, is treated as a save and carried over. Otherwise it's a switch: the conversation
+     * strategy reloads the incoming node's thread (the outgoing one was already saved after its last
+     * turn by the strategy's onTurnComplete). Consequence: abandoning an unsaved new item by
+     * navigating away loses its chat (accepted), and directly navigating from an unsaved new item to a
+     * history-less existing item would carry the chat over (rare, low-harm).
+     *
+     * Persistence itself lives in {@link UaiCopilotLocalHistoryStrategy}, which reads the active key
+     * via the accessor passed at construction — so setting #activeHistoryKey here is what steers which
+     * node the strategy loads/saves.
+     */
+    #handleEntitySelection(newKey: string | undefined): void {
+        if (newKey === this.#boundEntityKey) return;
+
+        const prevActiveStorageKey = this.#activeHistoryKey;
+        const hadMessages = this.#runController.messages.length > 0;
+
+        // Leaving to "no entity" (e.g. an unsupported workspace): keep the conversation as-is so a
+        // later re-open restores it. Don't rebind yet.
+        if (newKey === undefined) {
+            this.#boundEntityKey = undefined;
+            return;
+        }
+
+        const newStorageKey = isPersistableEntityKey(newKey) ? newKey : undefined;
+
+        // Save-rekey heuristic (see method doc): adopt the new key and persist the carried-over
+        // conversation now — onTurnComplete won't fire again until the next turn, so the pre-save
+        // turns would otherwise never reach storage under the real key.
+        if (
+            prevActiveStorageKey === undefined &&
+            hadMessages &&
+            newStorageKey &&
+            !this.#historyStore.has(newStorageKey)
+        ) {
+            this.#activeHistoryKey = newStorageKey;
+            this.#boundEntityKey = newKey;
+            this.#historyStore.save(newStorageKey, this.#runController.messages);
+            return;
+        }
+
+        // Navigation/switch: rebind to the incoming key, then let the strategy load its thread. Abort
+        // any in-flight run first so transient state doesn't leak across the swap (loadInitialMessages
+        // only replaces the message list).
+        this.#runController.abortRun();
+        this.#activeHistoryKey = newStorageKey;
+        this.#boundEntityKey = newKey;
+        void this.#runController.loadInitialMessages();
     }
 
     // ─── HITL Actions ──────────────────────────────────────────────────────────

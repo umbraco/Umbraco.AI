@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.MicrosoftFoundry will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@17.0.1...Umbraco.AI.MicrosoftFoundry@17.0.3) (2026-08-11)
+
+### fix
+
+* **deps:** Raise the minimum Umbraco CMS version to 17.5.0.
+* **microsoft-foundry:** Declare per-model setting support (#288) ([7ff304e](https://github.com/umbraco/Umbraco.AI/commit/7ff304e0a0e2e2ee98e8f95dc745e28ed6ce5120)), closes [#288](https://github.com/umbraco/Umbraco.AI/issues/288) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#267](https://github.com/umbraco/Umbraco.AI/issues/267) [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
+
 ## [17.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@17.0.0...Umbraco.AI.MicrosoftFoundry@17.0.1) (2026-07-27)
 
 ### Internal

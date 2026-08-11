@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [17.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.1...Umbraco.AI.Agent@17.2.0-rc.2) (2026-08-06)
+## [17.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.3...Umbraco.AI.Agent@17.2.0-rc.2) (2026-08-11)
 
 ### feat
 
@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### fix
 
+* **agent,conversations:** Lead every agent request with the runtime-context system message ([b262204](https://github.com/umbraco/Umbraco.AI/commit/b2622049e08d6b332d227809794995e13c8887b0))
 * **agent:** Keep filenames and remote links when converting back to AG-UI ([58306cf](https://github.com/umbraco/Umbraco.AI/commit/58306cf81ee16cd143387bd3ebb26fc95b99eddc))
+* **agent:** Resolve tool permissions once per agent execution ([13acd95](https://github.com/umbraco/Umbraco.AI/commit/13acd958463ca446511bc44e5ace439b94b3e9e9))
+* **agent:** Restore controller activation for the AG-UI stream endpoint ([9c80d65](https://github.com/umbraco/Umbraco.AI/commit/9c80d65a9788fd92d6facfdb4e75f56b598c5af9))
 * **core,agent:** Pass the real filename to file processing handlers ([85a9292](https://github.com/umbraco/Umbraco.AI/commit/85a92927c6f44bfb2182b6fed00fe464c2adeb28)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
 * **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
-* **core,agent:** Suppress execution-context flow for recurring hosted services ([dd3932a](https://github.com/umbraco/Umbraco.AI/commit/dd3932a970caaffe83743230cb57ca38eb244518)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
 
 ## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.0...Umbraco.AI.Agent@17.1.1) (2026-07-27)
 

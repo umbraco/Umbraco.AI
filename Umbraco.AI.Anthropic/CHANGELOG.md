@@ -5,6 +5,20 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@17.0.2...Umbraco.AI.Anthropic@17.1.0) (2026-08-11)
+
+### feat
+
+* **core,anthropic,frontend:** Add Anthropic prompt caching and cached-token reporting (v17 backport) (#296) ([42fe957](https://github.com/umbraco/Umbraco.AI/commit/42fe957f4e350ff7d83ea8e791d53ac54207c982)), closes [#296](https://github.com/umbraco/Umbraco.AI/issues/296) [#295](https://github.com/umbraco/Umbraco.AI/issues/295) [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core [v17 backport] (#284) ([6c6ff0e](https://github.com/umbraco/Umbraco.AI/commit/6c6ff0effa14b232b0126e7957c1a08d9ab2f49e)), closes [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
+* **core,openai,anthropic:** Add provider-declared, model-aware capability settings (#270) ([a86199d](https://github.com/umbraco/Umbraco.AI/commit/a86199da8612ca03939ec7297934177f201861ef)), closes [#270](https://github.com/umbraco/Umbraco.AI/issues/270) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+
+### fix
+
+* **deps:** Raise the minimum Umbraco CMS version to 17.5.0.
+* **core,anthropic,openai:** Read the cached input tokens adapters already report (v17 backport) ([40e0f34](https://github.com/umbraco/Umbraco.AI/commit/40e0f3443114bda9cd1082468df554d8e686b65e)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#274) ([38de95d](https://github.com/umbraco/Umbraco.AI/commit/38de95db9f4c29f702f122faa868e24c5cafa93b)), closes [#274](https://github.com/umbraco/Umbraco.AI/issues/274) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
+
 ## [17.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@17.0.1...Umbraco.AI.Anthropic@17.0.2) (2026-07-28)
 
 ### fix

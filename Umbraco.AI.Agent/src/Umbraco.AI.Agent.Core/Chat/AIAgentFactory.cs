@@ -3,6 +3,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Models;
@@ -33,6 +34,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly AIToolScopeCollection _toolScopeCollection;
     private readonly IAIFunctionFactory _functionFactory;
     private readonly AIAgentWorkflowCollection _workflowCollection;
+    private readonly AIAgentSurfaceCollection _surfaceCollection;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     /// <summary>
@@ -47,6 +49,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         AIToolScopeCollection toolScopeCollection,
         IAIFunctionFactory functionFactory,
         AIAgentWorkflowCollection workflowCollection,
+        AIAgentSurfaceCollection surfaceCollection,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
@@ -58,6 +61,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         _toolScopeCollection = toolScopeCollection ?? throw new ArgumentNullException(nameof(toolScopeCollection));
         _functionFactory = functionFactory ?? throw new ArgumentNullException(nameof(functionFactory));
         _workflowCollection = workflowCollection ?? throw new ArgumentNullException(nameof(workflowCollection));
+        _surfaceCollection = surfaceCollection ?? throw new ArgumentNullException(nameof(surfaceCollection));
     }
 
     /// <inheritdoc />
@@ -158,6 +162,15 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             .Select(t => t!.Id)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // Contextual surfaces (e.g. copilot) act only on the item the user has open, via their
+        // context-bound frontend tools. A destructive backend tool can mutate arbitrary content by
+        // id, which would let such a surface reach outside that context. So for a surface that
+        // declares RestrictsDestructiveBackendTools, we drop every destructive backend tool here —
+        // automatically and regardless of the agent's granted tool ids/scopes. This is a hard lock
+        // so a newly-added backend write tool can't leak into the copilot by default. Non-destructive
+        // backend tools (reads, search) are unaffected.
+        var restrictDestructiveBackendTools = ShouldRestrictDestructiveBackendTools(runtimeContext);
+
         var tools = new List<AITool>();
         foreach (var fn in _toolCollection.ToAIFunctions(allowedToolIds, _functionFactory))
         {
@@ -166,6 +179,9 @@ internal sealed class AIAgentFactory : IAIAgentFactory
                 tools.Add(fn);
                 continue;
             }
+
+            if (restrictDestructiveBackendTools)
+                continue;
 
             tools.Add(approvalPolicy switch
             {
@@ -297,6 +313,21 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         return user is null
             ? []
             : user.Groups.Select(g => g.Key).ToList();
+    }
+
+    /// <summary>
+    /// Determines whether the current request's surface withholds destructive backend tools.
+    /// Resolves the surface from the runtime context and reads its
+    /// <see cref="IAIAgentSurface.RestrictsDestructiveBackendTools"/> policy. Defaults to
+    /// <c>false</c> when there is no surface context or the surface is unknown.
+    /// </summary>
+    private bool ShouldRestrictDestructiveBackendTools(AIRuntimeContext? runtimeContext)
+    {
+        var surfaceId = runtimeContext?.GetValue<string>(Constants.ContextKeys.Surface);
+        if (string.IsNullOrEmpty(surfaceId))
+            return false;
+
+        return _surfaceCollection.GetById(surfaceId)?.RestrictsDestructiveBackendTools ?? false;
     }
 
     /// <summary>

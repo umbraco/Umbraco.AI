@@ -4,6 +4,7 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Profiles;
@@ -218,6 +219,7 @@ public class AIAgentFactoryToolPermissionTests
             scopeCollection,
             functionFactoryMock.Object,
             workflowCollection,
+            new AIAgentSurfaceCollection(() => []),
             securityAccessor?.Object);
     }
 

@@ -5,37 +5,12 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.3.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.2.0...Umbraco.AI@18.3.0-rc.2) (2026-08-06)
-
-### ⚠ BREAKING CHANGE
-
-* **core,frontend,openai:** `AIImageGenerationProfileSettings.Quality` and `.Style` are removed, along
-with their
-API model properties and editor fields. Quality and Style now live under the provider's own
-settings
-on the profile editor. Values stored under the old shape are ignored and need re-entering
-there.
-Image generation is experimental — gated by `UMBRACOAI_IMAGEGEN` and the
-`Umbraco:AI:Experimental:ImageGeneration` flag — so this ships without an obsolete shim.
-
-No data migration: the target keys belong to a provider's schema, and a core migration
-writing
-provider-specific keys would put vendor knowledge in core, which is the coupling this whole
-design
-
-* Sensitive field follow-ups: non-string crash, dead Deploy condition (#299) ([cf71a45](https://github.com/umbraco/Umbraco.AI/commit/cf71a45074258fea1b33a3403d304d3bfef431e1)), closes [#299](https://github.com/umbraco/Umbraco.AI/issues/299)
-* Mask sensitive field values by default (#293) ([4f4ddcb](https://github.com/umbraco/Umbraco.AI/commit/4f4ddcb85aba61bdc3cf017abb7defb445dce419)), closes [#293](https://github.com/umbraco/Umbraco.AI/issues/293)
+## [18.4.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.0...Umbraco.AI@18.4.0-rc.1) (2026-08-11)
 
 ### feat
 
-* **core,anthropic,frontend:** Add Anthropic prompt caching and cached-token reporting (#295) ([47547fb](https://github.com/umbraco/Umbraco.AI/commit/47547fbbb5d21c9c22b4edae2361dbf4bd3a35fa)), closes [#295](https://github.com/umbraco/Umbraco.AI/issues/295) [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
 * **core,copilot-workspace:** Mark readonly picker rows with a no-entry hint ([7384a8f](https://github.com/umbraco/Umbraco.AI/commit/7384a8f6a4ffa892de2169d54b211d62f5f3a100))
 * **core,copilot-workspace:** Show project and conversation context as one list ([f5f0480](https://github.com/umbraco/Umbraco.AI/commit/f5f0480a354e1fb3d5befa894b8c92b538838c92))
-* **core,frontend,openai:** Drive the image size field from the model's declared sizes (#279) ([42e09e8](https://github.com/umbraco/Umbraco.AI/commit/42e09e8f5afca36953024c55b7ae21d7378bd1bb)), closes [#279](https://github.com/umbraco/Umbraco.AI/issues/279)
-* **core,frontend,openai:** Move image quality and style to capability settings (#281) ([df7f0b8](https://github.com/umbraco/Umbraco.AI/commit/df7f0b874a6d1ed72c6ae8865d7f784dfde2cb99)), closes [#281](https://github.com/umbraco/Umbraco.AI/issues/281) [#275](https://github.com/umbraco/Umbraco.AI/issues/275) [#277](https://github.com/umbraco/Umbraco.AI/issues/277)
-* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core (#283) ([529f2a5](https://github.com/umbraco/Umbraco.AI/commit/529f2a57d1ad5c2b5a7b937d4ceb115125216180)), closes [#283](https://github.com/umbraco/Umbraco.AI/issues/283)
-* **core,openai,anthropic:** Add provider-declared, model-aware capability settings (#269) ([3f370c5](https://github.com/umbraco/Umbraco.AI/commit/3f370c56e6428cda88f667d09b5807b9fe675b94)), closes [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
-* **core,providers:** Extend capability settings to every capability (#275) ([ed34b82](https://github.com/umbraco/Umbraco.AI/commit/ed34b82a09fc137c5ae58316055f06e992d399fc)), closes [#275](https://github.com/umbraco/Umbraco.AI/issues/275) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
 * **core:** Add ad-hoc resource resolver seam (S3) ([fa8f250](https://github.com/umbraco/Umbraco.AI/commit/fa8f25096cc99ebdd2fe79ea08e50767f6cf28db))
 * **core:** Add compact display mode to the resource list ([28f913c](https://github.com/umbraco/Umbraco.AI/commit/28f913c3bb12aa13ea4b53f4a9575719cb517e77))
 * **core:** Add File (project-knowledge) resource type ([6ce8e32](https://github.com/umbraco/Umbraco.AI/commit/6ce8e3208e8d4b5187529194bde30a4f93b1586d))
@@ -47,14 +22,9 @@ design
 ### fix
 
 * **core,agent:** Pass the real filename to file processing handlers ([ed64bfa](https://github.com/umbraco/Umbraco.AI/commit/ed64bfafd824d4f6dfaf446d50bd8a5b36a188c5)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
-* **core,anthropic,openai:** Read the cached input tokens every adapter already reports ([464d9f4](https://github.com/umbraco/Umbraco.AI/commit/464d9f47033ee6d0e6d78b633ce94a816c3e9328)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
 * **core,copilot-workspace:** Stop the workspace store refetching its own write ([c35c82e](https://github.com/umbraco/Umbraco.AI/commit/c35c82ede17017d0574e0ceee02ac06440ae3549))
 * **core,copilot:** Persist contextual copilot history by keying on the reactive entity unique ([530c015](https://github.com/umbraco/Umbraco.AI/commit/530c0154f30db645577df004a0d1e820d893ba94))
-* **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#273) ([f4a4d67](https://github.com/umbraco/Umbraco.AI/commit/f4a4d673810a8a96982eabe2328b0da5e6b69904)), closes [#273](https://github.com/umbraco/Umbraco.AI/issues/273) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
-* **core:** Encrypt escaped literals in sensitive fields (#297) ([7bf8fba](https://github.com/umbraco/Umbraco.AI/commit/7bf8fbaea07336b7d7e358e48e60e431720f2c8e)), closes [#297](https://github.com/umbraco/Umbraco.AI/issues/297)
-* **frontend:** Import the setting rules' helper directly rather than via the barrel (#285) ([d6e3b00](https://github.com/umbraco/Umbraco.AI/commit/d6e3b0091c0fb98735d57501c2f0c535acddb285)), closes [#285](https://github.com/umbraco/Umbraco.AI/issues/285) [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
-* **frontend:** Space every sibling after a box on the profile editor ([dffc9bf](https://github.com/umbraco/Umbraco.AI/commit/dffc9bfff6caa813088e81349a4d59e99327fd81))
-* **openai,imagegeneration:** Send the image quality and style hints (#277) ([2444845](https://github.com/umbraco/Umbraco.AI/commit/2444845a39fb651d6e0e79c4e2279dcd6858ca49)), closes [#277](https://github.com/umbraco/Umbraco.AI/issues/277)
+* **core:** Don't require AI section access for property value operations (#309) ([9f578de](https://github.com/umbraco/Umbraco.AI/commit/9f578dee1fe6bfedf10df90f29211c13b57f3885)), closes [#309](https://github.com/umbraco/Umbraco.AI/issues/309) [#306](https://github.com/umbraco/Umbraco.AI/issues/306)
 
 ### refactor
 

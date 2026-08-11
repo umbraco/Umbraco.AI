@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.0.2...Umbraco.AI.Deploy@18.1.0) (2026-08-11)
+
+### fix
+
+* Sensitive field follow-ups: non-string crash, dead Deploy condition (#299) ([cf71a45](https://github.com/umbraco/Umbraco.AI/commit/cf71a45074258fea1b33a3403d304d3bfef431e1)), closes [#299](https://github.com/umbraco/Umbraco.AI/issues/299)
+
 ## [18.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.0.1...Umbraco.AI.Deploy@18.0.2) (2026-07-27)
 
 ### Internal

@@ -22,11 +22,21 @@ import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from ".
 import type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
+    UaiEntityContext,
     UaiPersistResult,
     UaiValueChange,
     UaiValueChangeResult,
     UaiSerializedEntity,
 } from "./types.js";
+
+/**
+ * The identity of a detected entity: `entityType:unique`, falling back to `entityType:new` for an
+ * entity that has no id yet. Shared by detection and the reactive-unique watcher so the two can
+ * never disagree about what an entity's key should be.
+ */
+function buildEntityKey(entityContext: UaiEntityContext): string {
+    return `${entityContext.entityType}:${entityContext.unique ?? "new"}`;
+}
 
 /**
  * Context for entity adapter operations.
@@ -54,8 +64,24 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
     /** Subscriptions to workspace observables, keyed by entity key */
     readonly #subscriptions = new Map<string, Subscription[]>();
 
+    /**
+     * Last unique observed for a workspace context.
+     *
+     * A workspace publishes its id on its unique observable before its synchronous `getUnique()`
+     * catches up, so an adapter's snapshot read can still say "no id" at the moment we're told the id
+     * exists. Remembering what we were told lets detection key the entity correctly on that pass
+     * instead of waiting for a later, unprompted refresh that may never come.
+     */
+    readonly #observedUniques = new WeakMap<object, string>();
+
     /** Promise that resolves when initial workspace registry consumption and refresh is complete */
     readonly #initialized: Promise<void>;
+
+    /** True while a detection pass is running; see #refresh. */
+    #refreshing = false;
+
+    /** Set when a refresh is requested mid-pass, so one more pass runs afterwards. */
+    #refreshQueued = false;
 
     constructor(host: UmbControllerHost) {
         super(host);
@@ -250,9 +276,34 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
     }
 
     /**
-     * Refresh detected entities from workspace registry.
+     * Refresh detected entities, coalescing overlapping requests.
+     *
+     * Detection is async (adapters load lazily) and is now triggered from two places — registry
+     * changes and a workspace's unique resolving — so two passes can overlap. Serializing them keeps
+     * the emitted entity list from interleaving, and the trailing re-run makes sure a change that
+     * landed mid-pass is still picked up.
      */
     async #refresh(): Promise<void> {
+        if (this.#refreshing) {
+            this.#refreshQueued = true;
+            return;
+        }
+
+        this.#refreshing = true;
+        try {
+            do {
+                this.#refreshQueued = false;
+                await this.#refreshOnce();
+            } while (this.#refreshQueued);
+        } finally {
+            this.#refreshing = false;
+        }
+    }
+
+    /**
+     * Refresh detected entities from workspace registry.
+     */
+    async #refreshOnce(): Promise<void> {
         if (!this.#workspaceRegistry) return;
 
         const entries = this.#workspaceRegistry.getAll();
@@ -264,8 +315,11 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
             const adapter = await this.#findAdapterAsync(entry.context);
 
             if (adapter) {
-                const entityContext = adapter.extractEntityContext(entry.context);
-                const key = `${entityContext.entityType}:${entityContext.unique ?? "new"}`;
+                const entityContext = this.#withObservedUnique(
+                    adapter.extractEntityContext(entry.context),
+                    entry.context,
+                );
+                const key = buildEntityKey(entityContext);
                 currentKeys.add(key);
 
                 detected.push({
@@ -303,10 +357,47 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
     }
 
     /**
+     * Fills in an entity's unique from what its workspace last told us, when the adapter's snapshot
+     * read hasn't caught up yet. Only ever fills a gap — a unique the adapter reports always wins.
+     */
+    #withObservedUnique(entityContext: UaiEntityContext, ctx: unknown): UaiEntityContext {
+        if (entityContext.unique || !ctx || typeof ctx !== "object") return entityContext;
+
+        const observed = this.#observedUniques.get(ctx as object);
+        return observed ? { ...entityContext, unique: observed } : entityContext;
+    }
+
+    /**
      * Subscribe to adapter observables for reactive updates (name, icon).
      */
     #subscribeToAdapter(key: string, adapter: UaiEntityAdapterApi, ctx: unknown): void {
         const subs: Subscription[] = [];
+
+        // Watch the unique so a key built before the entity finished loading doesn't stay stale.
+        // A workspace usually registers while its entity is still loading, so detection sees a null
+        // unique and keys it as ":new" — which would otherwise be its identity for the rest of the
+        // session, colliding with every other unloaded entity of the same type. Re-detect when the
+        // key this workspace *should* have no longer matches the one it was registered under; that
+        // comparison also absorbs the subscription's immediate replay, which by definition matches.
+        const uniqueObservable = adapter.getUniqueObservable?.(ctx);
+        if (uniqueObservable) {
+            subs.push(
+                uniqueObservable.subscribe((unique) => {
+                    if (unique && ctx && typeof ctx === "object") {
+                        this.#observedUniques.set(ctx as object, unique);
+                    }
+
+                    // Compare against what the entity's key *should* now be. The immediate replay on
+                    // subscribe matches by definition, so only a genuine change re-runs detection.
+                    const next = buildEntityKey(
+                        this.#withObservedUnique(adapter.extractEntityContext(ctx), ctx),
+                    );
+                    if (next !== key) {
+                        void this.#refresh();
+                    }
+                }),
+            );
+        }
 
         // Subscribe to name observable if available
         const nameObservable = adapter.getNameObservable?.(ctx);

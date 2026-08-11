@@ -42,6 +42,8 @@ interface PropertyStructure {
 interface DocumentWorkspaceContextLike {
     getEntityType(): string;
     getUnique(): string | undefined;
+    // unique observable - emits once the document has loaded and its id is known
+    unique?: Observable<string | undefined>;
     getName(variantId?: unknown): string | undefined;
     getContentTypeUnique(): string | undefined;
     getValues():
@@ -127,6 +129,18 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             entityType: "document",
             unique: ctx.getUnique() ?? null,
         };
+    }
+
+    /**
+     * Observable of the document's unique id.
+     *
+     * The workspace registers before the document has loaded, so the id starts undefined and arrives
+     * shortly after. Exposing it lets entity detection re-key once it does, instead of leaving the
+     * document identified as new for the rest of the session.
+     */
+    getUniqueObservable(workspaceContext: unknown): Observable<string | undefined> | undefined {
+        const ctx = workspaceContext as DocumentWorkspaceContextLike;
+        return ctx.unique;
     }
 
     /**

@@ -63,6 +63,8 @@ interface MediaVariantLike {
 interface MediaWorkspaceContextLike {
     getEntityType(): string;
     getUnique(): string | undefined;
+    // unique observable - emits once the media item has loaded and its id is known
+    unique?: Observable<string | undefined>;
     getContentTypeUnique(): string | undefined;
     getValues():
         | Array<{
@@ -130,6 +132,18 @@ export class UaiMediaAdapter implements UaiEntityAdapterApi {
             entityType: "media",
             unique: ctx.getUnique() ?? null,
         };
+    }
+
+    /**
+     * Observable of the media item's unique id.
+     *
+     * The workspace registers before the item has loaded, so the id starts undefined and arrives
+     * shortly after. Exposing it lets entity detection re-key once it does, instead of leaving the
+     * item identified as new for the rest of the session.
+     */
+    getUniqueObservable(workspaceContext: unknown): Observable<string | undefined> | undefined {
+        const ctx = workspaceContext as MediaWorkspaceContextLike;
+        return ctx.unique;
     }
 
     /**

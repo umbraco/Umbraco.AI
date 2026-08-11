@@ -136,6 +136,21 @@ export interface UaiEntityAdapterApi extends UmbApi {
     extractEntityContext(workspaceContext: unknown): UaiEntityContext;
 
     /**
+     * Get an observable of the entity's unique id for reactive updates.
+     *
+     * A workspace typically registers before it has loaded its entity, so the first
+     * {@link extractEntityContext} call reports a null unique and the entity is detected as new. This
+     * observable lets the detection re-run once the real id arrives, so the entity key — and
+     * everything identified by it — doesn't stay pinned to that pre-load snapshot.
+     *
+     * Returns undefined if the adapter doesn't support reactive uniques, in which case the key is
+     * whatever the initial extract produced.
+     */
+    getUniqueObservable?(
+        workspaceContext: unknown,
+    ): import("@umbraco-cms/backoffice/external/rxjs").Observable<string | undefined> | undefined;
+
+    /**
      * Get the current display name for the entity.
      * Used for initial name population.
      */

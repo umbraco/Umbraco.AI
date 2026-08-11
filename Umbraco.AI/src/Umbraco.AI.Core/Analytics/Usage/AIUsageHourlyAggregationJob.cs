@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Hosting;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Runtime;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.AI.Core.Analytics.Usage;
 
@@ -12,7 +12,7 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// Background service that periodically aggregates raw usage records into hourly statistics.
 /// Runs continuously, processing completed hours and catching up on any missed periods.
 /// </summary>
-internal sealed class AIUsageHourlyAggregationJob : RecurringHostedServiceBase
+internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIUsageAggregationService _aggregationService;
     private readonly IAIUsageRecordRepository _recordRepository;

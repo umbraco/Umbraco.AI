@@ -8,6 +8,47 @@ namespace Umbraco.AI.Extensions;
 internal static class OpenAIModelUtilities
 {
     /// <summary>
+    /// Model families that accept a reasoning effort: the o-series and the GPT-5 line, whose current
+    /// members use dotted minors (gpt-5.4, gpt-5.5, gpt-5.6 and its sol/terra/luna variants).
+    /// </summary>
+    /// <remarks>
+    /// The o-series is a closed set, not a snapshot: the naming was retired in favour of GPT-5, there is
+    /// no o5, and o1/o3 are scheduled for shutdown on 23 October 2026 (o3-deep-research on 11 December
+    /// 2026) with gpt-5.6-sol as the replacement. Those entries can be dropped once the shutdowns land;
+    /// they are kept for accounts that still have access. Future reasoning models arrive as gpt-5 minors,
+    /// which <c>^gpt-5</c> already covers — a further naming change is what would need a new pattern.
+    /// </remarks>
+    private static readonly Regex[] ReasoningModelPatterns =
+    [
+        new(@"^o1", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^o3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^o4", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"^gpt-5", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// GPT-5 variants that are not reasoning models despite the family prefix. Matches both the
+    /// undotted (<c>gpt-5-chat-latest</c>) and dotted (<c>gpt-5.6-chat</c>) naming.
+    /// </summary>
+    private static readonly Regex[] NonReasoningExceptionPatterns =
+    [
+        new(@"^gpt-5[\d.]*-chat", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Whether the model accepts a reasoning effort (<c>reasoning.effort</c> on the Responses API).
+    /// </summary>
+    /// <param name="modelId">The model ID, or null when unresolved.</param>
+    /// <remarks>
+    /// A positive list: a reasoning family released after this package ships reads as unsupported until
+    /// the list is updated. That only suppresses the setting in the editor and skips sending it — it
+    /// never produces a failed request — which is the safe direction for an unknown model.
+    /// </remarks>
+    public static bool SupportsReasoningEffort(string? modelId)
+        => !string.IsNullOrWhiteSpace(modelId)
+           && ReasoningModelPatterns.Any(p => p.IsMatch(modelId))
+           && !NonReasoningExceptionPatterns.Any(p => p.IsMatch(modelId));
+
     /// Model families that accept the sampling parameters (<c>temperature</c>, <c>top_p</c>).
     /// </summary>
     /// <remarks>
@@ -28,6 +69,28 @@ internal static class OpenAIModelUtilities
     ];
 
     /// <summary>
+    /// Embedding models that accept a <c>dimensions</c> request parameter.
+    /// </summary>
+    /// <remarks>
+    /// Shortening an embedding is a <c>text-embedding-3</c> feature; <c>ada-002</c> predates it. Written as
+    /// an allow-list so a model this package has not heard of is treated as not supporting it, which drops
+    /// the parameter rather than risking a rejected request — the same failure direction the sampling
+    /// predicate chooses, and for the same reason.
+    /// </remarks>
+    private static readonly Regex[] DimensionsModelPatterns =
+    [
+        new(@"^text-embedding-3", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
+    /// <summary>
+    /// Determines whether an OpenAI embedding model accepts a <c>dimensions</c> parameter.
+    /// </summary>
+    /// <param name="modelId">The model ID, or <c>null</c> if no model has been resolved.</param>
+    public static bool SupportsDimensions(string? modelId)
+        => !string.IsNullOrWhiteSpace(modelId)
+           && DimensionsModelPatterns.Any(p => p.IsMatch(modelId));
+
+    /// <summary>
     /// Determines whether an OpenAI model accepts the sampling parameters (<c>temperature</c>,
     /// <c>top_p</c>).
     /// </summary>
@@ -40,7 +103,6 @@ internal static class OpenAIModelUtilities
     public static bool SupportsSamplingParameters(string? modelId)
         => !string.IsNullOrWhiteSpace(modelId)
            && SamplingParameterModelPatterns.Any(p => p.IsMatch(modelId));
-
     /// <summary>
     /// Formats a model ID into a human-readable display name.
     /// </summary>

@@ -230,4 +230,33 @@ public static class Constants
         /// </summary>
         public const string AdditionalContextIds = "Umbraco.AI.AdditionalContextIds";
     }
+
+    /// <summary>
+    /// Well-known keys a provider may add to <see cref="Microsoft.Extensions.AI.UsageDetails.AdditionalCounts"/>
+    /// to report token counts that Microsoft.Extensions.AI has no first-class property for.
+    /// </summary>
+    /// <remarks>
+    /// These are the channel between a provider and the analytics/audit layer, which is otherwise
+    /// provider-agnostic: the provider translates its own vendor shape into one of these keys, and core
+    /// persists whatever it finds. A provider that reports nothing simply leaves the count null.
+    /// </remarks>
+    public static class UsageCounts
+    {
+        /// <summary>
+        /// The portion of the input tokens that was served from the provider's prompt cache rather than
+        /// processed afresh, and so billed at a discount.
+        /// </summary>
+        /// <remarks>
+        /// A subset of the reported input token count, not an addition to it — the input total stays the
+        /// true total. Providers differ in how much they discount a cache read, so the split is stored and
+        /// the weighting left to whoever presents or prices it.
+        /// <para>
+        /// Prefer <see cref="Microsoft.Extensions.AI.UsageDetails.CachedInputTokenCount"/>, which
+        /// Microsoft.Extensions.AI defines for this and the OpenAI and Anthropic adapters already populate.
+        /// This key is the fallback for a provider whose SDK leaves that property unset, and is read only
+        /// when it is — see <c>UsageDetailsExtensions.GetCachedInputTokenCount</c>.
+        /// </para>
+        /// </remarks>
+        public const string CachedInputTokens = "Umbraco.AI.CachedInputTokens";
+    }
 }

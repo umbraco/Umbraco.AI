@@ -122,6 +122,37 @@ public class AIImageGenerationServiceTests
     }
 
     [Fact]
+    public async Task GenerateImagesAsync_DoesNotInventProviderHints()
+    {
+        // Quality and style used to travel from here as additional properties, which the OpenAI adapter
+        // ignored — so they did nothing at all. They are now provider-declared capability settings, applied
+        // by the provider itself. This holds the core side of that move: nothing here fabricates a hint,
+        // so there is only ever one place those values come from.
+        var generator = new FakeImageGenerator();
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.ImageGeneration)
+            .WithModel("fake-provider", "dall-e-3")
+            .WithSettings(new AIImageGenerationProfileSettings { Size = "1024x1024", MediaType = "image/png" })
+            .Build();
+
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.ImageGeneration, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _factoryMock
+            .Setup(x => x.CreateGeneratorAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(generator);
+
+        await _service.GenerateImagesAsync(b => b.WithAlias("hints"), "a cat");
+
+        var options = generator.ReceivedOptions.ShouldHaveSingleItem();
+        // The first-class settings still flow, because M.E.AI models them.
+        options!.ImageSize.ShouldNotBeNull();
+        options.MediaType.ShouldBe("image/png");
+        options.AdditionalProperties?.ContainsKey("quality").ShouldNotBe(true);
+        options.AdditionalProperties?.ContainsKey("style").ShouldNotBe(true);
+    }
+
+    [Fact]
     public async Task GenerateImagesAsync_WithOriginalImages_FlowsThroughToGenerator()
     {
         var generator = new FakeImageGenerator();
@@ -237,7 +268,7 @@ public class AIImageGenerationServiceTests
             .ReturnsAsync(new List<AIModelDescriptor>
             {
                 new(new AIModelRef("fake-provider", "gpt-image-1"), "GPT Image 1",
-                    new Dictionary<string, string> { ["image.supportedSizes"] = "1024x1024" }),
+                    new Dictionary<string, string> { [AIModelMetadataKeys.ImageSupportedSizes] = "1024x1024" }),
             });
 
         var configuredProvider = new Mock<IAIConfiguredProvider>();
@@ -255,6 +286,8 @@ public class AIImageGenerationServiceTests
 
         result.ModelId.ShouldBe("gpt-image-1");
         result.Models.Count.ShouldBe(1);
+        // Deliberately the literal rather than the constant: this is the key that travels to the backoffice,
+        // so a change to the constant's value should fail here rather than silently rename the contract.
         result.Models[0].Metadata.ContainsKey("image.supportedSizes").ShouldBeTrue();
     }
 }

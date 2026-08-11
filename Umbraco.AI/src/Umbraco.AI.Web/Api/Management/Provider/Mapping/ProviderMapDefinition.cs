@@ -47,10 +47,35 @@ public class ProviderMapDefinition : IMapDefinition
         target.SettingsSchema = source.SettingsType is not null
             ? context.Map<EditableModelSchemaModel>(source.GetSettingsSchema())
             : null;
+        target.CapabilitySettingsSchemas = MapCapabilitySettingsSchemas(source, context);
     }
 
     private IEnumerable<string> MapCapabilities(IAIProvider source)
         => source.GetCapabilities()
             .Where(c => _experimentalFeatures.IsCapabilityEnabled(c.Kind))
             .Select(c => c.Kind.ToString());
+
+    private IReadOnlyDictionary<string, EditableModelSchemaModel> MapCapabilitySettingsSchemas(
+        IAIProvider source,
+        MapperContext context)
+    {
+        var schemas = new Dictionary<string, EditableModelSchemaModel>();
+        foreach (var capability in source.GetCapabilities()
+                     .Where(c => _experimentalFeatures.IsCapabilityEnabled(c.Kind)))
+        {
+            var schema = source.GetCapabilitySettingsSchema(capability.Kind);
+            if (schema is null)
+            {
+                continue;
+            }
+
+            var mapped = context.Map<EditableModelSchemaModel>(schema);
+            if (mapped is not null)
+            {
+                schemas[capability.Kind.ToString()] = mapped;
+            }
+        }
+
+        return schemas;
+    }
 }

@@ -258,6 +258,94 @@ public class AIEditableModelSerializerTests
         _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData("$$mysecret")]
+    [InlineData("$$Umbraco:AI:Secrets:ApiKey")]
+    [InlineData("$$")]
+    public void Serialize_WithEscapedLiteral_Encrypts(string escapedLiteral)
+    {
+        // A leading "$$" escapes a literal starting with "$" — the resolver hands back "$mysecret",
+        // so the stored value is a real secret and not a pointer to configuration. Skipping it
+        // because it starts with "$" left it sitting in the database in plaintext.
+
+        // Arrange
+        var model = new TestModel { ApiKey = escapedLiteral, Endpoint = "https://api.example.com" };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "apiKey",
+            Label = "API Key",
+            IsSensitive = true
+        });
+
+        // Act
+        var result = _serializer.Serialize(model, schema);
+
+        // Assert
+        result.ShouldContain($"\"apiKey\":\"ENC:{escapedLiteral}\"");
+        _protectorMock.Verify(p => p.Protect(escapedLiteral), Times.Once);
+    }
+
+    [Fact]
+    public void Serialize_WithNonStringSensitiveField_SkipsItInsteadOfThrowing()
+    {
+        // Only strings can be protected. Reading a number- or bool-backed value as a string threw,
+        // and since nothing caught it the whole entity failed to save. The field is a declaration
+        // mistake either way — the schema builder warns about it — but it must not break saving.
+
+        // Arrange
+        var model = new NonStringSensitiveModel
+        {
+            RotationDays = 30,
+            Enabled = true,
+            Endpoint = "https://api.example.com"
+        };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "rotationDays",
+            Label = "Rotation Days",
+            IsSensitive = true
+        }, new AIEditableModelField
+        {
+            Key = "enabled",
+            Label = "Enabled",
+            IsSensitive = true
+        });
+
+        // Act
+        var result = Should.NotThrow(() => _serializer.Serialize(model, schema));
+
+        // Assert — values pass through untouched
+        result.ShouldNotBeNull();
+        result.ShouldContain("\"rotationDays\":30");
+        result.ShouldContain("\"enabled\":true");
+        result.ShouldContain("\"endpoint\":\"https://api.example.com\"");
+        _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void SerializeThenDeserialize_WithEscapedLiteral_RoundTripsUnchanged()
+    {
+        // Encrypting the escaped literal must not disturb what the resolver later sees, otherwise
+        // the escape would stop meaning what it meant before.
+
+        // Arrange
+        var model = new TestModel { ApiKey = "$$mysecret", Endpoint = "https://api.example.com" };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "apiKey",
+            Label = "API Key",
+            IsSensitive = true
+        });
+
+        // Act
+        var json = _serializer.Serialize(model, schema);
+        var roundTripped = _serializer.Deserialize<TestModel>(json);
+
+        // Assert
+        roundTripped.ShouldNotBeNull();
+        roundTripped!.ApiKey.ShouldBe("$$mysecret");
+    }
+
     #endregion
 
     #region Deserialize
@@ -429,6 +517,13 @@ public class AIEditableModelSerializerTests
         public string? AccessKeyId { get; set; }
         public string? SecretAccessKey { get; set; }
         public string? Region { get; set; }
+    }
+
+    private class NonStringSensitiveModel
+    {
+        public int RotationDays { get; set; }
+        public bool Enabled { get; set; }
+        public string? Endpoint { get; set; }
     }
 
     #endregion

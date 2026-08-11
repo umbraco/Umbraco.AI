@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Hosting;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Runtime;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
-using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.AI.Core.Analytics.Usage;
 
@@ -12,7 +12,7 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// Background service that periodically rolls up hourly statistics into daily statistics.
 /// Runs daily, processing completed days and catching up on any missed periods.
 /// </summary>
-internal sealed class AIUsageDailyRollupJob : RecurringHostedServiceBase
+internal sealed class AIUsageDailyRollupJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIUsageAggregationService _aggregationService;
     private readonly IAIUsageStatisticsRepository _statisticsRepository;

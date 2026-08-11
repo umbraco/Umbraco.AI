@@ -187,17 +187,19 @@ public class UmbracoAIConnectionServiceConnector(
                     return false;
                 }
 
-                // Check value characteristics
-                bool isConfigReference = value?.StartsWith("$") == true;
                 bool isEncryptedValue = value?.StartsWith("ENC:") == true;
 
-                // Layer 3: IgnoreEncrypted - block encrypted values but allow $ config references
+                // Layer 3: IgnoreEncrypted - block encrypted values.
+                // Configuration references ($Umbraco:AI:Secrets:ApiKey) are never encrypted, so they
+                // are not caught here and reach the include below. This used to read
+                // "return isConfigReference" to express that, but a value can only be one or the
+                // other — an "ENC:" value never also starts with "$" — so it always meant false.
                 if (_settingsAccessor.Settings.Connections.IgnoreEncrypted && isEncryptedValue)
                 {
-                    return isConfigReference;  // Block encrypted, allow $ refs
+                    return false;
                 }
 
-                return true;  // Include all other fields
+                return true;  // Include all other fields, config references among them
             })
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 

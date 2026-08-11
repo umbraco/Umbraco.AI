@@ -14,13 +14,13 @@
 
   <!-- Umbraco CMS -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.4.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.4.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.5.0, 17.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Deploy -->
@@ -51,18 +51,18 @@
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[17.2.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[17.2.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.AGUI" Version="[17.1.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.2.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.1.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.1.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.1.1, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[17.3.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[17.3.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.AGUI" Version="[17.1.3, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.3.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.1.3, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.1.3, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.1.3, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[17.0.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[17.0.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Deploy" Version="[17.0.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[17.0.3, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Deploy" Version="[17.1.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Automate" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[17.2.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[17.2.2, 17.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->
@@ -87,13 +87,15 @@
   <!-- Shared dependencies -->
   <ItemGroup>
     <PackageVersion Include="DocumentFormat.OpenXml" Version="[3.5.1, 3.999.999)" />
-    <!-- 10.0.6 floor matches the EF Core version Umbraco.Cms 17.4.0 bundles. Bumping above
+    <!-- 10.0.6 floor matches the EF Core version Umbraco.Cms 17.5.0 bundles. Bumping above
          the host CMS's transitive EF Core means our migrations DLLs reference assemblies the
          hosting app never resolves, and runtime fails with a TypeLoadException. Move this floor
          in lockstep with the host CMS, not ahead of it. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="[10.0.6, 10.999.999)" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="[3.1.12, 3.999.999)" />
-    <PackageVersion Include="SmartReader" Version="[0.11.0, 0.999.999)" />
+    <!-- 0.11.1 floor: 0.11.0 pulls AngleSharp 1.4.0, which is vulnerable to mXSS
+         (GHSA-pgww-w46g-26qg, patched in 1.5.0). 0.11.1 depends on AngleSharp 1.5.2. -->
+    <PackageVersion Include="SmartReader" Version="[0.11.1, 0.999.999)" />
   </ItemGroup>
 
   <!-- Test dependencies -->

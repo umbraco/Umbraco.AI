@@ -12,7 +12,8 @@
         "build": "npm run build:api && npm run build:app",
         "build:app": "tsc -p tsconfig.app.json && vite build",
         "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)",
-        "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-management"
+        "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-management",
+        "test": "vitest run"
     },
     "dependencies": {
         "@umbraco-cms/backoffice": "^17.4.0",
@@ -24,7 +25,9 @@
         "@microsoft/api-extractor": "^7.55.1",
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
+        "happy-dom": "^20.10.6",
         "typescript": "^5.9.2",
-        "vite": "^8.0.16"
+        "vite": "^8.0.16",
+        "vitest": "^4.1.10"
     }
 }

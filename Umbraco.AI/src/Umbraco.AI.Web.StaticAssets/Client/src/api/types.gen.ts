@@ -50,6 +50,7 @@ export type AuditLogDetailResponseModel = {
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
+    cachedInputTokens?: number | null;
     outputTokens?: number | null;
     errorMessage?: string | null;
     endTime?: string | null;
@@ -81,6 +82,7 @@ export type AuditLogItemResponseModel = {
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
+    cachedInputTokens?: number | null;
     outputTokens?: number | null;
     errorMessage?: string | null;
 };
@@ -227,6 +229,7 @@ export type CreateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    capabilitySettings?: unknown;
     tags: Array<string>;
 };
 
@@ -364,8 +367,6 @@ export type GuardrailRuleModel = {
 export type ImageGenerationProfileSettingsModel = ProfileSettingsModel & {
     $type: 'imageGeneration';
     size?: string | null;
-    quality?: string | null;
-    style?: string | null;
     mediaType?: string | null;
 };
 
@@ -497,6 +498,7 @@ export type ProfileResponseModel = {
     model?: ModelRefModel | null;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    capabilitySettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
@@ -533,6 +535,9 @@ export type ProviderResponseModel = {
     name: string;
     capabilities: Array<string>;
     settingsSchema?: EditableModelSchemaModel | null;
+    capabilitySettingsSchemas: {
+        [key: string]: EditableModelSchemaModel;
+    };
 };
 
 export type RunTestBatchRequestModel = {
@@ -843,6 +848,7 @@ export type UpdateProfileRequestModel = {
     model: ModelRefModel;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    capabilitySettings?: unknown;
     tags: Array<string>;
 };
 
@@ -873,6 +879,7 @@ export type UsageBreakdownItemModel = {
     dimensionName?: string | null;
     requestCount: number;
     totalTokens: number;
+    cachedInputTokens?: number | null;
     percentage: number;
 };
 
@@ -885,6 +892,7 @@ export type UsageModel = {
 export type UsageSummaryResponseModel = {
     totalRequests: number;
     inputTokens: number;
+    cachedInputTokens?: number | null;
     outputTokens: number;
     totalTokens: number;
     successCount: number;
@@ -898,6 +906,7 @@ export type UsageTimeSeriesPointModel = {
     requestCount: number;
     totalTokens: number;
     inputTokens: number;
+    cachedInputTokens?: number | null;
     outputTokens: number;
     successCount: number;
     failureCount: number;

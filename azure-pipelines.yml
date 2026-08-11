@@ -136,15 +136,29 @@ stages:
                   inputs:
                       useGlobalJson: true
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - script: |
                       npm ci --include=optional
                       npm run build
                   displayName: Build frontend
+
+                - script: npm test
+                  displayName: Test frontend
+
+                - task: PublishTestResults@2
+                  displayName: Publish frontend test results
+                  condition: always()
+                  inputs:
+                      testResultsFormat: JUnit
+                      testResultsFiles: "**/Client/test-results/junit.xml"
+                      searchFolder: $(Build.SourcesDirectory)
+                      mergeTestResults: true
+                      testRunTitle: Frontend
+                      failTaskOnMissingResultsFile: true
 
                 - script: |
                       attempt=1
@@ -169,7 +183,7 @@ stages:
                   displayName: Build
 
                 - script: dotnet test Umbraco.AI.slnx --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
-                  displayName: Test
+                  displayName: Test .NET
 
                 - task: PublishTestResults@2
                   displayName: Publish test results
@@ -178,6 +192,7 @@ stages:
                       testResultsFormat: VSTest
                       testResultsFiles: "$(Agent.TempDirectory)/TestResults/**/*.trx"
                       mergeTestResults: true
+                      testRunTitle: .NET
 
                 - task: PublishPipelineArtifact@1
                   displayName: Upload build outputs
@@ -209,10 +224,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:
@@ -234,10 +249,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:
@@ -259,10 +274,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:
@@ -284,10 +299,10 @@ stages:
                 - checkout: self
                   fetchDepth: 1
 
-                - task: NodeTool@0
+                - task: UseNode@1
                   displayName: Setup Node.js
                   inputs:
-                      versionSpec: $(NODE_VERSION)
+                      version: $(NODE_VERSION)
 
                 - template: .azure-pipelines/templates/generate-sbom.yml
                   parameters:

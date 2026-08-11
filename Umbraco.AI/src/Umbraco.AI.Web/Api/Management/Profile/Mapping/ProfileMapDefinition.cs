@@ -54,6 +54,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = new AIModelRef(source.Model.ProviderId, source.Model.ModelId);
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
+        target.CapabilitySettings = source.CapabilitySettings;
         target.Tags = source.Tags;
     }
 
@@ -66,6 +67,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = new AIModelRef(source.Model.ProviderId, source.Model.ModelId);
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
+        target.CapabilitySettings = source.CapabilitySettings;
         target.Tags = source.Tags;
     }
 
@@ -79,6 +81,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Capability = source.Capability.ToString();
         target.Model = context.Map<ModelRefModel>(source.Model);
         target.Settings = MapSettingsToResponse(source);
+        target.CapabilitySettings = source.CapabilitySettings;
         target.Tags = source.Tags;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
@@ -120,8 +123,6 @@ public class ProfileMapDefinition : IMapDefinition
             AIImageGenerationProfileSettings imageGeneration => new ImageGenerationProfileSettingsModel
             {
                 Size = imageGeneration.Size,
-                Quality = imageGeneration.Quality,
-                Style = imageGeneration.Style,
                 MediaType = imageGeneration.MediaType
             },
             _ => null
@@ -154,8 +155,6 @@ public class ProfileMapDefinition : IMapDefinition
             AICapability.ImageGeneration when settings is ImageGenerationProfileSettingsModel imageGeneration => new AIImageGenerationProfileSettings
             {
                 Size = imageGeneration.Size,
-                Quality = imageGeneration.Quality,
-                Style = imageGeneration.Style,
                 MediaType = imageGeneration.MediaType
             },
             AICapability.ImageGeneration => new AIImageGenerationProfileSettings(),

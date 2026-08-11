@@ -222,6 +222,8 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.Settings);
 
+            entity.Property(e => e.CapabilitySettings);
+
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 
@@ -431,6 +433,7 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.FeatureVersion);
 
             entity.Property(e => e.InputTokens);
+            entity.Property(e => e.CachedInputTokens);
             entity.Property(e => e.OutputTokens);
             entity.Property(e => e.TotalTokens);
 
@@ -503,6 +506,9 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.InputTokens)
                 .IsRequired();
 
+            // Optional: only providers that report a prompt-cache split populate it.
+            entity.Property(e => e.CachedInputTokens);
+
             entity.Property(e => e.OutputTokens)
                 .IsRequired();
 
@@ -570,6 +576,9 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.InputTokens)
                 .IsRequired();
 
+            // Optional: only providers that report a prompt-cache split populate it.
+            entity.Property(e => e.CachedInputTokens);
+
             entity.Property(e => e.OutputTokens)
                 .IsRequired();
 
@@ -635,6 +644,9 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.InputTokens)
                 .IsRequired();
+
+            // Optional: only providers that report a prompt-cache split populate it.
+            entity.Property(e => e.CachedInputTokens);
 
             entity.Property(e => e.OutputTokens)
                 .IsRequired();

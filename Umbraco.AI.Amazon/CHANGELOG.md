@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Amazon will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Amazon@17.0.2...Umbraco.AI.Amazon@17.1.0) (2026-08-11)
+
+### feat
+
+* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core [v17 backport] (#284) ([6c6ff0e](https://github.com/umbraco/Umbraco.AI/commit/6c6ff0effa14b232b0126e7957c1a08d9ab2f49e)), closes [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
+
+### fix
+
+* **deps:** Raise the minimum Umbraco CMS version to 17.5.0.
+* **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#274) ([38de95d](https://github.com/umbraco/Umbraco.AI/commit/38de95db9f4c29f702f122faa868e24c5cafa93b)), closes [#274](https://github.com/umbraco/Umbraco.AI/issues/274) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
+
 ## [17.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Amazon@17.0.1...Umbraco.AI.Amazon@17.0.2) (2026-07-28)
 
 ### fix

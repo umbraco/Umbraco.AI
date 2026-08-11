@@ -41,6 +41,10 @@ export class UaiCopilotHeaderAppElement extends UmbLitElement {
             display: flex;
             align-items: center;
         }
+        uui-button {
+            --uui-button-background-color: var(--umb-header-app-button-background-color, transparent);
+            --uui-button-background-color-hover: var(--umb-header-app-button-background-color-hover);
+        }
         uui-button.active {
             background-color: var(--uui-color-selected);
         }

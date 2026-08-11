@@ -8,6 +8,9 @@
 const path = require("path");
 const configPath = path.join(__dirname, "..", "commitlint.config.js");
 const config = require(configPath);
+const { META_SCOPES, loadProductScopes } = require("./load-commit-scopes");
+
+const rootDir = path.join(__dirname, "..");
 
 console.log("═══════════════════════════════════════════════════════");
 console.log("Valid Commit Types and Scopes");
@@ -22,8 +25,15 @@ console.log();
 
 console.log("Valid Scopes:");
 console.log("─".repeat(55));
-const scopes = config.rules["scope-enum"][2];
-console.log(`  ${scopes.join(", ")}`);
+const productScopes = loadProductScopes(rootDir);
+for (const product of Object.keys(productScopes).sort()) {
+    console.log(`  ${product}:`);
+    console.log(`    ${productScopes[product].join(", ")}`);
+}
+console.log("  Meta:");
+console.log(`    ${[...META_SCOPES].sort().join(", ")}`);
+console.log();
+console.log("  Multiple comma-separated scopes are allowed, e.g. feat(core,openai):");
 console.log();
 
 console.log("Example:");

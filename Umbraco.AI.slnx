@@ -15,6 +15,7 @@
     <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web/Umbraco.AI.Agent.Web.csproj" />
     <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.Agent/Umbraco.AI.Agent.csproj" />
     <Project Path="Umbraco.AI.Agent/src/Umbraco.AI.AGUI/Umbraco.AI.AGUI.csproj" />
+    <Project Path="Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Umbraco.AI.Agent.Tests.Integration.csproj" />
     <Project Path="Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Unit/Umbraco.AI.Agent.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/AddOns/Copilot/">
@@ -30,6 +31,7 @@
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web/Umbraco.AI.Prompt.Web.csproj" />
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt/Umbraco.AI.Prompt.csproj" />
+    <Project Path="Umbraco.AI.Prompt/tests/Umbraco.AI.Prompt.Tests.Unit/Umbraco.AI.Prompt.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/AddOns/Search/">
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search.Core/Umbraco.AI.Search.Core.csproj" />
@@ -61,6 +63,9 @@
     <Project Path="Umbraco.AI.Agent.Deploy/src/Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.csproj" />
     <Project Path="Umbraco.AI.Deploy/src/Umbraco.AI.Deploy/Umbraco.AI.Deploy.csproj" />
     <Project Path="Umbraco.AI.Prompt.Deploy/src/Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.csproj" />
+    <Project Path="Umbraco.AI.Agent.Deploy/tests/Umbraco.AI.Agent.Deploy.Tests.Unit/Umbraco.AI.Agent.Deploy.Tests.Unit.csproj" />
+    <Project Path="Umbraco.AI.Deploy/tests/Umbraco.AI.Deploy.Tests.Unit/Umbraco.AI.Deploy.Tests.Unit.csproj" />
+    <Project Path="Umbraco.AI.Prompt.Deploy/tests/Umbraco.AI.Prompt.Deploy.Tests.Unit/Umbraco.AI.Prompt.Deploy.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/" />
   <Folder Name="/Providers/Amazon/">
@@ -85,6 +90,7 @@
   </Folder>
   <Folder Name="/Providers/MicrosoftFoundry/">
     <Project Path="Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj" />
+    <Project Path="Umbraco.AI.MicrosoftFoundry/tests/Umbraco.AI.MicrosoftFoundry.Tests.Unit/Umbraco.AI.MicrosoftFoundry.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/Mistral/">
     <Project Path="Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" />

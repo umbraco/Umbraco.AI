@@ -19,6 +19,10 @@ internal sealed class AIConfiguredChatCapability(IAIChatCapability inner, object
         => inner.CreateClientAsync(settings, modelId, cancellationToken);
 
     /// <inheritdoc />
+    public Task<IChatClient> CreateClientAsync(object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => inner.CreateClientAsync(settings, capabilitySettings, modelId, cancellationToken);
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
         => inner.GetModelsAsync(settings, cancellationToken);
 }
@@ -35,6 +39,13 @@ internal sealed class AIConfiguredEmbeddingCapability(IAIEmbeddingCapability inn
     /// <inheritdoc />
     public Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default)
          => inner.CreateGeneratorAsync(settings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => inner.CreateGeneratorAsync(settings, capabilitySettings, modelId, cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
@@ -55,6 +66,13 @@ internal sealed class AIConfiguredSpeechToTextCapability(IAISpeechToTextCapabili
         => inner.CreateClientAsync(settings, modelId, cancellationToken);
 
     /// <inheritdoc />
+    public Task<ISpeechToTextClient> CreateClientAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => inner.CreateClientAsync(settings, capabilitySettings, modelId, cancellationToken);
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
         => inner.GetModelsAsync(settings, cancellationToken);
 }
@@ -71,6 +89,13 @@ internal sealed class AIConfiguredImageGeneratorCapability(IAIImageGeneratorCapa
     /// <inheritdoc />
     public Task<IImageGenerator> CreateGeneratorAsync(string? modelId = null, CancellationToken cancellationToken = default)
         => inner.CreateGeneratorAsync(settings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IImageGenerator> CreateGeneratorAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => inner.CreateGeneratorAsync(settings, capabilitySettings, modelId, cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)

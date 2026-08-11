@@ -39,6 +39,21 @@ public class OpenAIEmbeddingCapability(OpenAIProvider provider) : AIEmbeddingCap
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Shortened embeddings are a <c>text-embedding-3</c> feature, so a profile's Dimensions cannot apply to
+    /// <c>ada-002</c>. Declaring it here hides the field for those models in the profile editor and, because
+    /// the base enforces what is declared, also strips the value from any request that still carries one —
+    /// a profile saved before a model change, or an alias-driven API caller.
+    /// </remarks>
+    public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+        => OpenAIModelUtilities.SupportsDimensions(modelId)
+            ? AIModelSettingsSupport.Default
+            : new AIModelSettingsSupport
+            {
+                UnsupportedProfileSettings = [AIProfileSettingKeys.Dimensions],
+            };
+
+    /// <inheritdoc />
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(OpenAIProviderSettings settings, string? modelId)
         => OpenAIProvider.CreateOpenAIClient(settings)
             .GetEmbeddingClient(modelId ?? DefaultEmbeddingModel)

@@ -5,6 +5,19 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.0.2...Umbraco.AI.Anthropic@18.1.0) (2026-08-11)
+
+### feat
+
+* **core,anthropic,frontend:** Add Anthropic prompt caching and cached-token reporting (#295) ([47547fb](https://github.com/umbraco/Umbraco.AI/commit/47547fbbb5d21c9c22b4edae2361dbf4bd3a35fa)), closes [#295](https://github.com/umbraco/Umbraco.AI/issues/295) [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core (#283) ([529f2a5](https://github.com/umbraco/Umbraco.AI/commit/529f2a57d1ad5c2b5a7b937d4ceb115125216180)), closes [#283](https://github.com/umbraco/Umbraco.AI/issues/283)
+* **core,openai,anthropic:** Add provider-declared, model-aware capability settings (#269) ([3f370c5](https://github.com/umbraco/Umbraco.AI/commit/3f370c56e6428cda88f667d09b5807b9fe675b94)), closes [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+
+### fix
+
+* **core,anthropic,openai:** Read the cached input tokens every adapter already reports ([464d9f4](https://github.com/umbraco/Umbraco.AI/commit/464d9f47033ee6d0e6d78b633ce94a816c3e9328)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#273) ([f4a4d67](https://github.com/umbraco/Umbraco.AI/commit/f4a4d673810a8a96982eabe2328b0da5e6b69904)), closes [#273](https://github.com/umbraco/Umbraco.AI/issues/273) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
+
 ## [18.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.0.1...Umbraco.AI.Anthropic@18.0.2) (2026-07-28)
 
 ### fix

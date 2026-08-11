@@ -46,6 +46,15 @@ public sealed class AIProfile : IAIVersionableEntity
     public IAIProfileSettings? Settings { get; set; }
 
     /// <summary>
+    /// Provider-declared, profile-level settings (e.g. reasoning effort) whose shape is defined by
+    /// the provider for this profile's <see cref="Capability"/>. Mirrors <see cref="Connections.AIConnection.Settings"/>:
+    /// holds the provider-specific bag (a raw <see cref="System.Text.Json.JsonElement"/> when read from
+    /// storage, or the value supplied by the API). Resolved into a typed instance at request time via
+    /// the provider's capability-settings schema.
+    /// </summary>
+    public object? CapabilitySettings { get; set; }
+
+    /// <summary>
     /// A list of tags associated with the AI profile for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();

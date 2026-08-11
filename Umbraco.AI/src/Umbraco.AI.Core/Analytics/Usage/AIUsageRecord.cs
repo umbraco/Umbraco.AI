@@ -80,6 +80,16 @@ public sealed class AIUsageRecord
     public required long InputTokens { get; init; }
 
     /// <summary>
+    /// Gets the portion of <see cref="InputTokens"/> that was served from the provider's prompt cache,
+    /// or <c>null</c> when the provider does not report it.
+    /// </summary>
+    /// <remarks>
+    /// A subset of <see cref="InputTokens"/>, not an addition to it. Null and zero mean different things:
+    /// null is "the provider said nothing", zero is "nothing was cached".
+    /// </remarks>
+    public long? CachedInputTokens { get; init; }
+
+    /// <summary>
     /// Gets the number of output tokens generated.
     /// </summary>
     public required long OutputTokens { get; init; }

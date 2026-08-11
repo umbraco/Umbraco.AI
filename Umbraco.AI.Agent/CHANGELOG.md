@@ -5,6 +5,15 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.1...Umbraco.AI.Agent@18.1.3) (2026-08-11)
+
+### fix
+
+* **agent:** Keep filenames and remote links when converting back to AG-UI ([a30a5c5](https://github.com/umbraco/Umbraco.AI/commit/a30a5c59d850bc3beaff3069bdeb90d33cb40b97))
+* **agent:** Resolve tool permissions once per agent execution ([c083453](https://github.com/umbraco/Umbraco.AI/commit/c08345325799702916e0d75327215756c873fdfb))
+* **agent:** Restore controller activation for the AG-UI stream endpoint ([c92f945](https://github.com/umbraco/Umbraco.AI/commit/c92f9452eafc3e0e8559729add46b2a92520c0fa))
+* **core,agent:** Pass the real filename to file processing handlers ([eb51724](https://github.com/umbraco/Umbraco.AI/commit/eb5172463e2dc2f7fab83f318a3997543282ac1d)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
+
 ## [18.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.0...Umbraco.AI.Agent@18.1.1) (2026-07-27)
 
 ### fix

@@ -26,12 +26,19 @@ const MAX_BYTES = 2_000_000;
 
 interface StoredThread {
     messages: UaiChatMessage[];
+    /** The agent the thread was last run with, so re-opening it resumes with the same one. */
+    agentId?: string;
     updatedAt: number;
 }
 
 interface StoredBlob {
     version: number;
     threads: Record<string, StoredThread>;
+    /**
+     * The agent the user last picked, used for items with no thread of their own. Without it, every
+     * fresh item would silently drop back to the default agent after a reload.
+     */
+    lastAgentId?: string;
 }
 
 export class UaiCopilotHistoryStore {
@@ -61,11 +68,33 @@ export class UaiCopilotHistoryStore {
         return thread.messages.map(reviveMessage);
     }
 
+    /** The agent a stored thread was last run with, if any. */
+    loadAgentId(key: string): string | undefined {
+        return this.#read().threads[key]?.agentId;
+    }
+
+    /** The agent the user last picked, used when an item has no thread of its own. */
+    getLastAgentId(): string | undefined {
+        return this.#read().lastAgentId;
+    }
+
+    /** Records the user's agent choice as the fallback for items without their own thread. */
+    rememberLastAgentId(agentId: string | undefined): void {
+        if (!this.#storage) return;
+
+        const blob = this.#read();
+        if (blob.lastAgentId === agentId) return;
+
+        blob.lastAgentId = agentId;
+        this.#write(blob);
+    }
+
     /**
-     * Saves a thread under a key. Saving an empty conversation removes the key instead (so an empty
-     * chat never counts as stored history). Evicts oldest threads if the blob exceeds the size cap.
+     * Saves a thread under a key, along with the agent it ran with. Saving an empty conversation
+     * removes the key instead (so an empty chat never counts as stored history). Evicts oldest
+     * threads if the blob exceeds the size cap.
      */
-    save(key: string, messages: UaiChatMessage[]): void {
+    save(key: string, messages: UaiChatMessage[], agentId?: string): void {
         if (!this.#storage) return;
         if (messages.length === 0) {
             this.remove(key);
@@ -73,7 +102,7 @@ export class UaiCopilotHistoryStore {
         }
 
         const blob = this.#read();
-        blob.threads[key] = { messages, updatedAt: Date.now() };
+        blob.threads[key] = { messages, agentId, updatedAt: Date.now() };
         this.#evict(blob, key);
         this.#write(blob);
     }
@@ -98,7 +127,11 @@ export class UaiCopilotHistoryStore {
             if (parsed?.version !== SCHEMA_VERSION || typeof parsed.threads !== "object" || !parsed.threads) {
                 return emptyBlob();
             }
-            return { version: SCHEMA_VERSION, threads: parsed.threads as Record<string, StoredThread> };
+            return {
+                version: SCHEMA_VERSION,
+                threads: parsed.threads as Record<string, StoredThread>,
+                lastAgentId: typeof parsed.lastAgentId === "string" ? parsed.lastAgentId : undefined,
+            };
         } catch {
             return emptyBlob();
         }

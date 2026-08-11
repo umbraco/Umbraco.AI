@@ -114,5 +114,50 @@ describe("UaiCopilotHistoryStore", () => {
         expect(() => store.save("document:a", [msg("1", "hi")])).not.toThrow();
         expect(store.load("document:a")).toBeUndefined();
         expect(store.has("document:a")).toBe(false);
+        expect(store.loadAgentId("document:a")).toBeUndefined();
+        expect(store.getLastAgentId()).toBeUndefined();
+        expect(() => store.rememberLastAgentId("agent-1")).not.toThrow();
+    });
+
+    it("stores the agent a thread ran with, per key", () => {
+        const store = new UaiCopilotHistoryStore(storage);
+        store.save("document:a", [msg("1", "hi")], "agent-legal");
+        store.save("document:b", [msg("2", "hi")], "agent-content");
+
+        expect(store.loadAgentId("document:a")).toBe("agent-legal");
+        expect(store.loadAgentId("document:b")).toBe("agent-content");
+        expect(store.loadAgentId("document:unknown")).toBeUndefined();
+    });
+
+    it("remembers the last picked agent independently of any thread", () => {
+        const store = new UaiCopilotHistoryStore(storage);
+        store.rememberLastAgentId("agent-legal");
+
+        // Survives a fresh store over the same storage — the point is it outlives a reload.
+        expect(new UaiCopilotHistoryStore(storage).getLastAgentId()).toBe("agent-legal");
+    });
+
+    it("keeps the last picked agent when threads are written and removed", () => {
+        const store = new UaiCopilotHistoryStore(storage);
+        store.rememberLastAgentId("agent-legal");
+        store.save("document:a", [msg("1", "hi")], "agent-content");
+        store.remove("document:a");
+
+        expect(store.getLastAgentId()).toBe("agent-legal");
+    });
+
+    it("reads a thread saved before agents were recorded", () => {
+        // Threads written by an earlier build carry no agentId; they must still load.
+        storage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                version: 1,
+                threads: { "document:a": { messages: [msg("1", "hi")], updatedAt: 1 } },
+            }),
+        );
+        const store = new UaiCopilotHistoryStore(storage);
+
+        expect(store.load("document:a")).toHaveLength(1);
+        expect(store.loadAgentId("document:a")).toBeUndefined();
     });
 });

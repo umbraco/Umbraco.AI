@@ -5,6 +5,38 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.1.2...Umbraco.AI.OpenAI@17.2.0) (2026-08-11)
+
+### ⚠ BREAKING CHANGE
+
+* **core,frontend,openai:** `AIImageGenerationProfileSettings.Quality` and `.Style` are removed, along
+with their
+API model properties and editor fields. Quality and Style now live under the provider's own
+settings
+on the profile editor. Values stored under the old shape are ignored and need re-entering
+there.
+Image generation is experimental — gated by `UMBRACOAI_IMAGEGEN` and the
+`Umbraco:AI:Experimental:ImageGeneration` flag — so this ships without an obsolete shim.
+
+No data migration: the target keys belong to a provider's schema, and a core migration
+writing
+provider-specific keys would put vendor knowledge in core, which is the coupling this whole
+design
+
+### feat
+
+* **core,frontend,openai:** Drive the image size field from the model's declared sizes (#280) ([371cb53](https://github.com/umbraco/Umbraco.AI/commit/371cb5335ba4b53127e54bca26e0b0de55e3588f)), closes [#280](https://github.com/umbraco/Umbraco.AI/issues/280)
+* **core,frontend,openai:** Move image quality and style to capability settings (#282) ([b7f462a](https://github.com/umbraco/Umbraco.AI/commit/b7f462a3ce01190727dedf809738cafc0274127a)), closes [#282](https://github.com/umbraco/Umbraco.AI/issues/282) [#275](https://github.com/umbraco/Umbraco.AI/issues/275) [#277](https://github.com/umbraco/Umbraco.AI/issues/277)
+* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core [v17 backport] (#284) ([6c6ff0e](https://github.com/umbraco/Umbraco.AI/commit/6c6ff0effa14b232b0126e7957c1a08d9ab2f49e)), closes [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
+* **core,openai,anthropic:** Add provider-declared, model-aware capability settings (#270) ([a86199d](https://github.com/umbraco/Umbraco.AI/commit/a86199da8612ca03939ec7297934177f201861ef)), closes [#270](https://github.com/umbraco/Umbraco.AI/issues/270) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+
+### fix
+
+* **deps:** Raise the minimum Umbraco CMS version to 17.5.0.
+* **core,anthropic,openai:** Read the cached input tokens adapters already report (v17 backport) ([40e0f34](https://github.com/umbraco/Umbraco.AI/commit/40e0f3443114bda9cd1082468df554d8e686b65e)), closes [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,frontend,openai,anthropic,amazon:** Give temperature a real unset state (#274) ([38de95d](https://github.com/umbraco/Umbraco.AI/commit/38de95db9f4c29f702f122faa868e24c5cafa93b)), closes [#274](https://github.com/umbraco/Umbraco.AI/issues/274) [#256](https://github.com/umbraco/Umbraco.AI/issues/256) [#269](https://github.com/umbraco/Umbraco.AI/issues/269) [#266](https://github.com/umbraco/Umbraco.AI/issues/266)
+* **openai,imagegeneration:** Send the image quality and style hints (#278) ([978a0f3](https://github.com/umbraco/Umbraco.AI/commit/978a0f34949501eba35ae6d15ccffe4a7a37d3f7)), closes [#278](https://github.com/umbraco/Umbraco.AI/issues/278)
+
 ## [17.1.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.1.1...Umbraco.AI.OpenAI@17.1.2) (2026-07-28)
 
 ### fix

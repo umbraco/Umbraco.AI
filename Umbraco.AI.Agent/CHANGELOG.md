@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.1...Umbraco.AI.Agent@17.1.3) (2026-08-11)
+
+### fix
+
+* **agent:** Keep filenames and remote links when converting back to AG-UI ([7cb4bcd](https://github.com/umbraco/Umbraco.AI/commit/7cb4bcd5a761fb9eb18a2b8c26965a2220f151eb))
+* **agent:** Resolve tool permissions once per agent execution ([fd8d09a](https://github.com/umbraco/Umbraco.AI/commit/fd8d09aa0baeba582ed99ebf5a3de2a07e2032d4))
+* **agent:** Restore controller activation for the AG-UI stream endpoint ([1c96765](https://github.com/umbraco/Umbraco.AI/commit/1c96765002df49925d95f9157d4060553ce712d9))
+* **core,agent:** Pass the real filename to file processing handlers ([de2f2b2](https://github.com/umbraco/Umbraco.AI/commit/de2f2b2fa99276b8e537937ad051533bd5098126)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
+* **core,agent:** Suppress execution-context flow for recurring hosted services ([dd3932a](https://github.com/umbraco/Umbraco.AI/commit/dd3932a970caaffe83743230cb57ca38eb244518)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+
 ## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.0...Umbraco.AI.Agent@17.1.1) (2026-07-27)
 
 ### fix

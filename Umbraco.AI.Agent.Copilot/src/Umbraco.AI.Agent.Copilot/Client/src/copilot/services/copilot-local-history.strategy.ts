@@ -19,11 +19,17 @@ import type { UaiCopilotHistoryStore } from "./copilot-history.store.js";
 export class UaiCopilotLocalHistoryStrategy extends UaiClientOwnedConversationStrategy {
     #store: UaiCopilotHistoryStore;
     #getKey: () => string | undefined;
+    #getAgentId: () => string | undefined;
 
-    constructor(store: UaiCopilotHistoryStore, getKey: () => string | undefined) {
+    constructor(
+        store: UaiCopilotHistoryStore,
+        getKey: () => string | undefined,
+        getAgentId: () => string | undefined,
+    ) {
         super();
         this.#store = store;
         this.#getKey = getKey;
+        this.#getAgentId = getAgentId;
     }
 
     override async loadInitial(): Promise<UaiChatMessage[]> {
@@ -35,7 +41,9 @@ export class UaiCopilotLocalHistoryStrategy extends UaiClientOwnedConversationSt
     onTurnComplete(allMessages: UaiChatMessage[]): void {
         const key = this.#getKey();
         if (key && allMessages.length > 0) {
-            this.#store.save(key, allMessages);
+            // The agent is stored with the thread, not just the messages — re-opening an item with a
+            // different agent selected would otherwise continue its conversation under the wrong one.
+            this.#store.save(key, allMessages, this.#getAgentId());
         }
     }
 }

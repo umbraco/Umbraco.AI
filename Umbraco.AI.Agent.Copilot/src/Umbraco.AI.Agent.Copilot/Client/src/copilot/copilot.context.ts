@@ -188,6 +188,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             conversationStrategy: new UaiCopilotLocalHistoryStrategy(
                 this.#historyStore,
                 () => this.#activeHistoryKey,
+                () => this.#selectedAgent.getValue()?.id,
             ),
         });
 
@@ -205,7 +206,12 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             this.#agents.setValue(displayAgents);
 
             if (!this.#selectedAgent.getValue() && displayAgents.length > 0) {
-                this.#selectedAgent.setValue(displayAgents[0]);
+                // Prefer the agent the user last chose over the default, so a reload doesn't quietly
+                // put them back on "Auto". Falls through to the default if it's since been removed.
+                const remembered = this.#historyStore.getLastAgentId();
+                this.#selectedAgent.setValue(
+                    displayAgents.find((a) => a.id === remembered) ?? displayAgents[0],
+                );
             }
 
             const currentSelected = this.#selectedAgent.getValue();
@@ -274,6 +280,9 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         const agent = this.#agents.getValue().find((a) => a.id === agentId);
         if (agent) {
             this.#selectedAgent.setValue(agent);
+            // Only a deliberate choice is remembered — restoring a thread's own agent goes through
+            // #restoreAgentForKey, which must not overwrite the user's standing preference.
+            this.#historyStore.rememberLastAgentId(agentId);
         }
     }
 
@@ -354,7 +363,11 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         ) {
             this.#activeHistoryKey = newStorageKey;
             this.#boundEntityKey = newKey;
-            this.#historyStore.save(newStorageKey, this.#runController.messages);
+            this.#historyStore.save(
+                newStorageKey,
+                this.#runController.messages,
+                this.#selectedAgent.getValue()?.id,
+            );
             return;
         }
 
@@ -364,7 +377,25 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#runController.abortRun();
         this.#activeHistoryKey = newStorageKey;
         this.#boundEntityKey = newKey;
+        this.#restoreAgentForKey(newStorageKey);
         void this.#runController.loadInitialMessages();
+    }
+
+    /**
+     * Puts the agent selector back on whichever agent the incoming item's thread was last run with,
+     * so continuing an old conversation continues it with the agent that produced it. Items with no
+     * stored thread keep the current selection (which itself starts from the user's last choice).
+     */
+    #restoreAgentForKey(storageKey: string | undefined): void {
+        if (!storageKey) return;
+
+        const storedAgentId = this.#historyStore.loadAgentId(storageKey);
+        if (!storedAgentId || storedAgentId === this.#selectedAgent.getValue()?.id) return;
+
+        const agent = this.#agents.getValue().find((a) => a.id === storedAgentId);
+        if (agent) {
+            this.#selectedAgent.setValue(agent);
+        }
     }
 
     // ─── HITL Actions ──────────────────────────────────────────────────────────

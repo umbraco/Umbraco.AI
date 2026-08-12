@@ -2,7 +2,7 @@ import { customElement, property, state, css, html } from "@umbraco-cms/backoffi
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
-import { resolveUaiFileObjectUrl } from "@umbraco-ai/agent";
+import { parseUaiFileUrl, resolveUaiFileObjectUrl } from "@umbraco-ai/agent";
 import type {
     UaiChatMessage,
     UaiInputContent,
@@ -152,6 +152,12 @@ export class UaiChatMessageElement extends UmbLitElement {
 
         if (source.type === "url") {
             const serverUrl = (source as UaiInputContentUrlSource).value;
+
+            // Only URLs from the stored-file endpoint resolve to an object URL. Anything else —
+            // an externally hosted image, say — is rendered directly.
+            if (!parseUaiFileUrl(serverUrl)) {
+                return serverUrl;
+            }
 
             // Fetched on first render and cached; the object URL arrives via _objectUrls and
             // re-renders this message.

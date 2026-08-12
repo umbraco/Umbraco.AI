@@ -46,12 +46,15 @@ export class UaiCopilotHistoryStore {
     #maxBytes: number;
 
     /**
-     * @param storage Storage backend; defaults to `localStorage`. Injectable for testing. A missing
-     * backend (or one that throws on access) disables persistence.
+     * @param storage Storage backend. Omitted (or `undefined`) falls back to `localStorage`; pass
+     * `null` to disable persistence outright. The two are distinct on purpose: `undefined` is what a
+     * caller supplies when it has no opinion, so it must not silently mean "off" — a test that wants
+     * a store with no backend has to say so, and gets the same result whether or not the environment
+     * happens to provide `localStorage`.
      * @param maxBytes Soft size cap for the serialized blob; injectable for testing.
      */
-    constructor(storage: Storage | undefined = safeLocalStorage(), maxBytes: number = MAX_BYTES) {
-        this.#storage = storage;
+    constructor(storage: Storage | null | undefined = safeLocalStorage(), maxBytes: number = MAX_BYTES) {
+        this.#storage = storage ?? undefined;
         this.#maxBytes = maxBytes;
     }
 

@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [17.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.3...Umbraco.AI.Agent@17.1.4) (2026-08-17)
 
+### feat
+
+* **agent:** Serve conversation files through the authenticated API ([c974f4b](https://github.com/umbraco/Umbraco.AI/commit/c974f4bd9a59294ec41800a3c98afec2e0255939))
+
 ### fix
 
+* **agent:** Fall back to the plain URL for non-stored images ([e7faffd](https://github.com/umbraco/Umbraco.AI/commit/e7faffd9e9079a7c59c68bf3fa3631aad5570c9a))
 * **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#326) ([41f3d61](https://github.com/umbraco/Umbraco.AI/commit/41f3d61d6915bbfcaa461b8cd57e7030fc0a4f0a)), closes [#326](https://github.com/umbraco/Umbraco.AI/issues/326) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
 
 ## [17.1.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.1...Umbraco.AI.Agent@17.1.3) (2026-08-11)

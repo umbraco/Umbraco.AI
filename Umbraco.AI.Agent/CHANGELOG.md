@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.3...Umbraco.AI.Agent@18.1.4) (2026-08-17)
+
+### fix
+
+* **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#325) ([0d176e7](https://github.com/umbraco/Umbraco.AI/commit/0d176e779e6e440a9831466b841dc10954d9e8b7)), closes [#325](https://github.com/umbraco/Umbraco.AI/issues/325) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+
 ## [18.1.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.1...Umbraco.AI.Agent@18.1.3) (2026-08-11)
 
 ### fix

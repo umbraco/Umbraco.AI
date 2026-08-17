@@ -1,7 +1,6 @@
 ﻿import { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/backoffice/extension-api";
 
-// Ensure all exports from index are available from the bundle
-export * from "./index.js";
+// Re-export the public API
 export * from "./exports.js";
 
 // Entry point initialization

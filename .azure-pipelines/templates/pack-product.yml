@@ -80,12 +80,17 @@ steps:
             BUILD_FLAG="--no-restore"
           fi
 
+          # ContinuousIntegrationBuild gates each product's UpdatePackageManifestVersion
+          # MSBuild target (stamps the real PackageVersion into umbraco-package.json's
+          # "version", which drives cache-busting). Without it explicitly set here, that
+          # target never fires and every shipped package keeps its placeholder version.
           dotnet pack ${{ parameters.product }}/${{ parameters.product }}.slnx \
             --configuration Release \
             $BUILD_FLAG \
             --output ./artifacts/nupkg \
             -p:UseProjectReferences=${{ parameters.useProjectReferences }} \
-            -p:DisableCloudBuildNumber=true
+            -p:DisableCloudBuildNumber=true \
+            -p:ContinuousIntegrationBuild=true
       displayName: Pack ${{ parameters.product }} (NuGet)
       condition: ${{ parameters.condition }}
 

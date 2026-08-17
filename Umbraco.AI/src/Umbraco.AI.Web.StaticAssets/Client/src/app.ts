@@ -2,8 +2,7 @@ import { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/backoff
 import { client } from "./api/client.gen.ts";
 import { configureAiClient } from "./core/client/index.js";
 
-// Re-export everything from the main index files
-export * from "./index.js";
+// Re-export the public API
 export * from "./exports.js";
 
 // Promise that resolves when the core client is configured with auth

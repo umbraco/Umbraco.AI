@@ -7,6 +7,7 @@ export default defineConfig({
             entry: {
                 "umbraco-ai-prompt-manifests": resolve(__dirname, "src/manifests.ts"),
                 "umbraco-ai-prompt-app": resolve(__dirname, "src/app.ts"),
+                "umbraco-ai-prompt-internal-components": resolve(__dirname, "src/internal-components.ts"),
             },
             formats: ["es"],
         },

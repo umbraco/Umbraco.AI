@@ -423,5 +423,5 @@ the inner view custom.
 
 ## Lessons Learned
 
-- Never import Lit components by path; export through `index.ts`/`export.ts` for global accessibility
+- Never import Lit components by path; export through the barrel chain — see [.claude/memory/frontend-entry-points.md](.claude/memory/frontend-entry-points.md) for which entry point (`app.ts`/`exports.ts`/`index.ts`/`internal-components.ts`) a new export belongs in
 - Avoid god objects

@@ -6,16 +6,24 @@ using Umbraco.Cms.Core.Security;
 namespace Umbraco.AI.Agent.Core.FileStore;
 
 /// <summary>
-/// Implementation of <see cref="IAIFileStore"/> backed by the Umbraco media file system.
-/// Stores files in a thread-scoped directory under <c>agui-files/</c>, using <see cref="MediaFileManager.FileSystem"/>
-/// so that storage is portable across providers (local disk, Azure Blob, S3, etc.).
+/// Implementation of <see cref="IAIFileStore"/> storing files in a thread-scoped directory under
+/// <c>agui-files/</c> on the file system it is given.
 /// </summary>
 /// <remarks>
+/// <para>
+/// The file system MUST NOT be one that is served publicly. Conversation uploads are private user
+/// content, and this store previously used <c>MediaFileManager.FileSystem</c>, which is rooted inside
+/// the web root and served at <c>/media</c> — so every uploaded file was downloadable anonymously
+/// regardless of what the management API allowed. It is now given a file system rooted outside the
+/// web root by <c>AddUmbracoAIAgentCore</c>. Do not reintroduce a publicly served file system here.
+/// </para>
+/// <para>
 /// Files are owned by the backoffice user who uploaded them. The owner is recorded on
 /// <see cref="StoreAsync"/> and checked on <see cref="ResolveAsync"/>, so a file only ever resolves
 /// for the user it belongs to. The check lives here rather than in the callers because there is more
 /// than one resolve path — the file endpoint and follow-up turns that reference a file by id — and
 /// both take a thread and file id supplied by the client.
+/// </para>
 /// </remarks>
 internal sealed class AIFileStore : IAIFileStore
 {
@@ -26,11 +34,11 @@ internal sealed class AIFileStore : IAIFileStore
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AIFileStore(
-        MediaFileManager mediaFileManager,
+        IFileSystem fileSystem,
         ILogger<AIFileStore> logger,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
-        _fileSystem = mediaFileManager.FileSystem;
+        _fileSystem = fileSystem;
         _logger = logger;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }

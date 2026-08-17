@@ -51,6 +51,12 @@ public class GetFileController : FileControllerBase
             return FileNotFound();
         }
 
+        // The content type comes from whatever the uploader's browser declared, so don't let the
+        // browser sniff its way to a different one. Combined with the attachment disposition that
+        // File(...) sets when given a filename, a mislabelled upload cannot be coaxed into executing
+        // as HTML or script in the backoffice's origin.
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+
         return File(storedFile.Data, storedFile.MimeType, storedFile.Filename);
     }
 }

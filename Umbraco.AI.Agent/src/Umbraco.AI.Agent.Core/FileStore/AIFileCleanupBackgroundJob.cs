@@ -17,6 +17,7 @@ namespace Umbraco.AI.Agent.Core.FileStore;
 internal sealed class AIFileCleanupBackgroundJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIFileStore _fileStore;
+    private readonly IAILegacyPublicFileCleanup _legacyCleanup;
     private readonly IOptionsMonitor<AIAgentOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
@@ -28,6 +29,7 @@ internal sealed class AIFileCleanupBackgroundJob : UmbracoAIRecurringHostedServi
 
     public AIFileCleanupBackgroundJob(
         IAIFileStore fileStore,
+        IAILegacyPublicFileCleanup legacyCleanup,
         IOptionsMonitor<AIAgentOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
@@ -36,6 +38,7 @@ internal sealed class AIFileCleanupBackgroundJob : UmbracoAIRecurringHostedServi
         : base(logger, CleanupInterval, StartupDelay)
     {
         _fileStore = fileStore;
+        _legacyCleanup = legacyCleanup;
         _options = options;
         _runtimeState = runtimeState;
         _serverRoleAccessor = serverRoleAccessor;
@@ -61,6 +64,11 @@ internal sealed class AIFileCleanupBackgroundJob : UmbracoAIRecurringHostedServi
         {
             return;
         }
+
+        // Runs before the retention sweep, and on every pass rather than once, so an install that fails
+        // to delete the directory the first time keeps retrying instead of leaving it public. Sits
+        // after the role and main-dom guards above so only one node attempts the delete.
+        _legacyCleanup.DeleteLegacyFiles();
 
         try
         {

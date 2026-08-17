@@ -375,7 +375,7 @@ Located in `src/Umbraco.AI.Web.StaticAssets/Client/`:
 
 ### Component Registration via Barrel Exports
 
-All custom elements are registered through barrel `index.ts` files that chain up to the app entry point (`app.ts` → `index.ts` → feature `index.ts` → `components/index.ts`). This means every component exported in a barrel is already registered by the time any chunk loads.
+Internal-only custom elements (referenced only by tag name in templates) are registered through barrel `index.ts` files that chain up to `internal-components.ts` (`internal-components.ts` → `index.ts` → feature `index.ts` → `components/index.ts`), loaded on every page via its own `backofficeEntryPoint`. Deliberately public components go through `exports.ts` instead, re-exported by `app.ts`. See [../.claude/memory/frontend-entry-points.md](../.claude/memory/frontend-entry-points.md) for the full entry-point breakdown — critically, `app.ts` must never re-export `index.ts` (fixed post-umbraco/Umbraco.AI#324).
 
 **Do NOT add side-effect imports** (e.g., `import "../some-component/some-component.element.js"`) for components that are already exported in the barrel chain. The barrel export handles registration; redundant imports add noise and can cause confusion about which mechanism is authoritative.
 

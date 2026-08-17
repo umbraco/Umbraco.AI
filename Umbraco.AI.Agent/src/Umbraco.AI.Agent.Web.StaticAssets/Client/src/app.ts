@@ -2,9 +2,6 @@ import { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/backoff
 import { configureAiClient } from "@umbraco-ai/core";
 import { client } from "./api/client.gen.ts";
 
-// Ensure all exports from index are available from the bundle
-export * from "./index.js";
-
 // Re-export the public API
 export * from "./exports.js";
 

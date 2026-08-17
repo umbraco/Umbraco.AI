@@ -150,22 +150,10 @@ public class AIFileStoreOwnershipTests
     }
 
     private static AIFileStore CreateStore(Mock<IFileSystem> fileSystem, Guid? currentUserKey)
-    {
-        // The five-arg constructor resolves a scope provider from the static service locator, which
-        // is not set up in unit tests. Only FileSystem is exercised here.
-        var mediaFileManager = new MediaFileManager(
+        => new(
             fileSystem.Object,
-            Mock.Of<IMediaPathScheme>(),
-            NullLogger<MediaFileManager>.Instance,
-            Mock.Of<IShortStringHelper>(),
-            Mock.Of<IServiceProvider>(),
-            new Lazy<ICoreScopeProvider>(() => Mock.Of<ICoreScopeProvider>()));
-
-        return new AIFileStore(
-            mediaFileManager,
             NullLogger<AIFileStore>.Instance,
             CreateSecurityAccessor(currentUserKey));
-    }
 
     private static IBackOfficeSecurityAccessor CreateSecurityAccessor(Guid? currentUserKey)
     {

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
@@ -16,6 +17,9 @@ using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Hosting;
+using Umbraco.Cms.Core.IO;
+using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 using Umbraco.Extensions;
 
@@ -61,7 +65,37 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAGUIMessageConverter, AGUIMessageConverter>();
         builder.Services.AddSingleton<IAGUIToolConverter, AGUIToolConverter>();
         builder.Services.AddSingleton<IAGUIContextConverter, AGUIContextConverter>();
-        builder.Services.AddSingleton<IAIFileStore, AIFileStore>();
+        // Conversation uploads are private user content, so the store is rooted under the content root
+        // rather than on the media file system. The media file system lives inside the web root and is
+        // served at /media, which made every upload anonymously downloadable no matter what the
+        // management API allowed. Registered by factory so the path stays an implementation detail;
+        // replace IAIFileStore itself to move storage elsewhere (a private blob container, say).
+        builder.Services.AddSingleton<IAILegacyPublicFileCleanup, AILegacyPublicFileCleanup>();
+        builder.Services.AddSingleton<IAIFileStore>(factory =>
+        {
+            var ioHelper = factory.GetRequiredService<IIOHelper>();
+            var hostingEnvironment = factory.GetRequiredService<IHostingEnvironment>();
+
+            // The path is content-root-relative and tilde-prefixed, so it needs Umbraco's mapper. The
+            // suggested IHostEnvironment replacement does not exist in the CMS version we target.
+#pragma warning disable CS0618 // MapPathContentRoot - no replacement available on this CMS version
+            var rootPath = hostingEnvironment.MapPathContentRoot(Constants.SystemDirectories.ConversationFiles);
+#pragma warning restore CS0618
+
+            // PhysicalFileSystem requires a non-empty root URL, but this file system is deliberately
+            // not addressable and the store never asks it for a URL.
+            var fileSystem = new PhysicalFileSystem(
+                ioHelper,
+                hostingEnvironment,
+                factory.GetRequiredService<ILogger<PhysicalFileSystem>>(),
+                rootPath,
+                rootUrl: "/__umbraco-ai-agent-conversation-files-not-served__");
+
+            return new AIFileStore(
+                fileSystem,
+                factory.GetRequiredService<ILogger<AIFileStore>>(),
+                factory.GetService<IBackOfficeSecurityAccessor>());
+        });
         builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
         builder.Services.AddRecurringBackgroundJob<AIFileCleanupBackgroundJob>();

@@ -2,7 +2,8 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbCollectionDataSource, UmbCollectionFilterModel } from "@umbraco-cms/backoffice/collection";
 import type { UaiAuditLogItemModel } from "../../types.js";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { AuditLogsService, UaiAuditLogTypeMapper } from "../../../app.js";
+import { AuditLogsService } from "../../../api";
+import { UaiAuditLogTypeMapper } from "../../type-mapper.js";
 
 /**
  * Server data source for AuditLog collection operations.

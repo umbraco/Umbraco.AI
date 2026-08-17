@@ -3,9 +3,6 @@ import { configureAiClient } from "@umbraco-ai/core";
 import { client } from "./api/client.gen.ts";
 import { UmbPromptRegistrarController } from "./prompt/controllers";
 
-// Re-export everything from the main index
-export * from "./index.js";
-
 // Promise that resolves when the prompt client is configured with auth
 let promptClientReadyResolve: (() => void) | undefined;
 export const promptClientReady = new Promise<void>((resolve) => {

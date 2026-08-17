@@ -15,6 +15,12 @@
             "name": "Umbraco AI Backoffice Entry Point",
             "alias": "Umbraco.AI.BackofficeEntryPoint",
             "js": "/App_Plugins/UmbracoAI/umbraco-ai-app.js"
+        },
+        {
+            "type": "backofficeEntryPoint",
+            "name": "Umbraco AI Internal Components Entry Point",
+            "alias": "Umbraco.AI.InternalComponentsEntryPoint",
+            "js": "/App_Plugins/UmbracoAI/umbraco-ai-internal-components.js"
         }
     ],
     "importmap": {

@@ -32,10 +32,24 @@ namespace Umbraco.AI.Agent.Core.FileStore;
 /// only short-lived, unsaved chats. <see cref="CleanupThreadAsync"/> remains the explicit purge called
 /// when a record is actually deleted.
 /// </para>
+/// <para>
+/// A confirmed-alive thread gets a small lifecycle marker file, refreshed on each confirmation, so it
+/// counts as the thread's most recently modified file. That keeps the thread under the sweep's own
+/// cutoff — and so out of the provider check entirely — until the marker itself goes stale (roughly once
+/// per retention window). Without it, a long-lived conversation would re-ask a provider on every single
+/// hourly sweep for as long as it exists, for an answer that's essentially always the same.
+/// </para>
 /// </remarks>
 internal sealed class AIFileStore : IAIFileStore
 {
     private const string BasePath = "agui-files";
+
+    /// <summary>
+    /// A zero-content marker written into a thread directory once a lifecycle provider confirms it's
+    /// still alive. Never resolvable as an attachment — real files are always named
+    /// <c>file-&lt;guid&gt;.bin</c>/<c>.json</c>, so this name can never collide with one.
+    /// </summary>
+    internal const string LifecycleMarkerFileName = "lifecycle-marker.json";
 
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<AIFileStore> _logger;
@@ -235,6 +249,13 @@ internal sealed class AIFileStore : IAIFileStore
                 // A registered lifecycle provider says this thread's backing record still exists (a
                 // persisted conversation, say) — keep it no matter how old. It is purged via
                 // CleanupThreadAsync when that record is actually deleted, not on a fixed clock.
+                //
+                // Refresh the lifecycle marker so it counts as the newest file here next sweep. That
+                // keeps this thread under the cutoff above without reaching this point again until the
+                // marker itself goes stale (roughly once per retention window) — a long-lived
+                // conversation would otherwise re-ask the provider every single sweep for its entire
+                // life, for an answer that is essentially always the same.
+                TouchLifecycleMarker(threadDir);
                 continue;
             }
 
@@ -278,6 +299,27 @@ internal sealed class AIFileStore : IAIFileStore
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Rewrites the lifecycle marker so its timestamp becomes "now". A write failure is logged and
+    /// swallowed rather than thrown — this runs inside the sweep's loop over every thread directory, and
+    /// one directory's write hiccup (a permissions issue, a full disk) must not abort the pass for every
+    /// other directory still waiting to be checked. Worst case, the next sweep just re-asks the provider
+    /// again for this thread, the same fail-safe fallback as a provider itself failing.
+    /// </summary>
+    private void TouchLifecycleMarker(string threadDir)
+    {
+        try
+        {
+            var markerPath = $"{threadDir}/{LifecycleMarkerFileName}";
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("{}"));
+            _fileSystem.AddFile(markerPath, stream, overrideIfExists: true);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Failed to refresh the lifecycle marker for thread directory {ThreadDir}", threadDir);
+        }
     }
 
     private static string GetThreadPath(string threadId)

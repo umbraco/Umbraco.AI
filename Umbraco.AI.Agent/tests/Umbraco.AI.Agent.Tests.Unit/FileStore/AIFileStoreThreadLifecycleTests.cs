@@ -163,4 +163,98 @@ public class AIFileStoreThreadLifecycleTests
         deleted.ShouldBe(0);
         fileSystem.Verify(x => x.DeleteDirectory(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
     }
+
+    /// <summary>
+    /// Without this, a long-lived persisted conversation would re-ask a provider on every single hourly
+    /// sweep for as long as it exists. The marker turns that into "roughly once per retention window" by
+    /// making the thread look recently modified again as soon as a provider confirms it's alive.
+    /// </summary>
+    public class LifecycleMarker
+    {
+        private static readonly string MarkerPath = $"{ThreadDir}/{AIFileStore.LifecycleMarkerFileName}";
+
+        [Fact]
+        public async Task CleanupExpiredAsync_WhenAProviderReportsAlive_WritesTheLifecycleMarker()
+        {
+            var fileSystem = CreateFileSystemWithOneExpiredThread();
+            var provider = CreateProvider(AIFileThreadLifecycleStatus.Alive);
+            var store = new AIFileStore(
+                fileSystem.Object,
+                NullLogger<AIFileStore>.Instance,
+                backOfficeSecurityAccessor: null,
+                lifecycleProviders: CollectionOf(provider.Object));
+
+            await store.CleanupExpiredAsync(TimeSpan.FromHours(24));
+
+            fileSystem.Verify(x => x.AddFile(MarkerPath, It.IsAny<Stream>(), true), Times.Once);
+        }
+
+        [Fact]
+        public async Task CleanupExpiredAsync_WithAFreshMarker_NeverAsksTheProviderAgain()
+        {
+            // The real attachment is old, but the marker (written on a prior sweep) is not — the
+            // directory as a whole still looks recently touched, so it never even reaches the provider.
+            var fileSystem = new Mock<IFileSystem>();
+            fileSystem.Setup(x => x.DirectoryExists("agui-files")).Returns(true);
+            fileSystem.Setup(x => x.GetDirectories("agui-files")).Returns([ThreadDir]);
+            fileSystem.Setup(x => x.GetFiles(ThreadDir)).Returns([$"{ThreadDir}/file-1.bin", MarkerPath]);
+            fileSystem.Setup(x => x.GetLastModified($"{ThreadDir}/file-1.bin")).Returns(DateTimeOffset.UtcNow - TimeSpan.FromDays(10));
+            fileSystem.Setup(x => x.GetLastModified(MarkerPath)).Returns(DateTimeOffset.UtcNow - TimeSpan.FromHours(1));
+
+            var provider = new Mock<IAIFileThreadLifecycleProvider>(MockBehavior.Strict);
+            var store = new AIFileStore(
+                fileSystem.Object,
+                NullLogger<AIFileStore>.Instance,
+                backOfficeSecurityAccessor: null,
+                lifecycleProviders: CollectionOf(provider.Object));
+
+            var deleted = await store.CleanupExpiredAsync(TimeSpan.FromHours(24));
+
+            deleted.ShouldBe(0);
+            fileSystem.Verify(x => x.DeleteDirectory(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CleanupExpiredAsync_WithAStaleMarker_AsksTheProviderAgain()
+        {
+            // Both the attachment and the marker have gone past the retention window — time to re-verify
+            // rather than trust a confirmation from a whole retention window ago.
+            var fileSystem = new Mock<IFileSystem>();
+            fileSystem.Setup(x => x.DirectoryExists("agui-files")).Returns(true);
+            fileSystem.Setup(x => x.GetDirectories("agui-files")).Returns([ThreadDir]);
+            fileSystem.Setup(x => x.GetFiles(ThreadDir)).Returns([$"{ThreadDir}/file-1.bin", MarkerPath]);
+            fileSystem.Setup(x => x.GetLastModified(It.IsAny<string>())).Returns(DateTimeOffset.UtcNow - TimeSpan.FromDays(2));
+
+            var provider = CreateProvider(AIFileThreadLifecycleStatus.Alive);
+            var store = new AIFileStore(
+                fileSystem.Object,
+                NullLogger<AIFileStore>.Instance,
+                backOfficeSecurityAccessor: null,
+                lifecycleProviders: CollectionOf(provider.Object));
+
+            await store.CleanupExpiredAsync(TimeSpan.FromHours(24));
+
+            provider.Verify(x => x.GetStatusAsync(ThreadId, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CleanupExpiredAsync_WhenWritingTheMarkerFails_KeepsTheThreadAndDoesNotThrow()
+        {
+            var fileSystem = CreateFileSystemWithOneExpiredThread();
+            fileSystem
+                .Setup(x => x.AddFile(MarkerPath, It.IsAny<Stream>(), true))
+                .Throws(new IOException("disk full"));
+            var provider = CreateProvider(AIFileThreadLifecycleStatus.Alive);
+            var store = new AIFileStore(
+                fileSystem.Object,
+                NullLogger<AIFileStore>.Instance,
+                backOfficeSecurityAccessor: null,
+                lifecycleProviders: CollectionOf(provider.Object));
+
+            var deleted = await store.CleanupExpiredAsync(TimeSpan.FromHours(24));
+
+            deleted.ShouldBe(0);
+            fileSystem.Verify(x => x.DeleteDirectory(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        }
+    }
 }

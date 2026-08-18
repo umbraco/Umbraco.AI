@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **copilot:** Remember the selected agent across reloads ([b865cfc](https://github.com/umbraco/Umbraco.AI/commit/b865cfcd4d31ca4bcfa8f687632ae76767d93cb2))
 * **copilot:** Use the AI sparkles glyph on the contextual copilot button ([dfd8ec1](https://github.com/umbraco/Umbraco.AI/commit/dfd8ec14a316cd2cf00c5447e025c14f900f5d91))
 
+## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.4...Umbraco.AI.Agent.Copilot@18.0.5) (2026-08-17)
+
+### fix
+
+* **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#325) ([0d176e7](https://github.com/umbraco/Umbraco.AI/commit/0d176e779e6e440a9831466b841dc10954d9e8b7)), closes [#325](https://github.com/umbraco/Umbraco.AI/issues/325) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+
+## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.0.2...Umbraco.AI.Agent.Copilot@18.0.4) (2026-08-11)
+
 ### fix
 
 * **core,copilot:** Persist contextual copilot history by keying on the reactive entity unique ([530c015](https://github.com/umbraco/Umbraco.AI/commit/530c0154f30db645577df004a0d1e820d893ba94))

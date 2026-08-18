@@ -16,16 +16,19 @@ internal sealed class AIFileCleanupBackgroundJob : RecurringBackgroundJobBase
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
     private readonly IAIFileStore _fileStore;
+    private readonly IAILegacyPublicFileCleanup _legacyCleanup;
     private readonly IOptionsMonitor<AIAgentOptions> _options;
     private readonly ILogger<AIFileCleanupBackgroundJob> _logger;
 
     public AIFileCleanupBackgroundJob(
         IAIFileStore fileStore,
+        IAILegacyPublicFileCleanup legacyCleanup,
         IOptionsMonitor<AIAgentOptions> options,
         ILogger<AIFileCleanupBackgroundJob> logger)
         : base(CleanupInterval)
     {
         _fileStore = fileStore;
+        _legacyCleanup = legacyCleanup;
         _options = options;
         _logger = logger;
     }
@@ -34,6 +37,10 @@ internal sealed class AIFileCleanupBackgroundJob : RecurringBackgroundJobBase
 
     public override async Task RunJobAsync(CancellationToken cancellationToken)
     {
+        // Runs before the retention sweep, and on every pass rather than once, so an install that fails
+        // to delete the directory the first time keeps retrying instead of leaving it public.
+        _legacyCleanup.DeleteLegacyFiles();
+
         try
         {
             var maxAge = TimeSpan.FromHours(_options.CurrentValue.FileRetentionHours);

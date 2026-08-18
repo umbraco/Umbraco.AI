@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [18.4.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.0...Umbraco.AI@18.4.0-rc.4) (2026-08-11)
 
+## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.0...Umbraco.AI@18.3.1) (2026-08-17)
+
+### fix
+
+* **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#325) ([0d176e7](https://github.com/umbraco/Umbraco.AI/commit/0d176e779e6e440a9831466b841dc10954d9e8b7)), closes [#325](https://github.com/umbraco/Umbraco.AI/issues/325) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+
+### ⚠ BREAKING CHANGE
+
+* **core,frontend,openai:** `AIImageGenerationProfileSettings.Quality` and `.Style` are removed, along
+with their
+API model properties and editor fields. Quality and Style now live under the provider's own
+settings
+on the profile editor. Values stored under the old shape are ignored and need re-entering
+there.
+Image generation is experimental — gated by `UMBRACOAI_IMAGEGEN` and the
+`Umbraco:AI:Experimental:ImageGeneration` flag — so this ships without an obsolete shim.
+
+No data migration: the target keys belong to a provider's schema, and a core migration
+writing
+provider-specific keys would put vendor knowledge in core, which is the coupling this whole
+design
+
 ### feat
 
 * **core,copilot-workspace:** Mark readonly picker rows with a no-entry hint ([7384a8f](https://github.com/umbraco/Umbraco.AI/commit/7384a8f6a4ffa892de2169d54b211d62f5f3a100))

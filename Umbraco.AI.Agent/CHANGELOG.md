@@ -17,6 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **agent:** Wire conversation-history binding through agent execution (A) ([8dc40f8](https://github.com/umbraco/Umbraco.AI/commit/8dc40f8ab935d6707e8e79e4437e307a06e5785e))
 * **openai,agent,core:** Run OpenAI statelessly when caller manages chat history ([db1b689](https://github.com/umbraco/Umbraco.AI/commit/db1b689d86cd14ce62dbed3f1f3e5c48ce86854a))
 
+## [18.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.3...Umbraco.AI.Agent@18.1.4) (2026-08-17)
+
+### feat
+
+* **agent:** Serve conversation files through the authenticated API ([8ba7341](https://github.com/umbraco/Umbraco.AI/commit/8ba73417e2a3de17c29cc64e1baf3e34f69af9cd))
+
+### fix
+
+* **agent:** Fall back to the plain URL for non-stored images ([1e06398](https://github.com/umbraco/Umbraco.AI/commit/1e06398f5d7affc43412762a1ed9e0f63c7a796b))
+* **agent:** Store conversation uploads outside the web root ([5181558](https://github.com/umbraco/Umbraco.AI/commit/518155806c7bc4b119248c7e11996f76c621695f))
+* **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#325) ([0d176e7](https://github.com/umbraco/Umbraco.AI/commit/0d176e779e6e440a9831466b841dc10954d9e8b7)), closes [#325](https://github.com/umbraco/Umbraco.AI/issues/325) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+
+## [18.1.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.1...Umbraco.AI.Agent@18.1.3) (2026-08-11)
+
 ### fix
 
 * **agent,conversations:** Lead every agent request with the runtime-context system message ([544459d](https://github.com/umbraco/Umbraco.AI/commit/544459da5224805595769ecb2c0683f22adc07a6))

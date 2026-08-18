@@ -1,6 +1,8 @@
 using Microsoft.Extensions.AI;
+using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
+using Umbraco.AI.Agent.Core.FileStore;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Conversations;
@@ -12,8 +14,13 @@ namespace Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Conversations;
 /// </summary>
 public class ConversationChatHistoryProviderTests
 {
+    private static readonly Guid ConversationId = Guid.NewGuid();
+
+    private static ConversationChatHistoryProvider CreateProvider(Mock<IAIFileStore>? fileStore = null)
+        => new(Mock.Of<IAIConversationRepository>(), (fileStore ?? new Mock<IAIFileStore>()).Object);
+
     [Fact]
-    public void ToStoredMessages_DropsTheInjectedSystemMessage()
+    public async Task ToStoredMessagesAsync_DropsTheInjectedSystemMessage()
     {
         // Arrange — a normal turn: the agent layer prepends the runtime context to the user's message.
         ChatMessage[] request =
@@ -24,7 +31,7 @@ public class ConversationChatHistoryProviderTests
         ChatMessage[] response = [new(ChatRole.Assistant, "Red, blue, green.")];
 
         // Act
-        var stored = ConversationChatHistoryProvider.ToStoredMessages(request, response);
+        var stored = await CreateProvider().ToStoredMessagesAsync(ConversationId, request, response);
 
         // Assert
         stored.Select(m => m.Role).ShouldBe(["user", "assistant"]);
@@ -32,7 +39,7 @@ public class ConversationChatHistoryProviderTests
     }
 
     [Fact]
-    public void ToStoredMessages_KeepsToolAndAssistantMessages()
+    public async Task ToStoredMessagesAsync_KeepsToolAndAssistantMessages()
     {
         // Arrange — only system messages are dropped; a tool-using turn is stored whole.
         ChatMessage[] request = [new(ChatRole.User, "What is the weather?")];
@@ -44,20 +51,20 @@ public class ConversationChatHistoryProviderTests
         ];
 
         // Act
-        var stored = ConversationChatHistoryProvider.ToStoredMessages(request, response);
+        var stored = await CreateProvider().ToStoredMessagesAsync(ConversationId, request, response);
 
         // Assert
         stored.Select(m => m.Role).ShouldBe(["user", "assistant", "tool", "assistant"]);
     }
 
     [Fact]
-    public void ToStoredMessages_WithNoResponse_StillStoresTheInboundTurn()
+    public async Task ToStoredMessagesAsync_WithNoResponse_StillStoresTheInboundTurn()
     {
         // Arrange
         ChatMessage[] request = [new(ChatRole.User, "Hello")];
 
         // Act
-        var stored = ConversationChatHistoryProvider.ToStoredMessages(request, null);
+        var stored = await CreateProvider().ToStoredMessagesAsync(ConversationId, request, null);
 
         // Assert
         stored.Count.ShouldBe(1);
@@ -65,15 +72,126 @@ public class ConversationChatHistoryProviderTests
     }
 
     [Fact]
-    public void ToStoredMessages_WithOnlyASystemMessage_StoresNothing()
+    public async Task ToStoredMessagesAsync_WithOnlyASystemMessage_StoresNothing()
     {
         // Arrange — a run that contributes nothing but context must not bump the conversation.
         ChatMessage[] request = [new(ChatRole.System, "## Current User")];
 
         // Act
-        var stored = ConversationChatHistoryProvider.ToStoredMessages(request, null);
+        var stored = await CreateProvider().ToStoredMessagesAsync(ConversationId, request, null);
 
         // Assert
         stored.ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// The file store is the one place attachment bytes live; ContentJson must never carry a second,
+    /// independently-aging copy of them.
+    /// </summary>
+    public class Attachments
+    {
+        private static byte[] SomeBytes => "not a real image"u8.ToArray();
+
+        [Fact]
+        public async Task ToStoredMessagesAsync_AttachmentAlreadyStored_ReferencesItInsteadOfEmbeddingBytes()
+        {
+            // Arrange — mirrors what AGUIMessageConverter produces for a resolved upload: a DataContent
+            // already tagged with the id it's stored under in the file store.
+            var data = new DataContent(SomeBytes, "image/png")
+            {
+                AdditionalProperties = new AdditionalPropertiesDictionary { [AIFileContentMarker.FileIdPropertyKey] = "file-abc" }
+            };
+            ChatMessage[] request = [new(ChatRole.User, [data])];
+            var fileStore = new Mock<IAIFileStore>(MockBehavior.Strict);
+
+            // Act
+            var stored = await CreateProvider(fileStore).ToStoredMessagesAsync(ConversationId, request, null);
+
+            // Assert — StoreAsync is never called (Strict mock would fail the test if it were); the
+            // existing file id is reused as-is.
+            stored.Count.ShouldBe(1);
+            stored[0].ContentJson.ShouldNotContain(Convert.ToBase64String(SomeBytes));
+            stored[0].ContentJson.ShouldContain("file-abc");
+        }
+
+        [Fact]
+        public async Task ToStoredMessagesAsync_AttachmentWithNoFileIdYet_StoresItThenReferencesIt()
+        {
+            // Arrange — content built outside the normal upload pipeline (no marker). The invariant
+            // "ContentJson never embeds bytes" must hold even here, not just for the common path.
+            var data = new DataContent(SomeBytes, "image/png");
+            ChatMessage[] request = [new(ChatRole.User, [data])];
+            var fileStore = new Mock<IAIFileStore>();
+            fileStore
+                .Setup(x => x.StoreAsync(ConversationId.ToString(), It.IsAny<byte[]>(), "image/png", null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync("file-new");
+
+            // Act
+            var stored = await CreateProvider(fileStore).ToStoredMessagesAsync(ConversationId, request, null);
+
+            // Assert
+            fileStore.Verify(x => x.StoreAsync(ConversationId.ToString(), It.IsAny<byte[]>(), "image/png", null, It.IsAny<CancellationToken>()), Times.Once);
+            stored[0].ContentJson.ShouldNotContain(Convert.ToBase64String(SomeBytes));
+            stored[0].ContentJson.ShouldContain("file-new");
+        }
+
+        [Fact]
+        public async Task ToStoredMessagesAsync_MessageWithNoAttachments_IsUnaffected()
+        {
+            ChatMessage[] request = [new(ChatRole.User, "just text")];
+            var fileStore = new Mock<IAIFileStore>(MockBehavior.Strict);
+
+            var stored = await CreateProvider(fileStore).ToStoredMessagesAsync(ConversationId, request, null);
+
+            stored[0].ContentText.ShouldBe("just text");
+        }
+
+        private static UriContent Reference(string fileId)
+            => new(new Uri($"urn:umbraco-ai-agent-file:{fileId}"), "image/png")
+            {
+                AdditionalProperties = new AdditionalPropertiesDictionary { [AIFileContentMarker.FileIdPropertyKey] = fileId }
+            };
+
+        [Fact]
+        public async Task RehydrateAttachmentsAsync_ReferenceStillInFileStore_RestoresRealBytes()
+        {
+            var message = new ChatMessage(ChatRole.User, [Reference("file-abc")]);
+            var fileStore = new Mock<IAIFileStore>();
+            fileStore
+                .Setup(x => x.ResolveAsync(ConversationId.ToString(), "file-abc", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new AIStoredFile { Data = SomeBytes, MimeType = "image/png", Filename = "a.png" });
+
+            var result = await CreateProvider(fileStore).RehydrateAttachmentsAsync(ConversationId, message);
+
+            var dataContent = result.Contents[0].ShouldBeOfType<DataContent>();
+            dataContent.Data.ToArray().ShouldBe(SomeBytes);
+            dataContent.Name.ShouldBe("a.png");
+        }
+
+        [Fact]
+        public async Task RehydrateAttachmentsAsync_ReferenceNoLongerInFileStore_ReplacesWithPlaceholder()
+        {
+            var message = new ChatMessage(ChatRole.User, [Reference("file-gone")]);
+            var fileStore = new Mock<IAIFileStore>();
+            fileStore
+                .Setup(x => x.ResolveAsync(ConversationId.ToString(), "file-gone", It.IsAny<CancellationToken>()))
+                .ReturnsAsync((AIStoredFile?)null);
+
+            var result = await CreateProvider(fileStore).RehydrateAttachmentsAsync(ConversationId, message);
+
+            var text = result.Contents[0].ShouldBeOfType<TextContent>();
+            text.Text.ShouldBe(ConversationChatHistoryProvider.MissingAttachmentPlaceholder);
+        }
+
+        [Fact]
+        public async Task RehydrateAttachmentsAsync_MessageWithNoReferences_IsUnaffected()
+        {
+            var message = new ChatMessage(ChatRole.User, "just text");
+            var fileStore = new Mock<IAIFileStore>(MockBehavior.Strict);
+
+            var result = await CreateProvider(fileStore).RehydrateAttachmentsAsync(ConversationId, message);
+
+            result.ShouldBeSameAs(message);
+        }
     }
 }

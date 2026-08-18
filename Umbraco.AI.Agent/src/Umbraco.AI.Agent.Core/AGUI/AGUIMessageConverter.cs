@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Agent.Core.FileStore;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -197,7 +198,21 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             var resolved = AGUIFileProcessor.GetResolvedBytes(media);
             if (resolved is { Length: > 0 })
             {
-                contents.Add(new DataContent(resolved, mimeType) { Name = filename });
+                var dataContent = new DataContent(resolved, mimeType) { Name = filename };
+
+                // Tag the content with the id it's already stored under in IAIFileStore, so a
+                // consumer persisting this message (a persisted conversation, say) knows it can write
+                // a lightweight reference instead of freezing these bytes into its own storage too.
+                var fileId = AGUIMetadata.GetString(media.Metadata, AGUIFileProcessor.FileIdMetadataKey);
+                if (fileId is not null)
+                {
+                    dataContent.AdditionalProperties = new AdditionalPropertiesDictionary
+                    {
+                        [AIFileContentMarker.FileIdPropertyKey] = fileId
+                    };
+                }
+
+                contents.Add(dataContent);
                 continue;
             }
 

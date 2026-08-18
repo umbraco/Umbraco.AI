@@ -309,6 +309,39 @@ public class AGUIMessageConverterTests
         var dataContent = result.Contents[1].ShouldBeOfType<DataContent>();
         dataContent.MediaType.ShouldBe("image/png");
         dataContent.Data.ToArray().ShouldBe(imageBytes);
+
+        // Tagged with the id it's already stored under, so a persisted-conversation consumer can write
+        // a reference instead of a second copy of these bytes.
+        dataContent.AdditionalProperties.ShouldNotBeNull();
+        dataContent.AdditionalProperties![Umbraco.AI.Agent.Core.FileStore.AIFileContentMarker.FileIdPropertyKey].ShouldBe("file-abc");
+    }
+
+    [Fact]
+    public void ConvertToChatMessage_WithResolvedDataButNoFileId_LeavesAdditionalPropertiesUnset()
+    {
+        // Arrange — resolved bytes with no recorded file id (shouldn't happen via the real upload
+        // pipeline, but the converter must not fabricate a marker it has no id for).
+        var imageBytes = new byte[] { 1, 2, 3 };
+        var message = new AGUIMessage
+        {
+            Id = Guid.NewGuid().ToString(),
+            Role = AGUIMessageRole.User,
+            ContentParts = new List<AGUIInputContent>
+            {
+                new AGUIImageInputContent
+                {
+                    Source = new AGUIInputContentUrlSource { Value = "https://server/file/unknown", MimeType = "image/png" },
+                    Metadata = new Dictionary<string, object?> { ["__resolvedData"] = imageBytes }
+                }
+            }
+        };
+
+        // Act
+        var result = _converter.ConvertToChatMessage(message);
+
+        // Assert
+        var dataContent = result.Contents[0].ShouldBeOfType<DataContent>();
+        dataContent.AdditionalProperties.ShouldBeNull();
     }
 
     [Fact]

@@ -144,6 +144,61 @@ public class AGUIFileProcessorTests
         AGUIFileProcessor.GetResolvedBytes(resolvedBinary).ShouldBe(storedData);
     }
 
+    /// <summary>
+    /// A follow-up turn's request body is real wire JSON, not an in-memory object graph like the other
+    /// tests above — ASP.NET Core model-binds it via <c>System.Text.Json</c>, which deserializes the
+    /// untyped <c>Metadata</c> dictionary's <c>fileId</c> value as a <see cref="System.Text.Json.JsonElement"/>,
+    /// never the original <see cref="string"/>. A resolver that only matched <c>string</c> would silently
+    /// treat every follow-up as an unresolvable external URL instead of looking up the stored bytes —
+    /// exactly the bug this test exists to catch (it passed against the in-memory metadata above while
+    /// failing for real, on a second turn, in the running app).
+    /// </summary>
+    [Fact]
+    public async Task ProcessInbound_IdReferenceLoadedFromJson_StillResolves()
+    {
+        // Arrange
+        var storedData = new byte[] { 10, 20, 30 };
+        AGUIMessage[] messages =
+        [
+            new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Role = AGUIMessageRole.User,
+                Content = "Analyze this",
+                ContentParts = new List<AGUIInputContent>
+                {
+                    new AGUITextInputContent { Text = "Analyze this" },
+                    new AGUIImageInputContent
+                    {
+                        Source = new AGUIInputContentUrlSource { Value = "https://server/file/file-abc", MimeType = "image/png" },
+                        Metadata = new Dictionary<string, object?>
+                        {
+                            ["filename"] = "test.png",
+                            ["fileId"] = "file-abc"
+                        }
+                    }
+                }
+            }
+        ];
+        var requestJson = System.Text.Json.JsonSerializer.Serialize(messages);
+        var deserialized = System.Text.Json.JsonSerializer.Deserialize<AGUIMessage[]>(requestJson)!;
+
+        // Confirms the round trip actually reproduces the JsonElement case rather than testing nothing.
+        var media = (AGUIImageInputContent)deserialized[0].ContentParts![1];
+        media.Metadata!["fileId"].ShouldBeOfType<System.Text.Json.JsonElement>();
+
+        _mockStore
+            .Setup(s => s.ResolveAsync("thread-1", "file-abc", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIStoredFile { Data = storedData, MimeType = "image/png", Filename = "test.png" });
+
+        // Act
+        var result = await _processor.ProcessInboundAsync(deserialized, "thread-1");
+
+        // Assert — resolved has bytes
+        var resolvedBinary = result.ResolvedMessages.First().ContentParts![1].ShouldBeOfType<AGUIImageInputContent>();
+        AGUIFileProcessor.GetResolvedBytes(resolvedBinary).ShouldBe(storedData);
+    }
+
     [Fact]
     public async Task ProcessInbound_DisallowedExtension_SkipsFileAndReturnsUnchanged()
     {

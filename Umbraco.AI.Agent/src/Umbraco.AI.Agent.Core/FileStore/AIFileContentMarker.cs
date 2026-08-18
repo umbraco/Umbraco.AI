@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Umbraco.AI.Agent.Core.FileStore;
 
 /// <summary>
@@ -18,4 +20,26 @@ public static class AIFileContentMarker
     /// as returned by <see cref="IAIFileStore.StoreAsync"/>.
     /// </summary>
     public const string FileIdPropertyKey = "umbraco-ai:fileId";
+
+    /// <summary>
+    /// Reads a file id marker value that may be a plain <see cref="string"/> (built in-memory this
+    /// request) or a <see cref="JsonElement"/> (loaded back from a JSON round trip — stored history,
+    /// or an AG-UI request body model-bound by <c>System.Text.Json</c>, both deserialize untyped
+    /// <c>object?</c> dictionary values this way, never as the original CLR type).
+    /// </summary>
+    public static bool TryGetFileId(object? value, out string fileId)
+    {
+        switch (value)
+        {
+            case string s when !string.IsNullOrEmpty(s):
+                fileId = s;
+                return true;
+            case JsonElement { ValueKind: JsonValueKind.String } je when !string.IsNullOrEmpty(je.GetString()):
+                fileId = je.GetString()!;
+                return true;
+            default:
+                fileId = string.Empty;
+                return false;
+        }
+    }
 }

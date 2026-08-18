@@ -151,8 +151,8 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         for (var i = 0; i < message.Contents.Count; i++)
         {
             if (message.Contents[i] is not UriContent { AdditionalProperties: { } properties } reference ||
-                properties.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var value) is false ||
-                value is not string fileId)
+                !properties.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var value) ||
+                !AIFileContentMarker.TryGetFileId(value, out var fileId))
             {
                 continue;
             }
@@ -267,8 +267,9 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
 
             stripped ??= new List<AIContent>(message.Contents);
 
-            var fileId = data.AdditionalProperties?.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var existing) is true
-                ? existing as string
+            string? fileId = data.AdditionalProperties?.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var existing) is true
+                && AIFileContentMarker.TryGetFileId(existing, out var existingFileId)
+                ? existingFileId
                 : null;
             fileId ??= await _fileStore.StoreAsync(conversationId.ToString(), data.Data.ToArray(), data.MediaType, data.Name, cancellationToken);
 

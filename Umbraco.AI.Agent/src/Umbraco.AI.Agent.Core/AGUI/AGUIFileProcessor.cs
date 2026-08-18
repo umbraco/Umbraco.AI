@@ -181,9 +181,8 @@ internal sealed class AGUIFileProcessor : IAGUIFileProcessor
 
     private static bool TryGetFileId(IReadOnlyDictionary<string, object?>? metadata, out string fileId)
     {
-        if (metadata is not null && metadata.TryGetValue(FileIdMetadataKey, out var raw) && raw is string s && !string.IsNullOrEmpty(s))
+        if (metadata is not null && metadata.TryGetValue(FileIdMetadataKey, out var raw) && AIFileContentMarker.TryGetFileId(raw, out fileId))
         {
-            fileId = s;
             return true;
         }
 

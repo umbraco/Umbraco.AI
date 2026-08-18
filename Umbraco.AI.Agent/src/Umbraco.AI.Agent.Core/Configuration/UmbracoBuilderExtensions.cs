@@ -94,11 +94,15 @@ public static class UmbracoBuilderExtensions
             return new AIFileStore(
                 fileSystem,
                 factory.GetRequiredService<ILogger<AIFileStore>>(),
-                factory.GetService<IBackOfficeSecurityAccessor>());
+                factory.GetService<IBackOfficeSecurityAccessor>(),
+                factory.GetRequiredService<AIFileThreadLifecycleProviderCollection>());
         });
         builder.Services.AddSingleton<IAGUIFileProcessor, AGUIFileProcessor>();
         builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
         builder.Services.AddRecurringBackgroundJob<AIFileCleanupBackgroundJob>();
+        // Always registered, even with zero providers, so the file store can resolve the collection
+        // whether or not anything (e.g. Copilot Workspace's persisted conversations) registers into it.
+        builder.AIFileThreadLifecycleProviders();
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();

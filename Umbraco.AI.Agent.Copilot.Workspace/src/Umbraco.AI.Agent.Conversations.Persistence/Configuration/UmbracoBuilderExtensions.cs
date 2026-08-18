@@ -3,6 +3,7 @@ using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Conversations.Persistence.Conversations;
 using Umbraco.AI.Agent.Conversations.Persistence.Projects;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Configuration;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -37,6 +38,10 @@ public static class UmbracoBuilderExtensions
         // collection and editable-model serializer for schema-driven settings (de)serialization.
         builder.Services.AddSingleton<AIConversationEntityFactory>();
         builder.Services.AddSingleton<IAIConversationRepository, EFCoreAIConversationRepository>();
+
+        // Tell the file store's retention sweep that a persisted conversation's attachments should not
+        // age out on a fixed clock — see ConversationFileThreadLifecycleProvider.
+        builder.AIFileThreadLifecycleProviders().Append<ConversationFileThreadLifecycleProvider>();
 
         // Project repository (EF Core) + its factory, which reuses the core resource-type collection
         // and editable-model serializer for schema-driven settings (de)serialization.

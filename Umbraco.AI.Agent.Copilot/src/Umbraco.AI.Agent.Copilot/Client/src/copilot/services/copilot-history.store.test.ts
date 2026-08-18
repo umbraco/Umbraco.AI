@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import type { UaiChatMessage } from "@umbraco-ai/agent-ui";
 import { UaiCopilotHistoryStore } from "./copilot-history.store.js";
 
@@ -137,6 +137,9 @@ describe("UaiCopilotHistoryStore", () => {
         expect(store.loadAgentId("document:a")).toBeUndefined();
         expect(store.getLastAgentId()).toBeUndefined();
         expect(() => store.rememberLastAgentId("agent-1")).not.toThrow();
+        expect(() => store.recordTimeout()).not.toThrow();
+        expect(() => store.consumeTimeout()).not.toThrow();
+        expect(() => store.clearAll()).not.toThrow();
     });
 
     it("stores the agent a thread ran with, per key", () => {
@@ -179,5 +182,77 @@ describe("UaiCopilotHistoryStore", () => {
 
         expect(store.load("document:a")).toHaveLength(1);
         expect(store.loadAgentId("document:a")).toBeUndefined();
+    });
+
+    describe("session timeout retention", () => {
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it("clearAll() wipes threads, agent memory, and any pending timeout marker", () => {
+            const store = new UaiCopilotHistoryStore(storage);
+            store.save("document:a", [msg("1", "hi")]);
+            store.rememberLastAgentId("agent-legal");
+            store.recordTimeout();
+
+            store.clearAll();
+
+            expect(store.load("document:a")).toBeUndefined();
+            expect(store.getLastAgentId()).toBeUndefined();
+            expect(storage.raw(STORAGE_KEY)).toBeUndefined();
+        });
+
+        it("consumeTimeout() is a no-op when no timeout was recorded", () => {
+            const store = new UaiCopilotHistoryStore(storage);
+            store.save("document:a", [msg("1", "hi")]);
+
+            store.consumeTimeout();
+
+            expect(store.load("document:a")).toHaveLength(1);
+        });
+
+        it("forgives a timeout resumed later the same calendar day", () => {
+            vi.useFakeTimers();
+            vi.setSystemTime(new Date("2026-01-01T09:00:00.000Z"));
+
+            const store = new UaiCopilotHistoryStore(storage);
+            store.save("document:a", [msg("1", "hi")]);
+            store.recordTimeout();
+
+            vi.setSystemTime(new Date("2026-01-01T18:00:00.000Z"));
+            store.consumeTimeout();
+
+            expect(store.load("document:a")).toHaveLength(1);
+        });
+
+        it("clears history when a timeout is resumed on a later calendar day, however little time passed", () => {
+            vi.useFakeTimers();
+            vi.setSystemTime(new Date("2026-01-01T23:58:00.000Z"));
+
+            const store = new UaiCopilotHistoryStore(storage);
+            store.save("document:a", [msg("1", "hi")]);
+            store.recordTimeout();
+
+            // Only 7 minutes later, but past midnight.
+            vi.setSystemTime(new Date("2026-01-02T00:05:00.000Z"));
+            store.consumeTimeout();
+
+            expect(store.load("document:a")).toBeUndefined();
+        });
+
+        it("consumes the timeout marker so a later call can't retroactively clear it", () => {
+            vi.useFakeTimers();
+            vi.setSystemTime(new Date("2026-01-01T09:00:00.000Z"));
+
+            const store = new UaiCopilotHistoryStore(storage);
+            store.save("document:a", [msg("1", "hi")]);
+            store.recordTimeout();
+            store.consumeTimeout(); // same day -- forgiven, marker consumed
+
+            vi.setSystemTime(new Date("2026-01-05T09:00:00.000Z"));
+            store.consumeTimeout(); // nothing pending -- must not clear
+
+            expect(store.load("document:a")).toHaveLength(1);
+        });
     });
 });

@@ -2,6 +2,7 @@ import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
+import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import {
     type Observable,
     map,
@@ -241,6 +242,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             }
         });
 
+        this.#bindHistoryToSession();
+
         this.provideContext(UAI_COPILOT_CONTEXT, this);
         this.provideContext(UAI_CHAT_CONTEXT, this);
         this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
@@ -316,6 +319,56 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         if (this.#activeHistoryKey) {
             this.#historyStore.remove(this.#activeHistoryKey);
         }
+    }
+
+    // ─── Session lifecycle (history retention) ──────────────────────────────────
+
+    /**
+     * Ties the local history store's lifetime to the backoffice session: an explicit sign-out
+     * clears everything immediately (a deliberate action, no grace period), while a session timeout
+     * is only forgiven if the user resumes on the same calendar day (see
+     * {@link UaiCopilotHistoryStore.consumeTimeout}).
+     *
+     * Distinguishing the two relies on `UmbAuthContext.timeOut()`'s exact ordering: it sets
+     * `isAuthorized` to `false` and *then* emits `timeoutSignal`, synchronously, in that order. So a
+     * `isAuthorized`→`false` transition can't yet know whether a timeout signal is coming — we defer
+     * the "was this a plain sign-out" check to a microtask, giving a same-tick `timeoutSignal`
+     * emission a chance to flag it first. `signOut()` doesn't emit `timeoutSignal` at all, so an
+     * unflagged transition is unambiguously an explicit sign-out.
+     */
+    #bindHistoryToSession(): void {
+        let hasBeenAuthorized = false;
+        let sawTimeoutForThisTransition = false;
+
+        this.consumeContext(UMB_AUTH_CONTEXT, (authContext) => {
+            if (!authContext) return;
+
+            this.observe(authContext.timeoutSignal, () => {
+                sawTimeoutForThisTransition = true;
+                this.#historyStore.recordTimeout();
+            });
+
+            this.observe(authContext.isAuthorized, (isAuthorized) => {
+                if (isAuthorized) {
+                    hasBeenAuthorized = true;
+                    this.#historyStore.consumeTimeout();
+                    return;
+                }
+
+                // Ignore the initial emission when the app loads while already signed out — there's
+                // no live sign-out/timeout to react to, and clearing here would wipe yesterday's
+                // history before the user even gets a chance to log back in and let the same-day
+                // check above run.
+                if (!hasBeenAuthorized) return;
+
+                sawTimeoutForThisTransition = false;
+                queueMicrotask(() => {
+                    if (!sawTimeoutForThisTransition) {
+                        this.#historyStore.clearAll();
+                    }
+                });
+            });
+        });
     }
 
     // ─── Per-node history plumbing ──────────────────────────────────────────────

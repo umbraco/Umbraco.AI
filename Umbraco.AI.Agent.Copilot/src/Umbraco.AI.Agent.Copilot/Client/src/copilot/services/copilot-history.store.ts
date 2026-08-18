@@ -15,7 +15,10 @@ import type { UaiChatMessage } from "@umbraco-ai/agent-ui";
  *   is corrupt, the store degrades to a no-op instead of throwing.
  *
  * Note: stored chats can contain content values, sitting in the browser's `localStorage`. That's
- * fine on a personal machine but worth being aware of on shared logins.
+ * fine on a personal machine but worth being aware of on shared logins — so on a shared machine,
+ * the caller (see `UaiCopilotContext`) ties this store's lifetime to the backoffice session:
+ * an explicit sign-out clears everything immediately, and a session timeout is forgiven only if the
+ * user resumes on the same calendar day ({@link recordTimeout} / {@link consumeTimeout}).
  */
 
 const STORAGE_KEY = "umb:uai-copilot:history";
@@ -39,6 +42,11 @@ interface StoredBlob {
      * fresh item would silently drop back to the default agent after a reload.
      */
     lastAgentId?: string;
+    /**
+     * When a session timeout was last observed, pending a decision on re-authentication (see
+     * {@link UaiCopilotHistoryStore.consumeTimeout}). Absent otherwise.
+     */
+    timedOutAt?: number;
 }
 
 export class UaiCopilotHistoryStore {
@@ -120,6 +128,52 @@ export class UaiCopilotHistoryStore {
         }
     }
 
+    /**
+     * Records that a session timeout just occurred, so a later {@link consumeTimeout} call (once
+     * the user re-authenticates) can decide whether the gap warrants clearing history. An explicit
+     * sign-out doesn't go through this — it clears immediately, unconditionally.
+     */
+    recordTimeout(): void {
+        if (!this.#storage) return;
+        const blob = this.#read();
+        blob.timedOutAt = Date.now();
+        this.#write(blob);
+    }
+
+    /**
+     * Resolves a previously recorded timeout on re-authentication. Crossing a calendar day boundary
+     * since the timeout is treated as enough of a break to start fresh — history is cleared
+     * regardless of how few hours actually elapsed (e.g. timing out at 11:58pm and returning at
+     * 12:05am still clears). A same-day timeout is forgiven. Either way the marker is consumed, so
+     * it isn't re-evaluated the next time the store happens to be read. A no-op if no timeout is
+     * pending (the common case — most sessions end via tab close, not a live timeout event).
+     */
+    consumeTimeout(): void {
+        if (!this.#storage) return;
+        const blob = this.#read();
+        const timedOutAt = blob.timedOutAt;
+        if (timedOutAt === undefined) return;
+
+        delete blob.timedOutAt;
+
+        if (!isSameLocalDay(timedOutAt, Date.now())) {
+            this.clearAll();
+            return;
+        }
+
+        this.#write(blob);
+    }
+
+    /** Wipes all stored history, preferences, and any pending timeout marker. */
+    clearAll(): void {
+        if (!this.#storage) return;
+        try {
+            this.#storage.removeItem(STORAGE_KEY);
+        } catch {
+            // Storage unavailable — nothing to clear.
+        }
+    }
+
     #read(): StoredBlob {
         if (!this.#storage) return emptyBlob();
         try {
@@ -134,6 +188,7 @@ export class UaiCopilotHistoryStore {
                 version: SCHEMA_VERSION,
                 threads: parsed.threads as Record<string, StoredThread>,
                 lastAgentId: typeof parsed.lastAgentId === "string" ? parsed.lastAgentId : undefined,
+                timedOutAt: typeof parsed.timedOutAt === "number" ? parsed.timedOutAt : undefined,
             };
         } catch {
             return emptyBlob();
@@ -174,6 +229,17 @@ function emptyBlob(): StoredBlob {
 /** JSON revives `timestamp` as a string; message rendering expects a Date. */
 function reviveMessage(message: UaiChatMessage): UaiChatMessage {
     return { ...message, timestamp: new Date(message.timestamp) };
+}
+
+/** Whether two epoch timestamps fall on the same local calendar day. */
+function isSameLocalDay(a: number, b: number): boolean {
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    return (
+        dateA.getFullYear() === dateB.getFullYear() &&
+        dateA.getMonth() === dateB.getMonth() &&
+        dateA.getDate() === dateB.getDate()
+    );
 }
 
 function safeLocalStorage(): Storage | undefined {

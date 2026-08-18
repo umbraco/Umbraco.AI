@@ -2,8 +2,7 @@ import type { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/ba
 import { configureAiClient } from "@umbraco-ai/core";
 import { client } from "./api/client.gen.js";
 
-// Ensure all exports are available from the bundle.
-export * from "./index.js";
+// Re-export the public API
 export * from "./exports.js";
 
 /**

@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [17.4.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.0...Umbraco.AI@17.4.0-rc.4) (2026-08-11)
 
+## [17.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.0...Umbraco.AI@17.3.1) (2026-08-17)
+
+### fix
+
+* **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#326) ([41f3d61](https://github.com/umbraco/Umbraco.AI/commit/41f3d61d6915bbfcaa461b8cd57e7030fc0a4f0a)), closes [#326](https://github.com/umbraco/Umbraco.AI/issues/326) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+
+### ⚠ BREAKING CHANGE
+
+* **core,frontend,openai:** `AIImageGenerationProfileSettings.Quality` and `.Style` are removed, along
+with their
+API model properties and editor fields. Quality and Style now live under the provider's own
+settings
+on the profile editor. Values stored under the old shape are ignored and need re-entering
+there.
+Image generation is experimental — gated by `UMBRACOAI_IMAGEGEN` and the
+`Umbraco:AI:Experimental:ImageGeneration` flag — so this ships without an obsolete shim.
+
+No data migration: the target keys belong to a provider's schema, and a core migration
+writing
+provider-specific keys would put vendor knowledge in core, which is the coupling this whole
+design
+
+### feat
+
+* **core,anthropic,frontend:** Add Anthropic prompt caching and cached-token reporting (v17 backport) (#296) ([42fe957](https://github.com/umbraco/Umbraco.AI/commit/42fe957f4e350ff7d83ea8e791d53ac54207c982)), closes [#296](https://github.com/umbraco/Umbraco.AI/issues/296) [#295](https://github.com/umbraco/Umbraco.AI/issues/295) [#291](https://github.com/umbraco/Umbraco.AI/issues/291)
+* **core,frontend:** Mask sensitive field values by default (v17 backport) (#294) ([e6d17f2](https://github.com/umbraco/Umbraco.AI/commit/e6d17f210f9631995ca339e31127d92409035c3f)), closes [#294](https://github.com/umbraco/Umbraco.AI/issues/294)
+* **core,frontend,openai:** Drive the image size field from the model's declared sizes (#280) ([371cb53](https://github.com/umbraco/Umbraco.AI/commit/371cb5335ba4b53127e54bca26e0b0de55e3588f)), closes [#280](https://github.com/umbraco/Umbraco.AI/issues/280)
+* **core,frontend,openai:** Move image quality and style to capability settings (#282) ([b7f462a](https://github.com/umbraco/Umbraco.AI/commit/b7f462a3ce01190727dedf809738cafc0274127a)), closes [#282](https://github.com/umbraco/Umbraco.AI/issues/282) [#275](https://github.com/umbraco/Umbraco.AI/issues/275) [#277](https://github.com/umbraco/Umbraco.AI/issues/277)
+* **core,openai,anthropic,amazon,frontend:** Enforce per-model declarations in core [v17 backport] (#284) ([6c6ff0e](https://github.com/umbraco/Umbraco.AI/commit/6c6ff0effa14b232b0126e7957c1a08d9ab2f49e)), closes [#284](https://github.com/umbraco/Umbraco.AI/issues/284)
+* **core,openai,anthropic:** Add provider-declared, model-aware capability settings (#270) ([a86199d](https://github.com/umbraco/Umbraco.AI/commit/a86199da8612ca03939ec7297934177f201861ef)), closes [#270](https://github.com/umbraco/Umbraco.AI/issues/270) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+* **core,providers:** Extend capability settings to every capability (#276) ([59e6548](https://github.com/umbraco/Umbraco.AI/commit/59e65486e9ac827abfb265e5ec4a1080c11713d4)), closes [#276](https://github.com/umbraco/Umbraco.AI/issues/276) [#269](https://github.com/umbraco/Umbraco.AI/issues/269)
+
 ### fix
 
 * **core,agent:** Pass the real filename to file processing handlers ([85a9292](https://github.com/umbraco/Umbraco.AI/commit/85a92927c6f44bfb2182b6fed00fe464c2adeb28)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)

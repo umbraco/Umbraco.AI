@@ -588,6 +588,10 @@ export type GetFileData = {
 
 export type GetFileErrors = {
     /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
      * Not Found
      */
     404: ProblemDetails;

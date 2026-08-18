@@ -6,6 +6,10 @@
 export { UaiAgentClient, type UaiAgentClientConfig } from "./uai-agent-client.js";
 export { UaiHttpAgent, type UaiHttpAgentConfig, type AGUIStreamRunner } from "./uai-http-agent.js";
 
+// Stored file access. The file endpoint is authenticated, so consumers resolve bytes through the
+// configured API client rather than pointing an element at the URL directly.
+export { resolveUaiFileObjectUrl, parseUaiFileUrl } from "./uai-file-source.js";
+
 // Domain types
 export type {
     UaiChatMessage,

@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **agent-ui,copilot:** Rename the empty-state slot to empty-state-message ([5a43dd4](https://github.com/umbraco/Umbraco.AI/commit/5a43dd47ce5f4ebbd324f75238b3bdf06ad618d5))
 
+## [17.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@17.0.1...Umbraco.AI.Agent.UI@17.0.2) (2026-08-17)
+
+### fix
+
+* **agent-ui:** Move internal-only components out of the shared entry file ([41f3d61](https://github.com/umbraco/Umbraco.AI/commit/41f3d61d6915bbfcaa461b8cd57e7030fc0a4f0a)), closes [#326](https://github.com/umbraco/Umbraco.AI/issues/326) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+
 ## [17.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@17.0.0...Umbraco.AI.Agent.UI@17.0.1) (2026-07-06)
 
 ### fix

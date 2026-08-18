@@ -5,7 +5,8 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.3...Umbraco.AI.Agent@18.2.0-rc.1) (2026-08-11)
+
+## [18.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.4...Umbraco.AI.Agent@18.2.0-rc.1) (2026-08-18)
 
 ### feat
 
@@ -17,6 +18,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **agent:** Wire conversation-history binding through agent execution (A) ([8dc40f8](https://github.com/umbraco/Umbraco.AI/commit/8dc40f8ab935d6707e8e79e4437e307a06e5785e))
 * **openai,agent,core:** Run OpenAI statelessly when caller manages chat history ([db1b689](https://github.com/umbraco/Umbraco.AI/commit/db1b689d86cd14ce62dbed3f1f3e5c48ce86854a))
 
+### fix
+
+* **agent,conversations:** Lead every agent request with the runtime-context system message ([544459d](https://github.com/umbraco/Umbraco.AI/commit/544459da5224805595769ecb2c0683f22adc07a6))
+* **agent,copilot-workspace:** Stop double-storing attachment bytes in conversation history ([3c6390a](https://github.com/umbraco/Umbraco.AI/commit/3c6390a39e7b7d1ab3de526c327d60ab01e247af))
+* **agent,copilot-workspace:** Stop the file retention sweep aging out live persisted conversations ([3be517c](https://github.com/umbraco/Umbraco.AI/commit/3be517c039369084a241466b5a5f1c69786641b9))
+* **agent:** Cache a confirmed-alive thread so the sweep stops re-asking every hour ([fdfbed2](https://github.com/umbraco/Umbraco.AI/commit/fdfbed24928f993ce5dddcefb5b4b9c64ef727ad))
+* **agent:** Keep filenames and remote links when converting back to AG-UI ([9593301](https://github.com/umbraco/Umbraco.AI/commit/95933016359942e6ec0e9cbebae3bbc26806aeb0))
+* **agent:** Resolve tool permissions once per agent execution ([67299d0](https://github.com/umbraco/Umbraco.AI/commit/67299d055315be237e50f8540dca6741d8c3aa21))
+* **agent:** Restore controller activation for the AG-UI stream endpoint ([40958ae](https://github.com/umbraco/Umbraco.AI/commit/40958aed36306703b1e304cde881f48f3587d07a))
+* **agent:** Treat dimensionless surfaces as unscoped in AIAgentScopeValidator ([45ca470](https://github.com/umbraco/Umbraco.AI/commit/45ca4701ac71424ee5104580a5dea11119cb4624)), closes [#4](https://github.com/umbraco/Umbraco.AI/issues/4)
+* **core,agent,agent-ui,copilot,copilot-workspace,ci:** Stop leaking internal components into the shared entry file (#327) ([990a987](https://github.com/umbraco/Umbraco.AI/commit/990a9879fec349f8d2f2b337bb581fbe5272c45c)), closes [#327](https://github.com/umbraco/Umbraco.AI/issues/327) [#324](https://github.com/umbraco/Umbraco.AI/issues/324) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+* **core,agent:** Pass the real filename to file processing handlers ([ed64bfa](https://github.com/umbraco/Umbraco.AI/commit/ed64bfafd824d4f6dfaf446d50bd8a5b36a188c5)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
+
+### refactor
+
+* **core,agent,copilot-workspace:** Render entity pickers as flat rows ([601fadb](https://github.com/umbraco/Umbraco.AI/commit/601fadb0b33aeb9c27fbde4b774bd000e0e4f5a6))
 ## [18.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.3...Umbraco.AI.Agent@18.1.4) (2026-08-17)
 
 ### feat

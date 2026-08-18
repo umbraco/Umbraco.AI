@@ -5,7 +5,8 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1) (2026-08-06)
+
+## [18.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1) (2026-08-18)
 
 ### feat
 
@@ -53,12 +54,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### fix
 
+* **agent,conversations:** Lead every agent request with the runtime-context system message ([544459d](https://github.com/umbraco/Umbraco.AI/commit/544459da5224805595769ecb2c0683f22adc07a6))
+* **agent,copilot-workspace:** Stop double-storing attachment bytes in conversation history ([3c6390a](https://github.com/umbraco/Umbraco.AI/commit/3c6390a39e7b7d1ab3de526c327d60ab01e247af))
+* **agent,copilot-workspace:** Stop the file retention sweep aging out live persisted conversations ([3be517c](https://github.com/umbraco/Umbraco.AI/commit/3be517c039369084a241466b5a5f1c69786641b9))
+* **conversations,agent-ui:** Replace the regenerated answer instead of appending it ([f810316](https://github.com/umbraco/Umbraco.AI/commit/f8103168cb42ce6a5c0417ca9f999ff97ba09d75))
 * **copilot-workspace:** Auto-select an agent when the catalog loads after the conversation opens ([3375bc2](https://github.com/umbraco/Umbraco.AI/commit/3375bc24da1d3e9eb11eab6bab78472ada166f77))
 * **copilot-workspace:** Keep chat icon on launcher recents ([1c332d1](https://github.com/umbraco/Umbraco.AI/commit/1c332d17309abce252bcd4bd345957285713d61a))
 * **copilot-workspace:** Keep New project in the top menu only; indent empty hint ([6acabcc](https://github.com/umbraco/Umbraco.AI/commit/6acabcceff30a9ace9f1be5684f158ba706cc806))
 * **copilot-workspace:** Localize the copilot-workspace agent-surface label ([e8011b8](https://github.com/umbraco/Umbraco.AI/commit/e8011b87818806a59883572bb6f65369997ec5c0))
 * **copilot-workspace:** Match the new-chat route to the path the buttons generate ([1810768](https://github.com/umbraco/Umbraco.AI/commit/18107681e30bef7b5a2cef6f548f8f6e5e524c1c))
 * **copilot-workspace:** Move New chat popover out of the button group ([3bc66d9](https://github.com/umbraco/Umbraco.AI/commit/3bc66d9822c5761d2245e301f5b270f045d89705))
+* **copilot-workspace:** Remove the redundant conversation file endpoint ([1bc9dbc](https://github.com/umbraco/Umbraco.AI/commit/1bc9dbc7723e4efc07fc149873e8e36c97b6cbed))
 * **copilot-workspace:** Render project nodes as uui-menu-item for consistency ([151d3e4](https://github.com/umbraco/Umbraco.AI/commit/151d3e40fc7585d61b3447787b61e438d651a64f))
 * **copilot-workspace:** Render the workspace as a standalone section element, not a dashboard ([6f7f3c7](https://github.com/umbraco/Umbraco.AI/commit/6f7f3c7b4d301e74f8ef624db90c5156ad727a3b))
 * **copilot-workspace:** Shorten section label to "Copilot" ([7c7161c](https://github.com/umbraco/Umbraco.AI/commit/7c7161cf753c89b5b0dedc0eaf916032465639d9))
@@ -66,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **copilot-workspace:** Use + icon for the New project group action ([557ed67](https://github.com/umbraco/Umbraco.AI/commit/557ed671841caf599e3fe50190b73131f43883b0))
 * **copilot-workspace:** Use icon-pushpin for the pin icon ([8f0ad19](https://github.com/umbraco/Umbraco.AI/commit/8f0ad195acdad6478ad8ba9fdfb537854e9aff35))
 * **copilot-workspace:** Wrap New-chat project picker rows in a ref-list ([11681d6](https://github.com/umbraco/Umbraco.AI/commit/11681d6178fe5c4fd7980ffa6c3c54b0d0362844))
+* **core,agent,agent-ui,copilot,copilot-workspace,ci:** Stop leaking internal components into the shared entry file (#327) ([990a987](https://github.com/umbraco/Umbraco.AI/commit/990a9879fec349f8d2f2b337bb581fbe5272c45c)), closes [#327](https://github.com/umbraco/Umbraco.AI/issues/327) [#324](https://github.com/umbraco/Umbraco.AI/issues/324) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
 * **core,copilot-workspace:** Stop the workspace store refetching its own write ([c35c82e](https://github.com/umbraco/Umbraco.AI/commit/c35c82ede17017d0574e0ceee02ac06440ae3549))
 
 ### refactor
@@ -76,4 +83,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **copilot-workspace:** Rename section alias to Uai.Section.CopilotWorkspace ([e9d8124](https://github.com/umbraco/Umbraco.AI/commit/e9d81247885d0dab117dadc67e9bdd65b76a897e))
 * **copilot-workspace:** Reorganize front-end topic-first and de-duplicate ([237beb0](https://github.com/umbraco/Umbraco.AI/commit/237beb03939b44c1c61cb46613d416a4d9bd1f15))
 * **core,agent,copilot-workspace:** Render entity pickers as flat rows ([601fadb](https://github.com/umbraco/Umbraco.AI/commit/601fadb0b33aeb9c27fbde4b774bd000e0e4f5a6))
-

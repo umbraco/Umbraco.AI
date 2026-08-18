@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
+using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Extensions;
 
@@ -26,10 +27,13 @@ public static class UmbracoBuilderExtensions
         }
 
         // A single shared instance (holds no session-specific state) — the repository (registered by
-        // the persistence layer) is resolved lazily. Registered via a factory because the provider's
-        // constructor takes the internal IAIConversationRepository.
+        // the persistence layer) and file store (registered by Umbraco.AI.Agent) are resolved lazily.
+        // Registered via a factory because the provider's constructor takes the internal
+        // IAIConversationRepository.
         builder.Services.AddSingleton(sp =>
-            new ConversationChatHistoryProvider(sp.GetRequiredService<IAIConversationRepository>()));
+            new ConversationChatHistoryProvider(
+                sp.GetRequiredService<IAIConversationRepository>(),
+                sp.GetRequiredService<IAIFileStore>()));
 
         // Ownership-enforcing services over the internal repositories (repos registered by the
         // persistence layer). Controllers and the stream endpoint go through these, never the repos.

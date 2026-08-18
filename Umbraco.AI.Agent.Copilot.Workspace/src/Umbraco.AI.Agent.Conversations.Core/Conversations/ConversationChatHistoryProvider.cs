@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Agent.Core.FileStore;
 
 namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
 
@@ -11,18 +12,34 @@ namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
 /// and <see cref="StoreChatHistoryAsync"/> persists the new request + response messages after it.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A single instance is shared across all sessions, so it holds NO session-specific state in fields:
 /// the bound conversation id lives in the <see cref="AgentSession"/> via <see cref="ProviderSessionState{TState}"/>,
 /// and the repository is a DI singleton that opens its own scoped unit-of-work per call.
+/// </para>
+/// <para>
+/// A message's <see cref="DataContent"/> parts (an uploaded image, say) are never written into
+/// <see cref="AIMessage.ContentJson"/> as-is. <see cref="IAIFileStore"/> is the one place file bytes
+/// live; storing them a second time here would leave two independently-aging copies of the same file.
+/// Instead, on the way in (<see cref="StoreChatHistoryAsync"/>) each <see cref="DataContent"/> is swapped
+/// for a small <see cref="UriContent"/> reference carrying the id it's stored under, and on the way out
+/// (<see cref="ProvideChatHistoryAsync"/>) that reference is resolved back into real bytes before the
+/// model sees it. See <see cref="AIFileContentMarker"/>.
+/// </para>
 /// </remarks>
 public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
 {
+    /// <summary>Placeholder shown in place of an attachment the file store no longer has.</summary>
+    internal const string MissingAttachmentPlaceholder = "[Attachment no longer available]";
+
     private readonly IAIConversationRepository _repository;
+    private readonly IAIFileStore _fileStore;
     private readonly ProviderSessionState<ConversationSessionState> _sessionState;
 
-    internal ConversationChatHistoryProvider(IAIConversationRepository repository)
+    internal ConversationChatHistoryProvider(IAIConversationRepository repository, IAIFileStore fileStore)
     {
         _repository = repository;
+        _fileStore = fileStore;
         _sessionState = new ProviderSessionState<ConversationSessionState>(
             stateInitializer: _ => new ConversationSessionState(),
             stateKey: typeof(ConversationChatHistoryProvider).FullName!,
@@ -114,11 +131,53 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             var chatMessage = TryDeserialize(message.ContentJson);
             if (chatMessage is not null)
             {
-                messages.Add(chatMessage);
+                messages.Add(await RehydrateAttachmentsAsync(conversationId, chatMessage, cancellationToken));
             }
         }
 
         return messages;
+    }
+
+    /// <summary>
+    /// Resolves any file-store reference in <paramref name="message"/>'s content back into real bytes,
+    /// so the model sees the same attachment it was given the turn it was uploaded. A reference whose
+    /// file is gone (an operational cleanup edge case) is replaced with a placeholder instead of failing
+    /// the whole turn — the rest of the message is still meaningful without it.
+    /// </summary>
+    internal async Task<ChatMessage> RehydrateAttachmentsAsync(Guid conversationId, ChatMessage message, CancellationToken cancellationToken = default)
+    {
+        List<AIContent>? rehydrated = null;
+
+        for (var i = 0; i < message.Contents.Count; i++)
+        {
+            if (message.Contents[i] is not UriContent { AdditionalProperties: { } properties } reference ||
+                properties.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var value) is false ||
+                value is not string fileId)
+            {
+                continue;
+            }
+
+            rehydrated ??= new List<AIContent>(message.Contents);
+
+            var storedFile = await _fileStore.ResolveAsync(conversationId.ToString(), fileId, cancellationToken);
+            rehydrated[i] = storedFile is not null
+                ? new DataContent(storedFile.Data, storedFile.MimeType) { Name = storedFile.Filename }
+                : new TextContent(MissingAttachmentPlaceholder);
+        }
+
+        if (rehydrated is null)
+        {
+            return message;
+        }
+
+        return new ChatMessage(message.Role, rehydrated)
+        {
+            AuthorName = message.AuthorName,
+            CreatedAt = message.CreatedAt,
+            MessageId = message.MessageId,
+            AdditionalProperties = message.AdditionalProperties,
+            RawRepresentation = message.RawRepresentation,
+        };
     }
 
     /// <inheritdoc />
@@ -133,7 +192,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return;
         }
 
-        var newMessages = ToStoredMessages(context.RequestMessages, context.ResponseMessages);
+        var newMessages = await ToStoredMessagesAsync(conversationId, context.RequestMessages, context.ResponseMessages, cancellationToken);
 
         if (newMessages.Count == 0)
         {
@@ -157,22 +216,85 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     /// contradict, the current one. Nothing is lost by dropping them: every contributor to that block is
     /// re-derived on the next run either way.
     /// </remarks>
-    internal static IReadOnlyList<AIMessage> ToStoredMessages(
+    internal async Task<IReadOnlyList<AIMessage>> ToStoredMessagesAsync(
+        Guid conversationId,
         IEnumerable<ChatMessage> requestMessages,
-        IEnumerable<ChatMessage>? responseMessages)
-        => requestMessages
-            .Where(m => m.Role != ChatRole.System)
-            .Concat(responseMessages ?? [])
-            .Select(ToDomain)
-            .ToList();
-
-    private static AIMessage ToDomain(ChatMessage message) => new()
+        IEnumerable<ChatMessage>? responseMessages,
+        CancellationToken cancellationToken = default)
     {
-        Role = message.Role.Value,
-        ContentJson = JsonSerializer.Serialize(message, AIJsonUtilities.DefaultOptions),
-        ContentText = message.Text,
-        SchemaVersion = 1,
-    };
+        var toStore = requestMessages
+            .Where(m => m.Role != ChatRole.System)
+            .Concat(responseMessages ?? []);
+
+        var result = new List<AIMessage>();
+        foreach (var message in toStore)
+        {
+            result.Add(await ToDomainAsync(conversationId, message, cancellationToken));
+        }
+
+        return result;
+    }
+
+    private async Task<AIMessage> ToDomainAsync(Guid conversationId, ChatMessage message, CancellationToken cancellationToken)
+    {
+        var storable = await StripAttachmentsAsync(conversationId, message, cancellationToken);
+        return new AIMessage
+        {
+            Role = storable.Role.Value,
+            ContentJson = JsonSerializer.Serialize(storable, AIJsonUtilities.DefaultOptions),
+            ContentText = storable.Text,
+            SchemaVersion = 2,
+        };
+    }
+
+    /// <summary>
+    /// Replaces each <see cref="DataContent"/> part with a small <see cref="UriContent"/> reference
+    /// before this message is serialized to <see cref="AIMessage.ContentJson"/>, so the durable record
+    /// never carries a second copy of bytes the file store already owns. A part not already tagged with
+    /// a file id (built outside the normal upload pipeline, say) is stored now — this keeps "the database
+    /// never holds embedded file bytes" true with no exceptions, not just true for the common case.
+    /// </summary>
+    private async Task<ChatMessage> StripAttachmentsAsync(Guid conversationId, ChatMessage message, CancellationToken cancellationToken)
+    {
+        List<AIContent>? stripped = null;
+
+        for (var i = 0; i < message.Contents.Count; i++)
+        {
+            if (message.Contents[i] is not DataContent data)
+            {
+                continue;
+            }
+
+            stripped ??= new List<AIContent>(message.Contents);
+
+            var fileId = data.AdditionalProperties?.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var existing) is true
+                ? existing as string
+                : null;
+            fileId ??= await _fileStore.StoreAsync(conversationId.ToString(), data.Data.ToArray(), data.MediaType, data.Name, cancellationToken);
+
+            stripped[i] = new UriContent(new Uri($"urn:umbraco-ai-agent-file:{fileId}"), data.MediaType)
+            {
+                AdditionalProperties = new AdditionalPropertiesDictionary
+                {
+                    [AIFileContentMarker.FileIdPropertyKey] = fileId
+                }
+            };
+        }
+
+        if (stripped is null)
+        {
+            return message;
+        }
+
+        return new ChatMessage(message.Role, stripped)
+        {
+            AuthorName = message.AuthorName,
+            CreatedAt = message.CreatedAt,
+            MessageId = message.MessageId,
+            AdditionalProperties = message.AdditionalProperties,
+            RawRepresentation = message.RawRepresentation,
+        };
+    }
 
     private static ChatMessage? TryDeserialize(string contentJson)
     {

@@ -24,6 +24,14 @@ namespace Umbraco.AI.Agent.Core.FileStore;
 /// than one resolve path — the file endpoint and follow-up turns that reference a file by id — and
 /// both take a thread and file id supplied by the client.
 /// </para>
+/// <para>
+/// <see cref="CleanupExpiredAsync"/> ages out a thread once it has been quiet past the retention
+/// window, unless a registered <see cref="IAIFileThreadLifecycleProvider"/> reports the thread's backing
+/// record is still alive (a persisted conversation, say) — that keeps a long-lived conversation's
+/// attachments readable for as long as the conversation exists, instead of on a fixed clock that fits
+/// only short-lived, unsaved chats. <see cref="CleanupThreadAsync"/> remains the explicit purge called
+/// when a record is actually deleted.
+/// </para>
 /// </remarks>
 internal sealed class AIFileStore : IAIFileStore
 {
@@ -32,15 +40,18 @@ internal sealed class AIFileStore : IAIFileStore
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<AIFileStore> _logger;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly AIFileThreadLifecycleProviderCollection _lifecycleProviders;
 
     public AIFileStore(
         IFileSystem fileSystem,
         ILogger<AIFileStore> logger,
-        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null,
+        AIFileThreadLifecycleProviderCollection? lifecycleProviders = null)
     {
         _fileSystem = fileSystem;
         _logger = logger;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
+        _lifecycleProviders = lifecycleProviders ?? new AIFileThreadLifecycleProviderCollection(() => []);
     }
 
     /// <inheritdoc />
@@ -185,11 +196,11 @@ internal sealed class AIFileStore : IAIFileStore
     }
 
     /// <inheritdoc />
-    public Task<int> CleanupExpiredAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
+    public async Task<int> CleanupExpiredAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
         if (!_fileSystem.DirectoryExists(BasePath))
         {
-            return Task.FromResult(0);
+            return 0;
         }
 
         var cutoff = DateTimeOffset.UtcNow - maxAge;
@@ -213,15 +224,60 @@ internal sealed class AIFileStore : IAIFileStore
                 .Select(f => _fileSystem.GetLastModified(f))
                 .Max();
 
-            if (lastModified < cutoff)
+            if (lastModified >= cutoff)
             {
-                _fileSystem.DeleteDirectory(threadDir, recursive: true);
-                deleted++;
-                _logger.LogDebug("Cleaned up expired thread directory {ThreadDir} (last modified: {LastModified})", threadDir, lastModified);
+                continue;
+            }
+
+            var threadId = threadDir[(BasePath.Length + 1)..];
+            if (await IsThreadStillAliveAsync(threadId, cancellationToken))
+            {
+                // A registered lifecycle provider says this thread's backing record still exists (a
+                // persisted conversation, say) — keep it no matter how old. It is purged via
+                // CleanupThreadAsync when that record is actually deleted, not on a fixed clock.
+                continue;
+            }
+
+            _fileSystem.DeleteDirectory(threadDir, recursive: true);
+            deleted++;
+            _logger.LogDebug("Cleaned up expired thread directory {ThreadDir} (last modified: {LastModified})", threadDir, lastModified);
+        }
+
+        return deleted;
+    }
+
+    /// <summary>
+    /// Asks every registered <see cref="IAIFileThreadLifecycleProvider"/> whether it still owns a live
+    /// record for this thread. Fails closed: a provider that throws is treated as "keep it this pass"
+    /// rather than "delete it", so a transient fault (the database being briefly unreachable during the
+    /// hourly sweep, say) cannot delete a live persisted conversation's attachments.
+    /// </summary>
+    private async Task<bool> IsThreadStillAliveAsync(string threadId, CancellationToken cancellationToken)
+    {
+        foreach (var provider in _lifecycleProviders)
+        {
+            AIFileThreadLifecycleStatus status;
+            try
+            {
+                status = await provider.GetStatusAsync(threadId, cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "File thread lifecycle provider {Provider} failed checking thread {ThreadId}; keeping it this pass",
+                    provider.GetType().Name,
+                    threadId);
+                return true;
+            }
+
+            if (status == AIFileThreadLifecycleStatus.Alive)
+            {
+                return true;
             }
         }
 
-        return Task.FromResult(deleted);
+        return false;
     }
 
     private static string GetThreadPath(string threadId)

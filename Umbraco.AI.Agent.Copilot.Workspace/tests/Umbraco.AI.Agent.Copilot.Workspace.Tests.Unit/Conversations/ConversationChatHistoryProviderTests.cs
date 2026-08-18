@@ -193,5 +193,36 @@ public class ConversationChatHistoryProviderTests
 
             result.ShouldBeSameAs(message);
         }
+
+        /// <summary>
+        /// A real reply loads its reference from <see cref="AIMessage.ContentJson"/> — a genuine
+        /// serialize-then-deserialize round trip, not a reference built directly in memory like the
+        /// other tests above. System.Text.Json deserializes an untyped dictionary value as
+        /// <see cref="System.Text.Json.JsonElement"/> rather than the original <see cref="string"/>, so
+        /// a rehydration check that only matched <c>string</c> would silently skip every reply — exactly
+        /// the bug this test exists to catch (it passed against the in-memory-built reference above
+        /// while failing for real, on a second turn, in the running app).
+        /// </summary>
+        [Fact]
+        public async Task RehydrateAttachmentsAsync_ReferenceLoadedFromJson_StillResolves()
+        {
+            var storedMessage = new ChatMessage(ChatRole.User, [Reference("file-json")]);
+            var contentJson = System.Text.Json.JsonSerializer.Serialize(storedMessage, Microsoft.Extensions.AI.AIJsonUtilities.DefaultOptions);
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<ChatMessage>(contentJson, Microsoft.Extensions.AI.AIJsonUtilities.DefaultOptions)!;
+
+            // Confirms the round trip actually reproduces the JsonElement case rather than testing nothing.
+            var marker = ((UriContent)deserialized.Contents[0]).AdditionalProperties![AIFileContentMarker.FileIdPropertyKey];
+            marker.ShouldBeOfType<System.Text.Json.JsonElement>();
+
+            var fileStore = new Mock<IAIFileStore>();
+            fileStore
+                .Setup(x => x.ResolveAsync(ConversationId.ToString(), "file-json", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new AIStoredFile { Data = SomeBytes, MimeType = "image/png", Filename = "a.png" });
+
+            var result = await CreateProvider(fileStore).RehydrateAttachmentsAsync(ConversationId, deserialized);
+
+            var dataContent = result.Contents[0].ShouldBeOfType<DataContent>();
+            dataContent.Data.ToArray().ShouldBe(SomeBytes);
+        }
     }
 }

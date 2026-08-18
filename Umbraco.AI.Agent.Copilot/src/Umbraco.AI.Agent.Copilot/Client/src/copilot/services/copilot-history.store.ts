@@ -16,9 +16,13 @@ import type { UaiChatMessage } from "@umbraco-ai/agent-ui";
  *
  * Note: stored chats can contain content values, sitting in the browser's `localStorage`. That's
  * fine on a personal machine but worth being aware of on shared logins — so on a shared machine,
- * the caller (see `UaiCopilotContext`) ties this store's lifetime to the backoffice session:
- * an explicit sign-out clears everything immediately, and a session timeout is forgiven only if the
- * user resumes on the same calendar day ({@link recordTimeout} / {@link consumeTimeout}).
+ * the caller (see `UaiCopilotContext`) ties this store to the backoffice session in two ways:
+ * - Scoped by user ({@link setUserScope}): each login reads and writes its own bucket, so switching
+ *   who's signed in never surfaces the previous person's threads — it doesn't destroy them, they're
+ *   just not visible until that person signs back in themselves.
+ * - Bounded by session lifetime: an explicit sign-out clears the current scope's history
+ *   immediately, and a session timeout is forgiven only if the user resumes on the same calendar day
+ *   ({@link recordTimeout} / {@link consumeTimeout}).
  */
 
 const STORAGE_KEY = "umb:uai-copilot:history";
@@ -52,6 +56,7 @@ interface StoredBlob {
 export class UaiCopilotHistoryStore {
     #storage?: Storage;
     #maxBytes: number;
+    #userScope?: string;
 
     /**
      * @param storage Storage backend. Omitted (or `undefined`) falls back to `localStorage`; pass
@@ -64,6 +69,25 @@ export class UaiCopilotHistoryStore {
     constructor(storage: Storage | null | undefined = safeLocalStorage(), maxBytes: number = MAX_BYTES) {
         this.#storage = storage ?? undefined;
         this.#maxBytes = maxBytes;
+    }
+
+    /**
+     * Scopes all subsequent reads/writes to the given user, so two different logins on the same
+     * browser never see each other's threads — switching scope doesn't touch the other user's data,
+     * it just stops looking at it; it's there again if that user comes back.
+     *
+     * Call once the current user's id is known (it may not be yet, right when the store is first
+     * constructed — see `UaiCopilotContext`) and again if the authenticated user ever changes without
+     * a full page reload in between. `undefined` (the default) falls back to a single unscoped
+     * bucket, which is also what every existing caller/test that never calls this method continues
+     * to use.
+     */
+    setUserScope(userId: string | undefined): void {
+        this.#userScope = userId;
+    }
+
+    get #storageKey(): string {
+        return this.#userScope ? `${STORAGE_KEY}:${this.#userScope}` : STORAGE_KEY;
     }
 
     /** Whether a (non-empty) thread is stored for the given key. */
@@ -164,11 +188,11 @@ export class UaiCopilotHistoryStore {
         this.#write(blob);
     }
 
-    /** Wipes all stored history, preferences, and any pending timeout marker. */
+    /** Wipes all stored history, preferences, and any pending timeout marker for the current scope. */
     clearAll(): void {
         if (!this.#storage) return;
         try {
-            this.#storage.removeItem(STORAGE_KEY);
+            this.#storage.removeItem(this.#storageKey);
         } catch {
             // Storage unavailable — nothing to clear.
         }
@@ -177,7 +201,7 @@ export class UaiCopilotHistoryStore {
     #read(): StoredBlob {
         if (!this.#storage) return emptyBlob();
         try {
-            const raw = this.#storage.getItem(STORAGE_KEY);
+            const raw = this.#storage.getItem(this.#storageKey);
             if (!raw) return emptyBlob();
             const parsed = JSON.parse(raw) as Partial<StoredBlob>;
             // Discard anything from an older/unknown schema rather than risk misreading it.
@@ -198,7 +222,7 @@ export class UaiCopilotHistoryStore {
     #write(blob: StoredBlob): void {
         if (!this.#storage) return;
         try {
-            this.#storage.setItem(STORAGE_KEY, JSON.stringify(blob));
+            this.#storage.setItem(this.#storageKey, JSON.stringify(blob));
         } catch {
             // Quota exceeded or storage unavailable — drop silently. History is best-effort.
         }

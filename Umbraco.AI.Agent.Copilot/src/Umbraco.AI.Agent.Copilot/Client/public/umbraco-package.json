@@ -15,6 +15,12 @@
             "name": "Umbraco AI Agent Copilot Backoffice Entry Point",
             "alias": "Umbraco.AI.Agent.Copilot.BackofficeEntryPoint",
             "js": "/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot-app.js"
+        },
+        {
+            "type": "backofficeEntryPoint",
+            "name": "Umbraco AI Agent Copilot Internal Components Entry Point",
+            "alias": "Umbraco.AI.Agent.Copilot.InternalComponentsEntryPoint",
+            "js": "/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot-internal-components.js"
         }
     ],
     "importmap": {

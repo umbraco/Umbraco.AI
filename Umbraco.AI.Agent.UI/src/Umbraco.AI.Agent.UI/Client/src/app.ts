@@ -1,18 +1,4 @@
-// Import all custom elements to register them
-import "./chat/components/chat.element.js";
-import "./chat/components/message.element.js";
-import "./chat/components/input.element.js";
-import "./chat/components/agent-status.element.js";
-import "./chat/components/tool-renderer.element.js";
-import "./chat/components/tool-status.element.js";
-import "./chat/components/hitl-approval.element.js";
-import "./chat/components/approval-base.element.js";
-import "./chat/components/message-copy-button.element.js";
-import "./chat/components/message-regenerate-button.element.js";
-import "./chat/components/voice-button.element.js";
-
-// Re-export all public APIs from the package.
-export * from "./index.js";
+// Re-export the public API
 export * from "./exports.js";
 
 /**

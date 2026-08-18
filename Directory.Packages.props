@@ -52,18 +52,18 @@
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[18.3.0, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[18.3.0, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.AGUI" Version="[18.1.3, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[18.3.0, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[18.1.3, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[18.1.3, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[18.1.3, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[18.0.1, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[18.0.4, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[18.3.1, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[18.3.1, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.AGUI" Version="[18.1.4, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[18.3.1, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[18.1.4, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[18.1.4, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[18.1.4, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[18.0.2, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[18.0.5, 18.999.999)" />
     <PackageVersion Include="Umbraco.AI.Deploy" Version="[18.1.0, 18.999.999)" />
     <PackageVersion Include="Umbraco.AI.Automate" Version="[18.0.0, 18.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[18.2.2, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[18.2.3, 18.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->

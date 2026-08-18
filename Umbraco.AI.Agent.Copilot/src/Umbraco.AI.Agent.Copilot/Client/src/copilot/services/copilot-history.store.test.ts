@@ -140,6 +140,7 @@ describe("UaiCopilotHistoryStore", () => {
         expect(() => store.recordTimeout()).not.toThrow();
         expect(() => store.consumeTimeout()).not.toThrow();
         expect(() => store.clearAll()).not.toThrow();
+        expect(() => store.setUserScope("user-a")).not.toThrow();
     });
 
     it("stores the agent a thread ran with, per key", () => {
@@ -182,6 +183,56 @@ describe("UaiCopilotHistoryStore", () => {
 
         expect(store.load("document:a")).toHaveLength(1);
         expect(store.loadAgentId("document:a")).toBeUndefined();
+    });
+
+    describe("per-user scope", () => {
+        it("isolates threads between two user scopes", () => {
+            const store = new UaiCopilotHistoryStore(storage);
+
+            store.setUserScope("user-a");
+            store.save("document:a", [msg("1", "from a")]);
+
+            store.setUserScope("user-b");
+            expect(store.load("document:a")).toBeUndefined();
+            store.save("document:a", [msg("2", "from b")]);
+
+            expect(store.load("document:a")![0].content).toBe("from b");
+        });
+
+        it("doesn't destroy the previous user's data when switching scope -- it's just not visible", () => {
+            const store = new UaiCopilotHistoryStore(storage);
+
+            store.setUserScope("user-a");
+            store.save("document:a", [msg("1", "from a")]);
+
+            store.setUserScope("user-b");
+            store.setUserScope("user-a");
+
+            expect(store.load("document:a")![0].content).toBe("from a");
+        });
+
+        it("clearAll() only wipes the current scope, not other users' scopes", () => {
+            const store = new UaiCopilotHistoryStore(storage);
+
+            store.setUserScope("user-a");
+            store.save("document:a", [msg("1", "from a")]);
+
+            store.setUserScope("user-b");
+            store.save("document:a", [msg("2", "from b")]);
+            store.clearAll();
+            expect(store.load("document:a")).toBeUndefined();
+
+            store.setUserScope("user-a");
+            expect(store.load("document:a")![0].content).toBe("from a");
+        });
+
+        it("falls back to a single unscoped bucket when no user scope is ever set", () => {
+            // Every other test in this file relies on this default -- asserted explicitly here.
+            const store = new UaiCopilotHistoryStore(storage);
+            store.save("document:a", [msg("1", "hi")]);
+
+            expect(storage.raw(STORAGE_KEY)).toBeDefined();
+        });
     });
 
     describe("session timeout retention", () => {

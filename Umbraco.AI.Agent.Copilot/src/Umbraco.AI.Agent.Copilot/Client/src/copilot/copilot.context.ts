@@ -3,6 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
+import { UMB_CURRENT_USER_CONTEXT } from "@umbraco-cms/backoffice/current-user";
 import {
     type Observable,
     map,
@@ -242,6 +243,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             }
         });
 
+        this.#bindHistoryToUser();
         this.#bindHistoryToSession();
 
         this.provideContext(UAI_COPILOT_CONTEXT, this);
@@ -322,6 +324,20 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     }
 
     // ─── Session lifecycle (history retention) ──────────────────────────────────
+
+    /**
+     * Scopes the local history store to whoever is currently logged in, so switching users on a
+     * shared machine never surfaces the previous person's threads. Re-runs if the authenticated
+     * user's id ever changes without a full page reload in between.
+     */
+    #bindHistoryToUser(): void {
+        this.consumeContext(UMB_CURRENT_USER_CONTEXT, (currentUserContext) => {
+            if (!currentUserContext) return;
+            this.observe(currentUserContext.unique, (userUnique) => {
+                this.#historyStore.setUserScope(userUnique);
+            });
+        });
+    }
 
     /**
      * Ties the local history store's lifetime to the backoffice session: an explicit sign-out

@@ -5,12 +5,25 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [17.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.3...Umbraco.AI.Agent@17.2.0-rc.1) (2026-08-11)
+
+## [17.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.4...Umbraco.AI.Agent@17.2.0-rc.1) (2026-08-18)
 
 ### feat
 
 * **agent,copilot:** Lock destructive backend tools out of the contextual copilot surface ([6e4854b](https://github.com/umbraco/Umbraco.AI/commit/6e4854b5484768bddb9f88b8dd8eab0d1dd3fdfc))
 
+### fix
+
+* **agent,conversations:** Lead every agent request with the runtime-context system message ([b262204](https://github.com/umbraco/Umbraco.AI/commit/b2622049e08d6b332d227809794995e13c8887b0))
+* **agent,copilot-workspace:** Stop double-storing attachment bytes in conversation history ([ff8106c](https://github.com/umbraco/Umbraco.AI/commit/ff8106c950eb83064d2029f7a8f47a77068fd576))
+* **agent,copilot-workspace:** Stop the file retention sweep aging out live persisted conversations ([01757fe](https://github.com/umbraco/Umbraco.AI/commit/01757feb51b307b61c7970096fd83eeac9133e9a))
+* **agent:** Cache a confirmed-alive thread so the sweep stops re-asking every hour ([7f227bf](https://github.com/umbraco/Umbraco.AI/commit/7f227bf81f50a415f569be8cfc3750d55209b225))
+* **agent:** Keep filenames and remote links when converting back to AG-UI ([58306cf](https://github.com/umbraco/Umbraco.AI/commit/58306cf81ee16cd143387bd3ebb26fc95b99eddc))
+* **agent:** Resolve tool permissions once per agent execution ([13acd95](https://github.com/umbraco/Umbraco.AI/commit/13acd958463ca446511bc44e5ace439b94b3e9e9))
+* **agent:** Restore controller activation for the AG-UI stream endpoint ([9c80d65](https://github.com/umbraco/Umbraco.AI/commit/9c80d65a9788fd92d6facfdb4e75f56b598c5af9))
+* **core,agent,agent-ui,copilot,copilot-workspace,ci:** Stop leaking internal components into the shared entry file (#328) ([0431da5](https://github.com/umbraco/Umbraco.AI/commit/0431da59443dfcf2ebbadf3d59f9d1709bcd2177)), closes [#328](https://github.com/umbraco/Umbraco.AI/issues/328) [#324](https://github.com/umbraco/Umbraco.AI/issues/324) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
+* **core,agent:** Pass the real filename to file processing handlers ([85a9292](https://github.com/umbraco/Umbraco.AI/commit/85a92927c6f44bfb2182b6fed00fe464c2adeb28)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
+* **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
 ## [17.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.3...Umbraco.AI.Agent@17.1.4) (2026-08-17)
 
 ### feat

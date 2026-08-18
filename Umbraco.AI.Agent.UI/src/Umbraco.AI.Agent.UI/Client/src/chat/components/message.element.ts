@@ -1,12 +1,14 @@
-import { customElement, property, css, html } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
+import { parseUaiFileUrl, resolveUaiFileObjectUrl } from "@umbraco-ai/agent";
 import type {
     UaiChatMessage,
     UaiInputContent,
     UaiInputContentSource,
     UaiInputContentDataSource,
+    UaiInputContentUrlSource,
 } from "../types/index.js";
 
 /**
@@ -23,6 +25,50 @@ export class UaiChatMessageElement extends UmbLitElement {
 
     @property({ type: Boolean, attribute: "is-running" })
     isRunning = false;
+
+    /**
+     * Object URLs for stored files, keyed by their server URL. Stored files sit behind the
+     * authenticated management API, so their bytes are fetched with the access token and rendered
+     * from an object URL rather than by pointing `<img src>` at the endpoint.
+     */
+    @state()
+    private _objectUrls: Record<string, string> = {};
+
+    /** Server URLs already requested, so a re-render does not refetch. */
+    #requestedUrls = new Set<string>();
+
+    override disconnectedCallback() {
+        super.disconnectedCallback();
+
+        // Object URLs pin their blob in memory until revoked.
+        for (const objectUrl of Object.values(this._objectUrls)) {
+            URL.revokeObjectURL(objectUrl);
+        }
+
+        this._objectUrls = {};
+        this.#requestedUrls.clear();
+    }
+
+    async #requestObjectUrl(serverUrl: string) {
+        if (this.#requestedUrls.has(serverUrl)) {
+            return;
+        }
+
+        this.#requestedUrls.add(serverUrl);
+
+        const objectUrl = await resolveUaiFileObjectUrl(serverUrl);
+        if (!objectUrl) {
+            return;
+        }
+
+        // The element may have been torn down while the fetch was in flight.
+        if (!this.isConnected) {
+            URL.revokeObjectURL(objectUrl);
+            return;
+        }
+
+        this._objectUrls = { ...this._objectUrls, [serverUrl]: objectUrl };
+    }
 
     #renderAgentAttribution() {
         if (this.message.role !== "assistant" || !this.message.agentName) {
@@ -78,6 +124,16 @@ export class UaiChatMessageElement extends UmbLitElement {
             if (src) {
                 return html`<img class="inline-image" src=${src} alt=${filename ?? "Attached image"} />`;
             }
+
+            // A stored image resolves asynchronously. Hold the space with a placeholder rather than
+            // falling through to the generic file chip and then swapping to an image.
+            if (source.type === "url") {
+                return html`
+                    <div class="inline-image-loading">
+                        <uui-loader></uui-loader>
+                    </div>
+                `;
+            }
         }
 
         return html`
@@ -93,9 +149,22 @@ export class UaiChatMessageElement extends UmbLitElement {
             const data = source as UaiInputContentDataSource;
             return `data:${data.mimeType};base64,${data.value}`;
         }
+
         if (source.type === "url") {
-            return source.value;
+            const serverUrl = (source as UaiInputContentUrlSource).value;
+
+            // Only URLs from the stored-file endpoint resolve to an object URL. Anything else —
+            // an externally hosted image, say — is rendered directly.
+            if (!parseUaiFileUrl(serverUrl)) {
+                return serverUrl;
+            }
+
+            // Fetched on first render and cached; the object URL arrives via _objectUrls and
+            // re-renders this message.
+            void this.#requestObjectUrl(serverUrl);
+            return this._objectUrls[serverUrl];
         }
+
         return undefined;
     }
 
@@ -255,6 +324,17 @@ export class UaiChatMessageElement extends UmbLitElement {
             border: 1px solid var(--uui-color-border);
             display: block;
             margin-top: var(--uui-size-space-1);
+        }
+
+        .inline-image-loading {
+            width: 200px;
+            height: 100px;
+            border-radius: var(--uui-border-radius);
+            border: 1px solid var(--uui-color-border);
+            margin-top: var(--uui-size-space-1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .file-chip {

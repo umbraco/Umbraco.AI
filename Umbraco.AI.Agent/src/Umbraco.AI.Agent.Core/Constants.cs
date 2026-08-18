@@ -6,6 +6,30 @@
 public static class Constants
 {
     /// <summary>
+    /// File system paths used by the agent.
+    /// </summary>
+    public static class SystemDirectories
+    {
+        /// <summary>
+        /// Content-root-relative directory holding conversation file uploads.
+        /// </summary>
+        /// <remarks>
+        /// Under the content root rather than the web root, so it is NOT reachable over HTTP. These are
+        /// private user uploads and are only ever served through the authenticated, owner-scoped file
+        /// endpoint. Anything served statically (the media directory in particular) is the wrong home
+        /// for them.
+        /// </remarks>
+        public const string ConversationFiles = Umbraco.Cms.Core.Constants.SystemDirectories.TempData + "/UmbracoAIAgent";
+
+        /// <summary>
+        /// Directory, relative to the media file system, that earlier versions wrote conversation
+        /// uploads into. Retained so the upgrade path can delete what was left there; nothing writes
+        /// to it any more.
+        /// </summary>
+        public const string LegacyPublicConversationFiles = "agui-files";
+    }
+
+    /// <summary>
     /// Keys for RuntimeContext.
     /// </summary>
     public static class ContextKeys

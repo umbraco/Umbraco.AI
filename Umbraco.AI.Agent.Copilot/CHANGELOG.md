@@ -5,7 +5,7 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [17.1.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.0.3...Umbraco.AI.Agent.Copilot@17.1.0-rc.4) (2026-08-12)
+## [17.1.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.0.3...Umbraco.AI.Agent.Copilot@17.1.0-rc.1) (2026-08-12)
 
 ### feat
 
@@ -24,28 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **core,agent,prompt,copilot:** Stop leaking internal components into the shared entry file (#326) ([41f3d61](https://github.com/umbraco/Umbraco.AI/commit/41f3d61d6915bbfcaa461b8cd57e7030fc0a4f0a)), closes [#326](https://github.com/umbraco/Umbraco.AI/issues/326) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
 
 ## [17.0.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.0.1...Umbraco.AI.Agent.Copilot@17.0.3) (2026-08-11)
-
-### fix
-
-* **core,copilot:** Persist contextual copilot history by keying on the reactive entity unique ([4b5c1fa](https://github.com/umbraco/Umbraco.AI/commit/4b5c1faf1439606f0ed8901ee69536570d73d61d))
-
-### refactor
-
-* **agent-ui,copilot:** Rename the empty-state slot to empty-state-message ([5a43dd4](https://github.com/umbraco/Umbraco.AI/commit/5a43dd47ce5f4ebbd324f75238b3bdf06ad618d5))
-* **copilot:** Centralise FAB ownership and derive support from adapters ([3eb4668](https://github.com/umbraco/Umbraco.AI/commit/3eb46687bfcb96316db5970ac26264b66e9cc2e9))
-* **copilot:** Extract the hide-debounce and ref-count the section observable ([8831d08](https://github.com/umbraco/Umbraco.AI/commit/8831d08561df6f329e2dc4659708893e0fcd69a0))
-* **copilot:** Remove retired header-app section stack and unify trigger visibility ([b3c1254](https://github.com/umbraco/Umbraco.AI/commit/b3c1254c89022e758b2a1463f3a0e2237b7dcab6))
-
-## [17.1.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.0.3...Umbraco.AI.Agent.Copilot@17.1.0-rc.3) (2026-08-11)
-
-### feat
-
-* **agent,copilot:** Lock destructive backend tools out of the contextual copilot surface ([6e4854b](https://github.com/umbraco/Umbraco.AI/commit/6e4854b5484768bddb9f88b8dd8eab0d1dd3fdfc))
-* **copilot,agent-ui:** Greet with the item name in the empty chat via an empty-state slot ([c8d8b36](https://github.com/umbraco/Umbraco.AI/commit/c8d8b36bbd8e10b3371383858271929bd56ec592))
-* **copilot,agent-ui:** Refocus the contextual copilot with context framing and per-node history ([1de34e4](https://github.com/umbraco/Umbraco.AI/commit/1de34e4a2e1746d5adb2adafa9e1eeafc4c442b7))
-* **copilot:** Add contextual floating chat button in supported workspaces ([6cc5d12](https://github.com/umbraco/Umbraco.AI/commit/6cc5d125cc582e6817c907e730cfca68856fb0d6))
-* **copilot:** Make the contextual trigger keyboard and screen-reader accessible ([010872c](https://github.com/umbraco/Umbraco.AI/commit/010872ced4f5a788c163192981a192ec13519447))
-* **copilot:** Use the AI sparkles glyph on the contextual copilot button ([4d0fd00](https://github.com/umbraco/Umbraco.AI/commit/4d0fd00a6d0cacc04d6217b5036ca497f2313782))
 
 ### fix
 

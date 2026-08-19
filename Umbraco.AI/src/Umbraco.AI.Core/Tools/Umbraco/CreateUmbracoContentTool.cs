@@ -95,6 +95,11 @@ public class CreateUmbracoContentTool(
             ContentToolHelpers.BuildContentItem(attempt.Result.Content, args.Culture),
             null);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(CreateUmbracoContentArgs args)
+        => $"Create a new '{args.ContentTypeAlias}' content item named '{args.Name}'" +
+           (args.ParentKey is { } parentKey ? $" under parent {parentKey}." : " at the root.");
 }
 
 /// <summary>

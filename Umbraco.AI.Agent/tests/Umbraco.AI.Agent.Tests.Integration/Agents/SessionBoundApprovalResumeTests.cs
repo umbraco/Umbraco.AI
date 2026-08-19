@@ -9,6 +9,7 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.Core.Tools;
 using Xunit;
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
@@ -97,7 +98,7 @@ public class SessionBoundApprovalResumeTests
             .ReturnsAsync((IEnumerable<AGUIMessage>? msgs, string _, CancellationToken _) =>
                 new AGUIFileProcessorResult { RewrittenMessages = msgs ?? [], ResolvedMessages = msgs ?? [] });
 
-        _service = new AGUIStreamingService(_converter.Object, _fileProcessor.Object, NullLogger<AGUIStreamingService>.Instance);
+        _service = new AGUIStreamingService(_converter.Object, _fileProcessor.Object, new AIToolCollection(() => []), NullLogger<AGUIStreamingService>.Instance);
     }
 
     [Fact]

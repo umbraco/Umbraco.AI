@@ -87,6 +87,20 @@ public class AddUmbracoContentItemTool(
         return new AddUmbracoContentItemResult(outcome.Success, outcome.BlockKey, outcome.Message);
     }
 
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(AddUmbracoContentItemArgs args)
+    {
+        var propertyAlias = args.Path.LastOrDefault()?.Alias;
+        if (propertyAlias is null)
+        {
+            return null;
+        }
+
+        return args.ElementType is { Length: > 0 }
+            ? $"Add a new '{args.ElementType}' item to '{propertyAlias}'."
+            : $"Add a new item to '{propertyAlias}'.";
+    }
+
     private static JsonObject? ToJsonObject(Dictionary<string, JsonElement>? values)
     {
         if (values is null)

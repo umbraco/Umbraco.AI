@@ -7,6 +7,7 @@ using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Providers.Errors;
+using Umbraco.AI.Core.Tools;
 
 namespace Umbraco.AI.Agent.Core.AGUI;
 
@@ -24,6 +25,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 {
     private readonly IAGUIMessageConverter _messageConverter;
     private readonly IAGUIFileProcessor _fileProcessor;
+    private readonly AIToolCollection _toolCollection;
     private readonly ILogger<AGUIStreamingService> _logger;
 
     /// <summary>
@@ -32,10 +34,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     public AGUIStreamingService(
         IAGUIMessageConverter messageConverter,
         IAGUIFileProcessor fileProcessor,
+        AIToolCollection toolCollection,
         ILogger<AGUIStreamingService> logger)
     {
         _messageConverter = messageConverter;
         _fileProcessor = fileProcessor;
+        _toolCollection = toolCollection;
         _logger = logger;
     }
 
@@ -241,7 +245,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                 {
                                     yield return pendingEvent;
                                 }
-                                emitter.RegisterApprovalRequest(approvalInterruptId, pendingCall.CallId, pendingCall.Name, argsJson);
+
+                                var tool = _toolCollection.GetById(pendingCall.Name);
+                                var approvalTitle = tool?.Name ?? pendingCall.Name;
+                                var approvalMessage = tool?.DescribeInvocation(pendingCall.Arguments)
+                                    ?? FormatGenericArgsMessage(pendingCall.Arguments);
+                                emitter.RegisterApprovalRequest(approvalInterruptId, pendingCall.CallId, pendingCall.Name, argsJson, approvalTitle, approvalMessage);
                             }
                             break;
 
@@ -338,6 +347,22 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         return string.IsNullOrEmpty(errorContent.ErrorCode)
             ? $"\n\n[Provider error: {message}]\n\n"
             : $"\n\n[Provider error {errorContent.ErrorCode}: {message}]\n\n";
+    }
+
+    /// <summary>
+    /// Builds a generic "what this call will do" message from raw arguments, for tools that haven't
+    /// implemented <see cref="IAITool.DescribeInvocation"/> -- a plain list of argument name/value pairs
+    /// is still far more informative to a human approving the call than the bare tool name alone.
+    /// </summary>
+    private static string FormatGenericArgsMessage(IDictionary<string, object?>? arguments)
+    {
+        if (arguments is null || arguments.Count == 0)
+        {
+            return "This action takes no arguments.";
+        }
+
+        var parts = arguments.Select(kvp => $"{kvp.Key}: {System.Text.Json.JsonSerializer.Serialize(kvp.Value)}");
+        return string.Join(", ", parts);
     }
 
 

@@ -109,7 +109,7 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
         {
             try
             {
-                var deserializedArgs = System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions);
+                var deserializedArgs = TryConvertDirectOrJson(jsonElement);
                 if (deserializedArgs is null)
                 {
                     throw new ArgumentException(
@@ -130,7 +130,10 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
             }
         }
 
-        if (args is TArgs typedArgs)
+        // Deliberately does NOT fall back to the lenient serialize-round-trip conversion the
+        // approval-UI hooks below use: an unexpected argument shape reaching actual execution is a
+        // caller bug worth surfacing loudly, not something to paper over.
+        if (TryConvertDirectOrJson(args) is { } typedArgs)
         {
             return ExecuteAsync(typedArgs, cancellationToken);
         }
@@ -207,7 +210,10 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
     /// <summary>
     /// Deserializes raw call arguments (a <typeparamref name="TArgs"/> instance, a JSON element, or an
     /// arbitrary object) to <typeparamref name="TArgs"/>, or null on any failure -- shared by the
-    /// approval-UI hooks above, both of which must degrade gracefully rather than throw.
+    /// approval-UI hooks above, both of which must degrade gracefully rather than throw. Unlike
+    /// <see cref="TryConvertDirectOrJson"/> (used by actual execution), this also falls back to a
+    /// serialize-round-trip for an arbitrary object shape, since a best-effort UI hint failing outright
+    /// on an unusual-but-convertible shape would be a worse outcome than the fallback conversion.
     /// </summary>
     private static TArgs? TryDeserializeArgs(object? args)
     {
@@ -218,19 +224,28 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
 
         try
         {
-            return args switch
-            {
-                TArgs t => t,
-                System.Text.Json.JsonElement jsonElement =>
-                    System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions),
-                _ => System.Text.Json.JsonSerializer.Deserialize<TArgs>(
-                    System.Text.Json.JsonSerializer.SerializeToElement(args, Constants.DefaultJsonSerializerOptions),
-                    Constants.DefaultJsonSerializerOptions),
-            };
+            return TryConvertDirectOrJson(args) ?? System.Text.Json.JsonSerializer.Deserialize<TArgs>(
+                System.Text.Json.JsonSerializer.SerializeToElement(args, Constants.DefaultJsonSerializerOptions),
+                Constants.DefaultJsonSerializerOptions);
         }
         catch
         {
             return null;
         }
     }
+
+    /// <summary>
+    /// Converts raw call arguments to <typeparamref name="TArgs"/> via the two "cheap" shapes: an
+    /// already-typed instance, or a JSON element to deserialize. Returns null for any other shape --
+    /// shared by <see cref="IAITool.ExecuteAsync"/> and <see cref="TryDeserializeArgs"/>, which then
+    /// apply their own, deliberately different, policy for what to do with an unrecognized shape (throw
+    /// vs. attempt a lenient fallback).
+    /// </summary>
+    private static TArgs? TryConvertDirectOrJson(object? args) => args switch
+    {
+        TArgs t => t,
+        System.Text.Json.JsonElement jsonElement =>
+            System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions),
+        _ => null,
+    };
 }

@@ -109,7 +109,7 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
         {
             try
             {
-                var deserializedArgs = System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions);
+                var deserializedArgs = TryConvertDirectOrJson(jsonElement);
                 if (deserializedArgs is null)
                 {
                     throw new ArgumentException(
@@ -130,7 +130,10 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
             }
         }
 
-        if (args is TArgs typedArgs)
+        // Deliberately does NOT fall back to the lenient serialize-round-trip conversion the
+        // approval-UI hooks below use: an unexpected argument shape reaching actual execution is a
+        // caller bug worth surfacing loudly, not something to paper over.
+        if (TryConvertDirectOrJson(args) is { } typedArgs)
         {
             return ExecuteAsync(typedArgs, cancellationToken);
         }
@@ -140,4 +143,109 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
             $"Expected {typeof(TArgs).Name} or JsonElement. " +
             $"Value: {System.Text.Json.JsonSerializer.Serialize(args)}");
     }
+
+    /// <summary>
+    /// Produces a short, human-readable description of what this specific call will do, given its
+    /// strongly-typed arguments. Override for destructive tools where the raw argument values alone
+    /// aren't clear on their own (e.g. a bare content key, or a property path with no context). Returns
+    /// null by default, which falls back to a generic argument-by-argument display in the approval UI.
+    /// </summary>
+    /// <param name="args">The strongly-typed arguments for this call.</param>
+    protected virtual string? DescribeInvocation(TArgs args) => null;
+
+    /// <summary>
+    /// Produces the exact phrase a human must type to unlock the Approve button for this specific call.
+    /// Override for calls that warrant more friction than a plain click (e.g. publishing or deleting a
+    /// content item) -- typically by looking up the target item and returning its display name. Unlike
+    /// <see cref="DescribeInvocation(TArgs)"/>, this may perform a lookup. Returns null by default, which
+    /// keeps the plain Approve/Deny buttons with no typed confirmation.
+    /// </summary>
+    /// <param name="args">The strongly-typed arguments for this call.</param>
+    protected virtual string? ConfirmationPhrase(TArgs args) => null;
+
+    /// <summary>
+    /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
+    /// delegates to <see cref="DescribeInvocation(TArgs)"/>. Never throws: description generation must
+    /// not break the approval flow, so any deserialization or generation failure falls back to null.
+    /// </summary>
+    string? IAITool.DescribeInvocation(object? args)
+    {
+        if (TryDeserializeArgs(args) is not { } typedArgs)
+        {
+            return null;
+        }
+
+        try
+        {
+            return DescribeInvocation(typedArgs);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
+    /// delegates to <see cref="ConfirmationPhrase(TArgs)"/>. Never throws: a lookup failure falls back to
+    /// null (no confirmation gate) rather than blocking the approval flow.
+    /// </summary>
+    string? IAITool.ConfirmationPhrase(object? args)
+    {
+        if (TryDeserializeArgs(args) is not { } typedArgs)
+        {
+            return null;
+        }
+
+        try
+        {
+            return ConfirmationPhrase(typedArgs);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Deserializes raw call arguments (a <typeparamref name="TArgs"/> instance, a JSON element, or an
+    /// arbitrary object) to <typeparamref name="TArgs"/>, or null on any failure -- shared by the
+    /// approval-UI hooks above, both of which must degrade gracefully rather than throw. Unlike
+    /// <see cref="TryConvertDirectOrJson"/> (used by actual execution), this also falls back to a
+    /// serialize-round-trip for an arbitrary object shape, since a best-effort UI hint failing outright
+    /// on an unusual-but-convertible shape would be a worse outcome than the fallback conversion.
+    /// </summary>
+    private static TArgs? TryDeserializeArgs(object? args)
+    {
+        if (args is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return TryConvertDirectOrJson(args) ?? System.Text.Json.JsonSerializer.Deserialize<TArgs>(
+                System.Text.Json.JsonSerializer.SerializeToElement(args, Constants.DefaultJsonSerializerOptions),
+                Constants.DefaultJsonSerializerOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Converts raw call arguments to <typeparamref name="TArgs"/> via the two "cheap" shapes: an
+    /// already-typed instance, or a JSON element to deserialize. Returns null for any other shape --
+    /// shared by <see cref="IAITool.ExecuteAsync"/> and <see cref="TryDeserializeArgs"/>, which then
+    /// apply their own, deliberately different, policy for what to do with an unrecognized shape (throw
+    /// vs. attempt a lenient fallback).
+    /// </summary>
+    private static TArgs? TryConvertDirectOrJson(object? args) => args switch
+    {
+        TArgs t => t,
+        System.Text.Json.JsonElement jsonElement =>
+            System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions),
+        _ => null,
+    };
 }

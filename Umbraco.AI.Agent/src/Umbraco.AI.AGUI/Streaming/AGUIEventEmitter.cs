@@ -30,7 +30,7 @@ public sealed class AGUIEventEmitter
     private readonly string _runId;
     private readonly HashSet<string> _emittedToolCallIds = new();
     private readonly HashSet<string> _frontendToolCallIds = new();
-    private readonly List<(string InterruptId, string ToolCallId, string ToolName, string ArgsJson)> _approvalInterrupts = new();
+    private readonly List<(string InterruptId, string ToolCallId, string ToolName, string ArgsJson, string Title, string Message, string? ConfirmationPhrase)> _approvalInterrupts = new();
 
     private string _currentMessageId;
     private string? _lastGeneratedCallId;
@@ -232,8 +232,60 @@ public sealed class AGUIEventEmitter
     /// <param name="toolCallId">The MEAI tool call ID for correlation with the resume entry.</param>
     /// <param name="toolName">The name of the tool requesting approval.</param>
     /// <param name="argsJson">The serialized arguments JSON for display in the approval UI.</param>
+    /// <remarks>
+    /// Registers with a generic title/message and no confirmation phrase. Use the overload with
+    /// <c>title</c>, <c>message</c>, and <c>confirmationPhrase</c> parameters to show the approver what
+    /// the call will actually do.
+    /// </remarks>
+    [Obsolete("Use the overload with title, message, and confirmationPhrase parameters instead. Will be removed in v20.")]
     public void RegisterApprovalRequest(string interruptId, string toolCallId, string toolName, string argsJson)
-        => _approvalInterrupts.Add((interruptId, toolCallId, toolName, argsJson));
+        => RegisterApprovalRequest(interruptId, toolCallId, toolName, argsJson, toolName, "This action requires approval.", confirmationPhrase: null);
+
+    /// <summary>
+    /// Registers a pending backend tool approval request to be included in the next
+    /// <see cref="EmitRunFinished"/> call as a <c>human_approval</c> interrupt.
+    /// </summary>
+    /// <param name="interruptId">
+    /// The AG-UI interrupt ID (opaque; typically built by <c>AGUIInterruptKind.ForApproval</c>).
+    /// </param>
+    /// <param name="toolCallId">The MEAI tool call ID for correlation with the resume entry.</param>
+    /// <param name="toolName">The name of the tool requesting approval.</param>
+    /// <param name="argsJson">The serialized arguments JSON for display in the approval UI.</param>
+    /// <param name="title">A human-readable title for the approval card (typically the tool's display name).</param>
+    /// <param name="message">
+    /// A human-readable description of what this specific call will do -- either a per-tool summary
+    /// (e.g. "Set 'title' to 'New Title'") or a generic argument dump when the tool has no summary.
+    /// </param>
+    /// <remarks>
+    /// Registers with no required typed confirmation. Use the overload with a <c>confirmationPhrase</c>
+    /// parameter for calls that warrant more friction than a plain Approve click.
+    /// </remarks>
+    [Obsolete("Use the overload with a confirmationPhrase parameter instead. Will be removed in v20.")]
+    public void RegisterApprovalRequest(string interruptId, string toolCallId, string toolName, string argsJson, string title, string message)
+        => RegisterApprovalRequest(interruptId, toolCallId, toolName, argsJson, title, message, confirmationPhrase: null);
+
+    /// <summary>
+    /// Registers a pending backend tool approval request to be included in the next
+    /// <see cref="EmitRunFinished"/> call as a <c>human_approval</c> interrupt.
+    /// </summary>
+    /// <param name="interruptId">
+    /// The AG-UI interrupt ID (opaque; typically built by <c>AGUIInterruptKind.ForApproval</c>).
+    /// </param>
+    /// <param name="toolCallId">The MEAI tool call ID for correlation with the resume entry.</param>
+    /// <param name="toolName">The name of the tool requesting approval.</param>
+    /// <param name="argsJson">The serialized arguments JSON for display in the approval UI.</param>
+    /// <param name="title">A human-readable title for the approval card (typically the tool's display name).</param>
+    /// <param name="message">
+    /// A human-readable description of what this specific call will do -- either a per-tool summary
+    /// (e.g. "Set 'title' to 'New Title'") or a generic argument dump when the tool has no summary.
+    /// </param>
+    /// <param name="confirmationPhrase">
+    /// When non-null, the exact phrase the approver must type to unlock the Approve button (typically
+    /// the target item's name) -- extra friction for calls where a plain click isn't enough (e.g.
+    /// publishing or deleting). Null keeps the plain Approve/Deny buttons.
+    /// </param>
+    public void RegisterApprovalRequest(string interruptId, string toolCallId, string toolName, string argsJson, string title, string message, string? confirmationPhrase)
+        => _approvalInterrupts.Add((interruptId, toolCallId, toolName, argsJson, title, message, confirmationPhrase));
 
     /// <summary>
     /// Emits a <see cref="RunFinishedEvent"/> with the appropriate outcome.
@@ -268,17 +320,31 @@ public sealed class AGUIEventEmitter
             ToolCallId = toolCallId,
         }));
 
-        // Backend tool approval interrupts — user must approve before execution.
-        interrupts.AddRange(_approvalInterrupts.Select(a => new AGUIInterruptInfo
+        // Backend tool approval interrupts — user must approve before execution. Message uses the
+        // interrupt's own spec-defined field ("the universal fallback UI content" per AGUIInterruptInfo),
+        // not Metadata -- title has no first-class field in the AG-UI schema, so it's vendor extension data.
+        interrupts.AddRange(_approvalInterrupts.Select(a =>
         {
-            Id = a.InterruptId,
-            Reason = "human_approval",
-            ToolCallId = a.ToolCallId,
-            Metadata = new Dictionary<string, object?>
+            var metadata = new Dictionary<string, object?>
             {
                 ["toolName"] = a.ToolName,
                 ["args"] = a.ArgsJson,
-            },
+                ["title"] = a.Title,
+            };
+
+            if (a.ConfirmationPhrase is not null)
+            {
+                metadata["confirmPhrase"] = a.ConfirmationPhrase;
+            }
+
+            return new AGUIInterruptInfo
+            {
+                Id = a.InterruptId,
+                Reason = "human_approval",
+                ToolCallId = a.ToolCallId,
+                Message = a.Message,
+                Metadata = metadata,
+            };
         }));
 
         AGUIRunOutcome outcome = interrupts.Count > 0

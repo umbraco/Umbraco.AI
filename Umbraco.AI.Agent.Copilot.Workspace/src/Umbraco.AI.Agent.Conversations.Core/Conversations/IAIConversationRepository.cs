@@ -40,6 +40,21 @@ internal interface IAIConversationRepository
     /// <summary>Deletes a conversation (cascades to its messages).</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets the conversation's persisted MAF session-state blob (see <c>AIConversationEntity.SessionStateJson</c>),
+    /// or null when the conversation doesn't exist or has never run. Deliberately separate from
+    /// <see cref="GetByIdAsync"/>/<see cref="UpdateAsync"/>: it is an execution detail read/written every
+    /// run, not part of the <see cref="AIConversation"/> domain model shown through the conversation API.
+    /// </summary>
+    Task<string?> GetSessionStateJsonAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Saves the conversation's MAF session-state blob. A no-op when the conversation no longer exists
+    /// (e.g. deleted mid-run). Does not bump <see cref="AIConversation.Version"/> or <c>DateModified</c> —
+    /// this is an execution detail, not user-visible conversation metadata.
+    /// </summary>
+    Task SetSessionStateJsonAsync(Guid id, string? sessionStateJson, CancellationToken cancellationToken = default);
+
     // --- Messages ---
 
     /// <summary>Loads all messages for a conversation in sequence order.</summary>

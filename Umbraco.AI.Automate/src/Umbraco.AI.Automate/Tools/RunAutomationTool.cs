@@ -125,6 +125,12 @@ public class RunAutomationTool : AIToolBase<RunAutomationArgs>
 
         return new RunAutomationResult(true, runId, automation.Name, $"Automation '{automation.Name}' has been triggered.");
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(RunAutomationArgs args)
+        => string.IsNullOrWhiteSpace(args.Message)
+            ? "Trigger this automation to run."
+            : $"Trigger this automation to run, passing message: '{args.Message}'.";
 }
 
 /// <summary>

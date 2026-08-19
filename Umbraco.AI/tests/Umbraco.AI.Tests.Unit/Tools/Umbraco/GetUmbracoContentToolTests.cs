@@ -25,9 +25,11 @@ public class GetUmbracoContentToolTests
             _contentServiceMock.Object,
             _umbracoContextAccessorMock.Object);
 
-        // No Umbraco context available by default — the published-cache URL lookup itself relies on an
-        // ambient StaticServiceProvider that isn't configured in a unit test, so every test here exercises
-        // the unpublished/draft path deliberately, mirroring GetContentByRouteToolTests' own approach.
+        // No Umbraco context available by default, so BuildEnrichedContentItem always falls back to the
+        // raw/IContentService.GetAncestors path below. The preview-cache path (BuildContentItem(IPublishedContent))
+        // calls the friendly .Url() extension, which relies on an ambient StaticServiceProvider that isn't
+        // configured in a unit test — untestable here for the same reason GetContentByRouteToolTests never
+        // exercises its own "found content" happy path either. Covered by live demo-site verification instead.
         _umbracoContextAccessorMock
             .Setup(x => x.TryGetUmbracoContext(out It.Ref<IUmbracoContext?>.IsAny))
             .Returns(false);

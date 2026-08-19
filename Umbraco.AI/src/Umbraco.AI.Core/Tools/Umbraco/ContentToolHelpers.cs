@@ -86,14 +86,24 @@ internal static class ContentToolHelpers
     /// <summary>
     /// Builds an <see cref="UmbracoContentItem"/> from a draft/business-layer content item for an ad-hoc
     /// lookup (e.g. <c>get_umbraco_content</c>), where — unlike a write tool — the caller doesn't already
-    /// know the item's parent or location. Resolves a friendly breadcrumb and parent info via
-    /// <see cref="IContentService.GetAncestors(IContent)"/>, which works regardless of publish state, and
-    /// resolves a live <see cref="UmbracoContentItem.Url"/> from the published cache when the item (and
-    /// requested culture) is actually published — null otherwise, since an unpublished item has no live URL.
+    /// know the item's parent or location, and where consistency with <see cref="BuildContentItem(IPublishedContent, string?)"/>
+    /// matters: a model calling <c>get_content_by_route</c> and <c>get_umbraco_content</c> for the same
+    /// item should see the same property representation either way.
     /// </summary>
+    /// <remarks>
+    /// Fetches the item from the published cache in <b>preview</b> mode
+    /// (<c>IPublishedCache.GetById(bool preview, Guid contentId)</c> with <c>preview: true</c>), which resolves the
+    /// same friendly, nested property values (media/content pickers, blocks) as the non-preview overload
+    /// — and, unlike the non-preview default, is populated for any saved content regardless of publish
+    /// state (Umbraco's nucache covers drafts too). <see cref="UmbracoContentItem.Url"/> is still nulled
+    /// out unless the item (and requested culture) is actually published, since preview-fetching alone
+    /// doesn't mean there's a live URL. Falls back to raw stored property values, with a breadcrumb/parent
+    /// resolved via <see cref="IContentService.GetAncestors(IContent)"/> instead, only for the rare case
+    /// where the item isn't in the nucache at all yet.
+    /// </remarks>
     /// <param name="content">The draft content item.</param>
-    /// <param name="contentService">Used to resolve ancestors for the breadcrumb and parent info.</param>
-    /// <param name="umbracoContextAccessor">Used to resolve a live URL when the item is published.</param>
+    /// <param name="contentService">Used to resolve ancestors for the breadcrumb/parent info in the fallback path.</param>
+    /// <param name="umbracoContextAccessor">Used to resolve the item from the published cache in preview mode.</param>
     /// <param name="culture">Optional culture for variant content.</param>
     /// <returns>A fully populated content item, enriched with breadcrumb/parent/URL where resolvable.</returns>
     public static UmbracoContentItem BuildEnrichedContentItem(
@@ -102,6 +112,20 @@ internal static class ContentToolHelpers
         IUmbracoContextAccessor umbracoContextAccessor,
         string? culture = null)
     {
+        IPublishedContent? previewContent = umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext)
+            ? umbracoContext.Content?.GetById(true, content.Key)
+            : null;
+
+        if (previewContent is not null)
+        {
+            var isPublished = culture is null ? content.Published : content.IsCulturePublished(culture);
+            var item = BuildContentItem(previewContent, culture);
+            return isPublished ? item : item with { Url = null };
+        }
+
+        // Fallback: the item isn't in the nucache yet (e.g. created moments ago and the cache hasn't
+        // caught up). Raw stored values, but the breadcrumb/parent still come from the business layer
+        // rather than being omitted, since IContentService.GetAncestors doesn't depend on the cache.
         var properties = ExtractDraftProperties(content, culture);
 
         var ancestors = contentService.GetAncestors(content).OrderBy(a => a.Level).ToList();
@@ -114,17 +138,11 @@ internal static class ContentToolHelpers
         pathParts.Add(content.GetCultureName(culture) ?? content.Name ?? string.Empty);
         var breadcrumb = string.Join(" > ", pathParts);
 
-        string? url = null;
-        if (umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            url = umbracoContext.Content?.GetById(content.Key)?.Url(culture);
-        }
-
         return new UmbracoContentItem(
             content.Key,
             content.GetCultureName(culture) ?? content.Name ?? string.Empty,
             content.ContentType.Alias,
-            url,
+            null,
             content.CreateDate,
             content.UpdateDate,
             content.Level,

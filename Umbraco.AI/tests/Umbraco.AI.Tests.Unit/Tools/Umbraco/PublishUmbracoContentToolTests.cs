@@ -4,6 +4,7 @@ using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Actions;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentPublishing;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
@@ -13,14 +14,16 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 public class PublishUmbracoContentToolTests
 {
     private readonly Mock<IContentPublishingService> _contentPublishingServiceMock;
+    private readonly Mock<IContentService> _contentServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
     private readonly IAITool _tool;
 
     public PublishUmbracoContentToolTests()
     {
         _contentPublishingServiceMock = new Mock<IContentPublishingService>();
+        _contentServiceMock = new Mock<IContentService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new PublishUmbracoContentTool(_contentPublishingServiceMock.Object, _authorizerMock.Object);
+        _tool = new PublishUmbracoContentTool(_contentPublishingServiceMock.Object, _contentServiceMock.Object, _authorizerMock.Object);
     }
 
     [Fact]
@@ -109,5 +112,27 @@ public class PublishUmbracoContentToolTests
 
         description.ShouldNotBeNullOrWhiteSpace();
         description.ShouldContain("live");
+    }
+
+    [Fact]
+    public void ConfirmationPhrase_ContentFound_ReturnsItsName()
+    {
+        var key = Guid.NewGuid();
+        _contentServiceMock.Setup(x => x.GetById(key)).Returns(Mock.Of<IContent>(c => c.Name == "Home"));
+
+        var phrase = _tool.ConfirmationPhrase(new PublishUmbracoContentArgs(key));
+
+        phrase.ShouldBe("Home");
+    }
+
+    [Fact]
+    public void ConfirmationPhrase_ContentNotFound_ReturnsNull()
+    {
+        var key = Guid.NewGuid();
+        _contentServiceMock.Setup(x => x.GetById(key)).Returns((IContent?)null);
+
+        var phrase = _tool.ConfirmationPhrase(new PublishUmbracoContentArgs(key));
+
+        phrase.ShouldBeNull();
     }
 }

@@ -66,4 +66,20 @@ public interface IAITool : IDiscoverable
     /// </remarks>
     /// <param name="args">The raw arguments for this call (a JSON element, an argument dictionary, or the tool's typed args).</param>
     string? DescribeInvocation(object? args) => null;
+
+    /// <summary>
+    /// Produces the exact phrase a human must type to unlock the Approve button for this specific call,
+    /// for destructive calls that warrant more friction than a plain click (e.g. publishing or deleting
+    /// a content item) -- typically the target item's display name. Returns null (the default) for
+    /// ordinary destructive calls, which keep the plain Approve/Deny buttons with no typed confirmation.
+    /// Unlike <see cref="DescribeInvocation"/>, this MAY perform a lookup (e.g. resolving a content key
+    /// to its name): it runs once, synchronously, while the approval interrupt is built -- not on every
+    /// render.
+    /// </summary>
+    /// <remarks>
+    /// Default interface implementation returns null, so existing <see cref="IAITool"/> implementers
+    /// (e.g. test fakes) that predate this member don't need updating to keep compiling.
+    /// </remarks>
+    /// <param name="args">The raw arguments for this call (a JSON element, an argument dictionary, or the tool's typed args).</param>
+    string? ConfirmationPhrase(object? args) => null;
 }

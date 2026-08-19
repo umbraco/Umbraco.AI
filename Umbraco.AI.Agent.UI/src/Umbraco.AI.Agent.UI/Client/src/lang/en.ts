@@ -10,5 +10,6 @@ export default {
         approvalSubmit: "Submit",
         approvalCancel: "Cancel",
         approvalInputPlaceholder: "Enter your response...",
+        approvalConfirmPhraseLabel: "Type %0% to confirm",
     },
 } as UmbLocalizationDictionary;

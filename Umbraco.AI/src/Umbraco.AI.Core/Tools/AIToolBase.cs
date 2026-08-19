@@ -151,11 +151,65 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
     protected virtual string? DescribeInvocation(TArgs args) => null;
 
     /// <summary>
+    /// Produces the exact phrase a human must type to unlock the Approve button for this specific call.
+    /// Override for calls that warrant more friction than a plain click (e.g. publishing or deleting a
+    /// content item) -- typically by looking up the target item and returning its display name. Unlike
+    /// <see cref="DescribeInvocation(TArgs)"/>, this may perform a lookup. Returns null by default, which
+    /// keeps the plain Approve/Deny buttons with no typed confirmation.
+    /// </summary>
+    /// <param name="args">The strongly-typed arguments for this call.</param>
+    protected virtual string? ConfirmationPhrase(TArgs args) => null;
+
+    /// <summary>
     /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
     /// delegates to <see cref="DescribeInvocation(TArgs)"/>. Never throws: description generation must
-    /// not break the approval flow, so any deserialization failure falls back to null.
+    /// not break the approval flow, so any deserialization or generation failure falls back to null.
     /// </summary>
     string? IAITool.DescribeInvocation(object? args)
+    {
+        if (TryDeserializeArgs(args) is not { } typedArgs)
+        {
+            return null;
+        }
+
+        try
+        {
+            return DescribeInvocation(typedArgs);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
+    /// delegates to <see cref="ConfirmationPhrase(TArgs)"/>. Never throws: a lookup failure falls back to
+    /// null (no confirmation gate) rather than blocking the approval flow.
+    /// </summary>
+    string? IAITool.ConfirmationPhrase(object? args)
+    {
+        if (TryDeserializeArgs(args) is not { } typedArgs)
+        {
+            return null;
+        }
+
+        try
+        {
+            return ConfirmationPhrase(typedArgs);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Deserializes raw call arguments (a <typeparamref name="TArgs"/> instance, a JSON element, or an
+    /// arbitrary object) to <typeparamref name="TArgs"/>, or null on any failure -- shared by the
+    /// approval-UI hooks above, both of which must degrade gracefully rather than throw.
+    /// </summary>
+    private static TArgs? TryDeserializeArgs(object? args)
     {
         if (args is null)
         {
@@ -164,7 +218,7 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
 
         try
         {
-            var typedArgs = args switch
+            return args switch
             {
                 TArgs t => t,
                 System.Text.Json.JsonElement jsonElement =>
@@ -173,8 +227,6 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
                     System.Text.Json.JsonSerializer.SerializeToElement(args, Constants.DefaultJsonSerializerOptions),
                     Constants.DefaultJsonSerializerOptions),
             };
-
-            return typedArgs is null ? null : DescribeInvocation(typedArgs);
         }
         catch
         {

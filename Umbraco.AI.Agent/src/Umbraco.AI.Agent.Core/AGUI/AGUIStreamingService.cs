@@ -250,7 +250,8 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                 var approvalTitle = tool?.Name ?? pendingCall.Name;
                                 var approvalMessage = tool?.DescribeInvocation(pendingCall.Arguments)
                                     ?? FormatGenericArgsMessage(pendingCall.Arguments);
-                                emitter.RegisterApprovalRequest(approvalInterruptId, pendingCall.CallId, pendingCall.Name, argsJson, approvalTitle, approvalMessage);
+                                var confirmationPhrase = tool?.ConfirmationPhrase(pendingCall.Arguments);
+                                emitter.RegisterApprovalRequest(approvalInterruptId, pendingCall.CallId, pendingCall.Name, argsJson, approvalTitle, approvalMessage, confirmationPhrase);
                             }
                             break;
 

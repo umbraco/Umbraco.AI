@@ -358,7 +358,7 @@ public class AGUIEventEmitterTests
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
-        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{\"id\":\"42\"}", "Delete Thing", "Delete thing 42.");
+        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{\"id\":\"42\"}", "Delete Thing", "Delete thing 42.", confirmationPhrase: null);
 
         // Act
         var evt = emitter.EmitRunFinished();
@@ -374,6 +374,24 @@ public class AGUIEventEmitterTests
         interrupt.Metadata.ShouldNotBeNull();
         interrupt.Metadata!["toolName"].ShouldBe("delete_thing");
         interrupt.Metadata!["title"].ShouldBe("Delete Thing");
+        interrupt.Metadata!.ContainsKey("confirmPhrase").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void EmitRunFinished_WithConfirmationPhrase_IncludesConfirmPhraseInMetadata()
+    {
+        // Arrange
+        var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
+        emitter.RegisterApprovalRequest("approval:call-pub", "call-pub", "publish_umbraco_content", "{}", "Publish Umbraco Content", "Publish this content item, making it live.", "Home");
+
+        // Act
+        var evt = emitter.EmitRunFinished();
+
+        // Assert
+        var interruptOutcome = evt.Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        var interrupt = interruptOutcome.Interrupts[0];
+        interrupt.Metadata.ShouldNotBeNull();
+        interrupt.Metadata!["confirmPhrase"].ShouldBe("Home");
     }
 
     [Fact]
@@ -382,7 +400,7 @@ public class AGUIEventEmitterTests
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
         emitter.EmitToolCall("call-frontend", "confirm", null, isFrontendTool: true);
-        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{}", "Delete Thing", "Delete thing.");
+        emitter.RegisterApprovalRequest("approval:call-del", "call-del", "delete_thing", "{}", "Delete Thing", "Delete thing.", confirmationPhrase: null);
 
         // Act
         var interruptOutcome = emitter.EmitRunFinished().Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
@@ -398,7 +416,7 @@ public class AGUIEventEmitterTests
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
-        emitter.RegisterApprovalRequest("approval:call-x", "call-x", "do_thing", "{}", "Do Thing", "Do the thing.");
+        emitter.RegisterApprovalRequest("approval:call-x", "call-x", "do_thing", "{}", "Do Thing", "Do the thing.", confirmationPhrase: null);
 
         // Act
         var outcome = emitter.EmitRunFinished().Outcome;

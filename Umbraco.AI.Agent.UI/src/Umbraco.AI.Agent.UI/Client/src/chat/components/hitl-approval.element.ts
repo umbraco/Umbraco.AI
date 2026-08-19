@@ -120,8 +120,12 @@ export class UaiHitlApprovalElement extends UmbLitElement {
         .interrupt-card {
             display: inline-block;
             margin: 0 var(--uui-size-space-3);
-            padding: var(--uui-size-space-3);
-            background: var(--uui-color-surface-alt);
+            padding: var(--uui-size-space-5);
+            /* Shared with the tool-status/agent-status chips and the markdown response bubble
+               (--uai-chat-surface-alt) so all of chat's "alternate surface" elements look consistent
+               and a single consumer-side override (e.g. Copilot Workspace setting this to white on its
+               own grey canvas) affects all of them together, not just this card. */
+            background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
             border-radius: var(--uui-border-radius);
         }
 

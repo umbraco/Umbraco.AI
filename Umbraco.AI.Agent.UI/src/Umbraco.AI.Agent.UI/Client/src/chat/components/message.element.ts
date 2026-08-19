@@ -256,7 +256,7 @@ export class UaiChatMessageElement extends UmbLitElement {
         }
 
         .markdown-content {
-            background: var(--uui-color-surface-alt);
+            background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
             padding: var(--uui-size-space-3);
             border-radius: var(--uui-border-radius);
         }
@@ -346,7 +346,7 @@ export class UaiChatMessageElement extends UmbLitElement {
             align-items: center;
             gap: var(--uui-size-space-1);
             padding: var(--uui-size-space-1) var(--uui-size-space-2);
-            background: var(--uui-color-surface-alt);
+            background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
             border: 1px solid var(--uui-color-border);
             border-radius: var(--uui-border-radius);
             font-size: 0.8rem;

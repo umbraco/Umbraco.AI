@@ -33,8 +33,14 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
     }
 
     override render() {
-        const title = (this.config.title as string) ?? (this.args.title as string);
-        const message = (this.config.message as string) ?? (this.args.message as string);
+        const rawTitle = (this.config.title as string) ?? (this.args.title as string);
+        const rawMessage = (this.config.message as string) ?? (this.args.message as string);
+        // Title/message may be a localization key (e.g. "#uaiChat_approvalDefaultTitle") set by a
+        // frontend tool's approval config, or a literal string built server-side for a backend tool
+        // (e.g. "Set 'title' to 'New Title'."). #localize.string() resolves the former and passes the
+        // latter through unchanged, so it's safe to call on either.
+        const title = rawTitle ? this.#localize.string(rawTitle) : undefined;
+        const message = rawMessage ? this.#localize.string(rawMessage) : undefined;
         const approveLabel = this.#localize.string(
             (this.config.approveLabel as string) ??
                 (this.args.approveLabel as string) ??
@@ -47,7 +53,7 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
         return html`
             ${title ? html`<div class="title">${title}</div>` : ""}
             ${message ? html`<div class="message">${message}</div>` : ""}
-            <div class="actions">
+            <div class="actions ${title || message ? "" : "no-content-above"}">
                 <uui-button look="primary" color="positive" @click=${this.#handleApprove}> ${approveLabel} </uui-button>
                 <uui-button look="primary" @click=${this.#handleDeny}> ${denyLabel} </uui-button>
             </div>
@@ -65,13 +71,20 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
         }
 
         .message {
-            margin-bottom: var(--uui-size-space-3);
             color: var(--uui-color-text-alt);
         }
 
         .actions {
             display: flex;
             gap: var(--uui-size-space-2);
+            /* On the button row's own margin (not the title/message's) so the gap above the buttons
+               is consistent whether there's a title only, a message only, or both. Omitted entirely
+               (see .no-content-above) when neither is present, so the card doesn't reserve empty space. */
+            margin-top: var(--uui-size-space-4);
+        }
+
+        .actions.no-content-above {
+            margin-top: 0;
         }
     `;
 }

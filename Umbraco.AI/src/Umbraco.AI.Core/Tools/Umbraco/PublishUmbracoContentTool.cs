@@ -53,6 +53,12 @@ public class PublishUmbracoContentTool(
             ? new PublishUmbracoContentResult(true, null)
             : new PublishUmbracoContentResult(false, attempt.Status.ToMessage());
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(PublishUmbracoContentArgs args)
+        => args.Culture is null
+            ? "Publish this content item, making it live."
+            : $"Publish the '{args.Culture}' culture of this content item, making it live.";
 }
 
 /// <summary>

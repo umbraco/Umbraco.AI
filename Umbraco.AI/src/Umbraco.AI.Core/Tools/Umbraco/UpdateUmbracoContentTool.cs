@@ -98,6 +98,23 @@ public class UpdateUmbracoContentTool(
             ContentToolHelpers.BuildContentItem(attempt.Result.Content, args.Culture),
             null);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(UpdateUmbracoContentArgs args)
+    {
+        var parts = new List<string>();
+        if (args.Name is not null)
+        {
+            parts.Add($"rename it to '{args.Name}'");
+        }
+
+        if (args.PropertyValues is { Count: > 0 })
+        {
+            parts.Add($"update {string.Join(", ", args.PropertyValues.Keys.Select(a => $"'{a}'"))}");
+        }
+
+        return parts.Count == 0 ? null : $"Update this content item: {string.Join(" and ", parts)}.";
+    }
 }
 
 /// <summary>

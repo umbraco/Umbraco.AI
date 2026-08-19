@@ -67,6 +67,19 @@ public class SetUmbracoContentValueTool(
 
         return new SetUmbracoContentValueResult(outcome.Success, outcome.Message);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(SetUmbracoContentValueArgs args)
+    {
+        var propertyAlias = args.Path.LastOrDefault()?.Alias;
+        return propertyAlias is null ? null : $"Set '{propertyAlias}' to {FormatValuePreview(args.Value)}.";
+    }
+
+    private static string FormatValuePreview(JsonElement value)
+    {
+        var raw = value.ValueKind == JsonValueKind.String ? $"'{value.GetString()}'" : value.GetRawText();
+        return raw.Length > 80 ? string.Concat(raw.AsSpan(0, 77), "...") : raw;
+    }
 }
 
 /// <summary>

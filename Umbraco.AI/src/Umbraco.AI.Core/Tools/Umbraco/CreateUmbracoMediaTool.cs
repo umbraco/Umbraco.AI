@@ -84,6 +84,11 @@ public class CreateUmbracoMediaTool(
 
         return new CreateUmbracoMediaResult(true, ContentToolHelpers.BuildMediaItem(attempt.Result.Content), null);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(CreateUmbracoMediaArgs args)
+        => $"Create a new '{args.MediaTypeAlias}' media item named '{args.Name}'" +
+           (args.ParentKey is { } parentKey ? $" under parent {parentKey}." : " at the root.");
 }
 
 /// <summary>

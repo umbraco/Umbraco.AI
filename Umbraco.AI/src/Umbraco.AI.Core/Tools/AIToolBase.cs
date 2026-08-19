@@ -140,4 +140,45 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
             $"Expected {typeof(TArgs).Name} or JsonElement. " +
             $"Value: {System.Text.Json.JsonSerializer.Serialize(args)}");
     }
+
+    /// <summary>
+    /// Produces a short, human-readable description of what this specific call will do, given its
+    /// strongly-typed arguments. Override for destructive tools where the raw argument values alone
+    /// aren't clear on their own (e.g. a bare content key, or a property path with no context). Returns
+    /// null by default, which falls back to a generic argument-by-argument display in the approval UI.
+    /// </summary>
+    /// <param name="args">The strongly-typed arguments for this call.</param>
+    protected virtual string? DescribeInvocation(TArgs args) => null;
+
+    /// <summary>
+    /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
+    /// delegates to <see cref="DescribeInvocation(TArgs)"/>. Never throws: description generation must
+    /// not break the approval flow, so any deserialization failure falls back to null.
+    /// </summary>
+    string? IAITool.DescribeInvocation(object? args)
+    {
+        if (args is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var typedArgs = args switch
+            {
+                TArgs t => t,
+                System.Text.Json.JsonElement jsonElement =>
+                    System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions),
+                _ => System.Text.Json.JsonSerializer.Deserialize<TArgs>(
+                    System.Text.Json.JsonSerializer.SerializeToElement(args, Constants.DefaultJsonSerializerOptions),
+                    Constants.DefaultJsonSerializerOptions),
+            };
+
+            return typedArgs is null ? null : DescribeInvocation(typedArgs);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

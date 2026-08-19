@@ -56,6 +56,13 @@ public class ClearUmbracoContentValueTool(
 
         return new ClearUmbracoContentValueResult(outcome.Success, outcome.Message);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(ClearUmbracoContentValueArgs args)
+    {
+        var propertyAlias = args.Path.LastOrDefault()?.Alias;
+        return propertyAlias is null ? null : $"Clear the '{propertyAlias}' property.";
+    }
 }
 
 /// <summary>

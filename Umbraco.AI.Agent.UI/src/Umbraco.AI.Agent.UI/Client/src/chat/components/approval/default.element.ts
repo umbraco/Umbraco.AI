@@ -74,10 +74,11 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
                 ? html`
                       <div class="confirm-phrase">
                           <label for="confirm-input"
-                              >${this.#localize.term("uaiChat_approvalConfirmPhraseLabel", confirmPhrase)}</label
+                              >${this.#localize.htmlString("#uaiChat_approvalConfirmPhraseLabel", confirmPhrase)}</label
                           >
                           <uui-input
                               id="confirm-input"
+                              label=${this.#localize.term("uaiChat_approvalConfirmPhraseLabelPlain", confirmPhrase)}
                               .value=${this._typedConfirmation}
                               @input=${this.#handleConfirmInput}
                           ></uui-input>

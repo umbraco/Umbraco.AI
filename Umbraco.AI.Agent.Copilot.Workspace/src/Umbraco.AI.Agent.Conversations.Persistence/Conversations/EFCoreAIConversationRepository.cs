@@ -237,7 +237,7 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
 
     public async Task<string?> GetSessionStateJsonAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
         var json = await scope.ExecuteWithContextAsync(async db =>
             await db.Conversations.AsNoTracking()
                 .Where(e => e.Id == id)
@@ -249,7 +249,7 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
 
     public async Task SetSessionStateJsonAsync(Guid id, string? sessionStateJson, CancellationToken cancellationToken = default)
     {
-        using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
         await scope.ExecuteWithContextAsync(async db =>
         {
             var entity = await db.Conversations.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);

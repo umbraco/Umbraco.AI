@@ -61,9 +61,14 @@ public interface IAGUIStreamingService
     /// behaviour).
     /// </param>
     /// <param name="pendingApprovalCalls">
-    /// Optional map of <c>callId → original tool call</c> reconstructed from persisted history, used to
-    /// correlate human-approval resume entries after a reload (when the original call is not in the
-    /// client-supplied messages). Null for the contextual Copilot.
+    /// Optional map of <c>callId → original approval request</c> reconstructed from persisted history,
+    /// used to correlate human-approval resume entries after a reload (when the original call is not in
+    /// the client-supplied messages). The full <see cref="ToolApprovalRequestContent"/> is kept (not just
+    /// its wrapped tool call) so the resume path can build its response via
+    /// <c>request.CreateResponse(approved)</c>, carrying forward FICC's own
+    /// <see cref="ToolApprovalRequestContent.RequestId"/> — required for
+    /// <c>Microsoft.Agents.AI</c>'s <c>ApprovalResponseBindingChatClient</c> to recognize the response as
+    /// tied to a request it actually surfaced. Null for the contextual Copilot.
     /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of AG-UI events.</returns>
@@ -77,7 +82,7 @@ public interface IAGUIStreamingService
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
         AgentSession? session,
-        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls = null,
+        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null,
         CancellationToken cancellationToken = default)
         => StreamAgentAsync(agent, request, frontendTools, cancellationToken);
 }

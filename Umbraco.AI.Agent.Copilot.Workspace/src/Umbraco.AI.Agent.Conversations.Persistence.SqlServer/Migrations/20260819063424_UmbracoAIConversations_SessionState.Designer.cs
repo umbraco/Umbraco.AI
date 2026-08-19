@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Umbraco.AI.Agent.Conversations.Persistence;
 
@@ -11,9 +12,11 @@ using Umbraco.AI.Agent.Conversations.Persistence;
 namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIConversationsDbContext))]
-    partial class UmbracoAIConversationsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260819063424_UmbracoAIConversations_SessionState")]
+    partial class UmbracoAIConversations_SessionState
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

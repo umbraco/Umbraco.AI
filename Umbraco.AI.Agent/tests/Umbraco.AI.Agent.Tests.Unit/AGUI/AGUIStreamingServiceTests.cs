@@ -611,7 +611,8 @@ public class AGUIStreamingServiceTests
 
         var realCall = new FunctionCallContent("call-del", "delete_thing",
             new Dictionary<string, object?> { ["id"] = "42" });
-        var pending = new Dictionary<string, FunctionCallContent>(StringComparer.Ordinal) { ["call-del"] = realCall };
+        var realRequest = new ToolApprovalRequestContent("ficc_call-del", realCall);
+        var pending = new Dictionary<string, ToolApprovalRequestContent>(StringComparer.Ordinal) { ["call-del"] = realRequest };
 
         var request = new AGUIRunRequest
         {
@@ -660,7 +661,7 @@ public class AGUIStreamingServiceTests
     private async Task<List<IAGUIEvent>> CollectEvents(
         AIAgent agent,
         AGUIRunRequest request,
-        IReadOnlyDictionary<string, FunctionCallContent> pendingApprovalCalls)
+        IReadOnlyDictionary<string, ToolApprovalRequestContent> pendingApprovalCalls)
     {
         var events = new List<IAGUIEvent>();
         await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, CancellationToken.None))

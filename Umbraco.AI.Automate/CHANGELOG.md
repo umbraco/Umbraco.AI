@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@18.0.0...Umbraco.AI.Automate@18.0.1-rc.1) (2026-08-19)
+
+### fix
+
+* **automate:** Show what a run_automation call will do on its approval card ([09e12b2](https://github.com/umbraco/Umbraco.AI/commit/09e12b22e27759aa52dddd66316689d59c1d97de))
+
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@18.0.0-beta.1...Umbraco.AI.Automate@18.0.0) (2026-07-08)
 
 ### Internal

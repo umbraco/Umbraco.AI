@@ -1,8 +1,7 @@
 using System.ComponentModel;
 
 using Umbraco.AI.Core.Tools.Scopes;
-using Umbraco.Cms.Core.Models.PublishedContent;
-using Umbraco.Cms.Core.Web;
+using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -19,58 +18,40 @@ public record GetUmbracoContentArgs(
     string? Culture = null);
 
 /// <summary>
-/// Tool that retrieves a published content item from Umbraco by its key, including all property values.
+/// Tool that retrieves a content item from Umbraco by its key, including all property values. Reads
+/// from the business/draft layer via <see cref="IContentEditingService"/> — the same layer the write
+/// tools operate on — so it works for unpublished drafts as well as published content, and returns the
+/// same <see cref="UmbracoContentItem"/> shape those tools do (raw stored property values, no resolved
+/// URL, no friendly breadcrumb/parent).
 /// </summary>
-/// <remarks>
-/// Uses Umbraco's friendly extension methods (Parent(), Children(), Url(), Ancestors())
-/// which internally resolve the navigation query service for optimised tree traversal.
-/// </remarks>
 [AITool("get_umbraco_content", "Get Umbraco Content", ScopeId = ContentReadScope.ScopeId)]
-public class GetUmbracoContentTool : AIToolBase<GetUmbracoContentArgs>
+public class GetUmbracoContentTool(IContentEditingService contentEditingService) : AIToolBase<GetUmbracoContentArgs>
 {
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="GetUmbracoContentTool"/>.
-    /// </summary>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
-    public GetUmbracoContentTool(IUmbracoContextAccessor umbracoContextAccessor)
-    {
-        _umbracoContextAccessor = umbracoContextAccessor;
-    }
-
     /// <inheritdoc />
     public override string Description =>
-        "Retrieves a published content item from Umbraco by its unique key (GUID). " +
-        "Returns the full content including all property values, content type, URL, parent info, and metadata. " +
-        "Use IDs from search_umbraco results to fetch detailed content. " +
-        "For variant (multilingual) content, specify the culture code to get culture-specific values.";
+        "Retrieves a content item from Umbraco by its unique key (GUID), whether it's published or still " +
+        "an unpublished draft. Returns the full content including all property values, content type, and " +
+        "metadata — the same shape create_umbraco_content/update_umbraco_content return. Use IDs from " +
+        "search_umbraco results to fetch detailed content. For variant (multilingual) content, specify " +
+        "the culture code to get culture-specific values.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(GetUmbracoContentArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(GetUmbracoContentArgs args, CancellationToken cancellationToken = default)
     {
         if (args.Key == Guid.Empty)
         {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, "Content key cannot be empty."));
+            return new GetUmbracoContentResult(false, null, "Content key cannot be empty.");
         }
 
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, "Umbraco context is not available."));
-        }
-
-        var content = umbracoContext.Content?.GetById(args.Key);
+        var content = await contentEditingService.GetAsync(args.Key);
         if (content is null)
         {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, $"Content with key '{args.Key}' was not found or is not published."));
+            return new GetUmbracoContentResult(false, null, $"Content with key '{args.Key}' was not found.");
         }
 
         var item = ContentToolHelpers.BuildContentItem(content, args.Culture);
 
-        return Task.FromResult<object>(new GetUmbracoContentResult(true, item, null));
+        return new GetUmbracoContentResult(true, item, null);
     }
 }
 
@@ -86,17 +67,23 @@ public record GetUmbracoContentResult(
     string? Message);
 
 /// <summary>
-/// A published content item with full property values.
+/// A content item with full property values. Shared across read and write tools, so its richness
+/// depends on which <c>ContentToolHelpers.BuildContentItem</c> overload built it: from the published
+/// cache (<c>get_content_by_route</c>, resource types) it carries a resolved <see cref="Url"/>, a
+/// friendly breadcrumb <see cref="Path"/>, and <see cref="Parent"/> info; from the business/draft layer
+/// (<c>get_umbraco_content</c>, <c>create_umbraco_content</c>, <c>update_umbraco_content</c>) — which
+/// works for unpublished drafts too — <see cref="Url"/> and <see cref="Parent"/> are always null and
+/// <see cref="Path"/> is the raw comma-separated id path.
 /// </summary>
 /// <param name="Key">The unique key of the content item.</param>
 /// <param name="Name">The name of the content item.</param>
 /// <param name="ContentType">The content type alias.</param>
-/// <param name="Url">The public URL of the content item.</param>
+/// <param name="Url">The public URL of the content item, if resolved from the published cache.</param>
 /// <param name="CreateDate">The creation date.</param>
 /// <param name="UpdateDate">The last update date.</param>
 /// <param name="Level">The depth level in the content tree.</param>
-/// <param name="Path">The breadcrumb path (e.g., "Home > About > Team").</param>
-/// <param name="Parent">The parent content item info, if any.</param>
+/// <param name="Path">The breadcrumb path (e.g., "Home > About > Team") or the raw id path, depending on source.</param>
+/// <param name="Parent">The parent content item info, if resolved from the published cache.</param>
 /// <param name="Properties">The content properties with their values.</param>
 public record UmbracoContentItem(
     Guid Key,

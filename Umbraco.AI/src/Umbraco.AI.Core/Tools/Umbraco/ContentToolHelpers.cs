@@ -1,6 +1,8 @@
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
+using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -58,7 +60,8 @@ internal static class ContentToolHelpers
     /// URL, and its <c>Path</c> is the raw comma-separated id path (e.g. <c>"-1,1063,1064"</c>) rather
     /// than a friendly breadcrumb — resolving ancestor names would need extra content-service lookups
     /// this static helper has no way to make, and the confirmation payload a write tool returns doesn't
-    /// need it. Parent info is omitted (the caller already knows the parent key it just passed in).
+    /// need it. Parent info is omitted (the caller already knows the parent key it just passed in). Use
+    /// <see cref="BuildEnrichedContentItem"/> instead for an ad-hoc lookup that doesn't already know these.
     /// </summary>
     /// <param name="content">The draft content item.</param>
     /// <param name="culture">Optional culture for variant content.</param>
@@ -77,6 +80,56 @@ internal static class ContentToolHelpers
             content.Level,
             content.Path,
             null,
+            properties);
+    }
+
+    /// <summary>
+    /// Builds an <see cref="UmbracoContentItem"/> from a draft/business-layer content item for an ad-hoc
+    /// lookup (e.g. <c>get_umbraco_content</c>), where — unlike a write tool — the caller doesn't already
+    /// know the item's parent or location. Resolves a friendly breadcrumb and parent info via
+    /// <see cref="IContentService.GetAncestors(IContent)"/>, which works regardless of publish state, and
+    /// resolves a live <see cref="UmbracoContentItem.Url"/> from the published cache when the item (and
+    /// requested culture) is actually published — null otherwise, since an unpublished item has no live URL.
+    /// </summary>
+    /// <param name="content">The draft content item.</param>
+    /// <param name="contentService">Used to resolve ancestors for the breadcrumb and parent info.</param>
+    /// <param name="umbracoContextAccessor">Used to resolve a live URL when the item is published.</param>
+    /// <param name="culture">Optional culture for variant content.</param>
+    /// <returns>A fully populated content item, enriched with breadcrumb/parent/URL where resolvable.</returns>
+    public static UmbracoContentItem BuildEnrichedContentItem(
+        IContent content,
+        IContentService contentService,
+        IUmbracoContextAccessor umbracoContextAccessor,
+        string? culture = null)
+    {
+        var properties = ExtractDraftProperties(content, culture);
+
+        var ancestors = contentService.GetAncestors(content).OrderBy(a => a.Level).ToList();
+
+        var parentInfo = ancestors.Count > 0
+            ? new ContentParentItem(ancestors[^1].Key, ancestors[^1].GetCultureName(culture) ?? ancestors[^1].Name ?? string.Empty)
+            : null;
+
+        var pathParts = ancestors.Select(a => a.GetCultureName(culture) ?? a.Name ?? string.Empty).ToList();
+        pathParts.Add(content.GetCultureName(culture) ?? content.Name ?? string.Empty);
+        var breadcrumb = string.Join(" > ", pathParts);
+
+        string? url = null;
+        if (umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
+        {
+            url = umbracoContext.Content?.GetById(content.Key)?.Url(culture);
+        }
+
+        return new UmbracoContentItem(
+            content.Key,
+            content.GetCultureName(culture) ?? content.Name ?? string.Empty,
+            content.ContentType.Alias,
+            url,
+            content.CreateDate,
+            content.UpdateDate,
+            content.Level,
+            breadcrumb,
+            parentInfo,
             properties);
     }
 

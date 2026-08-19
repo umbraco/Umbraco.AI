@@ -20,6 +20,7 @@ public record DeleteUmbracoContentArgs(
 [AITool("delete_umbraco_content", "Delete Umbraco Content", ScopeId = ContentWriteScope.ScopeId, IsDestructive = true)]
 public class DeleteUmbracoContentTool(
     IContentEditingService contentEditingService,
+    IContentService contentService,
     IUmbracoWriteAuthorizer authorizer)
     : AIToolBase<DeleteUmbracoContentArgs>
 {
@@ -52,6 +53,10 @@ public class DeleteUmbracoContentTool(
     /// <inheritdoc />
     protected override string? DescribeInvocation(DeleteUmbracoContentArgs args)
         => "Move this content item to the recycle bin (reversible).";
+
+    /// <inheritdoc />
+    protected override string? ConfirmationPhrase(DeleteUmbracoContentArgs args)
+        => contentService.GetById(args.Key)?.Name;
 }
 
 /// <summary>

@@ -1,6 +1,7 @@
-import { customElement, property, css, html } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
+import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiAgentApprovalElement } from "../../extensions/uai-agent-approval-element.extension.js";
 
 /**
@@ -24,12 +25,24 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
     @property({ attribute: false })
     respond!: (result: unknown) => void;
 
+    /**
+     * What the approver has typed so far into the confirmation box, when {@link confirmPhrase} gates
+     * the Approve button. Reset implicitly since this element is recreated per interrupt.
+     */
+    @state()
+    private _typedConfirmation = "";
+
     #handleApprove() {
         this.respond({ approved: true });
     }
 
     #handleDeny() {
         this.respond({ approved: false });
+    }
+
+    #handleConfirmInput(event: UUIInputEvent) {
+        const target = event.composedPath()[0] as UUIInputElement;
+        this._typedConfirmation = target.value?.toString() ?? "";
     }
 
     override render() {
@@ -41,6 +54,9 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
         // latter through unchanged, so it's safe to call on either.
         const title = rawTitle ? this.#localize.string(rawTitle) : undefined;
         const message = rawMessage ? this.#localize.string(rawMessage) : undefined;
+        // Set only for calls that warrant more friction than a plain click (e.g. publish/delete) --
+        // a literal string (typically the target item's name), never a localization key.
+        const confirmPhrase = (this.config.confirmPhrase as string) ?? (this.args.confirmPhrase as string);
         const approveLabel = this.#localize.string(
             (this.config.approveLabel as string) ??
                 (this.args.approveLabel as string) ??
@@ -49,12 +65,34 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
         const denyLabel = this.#localize.string(
             (this.config.denyLabel as string) ?? (this.args.denyLabel as string) ?? "#uaiChat_approvalDeny",
         );
+        const approveDisabled = !!confirmPhrase && this._typedConfirmation !== confirmPhrase;
 
         return html`
             ${title ? html`<div class="title">${title}</div>` : ""}
             ${message ? html`<div class="message">${message}</div>` : ""}
-            <div class="actions ${title || message ? "" : "no-content-above"}">
-                <uui-button look="primary" color="positive" @click=${this.#handleApprove}> ${approveLabel} </uui-button>
+            ${confirmPhrase
+                ? html`
+                      <div class="confirm-phrase">
+                          <label for="confirm-input"
+                              >${this.#localize.term("uaiChat_approvalConfirmPhraseLabel", confirmPhrase)}</label
+                          >
+                          <uui-input
+                              id="confirm-input"
+                              .value=${this._typedConfirmation}
+                              @input=${this.#handleConfirmInput}
+                          ></uui-input>
+                      </div>
+                  `
+                : ""}
+            <div class="actions ${title || message || confirmPhrase ? "" : "no-content-above"}">
+                <uui-button
+                    look="primary"
+                    color="positive"
+                    ?disabled=${approveDisabled}
+                    @click=${this.#handleApprove}
+                >
+                    ${approveLabel}
+                </uui-button>
                 <uui-button look="primary" @click=${this.#handleDeny}> ${denyLabel} </uui-button>
             </div>
         `;
@@ -72,6 +110,22 @@ export class UaiAgentApprovalDefaultElement extends UmbLitElement implements Uai
 
         .message {
             color: var(--uui-color-text-alt);
+        }
+
+        .confirm-phrase {
+            margin-top: var(--uui-size-space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--uui-size-space-1);
+        }
+
+        .confirm-phrase label {
+            font-size: var(--uui-type-small-size);
+            color: var(--uui-color-text-alt);
+        }
+
+        .confirm-phrase uui-input {
+            width: 100%;
         }
 
         .actions {

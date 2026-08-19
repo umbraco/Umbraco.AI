@@ -61,6 +61,7 @@ export class UaiHitlApprovalElement extends UmbLitElement {
             config = {
                 title: this.interrupt.title,
                 message: this.interrupt.message,
+                confirmPhrase: this.interrupt.metadata?.confirmPhrase as string | undefined,
             };
             if (this.interrupt.options?.length) {
                 const approveOpt = this.interrupt.options.find((o) => o.variant === "positive" || o.value === "yes");

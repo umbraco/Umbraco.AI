@@ -235,6 +235,35 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         scope.Complete();
     }
 
+    public async Task<string?> GetSessionStateJsonAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        var json = await scope.ExecuteWithContextAsync(async db =>
+            await db.Conversations.AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => e.SessionStateJson)
+                .FirstOrDefaultAsync(cancellationToken));
+        scope.Complete();
+        return json;
+    }
+
+    public async Task SetSessionStateJsonAsync(Guid id, string? sessionStateJson, CancellationToken cancellationToken = default)
+    {
+        using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        await scope.ExecuteWithContextAsync(async db =>
+        {
+            var entity = await db.Conversations.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            if (entity is null)
+            {
+                return 0;
+            }
+
+            entity.SessionStateJson = sessionStateJson;
+            return await db.SaveChangesAsync(cancellationToken);
+        });
+        scope.Complete();
+    }
+
     // --- Messages ---
 
     public async Task<IReadOnlyList<AIMessage>> GetMessagesAsync(Guid conversationId, CancellationToken cancellationToken = default)

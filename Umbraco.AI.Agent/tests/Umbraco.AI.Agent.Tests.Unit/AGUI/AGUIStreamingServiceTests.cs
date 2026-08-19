@@ -14,6 +14,7 @@ using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.Core.Providers.Errors;
+using Umbraco.AI.Core.Tools;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.AGUI;
@@ -33,6 +34,7 @@ public class AGUIStreamingServiceTests
         _service = new AGUIStreamingService(
             _mockConverter.Object,
             _mockFileProcessor.Object,
+            new AIToolCollection(() => []),
             _logger);
 
         // Default converter setup
@@ -291,6 +293,13 @@ public class AGUIStreamingServiceTests
         interrupt.Id.ShouldBe("approval:call-del");
         interrupt.Reason.ShouldBe("human_approval");
         interrupt.ToolCallId.ShouldBe("call-del");
+
+        // Assert — no matching tool in the (empty) collection, so falls back to a generic
+        // title/message built from the tool name and raw arguments.
+        interrupt.Metadata.ShouldNotBeNull();
+        interrupt.Metadata!["title"].ShouldBe("delete_thing");
+        interrupt.Message.ShouldContain("id");
+        interrupt.Message.ShouldContain("42");
     }
 
     #endregion
@@ -611,7 +620,8 @@ public class AGUIStreamingServiceTests
 
         var realCall = new FunctionCallContent("call-del", "delete_thing",
             new Dictionary<string, object?> { ["id"] = "42" });
-        var pending = new Dictionary<string, FunctionCallContent>(StringComparer.Ordinal) { ["call-del"] = realCall };
+        var realRequest = new ToolApprovalRequestContent("ficc_call-del", realCall);
+        var pending = new Dictionary<string, ToolApprovalRequestContent>(StringComparer.Ordinal) { ["call-del"] = realRequest };
 
         var request = new AGUIRunRequest
         {
@@ -660,7 +670,7 @@ public class AGUIStreamingServiceTests
     private async Task<List<IAGUIEvent>> CollectEvents(
         AIAgent agent,
         AGUIRunRequest request,
-        IReadOnlyDictionary<string, FunctionCallContent> pendingApprovalCalls)
+        IReadOnlyDictionary<string, ToolApprovalRequestContent> pendingApprovalCalls)
     {
         var events = new List<IAGUIEvent>();
         await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, CancellationToken.None))

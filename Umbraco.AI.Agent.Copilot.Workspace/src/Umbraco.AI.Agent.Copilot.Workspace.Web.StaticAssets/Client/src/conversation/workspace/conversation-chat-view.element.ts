@@ -60,6 +60,11 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
                 height: 100%;
                 width: 100%;
                 --uai-chat-content-max-width: 860px;
+                /* Tool chips, agent status, response bubbles, and approval cards default to a grey
+                   "alternate surface" tuned for the contextual copilot sidebar's light background.
+                   Copilot Workspace's own canvas is grey, so that default disappears into it -- override
+                   to a proper elevated surface so these elements read as cards against the canvas. */
+                --uai-chat-surface-alt: var(--uui-color-surface);
             }
         `,
     ];

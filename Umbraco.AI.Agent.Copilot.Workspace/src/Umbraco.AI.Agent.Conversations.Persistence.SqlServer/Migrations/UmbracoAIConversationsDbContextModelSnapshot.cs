@@ -61,6 +61,9 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("SessionStateJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");

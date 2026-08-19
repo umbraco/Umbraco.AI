@@ -59,7 +59,7 @@ export class UaiAgentToolStatusElement extends UmbLitElement implements UaiAgent
             align-items: center;
             gap: var(--uui-size-space-2);
             padding: var(--uui-size-space-2) var(--uui-size-space-3);
-            background: var(--uui-color-surface-alt);
+            background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
             border-radius: var(--uui-border-radius);
             font-size: var(--uui-type-small-size);
             color: var(--uui-color-text);

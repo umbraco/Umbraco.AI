@@ -138,6 +138,7 @@ public class UmbracoAIConversationsDbContext : DbContext
             entity.Property(e => e.DateModified).IsRequired();
             entity.Property(e => e.LastMessageAt).IsRequired(false);
             entity.Property(e => e.Version).IsRequired().HasDefaultValue(1);
+            entity.Property(e => e.SessionStateJson);
 
             entity.HasIndex(e => e.UserKey);
             entity.HasIndex(e => e.ProjectId);

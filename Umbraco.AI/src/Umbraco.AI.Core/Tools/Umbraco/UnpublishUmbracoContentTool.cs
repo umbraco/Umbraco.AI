@@ -52,6 +52,12 @@ public class UnpublishUmbracoContentTool(
             ? new UnpublishUmbracoContentResult(true, null)
             : new UnpublishUmbracoContentResult(false, attempt.Result.ToMessage());
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(UnpublishUmbracoContentArgs args)
+        => args.Culture is null
+            ? "Unpublish this content item, taking it offline."
+            : $"Unpublish the '{args.Culture}' culture of this content item.";
 }
 
 /// <summary>

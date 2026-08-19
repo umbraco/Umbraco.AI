@@ -47,6 +47,10 @@ public class DeleteUmbracoMediaTool(
             ? new DeleteUmbracoMediaResult(true, null)
             : new DeleteUmbracoMediaResult(false, attempt.Status.ToMessage());
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(DeleteUmbracoMediaArgs args)
+        => "Move this media item to the recycle bin (reversible).";
 }
 
 /// <summary>

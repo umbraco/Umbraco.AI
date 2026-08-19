@@ -48,6 +48,10 @@ public class DeleteUmbracoContentTool(
             ? new DeleteUmbracoContentResult(true, null)
             : new DeleteUmbracoContentResult(false, attempt.Status.ToMessage());
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(DeleteUmbracoContentArgs args)
+        => "Move this content item to the recycle bin (reversible).";
 }
 
 /// <summary>

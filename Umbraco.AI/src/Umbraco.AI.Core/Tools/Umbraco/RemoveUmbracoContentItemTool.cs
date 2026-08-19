@@ -61,6 +61,13 @@ public class RemoveUmbracoContentItemTool(
 
         return new RemoveUmbracoContentItemResult(outcome.Success, outcome.Message);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(RemoveUmbracoContentItemArgs args)
+    {
+        var propertyAlias = args.Path.LastOrDefault()?.Alias;
+        return propertyAlias is null ? null : $"Remove an item from '{propertyAlias}'.";
+    }
 }
 
 /// <summary>

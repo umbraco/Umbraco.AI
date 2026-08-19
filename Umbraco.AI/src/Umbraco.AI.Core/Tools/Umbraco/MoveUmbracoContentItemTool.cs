@@ -68,6 +68,13 @@ public class MoveUmbracoContentItemTool(
 
         return new MoveUmbracoContentItemResult(outcome.Success, outcome.Message);
     }
+
+    /// <inheritdoc />
+    protected override string? DescribeInvocation(MoveUmbracoContentItemArgs args)
+    {
+        var propertyAlias = args.Path.LastOrDefault()?.Alias;
+        return propertyAlias is null ? null : $"Move an item within '{propertyAlias}' to position {args.Position}.";
+    }
 }
 
 /// <summary>

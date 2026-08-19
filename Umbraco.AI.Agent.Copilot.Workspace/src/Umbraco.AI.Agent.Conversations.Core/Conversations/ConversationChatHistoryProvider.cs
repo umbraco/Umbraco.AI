@@ -62,16 +62,64 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     }
 
     /// <summary>
-    /// Recovers the original tool calls (name + arguments) for the given approval <paramref name="callIds"/>
-    /// from the conversation's persisted history — so a human-approval resume after a reload can correlate
-    /// against the real call rather than a synthesised empty one (B2). Returns only the callIds found.
+    /// Loads the conversation's persisted MAF session-state blob (see
+    /// <c>AIConversationEntity.SessionStateJson</c>), or null when the conversation has never run.
+    /// Used by the host's stream endpoint to restore a run's session via
+    /// <c>AIAgent.DeserializeSessionAsync</c> instead of always starting a bare one — session-scoped
+    /// decorators (e.g. the tool-approval-response binder) record their own state directly on the
+    /// session object rather than in chat history, so a fresh session per HTTP request would otherwise
+    /// lose it.
     /// </summary>
-    public async Task<IReadOnlyDictionary<string, FunctionCallContent>> GetApprovalToolCallsAsync(
+    public async Task<JsonElement?> GetSessionStateAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        var json = await _repository.GetSessionStateJsonAsync(conversationId, cancellationToken);
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<JsonElement>(json, AIJsonUtilities.DefaultOptions);
+        }
+        catch (JsonException)
+        {
+            // A corrupt/foreign blob shouldn't fail the run — just start the next session bare.
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Persists the conversation's MAF session-state blob after a run, so the next request's fresh
+    /// session can be restored via <c>AIAgent.DeserializeSessionAsync</c> (see <see cref="GetSessionStateAsync"/>).
+    /// </summary>
+    public async Task SaveSessionStateAsync(Guid conversationId, JsonElement state, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(state, AIJsonUtilities.DefaultOptions);
+        await _repository.SetSessionStateJsonAsync(conversationId, json, cancellationToken);
+    }
+
+    /// <summary>
+    /// Recovers the original approval requests for the given tool-call <paramref name="callIds"/> from the
+    /// conversation's persisted history — so a human-approval resume after a reload can correlate against
+    /// the real call rather than a synthesised empty one (B2). Returns only the callIds found.
+    /// </summary>
+    /// <remarks>
+    /// Returns the full <see cref="ToolApprovalRequestContent"/> — not just its wrapped tool call — because
+    /// its <see cref="ToolApprovalRequestContent.RequestId"/> is FICC's own correlation id (typically
+    /// <c>"ficc_" + callId</c>, not the callId itself). <c>Microsoft.Agents.AI</c>'s
+    /// <c>ApprovalResponseBindingChatClient</c> matches an inbound <see cref="ToolApprovalResponseContent"/>
+    /// against its session-recorded pending requests by that id, silently dropping any response built with
+    /// the wrong one — so the resume path must build its response via
+    /// <see cref="ToolApprovalRequestContent.CreateResponse(bool, string?)"/> off this recovered request,
+    /// not by hand-constructing one from just the callId.
+    /// </remarks>
+    public async Task<IReadOnlyDictionary<string, ToolApprovalRequestContent>> GetApprovalToolCallsAsync(
         Guid conversationId,
         IReadOnlyCollection<string> callIds,
         CancellationToken cancellationToken = default)
     {
-        var result = new Dictionary<string, FunctionCallContent>(StringComparer.Ordinal);
+        var result = new Dictionary<string, ToolApprovalRequestContent>(StringComparer.Ordinal);
         if (conversationId == Guid.Empty || callIds.Count == 0)
         {
             return result;
@@ -90,18 +138,9 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
 
             foreach (var content in chatMessage.Contents)
             {
-                // The interrupted run persisted the approval request (FICC emits ToolApprovalRequestContent);
-                // fall back to a raw FunctionCallContent in case it was stored pre-promotion.
-                var call = content switch
+                if (content is ToolApprovalRequestContent request && wanted.Contains(request.ToolCall.CallId))
                 {
-                    ToolApprovalRequestContent { ToolCall: FunctionCallContent fcc } => fcc,
-                    FunctionCallContent fcc => fcc,
-                    _ => null,
-                };
-
-                if (call is not null && wanted.Contains(call.CallId))
-                {
-                    result[call.CallId] = call;
+                    result[request.ToolCall.CallId] = request;
                 }
             }
         }

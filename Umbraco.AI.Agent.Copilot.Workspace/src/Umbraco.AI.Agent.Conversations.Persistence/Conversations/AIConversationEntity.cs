@@ -73,4 +73,15 @@ internal class AIConversationEntity
     /// concurrent-append reconcile (interrogation B1).
     /// </summary>
     public int Version { get; set; } = 1;
+
+    /// <summary>
+    /// Opaque, MAF-serialized <c>AgentSession</c> state (JSON produced by
+    /// <c>AIAgent.SerializeSessionAsync</c>) from the most recent run — restored into the fresh session
+    /// created for the next run via <c>AIAgent.DeserializeSessionAsync</c>. Session-scoped decorators
+    /// (e.g. the tool-approval-response binder) record state directly on the session object rather than
+    /// in chat history, so a request handled by a brand-new session per HTTP call needs this to survive
+    /// across requests. Not part of the <see cref="AIConversation"/> domain model: it is an execution
+    /// detail, never shown or edited through the conversation API.
+    /// </summary>
+    public string? SessionStateJson { get; set; }
 }

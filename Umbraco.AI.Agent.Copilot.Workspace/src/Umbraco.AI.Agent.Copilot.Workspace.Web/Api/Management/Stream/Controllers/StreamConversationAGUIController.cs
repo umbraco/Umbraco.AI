@@ -98,6 +98,13 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             // history — recover it so the run can correlate the approval rather than skip it (B2).
             ResolveApprovalToolCalls = async (callIds, ct) =>
                 await _historyProvider.GetApprovalToolCallsAsync(id, callIds, ct),
+
+            // A fresh AgentSession is created per HTTP request (below), but session-scoped decorators
+            // (e.g. tool-approval-response binding) record their own state directly on the session
+            // object rather than in chat history. Restore/persist it explicitly so that state survives
+            // across requests the same way the chat messages do.
+            LoadSessionState = async ct => await _historyProvider.GetSessionStateAsync(id, ct),
+            SaveSessionState = async (state, ct) => await _historyProvider.SaveSessionStateAsync(id, state, ct),
         };
 
         var options = new AIAgentExecutionOptions

@@ -56,6 +56,9 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.Sqlite.Migrations
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SessionStateJson")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Title")
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");

@@ -500,10 +500,28 @@ internal sealed class AIAgentService : IAIAgentService
         // binding lives with the consumer's provider) so the attached ChatHistoryProvider loads/stores
         // against the right conversation. Non-persisted surfaces stream with a null session as before.
         AgentSession? session = null;
-        IReadOnlyDictionary<string, FunctionCallContent>? pendingApprovalCalls = null;
+        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null;
         if (options.ConversationHistory is { } historyBinding)
         {
-            session = await context.MafAgent.CreateSessionAsync(cancellationToken);
+            // A fresh session is created per HTTP request (Copilot Workspace persists conversation
+            // history in its own store rather than keeping a MAF session alive between requests — it
+            // wouldn't survive a restart anyway). But session-scoped decorators (e.g. the tool-approval-
+            // response binder introduced in Microsoft.Agents.AI 1.14) record their own state directly on
+            // the session object, not in chat history — so restore the prior run's state here rather than
+            // always starting bare, or that state silently never reaches the decorator. Confirmed
+            // empirically necessary: disabling that decorator instead (relying solely on our own
+            // persisted-history-based approval correlation) breaks a chained multi-approval turn — e.g.
+            // create_umbraco_content then publish_umbraco_content approved back-to-back in one
+            // conversation — because a prior turn's already-resolved approval request resurfaces as
+            // unmatched once a later turn's persisted history is reloaded. Keeping this decorator active
+            // (with its state correctly restored) avoids that; our own correlation layer stays in place
+            // too, since it's what supplies the correct request object for CreateResponse().
+            var persistedState = historyBinding.LoadSessionState is { } loadState
+                ? await loadState(cancellationToken)
+                : null;
+            session = persistedState is { } state
+                ? await context.MafAgent.DeserializeSessionAsync(state, cancellationToken: cancellationToken)
+                : await context.MafAgent.CreateSessionAsync(cancellationToken);
             historyBinding.BindSession(session);
 
             // For an approval resume after a reload, the original tool call may only exist in persisted
@@ -523,6 +541,14 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
+            // Persist session state (success or interrupt) so the next request's fresh session can
+            // restore it above — see the restore comment for why this matters.
+            if (options.ConversationHistory is { SaveSessionState: { } saveState } binding && session is not null)
+            {
+                var serialized = await context.MafAgent.SerializeSessionAsync(session, cancellationToken: cancellationToken);
+                await saveState(serialized, cancellationToken);
+            }
+
             await PublishExecutedNotificationAsync(context, streamCompleted);
         }
     }
@@ -826,7 +852,7 @@ internal sealed class AIAgentService : IAIAgentService
     /// callIds from persisted history (via the binding), so the streaming resume path can correlate a
     /// reloaded approval instead of skipping it. Returns null when there is nothing to resolve (B2).
     /// </summary>
-    private static async ValueTask<IReadOnlyDictionary<string, FunctionCallContent>?> ResolvePendingApprovalCallsAsync(
+    private static async ValueTask<IReadOnlyDictionary<string, ToolApprovalRequestContent>?> ResolvePendingApprovalCallsAsync(
         AIConversationHistoryBinding binding,
         AGUIRunRequest request,
         CancellationToken cancellationToken)

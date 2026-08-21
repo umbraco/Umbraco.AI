@@ -58,6 +58,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         IEnumerable<AITool>? frontendTools,
         AgentSession? session,
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
@@ -70,7 +71,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -151,6 +152,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         HashSet<string> frontendToolNames,
         AgentSession? session,
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Process file content: store base64, resolve id references
@@ -211,6 +213,23 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 "Resume with {EntryCount} entries produced {ResultCount} tool results",
                 request.Resume.Count,
                 resumeMessages.Count);
+        }
+
+        // Auto-deny any approval request left dangling by an earlier reload that abandoned it before
+        // Approve/Deny was clicked. The caller has already excluded anything this request's own Resume
+        // entries cover, so what's left here genuinely has no response anywhere — left in place, MAF's
+        // bound ChatHistoryProvider would concatenate it into every future turn and
+        // FunctionInvokingChatClient would throw on it every time.
+        if (staleApprovalRequests is { Count: > 0 })
+        {
+            foreach (var stale in staleApprovalRequests)
+            {
+                chatMessages.Add(new ChatMessage(ChatRole.User, [stale.CreateResponse(false, "Auto-denied: the browser was reloaded before this action was approved or denied.")]));
+                _logger.LogInformation(
+                    "Auto-denying stale approval request for callId {CallId} on run {RunId} -- left unresolved by an earlier reload.",
+                    stale.ToolCall.CallId,
+                    request.RunId);
+            }
         }
 
         _logger.LogDebug(

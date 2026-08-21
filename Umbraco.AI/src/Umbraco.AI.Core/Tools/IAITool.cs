@@ -58,7 +58,11 @@ public interface IAITool : IDiscoverable
     /// arguments (e.g. "Set 'title' to 'New Title'") -- shown to a human approving a destructive call,
     /// in addition to the tool's general <see cref="Description"/>. Returns null when the tool hasn't
     /// implemented one; callers fall back to a generic display of the raw arguments in that case. Must
-    /// be pure -- never perform the actual operation, a lookup, or any other side effect.
+    /// never perform the actual operation or any other side effect. Prefer building the description from
+    /// the raw arguments alone; a synchronous, read-only lookup (e.g. resolving a parent key to its name,
+    /// the same way <see cref="ConfirmationPhrase"/> resolves a target's name) is acceptable when it turns
+    /// an opaque GUID into something a human can actually recognize -- as long as an unresolvable target
+    /// still falls back to the raw value rather than being dropped from the description.
     /// </summary>
     /// <remarks>
     /// Default interface implementation returns null, so existing <see cref="IAITool"/> implementers

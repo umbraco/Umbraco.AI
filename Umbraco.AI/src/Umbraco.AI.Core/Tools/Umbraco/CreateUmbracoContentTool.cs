@@ -35,6 +35,7 @@ public record CreateUmbracoContentArgs(
 public class CreateUmbracoContentTool(
     IContentEditingService contentEditingService,
     IContentTypeService contentTypeService,
+    IContentService contentService,
     IUmbracoWriteAuthorizer authorizer)
     : AIToolBase<CreateUmbracoContentArgs>
 {
@@ -98,8 +99,19 @@ public class CreateUmbracoContentTool(
 
     /// <inheritdoc />
     protected override string? DescribeInvocation(CreateUmbracoContentArgs args)
-        => $"Create a new '{args.ContentTypeAlias}' content item named '{args.Name}'" +
-           (args.ParentKey is { } parentKey ? $" under parent {parentKey}." : " at the root.");
+    {
+        if (args.ParentKey is not { } parentKey)
+        {
+            return $"Create a new '{args.ContentTypeAlias}' content item named '{args.Name}' at the root.";
+        }
+
+        // Falls back to the raw key when the parent can't be resolved (e.g. it was deleted since),
+        // rather than dropping the parent reference from the description entirely.
+        var parentDescription = contentService.GetById(parentKey)?.Name is { } parentName
+            ? $"'{parentName}'"
+            : parentKey.ToString();
+        return $"Create a new '{args.ContentTypeAlias}' content item named '{args.Name}' under parent {parentDescription}.";
+    }
 }
 
 /// <summary>

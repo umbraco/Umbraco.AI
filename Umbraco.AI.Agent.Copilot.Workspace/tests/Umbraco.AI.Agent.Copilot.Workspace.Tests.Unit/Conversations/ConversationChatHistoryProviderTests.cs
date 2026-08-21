@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Moq;
 using Shouldly;
@@ -223,6 +224,95 @@ public class ConversationChatHistoryProviderTests
 
             var dataContent = result.Contents[0].ShouldBeOfType<DataContent>();
             dataContent.Data.ToArray().ShouldBe(SomeBytes);
+        }
+    }
+
+    /// <summary>
+    /// A browser refresh/close before Approve/Deny leaves a <see cref="ToolApprovalRequestContent"/> in
+    /// persisted history with no matching <see cref="ToolApprovalResponseContent"/> — MAF's
+    /// <c>ChatHistoryProvider</c> would otherwise concatenate it into every future turn and
+    /// <c>FunctionInvokingChatClient</c> would throw. <see cref="ConversationChatHistoryProvider.GetDanglingApprovalRequestsAsync"/>
+    /// is how the caller finds these so it can synthesize a deny before that happens.
+    /// </summary>
+    public class DanglingApprovalRequests
+    {
+        private static AIMessage ToStoredMessage(ChatMessage message)
+            => new() { ContentJson = JsonSerializer.Serialize(message, AIJsonUtilities.DefaultOptions) };
+
+        private static Mock<IAIConversationRepository> RepositoryReturning(params ChatMessage[] messages)
+        {
+            var repository = new Mock<IAIConversationRepository>();
+            repository
+                .Setup(x => x.GetMessagesAsync(ConversationId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(messages.Select(ToStoredMessage).ToList());
+            return repository;
+        }
+
+        private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
+            => new(repository.Object, Mock.Of<IAIFileStore>());
+
+        [Fact]
+        public async Task GetDanglingApprovalRequestsAsync_RequestWithNoResponse_IsReturned()
+        {
+            var toolCall = new FunctionCallContent("call-1", "delete_umbraco_content");
+            var request = new ToolApprovalRequestContent("req-1", toolCall);
+            var provider = CreateProvider(RepositoryReturning(new ChatMessage(ChatRole.Assistant, [request])));
+
+            var dangling = await provider.GetDanglingApprovalRequestsAsync(ConversationId);
+
+            dangling.Single().ToolCall.CallId.ShouldBe("call-1");
+        }
+
+        [Fact]
+        public async Task GetDanglingApprovalRequestsAsync_RequestWithMatchingResponse_IsNotReturned()
+        {
+            var toolCall = new FunctionCallContent("call-1", "delete_umbraco_content");
+            var request = new ToolApprovalRequestContent("req-1", toolCall);
+            var provider = CreateProvider(RepositoryReturning(
+                new ChatMessage(ChatRole.Assistant, [request]),
+                new ChatMessage(ChatRole.User, [request.CreateResponse(true)])));
+
+            var dangling = await provider.GetDanglingApprovalRequestsAsync(ConversationId);
+
+            dangling.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task GetDanglingApprovalRequestsAsync_OneOfTwoRequestsResolved_ReturnsOnlyTheUnresolvedOne()
+        {
+            var resolvedCall = new FunctionCallContent("call-resolved", "publish_umbraco_content");
+            var resolvedRequest = new ToolApprovalRequestContent("req-resolved", resolvedCall);
+            var danglingCall = new FunctionCallContent("call-dangling", "delete_umbraco_content");
+            var danglingRequest = new ToolApprovalRequestContent("req-dangling", danglingCall);
+            var provider = CreateProvider(RepositoryReturning(
+                new ChatMessage(ChatRole.Assistant, [resolvedRequest]),
+                new ChatMessage(ChatRole.User, [resolvedRequest.CreateResponse(false)]),
+                new ChatMessage(ChatRole.Assistant, [danglingRequest])));
+
+            var dangling = await provider.GetDanglingApprovalRequestsAsync(ConversationId);
+
+            dangling.Single().ToolCall.CallId.ShouldBe("call-dangling");
+        }
+
+        [Fact]
+        public async Task GetDanglingApprovalRequestsAsync_NoApprovalContentAtAll_ReturnsEmpty()
+        {
+            var provider = CreateProvider(RepositoryReturning(new ChatMessage(ChatRole.User, "Hello")));
+
+            var dangling = await provider.GetDanglingApprovalRequestsAsync(ConversationId);
+
+            dangling.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task GetDanglingApprovalRequestsAsync_EmptyConversationId_ReturnsEmptyWithoutCallingRepository()
+        {
+            var repository = new Mock<IAIConversationRepository>(MockBehavior.Strict);
+            var provider = CreateProvider(repository);
+
+            var dangling = await provider.GetDanglingApprovalRequestsAsync(Guid.Empty);
+
+            dangling.ShouldBeEmpty();
         }
     }
 }

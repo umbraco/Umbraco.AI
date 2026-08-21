@@ -650,6 +650,58 @@ public class AGUIStreamingServiceTests
         approvalResponse.ToolCall.ShouldBeSameAs(realCall);
     }
 
+    [Fact]
+    public async Task StreamAgentAsync_WithStaleApprovalRequest_AutoDeniesIt()
+    {
+        // Arrange — a plain new turn, unrelated to (and NOT resuming) an approval abandoned by an
+        // earlier reload. Left alone, MAF's bound ChatHistoryProvider would concatenate that dangling
+        // request into this turn too, and FunctionInvokingChatClient would throw on it.
+        var converterReturnList = new List<ChatMessage> { new(ChatRole.User, "a new unrelated message") };
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var staleCall = new FunctionCallContent("call-stale", "delete_thing", null);
+        var staleRequest = new ToolApprovalRequestContent("ficc_call-stale", staleCall);
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "something else" }],
+        };
+
+        // Act
+        await CollectEvents(agent, request, pendingApprovalCalls: null, staleApprovalRequests: [staleRequest]);
+
+        // Assert — a denied ToolApprovalResponseContent for the stale call, appended after the new turn.
+        var approvalResponse = converterReturnList
+            .SelectMany(m => m.Contents ?? [])
+            .OfType<ToolApprovalResponseContent>()
+            .FirstOrDefault();
+        approvalResponse.ShouldNotBeNull();
+        approvalResponse!.Approved.ShouldBeFalse();
+        approvalResponse.ToolCall.CallId.ShouldBe("call-stale");
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithNoStaleApprovalRequests_AddsNothingExtra()
+    {
+        var converterReturnList = new List<ChatMessage> { new(ChatRole.User, "hi") };
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = CreateRequest();
+
+        // Act
+        await CollectEvents(agent, request, pendingApprovalCalls: null, staleApprovalRequests: []);
+
+        // Assert — nothing appended when there's nothing stale to resolve.
+        converterReturnList.Count.ShouldBe(1);
+    }
+
     #endregion
 
     #region Helper Methods
@@ -673,7 +725,21 @@ public class AGUIStreamingServiceTests
         IReadOnlyDictionary<string, ToolApprovalRequestContent> pendingApprovalCalls)
     {
         var events = new List<IAGUIEvent>();
-        await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, CancellationToken.None))
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, cancellationToken: CancellationToken.None))
+        {
+            events.Add(evt);
+        }
+        return events;
+    }
+
+    private async Task<List<IAGUIEvent>> CollectEvents(
+        AIAgent agent,
+        AGUIRunRequest request,
+        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests)
+    {
+        var events = new List<IAGUIEvent>();
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, staleApprovalRequests, CancellationToken.None))
         {
             events.Add(evt);
         }

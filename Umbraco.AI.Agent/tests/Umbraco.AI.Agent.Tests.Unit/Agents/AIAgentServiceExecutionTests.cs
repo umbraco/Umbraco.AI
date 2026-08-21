@@ -139,6 +139,7 @@ public class AIAgentServiceExecutionTests
                 It.IsAny<IEnumerable<AITool>?>(),
                 It.IsAny<AgentSession?>(),
                 It.IsAny<IReadOnlyDictionary<string, ToolApprovalRequestContent>?>(),
+                It.IsAny<IReadOnlyList<ToolApprovalRequestContent>?>(),
                 It.IsAny<CancellationToken>()))
             .Returns(EmptyEvents());
 

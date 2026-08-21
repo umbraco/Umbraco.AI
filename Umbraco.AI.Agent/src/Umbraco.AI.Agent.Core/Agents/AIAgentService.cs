@@ -501,6 +501,7 @@ internal sealed class AIAgentService : IAIAgentService
         // against the right conversation. Non-persisted surfaces stream with a null session as before.
         AgentSession? session = null;
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null;
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null;
         if (options.ConversationHistory is { } historyBinding)
         {
             // A fresh session is created per HTTP request (Copilot Workspace persists conversation
@@ -527,13 +528,19 @@ internal sealed class AIAgentService : IAIAgentService
             // For an approval resume after a reload, the original tool call may only exist in persisted
             // history — recover it (name + args) so the resume path can correlate instead of skipping (B2).
             pendingApprovalCalls = await ResolvePendingApprovalCallsAsync(historyBinding, request, cancellationToken);
+
+            // A DIFFERENT reload scenario: the browser was refreshed/closed before Approve/Deny was ever
+            // clicked, so this request isn't a resume for that call at all — just a new, unrelated turn.
+            // The dangling request from that abandoned interrupt still sits in persisted history and would
+            // otherwise brick every future turn (see AGUIStreamingService's staleApprovalRequests handling).
+            staleApprovalRequests = await ResolveStaleApprovalRequestsAsync(historyBinding, request, cancellationToken);
         }
 
         // Stream via AG-UI streaming service
         bool streamCompleted = false;
         try
         {
-            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, pendingApprovalCalls, cancellationToken))
+            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken))
             {
                 yield return evt;
             }
@@ -873,6 +880,38 @@ internal sealed class AIAgentService : IAIAgentService
         return callIds.Count == 0
             ? null
             : await binding.ResolveApprovalToolCalls(callIds, cancellationToken);
+    }
+
+    /// <summary>
+    /// Finds any approval request left dangling in persisted history by an earlier reload that abandoned
+    /// it before Approve/Deny was clicked, excluding whatever this request's own resume entries already
+    /// cover. Returns an empty list when there is nothing to resolve.
+    /// </summary>
+    private static async ValueTask<IReadOnlyList<ToolApprovalRequestContent>> ResolveStaleApprovalRequestsAsync(
+        AIConversationHistoryBinding binding,
+        AGUIRunRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (binding.ResolveDanglingApprovalRequests is null)
+        {
+            return [];
+        }
+
+        var dangling = await binding.ResolveDanglingApprovalRequests(cancellationToken);
+        if (dangling.Count == 0 || request.Resume is not { Count: > 0 })
+        {
+            return dangling;
+        }
+
+        var resumedCallIds = request.Resume
+            .Where(e => AGUI.AGUIInterruptKind.IsApproval(e.InterruptId))
+            .Select(e => AGUI.AGUIInterruptKind.GetCallId(e.InterruptId))
+            .Where(id => !string.IsNullOrEmpty(id))
+            .ToHashSet(StringComparer.Ordinal);
+
+        return resumedCallIds.Count == 0
+            ? dangling
+            : dangling.Where(r => !resumedCallIds.Contains(r.ToolCall.CallId)).ToList();
     }
 
     /// <summary>

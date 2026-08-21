@@ -49,6 +49,16 @@ public sealed record AIConversationHistoryBinding(
     public Func<IReadOnlyCollection<string>, CancellationToken, ValueTask<IReadOnlyDictionary<string, ToolApprovalRequestContent>>>? ResolveApprovalToolCalls { get; init; }
 
     /// <summary>
+    /// Optional resolver for any approval request left dangling in persisted history — from a browser
+    /// refresh/reload that abandoned a pending human-approval interrupt before Approve/Deny was clicked.
+    /// The Agent layer uses this to synthesize a deny for each one before starting a non-resume run, since
+    /// MAF's <c>ChatHistoryProvider</c> would otherwise concatenate the unresolved request into every
+    /// future turn and <c>FunctionInvokingChatClient</c> would throw. The consumer closes this over its
+    /// own conversation store; the Agent layer stays product-agnostic.
+    /// </summary>
+    public Func<CancellationToken, ValueTask<IReadOnlyList<ToolApprovalRequestContent>>>? ResolveDanglingApprovalRequests { get; init; }
+
+    /// <summary>
     /// Optional loader for the conversation's persisted MAF session-state blob (previously captured by
     /// <see cref="SaveSessionState"/>). When set and a blob is available, the agent layer restores the
     /// run's session from it via <c>AIAgent.DeserializeSessionAsync</c> instead of creating a bare one —

@@ -146,6 +146,52 @@ public class SessionBoundApprovalResumeTests
             .Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
     }
 
+    [Fact]
+    public async Task ApprovalAbandonedByReload_ThenUnrelatedMessage_DoesNotThrow_AndAutoDeniesTheStaleRequest()
+    {
+        // Reproduces the reported crash: a browser refresh/close before Approve/Deny leaves the pending
+        // ToolApprovalRequestContent dangling in persisted history. The user doesn't come back to resume
+        // it — they just type something new. Without the staleApprovalRequests handling, MAF's bound
+        // ChatHistoryProvider concatenates that dangling request into this turn too, and
+        // FunctionInvokingChatClient throws ("...that have no matching ToolApprovalResponseContent"),
+        // bricking every future turn in the conversation.
+        var executions = 0;
+        var historyProvider = new JsonRoundTrippingChatHistoryProvider();
+        var agent = CreateApprovalAgent(() => executions++, historyProvider);
+
+        // --- Turn 1: initial call, pauses on approval (persisted, never resolved). ---
+        SetConverterHistory(new ChatMessage(ChatRole.User, "delete content 42"));
+        var session1 = await agent.CreateSessionAsync();
+
+        var firstRun = await CollectEvents(agent, CreateRequest(), session1);
+        firstRun.OfType<RunFinishedEvent>().Single()
+            .Outcome.ShouldBeOfType<AGUIRunOutcomeInterrupt>();
+        executions.ShouldBe(0);
+
+        // --- Simulated reload: session state is restored (as a fresh HTTP request would), but the user
+        // sends a brand-new, unrelated message with no Resume entries at all — no click on Approve/Deny. ---
+        var serializedState = await agent.SerializeSessionAsync(session1);
+        var session2 = await agent.DeserializeSessionAsync(serializedState);
+        historyProvider.BindConversation(session2);
+
+        var staleRequests = await historyProvider.GetDanglingApprovalRequestsAsync();
+        staleRequests.Count.ShouldBe(1, "sanity check: the abandoned request should still be dangling");
+
+        SetConverterHistory(new ChatMessage(ChatRole.User, "what's today's date?"));
+
+        // Act — must not throw.
+        var secondRun = await CollectEvents(agent, CreateRequest(), session2, pendingApprovalCalls: null, staleApprovalRequests: staleRequests);
+
+        // Assert — the conversation completes normally; the abandoned destructive tool never ran.
+        secondRun.OfType<RunFinishedEvent>().Single()
+            .Outcome.ShouldBeOfType<AGUIRunOutcomeSuccess>();
+        executions.ShouldBe(0);
+
+        // The dangling request is now resolved (denied), so a later turn won't hit the same crash again.
+        var stillDangling = await historyProvider.GetDanglingApprovalRequestsAsync();
+        stillDangling.ShouldBeEmpty();
+    }
+
     // ---- Helpers ----
 
     private static ChatClientAgent CreateApprovalAgent(Action onExecute, ChatHistoryProvider historyProvider)
@@ -196,10 +242,11 @@ public class SessionBoundApprovalResumeTests
         MsAIAgent agent,
         AGUIRunRequest request,
         AgentSession session,
-        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null)
+        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null)
     {
         var events = new List<IAGUIEvent>();
-        await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools: null, session, pendingApprovalCalls, CancellationToken.None))
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools: null, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken: CancellationToken.None))
         {
             events.Add(evt);
         }
@@ -312,6 +359,36 @@ public class SessionBoundApprovalResumeTests
             }
 
             return new ValueTask<IReadOnlyDictionary<string, ToolApprovalRequestContent>>(result);
+        }
+
+        /// <summary>Mirrors <c>ConversationChatHistoryProvider.GetDanglingApprovalRequestsAsync</c>.</summary>
+        public ValueTask<IReadOnlyList<ToolApprovalRequestContent>> GetDanglingApprovalRequestsAsync()
+        {
+            var requests = new Dictionary<string, ToolApprovalRequestContent>(StringComparer.Ordinal);
+            var respondedRequestIds = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var json in _persistedMessageJson)
+            {
+                var message = JsonSerializer.Deserialize<ChatMessage>(json, AIJsonUtilities.DefaultOptions);
+                foreach (var content in message?.Contents ?? [])
+                {
+                    switch (content)
+                    {
+                        case ToolApprovalRequestContent request:
+                            requests[request.RequestId] = request;
+                            break;
+                        case ToolApprovalResponseContent response:
+                            respondedRequestIds.Add(response.RequestId);
+                            break;
+                    }
+                }
+            }
+
+            IReadOnlyList<ToolApprovalRequestContent> dangling = requests
+                .Where(kvp => !respondedRequestIds.Contains(kvp.Key))
+                .Select(kvp => kvp.Value)
+                .ToList();
+            return new ValueTask<IReadOnlyList<ToolApprovalRequestContent>>(dangling);
         }
     }
 }

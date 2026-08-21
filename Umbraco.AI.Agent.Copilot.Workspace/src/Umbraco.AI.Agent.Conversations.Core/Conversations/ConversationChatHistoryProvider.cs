@@ -126,26 +126,64 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         }
 
         var wanted = callIds.ToHashSet(StringComparer.Ordinal);
-        var stored = await _repository.GetMessagesAsync(conversationId, cancellationToken);
+        var messages = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
 
-        foreach (var message in stored)
+        foreach (var content in messages.SelectMany(m => m.Contents ?? []))
         {
-            var chatMessage = TryDeserialize(message.ContentJson);
-            if (chatMessage?.Contents is null)
+            if (content is ToolApprovalRequestContent request && wanted.Contains(request.ToolCall.CallId))
             {
-                continue;
-            }
-
-            foreach (var content in chatMessage.Contents)
-            {
-                if (content is ToolApprovalRequestContent request && wanted.Contains(request.ToolCall.CallId))
-                {
-                    result[request.ToolCall.CallId] = request;
-                }
+                result[request.ToolCall.CallId] = request;
             }
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Finds any <see cref="ToolApprovalRequestContent"/> in the conversation's persisted history that
+    /// has no matching <see cref="ToolApprovalResponseContent"/> anywhere in that same history (matched
+    /// by <see cref="ToolApprovalRequestContent.RequestId"/>) — i.e. an approval interrupt that was left
+    /// pending when the browser was closed or reloaded before Approve/Deny was clicked.
+    /// </summary>
+    /// <remarks>
+    /// MAF's base <c>ChatHistoryProvider.InvokingCoreAsync</c> unconditionally concatenates
+    /// <see cref="ProvideChatHistoryAsync"/>'s full result ahead of every run, resume or not. If a
+    /// dangling request like this reaches <c>FunctionInvokingChatClient</c> on a plain, non-resume turn,
+    /// it throws ("...that have no matching ToolApprovalResponseContent") because nothing in that
+    /// combined list resolves it — bricking every subsequent turn in the conversation. The caller uses
+    /// this to synthesize a deny for each one before starting a non-resume run (see
+    /// <c>AGUIStreamingService.StreamCoreAsync</c>'s <c>staleApprovalRequests</c> handling).
+    /// </remarks>
+    public async Task<IReadOnlyList<ToolApprovalRequestContent>> GetDanglingApprovalRequestsAsync(
+        Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        if (conversationId == Guid.Empty)
+        {
+            return [];
+        }
+
+        var messages = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
+
+        var requests = new Dictionary<string, ToolApprovalRequestContent>(StringComparer.Ordinal);
+        var respondedRequestIds = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var content in messages.SelectMany(m => m.Contents ?? []))
+        {
+            switch (content)
+            {
+                case ToolApprovalRequestContent request:
+                    requests[request.RequestId] = request;
+                    break;
+                case ToolApprovalResponseContent response:
+                    respondedRequestIds.Add(response.RequestId);
+                    break;
+            }
+        }
+
+        return requests
+            .Where(kvp => !respondedRequestIds.Contains(kvp.Key))
+            .Select(kvp => kvp.Value)
+            .ToList();
     }
 
     /// <inheritdoc />
@@ -159,18 +197,35 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return [];
         }
 
+        var messages = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
+
+        var rehydrated = new List<ChatMessage>(messages.Count);
+        foreach (var chatMessage in messages)
+        {
+            rehydrated.Add(await RehydrateAttachmentsAsync(conversationId, chatMessage, cancellationToken));
+        }
+
+        return rehydrated;
+    }
+
+    /// <summary>
+    /// Loads a conversation's persisted messages and deserializes each one, skipping any that can't be
+    /// re-materialized (e.g. a custom <see cref="AIContent"/> type that was later uninstalled) so a
+    /// single bad message doesn't fail the whole load (interrogation S14). Shared by every read path
+    /// below that needs the conversation's raw message content — attachment rehydration, if needed, is
+    /// each caller's own concern (only <see cref="ProvideChatHistoryAsync"/> needs it).
+    /// </summary>
+    private async Task<IReadOnlyList<ChatMessage>> LoadDeserializedMessagesAsync(Guid conversationId, CancellationToken cancellationToken)
+    {
         var stored = await _repository.GetMessagesAsync(conversationId, cancellationToken);
 
-        // Deserialize each persisted message; skip any that can't be re-materialized (e.g. a custom
-        // AIContent type that was later uninstalled) so a single bad message doesn't fail the whole
-        // conversation load (interrogation S14).
         var messages = new List<ChatMessage>(stored.Count);
         foreach (var message in stored)
         {
             var chatMessage = TryDeserialize(message.ContentJson);
             if (chatMessage is not null)
             {
-                messages.Add(await RehydrateAttachmentsAsync(conversationId, chatMessage, cancellationToken));
+                messages.Add(chatMessage);
             }
         }
 

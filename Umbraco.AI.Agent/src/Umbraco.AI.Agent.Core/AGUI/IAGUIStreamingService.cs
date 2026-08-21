@@ -70,12 +70,20 @@ public interface IAGUIStreamingService
     /// <c>Microsoft.Agents.AI</c>'s <c>ApprovalResponseBindingChatClient</c> to recognize the response as
     /// tied to a request it actually surfaced. Null for the contextual Copilot.
     /// </param>
+    /// <param name="staleApprovalRequests">
+    /// Optional approval requests left dangling in persisted history by an earlier reload that abandoned
+    /// them before Approve/Deny was clicked, and not covered by this request's own resume entries. Each
+    /// is auto-denied before streaming starts, since MAF's bound <c>ChatHistoryProvider</c> would
+    /// otherwise concatenate the unresolved request into every future turn and
+    /// <c>FunctionInvokingChatClient</c> would throw. Null/empty for the contextual Copilot, which never
+    /// persists history this way.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of AG-UI events.</returns>
     /// <remarks>
     /// Default interface method: implementations that predate session binding inherit this default,
-    /// which ignores <paramref name="session"/>/<paramref name="pendingApprovalCalls"/> and delegates to
-    /// the core overload.
+    /// which ignores <paramref name="session"/>/<paramref name="pendingApprovalCalls"/>/
+    /// <paramref name="staleApprovalRequests"/> and delegates to the core overload.
     /// </remarks>
     IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         AIAgent agent,
@@ -83,6 +91,7 @@ public interface IAGUIStreamingService
         IEnumerable<AITool>? frontendTools,
         AgentSession? session,
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null,
         CancellationToken cancellationToken = default)
         => StreamAgentAsync(agent, request, frontendTools, cancellationToken);
 }

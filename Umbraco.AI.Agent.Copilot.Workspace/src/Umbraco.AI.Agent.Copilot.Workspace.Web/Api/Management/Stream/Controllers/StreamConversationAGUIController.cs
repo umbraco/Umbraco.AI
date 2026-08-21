@@ -99,6 +99,12 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             ResolveApprovalToolCalls = async (callIds, ct) =>
                 await _historyProvider.GetApprovalToolCallsAsync(id, callIds, ct),
 
+            // A refresh/reload before Approve/Deny leaves a dangling approval request in persisted
+            // history — recover it so a subsequent non-resume turn can auto-deny it instead of bricking
+            // the conversation on FICC's unresolved-approval check.
+            ResolveDanglingApprovalRequests = async ct =>
+                await _historyProvider.GetDanglingApprovalRequestsAsync(id, ct),
+
             // A fresh AgentSession is created per HTTP request (below), but session-scoped decorators
             // (e.g. tool-approval-response binding) record their own state directly on the session
             // object rather than in chat history. Restore/persist it explicitly so that state survives

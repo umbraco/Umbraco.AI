@@ -51,15 +51,15 @@
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[17.4.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[17.4.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.AGUI" Version="[17.2.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.4.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.2.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.2.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.2.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[17.1.0-rc.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[17.1.0-rc.1, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[17.4.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[17.4.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.AGUI" Version="[17.2.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.4.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.2.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.2.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.2.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[17.1.0-rc.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[17.1.0-rc.2, 17.999.999)" />
 
     <PackageVersion Include="Umbraco.AI.Deploy" Version="[17.1.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Automate" Version="[17.0.0, 17.999.999)" />

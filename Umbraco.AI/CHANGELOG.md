@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### fix
 
 * **core:** Make update_umbraco_content patch instead of silently wiping properties ([1638085](https://github.com/umbraco/Umbraco.AI/commit/1638085952603d69fd42f37684c8233006e67ec7))
+* **core:** Resolve the parent's name in create_umbraco_content/media descriptions ([a1d72b9](https://github.com/umbraco/Umbraco.AI/commit/a1d72b9c9e0805da38b5295bca5ea09b7519231a))
 
 ## [17.4.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.0...Umbraco.AI@17.4.0-rc.1) (2026-08-11)
 

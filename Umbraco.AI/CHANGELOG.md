@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.4.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.4.0-rc.1...Umbraco.AI@18.4.0-rc.2) (2026-08-21)
+
+### fix
+
+* **core:** Make update_umbraco_content patch instead of silently wiping properties ([395e811](https://github.com/umbraco/Umbraco.AI/commit/395e811352032480e9c62c2995c6ca76181c9bdd))
+
 ## [18.4.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.0...Umbraco.AI@18.4.0-rc.1) (2026-08-11)
 
 ## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.0...Umbraco.AI@18.3.1) (2026-08-17)

@@ -13,8 +13,18 @@
         <Content Include="..\..\README.md" Pack="true" PackagePath="docs" />
     </ItemGroup>
 
-    <ItemGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.AI.Prompt.Startup\Umbraco.AI.Prompt.Startup.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Prompt.Web.StaticAssets\Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Prompt.Startup" VersionOverride="[$(Version)]" />
+        <PackageReference Include="Umbraco.AI.Prompt.Web.StaticAssets" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

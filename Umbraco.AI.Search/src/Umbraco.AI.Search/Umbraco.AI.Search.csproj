@@ -13,7 +13,16 @@
         <Content Include="..\..\README.md" Pack="true" PackagePath="docs" />
     </ItemGroup>
 
-    <ItemGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Search.Startup" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

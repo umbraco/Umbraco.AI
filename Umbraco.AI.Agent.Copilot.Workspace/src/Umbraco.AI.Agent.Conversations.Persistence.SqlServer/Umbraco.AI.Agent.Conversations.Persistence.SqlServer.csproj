@@ -10,10 +10,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Migrations\" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Migrations\" />
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Agent.Conversations.Persistence" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

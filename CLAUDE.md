@@ -307,6 +307,30 @@ Format: `[min, max)` -- inclusive lower, exclusive upper. Use `[X.Y.0, X.999.999
 
 **Pack recompiles against ranges (do not re-add `--no-build` to ranged packs).** The Build stage compiles the whole solution with project references (sibling *source*). For ranged packs (release/hotfix/main, or `packWithNuGetRanges`), `pack-product.yml` deliberately drops `--no-build` and recompiles so the shipped binary is validated against the *same* dependency versions the `.nuspec` declares — resolved from the LocalCI feed when the dependency was packed in the same run (co-release) or from nuget.org when it was not (solo release). This is what makes a solo release that needs an unpublished dependency API fail the pack instead of silently shipping a binary compiled against a higher version than its declared floor. Project-reference packs (dev previews) keep `--no-build` since the Build stage already produced those exact binaries.
 
+## Intra-Product Dependency Management
+
+Siblings *within one product* (e.g. `Umbraco.AI.Startup` → `Umbraco.AI.Persistence`, or the `Umbraco.AI`/`Umbraco.AI.Agent`/`Umbraco.AI.Prompt`/`Umbraco.AI.Search` meta-packages → their own `*.Startup`/`*.Web.StaticAssets`) always ship from the same `version.json`, same commit, same release. Unlike cross-product deps, there is never a valid reason for one to resolve to a different version than another — so these use an **exact pin**, not a range (this is the opposite of the "avoid exact versions" rule above, which is about cross-product deps specifically).
+
+```xml
+<PropertyGroup>
+    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+</PropertyGroup>
+
+<ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+</ItemGroup>
+
+<ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+    <PackageReference Include="Umbraco.AI.Persistence" VersionOverride="[$(Version)]" />
+</ItemGroup>
+```
+
+Same local-dev-vs-CI toggle as cross-product deps, but the PackageReference branch uses `VersionOverride="[$(Version)]"` instead of a central `Directory.Packages.props` range entry — no central entry is needed, `VersionOverride` supplies the version on its own.
+
+**Do not rely on `$(Version)` alone to make this correct.** NuGet's restore evaluates `PackageReference`/`VersionOverride` *before* Nerdbank.GitVersioning's version-setting props/targets run (they're excluded during restore via `ExcludeRestorePackageImports`), so left to itself `$(Version)` resolves to the SDK default `1.0.0` at restore time — which silently resolves against whatever unrelated package happens to sit at `1.0.0` on nuget.org instead of failing loudly (see [dotnet/Nerdbank.GitVersioning#351](https://github.com/dotnet/Nerdbank.GitVersioning/issues/351)). `pack-product.yml` works around this by computing the version once via `nbgv get-version -v NuGetPackageVersion` and passing it explicitly as `-p:Version=$VERSION` to both the restore and pack steps, so restore sees the real version from the start. Any other place that restores/packs a product with `UseProjectReferences=false` must do the same — don't rely on NBGV's implicit versioning for these builds, and don't try to fix this by hand-maintaining a version literal in a committed file (that's the kind of drift this whole fix exists to eliminate).
+
+This gap was found via [umbraco/Umbraco.AI#332](https://github.com/umbraco/Umbraco.AI/issues/332): before this fix, every intra-product dependency was an implicit NuGet floor (e.g. `Umbraco.AI.Startup` depending on `Umbraco.AI.Persistence >= 17.3.1`), so a consumer pinning the outer meta-package while a dependency floor elsewhere pulled a sibling package up produced a half-upgraded install — new server code next to old backoffice JavaScript, or similar mismatches, with no restore warning because no individual rule was technically violated.
+
 ## Commit Message Format
 
 [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>): <description>`

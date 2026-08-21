@@ -355,8 +355,8 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
     /// <summary>
     /// Builds a generic "what this call will do" message from raw arguments, for tools that haven't
-    /// implemented <see cref="IAITool.DescribeInvocation"/> -- a plain list of argument name/value pairs
-    /// is still far more informative to a human approving the call than the bare tool name alone.
+    /// implemented <see cref="IAITool.DescribeInvocationAsync"/> -- a plain list of argument name/value
+    /// pairs is still far more informative to a human approving the call than the bare tool name alone.
     /// </summary>
     private static string FormatGenericArgsMessage(IDictionary<string, object?>? arguments)
     {

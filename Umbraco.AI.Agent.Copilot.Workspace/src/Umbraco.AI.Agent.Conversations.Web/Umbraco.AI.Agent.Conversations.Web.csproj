@@ -24,11 +24,16 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Core\Umbraco.AI.Agent.Conversations.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <InternalsVisibleTo Include="Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit" />
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Agent.Conversations.Core" VersionOverride="[$(Version)]" />
+        <PackageReference Include="Umbraco.AI.Agent.Conversations.Persistence" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

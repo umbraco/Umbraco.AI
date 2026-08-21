@@ -23,8 +23,14 @@
         <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
 
-    <ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Prompt.Core" VersionOverride="[$(Version)]" />
+        <PackageReference Include="Umbraco.AI.Prompt.Persistence" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

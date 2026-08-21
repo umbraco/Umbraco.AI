@@ -9,7 +9,16 @@
         <PackageReference Include="Umbraco.Cms.Persistence.EFCore.Sqlite" />
     </ItemGroup>
 
-    <ItemGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Prompt.Persistence" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

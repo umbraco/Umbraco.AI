@@ -10,10 +10,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Persistence.SqlServer</_Parameter1>
         </AssemblyAttribute>
@@ -31,4 +27,16 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Core" VersionOverride="[$(Version)]" />
+    </ItemGroup>
 </Project>

@@ -149,12 +149,14 @@ internal static class ContentPropertyValueOperationHelper
     };
 
     /// <summary>
-    /// Converts a raw stored property value into a <see cref="JsonNode"/> for the dispatcher. A block
+    /// Converts a raw stored property value into a <see cref="JsonNode"/> — used both by the dispatcher
+    /// here and by <see cref="UpdateUmbracoContentTool"/> to round-trip untouched properties' current
+    /// values back into a <see cref="PropertyValueModel"/> so they survive a patch update. A block
     /// editor's stored value is a JSON string (the envelope) and parses directly; a scalar editor's
     /// stored value is often a plain, non-JSON string (e.g. "Hello World" from a text box) that would
     /// throw if parsed as JSON, so it falls back to wrapping it as a JSON string value instead.
     /// </summary>
-    private static JsonNode? ToJsonNode(object? value)
+    internal static JsonNode? ToJsonNode(object? value)
     {
         switch (value)
         {

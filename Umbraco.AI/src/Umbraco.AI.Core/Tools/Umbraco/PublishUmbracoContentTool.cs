@@ -23,7 +23,7 @@ public record PublishUmbracoContentArgs(
 [AITool("publish_umbraco_content", "Publish Umbraco Content", ScopeId = ContentWriteScope.ScopeId, IsDestructive = true)]
 public class PublishUmbracoContentTool(
     IContentPublishingService contentPublishingService,
-    IContentService contentService,
+    IContentEditingService contentEditingService,
     IUmbracoWriteAuthorizer authorizer)
     : AIToolBase<PublishUmbracoContentArgs>
 {
@@ -62,8 +62,8 @@ public class PublishUmbracoContentTool(
             : $"Publish the '{args.Culture}' culture of this content item, making it live.";
 
     /// <inheritdoc />
-    protected override string? ConfirmationPhrase(PublishUmbracoContentArgs args)
-        => contentService.GetById(args.Key)?.Name;
+    protected override async Task<string?> ResolveConfirmationPhraseAsync(PublishUmbracoContentArgs args)
+        => (await contentEditingService.GetAsync(args.Key))?.Name;
 }
 
 /// <summary>

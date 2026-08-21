@@ -22,7 +22,7 @@ public record UnpublishUmbracoContentArgs(
 [AITool("unpublish_umbraco_content", "Unpublish Umbraco Content", ScopeId = ContentWriteScope.ScopeId, IsDestructive = true)]
 public class UnpublishUmbracoContentTool(
     IContentPublishingService contentPublishingService,
-    IContentService contentService,
+    IContentEditingService contentEditingService,
     IUmbracoWriteAuthorizer authorizer)
     : AIToolBase<UnpublishUmbracoContentArgs>
 {
@@ -61,8 +61,8 @@ public class UnpublishUmbracoContentTool(
             : $"Unpublish the '{args.Culture}' culture of this content item.";
 
     /// <inheritdoc />
-    protected override string? ConfirmationPhrase(UnpublishUmbracoContentArgs args)
-        => contentService.GetById(args.Key)?.Name;
+    protected override async Task<string?> ResolveConfirmationPhraseAsync(UnpublishUmbracoContentArgs args)
+        => (await contentEditingService.GetAsync(args.Key))?.Name;
 }
 
 /// <summary>

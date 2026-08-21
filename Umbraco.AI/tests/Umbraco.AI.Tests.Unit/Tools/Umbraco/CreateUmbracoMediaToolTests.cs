@@ -16,7 +16,6 @@ public class CreateUmbracoMediaToolTests
 {
     private readonly Mock<IMediaEditingService> _mediaEditingServiceMock;
     private readonly Mock<IMediaTypeService> _mediaTypeServiceMock;
-    private readonly Mock<IMediaService> _mediaServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
     private readonly IAITool _tool;
 
@@ -24,9 +23,8 @@ public class CreateUmbracoMediaToolTests
     {
         _mediaEditingServiceMock = new Mock<IMediaEditingService>();
         _mediaTypeServiceMock = new Mock<IMediaTypeService>();
-        _mediaServiceMock = new Mock<IMediaService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new CreateUmbracoMediaTool(_mediaEditingServiceMock.Object, _mediaTypeServiceMock.Object, _mediaServiceMock.Object, _authorizerMock.Object);
+        _tool = new CreateUmbracoMediaTool(_mediaEditingServiceMock.Object, _mediaTypeServiceMock.Object, _authorizerMock.Object);
     }
 
     private static Mock<IMedia> CreateMediaMock(Guid key, string name, string mediaTypeAlias)
@@ -112,35 +110,35 @@ public class CreateUmbracoMediaToolTests
     }
 
     [Fact]
-    public void DescribeInvocation_NoParentKey_DescribesCreatingAtTheRoot()
+    public async Task DescribeInvocationAsync_NoParentKey_DescribesCreatingAtTheRoot()
     {
         var args = new CreateUmbracoMediaArgs(null, "image", "Logo", null);
 
-        var description = _tool.DescribeInvocation(args);
+        var description = await _tool.DescribeInvocationAsync(args);
 
         description.ShouldBe("Create a new 'image' media item named 'Logo' at the root.");
     }
 
     [Fact]
-    public void DescribeInvocation_ParentResolves_UsesItsNameInsteadOfTheRawKey()
+    public async Task DescribeInvocationAsync_ParentResolves_UsesItsNameInsteadOfTheRawKey()
     {
         var parentKey = Guid.NewGuid();
-        _mediaServiceMock.Setup(x => x.GetById(parentKey)).Returns(Mock.Of<IMedia>(m => m.Name == "Images"));
+        _mediaEditingServiceMock.Setup(x => x.GetAsync(parentKey)).ReturnsAsync(Mock.Of<IMedia>(m => m.Name == "Images"));
         var args = new CreateUmbracoMediaArgs(parentKey, "image", "Logo", null);
 
-        var description = _tool.DescribeInvocation(args);
+        var description = await _tool.DescribeInvocationAsync(args);
 
         description.ShouldBe("Create a new 'image' media item named 'Logo' under parent 'Images'.");
     }
 
     [Fact]
-    public void DescribeInvocation_ParentDoesNotResolve_FallsBackToTheRawKey()
+    public async Task DescribeInvocationAsync_ParentDoesNotResolve_FallsBackToTheRawKey()
     {
         var parentKey = Guid.NewGuid();
-        _mediaServiceMock.Setup(x => x.GetById(parentKey)).Returns((IMedia?)null);
+        _mediaEditingServiceMock.Setup(x => x.GetAsync(parentKey)).ReturnsAsync((IMedia?)null);
         var args = new CreateUmbracoMediaArgs(parentKey, "image", "Logo", null);
 
-        var description = _tool.DescribeInvocation(args);
+        var description = await _tool.DescribeInvocationAsync(args);
 
         description.ShouldBe($"Create a new 'image' media item named 'Logo' under parent {parentKey}.");
     }

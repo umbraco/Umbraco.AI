@@ -14,16 +14,16 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 public class PublishUmbracoContentToolTests
 {
     private readonly Mock<IContentPublishingService> _contentPublishingServiceMock;
-    private readonly Mock<IContentService> _contentServiceMock;
+    private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
     private readonly IAITool _tool;
 
     public PublishUmbracoContentToolTests()
     {
         _contentPublishingServiceMock = new Mock<IContentPublishingService>();
-        _contentServiceMock = new Mock<IContentService>();
+        _contentEditingServiceMock = new Mock<IContentEditingService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new PublishUmbracoContentTool(_contentPublishingServiceMock.Object, _contentServiceMock.Object, _authorizerMock.Object);
+        _tool = new PublishUmbracoContentTool(_contentPublishingServiceMock.Object, _contentEditingServiceMock.Object, _authorizerMock.Object);
     }
 
     [Fact]
@@ -115,23 +115,23 @@ public class PublishUmbracoContentToolTests
     }
 
     [Fact]
-    public void ConfirmationPhrase_ContentFound_ReturnsItsName()
+    public async Task ResolveConfirmationPhraseAsync_ContentFound_ReturnsItsName()
     {
         var key = Guid.NewGuid();
-        _contentServiceMock.Setup(x => x.GetById(key)).Returns(Mock.Of<IContent>(c => c.Name == "Home"));
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(Mock.Of<IContent>(c => c.Name == "Home"));
 
-        var phrase = _tool.ConfirmationPhrase(new PublishUmbracoContentArgs(key));
+        var phrase = await _tool.ResolveConfirmationPhraseAsync(new PublishUmbracoContentArgs(key));
 
         phrase.ShouldBe("Home");
     }
 
     [Fact]
-    public void ConfirmationPhrase_ContentNotFound_ReturnsNull()
+    public async Task ResolveConfirmationPhraseAsync_ContentNotFound_ReturnsNull()
     {
         var key = Guid.NewGuid();
-        _contentServiceMock.Setup(x => x.GetById(key)).Returns((IContent?)null);
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync((IContent?)null);
 
-        var phrase = _tool.ConfirmationPhrase(new PublishUmbracoContentArgs(key));
+        var phrase = await _tool.ResolveConfirmationPhraseAsync(new PublishUmbracoContentArgs(key));
 
         phrase.ShouldBeNull();
     }

@@ -31,7 +31,6 @@ public record CreateUmbracoMediaArgs(
 public class CreateUmbracoMediaTool(
     IMediaEditingService mediaEditingService,
     IMediaTypeService mediaTypeService,
-    IMediaService mediaService,
     IUmbracoWriteAuthorizer authorizer)
     : AIToolBase<CreateUmbracoMediaArgs>
 {
@@ -87,7 +86,7 @@ public class CreateUmbracoMediaTool(
     }
 
     /// <inheritdoc />
-    protected override string? DescribeInvocation(CreateUmbracoMediaArgs args)
+    protected override async Task<string?> DescribeInvocationAsync(CreateUmbracoMediaArgs args)
     {
         if (args.ParentKey is not { } parentKey)
         {
@@ -96,9 +95,8 @@ public class CreateUmbracoMediaTool(
 
         // Falls back to the raw key when the parent can't be resolved (e.g. it was deleted since),
         // rather than dropping the parent reference from the description entirely.
-        var parentDescription = mediaService.GetById(parentKey)?.Name is { } parentName
-            ? $"'{parentName}'"
-            : parentKey.ToString();
+        var parent = await mediaEditingService.GetAsync(parentKey);
+        var parentDescription = parent?.Name is { } parentName ? $"'{parentName}'" : parentKey.ToString();
         return $"Create a new '{args.MediaTypeAlias}' media item named '{args.Name}' under parent {parentDescription}.";
     }
 }

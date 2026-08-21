@@ -19,7 +19,6 @@ public record DeleteUmbracoMediaArgs(
 [AITool("delete_umbraco_media", "Delete Umbraco Media", ScopeId = MediaWriteScope.ScopeId, IsDestructive = true)]
 public class DeleteUmbracoMediaTool(
     IMediaEditingService mediaEditingService,
-    IMediaService mediaService,
     IUmbracoWriteAuthorizer authorizer)
     : AIToolBase<DeleteUmbracoMediaArgs>
 {
@@ -54,8 +53,8 @@ public class DeleteUmbracoMediaTool(
         => "Move this media item to the recycle bin (reversible).";
 
     /// <inheritdoc />
-    protected override string? ConfirmationPhrase(DeleteUmbracoMediaArgs args)
-        => mediaService.GetById(args.Key)?.Name;
+    protected override async Task<string?> ResolveConfirmationPhraseAsync(DeleteUmbracoMediaArgs args)
+        => (await mediaEditingService.GetAsync(args.Key))?.Name;
 }
 
 /// <summary>

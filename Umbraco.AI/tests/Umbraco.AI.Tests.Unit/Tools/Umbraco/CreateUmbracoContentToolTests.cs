@@ -17,7 +17,6 @@ public class CreateUmbracoContentToolTests
 {
     private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IContentTypeService> _contentTypeServiceMock;
-    private readonly Mock<IContentService> _contentServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
     private readonly IAITool _tool;
 
@@ -25,12 +24,10 @@ public class CreateUmbracoContentToolTests
     {
         _contentEditingServiceMock = new Mock<IContentEditingService>();
         _contentTypeServiceMock = new Mock<IContentTypeService>();
-        _contentServiceMock = new Mock<IContentService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
         _tool = new CreateUmbracoContentTool(
             _contentEditingServiceMock.Object,
             _contentTypeServiceMock.Object,
-            _contentServiceMock.Object,
             _authorizerMock.Object);
     }
 
@@ -192,35 +189,35 @@ public class CreateUmbracoContentToolTests
     }
 
     [Fact]
-    public void DescribeInvocation_NoParentKey_DescribesCreatingAtTheRoot()
+    public async Task DescribeInvocationAsync_NoParentKey_DescribesCreatingAtTheRoot()
     {
         var args = new CreateUmbracoContentArgs(null, "blogPost", "Home", null);
 
-        var description = _tool.DescribeInvocation(args);
+        var description = await _tool.DescribeInvocationAsync(args);
 
         description.ShouldBe("Create a new 'blogPost' content item named 'Home' at the root.");
     }
 
     [Fact]
-    public void DescribeInvocation_ParentResolves_UsesItsNameInsteadOfTheRawKey()
+    public async Task DescribeInvocationAsync_ParentResolves_UsesItsNameInsteadOfTheRawKey()
     {
         var parentKey = Guid.NewGuid();
-        _contentServiceMock.Setup(x => x.GetById(parentKey)).Returns(Mock.Of<IContent>(c => c.Name == "Blog"));
+        _contentEditingServiceMock.Setup(x => x.GetAsync(parentKey)).ReturnsAsync(Mock.Of<IContent>(c => c.Name == "Blog"));
         var args = new CreateUmbracoContentArgs(parentKey, "blogPost", "Home", null);
 
-        var description = _tool.DescribeInvocation(args);
+        var description = await _tool.DescribeInvocationAsync(args);
 
         description.ShouldBe("Create a new 'blogPost' content item named 'Home' under parent 'Blog'.");
     }
 
     [Fact]
-    public void DescribeInvocation_ParentDoesNotResolve_FallsBackToTheRawKey()
+    public async Task DescribeInvocationAsync_ParentDoesNotResolve_FallsBackToTheRawKey()
     {
         var parentKey = Guid.NewGuid();
-        _contentServiceMock.Setup(x => x.GetById(parentKey)).Returns((IContent?)null);
+        _contentEditingServiceMock.Setup(x => x.GetAsync(parentKey)).ReturnsAsync((IContent?)null);
         var args = new CreateUmbracoContentArgs(parentKey, "blogPost", "Home", null);
 
-        var description = _tool.DescribeInvocation(args);
+        var description = await _tool.DescribeInvocationAsync(args);
 
         description.ShouldBe($"Create a new 'blogPost' content item named 'Home' under parent {parentKey}.");
     }

@@ -12,16 +12,14 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 public class DeleteUmbracoMediaToolTests
 {
     private readonly Mock<IMediaEditingService> _mediaEditingServiceMock;
-    private readonly Mock<IMediaService> _mediaServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
     private readonly IAITool _tool;
 
     public DeleteUmbracoMediaToolTests()
     {
         _mediaEditingServiceMock = new Mock<IMediaEditingService>();
-        _mediaServiceMock = new Mock<IMediaService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new DeleteUmbracoMediaTool(_mediaEditingServiceMock.Object, _mediaServiceMock.Object, _authorizerMock.Object);
+        _tool = new DeleteUmbracoMediaTool(_mediaEditingServiceMock.Object, _authorizerMock.Object);
     }
 
     [Fact]
@@ -80,23 +78,23 @@ public class DeleteUmbracoMediaToolTests
     }
 
     [Fact]
-    public void ConfirmationPhrase_MediaFound_ReturnsItsName()
+    public async Task ResolveConfirmationPhraseAsync_MediaFound_ReturnsItsName()
     {
         var key = Guid.NewGuid();
-        _mediaServiceMock.Setup(x => x.GetById(key)).Returns(Mock.Of<IMedia>(m => m.Name == "Logo.png"));
+        _mediaEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(Mock.Of<IMedia>(m => m.Name == "Logo.png"));
 
-        var phrase = _tool.ConfirmationPhrase(new DeleteUmbracoMediaArgs(key));
+        var phrase = await _tool.ResolveConfirmationPhraseAsync(new DeleteUmbracoMediaArgs(key));
 
         phrase.ShouldBe("Logo.png");
     }
 
     [Fact]
-    public void ConfirmationPhrase_MediaNotFound_ReturnsNull()
+    public async Task ResolveConfirmationPhraseAsync_MediaNotFound_ReturnsNull()
     {
         var key = Guid.NewGuid();
-        _mediaServiceMock.Setup(x => x.GetById(key)).Returns((IMedia?)null);
+        _mediaEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync((IMedia?)null);
 
-        var phrase = _tool.ConfirmationPhrase(new DeleteUmbracoMediaArgs(key));
+        var phrase = await _tool.ResolveConfirmationPhraseAsync(new DeleteUmbracoMediaArgs(key));
 
         phrase.ShouldBeNull();
     }

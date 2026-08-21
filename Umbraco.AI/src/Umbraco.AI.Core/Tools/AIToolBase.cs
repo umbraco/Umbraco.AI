@@ -149,26 +149,49 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
     /// strongly-typed arguments. Override for destructive tools where the raw argument values alone
     /// aren't clear on their own (e.g. a bare content key, or a property path with no context). Returns
     /// null by default, which falls back to a generic argument-by-argument display in the approval UI.
+    /// Override <see cref="DescribeInvocationAsync(TArgs)"/> instead if producing the description needs
+    /// an asynchronous lookup — only one of the two overloads needs overriding.
     /// </summary>
     /// <param name="args">The strongly-typed arguments for this call.</param>
     protected virtual string? DescribeInvocation(TArgs args) => null;
 
     /// <summary>
-    /// Produces the exact phrase a human must type to unlock the Approve button for this specific call.
-    /// Override for calls that warrant more friction than a plain click (e.g. publishing or deleting a
-    /// content item) -- typically by looking up the target item and returning its display name. Unlike
-    /// <see cref="DescribeInvocation(TArgs)"/>, this may perform a lookup. Returns null by default, which
-    /// keeps the plain Approve/Deny buttons with no typed confirmation.
+    /// Async counterpart to <see cref="DescribeInvocation(TArgs)"/> — override this instead when the
+    /// description needs an asynchronous lookup (e.g. resolving a key via Umbraco's async content/media
+    /// APIs) to be meaningful. Defaults to wrapping <see cref="DescribeInvocation(TArgs)"/>'s result, so
+    /// a tool with nothing to look up only needs to override the sync overload above.
     /// </summary>
     /// <param name="args">The strongly-typed arguments for this call.</param>
-    protected virtual string? ConfirmationPhrase(TArgs args) => null;
+    protected virtual Task<string?> DescribeInvocationAsync(TArgs args) => Task.FromResult(DescribeInvocation(args));
+
+    /// <summary>
+    /// Produces the exact phrase a human must type to unlock the Approve button for this specific call.
+    /// Override for calls that warrant more friction than a plain click (e.g. publishing or deleting a
+    /// content item) -- typically by looking up the target item and returning its display name. Returns
+    /// null by default, which keeps the plain Approve/Deny buttons with no typed confirmation. Override
+    /// <see cref="ResolveConfirmationPhraseAsync(TArgs)"/> instead if the lookup needs to be asynchronous
+    /// — only one of the two overloads needs overriding.
+    /// </summary>
+    /// <param name="args">The strongly-typed arguments for this call.</param>
+    protected virtual string? ResolveConfirmationPhrase(TArgs args) => null;
+
+    /// <summary>
+    /// Async counterpart to <see cref="ResolveConfirmationPhrase(TArgs)"/> — override this instead when
+    /// the lookup needs to be asynchronous (e.g. Umbraco's async content/media APIs). Defaults to
+    /// wrapping <see cref="ResolveConfirmationPhrase(TArgs)"/>'s result, so a tool with a synchronous (or
+    /// no) lookup only needs to override the sync overload above.
+    /// </summary>
+    /// <param name="args">The strongly-typed arguments for this call.</param>
+    protected virtual Task<string?> ResolveConfirmationPhraseAsync(TArgs args) => Task.FromResult(ResolveConfirmationPhrase(args));
 
     /// <summary>
     /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
-    /// delegates to <see cref="DescribeInvocation(TArgs)"/>. Never throws: description generation must
-    /// not break the approval flow, so any deserialization or generation failure falls back to null.
+    /// delegates to <see cref="DescribeInvocationAsync(TArgs)"/> (which falls back to the sync
+    /// <see cref="DescribeInvocation(TArgs)"/> unless a tool overrides the async overload directly).
+    /// Never throws: description generation must not break the approval flow, so any deserialization or
+    /// generation failure falls back to null.
     /// </summary>
-    string? IAITool.DescribeInvocation(object? args)
+    async Task<string?> IAITool.DescribeInvocationAsync(object? args)
     {
         if (TryDeserializeArgs(args) is not { } typedArgs)
         {
@@ -177,7 +200,7 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
 
         try
         {
-            return DescribeInvocation(typedArgs);
+            return await DescribeInvocationAsync(typedArgs);
         }
         catch
         {
@@ -187,10 +210,12 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
 
     /// <summary>
     /// Explicit interface implementation - deserializes args to <typeparamref name="TArgs"/> and
-    /// delegates to <see cref="ConfirmationPhrase(TArgs)"/>. Never throws: a lookup failure falls back to
-    /// null (no confirmation gate) rather than blocking the approval flow.
+    /// delegates to <see cref="ResolveConfirmationPhraseAsync(TArgs)"/> (which falls back to the sync
+    /// <see cref="ResolveConfirmationPhrase(TArgs)"/> unless a tool overrides the async overload
+    /// directly). Never throws: a lookup failure falls back to null (no confirmation gate) rather than
+    /// blocking the approval flow.
     /// </summary>
-    string? IAITool.ConfirmationPhrase(object? args)
+    async Task<string?> IAITool.ResolveConfirmationPhraseAsync(object? args)
     {
         if (TryDeserializeArgs(args) is not { } typedArgs)
         {
@@ -199,7 +224,7 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
 
         try
         {
-            return ConfirmationPhrase(typedArgs);
+            return await ResolveConfirmationPhraseAsync(typedArgs);
         }
         catch
         {

@@ -5,7 +5,12 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [17.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0-rc.1...Umbraco.AI.Agent@17.2.0-rc.2) (2026-08-21)
+## [17.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0-rc.1...Umbraco.AI.Agent@17.2.0-rc.2) (2026-08-22)
+
+### fix
+
+* **agent,copilot-workspace:** Auto-deny an approval left dangling by a reload ([5f91fb9](https://github.com/umbraco/Umbraco.AI/commit/5f91fb9fa7a55e6942a56ffa798019bd7d1fabb7))
+* **agent:** Fix stale DescribeInvocation cref left over from the async rename ([0027604](https://github.com/umbraco/Umbraco.AI/commit/002760464c19d9beec7d70beae323a73e58745f2))
 
 ## [17.2.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.4...Umbraco.AI.Agent@17.2.0-rc.1) (2026-08-18)
 

@@ -72,7 +72,7 @@ function getProductConfig(product, rootDir) {
 }
 
 // Get previous version tag for a product
-function getPreviousVersion(product, currentVersion, tagPrefix) {
+function getPreviousVersion(product, currentVersion, tagPrefix, rootDir) {
     try {
         // Get all tags for this product, sorted by version
         const tags = execSync(`git tag --list "${tagPrefix}*" --sort=-version:refname`, {
@@ -86,6 +86,17 @@ function getPreviousVersion(product, currentVersion, tagPrefix) {
             return null; // No previous tags
         }
 
+        // If currentVersion isn't provided (--unreleased with no --version), fall back to the
+        // product's own version.json so we still know which major line we're on.
+        if (!currentVersion && rootDir) {
+            try {
+                const versionJsonPath = path.join(rootDir, product, "version.json");
+                currentVersion = JSON.parse(fs.readFileSync(versionJsonPath, "utf-8")).version;
+            } catch {
+                // version.json missing/unreadable - fall through to the unfiltered path below.
+            }
+        }
+
         // If currentVersion is provided, find the tag before it
         if (currentVersion) {
             const currentTag = `${tagPrefix}${currentVersion}`;
@@ -97,10 +108,10 @@ function getPreviousVersion(product, currentVersion, tagPrefix) {
                 return null; // This is the first version
             }
 
-            // currentTag not yet created (release-prep). Constrain the lookup to the
-            // same major line — otherwise a higher parallel major (e.g. v18 tags while
-            // preparing a v17 release) sorts to tags[0] and the changelog diffs across
-            // lines, pulling the entire previous major's history back in.
+            // currentTag not yet created (release-prep, or unreleased mode). Constrain the
+            // lookup to the same major line — otherwise a higher parallel major (e.g. v18
+            // tags while preparing a v17 release) sorts to tags[0] and the changelog diffs
+            // across lines, pulling the entire previous major's history back in.
             const major = currentVersion.split(".")[0];
             const sameMajor = tags.filter(
                 (t) => t !== currentTag && t.slice(tagPrefix.length).split(".")[0] === major,
@@ -127,7 +138,7 @@ async function generateChangelog(product, version, options = {}) {
     const tagPrefix = config.tagPrefix;
 
     // Get commit range
-    let previousTag = options.from || getPreviousVersion(product, version, tagPrefix);
+    let previousTag = options.from || getPreviousVersion(product, version, tagPrefix, rootDir);
 
     // For unreleased mode without a previous tag, limit to recent commits to improve performance
     if (options.unreleased && !previousTag && !options.from) {
@@ -449,7 +460,7 @@ async function generateChangelog(product, version, options = {}) {
             if (versionSectionRegex.test(sections)) {
                 // Replace existing version section
                 console.log(`  Replacing existing [${version}] section`);
-                const updatedSections = sections.replace(versionSectionRegex, "\n" + formattedChangelog.trim());
+                const updatedSections = sections.replace(versionSectionRegex, "\n" + formattedChangelog.trim() + "\n");
                 finalChangelog = header + updatedSections;
             } else {
                 // Add new version section at the top

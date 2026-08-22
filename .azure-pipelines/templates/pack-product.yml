@@ -37,21 +37,11 @@ steps:
       workingDirectory: ${{ parameters.product }}
 
     - script: |
-          # Passing -p:Version explicitly (rather than letting NBGV set it implicitly) matters for
-          # intra-product PackageReference items that pin a sibling via VersionOverride="[$(Version)]"
-          # (e.g. Umbraco.AI.Startup -> Umbraco.AI.Persistence). NBGV's own version-setting props/targets
-          # are excluded during restore (ExcludeRestorePackageImports=true), so without this, restore
-          # would see the SDK default "1.0.0" for $(Version) and silently resolve a VersionOverride
-          # against whatever unrelated package happens to sit at 1.0.0 on nuget.org, instead of the
-          # sibling this build is actually producing. See dotnet/Nerdbank.GitVersioning#351.
-          VERSION=$(cd ${{ parameters.product }} && nbgv get-version -v NuGetPackageVersion)
-          echo "Using version: $VERSION"
-
           attempt=1
           max_attempts=3
           delay=15
           while true; do
-            if dotnet restore ${{ parameters.product }}/${{ parameters.product }}.slnx --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true "-p:Version=$VERSION"; then
+            if dotnet restore ${{ parameters.product }}/${{ parameters.product }}.slnx --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true; then
               break
             fi
             if [ $attempt -ge $max_attempts ]; then
@@ -90,11 +80,6 @@ steps:
             BUILD_FLAG="--no-restore"
           fi
 
-          # Same explicit version as the restore step above - must match exactly so pack
-          # recompiles (see restore step comment) against the identical VersionOverride-pinned
-          # sibling packages that were just restored, rather than re-deriving $(Version) too late.
-          VERSION=$(cd ${{ parameters.product }} && nbgv get-version -v NuGetPackageVersion)
-
           # ContinuousIntegrationBuild gates each product's UpdatePackageManifestVersion
           # MSBuild target (stamps the real PackageVersion into umbraco-package.json's
           # "version", which drives cache-busting). Without it explicitly set here, that
@@ -105,9 +90,18 @@ steps:
             --output ./artifacts/nupkg \
             -p:UseProjectReferences=${{ parameters.useProjectReferences }} \
             -p:DisableCloudBuildNumber=true \
-            -p:ContinuousIntegrationBuild=true \
-            "-p:Version=$VERSION"
+            -p:ContinuousIntegrationBuild=true
       displayName: Pack ${{ parameters.product }} (NuGet)
+      condition: ${{ parameters.condition }}
+
+    # dotnet pack derives a sibling ProjectReference's dependency as a floor version
+    # (">="), but siblings within one product always ship from the same version.json in
+    # lockstep - so that floor should be an exact pin. NuGet has no built-in way to make
+    # pack emit that, so this rewrites the already-correct version string in each package's
+    # .nuspec after packing. See scripts/build/pin-intra-product-nuspec-deps.ps1 and
+    # umbraco/Umbraco.AI#332.
+    - pwsh: ./scripts/build/pin-intra-product-nuspec-deps.ps1 -ProductDir ${{ parameters.product }} -NupkgDir ./artifacts/nupkg
+      displayName: Pin intra-product dependency versions
       condition: ${{ parameters.condition }}
 
     # npm pack for frontend types (auto-detects if package.json exports types)

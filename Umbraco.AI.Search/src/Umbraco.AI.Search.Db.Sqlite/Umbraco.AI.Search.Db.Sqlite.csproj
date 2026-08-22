@@ -11,21 +11,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Search.Db\Umbraco.AI.Search.Db.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Search.Tests.Unit</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
 
-
-    <PropertyGroup>
-        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Search.Db\Umbraco.AI.Search.Db.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Search.Db" VersionOverride="[$(Version)]" />
-    </ItemGroup>
 </Project>

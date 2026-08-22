@@ -16,16 +16,9 @@
         <PackageReference Include="Umbraco.AI.Startup" />
     </ItemGroup>
 
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ItemGroup>
         <ProjectReference Include="..\Umbraco.AI.Search.Core\Umbraco.AI.Search.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Search.Db.SqlServer\Umbraco.AI.Search.Db.SqlServer.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Search.Db.Sqlite\Umbraco.AI.Search.Db.Sqlite.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Search.Core" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Search.Db.SqlServer" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Search.Db.Sqlite" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

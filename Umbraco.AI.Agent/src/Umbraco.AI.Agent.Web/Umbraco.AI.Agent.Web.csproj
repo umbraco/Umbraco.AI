@@ -23,14 +23,8 @@
         <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
 
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ItemGroup>
         <ProjectReference Include="..\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Agent.Core" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Persistence" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

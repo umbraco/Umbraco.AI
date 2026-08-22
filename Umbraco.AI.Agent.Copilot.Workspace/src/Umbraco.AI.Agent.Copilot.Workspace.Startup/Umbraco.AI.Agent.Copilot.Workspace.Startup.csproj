@@ -16,8 +16,7 @@
         <PackageReference Include="Umbraco.AI.Startup" />
     </ItemGroup>
 
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ItemGroup>
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Core\Umbraco.AI.Agent.Conversations.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Persistence.SqlServer\Umbraco.AI.Agent.Conversations.Persistence.SqlServer.csproj" />
@@ -25,15 +24,5 @@
         <ProjectReference Include="..\Umbraco.AI.Agent.Conversations.Web\Umbraco.AI.Agent.Conversations.Web.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Core\Umbraco.AI.Agent.Copilot.Workspace.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Agent.Copilot.Workspace.Web\Umbraco.AI.Agent.Copilot.Workspace.Web.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Agent.Conversations.Core" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Conversations.Persistence" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Conversations.Persistence.SqlServer" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Conversations.Persistence.Sqlite" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Conversations.Web" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Copilot.Workspace.Core" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Agent.Copilot.Workspace.Web" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

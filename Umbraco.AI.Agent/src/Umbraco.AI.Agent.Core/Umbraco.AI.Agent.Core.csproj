@@ -23,6 +23,9 @@
     </ItemGroup>
 
     <!-- Umbraco.AI.AGUI is always a ProjectReference (internal component of Agent package) -->
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.AGUI\Umbraco.AI.AGUI.csproj" />
+    </ItemGroup>
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
@@ -46,13 +49,5 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
         </AssemblyAttribute>
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.AGUI\Umbraco.AI.AGUI.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.AGUI" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

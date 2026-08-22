@@ -94,6 +94,16 @@ steps:
       displayName: Pack ${{ parameters.product }} (NuGet)
       condition: ${{ parameters.condition }}
 
+    # dotnet pack derives a sibling ProjectReference's dependency as a floor version
+    # (">="), but siblings within one product always ship from the same version.json in
+    # lockstep - so that floor should be an exact pin. NuGet has no built-in way to make
+    # pack emit that, so this rewrites the already-correct version string in each package's
+    # .nuspec after packing. See scripts/build/pin-intra-product-nuspec-deps.ps1 and
+    # umbraco/Umbraco.AI#332.
+    - pwsh: ./scripts/build/pin-intra-product-nuspec-deps.ps1 -ProductDir ${{ parameters.product }} -NupkgDir ./artifacts/nupkg
+      displayName: Pin intra-product dependency versions
+      condition: ${{ parameters.condition }}
+
     # npm pack for frontend types (auto-detects if package.json exports types)
     - script: |
           set -e

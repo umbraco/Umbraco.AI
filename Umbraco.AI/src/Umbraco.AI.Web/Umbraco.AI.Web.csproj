@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <Title>Umbraco AI Web</Title>
@@ -8,6 +8,10 @@
 
     <ItemGroup>
         <PackageReference Include="Umbraco.Cms.Api.Management" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -23,16 +27,4 @@
       <Folder Include="Api\Management\Analytics\Usage\" />
     </ItemGroup>
 
-
-    <PropertyGroup>
-        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Core" VersionOverride="[$(Version)]" />
-    </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <Title>Umbraco AI Startup</Title>
@@ -10,24 +10,13 @@
         <PackageReference Include="Umbraco.Cms.Web.Common" />
     </ItemGroup>
 
-
-    <PropertyGroup>
-        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Persistence.SqlServer\Umbraco.AI.Persistence.SqlServer.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Persistence.Sqlite\Umbraco.AI.Persistence.Sqlite.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+    <ItemGroup>
+      <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence.SqlServer\Umbraco.AI.Persistence.SqlServer.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence.Sqlite\Umbraco.AI.Persistence.Sqlite.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Core" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Persistence" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Persistence.SqlServer" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Persistence.Sqlite" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Web" VersionOverride="[$(Version)]" />
-    </ItemGroup>
+
 </Project>

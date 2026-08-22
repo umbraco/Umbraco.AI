@@ -309,25 +309,14 @@ Format: `[min, max)` -- inclusive lower, exclusive upper. Use `[X.Y.0, X.999.999
 
 ## Intra-Product Dependency Management
 
-Siblings *within one product* (e.g. `Umbraco.AI.Startup` → `Umbraco.AI.Persistence`, or the `Umbraco.AI`/`Umbraco.AI.Agent`/`Umbraco.AI.Prompt`/`Umbraco.AI.Search` meta-packages → their own `*.Startup`/`*.Web.StaticAssets`) always ship from the same `version.json`, same commit, same release. Unlike cross-product deps, there is never a valid reason for one to resolve to a different version than another — so these use an **exact pin**, not a range (this is the opposite of the "avoid exact versions" rule above, which is about cross-product deps specifically).
+Siblings *within one product* (e.g. `Umbraco.AI.Startup` → `Umbraco.AI.Persistence`, or the `Umbraco.AI`/`Umbraco.AI.Agent`/`Umbraco.AI.Prompt`/`Umbraco.AI.Search` meta-packages → their own `*.Startup`/`*.Web.StaticAssets`) always ship from the same `version.json`, same commit, same release. Unlike cross-product deps, there is never a valid reason for one to resolve to a different version than another — so these need an **exact pin**, not a range (this is the opposite of the "avoid exact versions" rule above, which is about cross-product deps specifically).
 
-```xml
-<PropertyGroup>
-    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
-</PropertyGroup>
+The `.csproj` files themselves need **no special handling** — keep using plain `<ProjectReference Include="..." />` for siblings, exactly as before. `dotnet pack` auto-derives a dependency from that ProjectReference, but always as a floor (`Version="X"` means "X or higher" in a nuspec) — there's no MSBuild/NuGet setting that makes it emit an exact bracket instead. Two mechanisms that look like they'd fix this don't, because a product's whole `.slnx` (every sibling project) restores and packs in a *single* `dotnet restore`/`dotnet pack` invocation:
 
-<ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-    <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
-</ItemGroup>
+- `PackageReference ... VersionOverride="[$(Version)]"` — breaks because NuGet restore evaluates `VersionOverride` *before* Nerdbank.GitVersioning's version-setting targets run (excluded during restore), so it silently resolves against whatever unrelated package sits at the SDK default `1.0.0` on nuget.org (see [dotnet/Nerdbank.GitVersioning#351](https://github.com/dotnet/Nerdbank.GitVersioning/issues/351)).
+- Even with the version supplied externally (e.g. `-p:Version=...`), a real `PackageReference` to a sibling still can't restore, because that sibling's `.nupkg` doesn't exist yet — it's part of the *same* pack invocation that's trying to restore it. Cross-product deps avoid this because they're always satisfied by an *earlier pipeline tier* that already finished packing; siblings within one product have no such tiering.
 
-<ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-    <PackageReference Include="Umbraco.AI.Persistence" VersionOverride="[$(Version)]" />
-</ItemGroup>
-```
-
-Same local-dev-vs-CI toggle as cross-product deps, but the PackageReference branch uses `VersionOverride="[$(Version)]"` instead of a central `Directory.Packages.props` range entry — no central entry is needed, `VersionOverride` supplies the version on its own.
-
-**Do not rely on `$(Version)` alone to make this correct.** NuGet's restore evaluates `PackageReference`/`VersionOverride` *before* Nerdbank.GitVersioning's version-setting props/targets run (they're excluded during restore via `ExcludeRestorePackageImports`), so left to itself `$(Version)` resolves to the SDK default `1.0.0` at restore time — which silently resolves against whatever unrelated package happens to sit at `1.0.0` on nuget.org instead of failing loudly (see [dotnet/Nerdbank.GitVersioning#351](https://github.com/dotnet/Nerdbank.GitVersioning/issues/351)). `pack-product.yml` works around this by computing the version once via `nbgv get-version -v NuGetPackageVersion` and passing it explicitly as `-p:Version=$VERSION` to both the restore and pack steps, so restore sees the real version from the start. Any other place that restores/packs a product with `UseProjectReferences=false` must do the same — don't rely on NBGV's implicit versioning for these builds, and don't try to fix this by hand-maintaining a version literal in a committed file (that's the kind of drift this whole fix exists to eliminate).
+The actual fix is a **post-pack rewrite**: `pack-product.yml` runs `scripts/build/pin-intra-product-nuspec-deps.ps1` after `dotnet pack`, which opens each just-packed `.nupkg`, and for every dependency whose id matches one of this product's own `src/*` sibling projects, rewrites the already-correct version string from `version="X"` to `version="[X]"` directly in the `.nuspec` entry. The version itself is never recomputed — only its string form changes — so none of the restore-timing or pack-ordering problems above apply.
 
 This gap was found via [umbraco/Umbraco.AI#332](https://github.com/umbraco/Umbraco.AI/issues/332): before this fix, every intra-product dependency was an implicit NuGet floor (e.g. `Umbraco.AI.Startup` depending on `Umbraco.AI.Persistence >= 17.3.1`), so a consumer pinning the outer meta-package while a dependency floor elsewhere pulled a sibling package up produced a half-upgraded install — new server code next to old backoffice JavaScript, or similar mismatches, with no restore warning because no individual rule was technically violated.
 

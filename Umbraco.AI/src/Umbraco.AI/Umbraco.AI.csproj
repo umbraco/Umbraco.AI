@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <Title>Umbraco AI</Title>
@@ -14,18 +14,9 @@
         <None Include="..\..\README.md" Pack="true" PackagePath="docs" />
     </ItemGroup>
 
-
-    <PropertyGroup>
-        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Web.StaticAssets\Umbraco.AI.Web.StaticAssets.csproj" />
+    <ItemGroup>
+      <ProjectReference Include="..\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Web.StaticAssets\Umbraco.AI.Web.StaticAssets.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Startup" VersionOverride="[$(Version)]" />
-        <PackageReference Include="Umbraco.AI.Web.StaticAssets" VersionOverride="[$(Version)]" />
-    </ItemGroup>
 </Project>

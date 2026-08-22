@@ -9,6 +9,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Prompt.Persistence.SqlServer</_Parameter1>
         </AssemblyAttribute>
@@ -18,17 +22,5 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Prompt.Tests.Unit</_Parameter1>
         </AssemblyAttribute>
-    </ItemGroup>
-
-    <PropertyGroup>
-        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Prompt.Core" VersionOverride="[$(Version)]" />
     </ItemGroup>
 </Project>

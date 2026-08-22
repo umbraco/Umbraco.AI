@@ -5,7 +5,11 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [18.0.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1...Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.2) (2026-08-21)
+## [18.0.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1...Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.2) (2026-08-22)
+
+### fix
+
+* **agent,copilot-workspace:** Auto-deny an approval left dangling by a reload ([0b8f3bd](https://github.com/umbraco/Umbraco.AI/commit/0b8f3bddb5a44cc5eb7e378fe3afcf9887b2f16d))
 
 ## [18.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1) (2026-08-18)
 

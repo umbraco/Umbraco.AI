@@ -11,27 +11,6 @@ namespace Umbraco.AI.Core.Media;
 /// </summary>
 internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 {
-    private static readonly Dictionary<string, string> ExtensionToMediaType = new(StringComparer.OrdinalIgnoreCase)
-    {
-        // Images
-        [".jpg"] = "image/jpeg",
-        [".jpeg"] = "image/jpeg",
-        [".png"] = "image/png",
-        [".gif"] = "image/gif",
-        [".webp"] = "image/webp",
-        [".bmp"] = "image/bmp",
-
-        // Audio
-        [".mp3"] = "audio/mpeg",
-        [".wav"] = "audio/wav",
-        [".m4a"] = "audio/mp4",
-        [".mp4"] = "audio/mp4",
-        [".ogg"] = "audio/ogg",
-        [".oga"] = "audio/ogg",
-        [".webm"] = "audio/webm",
-        [".flac"] = "audio/flac",
-    };
-
     private readonly IMediaService _mediaService;
     private readonly MediaFileManager _mediaFileManager;
     private readonly IOptionsMonitor<AIMediaOptions> _optionsMonitor;
@@ -290,7 +269,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 
         // Get file extension for media type
         var extension = Path.GetExtension(filePath);
-        if (!ExtensionToMediaType.TryGetValue(extension, out var mediaType))
+        if (!AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType))
         {
             _logger.LogWarning("Unsupported media extension: {Extension}", extension);
             return null;

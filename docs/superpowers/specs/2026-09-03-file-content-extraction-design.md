@@ -116,23 +116,44 @@ and adjust with `InsertBefore`/`InsertAfter` if needed.
 
 ## Phase 1b — "Resources" panel fix (fixes symptom 3)
 
-**Open question (needs a short investigation spike before/at the start of implementation):**
-this session could not pin down the exact class that formats a "Resources"-panel Media item for
-the LLM. Ruled out: `AIContextResourceType` (Contexts panel's mechanism — no `media`/`entity`
-resource type exists among the built-ins). Best lead: the entity-adapter/formatter pipeline
-(`MediaEntityAdapter.FormatForLlm` → `CmsEntityFormatHelper.FormatCmsEntity`,
-`Umbraco.AI.Core/EntityAdapter/Adapters/MediaEntityAdapter.cs`), which today only prints CMS
-property values. The implementation plan should start by locating the exact call site (likely
-by reproducing the panel in the running demo site and tracing the request), then apply the fix
-below.
+**Open question resolved.** There is no separate multi-attach "Resources" list in the codebase.
+What the Copilot UI presents as "Resources" (screenshot: "Product Snapshot csv" / "Media" /
+"Always") is the *single, always-on "currently open entity"* context path:
 
-**Fix, once located**: when formatting a Media entity for LLM consumption, resolve the
-underlying file via `IAIUmbracoMediaResolver` and, if its MIME type has a matching
-`IAIFileProcessingHandler`, append the extracted text to the formatted output (keep the existing
-name/size line — it's useful context, just not sufficient on its own). Apply the same
-truncation cap as Phase 1a. This matters more here than elsewhere: a Resource marked "Always" is
-re-sent on *every* turn of the conversation, so an uncapped attachment is a recurring token cost,
-not a one-off.
+- **Frontend**: `entity.contributor.ts`
+  (`Umbraco.AI.Web.StaticAssets/Client/src/request-context/contributors/entity.contributor.ts`)
+  — its own doc comment says "Unconditional — always contributes when an entity is selected."
+  Serializes whatever Media/Document/etc. entity the user currently has open into the request.
+- **Backend**: `SerializedEntityContributor.cs:120`
+  (`Umbraco.AI.Core/RuntimeContext/Contributors/SerializedEntityContributor.cs`) deserializes it
+  into an `AISerializedEntity` and calls `IAIEntityContextHelper.FormatForLlm(entity)`.
+- **Dispatch**: `AIEntityContextHelper` routes by `entityType` to the matching `IAIEntityAdapter`
+  — for Media, that's `MediaEntityAdapter.FormatForLlm`
+  (`Umbraco.AI.Core/EntityAdapter/Adapters/MediaEntityAdapter.cs:44`), which calls
+  `CmsEntityFormatHelper.FormatCmsEntity(...)` — CMS property values only (name, byte size,
+  etc.), never file content. Confirmed this is the **only** caller of `IAIEntityAdapter.FormatForLlm`
+  in the repo, so it's low-risk to extend.
+
+**The complication: this whole chain is synchronous, and reading a file needs to be async.**
+`IAIEntityAdapter.FormatForLlm(AISerializedEntity)` returns `string` (sync), and so does its
+caller `IAIRuntimeContextContributor.Contribute(AIRuntimeContext)` — a `void` method. Both are
+public interfaces (`Umbraco.AI.Core`), so changing either signature outright breaks any built-in
+or third-party implementation. Verified: `AIRuntimeContextContributorCollection.Populate(context)`
+is called synchronously from 18 sites across Chat/Embeddings/ImageGeneration/InlineChat/SpeechToText
+— but every one of those 18 sites is already inside an `async Task`/`async IAsyncEnumerable` method
+with a `CancellationToken` already in scope, so migrating them to an async `PopulateAsync` call is
+a safe, mechanical one-line change at each site, not a sync-over-async bridge.
+
+**Fix, additive and non-breaking** (mirrors this repo's existing "add new, keep old, no breaking
+changes" convention for public APIs):
+
+1. `IAIEntityAdapter` gains `Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken ct = default)` with a **default interface implementation** that wraps the existing sync method (`=> Task.FromResult(FormatForLlm(entity));`). Every existing/third-party adapter keeps working unchanged. Only `MediaEntityAdapter` overrides `FormatForLlmAsync` to do the real work: resolve the underlying file via `IAIUmbracoMediaResolver`, and if a matching `IAIFileProcessingHandler` exists, append the extracted text to the existing metadata line (keep the name/size line — useful context, just not sufficient alone). Apply the same truncation cap as Phase 1a — this matters *more* here, since this context is re-sent on every turn while the entity is open, not just once.
+2. `IAIEntityContextHelper` gains `Task<string> FormatForLlmAsync(AISerializedEntity, CancellationToken)`, analogous to its existing sync `FormatForLlm`, dispatching to the adapter's async method.
+3. `IAIRuntimeContextContributor` gains `Task ContributeAsync(AIRuntimeContext context, CancellationToken ct = default)` with a default implementation wrapping the existing sync `Contribute`. Only `SerializedEntityContributor` overrides it, calling the new `FormatForLlmAsync`. Its sync `Contribute` override is left exactly as-is (existing metadata-only behavior), satisfying the interface contract for any caller that still uses the sync path.
+4. `AIRuntimeContextContributorCollection` gains `PopulateAsync(AIRuntimeContext, CancellationToken)`, looping `ContributeAsync`. The existing sync `Populate` is untouched.
+5. All 18 internal call sites of `_contributors.Populate(...)` switch to `await _contributors.PopulateAsync(..., cancellationToken)` — mechanical, since all are already async methods with a cancellation token in scope.
+
+No public signature is removed or changed; this is purely additive.
 
 ## Phase 2 — PDF (later, separate follow-up)
 

@@ -73,7 +73,7 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
             {
                 // Create temporary scope for this execution
                 createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             PopulateProfileMetadata();
@@ -101,7 +101,7 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
             {
                 // Create temporary scope for this execution
                 createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             PopulateProfileMetadata();

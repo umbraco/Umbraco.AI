@@ -225,7 +225,7 @@ internal sealed class AIChatService : IAIChatService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
@@ -258,7 +258,7 @@ internal sealed class AIChatService : IAIChatService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);

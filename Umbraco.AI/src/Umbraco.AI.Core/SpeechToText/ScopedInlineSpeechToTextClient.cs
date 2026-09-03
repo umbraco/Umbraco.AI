@@ -66,7 +66,7 @@ internal sealed class ScopedInlineSpeechToTextClient : AIBoundSpeechToTextClient
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(_builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
@@ -92,7 +92,7 @@ internal sealed class ScopedInlineSpeechToTextClient : AIBoundSpeechToTextClient
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(_builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);

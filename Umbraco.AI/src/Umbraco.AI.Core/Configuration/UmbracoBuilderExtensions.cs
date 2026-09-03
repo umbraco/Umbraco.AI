@@ -111,6 +111,7 @@ public static partial class UmbracoBuilderExtensions
         // File processing handlers (extensible - add custom handlers via AIFileProcessingHandlers())
         builder.AIFileProcessingHandlers()
             .Append<OpenXmlFileProcessingHandler>()
+            .Append<PlainTextFileProcessingHandler>()
             .Append<AudioTranscriptionFileProcessingHandler>();
 
         builder.AIChatMiddleware()

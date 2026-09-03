@@ -7,18 +7,19 @@ public class AIEntityContextHelperTests
 {
     private readonly AIEntityAdapterCollection _adapterCollection;
     private readonly AIEntityContextHelper _helper;
+    private readonly Mock<IAIEntityAdapter> _defaultAdapterMock;
 
     public AIEntityContextHelperTests()
     {
         // Create real adapter collection with a mock adapter
-        var defaultAdapterMock = new Mock<IAIEntityAdapter>();
-        defaultAdapterMock.Setup(a => a.EntityType).Returns((string?)null);
-        defaultAdapterMock.Setup(a => a.FormatForLlm(It.IsAny<AISerializedEntity>()))
+        _defaultAdapterMock = new Mock<IAIEntityAdapter>();
+        _defaultAdapterMock.Setup(a => a.EntityType).Returns((string?)null);
+        _defaultAdapterMock.Setup(a => a.FormatForLlm(It.IsAny<AISerializedEntity>()))
             .Returns("Mocked formatted output");
-        defaultAdapterMock.Setup(a => a.FormatForLlmAsync(It.IsAny<AISerializedEntity>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Mocked formatted output");
+        _defaultAdapterMock.Setup(a => a.FormatForLlmAsync(It.IsAny<AISerializedEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("Mocked async output");
 
-        var adapters = new List<IAIEntityAdapter> { defaultAdapterMock.Object };
+        var adapters = new List<IAIEntityAdapter> { _defaultAdapterMock.Object };
         _adapterCollection = new AIEntityAdapterCollection(() => adapters);
 
         _helper = new AIEntityContextHelper(_adapterCollection);
@@ -497,9 +498,16 @@ public class AIEntityContextHelperTests
         // Act
         var result = await _helper.FormatForLlmAsync(entity);
 
-        // Assert — the default adapter mock only stubs the sync FormatForLlm; the helper's
-        // async path must still reach it via the adapter's own default ContributeAsync wrapper.
-        result.ShouldBe("Mocked formatted output");
+        // Assert — the helper must call the adapter's async method, not the sync one
+        result.ShouldBe("Mocked async output");
+        _defaultAdapterMock.Verify(
+            a => a.FormatForLlmAsync(It.IsAny<AISerializedEntity>(), It.IsAny<CancellationToken>()),
+            Times.Once,
+            "FormatForLlmAsync must be called on the adapter");
+        _defaultAdapterMock.Verify(
+            a => a.FormatForLlm(It.IsAny<AISerializedEntity>()),
+            Times.Never,
+            "FormatForLlm must NOT be called when FormatForLlmAsync is available");
     }
 
     [Fact]

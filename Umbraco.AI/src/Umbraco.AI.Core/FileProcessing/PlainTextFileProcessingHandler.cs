@@ -25,7 +25,9 @@ internal sealed class PlainTextFileProcessingHandler : IAIFileProcessingHandler
         string? filename,
         CancellationToken cancellationToken = default)
     {
-        var content = Encoding.UTF8.GetString(data.Span);
+        using var stream = new MemoryStream(data.ToArray());
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        var content = reader.ReadToEnd();
 
         var wasTruncated = content.Length > AIFileProcessingConstants.MaxExtractedCharacters;
         if (wasTruncated)

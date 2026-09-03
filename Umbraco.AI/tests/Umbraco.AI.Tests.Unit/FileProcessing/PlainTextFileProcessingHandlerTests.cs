@@ -69,6 +69,22 @@ public class PlainTextFileProcessingHandlerTests
     }
 
     [Fact]
+    public async Task ProcessAsync_WithUtf8Bom_StripsBomFromContent()
+    {
+        // Arrange - Excel's "CSV UTF-8" export always writes a BOM before the content
+        var csvContent = "name,age\nAlice,30\nBob,25";
+        var data = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csvContent)).ToArray();
+
+        // Act
+        var result = await _handler.ProcessAsync(data, "text/csv", "people.csv");
+
+        // Assert
+        result.Content[0].ShouldNotBe('﻿');
+        result.Content.ShouldBe(csvContent);
+        result.WasTruncated.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task ProcessAsync_WithEmptyFile_ReturnsEmptyContent()
     {
         // Arrange

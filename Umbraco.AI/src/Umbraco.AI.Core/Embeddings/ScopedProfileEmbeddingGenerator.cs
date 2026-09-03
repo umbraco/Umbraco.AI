@@ -61,7 +61,7 @@ internal sealed class ScopedProfileEmbeddingGenerator : DelegatingEmbeddingGener
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
+                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
             }
 
             PopulateProfileMetadata();

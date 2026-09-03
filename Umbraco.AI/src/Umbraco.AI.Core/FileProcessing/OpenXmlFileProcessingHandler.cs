@@ -19,8 +19,6 @@ namespace Umbraco.AI.Core.FileProcessing;
 /// </summary>
 internal sealed class OpenXmlFileProcessingHandler : IAIFileProcessingHandler
 {
-    private const int MaxCharacters = 100_000;
-
     private static readonly HashSet<string> SupportedMimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -51,10 +49,10 @@ internal sealed class OpenXmlFileProcessingHandler : IAIFileProcessingHandler
             _ => string.Empty,
         };
 
-        var wasTruncated = content.Length > MaxCharacters;
+        var wasTruncated = content.Length > AIFileProcessingConstants.MaxExtractedCharacters;
         if (wasTruncated)
         {
-            content = content[..MaxCharacters] + "\n\n[Content truncated due to size limits]";
+            content = content[..AIFileProcessingConstants.MaxExtractedCharacters] + "\n\n[Content truncated due to size limits]";
         }
 
         return Task.FromResult(new AIFileProcessingResult(content, wasTruncated));

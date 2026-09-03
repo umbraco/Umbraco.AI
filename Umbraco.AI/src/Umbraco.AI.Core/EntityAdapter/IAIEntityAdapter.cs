@@ -38,6 +38,17 @@ public interface IAIEntityAdapter
     string FormatForLlm(AISerializedEntity entity);
 
     /// <summary>
+    /// Formats a serialized entity as a system message for LLM context, asynchronously. The
+    /// default implementation calls <see cref="FormatForLlm"/>, so existing adapters work
+    /// unchanged. Override this when formatting needs async work (e.g. resolving a media file).
+    /// </summary>
+    /// <param name="entity">The serialized entity to format.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>Formatted markdown string suitable for LLM consumption.</returns>
+    Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken cancellationToken = default)
+        => Task.FromResult(FormatForLlm(entity));
+
+    /// <summary>
     /// Lists sub-types for this entity type (e.g., content types for documents).
     /// Only called when <see cref="HasSubTypes"/> is true.
     /// </summary>

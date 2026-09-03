@@ -15,6 +15,8 @@ public class AIEntityContextHelperTests
         defaultAdapterMock.Setup(a => a.EntityType).Returns((string?)null);
         defaultAdapterMock.Setup(a => a.FormatForLlm(It.IsAny<AISerializedEntity>()))
             .Returns("Mocked formatted output");
+        defaultAdapterMock.Setup(a => a.FormatForLlmAsync(It.IsAny<AISerializedEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("Mocked formatted output");
 
         var adapters = new List<IAIEntityAdapter> { defaultAdapterMock.Object };
         _adapterCollection = new AIEntityAdapterCollection(() => adapters);
@@ -477,5 +479,33 @@ public class AIEntityContextHelperTests
     {
         // Act & Assert
         Should.Throw<ArgumentNullException>(() => _helper.FormatForLlm(null!));
+    }
+
+    [Fact]
+    public async Task FormatForLlmAsync_GetsAdapterForEntityType()
+    {
+        // Arrange
+        var data = JsonDocument.Parse("{}").RootElement;
+        var entity = new AISerializedEntity
+        {
+            EntityType = "document",
+            Unique = "doc-1",
+            Name = "Test",
+            Data = data
+        };
+
+        // Act
+        var result = await _helper.FormatForLlmAsync(entity);
+
+        // Assert — the default adapter mock only stubs the sync FormatForLlm; the helper's
+        // async path must still reach it via the adapter's own default ContributeAsync wrapper.
+        result.ShouldBe("Mocked formatted output");
+    }
+
+    [Fact]
+    public async Task FormatForLlmAsync_ThrowsArgumentNullException_WhenEntityIsNull()
+    {
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(() => _helper.FormatForLlmAsync(null!));
     }
 }

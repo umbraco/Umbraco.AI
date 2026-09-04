@@ -26,6 +26,17 @@ public class MediaEntityAdapterTests
             collection);
     }
 
+    /// <summary>
+    /// Stubs <see cref="IAIUmbracoMediaResolver.GetMediaTypeAsync"/> — the gate
+    /// <see cref="MediaEntityAdapter.FormatForLlmAsync"/> now consults instead of deriving a MIME
+    /// type from <see cref="AISerializedEntity.Name"/> — to return the given MIME type (or
+    /// <c>null</c> to simulate an unrecognized/unresolvable file).
+    /// </summary>
+    private void SetupMediaType(string? mediaType)
+        => _mediaResolverMock
+            .Setup(m => m.GetMediaTypeAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mediaType);
+
     private static AISerializedEntity CreateEntity(string name = "report.csv")
         => new()
         {
@@ -40,6 +51,7 @@ public class MediaEntityAdapterTests
     {
         // Arrange
         var entity = CreateEntity();
+        SetupMediaType("text/csv");
         _mediaResolverMock
             .Setup(m => m.ResolveAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = "a,b\n1,2"u8.ToArray(), MediaType = "text/csv" });
@@ -68,6 +80,7 @@ public class MediaEntityAdapterTests
         // the interface default (metadata-only) even though the identical call on the concrete type
         // above works. This test exercises the actual production call shape to guard against that.
         var entity = CreateEntity();
+        SetupMediaType("text/csv");
         _mediaResolverMock
             .Setup(m => m.ResolveAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AIMediaContent { Data = "a,b\n1,2"u8.ToArray(), MediaType = "text/csv" });
@@ -87,6 +100,7 @@ public class MediaEntityAdapterTests
     {
         // Arrange — a handler claims text/csv, so the resolve is attempted, but it yields nothing
         var entity = CreateEntity();
+        SetupMediaType("text/csv");
         _mediaResolverMock
             .Setup(m => m.ResolveAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIMediaContent?)null);
@@ -105,8 +119,9 @@ public class MediaEntityAdapterTests
     public async Task FormatForLlmAsync_WhenNoHandlerMatchesMediaType_FallsBackToMetadataOnlyWithoutResolving()
     {
         // Arrange — e.g. a real image, which has no text-extraction handler. The handler lookup is
-        // driven off the filename extension, so the expensive resolve must never happen at all.
+        // driven off the file's real MIME type, so the expensive resolve must never happen at all.
         var entity = CreateEntity(name: "photo.png");
+        SetupMediaType("image/png");
         var adapter = CreateAdapter(); // no handlers registered
 
         // Act
@@ -125,8 +140,9 @@ public class MediaEntityAdapterTests
     {
         // Arrange — audio transcription is a paid, per-turn side effect. This always-on
         // "currently open entity" context path must never trigger it, so an audio file is
-        // rejected on extension alone: no resolve, no handler check.
+        // rejected on its real MIME type alone: no resolve, no handler check.
         var entity = CreateEntity(name: "interview.mp3");
+        SetupMediaType("audio/mpeg");
         var handler = new RecordingHandler();
         var adapter = CreateAdapter(handler);
 
@@ -148,6 +164,7 @@ public class MediaEntityAdapterTests
     {
         // Arrange — nothing in the extension table, so there is nothing a handler could claim
         var entity = CreateEntity(name: "archive.zip");
+        SetupMediaType(null);
         var adapter = CreateAdapter(new FakeHandler("application/zip", "stuff"));
 
         // Act

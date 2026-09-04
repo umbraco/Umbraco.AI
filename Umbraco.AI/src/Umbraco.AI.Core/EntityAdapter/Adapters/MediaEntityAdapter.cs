@@ -73,11 +73,11 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
 
         var baseline = FormatForLlm(entity);
 
-        // Derive the expected MIME type from the filename extension — the same lookup table
-        // IAIUmbracoMediaResolver uses internally — so the handler check below costs no I/O.
-        var extension = Path.GetExtension(entity.Name);
-        if (!AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType)
-            || mediaType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+        // Determine the file's real MIME type — sourced from the media node's actual umbracoFile
+        // property, not the (editable, unreliable) display name — so the handler check below
+        // costs no I/O beyond a single media-service lookup.
+        var mediaType = await _mediaResolver.GetMediaTypeAsync(entity.Unique, cancellationToken);
+        if (mediaType is null || mediaType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
         {
             // No recognized type, or an audio type — audio transcription is a paid, per-turn
             // side effect this always-on context path must never trigger. Only resolve the file

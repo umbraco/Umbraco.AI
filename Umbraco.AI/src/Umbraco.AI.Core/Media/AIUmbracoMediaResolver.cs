@@ -102,6 +102,45 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
         }
     }
 
+    /// <inheritdoc />
+    public Task<string?> GetMediaTypeAsync(object? value, CancellationToken cancellationToken = default)
+    {
+        if (value is null)
+        {
+            return Task.FromResult<string?>(null);
+        }
+
+        try
+        {
+            var (filePath, mediaKey) = ExtractPathOrKey(value);
+
+            string? resolvedPath;
+            if (mediaKey.HasValue)
+            {
+                var media = _mediaService.GetById(mediaKey.Value);
+                var umbracoFile = media?.GetValue<string>("umbracoFile");
+                resolvedPath = string.IsNullOrEmpty(umbracoFile) ? null : ExtractFilePathFromUmbracoFileValue(umbracoFile);
+            }
+            else
+            {
+                resolvedPath = filePath;
+            }
+
+            if (string.IsNullOrEmpty(resolvedPath))
+            {
+                return Task.FromResult<string?>(null);
+            }
+
+            var extension = Path.GetExtension(resolvedPath);
+            return Task.FromResult(AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType) ? mediaType : null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve media type from value: {ValueType}", value.GetType().Name);
+            return Task.FromResult<string?>(null);
+        }
+    }
+
     private (string? FilePath, Guid? MediaKey) ExtractPathOrKey(object value)
     {
         // Direct Guid
@@ -221,24 +260,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             return null;
         }
 
-        // umbracoFile might be JSON (image cropper) or plain path
-        string? filePath;
-        if (umbracoFile.StartsWith('{'))
-        {
-            try
-            {
-                using var doc = JsonDocument.Parse(umbracoFile);
-                filePath = doc.RootElement.TryGetProperty("src", out var srcProp) ? srcProp.GetString() : null;
-            }
-            catch (JsonException)
-            {
-                filePath = umbracoFile;
-            }
-        }
-        else
-        {
-            filePath = umbracoFile;
-        }
+        var filePath = ExtractFilePathFromUmbracoFileValue(umbracoFile);
 
         if (string.IsNullOrEmpty(filePath))
         {
@@ -252,6 +274,25 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             MediaType = content.MediaType,
             MediaKey = mediaKey,
         };
+    }
+
+    private static string? ExtractFilePathFromUmbracoFileValue(string umbracoFile)
+    {
+        // umbracoFile might be JSON (image cropper) or plain path
+        if (umbracoFile.StartsWith('{'))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(umbracoFile);
+                return doc.RootElement.TryGetProperty("src", out var srcProp) ? srcProp.GetString() : null;
+            }
+            catch (JsonException)
+            {
+                return umbracoFile;
+            }
+        }
+
+        return umbracoFile;
     }
 
     private AIMediaContent? LoadFromPath(string filePath)

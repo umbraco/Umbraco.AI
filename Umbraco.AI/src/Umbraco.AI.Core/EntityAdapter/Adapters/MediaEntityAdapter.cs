@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.Media;
 using Umbraco.Cms.Core.Models.PublishedContent;
@@ -18,6 +19,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
     private readonly IPropertyEditorSchemaService _propertyEditorSchemaService;
     private readonly IAIUmbracoMediaResolver _mediaResolver;
     private readonly AIFileProcessingHandlerCollection _fileProcessingHandlers;
+    private readonly ILogger<MediaEntityAdapter> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MediaEntityAdapter"/> class.
@@ -27,13 +29,15 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
         IPublishedContentTypeCache publishedContentTypeCache,
         IPropertyEditorSchemaService propertyEditorSchemaService,
         IAIUmbracoMediaResolver mediaResolver,
-        AIFileProcessingHandlerCollection fileProcessingHandlers)
+        AIFileProcessingHandlerCollection fileProcessingHandlers,
+        ILogger<MediaEntityAdapter> logger)
     {
         _mediaTypeService = mediaTypeService;
         _publishedContentTypeCache = publishedContentTypeCache;
         _propertyEditorSchemaService = propertyEditorSchemaService;
         _mediaResolver = mediaResolver;
         _fileProcessingHandlers = fileProcessingHandlers;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -100,19 +104,30 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
             return baseline;
         }
 
-        var media = await _mediaResolver.ResolveAsync(entity.Unique, cancellationToken: cancellationToken);
-        if (media is null)
+        try
         {
+            var media = await _mediaResolver.ResolveAsync(entity.Unique, cancellationToken: cancellationToken);
+            if (media is null)
+            {
+                return baseline;
+            }
+
+            var result = await handler.ProcessAsync(media.Data, media.MediaType, entity.Name, cancellationToken);
+            if (string.IsNullOrWhiteSpace(result.Content))
+            {
+                return baseline;
+            }
+
+            return $"{baseline}\n\n### File Content\n\n{result.Content}";
+        }
+        catch (Exception ex)
+        {
+            // This context path is always-on and repeats on every turn while this media item
+            // stays the active Copilot context — unlike deliberate chat attachments, a corrupted
+            // or malformed file here must not fail the whole request more than once per file.
+            _logger.LogWarning(ex, "Failed to extract file content for media entity {EntityUnique}; falling back to metadata-only context", entity.Unique);
             return baseline;
         }
-
-        var result = await handler.ProcessAsync(media.Data, media.MediaType, entity.Name, cancellationToken);
-        if (string.IsNullOrWhiteSpace(result.Content))
-        {
-            return baseline;
-        }
-
-        return $"{baseline}\n\n### File Content\n\n{result.Content}";
     }
 
     /// <inheritdoc />

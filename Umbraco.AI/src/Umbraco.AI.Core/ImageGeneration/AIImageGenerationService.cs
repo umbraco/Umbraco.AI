@@ -139,7 +139,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
@@ -240,7 +240,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);

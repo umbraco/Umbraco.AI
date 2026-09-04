@@ -110,7 +110,7 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
         using var scope = _scopeProvider.CreateScope(_contextItems);
 
         // Populate scope via contributors and set metadata
-        await PopulateScopeContextAsync(scope.Context, cancellationToken);
+        PopulateScopeContext(scope.Context);
 
         // Inject system message parts from populated context
         var enhancedMessages = InjectSystemMessageParts(scope.Context, messages);
@@ -134,7 +134,7 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
         using var scope = _scopeProvider.CreateScope(_contextItems);
 
         // Populate scope via contributors and set metadata
-        await PopulateScopeContextAsync(scope.Context, cancellationToken);
+        PopulateScopeContext(scope.Context);
 
         // Inject system message parts from populated context
         var enhancedMessages = InjectSystemMessageParts(scope.Context, messages);
@@ -152,12 +152,10 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
     /// Populates the runtime context scope with contributors and sets agent metadata.
     /// </summary>
     /// <param name="context">The runtime context to populate.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    private async Task PopulateScopeContextAsync(AIRuntimeContext context, CancellationToken cancellationToken)
+    private void PopulateScopeContext(AIRuntimeContext context)
     {
-        // Populate scope via contributors (async so contributors that need I/O — e.g. resolving
-        // and extracting text from the currently open media file — actually run their async path)
-        await _contributors.PopulateAsync(context, cancellationToken);
+        // Populate scope via contributors
+        _contributors.Populate(context);
 
         // Set agent metadata in context (moved from factory)
         context.SetValue(Constants.ContextKeys.AgentId, _definition.Id);

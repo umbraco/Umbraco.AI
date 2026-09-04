@@ -11,7 +11,7 @@ using Umbraco.Cms.Core.Strings;
 namespace Umbraco.AI.Tests.Unit.Media;
 
 /// <summary>
-/// Tests for <see cref="AIUmbracoMediaResolver.GetMediaTypeAsync"/> — the cheap, no-file-I/O MIME
+/// Tests for <see cref="AIUmbracoMediaResolver.GetMediaType"/> — the cheap, no-file-I/O MIME
 /// type lookup that <c>MediaEntityAdapter</c> uses to gate its (expensive) file-content-extraction
 /// path off the media's real underlying file rather than its editable display name.
 /// </summary>
@@ -24,7 +24,7 @@ public class AIUmbracoMediaResolverTests
     {
         // Uses the non-obsolete ctor overload: the obsolete 5-arg one resolves its
         // ICoreScopeProvider via StaticServiceProvider.Instance, which isn't initialized in a
-        // unit test and throws. GetMediaTypeAsync never touches the scope provider or file
+        // unit test and throws. GetMediaType never touches the scope provider or file
         // system anyway, so a mocked Lazy<ICoreScopeProvider> is never invoked.
         var mediaFileManager = new MediaFileManager(
             Mock.Of<IFileSystem>(),
@@ -68,7 +68,7 @@ public class AIUmbracoMediaResolverTests
     }
 
     [Fact]
-    public async Task GetMediaTypeAsync_WithGuidResolvingToRealFile_ReturnsRealFileMediaType()
+    public void GetMediaType_WithGuidResolvingToRealFile_ReturnsRealFileMediaType()
     {
         // Arrange — the media node's real umbracoFile is a .docx, regardless of what its display
         // name (entity.Name in the caller) might say.
@@ -79,14 +79,14 @@ public class AIUmbracoMediaResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var mediaType = await resolver.GetMediaTypeAsync(mediaKey);
+        var mediaType = resolver.GetMediaType(mediaKey);
 
         // Assert
         mediaType.ShouldBe("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     }
 
     [Fact]
-    public async Task GetMediaTypeAsync_WhenMediaHasNoUmbracoFileProperty_ReturnsNull()
+    public void GetMediaType_WhenMediaHasNoUmbracoFileProperty_ReturnsNull()
     {
         // Arrange
         var mediaKey = Guid.NewGuid();
@@ -96,27 +96,27 @@ public class AIUmbracoMediaResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var mediaType = await resolver.GetMediaTypeAsync(mediaKey);
+        var mediaType = resolver.GetMediaType(mediaKey);
 
         // Assert
         mediaType.ShouldBeNull();
     }
 
     [Fact]
-    public async Task GetMediaTypeAsync_WithNullValue_ReturnsNullWithoutThrowing()
+    public void GetMediaType_WithNullValue_ReturnsNullWithoutThrowing()
     {
         // Arrange
         var resolver = CreateResolver();
 
         // Act
-        var mediaType = await resolver.GetMediaTypeAsync(null);
+        var mediaType = resolver.GetMediaType(null);
 
         // Assert
         mediaType.ShouldBeNull();
     }
 
     [Fact]
-    public async Task GetMediaTypeAsync_WhenMediaNotFound_ReturnsNull()
+    public void GetMediaType_WhenMediaNotFound_ReturnsNull()
     {
         // Arrange
         var mediaKey = Guid.NewGuid();
@@ -125,7 +125,7 @@ public class AIUmbracoMediaResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var mediaType = await resolver.GetMediaTypeAsync(mediaKey);
+        var mediaType = resolver.GetMediaType(mediaKey);
 
         // Assert
         mediaType.ShouldBeNull();

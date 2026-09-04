@@ -103,11 +103,11 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
     }
 
     /// <inheritdoc />
-    public Task<string?> GetMediaTypeAsync(object? value, CancellationToken cancellationToken = default)
+    public string? GetMediaType(object? value)
     {
         if (value is null)
         {
-            return Task.FromResult<string?>(null);
+            return null;
         }
 
         try
@@ -128,16 +128,16 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 
             if (string.IsNullOrEmpty(resolvedPath))
             {
-                return Task.FromResult<string?>(null);
+                return null;
             }
 
             var extension = Path.GetExtension(resolvedPath);
-            return Task.FromResult(AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType) ? mediaType : null);
+            return AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType) ? mediaType : null;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to resolve media type from value: {ValueType}", value.GetType().Name);
-            return Task.FromResult<string?>(null);
+            return null;
         }
     }
 

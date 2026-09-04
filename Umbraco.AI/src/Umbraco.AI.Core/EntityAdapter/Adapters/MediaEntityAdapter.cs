@@ -52,35 +52,37 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
     /// <inheritdoc />
     public override bool HasSubTypes => true;
 
-    /// <inheritdoc />
-    public override string FormatForLlm(AISerializedEntity entity)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-        return CmsEntityFormatHelper.FormatCmsEntity(
-            entity,
-            _publishedContentTypeCache,
-            _propertyEditorSchemaService,
-            PublishedItemType.Media);
-    }
-
     /// <summary>
     /// Formats a media entity for LLM consumption, appending extracted file text when the
     /// underlying file is a supported format — reusing the same file-processing handler
     /// pipeline that already services chat attachments (see
     /// <c>Umbraco.AI.Core.FileProcessing.AIFileProcessingChatClient</c>). Falls back to the
-    /// metadata-only format from <see cref="FormatForLlm"/> when the media can't be resolved or
-    /// no handler matches its MIME type.
+    /// metadata-only format when the media can't be resolved or no handler matches its MIME type.
     /// </summary>
-    public override async Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken cancellationToken = default)
+    /// <remarks>
+    /// The file-processing handler pipeline is async end-to-end (handler eligibility can depend
+    /// on runtime state, and processing may involve genuine I/O). <see cref="IAIEntityAdapter.FormatForLlm"/>
+    /// is sync, and this is the one adapter that needs to reach that pipeline, so the async calls
+    /// are blocked on here rather than threading an async overload through every runtime-context
+    /// call site. Safe in this host: ASP.NET Core / Kestrel requests don't run under a capturing
+    /// <see cref="SynchronizationContext"/>, so this can't deadlock — it just occupies a thread
+    /// pool thread for the duration of the file read/extraction.
+    /// </remarks>
+    public override string FormatForLlm(AISerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        var baseline = FormatForLlm(entity);
+        var baseline = CmsEntityFormatHelper.FormatCmsEntity(
+            entity,
+            _publishedContentTypeCache,
+            _propertyEditorSchemaService,
+            PublishedItemType.Media);
 
         // Determine the file's real MIME type — sourced from the media node's actual umbracoFile
         // property, not the (editable, unreliable) display name — so the handler check below
-        // costs no I/O beyond a single media-service lookup.
-        var mediaType = await _mediaResolver.GetMediaTypeAsync(entity.Unique, cancellationToken);
+        // costs no I/O beyond a single media-service lookup. This call is sync all the way down
+        // (no file read), so no blocking is needed here.
+        var mediaType = _mediaResolver.GetMediaType(entity.Unique);
         if (mediaType is null || mediaType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
         {
             // No recognized type, or an audio type — audio transcription is a paid, per-turn
@@ -92,7 +94,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
         IAIFileProcessingHandler? handler = null;
         foreach (var candidate in _fileProcessingHandlers)
         {
-            if (await candidate.CanHandleAsync(mediaType, cancellationToken))
+            if (candidate.CanHandleAsync(mediaType).GetAwaiter().GetResult())
             {
                 handler = candidate;
                 break;
@@ -106,13 +108,13 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
 
         try
         {
-            var media = await _mediaResolver.ResolveAsync(entity.Unique, cancellationToken: cancellationToken);
+            var media = _mediaResolver.ResolveAsync(entity.Unique).GetAwaiter().GetResult();
             if (media is null)
             {
                 return baseline;
             }
 
-            var result = await handler.ProcessAsync(media.Data, media.MediaType, entity.Name, cancellationToken);
+            var result = handler.ProcessAsync(media.Data, media.MediaType, entity.Name).GetAwaiter().GetResult();
             if (string.IsNullOrWhiteSpace(result.Content))
             {
                 return baseline;

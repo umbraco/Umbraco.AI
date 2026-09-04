@@ -22,16 +22,6 @@ public interface IAIEntityContextHelper
     string FormatForLlm(AISerializedEntity entity);
 
     /// <summary>
-    /// Formats a serialized entity as a system message for LLM context, asynchronously. The
-    /// default implementation calls <see cref="FormatForLlm"/>.
-    /// </summary>
-    /// <param name="entity">The serialized entity.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A formatted string describing the entity context.</returns>
-    Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken cancellationToken = default)
-        => Task.FromResult(FormatForLlm(entity));
-
-    /// <summary>
     /// Formats a serialized element (e.g., a block within a document) as a system message for LLM context.
     /// Uses element-specific formatting that distinguishes it from the parent entity context.
     /// </summary>

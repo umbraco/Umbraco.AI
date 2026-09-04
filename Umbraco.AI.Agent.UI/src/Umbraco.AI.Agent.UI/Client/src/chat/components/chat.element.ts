@@ -3,6 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaiChatMessage, UaiAgentState } from "../types/index.js";
 import { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "../context.js";
 import type { PendingApproval } from "../services/hitl.context.js";
+import { isNearBottom } from "../utils/scroll.js";
 
 /**
  * Main chat component.
@@ -28,6 +29,7 @@ export class UaiChatElement extends UmbLitElement {
 
     #chatContext?: UaiChatContextApi;
     #messagesRef = createRef<HTMLElement>();
+    #isFollowingBottom = true;
 
     constructor() {
         super();
@@ -84,7 +86,14 @@ export class UaiChatElement extends UmbLitElement {
         return undefined;
     }
 
+    #handleMessagesScroll() {
+        const container = this.#messagesRef.value;
+        if (!container) return;
+        this.#isFollowingBottom = isNearBottom(container);
+    }
+
     #scrollToBottom() {
+        if (!this.#isFollowingBottom) return;
         requestAnimationFrame(() => {
             const container = this.#messagesRef.value;
             if (container) {
@@ -132,7 +141,7 @@ export class UaiChatElement extends UmbLitElement {
     override render() {
         return html`
             <div class="chat-container">
-                <div class="messages-area" ${ref(this.#messagesRef)}>
+                <div class="messages-area" ${ref(this.#messagesRef)} @scroll=${this.#handleMessagesScroll}>
                     ${this._messages.length === 0
                         ? html`
                               <div class="empty-state">

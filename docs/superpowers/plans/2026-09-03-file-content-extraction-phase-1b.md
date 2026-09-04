@@ -1,5 +1,17 @@
 # File Content Extraction — Phase 1b Implementation Plan
 
+> **Status: Superseded.** This plan was fully executed (all 4 tasks, final review passed), then
+> replaced after the fact by a much smaller sync-only implementation: rather than threading an
+> async contributor path through every runtime-context call site, `MediaEntityAdapter.FormatForLlm`
+> blocks on the three genuinely-async calls directly (safe in this host — no capturing
+> `SynchronizationContext` to deadlock on). That cut the change from ~1,200 lines across 29 files
+> to ~150 lines across 3 files, and made the `ScopedAIAgent` fix in Task 4 below unnecessary — the
+> sync call chain already reached it. See the updated "Phase 1b" section of
+> `docs/superpowers/specs/2026-09-03-file-content-extraction-design.md` for the current design.
+> The task-by-task plan below is kept as the historical record of what was built and reviewed
+> before that change; none of the async infrastructure it describes (`FormatForLlmAsync`,
+> `ContributeAsync`, `PopulateAsync`) exists in the codebase anymore.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** When a Media item (e.g. a `.csv`) is the "currently open entity" in a Copilot

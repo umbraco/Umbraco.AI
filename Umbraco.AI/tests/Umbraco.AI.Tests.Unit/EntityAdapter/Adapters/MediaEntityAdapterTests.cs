@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.EntityAdapter.Adapters;
 using Umbraco.AI.Core.FileProcessing;
@@ -23,7 +24,8 @@ public class MediaEntityAdapterTests
             _typeCacheMock.Object,
             _schemaServiceMock.Object,
             _mediaResolverMock.Object,
-            collection);
+            collection,
+            NullLogger<MediaEntityAdapter>.Instance);
     }
 
     /// <summary>
@@ -178,6 +180,29 @@ public class MediaEntityAdapterTests
     }
 
     [Fact]
+    public async Task FormatForLlmAsync_WhenHandlerThrows_FallsBackToMetadataOnly()
+    {
+        // Arrange — e.g. a corrupted .docx that makes the underlying parser throw. This path is
+        // always-on (repeats every turn while the media stays the active context), so a bad file
+        // must degrade to metadata-only instead of failing the whole chat request.
+        var entity = CreateEntity();
+        SetupMediaType("text/csv");
+        _mediaResolverMock
+            .Setup(m => m.ResolveAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIMediaContent { Data = "a,b\n1,2"u8.ToArray(), MediaType = "text/csv" });
+
+        var handler = new ThrowingHandler("text/csv");
+        var adapter = CreateAdapter(handler);
+
+        // Act
+        var asyncResult = await adapter.FormatForLlmAsync(entity);
+        var syncResult = adapter.FormatForLlm(entity);
+
+        // Assert
+        asyncResult.ShouldBe(syncResult);
+    }
+
+    [Fact]
     public void FormatForLlm_SyncPath_DoesNotTouchTheMediaResolver()
     {
         // Arrange — the original sync method must remain exactly as before: no file I/O.
@@ -211,6 +236,28 @@ public class MediaEntityAdapterTests
             ReadOnlyMemory<byte> data, string mimeType, string? filename,
             CancellationToken cancellationToken = default)
             => Task.FromResult(new AIFileProcessingResult(_content, false));
+    }
+
+    /// <summary>
+    /// A handler that claims a MIME type but throws when asked to process it — stands in for a
+    /// corrupted/malformed file (e.g. a damaged .docx) that makes the real parser throw.
+    /// </summary>
+    private sealed class ThrowingHandler : IAIFileProcessingHandler
+    {
+        private readonly string _mimeType;
+
+        public ThrowingHandler(string mimeType)
+        {
+            _mimeType = mimeType;
+        }
+
+        public Task<bool> CanHandleAsync(string mimeType, CancellationToken cancellationToken = default)
+            => Task.FromResult(string.Equals(mimeType, _mimeType, StringComparison.OrdinalIgnoreCase));
+
+        public Task<AIFileProcessingResult> ProcessAsync(
+            ReadOnlyMemory<byte> data, string mimeType, string? filename,
+            CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Simulated corrupted file parse failure.");
     }
 
     /// <summary>

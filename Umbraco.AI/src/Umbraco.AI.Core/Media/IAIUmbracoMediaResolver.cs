@@ -29,4 +29,16 @@ public interface IAIUmbracoMediaResolver
     /// The resolved media content, or <c>null</c> if the value cannot be resolved to media.
     /// </returns>
     Task<AIMediaContent?> ResolveAsync(object? value, string? cropAlias = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Determines the MIME type of the media the given value resolves to, without reading the
+    /// file's contents. Uses the same resolution logic as <see cref="ResolveAsync"/> (media key,
+    /// path, or JSON picker value) but stops after determining the file's actual extension —
+    /// no file I/O, no image decoding. Useful for cheaply checking whether a file is worth fully
+    /// resolving before doing so.
+    /// </summary>
+    /// <param name="value">The value to resolve (same accepted formats as <see cref="ResolveAsync"/>).</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The MIME type if the media can be found and has a recognized extension; otherwise <c>null</c>.</returns>
+    Task<string?> GetMediaTypeAsync(object? value, CancellationToken cancellationToken = default);
 }

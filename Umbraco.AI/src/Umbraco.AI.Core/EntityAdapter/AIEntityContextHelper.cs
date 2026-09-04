@@ -156,16 +156,6 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
     }
 
     /// <inheritdoc />
-    public async Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        var adapter = _adapters.GetAdapter(entity.EntityType);
-
-        return await adapter.FormatForLlmAsync(entity, cancellationToken);
-    }
-
-    /// <inheritdoc />
     public string FormatElementForLlm(AISerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);

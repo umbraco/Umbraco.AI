@@ -63,7 +63,7 @@ internal sealed class ScopedInlineChatClient : DelegatingChatClient
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(_builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
@@ -89,7 +89,7 @@ internal sealed class ScopedInlineChatClient : DelegatingChatClient
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(_builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);

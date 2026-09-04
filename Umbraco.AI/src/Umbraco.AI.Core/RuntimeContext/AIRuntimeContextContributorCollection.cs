@@ -26,18 +26,4 @@ public sealed class AIRuntimeContextContributorCollection : BuilderCollectionBas
             contributor.Contribute(context);
         }
     }
-
-    /// <summary>
-    /// Populates a runtime context by invoking all registered contributors in order, awaiting
-    /// each one's <see cref="IAIRuntimeContextContributor.ContributeAsync"/>.
-    /// </summary>
-    /// <param name="context">The runtime context to populate.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task PopulateAsync(AIRuntimeContext context, CancellationToken cancellationToken = default)
-    {
-        foreach (var contributor in this)
-        {
-            await contributor.ContributeAsync(context, cancellationToken);
-        }
-    }
 }

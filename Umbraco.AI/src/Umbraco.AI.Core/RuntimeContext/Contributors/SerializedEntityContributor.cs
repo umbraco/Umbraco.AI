@@ -28,43 +28,9 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
     /// <inheritdoc />
     public void Contribute(AIRuntimeContext context)
     {
-        AIRequestContextItem? matchedItem = null;
-        context.RequestContextItems.Handle(IsSerializedEntity, item => matchedItem = item);
-
-        if (matchedItem is null)
-        {
-            return;
-        }
-
-        var entity = PrepareEntity(matchedItem, context);
-        if (entity is null)
-        {
-            return;
-        }
-
-        var systemMessage = _contextHelper.FormatForLlm(entity);
-        context.SystemMessageParts.Add(systemMessage);
-    }
-
-    /// <inheritdoc />
-    public async Task ContributeAsync(AIRuntimeContext context, CancellationToken cancellationToken = default)
-    {
-        AIRequestContextItem? matchedItem = null;
-        context.RequestContextItems.Handle(IsSerializedEntity, item => matchedItem = item);
-
-        if (matchedItem is null)
-        {
-            return;
-        }
-
-        var entity = PrepareEntity(matchedItem, context);
-        if (entity is null)
-        {
-            return;
-        }
-
-        var systemMessage = await _contextHelper.FormatForLlmAsync(entity, cancellationToken);
-        context.SystemMessageParts.Add(systemMessage);
+        context.RequestContextItems.Handle(
+            IsSerializedEntity,
+            item => ProcessSerializedEntity(item, context));
     }
 
     private bool IsSerializedEntity(AIRequestContextItem item)
@@ -99,24 +65,11 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
            && element.ValueKind == JsonValueKind.String
            && !string.IsNullOrEmpty(element.GetString());
 
-    /// <summary>
-    /// Deserializes the context item's JSON into an <see cref="AISerializedEntity"/>, stores
-    /// derived values (entity id, parent id, entity type) into the runtime context's data bag,
-    /// and builds template variables from it. Returns <c>null</c> (silently) on any
-    /// deserialization failure — the item was already validated as JSON-shaped-like-an-entity
-    /// by <see cref="IsSerializedEntity"/>, so failures here are unexpected edge cases, not the
-    /// common path.
-    /// </summary>
-    /// <remarks>
-    /// Deliberately does NOT call <see cref="IAIEntityContextHelper.FormatForLlm"/> or
-    /// <see cref="IAIEntityContextHelper.FormatForLlmAsync"/> — callers do that themselves so
-    /// each can use the sync or async path as appropriate.
-    /// </remarks>
-    private AISerializedEntity? PrepareEntity(AIRequestContextItem item, AIRuntimeContext context)
+    private void ProcessSerializedEntity(AIRequestContextItem item, AIRuntimeContext context)
     {
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
-            return null;
+            return;
         }
 
         try
@@ -125,7 +78,7 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             var entity = DeserializeEntity(value);
             if (entity is null)
             {
-                return null;
+                return;
             }
 
             // Store in data bag
@@ -163,12 +116,13 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
                 }
             }
 
-            return entity;
+            // Add system message with entity context
+            var systemMessage = _contextHelper.FormatForLlm(entity);
+            context.SystemMessageParts.Add(systemMessage);
         }
         catch
         {
             // Silently ignore deserialization errors - item wasn't actually an entity
-            return null;
         }
     }
 

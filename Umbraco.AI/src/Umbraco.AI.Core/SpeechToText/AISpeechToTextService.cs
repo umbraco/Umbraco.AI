@@ -213,7 +213,7 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
@@ -244,7 +244,7 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);

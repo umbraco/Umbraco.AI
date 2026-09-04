@@ -57,7 +57,7 @@ internal sealed class ScopedProfileImageGenerator : AIBoundImageGeneratorBase
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope([]);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             PopulateProfileMetadata();

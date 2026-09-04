@@ -177,7 +177,7 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);

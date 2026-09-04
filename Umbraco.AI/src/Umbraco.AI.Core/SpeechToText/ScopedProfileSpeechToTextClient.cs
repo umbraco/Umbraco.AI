@@ -60,7 +60,7 @@ internal sealed class ScopedProfileSpeechToTextClient : AIBoundSpeechToTextClien
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope([]);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             PopulateProfileMetadata();
@@ -86,7 +86,7 @@ internal sealed class ScopedProfileSpeechToTextClient : AIBoundSpeechToTextClien
             if (!scopeExisted)
             {
                 createdScope = _scopeProvider.CreateScope([]);
-                await _contributors.PopulateAsync(createdScope.Context, cancellationToken);
+                _contributors.Populate(createdScope.Context);
             }
 
             PopulateProfileMetadata();

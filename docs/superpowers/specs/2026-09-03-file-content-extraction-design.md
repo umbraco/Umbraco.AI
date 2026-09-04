@@ -138,20 +138,42 @@ What the Copilot UI presents as "Resources" (screenshot: "Product Snapshot csv" 
 `IAIEntityAdapter.FormatForLlm(AISerializedEntity)` returns `string` (sync), and so does its
 caller `IAIRuntimeContextContributor.Contribute(AIRuntimeContext)` — a `void` method. Both are
 public interfaces (`Umbraco.AI.Core`), so changing either signature outright breaks any built-in
-or third-party implementation. Verified: `AIRuntimeContextContributorCollection.Populate(context)`
-is called synchronously from 18 sites across Chat/Embeddings/ImageGeneration/InlineChat/SpeechToText
-— but every one of those 18 sites is already inside an `async Task`/`async IAsyncEnumerable` method
-with a `CancellationToken` already in scope, so migrating them to an async `PopulateAsync` call is
-a safe, mechanical one-line change at each site, not a sync-over-async bridge.
+or third-party implementation.
 
-**Fix, additive and non-breaking** (mirrors this repo's existing "add new, keep old, no breaking
-changes" convention for public APIs):
+**First attempt (built, then reverted): thread async all the way through.** Add an async DIM
+(`FormatForLlmAsync`/`ContributeAsync`/`PopulateAsync`) at each layer, mirroring the existing sync
+method, and migrate all 18 internal call sites of `_contributors.Populate(...)` — across
+Chat/Embeddings/ImageGeneration/InlineChat/SpeechToText, plus `Umbraco.AI.Agent`'s `ScopedAIAgent`
+(the actual Copilot entry point, and the one call site the first pass of this migration missed,
+which meant the feature never reached production Copilot chat until caught in review) — to
+`await PopulateAsync(...)`. Mechanical since every site was already inside an `async Task` method
+with a `CancellationToken` in scope, but it landed as a ~1,200-line, 29-file diff to reach three
+actually-async calls (`IAIUmbracoMediaResolver.ResolveAsync`, `IAIFileProcessingHandler.CanHandleAsync`,
+`.ProcessAsync`), most of it plumbing unrelated call sites through a new async path they never use.
 
-1. `IAIEntityAdapter` gains `Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken ct = default)` with a **default interface implementation** that wraps the existing sync method (`=> Task.FromResult(FormatForLlm(entity));`). Every existing/third-party adapter keeps working unchanged. Only `MediaEntityAdapter` overrides `FormatForLlmAsync` to do the real work: resolve the underlying file via `IAIUmbracoMediaResolver`, and if a matching `IAIFileProcessingHandler` exists, append the extracted text to the existing metadata line (keep the name/size line — useful context, just not sufficient alone). Apply the same truncation cap as Phase 1a — this matters *more* here, since this context is re-sent on every turn while the entity is open, not just once.
-2. `IAIEntityContextHelper` gains `Task<string> FormatForLlmAsync(AISerializedEntity, CancellationToken)`, analogous to its existing sync `FormatForLlm`, dispatching to the adapter's async method.
-3. `IAIRuntimeContextContributor` gains `Task ContributeAsync(AIRuntimeContext context, CancellationToken ct = default)` with a default implementation wrapping the existing sync `Contribute`. Only `SerializedEntityContributor` overrides it, calling the new `FormatForLlmAsync`. Its sync `Contribute` override is left exactly as-is (existing metadata-only behavior), satisfying the interface contract for any caller that still uses the sync path.
-4. `AIRuntimeContextContributorCollection` gains `PopulateAsync(AIRuntimeContext, CancellationToken)`, looping `ContributeAsync`. The existing sync `Populate` is untouched.
-5. All 18 internal call sites of `_contributors.Populate(...)` switch to `await _contributors.PopulateAsync(..., cancellationToken)` — mechanical, since all are already async methods with a cancellation token in scope.
+**Fix, additive and non-breaking, sync-only:** since `MediaEntityAdapter` is the *only* adapter
+that needs to reach the async file-processing pipeline, block on the three async calls inside its
+existing sync `FormatForLlm` override instead of adding an async path anywhere else. Safe in this
+host — ASP.NET Core/Kestrel requests don't run under a capturing `SynchronizationContext`, so
+`.GetAwaiter().GetResult()` can't deadlock here, it just occupies a thread pool thread for the
+duration of the file read/extraction. The trade-off: `FormatForLlm` has no `CancellationToken`, so
+those three calls can't be cancelled mid-request.
+
+1. `IAIUmbracoMediaResolver` gains `GetMediaType(object? value)` — sync, since its implementation
+   was already synchronous underneath (no file read, just a media-service lookup and an extension
+   check) — resolving the file's real MIME type from its `umbracoFile` property, not the editable
+   display name, so the handler check below costs no I/O.
+2. `MediaEntityAdapter.FormatForLlm` calls `GetMediaType`, excludes `audio/*` (audio transcription
+   is a paid, per-turn side effect this always-on context path must never trigger), finds a
+   matching `IAIFileProcessingHandler` via `candidate.CanHandleAsync(mediaType).GetAwaiter().GetResult()`,
+   then resolves and extracts via `.GetAwaiter().GetResult()` on `ResolveAsync`/`ProcessAsync`,
+   appending the extracted text under a `### File Content` heading. Falls back to the existing
+   metadata-only format on any failure (unresolvable file, no matching handler, or a thrown
+   exception from a corrupted file).
+3. No other file changes — `IAIEntityAdapter`, `IAIEntityContextHelper`, `IAIRuntimeContextContributor`,
+   `AIRuntimeContextContributorCollection`, `SerializedEntityContributor`, and every one of the 18
+   `Populate(...)` call sites (including `ScopedAIAgent`) are untouched, because none of them need
+   to know this path exists — they already call the sync chain that now does the real work.
 
 No public signature is removed or changed; this is purely additive.
 

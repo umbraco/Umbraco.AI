@@ -11,20 +11,7 @@ namespace Umbraco.AI.Core.EntityAdapter.Adapters;
 /// Delegates formatting to the same CMS property-based logic as documents.
 /// Provides media type sub-types.
 /// </summary>
-/// <remarks>
-/// Redeclares <see cref="IAIEntityAdapter"/> (already implemented by <see cref="AIEntityAdapterBase"/>)
-/// so this class's plain (non-<c>override</c>) <see cref="FormatForLlmAsync"/> participates in the
-/// interface's dispatch table for this type. <see cref="AIEntityAdapterBase"/> never declares a class
-/// member for <see cref="IAIEntityAdapter.FormatForLlmAsync"/> — it satisfies that member purely via
-/// the interface's default implementation (C# 8 default interface method), so there is no virtual
-/// slot to <c>override</c> here. Without this redeclaration, calls made through an
-/// <see cref="IAIEntityAdapter"/>-typed reference (as <c>AIEntityContextHelper</c> does, since
-/// <c>AIEntityAdapterCollection.GetAdapter</c> returns <see cref="IAIEntityAdapter"/>) would silently
-/// resolve to the interface's default method instead of this override, even though a same-signature
-/// concrete-type call would appear to work correctly. Do not remove this without re-verifying
-/// interface-typed dispatch.
-/// </remarks>
-internal sealed class MediaEntityAdapter : AIEntityAdapterBase, IAIEntityAdapter
+internal sealed class MediaEntityAdapter : AIEntityAdapterBase
 {
     private readonly IMediaTypeService _mediaTypeService;
     private readonly IPublishedContentTypeCache _publishedContentTypeCache;
@@ -80,22 +67,28 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase, IAIEntityAdapter
     /// metadata-only format from <see cref="FormatForLlm"/> when the media can't be resolved or
     /// no handler matches its MIME type.
     /// </summary>
-    public async Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken cancellationToken = default)
+    public override async Task<string> FormatForLlmAsync(AISerializedEntity entity, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
         var baseline = FormatForLlm(entity);
 
-        var media = await _mediaResolver.ResolveAsync(entity.Unique, cancellationToken: cancellationToken);
-        if (media is null)
+        // Derive the expected MIME type from the filename extension — the same lookup table
+        // IAIUmbracoMediaResolver uses internally — so the handler check below costs no I/O.
+        var extension = Path.GetExtension(entity.Name);
+        if (!AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType)
+            || mediaType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
         {
+            // No recognized type, or an audio type — audio transcription is a paid, per-turn
+            // side effect this always-on context path must never trigger. Only resolve the file
+            // at all once we know a text-extraction handler actually wants it.
             return baseline;
         }
 
         IAIFileProcessingHandler? handler = null;
         foreach (var candidate in _fileProcessingHandlers)
         {
-            if (await candidate.CanHandleAsync(media.MediaType, cancellationToken))
+            if (await candidate.CanHandleAsync(mediaType, cancellationToken))
             {
                 handler = candidate;
                 break;
@@ -107,13 +100,19 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase, IAIEntityAdapter
             return baseline;
         }
 
+        var media = await _mediaResolver.ResolveAsync(entity.Unique, cancellationToken: cancellationToken);
+        if (media is null)
+        {
+            return baseline;
+        }
+
         var result = await handler.ProcessAsync(media.Data, media.MediaType, entity.Name, cancellationToken);
         if (string.IsNullOrWhiteSpace(result.Content))
         {
             return baseline;
         }
 
-        return $"{baseline}\n\n{result.Content}";
+        return $"{baseline}\n\n### File Content\n\n{result.Content}";
     }
 
     /// <inheritdoc />

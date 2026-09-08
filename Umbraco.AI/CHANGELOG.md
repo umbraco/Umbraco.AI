@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### fix
 
 * **core:** Make set/add/clear/remove/move content-value tools patch instead of wiping properties ([f2bca51](https://github.com/umbraco/Umbraco.AI/commit/f2bca513c10dad06d3223ab136f6565b8aff9543))
+* **core:** Turn on throwOnError so a failed request always shows a notification ([24684d0](https://github.com/umbraco/Umbraco.AI/commit/24684d039ac6e0f41fc61d446925c7e8c312841e)), closes [#334](https://github.com/umbraco/Umbraco.AI/issues/334)
 
 ## [17.4.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.1...Umbraco.AI@17.4.0-rc.2) (2026-08-21)
 

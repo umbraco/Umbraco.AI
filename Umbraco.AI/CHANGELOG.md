@@ -5,10 +5,12 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [18.4.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.4.0-rc.2...Umbraco.AI@18.4.0-rc.3) (2026-09-08)
 
 ### fix
 
+* **core:** Actually fix block labels in the Copilot context selector ([ec0045b](https://github.com/umbraco/Umbraco.AI/commit/ec0045b8c545d4b06e25d1eac4d335b2be5c4bf4)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343)
 * **core:** Ensure an Umbraco context exists for content read tools ([175a952](https://github.com/umbraco/Umbraco.AI/commit/175a9529db730730b1c8fb06fca9a138198c2504))
 * **core:** Give each block its own label in the Copilot context selector ([ad0c77d](https://github.com/umbraco/Umbraco.AI/commit/ad0c77d1e4cbe5c68f1c26088d819f06342e254f))
 * **core:** Let get_umbraco_content enrich from Automate automations too ([388ccd5](https://github.com/umbraco/Umbraco.AI/commit/388ccd5c626e26b0ef448df2a60c13294aa42d3a))

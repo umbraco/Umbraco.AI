@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [18.2.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0-rc.2...Umbraco.AI.Agent@18.2.0-rc.3) (2026-09-08)
 
+### fix
+
+* **agent:** Catch a failed chat-attachment fetch instead of an unhandled rejection ([6b1d6aa](https://github.com/umbraco/Umbraco.AI/commit/6b1d6aa470aba69faa5dc91fbf52b326d9be214d))
+
 ## [18.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0-rc.1...Umbraco.AI.Agent@18.2.0-rc.2) (2026-08-22)
 
 ### fix

@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### fix
 
+* **core:** Ensure an Umbraco context exists for content read tools ([175a952](https://github.com/umbraco/Umbraco.AI/commit/175a9529db730730b1c8fb06fca9a138198c2504))
 * **core:** Give each block its own label in the Copilot context selector ([ad0c77d](https://github.com/umbraco/Umbraco.AI/commit/ad0c77d1e4cbe5c68f1c26088d819f06342e254f))
+* **core:** Let get_umbraco_content enrich from Automate automations too ([388ccd5](https://github.com/umbraco/Umbraco.AI/commit/388ccd5c626e26b0ef448df2a60c13294aa42d3a))
 * **core:** Make set/add/clear/remove/move content-value tools patch instead of wiping properties ([edaca4b](https://github.com/umbraco/Umbraco.AI/commit/edaca4be93a5fde19d7ee6c8dadcd3603ccb27dc))
 * **core:** Turn on throwOnError so a failed request always shows a notification ([e5fd37f](https://github.com/umbraco/Umbraco.AI/commit/e5fd37f82cc7764bcaa979b9c9b20821213d682d)), closes [#334](https://github.com/umbraco/Umbraco.AI/issues/334)
 

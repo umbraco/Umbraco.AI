@@ -29,7 +29,7 @@ public record GetUmbracoContentArgs(
 public class GetUmbracoContentTool(
     IContentEditingService contentEditingService,
     IContentService contentService,
-    IUmbracoContextAccessor umbracoContextAccessor)
+    IUmbracoContextFactory umbracoContextFactory)
     : AIToolBase<GetUmbracoContentArgs>
 {
     /// <inheritdoc />
@@ -54,7 +54,7 @@ public class GetUmbracoContentTool(
             return new GetUmbracoContentResult(false, null, $"Content with key '{args.Key}' was not found.");
         }
 
-        var item = ContentToolHelpers.BuildEnrichedContentItem(content, contentService, umbracoContextAccessor, args.Culture);
+        var item = ContentToolHelpers.BuildEnrichedContentItem(content, contentService, umbracoContextFactory, args.Culture);
 
         return new GetUmbracoContentResult(true, item, null);
     }

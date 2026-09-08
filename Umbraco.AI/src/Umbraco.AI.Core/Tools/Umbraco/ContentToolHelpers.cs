@@ -103,18 +103,20 @@ internal static class ContentToolHelpers
     /// </remarks>
     /// <param name="content">The draft content item.</param>
     /// <param name="contentService">Used to resolve ancestors for the breadcrumb/parent info in the fallback path.</param>
-    /// <param name="umbracoContextAccessor">Used to resolve the item from the published cache in preview mode.</param>
+    /// <param name="umbracoContextFactory">Used to resolve the item from the published cache in preview mode.</param>
     /// <param name="culture">Optional culture for variant content.</param>
     /// <returns>A fully populated content item, enriched with breadcrumb/parent/URL where resolvable.</returns>
     public static UmbracoContentItem BuildEnrichedContentItem(
         IContent content,
         IContentService contentService,
-        IUmbracoContextAccessor umbracoContextAccessor,
+        IUmbracoContextFactory umbracoContextFactory,
         string? culture = null)
     {
-        IPublishedContent? previewContent = umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext)
-            ? umbracoContext.Content?.GetById(true, content.Key)
-            : null;
+        // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
+        // never created at all when this is invoked from Umbraco.Automate's background dispatcher. A
+        // no-op if a context is already ambient.
+        using var contextReference = umbracoContextFactory.EnsureUmbracoContext();
+        IPublishedContent? previewContent = contextReference.UmbracoContext.Content?.GetById(true, content.Key);
 
         if (previewContent is not null)
         {

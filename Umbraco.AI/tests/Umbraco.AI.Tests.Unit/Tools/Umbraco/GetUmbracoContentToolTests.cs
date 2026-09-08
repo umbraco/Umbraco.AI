@@ -2,7 +2,10 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
 
@@ -12,27 +15,30 @@ public class GetUmbracoContentToolTests
 {
     private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IContentService> _contentServiceMock;
-    private readonly Mock<IUmbracoContextAccessor> _umbracoContextAccessorMock;
+    private readonly Mock<IUmbracoContextFactory> _umbracoContextFactoryMock;
     private readonly IAITool _tool;
 
     public GetUmbracoContentToolTests()
     {
         _contentEditingServiceMock = new Mock<IContentEditingService>();
         _contentServiceMock = new Mock<IContentService>();
-        _umbracoContextAccessorMock = new Mock<IUmbracoContextAccessor>();
+        _umbracoContextFactoryMock = new Mock<IUmbracoContextFactory>();
         _tool = new GetUmbracoContentTool(
             _contentEditingServiceMock.Object,
             _contentServiceMock.Object,
-            _umbracoContextAccessorMock.Object);
+            _umbracoContextFactoryMock.Object);
 
-        // No Umbraco context available by default, so BuildEnrichedContentItem always falls back to the
+        // Item not (yet) in the nucache by default, so BuildEnrichedContentItem always falls back to the
         // raw/IContentService.GetAncestors path below. The preview-cache path (BuildContentItem(IPublishedContent))
         // calls the friendly .Url() extension, which relies on an ambient StaticServiceProvider that isn't
         // configured in a unit test — untestable here for the same reason GetContentByRouteToolTests never
         // exercises its own "found content" happy path either. Covered by live demo-site verification instead.
-        _umbracoContextAccessorMock
-            .Setup(x => x.TryGetUmbracoContext(out It.Ref<IUmbracoContext?>.IsAny))
-            .Returns(false);
+        var contentCacheMock = new Mock<IPublishedContentCache>();
+        contentCacheMock.Setup(x => x.GetById(true, It.IsAny<Guid>())).Returns((IPublishedContent?)null);
+        var umbracoContextMock = new Mock<IUmbracoContext>();
+        umbracoContextMock.Setup(x => x.Content).Returns(contentCacheMock.Object);
+        var reference = new UmbracoContextReference(umbracoContextMock.Object, false, Mock.Of<IUmbracoContextAccessor>());
+        _umbracoContextFactoryMock.Setup(x => x.EnsureUmbracoContext()).Returns(reference);
     }
 
     private static Mock<IContent> CreateContentMock(Guid key, string name, string contentTypeAlias, int level = 1)

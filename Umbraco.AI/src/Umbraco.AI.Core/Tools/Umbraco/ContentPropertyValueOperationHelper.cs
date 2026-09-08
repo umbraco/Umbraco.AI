@@ -7,6 +7,7 @@ using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -113,18 +114,38 @@ internal static class ContentPropertyValueOperationHelper
             return ContentPropertyValueOperationOutcome.Fail(dispatchResult.Error!.Message);
         }
 
+        var properties = new List<PropertyValueModel>
+        {
+            new()
+            {
+                Alias = rootAlias,
+                Value = dispatchResult.NewRootValue?.Deserialize<JsonElement>(),
+                Culture = culture,
+                Segment = segment,
+            },
+        };
+
+        // ContentEditingServiceBase.RemoveMissingProperties clears every property alias NOT present in
+        // Properties on every save, so — like UpdateUmbracoContentTool — this must resubmit every other
+        // property's current value or an operation touching only the root alias would silently wipe the
+        // rest of the content item. Segment-varying properties are skipped: there's no per-property
+        // segment to read/write them correctly here, so they're left with the pre-existing
+        // (removed-if-omitted) behavior rather than risk a NotSupportedException from guessing a segment.
+        foreach (var property in content.Properties)
+        {
+            if (property.Alias == rootAlias || property.PropertyType.VariesBySegment())
+            {
+                continue;
+            }
+
+            var propertyCulture = property.PropertyType.VariesByCulture() ? culture : null;
+            var currentValue = ToJsonNode(property.GetValue(propertyCulture))?.Deserialize<JsonElement>();
+            properties.Add(new PropertyValueModel { Alias = property.Alias, Value = currentValue, Culture = propertyCulture });
+        }
+
         var updateModel = new ContentUpdateModel
         {
-            Properties =
-            [
-                new PropertyValueModel
-                {
-                    Alias = rootAlias,
-                    Value = dispatchResult.NewRootValue?.Deserialize<JsonElement>(),
-                    Culture = culture,
-                    Segment = segment,
-                },
-            ],
+            Properties = properties,
             // ContentEditingServiceBase.TryGetAndValidateContentType requires at least one Variants entry
             // matching the content type's own variance — an invariant type demands one with
             // Culture/Segment both null, otherwise it fails with ContentTypeCultureVarianceMismatch even

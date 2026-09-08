@@ -183,59 +183,24 @@ public class AIAgentServiceExecutionTests
     {
         // Arrange
         var agent = CreateAgent(TestAgentId);
-        var repositoryMock = new Mock<IAIAgentRepository>();
-        repositoryMock
-            .Setup(x => x.GetByIdAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
-
-        var agentFactoryMock = new Mock<IAIAgentFactory>();
-        agentFactoryMock
-            .Setup(x => x.CreateAgentAsync(
-                agent,
-                It.IsAny<ChatHistoryProvider?>(),
-                It.IsAny<IEnumerable<AIRequestContextItem>?>(),
-                It.IsAny<IEnumerable<AITool>?>(),
-                It.IsAny<IReadOnlyDictionary<string, object?>?>(),
-                It.IsAny<AIApprovalPolicy>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateRespondingAgent());
-
-        var eventAggregatorMock = new Mock<IEventAggregator>();
-        eventAggregatorMock
-            .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutingNotification>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-        eventAggregatorMock
-            .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutedNotification>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        var service = CreateService(repositoryMock.Object, agentFactoryMock.Object, eventAggregatorMock.Object);
-
-        AgentSession? boundSession = null;
-        var saveStateCalled = false;
-        var historyBinding = new AIConversationHistoryBinding(
-            Provider: null!,
-            ConversationId: Guid.NewGuid(),
-            BindSession: session => boundSession = session)
-        {
-            SaveSessionState = (_, _) =>
-            {
-                saveStateCalled = true;
-                return ValueTask.CompletedTask;
-            },
-        };
+        var fixture = CreatePersistedConversationFixture(agent);
 
         // Act
-        var response = await service.RunAgentAsync(
+        var response = await fixture.Service.RunAgentAsync(
             TestAgentId,
             [new ChatMessage(ChatRole.User, "Hello")],
-            new AIAgentExecutionOptions { ConversationHistory = historyBinding },
+            new AIAgentExecutionOptions { ConversationHistory = fixture.HistoryBinding },
             CancellationToken.None);
 
         // Assert — BindSession must be invoked with a real session before the run, or the attached
         // ChatHistoryProvider never learns which conversation to persist to and every message is
         // silently dropped (the bug: session was always run as null on this path).
-        boundSession.ShouldNotBeNull();
-        saveStateCalled.ShouldBeTrue();
+        fixture.BoundSession.ShouldNotBeNull();
+        fixture.SaveStateCalled.ShouldBeTrue();
+        // The bound ChatHistoryProvider itself must reach the factory too — a broken forwarding path
+        // (e.g. accidentally passing null) would still leave BoundSession/SaveStateCalled true above,
+        // since those are driven independently by this method's own session-creation code.
+        fixture.CapturedProvider.ShouldBeSameAs(fixture.Provider);
         response.Text.ShouldBe("ok");
     }
 
@@ -244,9 +209,41 @@ public class AIAgentServiceExecutionTests
     {
         // Arrange
         var agent = CreateAgent(TestAgentId);
+        var fixture = CreatePersistedConversationFixture(agent);
+
+        // Act
+        var updates = new List<AgentResponseUpdate>();
+        await foreach (var update in fixture.Service.StreamAgentAsync(
+            TestAgentId,
+            [new ChatMessage(ChatRole.User, "Hello")],
+            new AIAgentExecutionOptions { ConversationHistory = fixture.HistoryBinding },
+            CancellationToken.None))
+        {
+            updates.Add(update);
+        }
+
+        // Assert — same session-binding requirement as the non-streaming path above, plus proof the
+        // stream actually produced the agent's output (previously asserted nothing about it, so a
+        // regression that silently yielded zero updates would have stayed green here).
+        fixture.BoundSession.ShouldNotBeNull();
+        fixture.SaveStateCalled.ShouldBeTrue();
+        fixture.CapturedProvider.ShouldBeSameAs(fixture.Provider);
+        string.Concat(updates.Select(u => u.Text)).ShouldBe("ok");
+    }
+
+    /// <summary>
+    /// Shared arrange for the persisted-conversation tests above: a repository/agent-factory/event-
+    /// aggregator wiring identical to <see cref="CreateService"/>'s callers, plus an
+    /// <see cref="AIConversationHistoryBinding"/> whose BindSession/SaveSessionState/Provider forwarding
+    /// is captured for assertions.
+    /// </summary>
+    private static PersistedConversationFixture CreatePersistedConversationFixture(AIAgent agent)
+    {
+        var fixture = new PersistedConversationFixture { Provider = new NoOpChatHistoryProvider() };
+
         var repositoryMock = new Mock<IAIAgentRepository>();
         repositoryMock
-            .Setup(x => x.GetByIdAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(agent.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(agent);
 
         var agentFactoryMock = new Mock<IAIAgentFactory>();
@@ -259,6 +256,8 @@ public class AIAgentServiceExecutionTests
                 It.IsAny<IReadOnlyDictionary<string, object?>?>(),
                 It.IsAny<AIApprovalPolicy>(),
                 It.IsAny<CancellationToken>()))
+            .Callback<AIAgent, ChatHistoryProvider?, IEnumerable<AIRequestContextItem>?, IEnumerable<AITool>?, IReadOnlyDictionary<string, object?>?, AIApprovalPolicy, CancellationToken>(
+                (_, boundProvider, _, _, _, _, _) => fixture.CapturedProvider = boundProvider)
             .ReturnsAsync(CreateRespondingAgent());
 
         var eventAggregatorMock = new Mock<IEventAggregator>();
@@ -269,34 +268,42 @@ public class AIAgentServiceExecutionTests
             .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var service = CreateService(repositoryMock.Object, agentFactoryMock.Object, eventAggregatorMock.Object);
-
-        AgentSession? boundSession = null;
-        var saveStateCalled = false;
-        var historyBinding = new AIConversationHistoryBinding(
-            Provider: null!,
+        fixture.Service = CreateService(repositoryMock.Object, agentFactoryMock.Object, eventAggregatorMock.Object);
+        fixture.HistoryBinding = new AIConversationHistoryBinding(
+            Provider: fixture.Provider,
             ConversationId: Guid.NewGuid(),
-            BindSession: session => boundSession = session)
+            BindSession: session => fixture.BoundSession = session)
         {
             SaveSessionState = (_, _) =>
             {
-                saveStateCalled = true;
+                fixture.SaveStateCalled = true;
                 return ValueTask.CompletedTask;
             },
         };
 
-        // Act
-        await foreach (var _ in service.StreamAgentAsync(
-            TestAgentId,
-            [new ChatMessage(ChatRole.User, "Hello")],
-            new AIAgentExecutionOptions { ConversationHistory = historyBinding },
-            CancellationToken.None))
-        {
-        }
+        return fixture;
+    }
 
-        // Assert — same requirement as the non-streaming path above.
-        boundSession.ShouldNotBeNull();
-        saveStateCalled.ShouldBeTrue();
+    private sealed class PersistedConversationFixture
+    {
+        public AIAgentService Service { get; set; } = null!;
+        public AIConversationHistoryBinding HistoryBinding { get; set; } = null!;
+        public ChatHistoryProvider Provider { get; set; } = null!;
+        public AgentSession? BoundSession { get; set; }
+        public bool SaveStateCalled { get; set; }
+        public ChatHistoryProvider? CapturedProvider { get; set; }
+    }
+
+    /// <summary>Minimal <see cref="ChatHistoryProvider"/> stand-in — only its identity matters here.</summary>
+    private sealed class NoOpChatHistoryProvider : ChatHistoryProvider
+    {
+        protected override ValueTask<IEnumerable<ChatMessage>> ProvideChatHistoryAsync(
+            InvokingContext context, CancellationToken cancellationToken = default)
+            => new(Array.Empty<ChatMessage>());
+
+        protected override ValueTask StoreChatHistoryAsync(
+            InvokedContext context, CancellationToken cancellationToken = default)
+            => default;
     }
 
     private static async IAsyncEnumerable<IAGUIEvent> EmptyEvents()

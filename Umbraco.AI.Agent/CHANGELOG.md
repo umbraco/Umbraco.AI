@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **agent:** Bind persisted agent runs to their session so history persists ([b975543](https://github.com/umbraco/Umbraco.AI/commit/b97554301437fd884072f3c1a8d56d9b6977aed4))
 * **agent:** Catch a failed chat-attachment fetch instead of an unhandled rejection ([6b1d6aa](https://github.com/umbraco/Umbraco.AI/commit/6b1d6aa470aba69faa5dc91fbf52b326d9be214d))
 * **agent:** Resolve dangling approvals and unsafe session-save in persisted runs ([b6c6a60](https://github.com/umbraco/Umbraco.AI/commit/b6c6a60a3c35f9a5407a9050ba5599807f11e106))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([5e43987](https://github.com/umbraco/Umbraco.AI/commit/5e43987702f7e4f0cc3c3518b3be9cb7bfa1518e))
 
 ### refactor
 

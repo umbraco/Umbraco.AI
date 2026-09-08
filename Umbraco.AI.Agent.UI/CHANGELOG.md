@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **agent-ui:** Re-arm auto-follow when a consumer swaps the message source ([c819ed0](https://github.com/umbraco/Umbraco.AI/commit/c819ed0dc4be7a68425000732ae98656058dd2ef))
 * **agent-ui:** Stop chat auto-scroll from overriding a manual scroll during streaming ([9434226](https://github.com/umbraco/Umbraco.AI/commit/9434226051d21c3c90b2a0f111a1128a7abb82ed))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([5e43987](https://github.com/umbraco/Umbraco.AI/commit/5e43987702f7e4f0cc3c3518b3be9cb7bfa1518e))
 
 ## [18.1.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.1.0-rc.1...Umbraco.AI.Agent.UI@18.1.0-rc.2) (2026-08-21)
 

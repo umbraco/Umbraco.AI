@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [18.0.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.2...Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.3) (2026-09-08)
 
+### fix
+
+* **copilot-workspace:** Show an error and fix wording when a project delete is rejected ([035f41a](https://github.com/umbraco/Umbraco.AI/commit/035f41a70229d69bb9f4dcf6b0c268ed09b780e1))
+
 ## [18.0.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.1...Umbraco.AI.Agent.Copilot.Workspace@18.0.0-rc.2) (2026-08-22)
 
 ### fix

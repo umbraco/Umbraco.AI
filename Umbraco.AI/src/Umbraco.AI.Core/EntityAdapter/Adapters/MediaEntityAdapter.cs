@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.Media;
@@ -19,6 +20,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
     private readonly IPropertyEditorSchemaService _propertyEditorSchemaService;
     private readonly IAIUmbracoMediaResolver _mediaResolver;
     private readonly AIFileProcessingHandlerCollection _fileProcessingHandlers;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<MediaEntityAdapter> _logger;
 
     /// <summary>
@@ -30,6 +32,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
         IPropertyEditorSchemaService propertyEditorSchemaService,
         IAIUmbracoMediaResolver mediaResolver,
         AIFileProcessingHandlerCollection fileProcessingHandlers,
+        IHttpContextAccessor httpContextAccessor,
         ILogger<MediaEntityAdapter> logger)
     {
         _mediaTypeService = mediaTypeService;
@@ -37,6 +40,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
         _propertyEditorSchemaService = propertyEditorSchemaService;
         _mediaResolver = mediaResolver;
         _fileProcessingHandlers = fileProcessingHandlers;
+        _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
 
@@ -77,6 +81,21 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
             _publishedContentTypeCache,
             _propertyEditorSchemaService,
             PublishedItemType.Media);
+
+        // This whole extraction path is only exercised by the interactive Copilot chat today (a live
+        // HTTP request), which is what makes blocking on the async calls below safe — but the runtime
+        // context contributor pipeline that calls in here is explicitly built to also run detached
+        // from any request (see AIRuntimeContextScopeProvider's AsyncLocal-backed DetachedScope, and
+        // AIAgentExecutionOptions.ContextItems' "headless execution" use case for callers such as
+        // Umbraco.Automate). If a serialized media entity is ever supplied that way, there is no
+        // request pipeline underneath to absorb the blocked thread — for Automate specifically that
+        // thread belongs to OutboxDispatcher's single-message dispatch loop, so blocking it would
+        // stall every other pending automation for the duration of the file read, not just cost a
+        // thread pool thread. Bail out to the metadata-only baseline in that case rather than block.
+        if (_httpContextAccessor.HttpContext is null)
+        {
+            return baseline;
+        }
 
         // Determine the file's real MIME type — sourced from the media node's actual umbracoFile
         // property, not the (editable, unreliable) display name — so the handler check below

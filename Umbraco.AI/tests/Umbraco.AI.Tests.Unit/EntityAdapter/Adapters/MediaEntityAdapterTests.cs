@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.EntityAdapter.Adapters;
@@ -15,6 +16,14 @@ public class MediaEntityAdapterTests
     private readonly Mock<IPublishedContentTypeCache> _typeCacheMock = new();
     private readonly Mock<IPropertyEditorSchemaService> _schemaServiceMock = new();
     private readonly Mock<IAIUmbracoMediaResolver> _mediaResolverMock = new();
+    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
+
+    public MediaEntityAdapterTests()
+    {
+        // Every existing test below exercises the "live Copilot chat request" case, so default to a
+        // real HttpContext being present. FormatForLlm_WithNoHttpContext_* overrides this to null.
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(new DefaultHttpContext());
+    }
 
     private MediaEntityAdapter CreateAdapter(params IAIFileProcessingHandler[] handlers)
     {
@@ -25,6 +34,7 @@ public class MediaEntityAdapterTests
             _schemaServiceMock.Object,
             _mediaResolverMock.Object,
             collection,
+            _httpContextAccessorMock.Object,
             NullLogger<MediaEntityAdapter>.Instance);
     }
 
@@ -189,6 +199,32 @@ public class MediaEntityAdapterTests
 
         // Assert
         result.ShouldNotContain("### File Content");
+    }
+
+    [Fact]
+    public void FormatForLlm_WithNoHttpContext_FallsBackToMetadataOnlyWithoutBlocking()
+    {
+        // Arrange — the runtime-context contributor pipeline that calls in here is explicitly built
+        // to also run detached from any HTTP request (e.g. Umbraco.Automate's headless agent runs).
+        // There is no request pipeline there to absorb a blocked thread the way a live request can,
+        // so this path must bail out to the metadata-only baseline rather than block at all.
+        var entity = CreateEntity();
+        SetupMediaType("text/csv");
+        _httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+
+        var handler = new RecordingHandler();
+        var adapter = CreateAdapter(handler);
+
+        // Act
+        var result = adapter.FormatForLlm(entity);
+
+        // Assert
+        result.ShouldNotContain("### File Content");
+        handler.CanHandleCalled.ShouldBeFalse();
+        handler.ProcessCalled.ShouldBeFalse();
+        _mediaResolverMock.Verify(
+            m => m.ResolveAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

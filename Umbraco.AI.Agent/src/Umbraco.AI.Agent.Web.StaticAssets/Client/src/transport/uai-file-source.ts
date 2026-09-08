@@ -1,5 +1,5 @@
 import { FilesService } from "../api/sdk.gen.js";
-import { agentClientReady } from "../app.js";
+import { agentClientReady } from "../client-ready.js";
 
 /**
  * Matches the file-serving route produced server-side by `AIFileUrlProvider`, capturing the thread

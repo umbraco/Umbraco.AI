@@ -5,7 +5,7 @@
  * Blocks live inside a parent document but have their own workspace context.
  */
 
-import { map, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
+import { from, map, of, switchMap, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
 import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
     UaiEntityAdapterApi,
@@ -38,6 +38,11 @@ interface BlockWorkspaceContextLike {
     getUnique(): string;
     getEntityType(): string;
     getName(): string;
+    /**
+     * Every Umb*Context instance provides this (inherited from UmbClassMixin), used here to reach the
+     * ancestor UmbBlockEntryContext — see BLOCK_ENTRY_CONTEXT_ALIAS below.
+     */
+    getContext<T>(alias: string): Promise<T | undefined>;
     /** The variant the block is being edited in (inherited from parent doc). */
     getVariantId?(): { culture: string | null; segment: string | null } | undefined;
     content: {
@@ -74,6 +79,33 @@ function getActiveVariant(ctx: BlockWorkspaceContextLike): ActiveVariantInfo | n
 }
 
 /**
+ * Minimal surface of UmbBlockEntryContext this adapter needs. That class is abstract and its concrete
+ * per-editor subclasses (block-list, block-grid, block-rte, block-single) are generic enough that CMS
+ * core doesn't export a single non-generic token for it — every one of those subclasses registers
+ * itself under this same literal alias regardless of editor type (see UMB_BLOCK_LIST_ENTRY_CONTEXT et
+ * al., each `new UmbContextToken('UmbBlockEntryContext')`), so requesting the alias directly matches
+ * whichever one actually owns this block.
+ */
+interface BlockEntryContextLike {
+    /** Resolved, UFM-rendered plain-text label — the same text the block list itself renders. */
+    readonly label: Observable<string>;
+}
+
+const BLOCK_ENTRY_CONTEXT_ALIAS = "UmbBlockEntryContext";
+
+/**
+ * Observable of the block's real label, sourced from its owning UmbBlockEntryContext (the block-list/
+ * grid entry, not the block's own edit-workspace) — see BlockEntryContextLike. Falls back to undefined
+ * when no entry context is reachable (e.g. a detached/mocked workspace in tests), so callers still need
+ * their own final fallback.
+ */
+function blockEntryLabel$(ctx: BlockWorkspaceContextLike): Observable<string | undefined> {
+    return from(ctx.getContext<BlockEntryContextLike>(BLOCK_ENTRY_CONTEXT_ALIAS)).pipe(
+        switchMap((entry) => entry?.label ?? of(undefined)),
+    );
+}
+
+/**
  * Adapter for Umbraco block entities (Block List, Block Grid items).
  */
 export class UaiBlockAdapter implements UaiEntityAdapterApi {
@@ -99,14 +131,16 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
 
     /**
      * Get an observable for the block name for reactive updates.
-     * Uses the content element manager's name observable.
+     *
+     * Sourced from the owning UmbBlockEntryContext's resolved label (see blockEntryLabel$) — the same
+     * text the block list itself renders, distinguishing "USP Block" from "CTA Block" and one instance
+     * from another. The content element manager's own name is not a usable source: on an element type
+     * it's always empty, which is what previously made every block's chip read the literal "Block"
+     * fallback.
      */
     getNameObservable(workspaceContext: unknown): Observable<string | undefined> | undefined {
         const ctx = workspaceContext as BlockWorkspaceContextLike;
-        if (ctx.content?.name) {
-            return ctx.content.name.pipe(map((name) => name || "Block"));
-        }
-        return undefined;
+        return blockEntryLabel$(ctx).pipe(map((label) => label || ctx.getName() || "Block"));
     }
 
     /**

@@ -39,22 +39,22 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
     private const string ExternalIndexName = "ExternalIndex";
 
     private readonly IExamineManager _examineManager;
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
     private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
 
     /// <summary>
     /// Initializes a new instance of <see cref="SearchUmbracoTool"/>.
     /// </summary>
     /// <param name="examineManager">The Examine manager.</param>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user context.</param>
     public SearchUmbracoTool(
         IExamineManager examineManager,
-        IUmbracoContextAccessor umbracoContextAccessor,
+        IUmbracoContextFactory umbracoContextFactory,
         IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
     {
         _examineManager = examineManager;
-        _umbracoContextAccessor = umbracoContextAccessor;
+        _umbracoContextFactory = umbracoContextFactory;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -326,18 +326,13 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         var hasRestrictions = !IsUnrestricted(startContentIds) || !IsUnrestricted(startMediaIds);
         var enrichedResults = new List<UmbracoSearchResultItem>();
 
-        // Try to get Umbraco context for enrichment
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            // Without Umbraco context we can't verify paths for access control.
-            // If the user has start node restrictions, skip basic results to avoid leaking content.
-            if (hasRestrictions)
-            {
-                return enrichedResults;
-            }
-
-            return searchResults.Select(r => CreateBasicResultItem(r)).ToList();
-        }
+        // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
+        // never created at all when this tool is invoked from Umbraco.Automate's background dispatcher.
+        // A no-op if a context is already ambient. Needed here specifically so path-based access
+        // control (below) can always verify a restricted user's start nodes rather than falling back
+        // to leaking unverified basic results.
+        using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
+        var umbracoContext = contextReference.UmbracoContext;
 
         foreach (var searchResult in searchResults)
         {

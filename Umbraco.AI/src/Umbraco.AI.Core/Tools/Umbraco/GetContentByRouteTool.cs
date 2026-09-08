@@ -26,19 +26,19 @@ public record GetContentByRouteArgs(
 [AITool("get_content_by_route", "Get Content By Route", ScopeId = ContentReadScope.ScopeId)]
 public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
 {
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
     private readonly IDocumentUrlService _documentUrlService;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContentByRouteTool"/>.
     /// </summary>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
     /// <param name="documentUrlService">The document URL service for route resolution.</param>
     public GetContentByRouteTool(
-        IUmbracoContextAccessor umbracoContextAccessor,
+        IUmbracoContextFactory umbracoContextFactory,
         IDocumentUrlService documentUrlService)
     {
-        _umbracoContextAccessor = umbracoContextAccessor;
+        _umbracoContextFactory = umbracoContextFactory;
         _documentUrlService = documentUrlService;
     }
 
@@ -58,11 +58,10 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
                 false, null, "Route cannot be empty."));
         }
 
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, "Umbraco context is not available."));
-        }
+        // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
+        // never created at all when this tool is invoked from Umbraco.Automate's background dispatcher.
+        // A no-op if a context is already ambient.
+        using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
         // Ensure route starts with /
         var route = args.Route.StartsWith('/') ? args.Route : "/" + args.Route;
@@ -80,7 +79,7 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
                 false, null, $"No published content was found at route '{route}'."));
         }
 
-        var content = umbracoContext.Content?.GetById(documentKey.Value);
+        var content = contextReference.UmbracoContext.Content?.GetById(documentKey.Value);
         if (content is null)
         {
             return Task.FromResult<object>(new GetUmbracoContentResult(

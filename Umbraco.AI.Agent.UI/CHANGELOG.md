@@ -5,7 +5,13 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [18.1.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.1.0-rc.2...Umbraco.AI.Agent.UI@18.1.0-rc.3) (2026-09-08)
+
+### fix
+
+* **agent-ui:** Re-arm auto-follow when a consumer swaps the message source ([c819ed0](https://github.com/umbraco/Umbraco.AI/commit/c819ed0dc4be7a68425000732ae98656058dd2ef))
+* **agent-ui:** Stop chat auto-scroll from overriding a manual scroll during streaming ([9434226](https://github.com/umbraco/Umbraco.AI/commit/9434226051d21c3c90b2a0f111a1128a7abb82ed))
 
 ## [18.1.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.1.0-rc.1...Umbraco.AI.Agent.UI@18.1.0-rc.2) (2026-08-21)
 

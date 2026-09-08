@@ -22,7 +22,11 @@ public class ContentPropertyValueOperationHelperTests
 
     private static readonly UmbracoPropertyPathSegmentArg RootSegment = new("contentBlocks", null);
 
-    private static Mock<IContent> CreateContentMock(Guid contentTypeKey, object? currentValue, ContentVariation variation = ContentVariation.Nothing)
+    private static Mock<IContent> CreateContentMock(
+        Guid contentTypeKey,
+        object? currentValue,
+        ContentVariation variation = ContentVariation.Nothing,
+        IEnumerable<IProperty>? otherProperties = null)
     {
         var contentTypeMock = new Mock<ISimpleContentType>();
         contentTypeMock.Setup(x => x.Key).Returns(contentTypeKey);
@@ -32,7 +36,35 @@ public class ContentPropertyValueOperationHelperTests
         contentMock.Setup(x => x.ContentType).Returns(contentTypeMock.Object);
         contentMock.Setup(x => x.Name).Returns("Home");
         contentMock.Setup(x => x.GetValue(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), false)).Returns(currentValue);
+        contentMock.Setup(x => x.Properties).Returns(new PropertyCollection(otherProperties ?? []));
         return contentMock;
+    }
+
+    private static Mock<IProperty> CreatePropertyMock(string alias, object? value, bool variesByCulture = false, bool variesBySegment = false)
+    {
+        var variations = ContentVariation.Nothing;
+        if (variesByCulture)
+        {
+            variations |= ContentVariation.Culture;
+        }
+
+        if (variesBySegment)
+        {
+            variations |= ContentVariation.Segment;
+        }
+
+        // VariesByCulture()/VariesBySegment() are extension methods over Variations, not overridable
+        // interface members, so Moq can't Setup() them directly — the underlying Variations property is
+        // the real, mockable seam.
+        var propertyTypeMock = new Mock<IPropertyType>();
+        propertyTypeMock.Setup(x => x.Alias).Returns(alias);
+        propertyTypeMock.Setup(x => x.Variations).Returns(variations);
+
+        var propertyMock = new Mock<IProperty>();
+        propertyMock.Setup(x => x.Alias).Returns(alias);
+        propertyMock.Setup(x => x.PropertyType).Returns(propertyTypeMock.Object);
+        propertyMock.Setup(x => x.GetValue(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>())).Returns(value);
+        return propertyMock;
     }
 
     private Task<ContentPropertyValueOperationOutcome> ExecuteAsync(
@@ -328,5 +360,93 @@ public class ContentPropertyValueOperationHelperTests
         variant.Name.ShouldBe("Home");
         variant.Culture.ShouldBeNull();
         variant.Segment.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ContentHasOtherProperties_ResubmitsTheirCurrentValuesSoTheySurvive()
+    {
+        // ContentEditingServiceBase.RemoveMissingProperties wipes any property alias not present in the
+        // submitted set on every save. A property-value operation only ever names the root alias it's
+        // operating on, so every other property here ("title", "employee") must come back out in the
+        // captured model with its current value, or it's silently wiped by the save.
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        var contentTypeKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+
+        var otherProperties = new List<IProperty>
+        {
+            CreatePropertyMock("title", "Old Title").Object,
+            CreatePropertyMock("employee", "Old Employee").Object,
+        };
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(contentTypeKey, null, otherProperties: otherProperties).Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(JsonValue.Create("new value")));
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+
+        var result = await ExecuteAsync(key, [RootSegment]);
+
+        result.Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.Properties.Count().ShouldBe(3);
+
+        var root = capturedModel.Properties.Single(p => p.Alias == "contentBlocks");
+        ((JsonElement)root.Value!).GetString().ShouldBe("new value");
+
+        var title = capturedModel.Properties.Single(p => p.Alias == "title");
+        ((JsonElement)title.Value!).GetString().ShouldBe("Old Title");
+
+        var employee = capturedModel.Properties.Single(p => p.Alias == "employee");
+        ((JsonElement)employee.Value!).GetString().ShouldBe("Old Employee");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OtherPropertyVariesBySegment_IsLeftOutOfThePatch()
+    {
+        // There's no per-property segment to read/write these correctly here, so — matching
+        // UpdateUmbracoContentTool — they're left out of the resubmitted set rather than risk a
+        // NotSupportedException from guessing a segment.
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        var contentTypeKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+
+        var otherProperties = new List<IProperty>
+        {
+            CreatePropertyMock("title", "Old Title").Object,
+            CreatePropertyMock("regionalNote", "Old Note", variesBySegment: true).Object,
+        };
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(contentTypeKey, null, otherProperties: otherProperties).Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(JsonValue.Create("new value")));
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+
+        var result = await ExecuteAsync(key, [RootSegment]);
+
+        result.Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "contentBlocks", "title" });
     }
 }

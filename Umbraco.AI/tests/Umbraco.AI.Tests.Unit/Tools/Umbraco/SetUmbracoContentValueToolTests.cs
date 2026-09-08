@@ -37,6 +37,7 @@ public class SetUmbracoContentValueToolTests
         var contentMock = new Mock<IContent>();
         contentMock.Setup(x => x.ContentType).Returns(contentTypeMock.Object);
         contentMock.Setup(x => x.Name).Returns("Home");
+        contentMock.Setup(x => x.Properties).Returns(new PropertyCollection());
 
         _authorizerMock
             .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))

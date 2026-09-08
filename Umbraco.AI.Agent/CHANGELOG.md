@@ -5,11 +5,18 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [18.2.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0-rc.2...Umbraco.AI.Agent@18.2.0-rc.3) (2026-09-08)
 
 ### fix
 
+* **agent:** Bind persisted agent runs to their session so history persists ([b975543](https://github.com/umbraco/Umbraco.AI/commit/b97554301437fd884072f3c1a8d56d9b6977aed4))
 * **agent:** Catch a failed chat-attachment fetch instead of an unhandled rejection ([6b1d6aa](https://github.com/umbraco/Umbraco.AI/commit/6b1d6aa470aba69faa5dc91fbf52b326d9be214d))
+* **agent:** Resolve dangling approvals and unsafe session-save in persisted runs ([b6c6a60](https://github.com/umbraco/Umbraco.AI/commit/b6c6a60a3c35f9a5407a9050ba5599807f11e106))
+
+### refactor
+
+* **agent:** Share the dangling-approval-denial logic between AG-UI and persisted paths ([d9eb85f](https://github.com/umbraco/Umbraco.AI/commit/d9eb85f14d322d988406b318030c428ea4f6ffc6))
 
 ## [18.2.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0-rc.1...Umbraco.AI.Agent@18.2.0-rc.2) (2026-08-22)
 

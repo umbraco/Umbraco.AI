@@ -5,10 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [17.0.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.2...Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.3) (2026-09-08)
 
 ### fix
 
+* **agent-ui,copilot-workspace:** Stop chat auto-scroll from overriding a manual scroll ([03c381f](https://github.com/umbraco/Umbraco.AI/commit/03c381f9c622f8682e4b08ce0cd2a3fd857022bb)), closes [#348](https://github.com/umbraco/Umbraco.AI/issues/348)
 * **copilot-workspace:** Show an error and fix wording when a project delete is rejected ([f72221b](https://github.com/umbraco/Umbraco.AI/commit/f72221bdc9f7437bb0bae3899d0accb2b49dfe22))
 
 ## [17.0.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.1...Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.2) (2026-08-22)

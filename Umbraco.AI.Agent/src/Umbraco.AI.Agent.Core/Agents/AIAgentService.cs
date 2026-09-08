@@ -1,10 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
@@ -54,6 +56,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly AIAgentSurfaceCollection _surfaceCollection;
     private readonly IEventAggregator _eventAggregator;
     private readonly ILoggerFactory? _loggerFactory;
+    private readonly ILogger _logger;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -89,6 +92,7 @@ internal sealed class AIAgentService : IAIAgentService
         _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _loggerFactory = loggerFactory;
+        _logger = (ILogger?)loggerFactory?.CreateLogger<AIAgentService>() ?? NullLogger.Instance;
     }
 
     /// <inheritdoc />
@@ -478,6 +482,12 @@ internal sealed class AIAgentService : IAIAgentService
             }
         }
 
+        // Kick off the persisted session-state load in parallel with PrepareAgentExecutionAsync below —
+        // it only needs the conversation id, not anything PrepareAgentExecutionAsync resolves, so there's
+        // no reason to pay its DB round trip as pure added latency on top of prep's own I/O.
+        var historyBinding = options.ConversationHistory;
+        var sessionStateTask = StartLoadSessionStateAsync(historyBinding, cancellationToken);
+
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools,
             contextItems: _contextConverter.ConvertToRequestContextItems(request.Context),
@@ -496,50 +506,49 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
-        // When bound to a persisted conversation, create the run's session and bind it (the concrete
-        // binding lives with the consumer's provider) so the attached ChatHistoryProvider loads/stores
-        // against the right conversation. Non-persisted surfaces stream with a null session as before.
+        // Stream via AG-UI streaming service. Session setup lives inside the try so a failure restoring
+        // it (e.g. an incompatible persisted state blob) still reaches the finally below and publishes
+        // the executed notification, instead of leaving the AIAgentExecutingNotification's counterpart
+        // never published.
         AgentSession? session = null;
-        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null;
-        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null;
-        if (options.ConversationHistory is { } historyBinding)
-        {
-            // A fresh session is created per HTTP request (Copilot Workspace persists conversation
-            // history in its own store rather than keeping a MAF session alive between requests — it
-            // wouldn't survive a restart anyway). But session-scoped decorators (e.g. the tool-approval-
-            // response binder introduced in Microsoft.Agents.AI 1.14) record their own state directly on
-            // the session object, not in chat history — so restore the prior run's state here rather than
-            // always starting bare, or that state silently never reaches the decorator. Confirmed
-            // empirically necessary: disabling that decorator instead (relying solely on our own
-            // persisted-history-based approval correlation) breaks a chained multi-approval turn — e.g.
-            // create_umbraco_content then publish_umbraco_content approved back-to-back in one
-            // conversation — because a prior turn's already-resolved approval request resurfaces as
-            // unmatched once a later turn's persisted history is reloaded. Keeping this decorator active
-            // (with its state correctly restored) avoids that; our own correlation layer stays in place
-            // too, since it's what supplies the correct request object for CreateResponse().
-            var persistedState = historyBinding.LoadSessionState is { } loadState
-                ? await loadState(cancellationToken)
-                : null;
-            session = persistedState is { } state
-                ? await context.MafAgent.DeserializeSessionAsync(state, cancellationToken: cancellationToken)
-                : await context.MafAgent.CreateSessionAsync(cancellationToken);
-            historyBinding.BindSession(session);
-
-            // For an approval resume after a reload, the original tool call may only exist in persisted
-            // history — recover it (name + args) so the resume path can correlate instead of skipping (B2).
-            pendingApprovalCalls = await ResolvePendingApprovalCallsAsync(historyBinding, request, cancellationToken);
-
-            // A DIFFERENT reload scenario: the browser was refreshed/closed before Approve/Deny was ever
-            // clicked, so this request isn't a resume for that call at all — just a new, unrelated turn.
-            // The dangling request from that abandoned interrupt still sits in persisted history and would
-            // otherwise brick every future turn (see AGUIStreamingService's staleApprovalRequests handling).
-            staleApprovalRequests = await ResolveStaleApprovalRequestsAsync(historyBinding, request, cancellationToken);
-        }
-
-        // Stream via AG-UI streaming service
         bool streamCompleted = false;
         try
         {
+            IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null;
+            IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null;
+            if (historyBinding is not null)
+            {
+                // When bound to a persisted conversation, create the run's session and bind it (the
+                // concrete binding lives with the consumer's provider) so the attached ChatHistoryProvider
+                // loads/stores against the right conversation. Non-persisted surfaces stream with a null
+                // session as before.
+                //
+                // A fresh session is created per HTTP request (Copilot Workspace persists conversation
+                // history in its own store rather than keeping a MAF session alive between requests — it
+                // wouldn't survive a restart anyway). But session-scoped decorators (e.g. the tool-approval-
+                // response binder introduced in Microsoft.Agents.AI 1.14) record their own state directly on
+                // the session object, not in chat history — so restore the prior run's state here rather than
+                // always starting bare, or that state silently never reaches the decorator. Confirmed
+                // empirically necessary: disabling that decorator instead (relying solely on our own
+                // persisted-history-based approval correlation) breaks a chained multi-approval turn — e.g.
+                // create_umbraco_content then publish_umbraco_content approved back-to-back in one
+                // conversation — because a prior turn's already-resolved approval request resurfaces as
+                // unmatched once a later turn's persisted history is reloaded. Keeping this decorator active
+                // (with its state correctly restored) avoids that; our own correlation layer stays in place
+                // too, since it's what supplies the correct request object for CreateResponse().
+                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, sessionStateTask, cancellationToken);
+
+                // For an approval resume after a reload, the original tool call may only exist in persisted
+                // history — recover it (name + args) so the resume path can correlate instead of skipping (B2).
+                pendingApprovalCalls = await ResolvePendingApprovalCallsAsync(historyBinding, request, cancellationToken);
+
+                // A DIFFERENT reload scenario: the browser was refreshed/closed before Approve/Deny was ever
+                // clicked, so this request isn't a resume for that call at all — just a new, unrelated turn.
+                // The dangling request from that abandoned interrupt still sits in persisted history and would
+                // otherwise brick every future turn (see AGUIStreamingService's staleApprovalRequests handling).
+                staleApprovalRequests = await ResolveStaleApprovalRequestsAsync(historyBinding, request, cancellationToken);
+            }
+
             await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken))
             {
                 yield return evt;
@@ -548,12 +557,12 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
-            // Persist session state (success or interrupt) so the next request's fresh session can
-            // restore it above — see the restore comment for why this matters.
-            if (options.ConversationHistory is { SaveSessionState: { } saveState } binding && session is not null)
+            // Persist session state (success or interrupt — both leave streamCompleted true; only a
+            // genuine error/cancellation does not) so the next request's fresh session can restore it
+            // above — see the restore comment for why this matters.
+            if (streamCompleted && historyBinding?.SaveSessionState is { } saveState && session is not null)
             {
-                var serialized = await context.MafAgent.SerializeSessionAsync(session, cancellationToken: cancellationToken);
-                await saveState(serialized, cancellationToken);
+                await TrySaveSessionStateAsync(context.MafAgent, session, saveState);
             }
 
             await PublishExecutedNotificationAsync(context, streamCompleted);
@@ -915,6 +924,92 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
+    /// Starts loading the conversation's persisted session-state blob (if a loader is configured) without
+    /// awaiting it, so the DB round trip overlaps with the independent I/O in <see cref="PrepareAgentExecutionAsync"/>
+    /// (tool-permission lookup, agent-factory/profile resolution) instead of adding to it serially.
+    /// </summary>
+    private static Task<JsonElement?> StartLoadSessionStateAsync(
+        AIConversationHistoryBinding? historyBinding,
+        CancellationToken cancellationToken)
+        => historyBinding?.LoadSessionState is { } loadState
+            ? loadState(cancellationToken).AsTask()
+            : Task.FromResult<JsonElement?>(null);
+
+    /// <summary>
+    /// Creates or restores the run's session from <paramref name="sessionStateTask"/> (started earlier via
+    /// <see cref="StartLoadSessionStateAsync"/>) and binds it via <paramref name="historyBinding"/>, so the
+    /// attached ChatHistoryProvider has a conversation id to load/store against.
+    /// </summary>
+    private static async Task<AgentSession> CreateOrRestoreSessionAsync(
+        MsAIAgent mafAgent,
+        AIConversationHistoryBinding historyBinding,
+        Task<JsonElement?> sessionStateTask,
+        CancellationToken cancellationToken)
+    {
+        var persistedState = await sessionStateTask;
+        var session = persistedState is { } state
+            ? await mafAgent.DeserializeSessionAsync(state, cancellationToken: cancellationToken)
+            : await mafAgent.CreateSessionAsync(cancellationToken);
+        historyBinding.BindSession(session);
+        return session;
+    }
+
+    /// <summary>
+    /// Resolves any approval request left dangling in persisted history by an earlier run of this
+    /// conversation that never resolved it, and appends a synthesized denial for each one so the model
+    /// sees a resolved turn instead of an orphaned request. Returns <paramref name="chatMessages"/>
+    /// unchanged when there is nothing to resolve.
+    /// </summary>
+    private async ValueTask<IReadOnlyList<ChatMessage>> AppendDanglingApprovalDenialsAsync(
+        IReadOnlyList<ChatMessage> chatMessages,
+        AIConversationHistoryBinding historyBinding,
+        CancellationToken cancellationToken)
+    {
+        if (historyBinding.ResolveDanglingApprovalRequests is null)
+        {
+            return chatMessages;
+        }
+
+        var dangling = await historyBinding.ResolveDanglingApprovalRequests(cancellationToken);
+        if (dangling.Count == 0)
+        {
+            return chatMessages;
+        }
+
+        var withDenials = new List<ChatMessage>(chatMessages);
+        AIApprovalDenialHelper.AppendDenials(
+            withDenials,
+            dangling,
+            "Auto-denied: an earlier run left this tool approval unresolved.",
+            _logger);
+
+        return withDenials;
+    }
+
+    /// <summary>
+    /// Serializes and persists the run's session state, logging (rather than throwing) on failure so a
+    /// save error can never mask an already-successful response or replace the run's real exception when
+    /// called from a <c>finally</c> block. Deliberately uses <see cref="CancellationToken.None"/> instead
+    /// of the run's own token: this save is meant to be best-effort even when the caller's request was
+    /// itself just cancelled, and reusing that token would make the save fail immediately every time.
+    /// </summary>
+    private async Task TrySaveSessionStateAsync(
+        MsAIAgent mafAgent,
+        AgentSession session,
+        Func<JsonElement, CancellationToken, ValueTask> saveState)
+    {
+        try
+        {
+            var serialized = await mafAgent.SerializeSessionAsync(session, cancellationToken: CancellationToken.None);
+            await saveState(serialized, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to persist agent session state; the next run will start from the last successfully saved state.");
+        }
+    }
+
+    /// <summary>
     /// Runs a persisted agent by ID with full orchestration.
     /// </summary>
     private async Task<AgentResponse> RunPersistedAgentAsync(
@@ -925,6 +1020,11 @@ internal sealed class AIAgentService : IAIAgentService
     {
         var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
+
+        // Kick off the persisted session-state load in parallel with PrepareAgentExecutionAsync below —
+        // see StartLoadSessionStateAsync.
+        var historyBinding = options.ConversationHistory;
+        var sessionStateTask = StartLoadSessionStateAsync(historyBinding, cancellationToken);
 
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
@@ -938,12 +1038,33 @@ internal sealed class AIAgentService : IAIAgentService
             throw new InvalidOperationException("Agent execution cancelled by notification handler.");
         }
 
+        AgentSession? session = null;
         bool isSuccess = false;
         string? responseText = null;
         Exception? capturedException = null;
         try
         {
-            var response = await context.MafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            var runMessages = chatMessages;
+            if (historyBinding is not null)
+            {
+                // Create the run's session and bind it — mirrors the AG-UI streaming path so the attached
+                // ChatHistoryProvider actually has a conversation id to load/store against. Without this,
+                // session stays null, the provider's per-session ConversationId is never set, and
+                // StoreChatHistoryAsync silently no-ops: the run succeeds and returns a real response, but
+                // nothing is ever persisted to the conversation. Session setup lives inside this try so a
+                // failure restoring it (e.g. an incompatible persisted state blob) still reaches the
+                // finally below and publishes the executed notification.
+                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, sessionStateTask, cancellationToken);
+
+                // Auto-deny any approval request left dangling by an earlier run of this conversation that
+                // never resolved it (e.g. the caller never resumed it). Left in place, MAF's bound
+                // ChatHistoryProvider would concatenate the unresolved request into every future turn and
+                // FunctionInvokingChatClient would throw on it every time — see
+                // AIConversationHistoryBinding.ResolveDanglingApprovalRequests.
+                runMessages = await AppendDanglingApprovalDenialsAsync(chatMessages, historyBinding, cancellationToken);
+            }
+
+            var response = await context.MafAgent.RunAsync(runMessages, session, options: null, cancellationToken);
             responseText = response.Text;
             isSuccess = true;
             return response;
@@ -955,6 +1076,14 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
+            // Only save on success — a run that never got as far as mutating the session has nothing new
+            // to persist, and this path has no "interrupt" concept to preserve (headless callers default
+            // to AIApprovalPolicy.DenyAll, so there's no pending human-approval state to keep around).
+            if (isSuccess && historyBinding?.SaveSessionState is { } saveState && session is not null)
+            {
+                await TrySaveSessionStateAsync(context.MafAgent, session, saveState);
+            }
+
             await PublishExecutedNotificationAsync(context, isSuccess, responseText, capturedException);
         }
     }
@@ -971,6 +1100,11 @@ internal sealed class AIAgentService : IAIAgentService
         var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
+        // Kick off the persisted session-state load in parallel with PrepareAgentExecutionAsync below —
+        // see StartLoadSessionStateAsync.
+        var historyBinding = options.ConversationHistory;
+        var sessionStateTask = StartLoadSessionStateAsync(historyBinding, cancellationToken);
+
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
             contextItems: options.ContextItems,
@@ -983,10 +1117,20 @@ internal sealed class AIAgentService : IAIAgentService
             throw new InvalidOperationException("Agent execution cancelled by notification handler.");
         }
 
+        // See RunPersistedAgentAsync above for why session setup and the dangling-approval auto-deny are
+        // required, and why both live inside this try.
+        AgentSession? session = null;
         bool isSuccess = false;
         try
         {
-            await foreach (var update in context.MafAgent.RunStreamingAsync(chatMessages, session: null, options: null, cancellationToken))
+            var runMessages = chatMessages;
+            if (historyBinding is not null)
+            {
+                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, sessionStateTask, cancellationToken);
+                runMessages = await AppendDanglingApprovalDenialsAsync(chatMessages, historyBinding, cancellationToken);
+            }
+
+            await foreach (var update in context.MafAgent.RunStreamingAsync(runMessages, session, options: null, cancellationToken))
             {
                 yield return update;
             }
@@ -994,6 +1138,12 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
+            // See RunPersistedAgentAsync above for why the save is gated on isSuccess.
+            if (isSuccess && historyBinding?.SaveSessionState is { } saveState && session is not null)
+            {
+                await TrySaveSessionStateAsync(context.MafAgent, session, saveState);
+            }
+
             await PublishExecutedNotificationAsync(context, isSuccess);
         }
     }

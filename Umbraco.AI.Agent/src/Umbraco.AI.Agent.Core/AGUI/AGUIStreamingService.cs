@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using AIApprovalDenialHelper = Umbraco.AI.Agent.Core.Agents.AIApprovalDenialHelper;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
@@ -222,14 +223,11 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // FunctionInvokingChatClient would throw on it every time.
         if (staleApprovalRequests is { Count: > 0 })
         {
-            foreach (var stale in staleApprovalRequests)
-            {
-                chatMessages.Add(new ChatMessage(ChatRole.User, [stale.CreateResponse(false, "Auto-denied: the browser was reloaded before this action was approved or denied.")]));
-                _logger.LogInformation(
-                    "Auto-denying stale approval request for callId {CallId} on run {RunId} -- left unresolved by an earlier reload.",
-                    stale.ToolCall.CallId,
-                    request.RunId);
-            }
+            AIApprovalDenialHelper.AppendDenials(
+                chatMessages,
+                staleApprovalRequests,
+                "Auto-denied: the browser was reloaded before this action was approved or denied.",
+                _logger);
         }
 
         _logger.LogDebug(

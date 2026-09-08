@@ -33,15 +33,15 @@ public record GetUmbracoContentChildrenArgs(
 [AITool("get_umbraco_content_children", "Get Umbraco Content Children", ScopeId = ContentReadScope.ScopeId)]
 public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildrenArgs>
 {
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetUmbracoContentChildrenTool"/>.
     /// </summary>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
-    public GetUmbracoContentChildrenTool(IUmbracoContextAccessor umbracoContextAccessor)
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    public GetUmbracoContentChildrenTool(IUmbracoContextFactory umbracoContextFactory)
     {
-        _umbracoContextAccessor = umbracoContextAccessor;
+        _umbracoContextFactory = umbracoContextFactory;
     }
 
     /// <inheritdoc />
@@ -61,13 +61,12 @@ public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildre
                 false, [], 0, "Parent key cannot be empty."));
         }
 
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            return Task.FromResult<object>(new GetUmbracoContentChildrenResult(
-                false, [], 0, "Umbraco context is not available."));
-        }
+        // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
+        // never created at all when this tool is invoked from Umbraco.Automate's background dispatcher.
+        // A no-op if a context is already ambient.
+        using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
-        var parent = umbracoContext.Content?.GetById(args.ParentKey);
+        var parent = contextReference.UmbracoContext.Content?.GetById(args.ParentKey);
         if (parent is null)
         {
             return Task.FromResult<object>(new GetUmbracoContentChildrenResult(

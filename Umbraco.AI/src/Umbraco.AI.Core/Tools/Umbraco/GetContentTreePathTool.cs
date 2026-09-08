@@ -26,15 +26,15 @@ public record GetContentTreePathArgs(
 [AITool("get_content_tree_path", "Get Content Tree Path", ScopeId = ContentReadScope.ScopeId)]
 public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
 {
-    private readonly IUmbracoContextAccessor _umbracoContextAccessor;
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContentTreePathTool"/>.
     /// </summary>
-    /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
-    public GetContentTreePathTool(IUmbracoContextAccessor umbracoContextAccessor)
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    public GetContentTreePathTool(IUmbracoContextFactory umbracoContextFactory)
     {
-        _umbracoContextAccessor = umbracoContextAccessor;
+        _umbracoContextFactory = umbracoContextFactory;
     }
 
     /// <inheritdoc />
@@ -53,13 +53,12 @@ public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
                 false, null, null, null, "Content key cannot be empty."));
         }
 
-        if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
-        {
-            return Task.FromResult<object>(new GetContentTreePathResult(
-                false, null, null, null, "Umbraco context is not available."));
-        }
+        // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
+        // never created at all when this tool is invoked from Umbraco.Automate's background dispatcher.
+        // A no-op if a context is already ambient.
+        using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
-        var content = umbracoContext.Content?.GetById(args.ContentKey);
+        var content = contextReference.UmbracoContext.Content?.GetById(args.ContentKey);
         if (content is null)
         {
             return Task.FromResult<object>(new GetContentTreePathResult(

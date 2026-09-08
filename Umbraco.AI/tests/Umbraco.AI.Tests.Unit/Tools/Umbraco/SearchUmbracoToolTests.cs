@@ -11,18 +11,18 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 public class SearchUmbracoToolTests
 {
     private readonly Mock<IExamineManager> _examineManagerMock;
-    private readonly Mock<IUmbracoContextAccessor> _umbracoContextAccessorMock;
+    private readonly Mock<IUmbracoContextFactory> _umbracoContextFactoryMock;
     private readonly Mock<IBackOfficeSecurityAccessor> _backOfficeSecurityAccessorMock;
     private readonly IAITool _tool;
 
     public SearchUmbracoToolTests()
     {
         _examineManagerMock = new Mock<IExamineManager>();
-        _umbracoContextAccessorMock = new Mock<IUmbracoContextAccessor>();
+        _umbracoContextFactoryMock = new Mock<IUmbracoContextFactory>();
         _backOfficeSecurityAccessorMock = new Mock<IBackOfficeSecurityAccessor>();
         _tool = new SearchUmbracoTool(
             _examineManagerMock.Object,
-            _umbracoContextAccessorMock.Object,
+            _umbracoContextFactoryMock.Object,
             _backOfficeSecurityAccessorMock.Object);
     }
 

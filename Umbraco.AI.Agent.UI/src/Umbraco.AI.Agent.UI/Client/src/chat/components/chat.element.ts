@@ -118,6 +118,17 @@ export class UaiChatElement extends UmbLitElement {
         this.#isFollowingBottom = isNearBottom(container);
     }
 
+    /**
+     * Re-arms auto-follow so the next message update scrolls to the bottom, regardless of where a
+     * previous message source (e.g. a different conversation) left the scroll position. Consumers that
+     * reuse a single `<uai-chat>` across multiple message sources -- Copilot Workspace switching between
+     * saved conversations without remounting the element -- must call this when the source changes, or a
+     * scroll-up left over from the previous conversation silently suppresses the new one's initial scroll.
+     */
+    resetScrollFollow(): void {
+        this.#isFollowingBottom = true;
+    }
+
     #scrollToBottom() {
         if (!this.#isFollowingBottom) return;
         requestAnimationFrame(() => {

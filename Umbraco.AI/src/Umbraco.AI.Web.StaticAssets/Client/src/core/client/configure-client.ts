@@ -1,4 +1,5 @@
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
+import type { UmbApiClient } from "@umbraco-cms/backoffice/http-client";
 import type { UmbElement } from "@umbraco-cms/backoffice/element-api";
 
 /**
@@ -14,19 +15,23 @@ import type { UmbElement } from "@umbraco-cms/backoffice/element-api";
  *   own host so the `UmbAuthSignalerContext` is registered at `umb-app`
  *   and emissions reach `UmbAuthContext` correctly.
  *
+ * Additionally sets `throwOnError: true` — every product sharing this function
+ * relies on `tryExecute` to turn a failed request into a user-facing notification,
+ * which only happens when the underlying call throws. `setConfig` merges onto the
+ * config `authContext.configureClient` already applied, so this doesn't clobber
+ * `baseUrl`/`credentials`/`auth`.
+ *
  * @param host The entry point's `host` parameter (`UmbElement`).
  * @param client The generated hey-api client to configure.
  * @returns A Promise that resolves once auth is configured on the client.
  * @public
  */
-export function configureAiClient(host: UmbElement, client: unknown): Promise<void> {
+export function configureAiClient(host: UmbElement, client: UmbApiClient): Promise<void> {
     return new Promise<void>((resolve) => {
         host.consumeContext(UMB_AUTH_CONTEXT, (authContext) => {
             if (!authContext) return;
-            // Cast: per-project hey-api codegen produces nominally distinct Client
-            // types, but configureClient only uses the shared setConfig + interceptor
-            // surface that every hey-api Client provides.
-            authContext.configureClient(client as never);
+            authContext.configureClient(client);
+            client.setConfig({ throwOnError: true });
             resolve();
         });
     });

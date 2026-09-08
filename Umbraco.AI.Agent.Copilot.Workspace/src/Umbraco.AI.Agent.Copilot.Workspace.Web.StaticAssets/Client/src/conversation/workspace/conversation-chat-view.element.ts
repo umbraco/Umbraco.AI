@@ -16,9 +16,9 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
     @state() private _readonly = false;
     @state() private _ready = false;
 
-    /** The shared chat element; used to focus its composer when the conversation changes. */
+    /** The shared chat element; used to focus its composer and re-arm auto-scroll when the conversation changes. */
     @query("uai-chat")
-    private _chat?: HTMLElement & { focusComposer?: () => void };
+    private _chat?: HTMLElement & { focusComposer?: () => void; resetScrollFollow?: () => void };
 
     constructor() {
         super();
@@ -26,10 +26,13 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
         this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
             this.observe(store?.isReadonly$, (value) => (this._readonly = value ?? false));
             this.observe(store?.isResolved$, (value) => (this._ready = value ?? false));
-            // Focus the composer on every target the store is pointed at, not just this view's first
-            // mount — the store re-targets within a mount (a draft promoted to its real conversation),
-            // where the composer's own mount-time focus wouldn't fire.
+            // Re-key auto-scroll and composer focus on every target the store is pointed at, not just
+            // this view's first mount — the store re-targets within a mount (a draft promoted to its real
+            // conversation, or the user picking a different saved conversation), and `<uai-chat>` is never
+            // remounted across those switches. Without resetScrollFollow(), a scroll-up left over from the
+            // previous conversation would silently suppress the new one's initial scroll-to-bottom.
             this.observe(store?.target$, () => {
+                this._chat?.resetScrollFollow?.();
                 this.updateComplete.then(() => this._chat?.focusComposer?.());
             });
         });

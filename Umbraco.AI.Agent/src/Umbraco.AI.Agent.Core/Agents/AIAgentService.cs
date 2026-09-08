@@ -960,7 +960,7 @@ internal sealed class AIAgentService : IAIAgentService
     /// sees a resolved turn instead of an orphaned request. Returns <paramref name="chatMessages"/>
     /// unchanged when there is nothing to resolve.
     /// </summary>
-    private static async ValueTask<IReadOnlyList<ChatMessage>> AppendDanglingApprovalDenialsAsync(
+    private async ValueTask<IReadOnlyList<ChatMessage>> AppendDanglingApprovalDenialsAsync(
         IReadOnlyList<ChatMessage> chatMessages,
         AIConversationHistoryBinding historyBinding,
         CancellationToken cancellationToken)
@@ -977,10 +977,11 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         var withDenials = new List<ChatMessage>(chatMessages);
-        foreach (var stale in dangling)
-        {
-            withDenials.Add(new ChatMessage(ChatRole.User, [stale.CreateResponse(false, "Auto-denied: an earlier run left this tool approval unresolved.")]));
-        }
+        AIApprovalDenialHelper.AppendDenials(
+            withDenials,
+            dangling,
+            "Auto-denied: an earlier run left this tool approval unresolved.",
+            _logger);
 
         return withDenials;
     }

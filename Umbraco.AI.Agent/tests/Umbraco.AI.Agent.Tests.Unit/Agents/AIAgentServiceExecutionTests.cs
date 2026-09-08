@@ -178,6 +178,127 @@ public class AIAgentServiceExecutionTests
         capturedAdditionalProperties[Constants.ContextKeys.ThreadId].ShouldBe("thread-1");
     }
 
+    [Fact]
+    public async Task RunAgentAsync_WithConversationHistory_BindsSessionAndSavesState()
+    {
+        // Arrange
+        var agent = CreateAgent(TestAgentId);
+        var repositoryMock = new Mock<IAIAgentRepository>();
+        repositoryMock
+            .Setup(x => x.GetByIdAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+
+        var agentFactoryMock = new Mock<IAIAgentFactory>();
+        agentFactoryMock
+            .Setup(x => x.CreateAgentAsync(
+                agent,
+                It.IsAny<ChatHistoryProvider?>(),
+                It.IsAny<IEnumerable<AIRequestContextItem>?>(),
+                It.IsAny<IEnumerable<AITool>?>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>(),
+                It.IsAny<AIApprovalPolicy>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateRespondingAgent());
+
+        var eventAggregatorMock = new Mock<IEventAggregator>();
+        eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutingNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(repositoryMock.Object, agentFactoryMock.Object, eventAggregatorMock.Object);
+
+        AgentSession? boundSession = null;
+        var saveStateCalled = false;
+        var historyBinding = new AIConversationHistoryBinding(
+            Provider: null!,
+            ConversationId: Guid.NewGuid(),
+            BindSession: session => boundSession = session)
+        {
+            SaveSessionState = (_, _) =>
+            {
+                saveStateCalled = true;
+                return ValueTask.CompletedTask;
+            },
+        };
+
+        // Act
+        var response = await service.RunAgentAsync(
+            TestAgentId,
+            [new ChatMessage(ChatRole.User, "Hello")],
+            new AIAgentExecutionOptions { ConversationHistory = historyBinding },
+            CancellationToken.None);
+
+        // Assert — BindSession must be invoked with a real session before the run, or the attached
+        // ChatHistoryProvider never learns which conversation to persist to and every message is
+        // silently dropped (the bug: session was always run as null on this path).
+        boundSession.ShouldNotBeNull();
+        saveStateCalled.ShouldBeTrue();
+        response.Text.ShouldBe("ok");
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithConversationHistory_BindsSessionAndSavesState()
+    {
+        // Arrange
+        var agent = CreateAgent(TestAgentId);
+        var repositoryMock = new Mock<IAIAgentRepository>();
+        repositoryMock
+            .Setup(x => x.GetByIdAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+
+        var agentFactoryMock = new Mock<IAIAgentFactory>();
+        agentFactoryMock
+            .Setup(x => x.CreateAgentAsync(
+                agent,
+                It.IsAny<ChatHistoryProvider?>(),
+                It.IsAny<IEnumerable<AIRequestContextItem>?>(),
+                It.IsAny<IEnumerable<AITool>?>(),
+                It.IsAny<IReadOnlyDictionary<string, object?>?>(),
+                It.IsAny<AIApprovalPolicy>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateRespondingAgent());
+
+        var eventAggregatorMock = new Mock<IEventAggregator>();
+        eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutingNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<AIAgentExecutedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var service = CreateService(repositoryMock.Object, agentFactoryMock.Object, eventAggregatorMock.Object);
+
+        AgentSession? boundSession = null;
+        var saveStateCalled = false;
+        var historyBinding = new AIConversationHistoryBinding(
+            Provider: null!,
+            ConversationId: Guid.NewGuid(),
+            BindSession: session => boundSession = session)
+        {
+            SaveSessionState = (_, _) =>
+            {
+                saveStateCalled = true;
+                return ValueTask.CompletedTask;
+            },
+        };
+
+        // Act
+        await foreach (var _ in service.StreamAgentAsync(
+            TestAgentId,
+            [new ChatMessage(ChatRole.User, "Hello")],
+            new AIAgentExecutionOptions { ConversationHistory = historyBinding },
+            CancellationToken.None))
+        {
+        }
+
+        // Assert — same requirement as the non-streaming path above.
+        boundSession.ShouldNotBeNull();
+        saveStateCalled.ShouldBeTrue();
+    }
+
     private static async IAsyncEnumerable<IAGUIEvent> EmptyEvents()
     {
         await Task.CompletedTask;
@@ -208,7 +329,19 @@ public class AIAgentServiceExecutionTests
                 It.IsAny<ChatOptions?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
+        chatClientMock
+            .Setup(x => x.GetStreamingResponseAsync(
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<ChatOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(StreamingUpdates());
 
         return new ChatClientAgent(chatClientMock.Object);
+    }
+
+    private static async IAsyncEnumerable<ChatResponseUpdate> StreamingUpdates()
+    {
+        await Task.CompletedTask;
+        yield return new ChatResponseUpdate(ChatRole.Assistant, "ok");
     }
 }

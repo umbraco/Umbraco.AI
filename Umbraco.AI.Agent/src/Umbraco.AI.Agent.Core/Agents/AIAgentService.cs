@@ -938,12 +938,29 @@ internal sealed class AIAgentService : IAIAgentService
             throw new InvalidOperationException("Agent execution cancelled by notification handler.");
         }
 
+        // When bound to a persisted conversation, create the run's session and bind it — mirrors the
+        // AG-UI streaming path so the attached ChatHistoryProvider actually has a conversation id to
+        // load/store against. Without this, session stays null, the provider's per-session
+        // ConversationId is never set, and StoreChatHistoryAsync silently no-ops: the run succeeds and
+        // returns a real response, but nothing is ever persisted to the conversation.
+        AgentSession? session = null;
+        if (options.ConversationHistory is { } historyBinding)
+        {
+            var persistedState = historyBinding.LoadSessionState is { } loadState
+                ? await loadState(cancellationToken)
+                : null;
+            session = persistedState is { } state
+                ? await context.MafAgent.DeserializeSessionAsync(state, cancellationToken: cancellationToken)
+                : await context.MafAgent.CreateSessionAsync(cancellationToken);
+            historyBinding.BindSession(session);
+        }
+
         bool isSuccess = false;
         string? responseText = null;
         Exception? capturedException = null;
         try
         {
-            var response = await context.MafAgent.RunAsync(chatMessages, session: null, options: null, cancellationToken);
+            var response = await context.MafAgent.RunAsync(chatMessages, session, options: null, cancellationToken);
             responseText = response.Text;
             isSuccess = true;
             return response;
@@ -955,6 +972,12 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
+            if (options.ConversationHistory is { SaveSessionState: { } saveState } && session is not null)
+            {
+                var serialized = await context.MafAgent.SerializeSessionAsync(session, cancellationToken: cancellationToken);
+                await saveState(serialized, cancellationToken);
+            }
+
             await PublishExecutedNotificationAsync(context, isSuccess, responseText, capturedException);
         }
     }
@@ -983,10 +1006,23 @@ internal sealed class AIAgentService : IAIAgentService
             throw new InvalidOperationException("Agent execution cancelled by notification handler.");
         }
 
+        // See RunPersistedAgentAsync above for why this is required for conversation persistence to work.
+        AgentSession? session = null;
+        if (options.ConversationHistory is { } historyBinding)
+        {
+            var persistedState = historyBinding.LoadSessionState is { } loadState
+                ? await loadState(cancellationToken)
+                : null;
+            session = persistedState is { } state
+                ? await context.MafAgent.DeserializeSessionAsync(state, cancellationToken: cancellationToken)
+                : await context.MafAgent.CreateSessionAsync(cancellationToken);
+            historyBinding.BindSession(session);
+        }
+
         bool isSuccess = false;
         try
         {
-            await foreach (var update in context.MafAgent.RunStreamingAsync(chatMessages, session: null, options: null, cancellationToken))
+            await foreach (var update in context.MafAgent.RunStreamingAsync(chatMessages, session, options: null, cancellationToken))
             {
                 yield return update;
             }
@@ -994,6 +1030,12 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
+            if (options.ConversationHistory is { SaveSessionState: { } saveState } && session is not null)
+            {
+                var serialized = await context.MafAgent.SerializeSessionAsync(session, cancellationToken: cancellationToken);
+                await saveState(serialized, cancellationToken);
+            }
+
             await PublishExecutedNotificationAsync(context, isSuccess);
         }
     }

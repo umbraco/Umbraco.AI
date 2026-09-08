@@ -69,7 +69,7 @@ export default {
         projectDelete: "Delete project",
         projectDeleteConfirmTitle: "Delete project",
         projectDeleteConfirmMessage:
-            "Delete this project? Its conversations are kept but detached from the project. This cannot be undone.",
+            "Delete this project? This cannot be undone. A project that still has conversations can't be deleted — move or delete them first.",
         projectNotFound: "This project could not be found.",
         projectNoConversations: "No conversations yet",
         projectBack: "Back",

@@ -319,4 +319,99 @@ public class ConversationChatHistoryProviderTests
             dangling.ShouldBeEmpty();
         }
     }
+
+    /// <summary>
+    /// Defence in depth against the client-side conversation-message-duplication bug: a client whose
+    /// not-yet-persisted boundary is corrupted re-sends messages the server already holds as "new".
+    /// <see cref="ConversationChatHistoryProvider.DropAlreadyPersistedTailAsync"/> is the last line of
+    /// defence in <c>StoreChatHistoryAsync</c> that catches this before it double-writes history.
+    /// </summary>
+    public class DropAlreadyPersistedTail
+    {
+        private static AIMessage Message(string role, string content) => new() { Role = role, ContentJson = content };
+
+        private static Mock<IAIConversationRepository> RepositoryReturning(params AIMessage[] stored)
+        {
+            var repository = new Mock<IAIConversationRepository>();
+            repository
+                .Setup(x => x.GetMessagesAsync(ConversationId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(stored.ToList());
+            return repository;
+        }
+
+        private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
+            => new(repository.Object, Mock.Of<IAIFileStore>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+
+        [Fact]
+        public async Task NewConversation_NoStoredMessages_ReturnsCandidatesUnchanged()
+        {
+            var provider = CreateProvider(RepositoryReturning());
+            AIMessage[] candidates = [Message("user", "Hello")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task CandidatesDoNotOverlapStoredTail_ReturnsCandidatesUnchanged()
+        {
+            var provider = CreateProvider(RepositoryReturning(Message("assistant", "Hi")));
+            AIMessage[] candidates = [Message("user", "A genuinely new message")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task LeadingRunDuplicatesStoredTail_IsDroppedKeepingOnlyTheGenuinelyNewMessage()
+        {
+            // The client re-sent the previous turn (already persisted) plus one genuinely new message —
+            // exactly what a corrupted `#persisted` boundary produces.
+            var provider = CreateProvider(RepositoryReturning(
+                Message("user", "Hello"),
+                Message("assistant", "Hi there")));
+            AIMessage[] candidates =
+            [
+                Message("user", "Hello"),
+                Message("assistant", "Hi there"),
+                Message("user", "How are you?"),
+            ];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.Count.ShouldBe(1);
+            result[0].Role.ShouldBe("user");
+            result[0].ContentJson.ShouldBe("How are you?");
+        }
+
+        [Fact]
+        public async Task EntireCandidateListDuplicatesStoredTail_ReturnsEmpty()
+        {
+            var provider = CreateProvider(RepositoryReturning(
+                Message("user", "Hello"),
+                Message("assistant", "Hi there")));
+            AIMessage[] candidates =
+            [
+                Message("user", "Hello"),
+                Message("assistant", "Hi there"),
+            ];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task SameRoleButDifferentContent_IsNotTreatedAsADuplicate()
+        {
+            var provider = CreateProvider(RepositoryReturning(Message("user", "Hello")));
+            AIMessage[] candidates = [Message("user", "Hello again, but different")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+    }
 }

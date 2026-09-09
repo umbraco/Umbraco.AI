@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [17.4.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.2...Umbraco.AI@17.4.0-rc.3) (2026-09-08)
+## [17.4.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.2...Umbraco.AI@17.4.0-rc.3) (2026-09-09)
 
 ### fix
 
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **core:** Let get_umbraco_content enrich from Automate automations too ([7e3807b](https://github.com/umbraco/Umbraco.AI/commit/7e3807b9200583a84fd8a02f22bd9752bc009da0))
 * **core:** Make set/add/clear/remove/move content-value tools patch instead of wiping properties ([f2bca51](https://github.com/umbraco/Umbraco.AI/commit/f2bca513c10dad06d3223ab136f6565b8aff9543))
 * **core:** Turn on throwOnError so a failed request always shows a notification ([24684d0](https://github.com/umbraco/Umbraco.AI/commit/24684d039ac6e0f41fc61d446925c7e8c312841e)), closes [#334](https://github.com/umbraco/Umbraco.AI/issues/334)
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([16731d5](https://github.com/umbraco/Umbraco.AI/commit/16731d503e14e622c923fafe913e050863e541d1))
 
 ## [17.4.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.1...Umbraco.AI@17.4.0-rc.2) (2026-08-21)
 

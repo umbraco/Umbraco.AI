@@ -6,13 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [17.2.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0-rc.2...Umbraco.AI.Agent@17.2.0-rc.3) (2026-09-08)
+## [17.2.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0-rc.2...Umbraco.AI.Agent@17.2.0-rc.3) (2026-09-09)
 
 ### fix
 
 * **agent:** Bind persisted agent runs to their session so history persists ([b4b282b](https://github.com/umbraco/Umbraco.AI/commit/b4b282b56df5b573553a6bb168fe9ee4a5598266))
 * **agent:** Catch a failed chat-attachment fetch instead of an unhandled rejection ([fa71be5](https://github.com/umbraco/Umbraco.AI/commit/fa71be5a6200b401d9f9a342fb28d0fa7496e8ab))
 * **agent:** Resolve dangling approvals and unsafe session-save in persisted runs ([563ecb9](https://github.com/umbraco/Umbraco.AI/commit/563ecb944ceded50b6e29bbcd6de2942233eb28d))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([16731d5](https://github.com/umbraco/Umbraco.AI/commit/16731d503e14e622c923fafe913e050863e541d1))
 
 ### refactor
 

@@ -319,10 +319,10 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     /// untouched, so a false negative here costs a duplicate row rather than a failed run. Logs at
     /// information level so a drop is diagnosable rather than silently disappearing.
     /// </summary>
-    private async Task<IReadOnlyList<AIMessage>> DropAlreadyPersistedTailAsync(
+    internal async Task<IReadOnlyList<AIMessage>> DropAlreadyPersistedTailAsync(
         Guid conversationId,
         IReadOnlyList<AIMessage> candidates,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var stored = await _repository.GetMessagesAsync(conversationId, cancellationToken);
         var maxOverlap = Math.Min(candidates.Count, stored.Count);

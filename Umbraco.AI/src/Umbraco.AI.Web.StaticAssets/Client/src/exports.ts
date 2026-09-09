@@ -29,4 +29,4 @@ export {
 } from "./api/index.js";
 
 // Export client ready promise for nested packages to wait on
-export { coreClientReady } from "./app.js";
+export { coreClientReady } from "./client-ready.js";

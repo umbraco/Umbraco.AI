@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
@@ -18,7 +19,10 @@ public class ConversationChatHistoryProviderTests
     private static readonly Guid ConversationId = Guid.NewGuid();
 
     private static ConversationChatHistoryProvider CreateProvider(Mock<IAIFileStore>? fileStore = null)
-        => new(Mock.Of<IAIConversationRepository>(), (fileStore ?? new Mock<IAIFileStore>()).Object);
+        => new(
+            Mock.Of<IAIConversationRepository>(),
+            (fileStore ?? new Mock<IAIFileStore>()).Object,
+            NullLogger<ConversationChatHistoryProvider>.Instance);
 
     [Fact]
     public async Task ToStoredMessagesAsync_DropsTheInjectedSystemMessage()
@@ -249,7 +253,7 @@ public class ConversationChatHistoryProviderTests
         }
 
         private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
-            => new(repository.Object, Mock.Of<IAIFileStore>());
+            => new(repository.Object, Mock.Of<IAIFileStore>(), NullLogger<ConversationChatHistoryProvider>.Instance);
 
         [Fact]
         public async Task GetDanglingApprovalRequestsAsync_RequestWithNoResponse_IsReturned()

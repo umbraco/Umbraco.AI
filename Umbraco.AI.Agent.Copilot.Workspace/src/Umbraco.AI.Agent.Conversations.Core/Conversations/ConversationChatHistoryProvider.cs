@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Core.FileStore;
 
 namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
@@ -34,12 +35,17 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
 
     private readonly IAIConversationRepository _repository;
     private readonly IAIFileStore _fileStore;
+    private readonly ILogger<ConversationChatHistoryProvider> _logger;
     private readonly ProviderSessionState<ConversationSessionState> _sessionState;
 
-    internal ConversationChatHistoryProvider(IAIConversationRepository repository, IAIFileStore fileStore)
+    internal ConversationChatHistoryProvider(
+        IAIConversationRepository repository,
+        IAIFileStore fileStore,
+        ILogger<ConversationChatHistoryProvider> logger)
     {
         _repository = repository;
         _fileStore = fileStore;
+        _logger = logger;
         _sessionState = new ProviderSessionState<ConversationSessionState>(
             stateInitializer: _ => new ConversationSessionState(),
             stateKey: typeof(ConversationChatHistoryProvider).FullName!,
@@ -293,8 +299,70 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return;
         }
 
+        // Defence in depth against a client bug that re-uploads already-persisted messages as "new"
+        // (the client keeps its own not-yet-persisted boundary and a corrupted one re-sends a prefix
+        // the server already holds — see the Copilot Workspace's server-persisted conversation
+        // strategy). Drop that duplicate prefix here so a client-side bug can't double-write history.
+        newMessages = await DropAlreadyPersistedTailAsync(conversationId, newMessages, cancellationToken);
+        if (newMessages.Count == 0)
+        {
+            return;
+        }
+
         await _repository.AddMessagesAsync(conversationId, newMessages, cancellationToken);
     }
+
+    /// <summary>
+    /// Drops the leading run of <paramref name="candidates"/> that exactly duplicates the tail of what's
+    /// already stored for <paramref name="conversationId"/> — same role and same content, in sequence.
+    /// Never throws: a comparison that finds no overlap just leaves <paramref name="candidates"/>
+    /// untouched, so a false negative here costs a duplicate row rather than a failed run. Logs at
+    /// information level so a drop is diagnosable rather than silently disappearing.
+    /// </summary>
+    private async Task<IReadOnlyList<AIMessage>> DropAlreadyPersistedTailAsync(
+        Guid conversationId,
+        IReadOnlyList<AIMessage> candidates,
+        CancellationToken cancellationToken)
+    {
+        var stored = await _repository.GetMessagesAsync(conversationId, cancellationToken);
+        var maxOverlap = Math.Min(candidates.Count, stored.Count);
+
+        for (var overlap = maxOverlap; overlap > 0; overlap--)
+        {
+            var isDuplicateTail = true;
+            for (var i = 0; i < overlap; i++)
+            {
+                if (!IsSameContent(candidates[i], stored[stored.Count - overlap + i]))
+                {
+                    isDuplicateTail = false;
+                    break;
+                }
+            }
+
+            if (!isDuplicateTail)
+            {
+                continue;
+            }
+
+            _logger.LogInformation(
+                "Conversation {ConversationId}: dropped {Count} message(s) that duplicated the tail of " +
+                "the stored transcript before persisting a new turn (the client re-sent already-persisted " +
+                "messages as new).",
+                conversationId,
+                overlap);
+
+            return candidates.Skip(overlap).ToList();
+        }
+
+        return candidates;
+    }
+
+    /// <summary>Same role and identical serialized content — the durable record carries no volatile
+    /// fields (timestamps/ids live in <see cref="AIMessage"/> columns, not <see cref="AIMessage.ContentJson"/>),
+    /// so a genuine re-send of the same client-built message serializes byte-for-byte identically.</summary>
+    private static bool IsSameContent(AIMessage candidate, AIMessage stored) =>
+        string.Equals(candidate.Role, stored.Role, StringComparison.Ordinal) &&
+        string.Equals(candidate.ContentJson, stored.ContentJson, StringComparison.Ordinal);
 
     /// <summary>
     /// Selects what a finished run contributes to the durable history. The base <c>InvokedCoreAsync</c> has

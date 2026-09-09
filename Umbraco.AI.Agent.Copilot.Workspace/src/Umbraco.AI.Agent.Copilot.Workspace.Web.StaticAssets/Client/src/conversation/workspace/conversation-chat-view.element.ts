@@ -14,7 +14,12 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
     #context = new UaiCopilotWorkspaceChatContext(this);
 
     @state() private _readonly = false;
-    @state() private _ready = false;
+    /** True once the store knows the target's mode (loaded, or a draft) — gates the composer flash. */
+    @state() private _resolved = false;
+    /** True once the chat context's history load has resolved for the *currently targeted* conversation —
+     *  false again the moment the target changes. Guards against sending before `#persisted` is correct
+     *  (see `UaiServerPersistedConversationStrategy`). */
+    @state() private _historyLoaded = false;
 
     /** The shared chat element; used to focus its composer and re-arm auto-scroll when the conversation changes. */
     @query("uai-chat")
@@ -23,9 +28,10 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
     constructor() {
         super();
         void this.#context.loadAgents();
+        this.observe(this.#context.historyLoaded$, (value) => (this._historyLoaded = value ?? false));
         this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
             this.observe(store?.isReadonly$, (value) => (this._readonly = value ?? false));
-            this.observe(store?.isResolved$, (value) => (this._ready = value ?? false));
+            this.observe(store?.isResolved$, (value) => (this._resolved = value ?? false));
             // Re-key auto-scroll and composer focus on every target the store is pointed at, not just
             // this view's first mount — the store re-targets within a mount (a draft promoted to its real
             // conversation, or the user picking a different saved conversation), and `<uai-chat>` is never
@@ -41,9 +47,11 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
     override render() {
         // Property bindings (not `?attr`): `ready` defaults true on the element, and a boolean-attribute
         // binding of false only removes the attribute (a no-op when never set), leaving the property true
-        // and flashing the composer. Setting the property is unambiguous.
+        // and flashing the composer. Setting the property is unambiguous. Both the store's resolution and
+        // the chat context's history load must be true — either alone lets the user send before the
+        // server-persisted strategy's boundary is correct, re-sending already-stored messages as new.
         return html`<uai-chat
-            .ready=${this._ready}
+            .ready=${this._resolved && this._historyLoaded}
             .readonly=${this._readonly}
             readonly-notice=${this.localize.term("uaiCopilotWorkspace_readOnlyNotice")}
         ></uai-chat>`;

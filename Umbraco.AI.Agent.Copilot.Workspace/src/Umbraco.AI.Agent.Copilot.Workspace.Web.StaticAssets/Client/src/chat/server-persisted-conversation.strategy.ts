@@ -21,6 +21,17 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
     #repository: UaiConversationRepository;
     #conversationId?: string;
     #persisted = 0;
+    /**
+     * True once {@link loadInitial} has resolved for the *currently bound* conversation. `outbound()`
+     * consults this as a last-resort guard: the AG-UI turn endpoint (SSE) carries no authoritative
+     * persisted-count or message-id data to resync `#persisted` from — `RunFinishedEvent.Result` is
+     * unused today and `MessagesSnapshotEvent` only fires conditionally (file-reference rewrites) with
+     * the client's own outbound turn, not the server's durable tail — so this arithmetic boundary is
+     * still the source of truth in the normal case. This flag only catches the case where something
+     * calls `outbound()` before that arithmetic has ever been initialised for the bound id (e.g. a caller
+     * that bypasses the composer-level gate in `conversation-chat-view.element.ts`).
+     */
+    #loaded = false;
 
     constructor(repository: UaiConversationRepository) {
         this.#repository = repository;
@@ -30,6 +41,7 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
     setConversationId(conversationId: string | undefined): void {
         this.#conversationId = conversationId;
         this.#persisted = 0;
+        this.#loaded = false;
     }
 
     createClient(agent: UaiAgentItem, callbacks: AgentClientCallbacks): UaiAgentClient {
@@ -57,15 +69,32 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
         const id = this.#conversationId;
         if (!id) {
             this.#persisted = 0;
+            this.#loaded = true;
             return [];
         }
         const { data } = await this.#repository.requestMessages(id);
         const messages = toDisplayMessages(data?.items ?? []);
         this.#persisted = messages.length;
+        this.#loaded = true;
         return messages;
     }
 
+    /**
+     * Refuses to send anything for a bound conversation whose history hasn't loaded yet — the boundary
+     * below is meaningless before `loadInitial()` has run for it, and sending here would re-upload the
+     * conversation's own persisted history as "new", duplicating it server-side. This is a last-resort
+     * guard: `conversation-chat-view.element.ts` already keeps the composer disabled until history load
+     * resolves (see `UaiCopilotWorkspaceChatContext.historyLoaded$`), so this should not trigger in the
+     * normal flow — it exists for any caller that reaches the strategy without going through that gate.
+     */
     outbound(allMessages: UaiChatMessage[]): UaiChatMessage[] {
+        if (this.#conversationId && !this.#loaded) {
+            console.warn(
+                "[UaiServerPersistedConversationStrategy] Refusing to send: history for the bound " +
+                    "conversation has not finished loading, so the persisted boundary is not yet known.",
+            );
+            return [];
+        }
         return allMessages.slice(this.#persisted);
     }
 

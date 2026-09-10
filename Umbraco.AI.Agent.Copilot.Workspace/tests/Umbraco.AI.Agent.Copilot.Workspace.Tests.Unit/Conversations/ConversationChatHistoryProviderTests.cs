@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
@@ -18,7 +19,10 @@ public class ConversationChatHistoryProviderTests
     private static readonly Guid ConversationId = Guid.NewGuid();
 
     private static ConversationChatHistoryProvider CreateProvider(Mock<IAIFileStore>? fileStore = null)
-        => new(Mock.Of<IAIConversationRepository>(), (fileStore ?? new Mock<IAIFileStore>()).Object);
+        => new(
+            Mock.Of<IAIConversationRepository>(),
+            (fileStore ?? new Mock<IAIFileStore>()).Object,
+            NullLogger<ConversationChatHistoryProvider>.Instance);
 
     [Fact]
     public async Task ToStoredMessagesAsync_DropsTheInjectedSystemMessage()
@@ -249,7 +253,7 @@ public class ConversationChatHistoryProviderTests
         }
 
         private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
-            => new(repository.Object, Mock.Of<IAIFileStore>());
+            => new(repository.Object, Mock.Of<IAIFileStore>(), NullLogger<ConversationChatHistoryProvider>.Instance);
 
         [Fact]
         public async Task GetDanglingApprovalRequestsAsync_RequestWithNoResponse_IsReturned()
@@ -313,6 +317,156 @@ public class ConversationChatHistoryProviderTests
             var dangling = await provider.GetDanglingApprovalRequestsAsync(Guid.Empty);
 
             dangling.ShouldBeEmpty();
+        }
+    }
+
+    /// <summary>
+    /// Defence in depth against the client-side conversation-message-duplication bug: a client whose
+    /// not-yet-persisted boundary is corrupted re-sends messages the server already holds as "new".
+    /// <see cref="ConversationChatHistoryProvider.DropAlreadyPersistedTailAsync"/> is the last line of
+    /// defence in <c>StoreChatHistoryAsync</c> that catches this before it double-writes history.
+    /// </summary>
+    public class DropAlreadyPersistedTail
+    {
+        private static AIMessage Message(string role, string content) => new() { Role = role, ContentJson = content };
+
+        /// <summary>Builds an <see cref="AIMessage"/> with real, production-shaped <c>ContentJson</c> — a
+        /// serialized <see cref="ChatMessage"/>, optionally carrying a <see cref="ChatMessage.MessageId"/> —
+        /// so tests can exercise the id-comparison path in <c>IsSameContent</c> rather than only its
+        /// content-comparison fallback (which is all the plain-text <see cref="Message"/> helper above can
+        /// reach, since its non-JSON <c>ContentJson</c> always fails to deserialize).</summary>
+        private static AIMessage SerializedMessage(string role, string content, string? messageId = null)
+        {
+            var chatMessage = new ChatMessage(new ChatRole(role), content) { MessageId = messageId };
+            return new AIMessage
+            {
+                Role = role,
+                ContentJson = JsonSerializer.Serialize(chatMessage, AIJsonUtilities.DefaultOptions),
+            };
+        }
+
+        private static Mock<IAIConversationRepository> RepositoryReturning(params AIMessage[] stored)
+        {
+            var repository = new Mock<IAIConversationRepository>();
+            repository
+                .Setup(x => x.GetMessagesAsync(ConversationId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(stored.ToList());
+            return repository;
+        }
+
+        private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
+            => new(repository.Object, Mock.Of<IAIFileStore>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+
+        [Fact]
+        public async Task NewConversation_NoStoredMessages_ReturnsCandidatesUnchanged()
+        {
+            var provider = CreateProvider(RepositoryReturning());
+            AIMessage[] candidates = [Message("user", "Hello")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task CandidatesDoNotOverlapStoredTail_ReturnsCandidatesUnchanged()
+        {
+            var provider = CreateProvider(RepositoryReturning(Message("assistant", "Hi")));
+            AIMessage[] candidates = [Message("user", "A genuinely new message")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task LeadingRunDuplicatesStoredTail_IsDroppedKeepingOnlyTheGenuinelyNewMessage()
+        {
+            // The client re-sent the previous turn (already persisted) plus one genuinely new message —
+            // exactly what a corrupted `#persisted` boundary produces.
+            var provider = CreateProvider(RepositoryReturning(
+                Message("user", "Hello"),
+                Message("assistant", "Hi there")));
+            AIMessage[] candidates =
+            [
+                Message("user", "Hello"),
+                Message("assistant", "Hi there"),
+                Message("user", "How are you?"),
+            ];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.Count.ShouldBe(1);
+            result[0].Role.ShouldBe("user");
+            result[0].ContentJson.ShouldBe("How are you?");
+        }
+
+        [Fact]
+        public async Task EntireCandidateListDuplicatesStoredTail_ReturnsEmpty()
+        {
+            var provider = CreateProvider(RepositoryReturning(
+                Message("user", "Hello"),
+                Message("assistant", "Hi there")));
+            AIMessage[] candidates =
+            [
+                Message("user", "Hello"),
+                Message("assistant", "Hi there"),
+            ];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task SameRoleButDifferentContent_IsNotTreatedAsADuplicate()
+        {
+            var provider = CreateProvider(RepositoryReturning(Message("user", "Hello")));
+            AIMessage[] candidates = [Message("user", "Hello again, but different")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task SameMessageId_IsTreatedAsADuplicate()
+        {
+            // A genuine client re-send of the same message carries the same client-issued id.
+            var provider = CreateProvider(RepositoryReturning(SerializedMessage("user", "Hello", "msg-1")));
+            AIMessage[] candidates = [SerializedMessage("user", "Hello", "msg-1")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task SameContentDifferentMessageId_IsNotTreatedAsADuplicate()
+        {
+            // Two genuinely different messages that happen to share identical text (the user replying
+            // "ok" twice in separate turns, say) must never be mistaken for a re-send — this is exactly
+            // the false positive pure content-comparison risked before ids were compared.
+            var provider = CreateProvider(RepositoryReturning(SerializedMessage("user", "ok", "msg-1")));
+            AIMessage[] candidates = [SerializedMessage("user", "ok", "msg-2")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task NoMessageIdOnEitherSide_FallsBackToContentComparison()
+        {
+            // A response message the model itself never assigned an id to (or a row stored before ids
+            // were carried through) still gets deduped, via the same role + identical content it always
+            // used to be compared on.
+            var provider = CreateProvider(RepositoryReturning(SerializedMessage("assistant", "Hi there")));
+            AIMessage[] candidates = [SerializedMessage("assistant", "Hi there")];
+
+            var result = await provider.DropAlreadyPersistedTailAsync(ConversationId, candidates);
+
+            result.ShouldBeEmpty();
         }
     }
 }

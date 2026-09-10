@@ -6,11 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [17.4.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.2...Umbraco.AI@17.4.0-rc.3) (2026-09-09)
+## [17.4.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.2...Umbraco.AI@17.4.0-rc.3) (2026-09-10)
 
 ### fix
 
 * **core:** Actually fix block labels in the Copilot context selector ([9fa53c4](https://github.com/umbraco/Umbraco.AI/commit/9fa53c4d8169671734f6cf35117acc4fcb75a80d)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343)
+* **core:** Contribute the entity the user actually selected, not the last-detected one ([1d2d2b9](https://github.com/umbraco/Umbraco.AI/commit/1d2d2b9652b49215976c4d468dcd5155fd728598))
 * **core:** Ensure an Umbraco context exists for content read tools ([962be55](https://github.com/umbraco/Umbraco.AI/commit/962be55580e96a817406e7e3adc4bd65537bec70))
 * **core:** Give each block its own label in the Copilot context selector ([36f085d](https://github.com/umbraco/Umbraco.AI/commit/36f085dde442efd8b86834dc166e9f9f49793f83))
 * **core:** Let get_umbraco_content enrich from Automate automations too ([7e3807b](https://github.com/umbraco/Umbraco.AI/commit/7e3807b9200583a84fd8a02f22bd9752bc009da0))

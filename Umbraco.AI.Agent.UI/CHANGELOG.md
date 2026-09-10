@@ -6,11 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [17.1.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@17.1.0-rc.2...Umbraco.AI.Agent.UI@17.1.0-rc.3) (2026-09-09)
+## [17.1.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@17.1.0-rc.2...Umbraco.AI.Agent.UI@17.1.0-rc.3) (2026-09-10)
 
 ### fix
 
 * **agent-ui,copilot-workspace:** Stop chat auto-scroll from overriding a manual scroll ([03c381f](https://github.com/umbraco/Umbraco.AI/commit/03c381f9c622f8682e4b08ce0cd2a3fd857022bb)), closes [#348](https://github.com/umbraco/Umbraco.AI/issues/348)
+* **conversations,agent-ui:** Stop returning to a conversation duplicating user messages ([5cde524](https://github.com/umbraco/Umbraco.AI/commit/5cde524c75c485ad12a191540c40d96794ac2be5))
 * **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([16731d5](https://github.com/umbraco/Umbraco.AI/commit/16731d503e14e622c923fafe913e050863e541d1))
 
 ## [17.1.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@17.1.0-rc.1...Umbraco.AI.Agent.UI@17.1.0-rc.2) (2026-08-21)

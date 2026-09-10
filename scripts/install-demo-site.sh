@@ -259,6 +259,9 @@ add_product_projects "Umbraco.AI.MicrosoftFoundry" "Providers/MicrosoftFoundry"
 echo "Adding Umbraco.AI.Mistral projects..."
 add_product_projects "Umbraco.AI.Mistral" "Providers/Mistral"
 
+echo "Adding Umbraco.AI.OpenRouter projects..."
+add_product_projects "Umbraco.AI.OpenRouter" "Providers/OpenRouter"
+
 echo "Adding Umbraco.AI.TogetherAI projects..."
 add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
 
@@ -346,6 +349,11 @@ fi
 # Mistral provider
 if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+fi
+
+# OpenRouter provider
+if [ -f "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj"
 fi
 
 # TogetherAI provider

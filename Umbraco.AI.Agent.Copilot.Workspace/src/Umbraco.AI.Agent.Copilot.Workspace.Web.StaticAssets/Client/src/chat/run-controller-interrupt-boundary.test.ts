@@ -9,9 +9,9 @@ import {
 import type { AgentClientCallbacks, RunFinishedEvent, UaiAgentClient } from "@umbraco-ai/agent";
 import type { UmbController, UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
-// `@umbraco-ai/core` resolves to a local (empty) stub under vitest — see the `test.alias` entry and its
-// doc comment in `vitest.config.ts` / `src/test-stubs/umbraco-ai-core.stub.ts`. Real production code
-// (and the actual app) never sees it; the real build externalizes that package entirely.
+// `@umbraco-ai/core` resolves to its real TS source under vitest — see the `test.alias` entry and its
+// doc comment in `vitest.config.ts`. Real production code (and the actual app) never resolves it this
+// way; the real build externalizes that package entirely.
 
 /**
  * Minimal in-memory {@link UmbControllerHost} — just enough bookkeeping to host the

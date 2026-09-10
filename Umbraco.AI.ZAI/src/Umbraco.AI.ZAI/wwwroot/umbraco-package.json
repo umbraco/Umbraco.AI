@@ -1,0 +1,17 @@
+{
+  "name": "Umbraco AI Z.AI Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.ZAI.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAIZAI/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

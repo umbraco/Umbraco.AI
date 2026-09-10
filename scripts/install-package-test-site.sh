@@ -232,6 +232,9 @@ dotnet add package Umbraco.AI.Google $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Amazon..."
 dotnet add package Umbraco.AI.Amazon $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.Alibaba..."
+dotnet add package Umbraco.AI.Alibaba $PRERELEASE_FLAG
+
 echo "  Installing Umbraco.AI.MicrosoftFoundry..."
 dotnet add package Umbraco.AI.MicrosoftFoundry $PRERELEASE_FLAG
 

@@ -11,27 +11,6 @@ namespace Umbraco.AI.Core.Media;
 /// </summary>
 internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 {
-    private static readonly Dictionary<string, string> ExtensionToMediaType = new(StringComparer.OrdinalIgnoreCase)
-    {
-        // Images
-        [".jpg"] = "image/jpeg",
-        [".jpeg"] = "image/jpeg",
-        [".png"] = "image/png",
-        [".gif"] = "image/gif",
-        [".webp"] = "image/webp",
-        [".bmp"] = "image/bmp",
-
-        // Audio
-        [".mp3"] = "audio/mpeg",
-        [".wav"] = "audio/wav",
-        [".m4a"] = "audio/mp4",
-        [".mp4"] = "audio/mp4",
-        [".ogg"] = "audio/ogg",
-        [".oga"] = "audio/ogg",
-        [".webm"] = "audio/webm",
-        [".flac"] = "audio/flac",
-    };
-
     private readonly IMediaService _mediaService;
     private readonly MediaFileManager _mediaFileManager;
     private readonly IOptionsMonitor<AIMediaOptions> _optionsMonitor;
@@ -120,6 +99,45 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
         {
             _logger.LogWarning(ex, "Failed to resolve media from value: {ValueType}", value.GetType().Name);
             return Task.FromResult<AIMediaContent?>(null);
+        }
+    }
+
+    /// <inheritdoc />
+    public string? GetMediaType(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var (filePath, mediaKey) = ExtractPathOrKey(value);
+
+            string? resolvedPath;
+            if (mediaKey.HasValue)
+            {
+                var media = _mediaService.GetById(mediaKey.Value);
+                var umbracoFile = media?.GetValue<string>("umbracoFile");
+                resolvedPath = string.IsNullOrEmpty(umbracoFile) ? null : ExtractFilePathFromUmbracoFileValue(umbracoFile);
+            }
+            else
+            {
+                resolvedPath = filePath;
+            }
+
+            if (string.IsNullOrEmpty(resolvedPath))
+            {
+                return null;
+            }
+
+            var extension = Path.GetExtension(resolvedPath);
+            return AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType) ? mediaType : null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve media type from value: {ValueType}", value.GetType().Name);
+            return null;
         }
     }
 
@@ -242,24 +260,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             return null;
         }
 
-        // umbracoFile might be JSON (image cropper) or plain path
-        string? filePath;
-        if (umbracoFile.StartsWith('{'))
-        {
-            try
-            {
-                using var doc = JsonDocument.Parse(umbracoFile);
-                filePath = doc.RootElement.TryGetProperty("src", out var srcProp) ? srcProp.GetString() : null;
-            }
-            catch (JsonException)
-            {
-                filePath = umbracoFile;
-            }
-        }
-        else
-        {
-            filePath = umbracoFile;
-        }
+        var filePath = ExtractFilePathFromUmbracoFileValue(umbracoFile);
 
         if (string.IsNullOrEmpty(filePath))
         {
@@ -273,6 +274,25 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
             MediaType = content.MediaType,
             MediaKey = mediaKey,
         };
+    }
+
+    private static string? ExtractFilePathFromUmbracoFileValue(string umbracoFile)
+    {
+        // umbracoFile might be JSON (image cropper) or plain path
+        if (umbracoFile.StartsWith('{'))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(umbracoFile);
+                return doc.RootElement.TryGetProperty("src", out var srcProp) ? srcProp.GetString() : null;
+            }
+            catch (JsonException)
+            {
+                return umbracoFile;
+            }
+        }
+
+        return umbracoFile;
     }
 
     private AIMediaContent? LoadFromPath(string filePath)
@@ -290,7 +310,7 @@ internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 
         // Get file extension for media type
         var extension = Path.GetExtension(filePath);
-        if (!ExtensionToMediaType.TryGetValue(extension, out var mediaType))
+        if (!AIMediaExtensionResolver.TryGetMediaType(extension, out var mediaType))
         {
             _logger.LogWarning("Unsupported media extension: {Extension}", extension);
             return null;

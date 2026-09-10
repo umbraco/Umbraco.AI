@@ -1,6 +1,6 @@
 ---
 name: post-release-cleanup
-description: Merges a release or hotfix branch back into vN/main and vN/dev, bumps version.json on vN/dev so nightly builds produce versions higher than the released version, and optionally deletes the release branch. If the release is a new major version, creates the new vN+1/dev and vN+1/main branches and updates the GitHub default branch. Use after a release has been deployed and tagged.
+description: Merges a release or hotfix branch back into vN/main and vN/dev, bumps version.json on vN/dev so nightly builds produce versions higher than the released version, checks GitHub issues and the Azure DevOps AI Team backlog for anything needing a release-confirmation comment or closing, and optionally deletes the release branch. If the release is a new major version, creates the new vN+1/dev and vN+1/main branches and updates the GitHub default branch. Use after a release has been deployed and tagged.
 ---
 
 # Post-Release Cleanup
@@ -9,7 +9,7 @@ You are the orchestrator for post-release cleanup in the Umbraco.AI repository.
 
 ## Task
 
-After a release has been deployed and tagged by the release pipeline, merge the release/hotfix branch back into the appropriate `vN/main` and `vN/dev`, bump `version.json` on `vN/dev` so nightly builds produce versions **higher** than the released version, and optionally clean up the branch. If this is the first release of a new major version, also create the new version's `dev`/`main` branches and update the GitHub default branch.
+After a release has been deployed and tagged by the release pipeline, merge the release/hotfix branch back into the appropriate `vN/main` and `vN/dev`, bump `version.json` on `vN/dev` so nightly builds produce versions **higher** than the released version, check whether any GitHub issues or Azure DevOps work items need a release-confirmation comment or closing, and optionally clean up the branch. If this is the first release of a new major version, also create the new version's `dev`/`main` branches and update the GitHub default branch.
 
 ## Why This Matters
 
@@ -200,7 +200,36 @@ Let `new_prefix` = `v{released_major}` (e.g. `v19`).
      git checkout ${new_prefix}/dev
    ```
 
-### Phase 6: Cleanup (Optional)
+### Phase 6: Check Issue Tracker
+
+Before cleanup, check whether any tracked issues need closing or a release-confirmation comment now that the fix is actually live.
+
+1. **Find issues referenced by the merged PRs.** For each PR that landed on the release/hotfix branch (from Phase 1's commit range, or from PR numbers you already know from preparing this release), check `mcp__github__issue_read` (`get`) on any `Fixes #N`/`Closes #N` issue numbers mentioned in commit messages or PR bodies.
+
+2. **If an issue is already closed** (GitHub auto-closes on merge to the default branch — which happens well before the fix actually reaches users via a release), post a follow-up comment stating the actual released version(s) now available, e.g.:
+   ```
+   Fixed in 18.1.4 (and backported to 17.1.4 for the v17 line), both now available on NuGet.
+   ```
+   Posting a comment is public content — **always confirm with the user before posting**, per repo-wide safety norms. Don't post if the user doesn't respond or declines.
+
+3. **If an issue is still open** despite the fix being released, ask the user whether to close it (with the same release-confirmation comment) rather than closing it silently.
+
+4. **Search for duplicate open issues** describing the same symptoms (`mcp__github__search_issues`) that the fix likely also resolves. Surface any candidates to the user — don't close or comment on them without explicit confirmation, since a symptom match isn't proof of the same root cause.
+
+5. **Check the Azure DevOps AI Team backlog** for related open work items. Scope every query to the `Umbraco AI` tag (per root `CLAUDE.md` — the `D-Team Tracker` project is shared across teams, so an unscoped search returns cross-product noise) and match on keywords from the fix's actual symptoms/root cause (component names, error strings, issue title) rather than generic terms like "agent" or "file" alone, which over-match the whole backlog:
+   ```
+   mcp__azure-devops__wit_query (action: wiql), e.g.:
+   SELECT [System.Id], [System.Title], [System.State] FROM WorkItems
+   WHERE [System.TeamProject] = 'D-Team Tracker'
+     AND [System.Tags] CONTAINS 'Umbraco AI'
+     AND [System.State] NOT IN ('Closed','Removed','Done')
+     AND ([System.Title] CONTAINS '<specific term>' OR ...)
+   ```
+   Report any real matches to the user; don't change work item state without confirmation.
+
+6. **If nothing is found** in either tracker, say so explicitly in the summary (Phase 8) rather than omitting the check — this confirms the check ran, not that it was skipped.
+
+### Phase 7: Cleanup (Optional)
 
 1. **Ask the user** if they want to delete the release/hotfix branch (local + remote):
    ```
@@ -221,7 +250,7 @@ Let `new_prefix` = `v{released_major}` (e.g. `v19`).
    git checkout ${active_dev}
    ```
 
-### Phase 7: Summary
+### Phase 8: Summary
 
 Present a summary of everything that was done:
 
@@ -241,6 +270,10 @@ Major version cutover:
 - Created v19/main from v18/main
 - Created v19/dev  from v18/dev
 - GitHub default branch: v18/dev → v19/dev
+
+Issue tracker check:
+- GitHub #324: already closed, posted release-confirmation comment
+- Azure DevOps: no related open items found
 
 Branch cleanup: [deleted/kept]
 

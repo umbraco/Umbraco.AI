@@ -58,7 +58,7 @@
         }
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^17.3.3",
+        "@umbraco-ai/core": "^17.3.4",
         "@umbraco-ai/agent": "^17.1.6",
         "@umbraco-ai/agent-ui": "^17.0.4",
         "@umbraco-ai/agent-copilot": "^17.0.4",

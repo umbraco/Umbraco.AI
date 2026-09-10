@@ -5,15 +5,15 @@ export default defineConfig({
     test: {
         environment: "happy-dom",
         include: ["src/**/*.test.ts"],
-        // `@umbraco-ai/core` (and, transitively through it, parts of `@umbraco-ai/agent`'s barrel) has
-        // no "main"/"module" entry — only a `types` rollup — so it's unresolvable by a plain module
-        // loader outside the backoffice build pipeline, which externalizes it instead of bundling it
-        // (see `vite.config.ts`'s `rollupOptions.external`). Test-only aliases to local stubs let a test
-        // import a real class from `@umbraco-ai/agent-ui`/`@umbraco-ai/agent` without the transform
-        // failing on that unrelated, unresolvable transitive import. Never applied to the real build.
+        // `@umbraco-ai/core` has no "main"/"module" entry — only a `types` rollup — so it's
+        // unresolvable by a plain module loader outside the backoffice build pipeline, which
+        // externalizes it instead of bundling it (see `vite.config.ts`'s `rollupOptions.external`).
+        // `@umbraco-ai/agent-ui`'s barrel transitively imports from it via `@umbraco-ai/agent`'s
+        // agent-picker component, so a test importing from `@umbraco-ai/agent-ui` needs the bare
+        // specifier to resolve to something. See `src/test-stubs/umbraco-ai-core.stub.ts` — it's
+        // deliberately an empty module. Never applied to the real build.
         alias: {
             "@umbraco-ai/core": resolve(__dirname, "src/test-stubs/umbraco-ai-core.stub.ts"),
-            "@umbraco-ai/agent": resolve(__dirname, "src/test-stubs/umbraco-ai-agent.stub.ts"),
         },
     },
 });

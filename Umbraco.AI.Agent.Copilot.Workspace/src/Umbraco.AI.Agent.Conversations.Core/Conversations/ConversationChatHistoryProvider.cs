@@ -357,12 +357,29 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         return candidates;
     }
 
-    /// <summary>Same role and identical serialized content — the durable record carries no volatile
-    /// fields (timestamps/ids live in <see cref="AIMessage"/> columns, not <see cref="AIMessage.ContentJson"/>),
-    /// so a genuine re-send of the same client-built message serializes byte-for-byte identically.</summary>
-    private static bool IsSameContent(AIMessage candidate, AIMessage stored) =>
-        string.Equals(candidate.Role, stored.Role, StringComparison.Ordinal) &&
-        string.Equals(candidate.ContentJson, stored.ContentJson, StringComparison.Ordinal);
+    /// <summary>
+    /// Prefers matching by the client-issued <see cref="ChatMessage.MessageId"/> (carried into
+    /// <see cref="AIMessage.ContentJson"/> by <see cref="ToDomainAsync"/> since it's just another
+    /// property on the serialized <see cref="ChatMessage"/>) when both sides have one recorded. This is
+    /// the precise signal — two genuinely different messages that happen to share identical text (the
+    /// user replying "ok" twice in a row, say) still carry different ids, so they're never mistaken for
+    /// a re-send the way pure content-equality would. Falls back to same role + identical serialized
+    /// content when either side has no id — a row stored before
+    /// <see cref="Umbraco.AI.Agent.Core.AGUI.AGUIMessageConverter"/> began setting it, or a response
+    /// message the model itself never assigned one to.
+    /// </summary>
+    private static bool IsSameContent(AIMessage candidate, AIMessage stored)
+    {
+        var candidateMessageId = TryDeserialize(candidate.ContentJson)?.MessageId;
+        var storedMessageId = TryDeserialize(stored.ContentJson)?.MessageId;
+        if (!string.IsNullOrEmpty(candidateMessageId) && !string.IsNullOrEmpty(storedMessageId))
+        {
+            return string.Equals(candidateMessageId, storedMessageId, StringComparison.Ordinal);
+        }
+
+        return string.Equals(candidate.Role, stored.Role, StringComparison.Ordinal) &&
+            string.Equals(candidate.ContentJson, stored.ContentJson, StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Selects what a finished run contributes to the durable history. The base <c>InvokedCoreAsync</c> has

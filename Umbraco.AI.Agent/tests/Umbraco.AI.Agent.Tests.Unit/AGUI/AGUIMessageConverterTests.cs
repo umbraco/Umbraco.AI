@@ -62,6 +62,7 @@ public class AGUIMessageConverterTests
 
         // Assert
         result.Text.ShouldBe("Test content");
+        result.MessageId.ShouldBe(message.Id);
     }
 
     [Fact]
@@ -142,6 +143,8 @@ public class AGUIMessageConverterTests
         functionCall.ShouldNotBeNull();
         functionCall.CallId.ShouldBe("call-123");
         functionCall.Name.ShouldBe("get_weather");
+
+        result.MessageId.ShouldBe(message.Id);
     }
 
     [Fact]
@@ -164,6 +167,8 @@ public class AGUIMessageConverterTests
         var functionResult = result.Contents.OfType<FunctionResultContent>().FirstOrDefault();
         functionResult.ShouldNotBeNull();
         functionResult.CallId.ShouldBe("call-123");
+
+        result.MessageId.ShouldBe(message.Id);
     }
 
     [Fact]
@@ -314,6 +319,8 @@ public class AGUIMessageConverterTests
         // a reference instead of a second copy of these bytes.
         dataContent.AdditionalProperties.ShouldNotBeNull();
         dataContent.AdditionalProperties![Umbraco.AI.Agent.Core.FileStore.AIFileContentMarker.FileIdPropertyKey].ShouldBe("file-abc");
+
+        result.MessageId.ShouldBe(message.Id);
     }
 
     [Fact]
@@ -589,6 +596,7 @@ public class AGUIMessageConverterTests
 
         // Assert
         roundTripped.Contents.OfType<DataContent>().Single().Name.ShouldBe("example.csv");
+        roundTripped.MessageId.ShouldBe("msg-1");
     }
 
     #endregion

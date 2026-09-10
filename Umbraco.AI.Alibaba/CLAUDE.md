@@ -129,8 +129,8 @@ workspace-scoped endpoint.
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 17.x
+- Umbraco.AI 17.x
 - Microsoft.Extensions.AI.OpenAI (transitively brings the `OpenAI` .NET SDK)
 
 ## Target Framework

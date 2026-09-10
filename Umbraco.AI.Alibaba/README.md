@@ -25,8 +25,8 @@ dotnet add package Umbraco.AI.Alibaba
 
 ## Requirements
 
-- Umbraco CMS 18.0.0+
-- Umbraco.AI 18.0.0+
+- Umbraco CMS 17.0.0+
+- Umbraco.AI 17.0.0+
 - .NET 10.0
 - Alibaba Cloud Model Studio API key (from <https://bailian.console.alibabacloud.com/>)
 

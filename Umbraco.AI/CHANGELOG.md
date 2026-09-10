@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.3...Umbraco.AI@18.3.4) (2026-09-10)
+
+### fix
+
+* **core:** Actually fix block labels in the Copilot context selector ([5e8be5f](https://github.com/umbraco/Umbraco.AI/commit/5e8be5fcaa51a6ded8ce200fc50ab6bae01983cd)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343)
+
 ## [18.3.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.3.1...Umbraco.AI@18.3.3) (2026-09-10)
 
 ### feat

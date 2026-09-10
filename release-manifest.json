@@ -1,6 +1,8 @@
 {
-    "include": ["Umbraco.AI", "Umbraco.AI.Agent", "Umbraco.AI.Agent.UI"],
+    "include": ["Umbraco.AI"],
     "exclude": [
+        "Umbraco.AI.Agent",
+        "Umbraco.AI.Agent.UI",
         "Umbraco.AI.Agent.Copilot",
         "Umbraco.AI.Agent.Deploy",
         "Umbraco.AI.Amazon",

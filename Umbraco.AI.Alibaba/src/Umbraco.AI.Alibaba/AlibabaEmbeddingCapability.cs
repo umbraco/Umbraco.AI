@@ -16,11 +16,14 @@ public class AlibabaEmbeddingCapability(AlibabaProvider provider) : AIEmbeddingC
     private new AlibabaProvider Provider => (AlibabaProvider)base.Provider;
 
     /// <summary>
-    /// Patterns that match Alibaba text embedding models.
+    /// Patterns that match Alibaba text embedding models. A plain "embedding" substring
+    /// match is used rather than a "^text-embedding-" prefix because not all of Alibaba's
+    /// embedding models follow that naming — e.g. "qwen3.7-text-embedding" is prefixed
+    /// with the model family instead. Confirmed against a live model list during development.
     /// </summary>
     private static readonly Regex[] IncludePatterns =
     [
-        new(@"^text-embedding-", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"embedding", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     /// <inheritdoc />

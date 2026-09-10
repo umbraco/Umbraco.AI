@@ -45,17 +45,23 @@ public class AlibabaProvider : AIProviderBase<AlibabaProviderSettings>
 - Extends `AIChatCapabilityBase<AlibabaProviderSettings>`
 - Creates `IChatClient` via `OpenAIClient.GetChatClient(modelId).AsIChatClient()`
 - Uses the OpenAI `/chat/completions` shape
-- Discovers models dynamically via `GET /models` and filters with the `^qwen` regex, so new model
-  families (e.g. a future `qwen4-*`) are picked up without code changes. Model Studio also fronts
-  other vendors' models (DeepSeek, Kimi, GLM, MiniMax) behind the same endpoint — those are
-  filtered out here since dedicated providers already cover some of them.
+- Discovers models dynamically via `GET /models` and filters with the `^qwen` include regex, so
+  new model families (e.g. a future `qwen4-*`) are picked up without code changes. Model Studio
+  also fronts other vendors' models (DeepSeek, Kimi, GLM, MiniMax) behind the same endpoint —
+  those are filtered out here since dedicated providers already cover some of them.
+- Also excludes Qwen-prefixed models that don't speak chat/completions — image generation
+  (`qwen-image-*`), speech (`qwen-audio-*`, `qwen3-asr-*`, `qwen3-tts-*`), translation
+  (`qwen-mt-*`, `qwen3-livetranslate-*`), speech-to-speech (`qwen3-s2s-*`), realtime WebSocket
+  variants (`*-realtime`), and the `qwen3.7-text-embedding` embedding model. Confirmed against a
+  live 165-model catalog during development — the plain `^qwen` regex alone was too broad.
 - Default model: `qwen-plus`
 
 **Embedding Capability** (`AlibabaEmbeddingCapability`):
 
 - Extends `AIEmbeddingCapabilityBase<AlibabaProviderSettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` via `OpenAIClient.GetEmbeddingClient(modelId).AsIEmbeddingGenerator()`
-- Discovers models dynamically, filtered with the `^text-embedding-` regex
+- Discovers models dynamically, filtered with an `embedding` substring match — not all of
+  Alibaba's embedding models are `text-embedding-*` prefixed (`qwen3.7-text-embedding` isn't)
 - Default model: `text-embedding-v4`
 
 ### The "thinking" quirk (`AlibabaDisableThinkingPolicy`)
@@ -68,18 +74,25 @@ non-streaming calls to reasoning-capable models unless `enable_thinking` is pass
 `AlibabaDisableThinkingPolicy` injects `enable_thinking: false` into every `/chat/completions`
 request, **except** when the model ID contains `"thinking"` or `"instruct"` — per Alibaba's docs,
 `-thinking` models are thinking-only (they reject `enable_thinking: false`) and `-instruct` models
-don't support the toggle at all. This split is based on documentation, not a live-tested matrix —
-verify against the real API during smoke testing and widen the skip list if another model family
-turns out to reject the parameter.
+don't support the toggle at all.
 
-### Model discovery is unconfirmed against a live key
+Live testing against `qwen-plus`, `qwen3-max`, and `qwen3-max-preview` found calls succeed
+identically with or without `enable_thinking` — the documented "non-streaming fails without it"
+failure mode didn't reproduce for those models on the current API version. The policy is kept
+anyway since it's harmless where it isn't needed and guards against the documented failure mode
+for models/API versions where it does apply. The `thinking`/`instruct` skip list itself is still
+based on documentation rather than a live-tested matrix across the full model catalog — widen it
+if another family turns out to reject the parameter.
 
-`GET {endpoint}/models` is not documented for Model Studio's OpenAI-compatible mode, but probing
-it without an API key returns `401` (auth required) rather than `404` (route missing) on both the
-international and China endpoints — unlike Alibaba's own SDKs, which hard-code model IDs as
-constants, this suggests the route exists. This has **not** been confirmed against a real
-response body. If it turns out not to return usable data, the include-pattern approach in the
-capabilities above will need to fall back to a small hard-coded seed list instead.
+### Model discovery — confirmed against a live key
+
+`GET {endpoint}/models` is undocumented for Model Studio's OpenAI-compatible mode, but it works:
+confirmed live during development against both the flat international endpoint
+(`dashscope-intl.aliyuncs.com`) and a workspace-scoped endpoint, both returning an identical
+165-model OpenAI-style list (`{"object": "list", "data": [...]}`). Chat completions and embeddings
+were also confirmed live. The catalog mixes Qwen models with several other vendors' and several
+non-chat Alibaba capabilities (see the exclude regex above) — plan for it to keep growing and
+changing shape as Alibaba ships new model families.
 
 ### Settings
 

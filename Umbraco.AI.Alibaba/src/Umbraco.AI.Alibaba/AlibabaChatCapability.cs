@@ -26,6 +26,20 @@ public class AlibabaChatCapability(AlibabaProvider provider) : AIChatCapabilityB
         new(@"^qwen", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
+    /// <summary>
+    /// Patterns that exclude non-chat models even when they match an include pattern.
+    /// Alibaba reuses the "qwen" prefix for other capabilities — image generation
+    /// (qwen-image-*), speech (qwen-audio-*-asr-*, qwen3-asr-*, qwen3-tts-*), machine
+    /// translation (qwen-mt-*), live translation (qwen3-livetranslate-*), speech-to-speech
+    /// (qwen3-s2s-*), realtime WebSocket variants (*-realtime), and one text embedding
+    /// model (qwen3.7-text-embedding) — none of these speak the chat/completions shape.
+    /// Confirmed against a live model list (165 entries) during development.
+    /// </summary>
+    private static readonly Regex[] ExcludePatterns =
+    [
+        new(@"-image-|-audio-|-asr-|-tts-|-mt-|-livetranslate-|-s2s-|-realtime|embedding", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
+
     /// <inheritdoc />
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AlibabaProviderSettings settings,
@@ -48,5 +62,6 @@ public class AlibabaChatCapability(AlibabaProvider provider) : AIChatCapabilityB
             .AsIChatClient();
 
     private static bool IsChatModel(string modelId)
-        => IncludePatterns.Any(p => p.IsMatch(modelId));
+        => IncludePatterns.Any(p => p.IsMatch(modelId))
+           && !ExcludePatterns.Any(p => p.IsMatch(modelId));
 }

@@ -42,6 +42,9 @@ parameters:
           - name: Umbraco.AI.TogetherAI
             changeVar: TogetheraiChanged
             hasNpm: false
+          - name: Umbraco.AI.ZAI
+            changeVar: ZaiChanged
+            hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search
             changeVar: SearchChanged

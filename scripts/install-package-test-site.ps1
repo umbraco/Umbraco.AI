@@ -188,6 +188,7 @@ Install-Package "Umbraco.AI.FireworksAI"
 Install-Package "Umbraco.AI.HuggingFace"
 Install-Package "Umbraco.AI.Mistral"
 Install-Package "Umbraco.AI.TogetherAI"
+Install-Package "Umbraco.AI.ZAI"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Install-Package "Umbraco.AI.Prompt"

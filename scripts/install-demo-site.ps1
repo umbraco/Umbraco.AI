@@ -249,6 +249,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Provide
 Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "Providers/TogetherAI"
 
+Write-Host "Adding Umbraco.AI.ZAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.ZAI" -SolutionFolder "Providers/ZAI"
+
 # Step 7: Add add-on projects
 Write-Host "Adding Umbraco.AI.Prompt projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt" -SolutionFolder "Addons/Prompt"
@@ -338,6 +341,11 @@ if (Test-Path "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.cspr
 # TogetherAI provider
 if (Test-Path "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
+}
+
+# Z.AI provider
+if (Test-Path "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

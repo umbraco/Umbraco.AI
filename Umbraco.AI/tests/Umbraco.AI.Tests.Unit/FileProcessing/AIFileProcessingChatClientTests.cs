@@ -234,6 +234,92 @@ public class AIFileProcessingChatClientTests
         text.ShouldNotContain("base64");
     }
 
+    [Fact]
+    public async Task GetResponseAsync_WithWrongMimeTypeButCsvExtension_FallsBackToExtension()
+    {
+        // Arrange — Windows often reports .csv as application/vnd.ms-excel (the OS's registered
+        // handler) rather than text/csv; the extension fallback should still find the handler.
+        var handler = new FakeHandler("text/csv", "extracted,data");
+        var (client, inner) = CreateClient(handler);
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.User, [CreateDataContent(new byte[] { 1, 2, 3 }, "application/vnd.ms-excel", "report.csv")]),
+        };
+
+        // Act
+        await client.GetResponseAsync(messages);
+
+        // Assert
+        var contents = inner.LastMessages![0].Contents;
+        contents[0].ShouldBeOfType<TextContent>();
+        ((TextContent)contents[0]).Text.ShouldContain("extracted,data");
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithWrongMimeTypeButMarkdownExtension_FallsBackToExtension()
+    {
+        // Arrange — browsers often report .md as application/octet-stream (or empty) on Windows;
+        // the extension fallback should still find the handler.
+        var handler = new FakeHandler("text/markdown", "# Notes");
+        var (client, inner) = CreateClient(handler);
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.User, [CreateDataContent(new byte[] { 1, 2, 3 }, "application/octet-stream", "notes.md")]),
+        };
+
+        // Act
+        await client.GetResponseAsync(messages);
+
+        // Assert
+        var contents = inner.LastMessages![0].Contents;
+        contents[0].ShouldBeOfType<TextContent>();
+        ((TextContent)contents[0]).Text.ShouldContain("# Notes");
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithUnmatchedMimeTypeAndNoExtensionHandler_PassesThrough()
+    {
+        // Arrange — image/png matches no handler, and the .png extension fallback also matches
+        // no handler; this must still pass through unchanged (no regression from the fallback).
+        var handler = new FakeHandler("text/csv", "ignored");
+        var (client, inner) = CreateClient(handler);
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.User, [CreateDataContent(new byte[] { 1, 2, 3 }, "image/png", "photo.png")]),
+        };
+
+        // Act
+        await client.GetResponseAsync(messages);
+
+        // Assert
+        var contents = inner.LastMessages![0].Contents;
+        contents[0].ShouldBeOfType<DataContent>();
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithUnmatchedMimeTypeAndNoFilename_PassesThrough()
+    {
+        // Arrange — no filename means no extension to fall back to; the fallback path must be
+        // skipped entirely rather than throwing or misbehaving.
+        var handler = new FakeHandler("text/csv", "ignored");
+        var (client, inner) = CreateClient(handler);
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.User, [new DataContent(new byte[] { 1, 2, 3 }, "image/png")]),
+        };
+
+        // Act
+        await client.GetResponseAsync(messages);
+
+        // Assert
+        var contents = inner.LastMessages![0].Contents;
+        contents[0].ShouldBeOfType<DataContent>();
+    }
+
     #region Test Helpers
 
     private static (AIFileProcessingChatClient Client, CapturingChatClient Inner) CreateClient(

@@ -5,7 +5,7 @@
  * Blocks live inside a parent document but have their own workspace context.
  */
 
-import { map, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
+import { from, map, of, switchMap, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
 import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
     UaiEntityAdapterApi,
@@ -38,7 +38,30 @@ interface BlockWorkspaceContextLike {
     IS_BLOCK_WORKSPACE_CONTEXT: true;
     getUnique(): string;
     getEntityType(): string;
+    /** Always returns '' at runtime — see the {@link name} observable for the real source. */
     getName(): string;
+    /**
+     * Raw label observable, sourced internally from the block type's configured label markdown (UFM-
+     * rendered) — the same text the block list itself shows. Emits undefined until the first render pass
+     * completes, and carries a literal, non-localized prefix (`"#general_edit "` or `"#general_add "`,
+     * an unresolved localization-key marker, not user-facing text) that must be stripped — see
+     * stripBlockNamePrefix. Emits `"#general_edit "` with nothing after it when the block type has no
+     * label markdown configured at all.
+     */
+    readonly name?: Observable<string | undefined>;
+    /**
+     * Set once UMB_MODAL_CONTEXT resolves — public on UmbSubmittableWorkspaceContextBase, inherited here.
+     * This workspace's own host is the block's edit-workspace element, mounted wherever the CMS's
+     * routable-workspace machinery puts it — not necessarily anywhere near the block-list/grid entry that
+     * provides UmbBlockEntryContext. Confirmed live: requesting UmbBlockEntryContext directly via this
+     * object's own getContext() never finds a provider. UmbModalManagerContext.open()'s own doc comment
+     * says the invoking host "additionally acts as the modal origin for the context api": UmbModalContext
+     * is itself a controller hosted on that original invoker (the block-list/grid property editor that
+     * opened this edit workspace), so going through modalContext.getContext(...) reaches a provider this
+     * object's own getContext() cannot — confirmed live, this is what actually resolves
+     * UmbBlockEntryContext successfully.
+     */
+    modalContext?: { getContext<T>(alias: string): Promise<T | undefined> };
     /** The variant the block is being edited in (inherited from parent doc). */
     getVariantId?(): { culture: string | null; segment: string | null } | undefined;
     content: {
@@ -53,7 +76,6 @@ interface BlockWorkspaceContextLike {
             | undefined;
         getData(): { contentTypeKey?: string; key?: string } | undefined;
         setPropertyValue?<T>(alias: string, value: T, variantId?: UmbVariantId): Promise<void>;
-        name?: Observable<string | undefined>;
         structure: {
             ownerContentType?: Observable<{ alias?: string; icon?: string } | undefined>;
             contentTypeAliases?: Observable<string[]>;
@@ -72,6 +94,58 @@ function getActiveVariant(ctx: BlockWorkspaceContextLike): ActiveVariantInfo | n
     const variantId = ctx.getVariantId?.();
     if (!variantId) return null;
     return { culture: variantId.culture ?? null, segment: variantId.segment ?? null };
+}
+
+/**
+ * Minimal surface of UmbBlockEntryContext this adapter needs. That class is abstract and its concrete
+ * per-editor subclasses (block-list, block-grid, block-rte, block-single) are generic enough that CMS
+ * core doesn't export a single non-generic token for it — every one of those subclasses registers
+ * itself under this same literal alias regardless of editor type (see UMB_BLOCK_LIST_ENTRY_CONTEXT et
+ * al., each `new UmbContextToken('UmbBlockEntryContext')`), so requesting the alias directly matches
+ * whichever one actually owns this block.
+ */
+interface BlockEntryContextLike {
+    /** Resolved, UFM-rendered plain-text label — the same text the block list itself renders. */
+    readonly label: Observable<string>;
+}
+
+const BLOCK_ENTRY_CONTEXT_ALIAS = "UmbBlockEntryContext";
+
+/**
+ * Observable of the block's real label, sourced from its owning UmbBlockEntryContext (the block-list/
+ * grid entry, not the block's own edit-workspace) — see BlockEntryContextLike and
+ * BlockWorkspaceContextLike.modalContext for why the lookup has to go through modalContext rather than
+ * this workspace context's own getContext(). Emits undefined when no modal context is available (e.g.
+ * inline editing mode, which has no modal) or no entry context is reachable through it.
+ */
+function blockEntryLabel$(ctx: BlockWorkspaceContextLike): Observable<string | undefined> {
+    const lookup = ctx.modalContext?.getContext<BlockEntryContextLike>(BLOCK_ENTRY_CONTEXT_ALIAS);
+    if (!lookup) return of(undefined);
+    // getContext() REJECTS (not resolves undefined) when no provider answers — must be caught, or this
+    // whole observable errors out instead of emitting, silently skipping every downstream fallback below.
+    return from(lookup.catch(() => undefined)).pipe(switchMap((entry) => entry?.label ?? of(undefined)));
+}
+
+/**
+ * Literal, non-localized markers UmbBlockWorkspaceContext prepends to its `name` observable's value —
+ * see stripBlockNamePrefix.
+ */
+const BLOCK_NAME_PREFIXES = ["#general_edit ", "#general_add "];
+
+/**
+ * Strips UmbBlockWorkspaceContext's `"#general_edit "`/`"#general_add "` marker off its `name`
+ * observable's value, leaving the block's actual resolved label. Used only as a fallback when
+ * blockEntryLabel$ can't reach the entry context — this value is really a modal-title string that
+ * happens to end with the label, not a purpose-built "get the label" API, and would break silently if
+ * the CMS ever changes that title's format. Returns undefined for a still-pending emission, an
+ * unprefixed value from a non-CMS/mocked context, or a block type with no label markdown configured
+ * (whose value is just the bare prefix with nothing after it).
+ */
+function stripBlockNamePrefix(raw: string | undefined): string | undefined {
+    if (!raw) return undefined;
+    const prefix = BLOCK_NAME_PREFIXES.find((p) => raw.startsWith(p));
+    const stripped = (prefix ? raw.slice(prefix.length) : raw).trim();
+    return stripped || undefined;
 }
 
 /**
@@ -116,14 +190,21 @@ export class UaiBlockAdapter implements UaiEntityAdapterApi {
 
     /**
      * Get an observable for the block name for reactive updates.
-     * Uses the content element manager's name observable.
+     *
+     * Primary source is the owning UmbBlockEntryContext's resolved label (blockEntryLabel$) — the same
+     * text the block list itself renders, distinguishing "USP Block" from "CTA Block" and one instance
+     * from another. Confirmed live in the backoffice (not just unit-tested against a mock): this requires
+     * going through BlockWorkspaceContextLike.modalContext rather than this workspace context's own
+     * getContext(), which never finds a provider. Falls back to the workspace context's own `name`
+     * observable (stripBlockNamePrefix) when no modal context is available (e.g. inline editing mode),
+     * then to the literal "Block" when neither source has anything.
      */
     getNameObservable(workspaceContext: unknown): Observable<string | undefined> | undefined {
         const ctx = workspaceContext as BlockWorkspaceContextLike;
-        if (ctx.content?.name) {
-            return ctx.content.name.pipe(map((name) => name || "Block"));
-        }
-        return undefined;
+        return blockEntryLabel$(ctx).pipe(
+            switchMap((entryLabel) => (entryLabel ? of(entryLabel) : (ctx.name?.pipe(map(stripBlockNamePrefix)) ?? of(undefined)))),
+            map((label) => label || ctx.getName() || "Block"),
+        );
     }
 
     /**

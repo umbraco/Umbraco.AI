@@ -21,4 +21,4 @@ export * from "./agent/exports.js";
 export * from "./transport/exports.js";
 
 // Export client ready promise for nested packages to wait on
-export { agentClientReady } from "./app.js";
+export { agentClientReady } from "./client-ready.js";

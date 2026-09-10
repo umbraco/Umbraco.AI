@@ -1,5 +1,5 @@
 import { FilesService } from "../api/sdk.gen.js";
-import { agentClientReady } from "../app.js";
+import { agentClientReady } from "../client-ready.js";
 
 /**
  * Matches the file-serving route produced server-side by `AIFileUrlProvider`, capturing the thread
@@ -48,14 +48,21 @@ export async function resolveUaiFileObjectUrl(url: string): Promise<string | und
     // that completes, so wait rather than firing an unauthenticated request.
     await agentClientReady;
 
-    const { data, error } = await FilesService.getFile({
-        path: ids,
-        parseAs: "blob",
-    });
+    try {
+        const { data, error } = await FilesService.getFile({
+            path: ids,
+            parseAs: "blob",
+        });
 
-    if (error || !data) {
+        if (error || !data) {
+            return undefined;
+        }
+
+        return URL.createObjectURL(data as Blob);
+    } catch {
+        // Callers fire this without awaiting (see message.element.ts), so an uncaught rejection here
+        // would surface only as unhandled-rejection console noise, not a user-visible failure — a
+        // missing attachment already renders the same "no preview" fallback either way.
         return undefined;
     }
-
-    return URL.createObjectURL(data as Blob);
 }

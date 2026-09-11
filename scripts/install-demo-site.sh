@@ -241,6 +241,9 @@ add_product_projects "Umbraco.AI.Anthropic" "Providers/Anthropic"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Providers/Amazon"
 
+echo "Adding Umbraco.AI.Alibaba projects..."
+add_product_projects "Umbraco.AI.Alibaba" "Providers/Alibaba"
+
 echo "Adding Umbraco.AI.DeepSeek projects..."
 add_product_projects "Umbraco.AI.DeepSeek" "Providers/DeepSeek"
 
@@ -337,6 +340,11 @@ fi
 # Amazon provider
 if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+fi
+
+# Alibaba provider
+if [ -f "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj"
 fi
 
 # FireworksAI provider

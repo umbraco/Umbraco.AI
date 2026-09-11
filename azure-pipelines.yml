@@ -24,6 +24,9 @@ parameters:
           - name: Umbraco.AI.Amazon
             changeVar: AmazonChanged
             hasNpm: false
+          - name: Umbraco.AI.Alibaba
+            changeVar: AlibabaChanged
+            hasNpm: false
           - name: Umbraco.AI.Google
             changeVar: GoogleChanged
             hasNpm: false

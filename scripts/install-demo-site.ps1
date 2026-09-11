@@ -228,6 +228,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Provi
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Providers/Amazon"
 
+Write-Host "Adding Umbraco.AI.Alibaba projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Alibaba" -SolutionFolder "Providers/Alibaba"
+
 Write-Host "Adding Umbraco.AI.DeepSeek projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.DeepSeek" -SolutionFolder "Providers/DeepSeek"
 
@@ -324,6 +327,11 @@ if (Test-Path "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj"
 # Amazon provider
 if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
+}
+
+# Alibaba provider
+if (Test-Path "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj"
 }
 
 # FireworksAI provider

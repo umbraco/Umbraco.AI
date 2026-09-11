@@ -68,6 +68,9 @@
     <Project Path="Umbraco.AI.Prompt.Deploy/tests/Umbraco.AI.Prompt.Deploy.Tests.Unit/Umbraco.AI.Prompt.Deploy.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/" />
+  <Folder Name="/Providers/Alibaba/">
+    <Project Path="Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj" />
+  </Folder>
   <Folder Name="/Providers/Amazon/">
     <Project Path="Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" />
     <Project Path="Umbraco.AI.Amazon/tests/Umbraco.AI.Amazon.Tests.Unit/Umbraco.AI.Amazon.Tests.Unit.csproj" />

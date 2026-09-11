@@ -188,6 +188,8 @@ Install-Package "Umbraco.AI.MicrosoftFoundry"
 Install-Package "Umbraco.AI.FireworksAI"
 Install-Package "Umbraco.AI.HuggingFace"
 Install-Package "Umbraco.AI.Mistral"
+Install-Package "Umbraco.AI.Moonshot"
+Install-Package "Umbraco.AI.OpenRouter"
 Install-Package "Umbraco.AI.TogetherAI"
 
 # Add-on packages (includes Startup + Web.StaticAssets)

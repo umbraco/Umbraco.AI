@@ -42,8 +42,14 @@ parameters:
           - name: Umbraco.AI.Mistral
             changeVar: MistralChanged
             hasNpm: false
+          - name: Umbraco.AI.OpenRouter
+            changeVar: OpenrouterChanged
+            hasNpm: false
           - name: Umbraco.AI.TogetherAI
             changeVar: TogetheraiChanged
+            hasNpm: false
+          - name: Umbraco.AI.Moonshot
+            changeVar: MoonshotChanged
             hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search

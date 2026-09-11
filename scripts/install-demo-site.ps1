@@ -249,6 +249,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Provide
 Write-Host "Adding Umbraco.AI.Moonshot projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Moonshot" -SolutionFolder "Providers/Moonshot"
 
+Write-Host "Adding Umbraco.AI.OpenRouter projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.OpenRouter" -SolutionFolder "Providers/OpenRouter"
+
 Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "Providers/TogetherAI"
 
@@ -341,6 +344,11 @@ if (Test-Path "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.cspr
 # Moonshot provider
 if (Test-Path "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj"
+}
+
+# OpenRouter provider
+if (Test-Path "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj"
 }
 
 # TogetherAI provider

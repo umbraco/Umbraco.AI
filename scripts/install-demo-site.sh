@@ -241,6 +241,9 @@ add_product_projects "Umbraco.AI.Anthropic" "Providers/Anthropic"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Providers/Amazon"
 
+echo "Adding Umbraco.AI.Alibaba projects..."
+add_product_projects "Umbraco.AI.Alibaba" "Providers/Alibaba"
+
 echo "Adding Umbraco.AI.DeepSeek projects..."
 add_product_projects "Umbraco.AI.DeepSeek" "Providers/DeepSeek"
 
@@ -258,6 +261,12 @@ add_product_projects "Umbraco.AI.MicrosoftFoundry" "Providers/MicrosoftFoundry"
 
 echo "Adding Umbraco.AI.Mistral projects..."
 add_product_projects "Umbraco.AI.Mistral" "Providers/Mistral"
+
+echo "Adding Umbraco.AI.Moonshot projects..."
+add_product_projects "Umbraco.AI.Moonshot" "Providers/Moonshot"
+
+echo "Adding Umbraco.AI.OpenRouter projects..."
+add_product_projects "Umbraco.AI.OpenRouter" "Providers/OpenRouter"
 
 echo "Adding Umbraco.AI.TogetherAI projects..."
 add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
@@ -336,6 +345,11 @@ if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; th
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 fi
 
+# Alibaba provider
+if [ -f "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj"
+fi
+
 # FireworksAI provider
 if [ -f "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
@@ -349,6 +363,16 @@ fi
 # Mistral provider
 if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+fi
+
+# Moonshot provider
+if [ -f "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj"
+fi
+
+# OpenRouter provider
+if [ -f "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj"
 fi
 
 # TogetherAI provider

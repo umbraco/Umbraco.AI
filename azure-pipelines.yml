@@ -24,6 +24,9 @@ parameters:
           - name: Umbraco.AI.Amazon
             changeVar: AmazonChanged
             hasNpm: false
+          - name: Umbraco.AI.Alibaba
+            changeVar: AlibabaChanged
+            hasNpm: false
           - name: Umbraco.AI.Google
             changeVar: GoogleChanged
             hasNpm: false
@@ -39,8 +42,14 @@ parameters:
           - name: Umbraco.AI.Mistral
             changeVar: MistralChanged
             hasNpm: false
+          - name: Umbraco.AI.OpenRouter
+            changeVar: OpenrouterChanged
+            hasNpm: false
           - name: Umbraco.AI.TogetherAI
             changeVar: TogetheraiChanged
+            hasNpm: false
+          - name: Umbraco.AI.Moonshot
+            changeVar: MoonshotChanged
             hasNpm: false
           - name: Umbraco.AI.ZAI
             changeVar: ZaiChanged

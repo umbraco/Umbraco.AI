@@ -68,6 +68,9 @@
     <Project Path="Umbraco.AI.Prompt.Deploy/tests/Umbraco.AI.Prompt.Deploy.Tests.Unit/Umbraco.AI.Prompt.Deploy.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/" />
+  <Folder Name="/Providers/Alibaba/">
+    <Project Path="Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj" />
+  </Folder>
   <Folder Name="/Providers/Amazon/">
     <Project Path="Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" />
     <Project Path="Umbraco.AI.Amazon/tests/Umbraco.AI.Amazon.Tests.Unit/Umbraco.AI.Amazon.Tests.Unit.csproj" />
@@ -95,9 +98,15 @@
   <Folder Name="/Providers/Mistral/">
     <Project Path="Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" />
   </Folder>
+  <Folder Name="/Providers/Moonshot/">
+    <Project Path="Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj" />
+  </Folder>
   <Folder Name="/Providers/OpenAI/">
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
     <Project Path="Umbraco.AI.OpenAI/tests/Umbraco.AI.OpenAI.Tests.Unit/Umbraco.AI.OpenAI.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Providers/OpenRouter/">
+    <Project Path="Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj" />
   </Folder>
   <Folder Name="/Providers/TogetherAI/">
     <Project Path="Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" />

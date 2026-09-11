@@ -5,6 +5,34 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.3.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.3...Umbraco.AI@17.3.4) (2026-09-10)
+
+### fix
+
+* **core:** Actually fix block labels in the Copilot context selector ([3fb4c85](https://github.com/umbraco/Umbraco.AI/commit/3fb4c853bc333cdc64efcd0d456c5624666e3efd)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343)
+
+## [17.3.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.1...Umbraco.AI@17.3.3) (2026-09-10)
+
+### feat
+
+* **core:** Allow text and Office file extensions through the Umbraco media resolver ([989f9a7](https://github.com/umbraco/Umbraco.AI/commit/989f9a7e7ae85ddb925beddf6002aca8c8cc22c2))
+* **core:** Extract file content when a Media entity is the active Copilot context ([bd43144](https://github.com/umbraco/Umbraco.AI/commit/bd431446cc4bf18e15fea2a3c08e1f85f0a71a09))
+* **core:** Extract text from plain-text file attachments (csv, txt, md) ([a5c6d5f](https://github.com/umbraco/Umbraco.AI/commit/a5c6d5f6bac02ce7cfc9d1443993cc6adf018758))
+
+### fix
+
+* **agent,core:** Make client-ready dual-reachable to fix hanging agent-load promise ([5107b19](https://github.com/umbraco/Umbraco.AI/commit/5107b19a97329a0d49e0828685fddfd63cf1d477))
+* **core,agent:** Turn on throwOnError so a failed request always shows a notification ([f298972](https://github.com/umbraco/Umbraco.AI/commit/f29897201dd618604d709beaf73cb00bfbceba60))
+* **core:** Contribute the entity the user actually selected, not the last-detected one ([4b1ac47](https://github.com/umbraco/Umbraco.AI/commit/4b1ac47248b545071f4d5f9750ceda57ff34161e))
+* **core:** Ensure an Umbraco context exists for content read tools ([acc37f6](https://github.com/umbraco/Umbraco.AI/commit/acc37f6234f34973fd985e772ab4c2988f959792))
+* **core:** Fall back to metadata-only context when file extraction throws ([702187e](https://github.com/umbraco/Umbraco.AI/commit/702187ea69fb5bc24480dee31dd32656d627ed2c))
+* **core:** Give each block its own label in the Copilot context selector ([aa2e44d](https://github.com/umbraco/Umbraco.AI/commit/aa2e44d67245392b59ec9abe2936bc272269bea1))
+* **core:** Skip the blocking file-extraction path when there's no HttpContext ([28a90a8](https://github.com/umbraco/Umbraco.AI/commit/28a90a8fcdb857adf4e5f6a93ae8ff00c7225ba8)), closes [#340](https://github.com/umbraco/Umbraco.AI/issues/340)
+* **core:** Source the media context extraction gate from the real file, not its display name ([59b0225](https://github.com/umbraco/Umbraco.AI/commit/59b0225bea5bd89776a97b0b7172c8a4c51d17e8))
+* **core:** Stop the media context path resolving files and transcribing audio needlessly ([7393604](https://github.com/umbraco/Umbraco.AI/commit/73936049e8a255fe05c9a8c1e8815565f49bd17f))
+* **core:** Strip BOM and add extension-based MIME fallback for file attachments ([24dd1c3](https://github.com/umbraco/Umbraco.AI/commit/24dd1c3d5733f89f6a3537812301b858b7efeaeb))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([1030097](https://github.com/umbraco/Umbraco.AI/commit/10300979802a28f8da0f648035162b7854323f53))
+
 ## [17.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.0...Umbraco.AI@17.3.1) (2026-08-17)
 
 ### fix

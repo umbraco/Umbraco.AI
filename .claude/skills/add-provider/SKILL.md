@@ -23,11 +23,12 @@ User asks to "add a provider for X", "wire up Y to Umbraco.AI", or similar.
 
 1. Research the vendor's .NET SDK
 2. Decide capabilities and scope
-3. Create feature branch
+3. Set up an isolated worktree on the target version line
 4. Scaffold the provider
 5. Register across the monorepo
 6. Build + smoke-test in the demo site
 7. Commit + push + PR
+8. Consider backporting to other active version lines
 
 ---
 
@@ -60,11 +61,15 @@ Match the user's intent. By default, if unsure:
 
 Skip unusual capabilities (moderation, OCR, image gen) unless Umbraco.AI.Core has a capability base class for them. Check `Umbraco.AI/src/Umbraco.AI.Core/Providers/` for `AI*CapabilityBase` classes before promising support.
 
-## 3. Feature branch
+## 3. Set up an isolated worktree
 
-```bash
-git checkout -b feature/<provider-id>-provider
-```
+Branches are version-prefixed (`vN/dev`, `vN/main`, `vN/feature/<name>`, …) — see the root `CLAUDE.md` Branch Model. A new provider is a feature, so it targets a single version line's `vN/feature/<name>` branch, normally cut from the latest active line's `vN/dev` (currently `v18/dev`) unless the user asks to start from an older supported line instead.
+
+Per the repo's mandatory worktree workflow, use the `EnterWorktree` tool rather than a bare `git checkout -b`:
+
+1. `EnterWorktree` with a descriptive name (e.g. `add-<provider-id>-provider`) — this creates `vN/feature/add-<provider-id>-provider` off the current default branch and switches the session into it.
+2. If it branched from the wrong version line (it follows whatever branch/default was current, not necessarily the latest), exit and remove it, `git checkout vN/dev` (the intended line) in the original checkout, then `EnterWorktree` again.
+3. Keep a tracking task open (`Worktree: <name>` — path + branch) per `CLAUDE.local.md` so the location survives context compression.
 
 ## 4. Scaffold the provider
 
@@ -248,12 +253,16 @@ git commit -m "feat(<provider-id>): Add <ProviderName> AI provider"
 git add azure-pipelines.yml scripts/install-demo-site.{sh,ps1} scripts/install-package-test-site.{sh,ps1}
 git commit -m "chore(<provider-id>,ci): Register <ProviderName> in install scripts and CI pipeline"
 
-git push -u origin feature/<provider-id>-provider
+git push -u origin vN/feature/add-<provider-id>-provider
 ```
 
 Commitlint enforces: sentence-case subject, scope declared in a `changelog.config.json`, valid types. Your new `<provider-id>` scope is picked up automatically from the `changelog.config.json` you added.
 
-Then open the PR via the URL GitHub prints, or `gh pr create`.
+Open the PR against `vN/dev` (the same line the branch was cut from) via the URL GitHub prints, or `gh pr create --base vN/dev`.
+
+## 8. Consider backporting
+
+Per the root `CLAUDE.md` "Keep Active Versions in Sync" policy: before treating the new provider as done, ask the user whether it should also ship on the other active version line(s) (e.g. a provider added on `v18/dev` may also be wanted on `v17/dev`). If so, follow the repo's Backport Workflow — branch a fresh `vN/feature/<name>` off the older line's `vN/dev` (not a forward-merge) and repeat steps 3-7 there. Respect each line's support phase (security phase → skip; EOL → skip unless explicitly requested).
 
 ## Gotchas (learned from adding Mistral)
 

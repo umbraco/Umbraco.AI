@@ -59,9 +59,9 @@
         "@hey-api/openapi-ts": "0.97.3"
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^18.3.1",
-        "@umbraco-ai/agent": "^18.1.4",
-        "@umbraco-ai/agent-ui": "^18.0.2",
+        "@umbraco-ai/core": "^18.3.4",
+        "@umbraco-ai/agent": "^18.1.6",
+        "@umbraco-ai/agent-ui": "^18.0.4",
         "@umbraco-ai/agent-copilot": "^18.0.5",
         "@umbraco-cms/backoffice": "^18.0.0"
     },

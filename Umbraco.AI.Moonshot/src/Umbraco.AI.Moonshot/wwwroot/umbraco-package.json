@@ -1,0 +1,17 @@
+{
+  "name": "Umbraco AI Moonshot Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.Moonshot.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAIMoonshot/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

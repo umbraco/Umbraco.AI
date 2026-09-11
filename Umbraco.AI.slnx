@@ -95,6 +95,9 @@
   <Folder Name="/Providers/Mistral/">
     <Project Path="Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" />
   </Folder>
+  <Folder Name="/Providers/Moonshot/">
+    <Project Path="Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj" />
+  </Folder>
   <Folder Name="/Providers/OpenAI/">
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
     <Project Path="Umbraco.AI.OpenAI/tests/Umbraco.AI.OpenAI.Tests.Unit/Umbraco.AI.OpenAI.Tests.Unit.csproj" />

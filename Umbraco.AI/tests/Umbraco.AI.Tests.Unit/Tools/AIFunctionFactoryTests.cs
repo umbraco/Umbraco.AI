@@ -40,6 +40,57 @@ public class AIFunctionFactoryTests
     }
 
     [Fact]
+    public void Create_WithUntypedTool_ExposesEmptyObjectSchemaWithoutArgsWrapper()
+    {
+        // Arrange
+        // Regression test: MEAI's reflection-based AIFunctionFactory.Create(Delegate), given
+        // IAITool.ExecuteAsync's `object? args` parameter, infers the JSON Schema boolean `true`
+        // for it (no shape to infer from `object`) and marks it required — a schema of
+        // {"properties":{"args":true},"required":["args"]}. OpenAI and Anthropic tolerate the
+        // stray boolean-schema property; Moonshot's stricter validator rejects it outright
+        // ("property schema for 'args' must be an object"), failing every request for an agent
+        // with any no-argument tool available. A no-argument tool should describe no parameters.
+        var tool = new FakeTool(id: "my-tool");
+
+        // Act
+        var function = _factory.Create(tool);
+        var schema = function.JsonSchema;
+
+        // Assert
+        schema.ValueKind.ShouldBe(System.Text.Json.JsonValueKind.Object);
+
+        var properties = schema.GetProperty("properties");
+        properties.TryGetProperty("args", out _).ShouldBeFalse(
+            "Untyped tool schema must not expose a boolean-schema 'args' property; Moonshot rejects it.");
+        properties.EnumerateObject().Any().ShouldBeFalse("A no-argument tool should describe no properties.");
+
+        schema.TryGetProperty("required", out _).ShouldBeFalse(
+            "A no-argument tool schema must not declare any required properties.");
+    }
+
+    [Fact]
+    public async Task Create_WithUntypedTool_InvokesToolWithNullArgs()
+    {
+        // Arrange
+        object? capturedArgs = "not-null";
+        var tool = new FakeTool(id: "my-tool")
+        {
+            ExecuteHandler = (args, _) =>
+            {
+                capturedArgs = args;
+                return Task.FromResult<object>(new { });
+            },
+        };
+        var function = _factory.Create(tool);
+
+        // Act
+        await function.InvokeAsync(new MeaiAIFunctionArguments(), CancellationToken.None);
+
+        // Assert
+        capturedArgs.ShouldBeNull();
+    }
+
+    [Fact]
     public void Create_WithTypedTool_ReturnsAIFunctionWithCorrectMetadata()
     {
         // Arrange

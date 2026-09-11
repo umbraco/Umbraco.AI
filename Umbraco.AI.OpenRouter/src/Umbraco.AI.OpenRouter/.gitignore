@@ -1,0 +1,2 @@
+# Include wwwroot (overrides root .gitignore exclusion)
+!wwwroot/

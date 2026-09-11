@@ -228,6 +228,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Provi
 Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Providers/Amazon"
 
+Write-Host "Adding Umbraco.AI.Alibaba projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Alibaba" -SolutionFolder "Providers/Alibaba"
+
 Write-Host "Adding Umbraco.AI.DeepSeek projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.DeepSeek" -SolutionFolder "Providers/DeepSeek"
 
@@ -245,6 +248,12 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.MicrosoftFoundry" -SolutionFolder
 
 Write-Host "Adding Umbraco.AI.Mistral projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Mistral" -SolutionFolder "Providers/Mistral"
+
+Write-Host "Adding Umbraco.AI.Moonshot projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Moonshot" -SolutionFolder "Providers/Moonshot"
+
+Write-Host "Adding Umbraco.AI.OpenRouter projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.OpenRouter" -SolutionFolder "Providers/OpenRouter"
 
 Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "Providers/TogetherAI"
@@ -323,6 +332,11 @@ if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 }
 
+# Alibaba provider
+if (Test-Path "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj"
+}
+
 # FireworksAI provider
 if (Test-Path "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
@@ -336,6 +350,16 @@ if (Test-Path "Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.Hugg
 # Mistral provider
 if (Test-Path "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+}
+
+# Moonshot provider
+if (Test-Path "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj"
+}
+
+# OpenRouter provider
+if (Test-Path "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj"
 }
 
 # TogetherAI provider

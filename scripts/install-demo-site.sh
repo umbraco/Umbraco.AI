@@ -259,6 +259,9 @@ add_product_projects "Umbraco.AI.MicrosoftFoundry" "Providers/MicrosoftFoundry"
 echo "Adding Umbraco.AI.Mistral projects..."
 add_product_projects "Umbraco.AI.Mistral" "Providers/Mistral"
 
+echo "Adding Umbraco.AI.Moonshot projects..."
+add_product_projects "Umbraco.AI.Moonshot" "Providers/Moonshot"
+
 echo "Adding Umbraco.AI.OpenRouter projects..."
 add_product_projects "Umbraco.AI.OpenRouter" "Providers/OpenRouter"
 
@@ -349,6 +352,11 @@ fi
 # Mistral provider
 if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
+fi
+
+# Moonshot provider
+if [ -f "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj"
 fi
 
 # OpenRouter provider

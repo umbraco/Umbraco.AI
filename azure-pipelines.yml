@@ -51,6 +51,9 @@ parameters:
           - name: Umbraco.AI.Moonshot
             changeVar: MoonshotChanged
             hasNpm: false
+          - name: Umbraco.AI.ZAI
+            changeVar: ZaiChanged
+            hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search
             changeVar: SearchChanged

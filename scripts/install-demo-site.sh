@@ -271,6 +271,9 @@ add_product_projects "Umbraco.AI.OpenRouter" "Providers/OpenRouter"
 echo "Adding Umbraco.AI.TogetherAI projects..."
 add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
 
+echo "Adding Umbraco.AI.ZAI projects..."
+add_product_projects "Umbraco.AI.ZAI" "Providers/ZAI"
+
 # Step 7: Add add-on projects
 echo "Adding Umbraco.AI.Prompt projects..."
 add_product_projects "Umbraco.AI.Prompt" "Addons/Prompt"
@@ -375,6 +378,11 @@ fi
 # TogetherAI provider
 if [ -f "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
+fi
+
+# Z.AI provider
+if [ -f "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

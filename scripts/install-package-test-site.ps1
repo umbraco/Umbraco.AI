@@ -191,6 +191,7 @@ Install-Package "Umbraco.AI.Mistral"
 Install-Package "Umbraco.AI.Moonshot"
 Install-Package "Umbraco.AI.OpenRouter"
 Install-Package "Umbraco.AI.TogetherAI"
+Install-Package "Umbraco.AI.ZAI"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Install-Package "Umbraco.AI.Prompt"

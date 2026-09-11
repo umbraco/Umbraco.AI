@@ -247,6 +247,9 @@ dotnet add package Umbraco.AI.Mistral $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Moonshot..."
 dotnet add package Umbraco.AI.Moonshot $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.OpenRouter..."
+dotnet add package Umbraco.AI.OpenRouter $PRERELEASE_FLAG
+
 echo "  Installing Umbraco.AI.TogetherAI..."
 dotnet add package Umbraco.AI.TogetherAI $PRERELEASE_FLAG
 

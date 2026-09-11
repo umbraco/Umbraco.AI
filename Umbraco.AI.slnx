@@ -102,6 +102,9 @@
     <Project Path="Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" />
     <Project Path="Umbraco.AI.OpenAI/tests/Umbraco.AI.OpenAI.Tests.Unit/Umbraco.AI.OpenAI.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Providers/OpenRouter/">
+    <Project Path="Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj" />
+  </Folder>
   <Folder Name="/Providers/TogetherAI/">
     <Project Path="Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" />
   </Folder>

@@ -47,6 +47,20 @@ public class MoonshotChatCapability(MoonshotProvider provider) : AIChatCapabilit
             .AsIChatClient();
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Every Kimi model rejects a non-default <c>temperature</c> outright (HTTP 400
+    /// <c>invalid temperature: only 1 is allowed for this model</c>) rather than clamping or ignoring it,
+    /// so a profile carrying any other value would fail every request. Declaring it unsupported here makes
+    /// the base strip it before the request is sent — see <see cref="DeclaredSettingsChatClient"/> — so the
+    /// API's own default (which satisfies the constraint) applies instead.
+    /// </remarks>
+    public override AIModelSettingsSupport GetSettingsSupport(string modelId)
+        => new()
+        {
+            UnsupportedProfileSettings = [AIProfileSettingKeys.Temperature],
+        };
+
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId));
 }

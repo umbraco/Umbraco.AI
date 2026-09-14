@@ -5,5 +5,8 @@
         "Umbraco.AI.OpenRouter",
         "Umbraco.AI.ZAI"
     ],
-    "exclude": []
+    "exclude": [
+        "Umbraco.AI",
+        "Umbraco.AI.Automate"
+    ]
 }

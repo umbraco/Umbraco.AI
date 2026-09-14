@@ -1,7 +1,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Tools.Scopes;
-using MeaiAIFunctionFactory = Microsoft.Extensions.AI.AIFunctionFactory;
 
 namespace Umbraco.AI.Core.Tools;
 
@@ -37,11 +36,10 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
             return CreateTypedFunction(tool, enrichedDescription);
         }
 
-        // For untyped tools, create a simple delegate
-        return MeaiAIFunctionFactory.Create(
-            tool.ExecuteAsync,
-            name: tool.Id,
-            description: enrichedDescription);
+        // For untyped (no-argument) tools, expose a fixed empty-object schema rather than handing
+        // tool.ExecuteAsync to MEAI's reflection-based factory — see AIToolFunction's remarks for why
+        // that path leaks a boolean-schema "args" property that Moonshot's validator rejects.
+        return new AIToolFunction(tool, tool.Id, enrichedDescription);
     }
 
     /// <inheritdoc />

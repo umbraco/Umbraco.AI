@@ -1,0 +1,12 @@
+{
+    "include": [
+        "Umbraco.AI.Alibaba",
+        "Umbraco.AI.Moonshot",
+        "Umbraco.AI.OpenRouter",
+        "Umbraco.AI.ZAI"
+    ],
+    "exclude": [
+        "Umbraco.AI",
+        "Umbraco.AI.Automate"
+    ]
+}

@@ -24,7 +24,7 @@ dotnet add package Umbraco.AI.OpenRouter
 ## Requirements
 
 - Umbraco CMS 18.0.0+
-- Umbraco.AI 1.0.0+
+- Umbraco.AI 18.0.0+
 - .NET 10.0
 - OpenRouter API key
 

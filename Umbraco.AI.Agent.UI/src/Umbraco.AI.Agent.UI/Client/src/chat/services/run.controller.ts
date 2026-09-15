@@ -247,6 +247,13 @@ export class UaiRunController extends UmbControllerBase {
             this.#agent,
             {
                 onTextStart: (messageId) => {
+                    // The model is generating again -- if the caption still says "Calling
+                    // <tool>..." from the last tool call, fall back to "Thinking...". Only
+                    // replace an "executing" caption so an awaiting_input state isn't clobbered.
+                    if (this.#agentState.value?.status === "executing") {
+                        this.#agentState.next({ status: "thinking" });
+                    }
+
                     const messages = this.#messages.value;
                     const lastMessage = messages[messages.length - 1];
 
@@ -451,6 +458,15 @@ export class UaiRunController extends UmbControllerBase {
         };
 
         this.#messages.next([...updated, toolMessage]);
+
+        // If no other tool call is still pending/executing, the caption shouldn't keep
+        // naming this tool while the model generates its next turn.
+        const stillRunning = this.#currentToolCalls.some(
+            (tc) => tc.status === "pending" || tc.status === "executing",
+        );
+        if (!stillRunning && this.#agentState.value?.status === "executing") {
+            this.#agentState.next({ status: "thinking" });
+        }
     }
 
     #handleRunFinished(event: { outcome: string; interrupt?: UaiInterruptInfo; error?: string }): void {

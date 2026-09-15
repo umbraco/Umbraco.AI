@@ -563,6 +563,67 @@ public class AGUIStreamingServiceTests
         converterReturnList[0].Contents!.OfType<ToolApprovalResponseContent>().ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task StreamAgentAsync_WithCancelledToolCallResume_SynthesisesFunctionResultContent()
+    {
+        // A cancelled frontend tool_call interrupt (user abandoned it) must still get a
+        // FunctionResultContent, otherwise the tool_use this interrupt paused on is left
+        // dangling in the history sent to the provider on the next turn (#381).
+        var converterReturnList = new List<ChatMessage>();
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "hi" }],
+            Resume = [new()
+            {
+                InterruptId = "call-fe-2",  // no "approval:" prefix
+                Status = AGUIResumeStatus.Cancelled
+            }]
+        };
+
+        await CollectEvents(agent, request);
+
+        converterReturnList.Count.ShouldBe(1);
+        converterReturnList[0].Role.ShouldBe(ChatRole.Tool);
+        var resultContent = converterReturnList[0].Contents!
+            .OfType<FunctionResultContent>()
+            .FirstOrDefault();
+        resultContent.ShouldNotBeNull();
+        resultContent!.CallId.ShouldBe("call-fe-2");
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithCancelledApprovalResume_SkipsEntry()
+    {
+        // A cancelled approval interrupt never reached the provider as a raw tool_use (FICC
+        // intercepts it before that), so there's nothing to reconcile -- it stays skipped.
+        var converterReturnList = new List<ChatMessage>();
+        _mockConverter
+            .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AGUIMessage>?>()))
+            .Returns(converterReturnList);
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "t1", RunId = "r1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "hi" }],
+            Resume = [new()
+            {
+                InterruptId = "approval:call-y",
+                Status = AGUIResumeStatus.Cancelled
+            }]
+        };
+
+        await CollectEvents(agent, request);
+
+        converterReturnList.ShouldBeEmpty();
+    }
+
     #endregion
 
     #region Helper Methods

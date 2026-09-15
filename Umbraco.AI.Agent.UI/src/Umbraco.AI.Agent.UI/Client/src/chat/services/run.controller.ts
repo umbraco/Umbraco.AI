@@ -155,10 +155,49 @@ export class UaiRunController extends UmbControllerBase {
 
         this.#client.reset();
         this.#streamingContent.next("");
+
+        // A frontend tool call that was still pending/executing when the run was aborted (e.g.
+        // the user hit Cancel while a tool-call interrupt was in flight) never got a matching
+        // tool-result message. Left as-is, the next turn resends that tool_use with nothing
+        // after it, which providers such as Anthropic reject outright (#381).
+        this.#reconcileAbortedToolCalls();
+
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
         this.#resolvedAgent.next(undefined);
+    }
+
+    /** Marks any still-pending/executing tool call as aborted and appends a matching result. */
+    #reconcileAbortedToolCalls(): void {
+        const unresolved = this.#currentToolCalls.filter(
+            (tc) => tc.status === "pending" || tc.status === "executing",
+        );
+        if (unresolved.length === 0) return;
+
+        const unresolvedIds = new Set(unresolved.map((tc) => tc.id));
+
+        const updated = this.#messages.value.map((msg) => {
+            if (msg.role === "assistant" && msg.toolCalls?.some((tc) => unresolvedIds.has(tc.id))) {
+                return {
+                    ...msg,
+                    toolCalls: msg.toolCalls.map((tc) =>
+                        unresolvedIds.has(tc.id) ? { ...tc, status: "error" as UaiToolCallStatus, result: "Aborted" } : tc,
+                    ),
+                };
+            }
+            return msg;
+        });
+
+        const toolMessages: UaiChatMessage[] = unresolved.map((tc) => ({
+            id: crypto.randomUUID(),
+            role: "tool",
+            content: "Aborted",
+            toolCallId: tc.id,
+            timestamp: new Date(),
+        }));
+
+        this.#messages.next([...updated, ...toolMessages]);
     }
 
     regenerateLastMessage(): void {

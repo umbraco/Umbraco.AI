@@ -576,8 +576,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     ///   </item>
     /// </list>
     /// <para>
-    /// Cancelled entries are skipped — we don't synthesise a result when the user
-    /// abandoned the interrupt without input.
+    /// A cancelled tool-call interrupt (the user abandoned it without input) still gets a
+    /// synthesised <see cref="FunctionResultContent"/> saying so: the model already emitted the
+    /// corresponding <c>tool_use</c> block, and a provider such as Anthropic rejects any later
+    /// turn whose history has a <c>tool_use</c> with no matching <c>tool_result</c>. A cancelled
+    /// approval interrupt is still skipped — it never reached the provider as a raw tool call
+    /// (FICC intercepts it before that), so there is nothing to reconcile.
     /// </para>
     /// </remarks>
     private List<ChatMessage> ExtractToolResultsFromResume(
@@ -590,8 +594,15 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
         foreach (var entry in resume)
         {
-            if (entry.Status != AGUIResumeStatus.Resolved)
+            if (entry.Status == AGUIResumeStatus.Cancelled)
             {
+                if (string.IsNullOrEmpty(entry.InterruptId) || AGUIInterruptKind.IsApproval(entry.InterruptId))
+                {
+                    continue;
+                }
+
+                results.Add(new ChatMessage(ChatRole.Tool,
+                    [new FunctionResultContent(entry.InterruptId, "The user cancelled this tool call.")]));
                 continue;
             }
 

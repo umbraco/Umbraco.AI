@@ -28,6 +28,16 @@ export interface UaiConversationStrategy {
     onTurnComplete?(allMessages: UaiChatMessage[]): void;
 
     /**
+     * Called when the server reports the id of the last message it has durably persisted for this
+     * conversation (a `conversation_persisted_boundary` custom event, sent just before RUN_FINISHED). A
+     * persisted strategy uses this to correct its own "already sent" boundary from this authoritative
+     * source, rather than relying only on a turn completing cleanly (see {@link onTurnComplete}) — the
+     * assumption a dropped SSE connection breaks, letting a stale boundary resend already-persisted
+     * content as if it were new. No-op for the client-owned default strategy.
+     */
+    onServerPersistedBoundary?(lastPersistedMessageId: string, allMessages: UaiChatMessage[]): void;
+
+    /**
      * Called before a regenerate re-runs the last turn, with the messages that survive the cut (up to and
      * including the user message being answered again). A persisted strategy uses this to drop the stale
      * tail from its durable store, so the new answer replaces the old one instead of being appended after

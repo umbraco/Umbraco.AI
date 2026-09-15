@@ -7,9 +7,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.AGUI;
+using AIConversationPersistenceSync = Umbraco.AI.Agent.Core.Agents.AIConversationPersistenceSync;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Events.Messages;
+using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Events.Tools;
 using Umbraco.AI.AGUI.Models;
@@ -704,6 +706,65 @@ public class AGUIStreamingServiceTests
 
     #endregion
 
+    #region Persistence Sync Tests (umbraco/Umbraco.AI#375)
+
+    /// <summary>
+    /// Proves the server tells the client what's actually persisted before RUN_FINISHED, via a
+    /// CustomEvent — not RunFinishedEvent.Result, which is reserved for the agent's own terminal result
+    /// per the AG-UI spec (see this project's CLAUDE.md).
+    /// </summary>
+    [Fact]
+    public async Task StreamAgentAsync_WithResolvedPersistedBoundary_EmitsCustomEventBeforeRunFinished()
+    {
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+        var request = CreateRequest();
+        var persistenceSync = new AIConversationPersistenceSync(
+            DropAlreadyPersistedLeadingMessages: null,
+            ResolveLastPersistedMessageId: (CancellationToken _) => ValueTask.FromResult<string?>("msg-42"));
+
+        var events = await CollectEvents(agent, request, persistenceSync);
+
+        var customEvent = events.OfType<CustomEvent>().ShouldHaveSingleItem();
+        customEvent.Name.ShouldBe("conversation_persisted_boundary");
+        // Separately-compiled anonymous types with the same shape aren't equal to Shouldly's
+        // ShouldBeEquivalentTo (it checks the CLR type, not just structure) — compare the serialized
+        // shape instead of the raw object.
+        JsonSerializer.Serialize(customEvent.Value).ShouldBe("""{"lastPersistedMessageId":"msg-42"}""");
+
+        var runFinishedIndex = events.FindIndex(e => e is RunFinishedEvent);
+        var customEventIndex = events.IndexOf(customEvent);
+        customEventIndex.ShouldBeLessThan(runFinishedIndex);
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WhenNothingPersistedYet_EmitsNoCustomEvent()
+    {
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+        var request = CreateRequest();
+        var persistenceSync = new AIConversationPersistenceSync(
+            DropAlreadyPersistedLeadingMessages: null,
+            ResolveLastPersistedMessageId: (CancellationToken _) => ValueTask.FromResult<string?>(null));
+
+        var events = await CollectEvents(agent, request, persistenceSync);
+
+        events.OfType<CustomEvent>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_WithNullPersistenceSync_EmitsNoCustomEvent()
+    {
+        // The contextual Copilot and any other non-persisted surface pass null — must behave exactly as
+        // before, with no persistence-related event ever appearing on the stream.
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+        var request = CreateRequest();
+
+        var events = await CollectEvents(agent, request, persistenceSync: null);
+
+        events.OfType<CustomEvent>().ShouldBeEmpty();
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private async Task<List<IAGUIEvent>> CollectEvents(
@@ -740,6 +801,19 @@ public class AGUIStreamingServiceTests
     {
         var events = new List<IAGUIEvent>();
         await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls, staleApprovalRequests, CancellationToken.None))
+        {
+            events.Add(evt);
+        }
+        return events;
+    }
+
+    private async Task<List<IAGUIEvent>> CollectEvents(
+        AIAgent agent,
+        AGUIRunRequest request,
+        AIConversationPersistenceSync? persistenceSync)
+    {
+        var events = new List<IAGUIEvent>();
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, null, session: null, pendingApprovalCalls: null, staleApprovalRequests: null, persistenceSync, CancellationToken.None))
         {
             events.Add(evt);
         }

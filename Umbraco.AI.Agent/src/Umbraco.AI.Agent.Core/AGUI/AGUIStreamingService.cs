@@ -3,7 +3,9 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using AIApprovalDenialHelper = Umbraco.AI.Agent.Core.Agents.AIApprovalDenialHelper;
+using AIConversationPersistenceSync = Umbraco.AI.Agent.Core.Agents.AIConversationPersistenceSync;
 using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Events.State;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
@@ -53,13 +55,25 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         => StreamAgentAsync(agent, request, frontendTools, session: null, cancellationToken: cancellationToken);
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+    public IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         AIAgent agent,
         AGUIRunRequest request,
         IEnumerable<AITool>? frontendTools,
         AgentSession? session,
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls = null,
         IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null,
+        CancellationToken cancellationToken = default)
+        => StreamAgentAsync(agent, request, frontendTools, session, pendingApprovalCalls, staleApprovalRequests, persistenceSync: null, cancellationToken);
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        AIAgent agent,
+        AGUIRunRequest request,
+        IEnumerable<AITool>? frontendTools,
+        AgentSession? session,
+        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests,
+        AIConversationPersistenceSync? persistenceSync,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var emitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
@@ -72,7 +86,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, staleApprovalRequests, persistenceSync, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -138,6 +152,26 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         }
         else
         {
+            // Tell the client what's actually durably persisted before RUN_FINISHED, so a stale local
+            // "already sent" boundary (e.g. left behind by a dropped connection) can be corrected from an
+            // authoritative source instead of only inferred from a turn completing cleanly — the exact
+            // assumption a dropped connection breaks (umbraco/Umbraco.AI#375). A vendor extension via
+            // CustomEvent, not RunFinishedEvent.Result — that field is reserved for the agent's own
+            // terminal result per the AG-UI spec, not server-persistence bookkeeping (see this project's
+            // CLAUDE.md: use CustomEvent for vendor-specific extensions).
+            if (persistenceSync?.ResolveLastPersistedMessageId is { } resolveLastPersisted)
+            {
+                var lastPersistedMessageId = await resolveLastPersisted(cancellationToken);
+                if (lastPersistedMessageId is not null)
+                {
+                    yield return new CustomEvent
+                    {
+                        Name = "conversation_persisted_boundary",
+                        Value = new { lastPersistedMessageId }
+                    };
+                }
+            }
+
             yield return emitter.EmitRunFinished();
         }
     }
@@ -154,6 +188,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AgentSession? session,
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls,
         IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests,
+        AIConversationPersistenceSync? persistenceSync,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Process file content: store base64, resolve id references
@@ -214,6 +249,21 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 "Resume with {EntryCount} entries produced {ResultCount} tool results",
                 request.Resume.Count,
                 resumeMessages.Count);
+        }
+        else if (persistenceSync?.DropAlreadyPersistedLeadingMessages is { } dropAlreadyPersistedLeadingMessages)
+        {
+            // A plain (non-resume) turn on a persisted conversation. A dropped SSE connection can leave
+            // the client's own "already sent" bookkeeping stale, so it resends a leading run of messages
+            // the server already holds — left in place, MAF's bound ChatHistoryProvider concatenates its
+            // persisted copy back in ahead of these, so the model sees the same tool call (and result)
+            // twice, which a real provider rejects outright (Anthropic: "tool_use ids must be unique")
+            // (umbraco/Umbraco.AI#375). The resume branch above already has its own dedicated handling
+            // for the approval case, so this only runs when there's nothing to resume.
+            var deduped = await dropAlreadyPersistedLeadingMessages(chatMessages, cancellationToken);
+            if (deduped.Count != chatMessages.Count)
+            {
+                chatMessages = deduped.ToList();
+            }
         }
 
         // Auto-deny any approval request left dangling by an earlier reload that abandoned it before

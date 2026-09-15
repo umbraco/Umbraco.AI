@@ -37,6 +37,7 @@ function createHarness() {
 
     let capturedCallbacks: AgentClientCallbacks | undefined;
     const onTurnComplete = vi.fn();
+    const onServerPersistedBoundary = vi.fn();
     const strategy: UaiConversationStrategy = {
         createClient: (_agent, callbacks) => {
             capturedCallbacks = callbacks;
@@ -46,6 +47,7 @@ function createHarness() {
         loadInitial: async () => [],
         outbound: (messages) => messages,
         onTurnComplete,
+        onServerPersistedBoundary,
     };
 
     const controller = new UaiRunController(host, hitlContext, {
@@ -60,7 +62,7 @@ function createHarness() {
     const agent: UaiAgentItem = { id: "agent-1", name: "Agent", alias: "agent" };
     controller.setAgent(agent);
 
-    return { onTurnComplete, getCallbacks: () => capturedCallbacks };
+    return { onTurnComplete, onServerPersistedBoundary, getCallbacks: () => capturedCallbacks };
 }
 
 /**
@@ -99,5 +101,30 @@ describe("UaiRunController — interrupt path advances the persisted boundary", 
         getCallbacks()?.onRunFinished?.({ outcome: "error", error: "boom" });
 
         expect(onTurnComplete).not.toHaveBeenCalled();
+    });
+});
+
+/**
+ * Regression coverage for umbraco/Umbraco.AI#375's resync fix: the server reports what it actually
+ * persisted via a `conversation_persisted_boundary` custom event, and the run controller must forward
+ * that to the bound strategy so it can correct a boundary a dropped connection left stale — rather than
+ * only ever inferring it from a turn completing cleanly.
+ */
+describe("UaiRunController — forwards the server's persisted-boundary report", () => {
+    it("calls the strategy's onServerPersistedBoundary with the reported id and current messages", () => {
+        const { onServerPersistedBoundary, getCallbacks } = createHarness();
+
+        getCallbacks()?.onCustomEvent?.("conversation_persisted_boundary", { lastPersistedMessageId: "msg-42" });
+
+        expect(onServerPersistedBoundary).toHaveBeenCalledTimes(1);
+        expect(onServerPersistedBoundary).toHaveBeenCalledWith("msg-42", expect.any(Array));
+    });
+
+    it("does not call it for an unrelated custom event", () => {
+        const { onServerPersistedBoundary, getCallbacks } = createHarness();
+
+        getCallbacks()?.onCustomEvent?.("agent_selected", { agentId: "a", agentName: "A", agentAlias: "a" });
+
+        expect(onServerPersistedBoundary).not.toHaveBeenCalled();
     });
 });

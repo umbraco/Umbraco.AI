@@ -140,6 +140,7 @@ public class AIAgentServiceExecutionTests
                 It.IsAny<AgentSession?>(),
                 It.IsAny<IReadOnlyDictionary<string, ToolApprovalRequestContent>?>(),
                 It.IsAny<IReadOnlyList<ToolApprovalRequestContent>?>(),
+                It.IsAny<AIConversationPersistenceSync?>(),
                 It.IsAny<CancellationToken>()))
             .Returns(EmptyEvents());
 

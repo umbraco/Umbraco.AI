@@ -553,7 +553,7 @@ internal sealed class AIAgentService : IAIAgentService
                 staleApprovalRequests = await ResolveStaleApprovalRequestsAsync(historyBinding, request, cancellationToken);
             }
 
-            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken))
+            await foreach (var evt in _streamingService.StreamAgentAsync(context.MafAgent, request, context.ConvertedFrontendTools, session, pendingApprovalCalls, staleApprovalRequests, historyBinding?.PersistenceSync, cancellationToken))
             {
                 yield return evt;
             }

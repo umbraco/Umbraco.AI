@@ -1,5 +1,6 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using AIConversationPersistenceSync = Umbraco.AI.Agent.Core.Agents.AIConversationPersistenceSync;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 
@@ -94,4 +95,43 @@ public interface IAGUIStreamingService
         IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests = null,
         CancellationToken cancellationToken = default)
         => StreamAgentAsync(agent, request, frontendTools, cancellationToken);
+
+    /// <summary>
+    /// Streams AG-UI events as
+    /// <see cref="StreamAgentAsync(AIAgent, AGUIRunRequest, IEnumerable{AITool}, AgentSession?, IReadOnlyDictionary{string, ToolApprovalRequestContent}?, IReadOnlyList{ToolApprovalRequestContent}?, CancellationToken)"/>,
+    /// additionally given <paramref name="persistenceSync"/> so a plain (non-resume) continuation can
+    /// strip client-resent messages that duplicate the conversation's persisted tail before they reach
+    /// the model, and so the terminal <c>RUN_FINISHED</c> event can carry the true persisted boundary
+    /// back to the client — see umbraco/Umbraco.AI#375. Surfaces without server-side persistence pass
+    /// <see langword="null"/> and behave exactly as before.
+    /// </summary>
+    /// <param name="agent">The MAF AIAgent to run.</param>
+    /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
+    /// <param name="frontendTools">The frontend tools (converted from request.Tools).</param>
+    /// <param name="session">
+    /// The MAF session to run within, or <see langword="null"/> to start a fresh session.
+    /// </param>
+    /// <param name="pendingApprovalCalls">See the other overload.</param>
+    /// <param name="staleApprovalRequests">See the other overload.</param>
+    /// <param name="persistenceSync">
+    /// Optional bundle of resolvers (see <see cref="AIConversationPersistenceSync"/>) that the consumer
+    /// closes over its own conversation store; the Agent layer stays product-agnostic. Null for the
+    /// contextual Copilot and any other non-persisted surface.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async enumerable of AG-UI events.</returns>
+    /// <remarks>
+    /// Default interface method: implementations that predate this overload inherit this default, which
+    /// ignores <paramref name="persistenceSync"/> and delegates to the previous overload.
+    /// </remarks>
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
+        AIAgent agent,
+        AGUIRunRequest request,
+        IEnumerable<AITool>? frontendTools,
+        AgentSession? session,
+        IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls,
+        IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests,
+        AIConversationPersistenceSync? persistenceSync,
+        CancellationToken cancellationToken = default)
+        => StreamAgentAsync(agent, request, frontendTools, session, pendingApprovalCalls, staleApprovalRequests, cancellationToken);
 }

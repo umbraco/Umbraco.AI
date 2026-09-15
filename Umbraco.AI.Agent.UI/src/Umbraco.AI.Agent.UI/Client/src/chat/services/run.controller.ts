@@ -365,6 +365,11 @@ export class UaiRunController extends UmbControllerBase {
                     if (name === "agent_selected") {
                         const agentInfo = value as { agentId: string; agentName: string; agentAlias: string };
                         this.#resolvedAgent.next(agentInfo);
+                    } else if (name === "conversation_persisted_boundary") {
+                        // Authoritative correction for a persisted strategy's own "already sent"
+                        // boundary — see the onServerPersistedBoundary contract (umbraco/Umbraco.AI#375).
+                        const { lastPersistedMessageId } = value as { lastPersistedMessageId: string };
+                        this.#strategy.onServerPersistedBoundary?.(lastPersistedMessageId, this.#messages.value);
                     }
                 },
                 onError: (error) => {

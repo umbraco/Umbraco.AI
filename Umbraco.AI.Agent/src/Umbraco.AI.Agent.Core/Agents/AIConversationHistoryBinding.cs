@@ -74,4 +74,11 @@ public sealed record AIConversationHistoryBinding(
     /// closes this over its own conversation store.
     /// </summary>
     public Func<JsonElement, CancellationToken, ValueTask>? SaveSessionState { get; init; }
+
+    /// <summary>
+    /// Optional bundle of resolvers that keep the client's own copy of "what's already saved" honest —
+    /// see <see cref="AIConversationPersistenceSync"/> (umbraco/Umbraco.AI#375). The consumer closes each
+    /// resolver over its own conversation store; the Agent layer stays product-agnostic.
+    /// </summary>
+    public AIConversationPersistenceSync? PersistenceSync { get; init; }
 }

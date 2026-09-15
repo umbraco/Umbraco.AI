@@ -469,4 +469,211 @@ public class ConversationChatHistoryProviderTests
             result.ShouldBeEmpty();
         }
     }
+
+    /// <summary>
+    /// <see cref="ConversationChatHistoryProvider.DropAlreadyPersistedLeadingMessagesAsync"/> is the
+    /// read-side counterpart of <see cref="DropAlreadyPersistedTail"/>'s subject: a dropped SSE
+    /// connection can leave the client's own "already sent" boundary stale, so a plain follow-up turn
+    /// resends a leading run of messages the conversation already holds. Left in place, MAF's bound
+    /// <c>ChatHistoryProvider</c> concatenates its own persisted copy back in ahead of these, so the
+    /// model sees the same tool call (and result) twice — a real provider rejects that outright
+    /// (Anthropic: "tool_use ids must be unique") (umbraco/Umbraco.AI#375).
+    /// </summary>
+    public class DropAlreadyPersistedLeadingMessages
+    {
+        private static AIMessage StoredFrom(ChatMessage message) => new()
+        {
+            Role = message.Role.Value,
+            ContentJson = JsonSerializer.Serialize(message, AIJsonUtilities.DefaultOptions),
+        };
+
+        private static Mock<IAIConversationRepository> RepositoryReturning(params ChatMessage[] stored)
+        {
+            var repository = new Mock<IAIConversationRepository>();
+            repository
+                .Setup(x => x.GetMessagesAsync(ConversationId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(stored.Select(StoredFrom).ToList());
+            return repository;
+        }
+
+        private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
+            => new(repository.Object, Mock.Of<IAIFileStore>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+
+        [Fact]
+        public async Task NewConversation_NoStoredMessages_ReturnsCandidatesUnchanged()
+        {
+            var provider = CreateProvider(RepositoryReturning());
+            ChatMessage[] candidates = [new(ChatRole.User, "Hello")];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task CandidatesDoNotOverlapStoredTail_ReturnsCandidatesUnchanged()
+        {
+            var provider = CreateProvider(RepositoryReturning(new ChatMessage(ChatRole.Assistant, "Hi")));
+            ChatMessage[] candidates = [new(ChatRole.User, "A genuinely new message")];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task LeadingRunDuplicatesStoredTail_IsDroppedKeepingOnlyTheGenuinelyNewMessage()
+        {
+            // The browser's own "already sent" boundary went stale after a dropped connection, so it
+            // resends the previous (already-persisted) turn plus one genuinely new follow-up message —
+            // the exact scenario reported in #375.
+            ChatMessage stored1 = new(ChatRole.User, "Hello") { MessageId = "msg-1" };
+            ChatMessage stored2 = new(ChatRole.Assistant, "Hi there") { MessageId = "msg-2" };
+            var provider = CreateProvider(RepositoryReturning(stored1, stored2));
+            ChatMessage[] candidates =
+            [
+                new(ChatRole.User, "Hello") { MessageId = "msg-1" },
+                new(ChatRole.Assistant, "Hi there") { MessageId = "msg-2" },
+                new(ChatRole.User, "How are you?") { MessageId = "msg-3" },
+            ];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.Count.ShouldBe(1);
+            result[0].MessageId.ShouldBe("msg-3");
+        }
+
+        [Fact]
+        public async Task EntireCandidateListDuplicatesStoredTail_ReturnsEmpty()
+        {
+            ChatMessage stored1 = new(ChatRole.User, "Hello") { MessageId = "msg-1" };
+            ChatMessage stored2 = new(ChatRole.Assistant, "Hi there") { MessageId = "msg-2" };
+            var provider = CreateProvider(RepositoryReturning(stored1, stored2));
+            ChatMessage[] candidates =
+            [
+                new(ChatRole.User, "Hello") { MessageId = "msg-1" },
+                new(ChatRole.Assistant, "Hi there") { MessageId = "msg-2" },
+            ];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task SameRoleButDifferentContent_IsNotTreatedAsADuplicate()
+        {
+            var provider = CreateProvider(RepositoryReturning(new ChatMessage(ChatRole.User, "Hello")));
+            ChatMessage[] candidates = [new(ChatRole.User, "Hello again, but different")];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task SameContentDifferentMessageId_IsNotTreatedAsADuplicate()
+        {
+            // Two genuinely different messages that happen to share identical text (the user replying
+            // "ok" in two separate turns, say) must never be mistaken for a re-send.
+            var provider = CreateProvider(RepositoryReturning(new ChatMessage(ChatRole.User, "ok") { MessageId = "msg-1" }));
+            ChatMessage[] candidates = [new(ChatRole.User, "ok") { MessageId = "msg-2" }];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.ShouldBe(candidates);
+        }
+
+        [Fact]
+        public async Task NoMessageIdOnEitherSide_FallsBackToContentComparison()
+        {
+            var provider = CreateProvider(RepositoryReturning(new ChatMessage(ChatRole.Assistant, "Hi there")));
+            ChatMessage[] candidates = [new(ChatRole.Assistant, "Hi there")];
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
+
+            result.ShouldBeEmpty();
+        }
+
+        /// <summary>
+        /// The exact fingerprint from #375: the browser's own re-emitted copy of a tool result serializes
+        /// it as a PascalCase JSON string (<c>AGUIEventEmitter.EmitToolResult</c>'s bare
+        /// <c>JsonSerializer.Serialize</c> with .NET default options), while the persisted copy holds it
+        /// as a native camelCase object (<c>AIJsonUtilities.DefaultOptions</c>) — two different shapes for
+        /// the same logical result. Matching by <see cref="ChatMessage.MessageId"/> first means this
+        /// shape difference never gets a chance to defeat the comparison.
+        /// </summary>
+        [Fact]
+        public async Task SameMessageIdWithDifferentlySerializedToolResult_IsStillTreatedAsADuplicate()
+        {
+            var persistedResult = new FunctionResultContent("call-1", new { ok = true, itemCount = 3 });
+            ChatMessage stored = new(ChatRole.Tool, [persistedResult]) { MessageId = "msg-1" };
+
+            var resentResult = new FunctionResultContent("call-1", "{\"Ok\":true,\"ItemCount\":3}");
+            ChatMessage candidate = new(ChatRole.Tool, [resentResult]) { MessageId = "msg-1" };
+
+            var provider = CreateProvider(RepositoryReturning(stored));
+
+            var result = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, [candidate]);
+
+            result.ShouldBeEmpty();
+        }
+    }
+
+    /// <summary>
+    /// <see cref="ConversationChatHistoryProvider.GetLastPersistedMessageIdAsync"/> is the outgoing half
+    /// of the #375 fix: it resolves the boundary the server reports back to the client on RUN_FINISHED,
+    /// so a dropped connection can't leave the client's own copy of "what's saved" stale forever.
+    /// </summary>
+    public class GetLastPersistedMessageId
+    {
+        private static Mock<IAIConversationRepository> RepositoryReturning(params ChatMessage[] stored)
+        {
+            var repository = new Mock<IAIConversationRepository>();
+            repository
+                .Setup(x => x.GetMessagesAsync(ConversationId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(stored.Select(m => new AIMessage
+                {
+                    Role = m.Role.Value,
+                    ContentJson = JsonSerializer.Serialize(m, AIJsonUtilities.DefaultOptions),
+                }).ToList());
+            return repository;
+        }
+
+        private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
+            => new(repository.Object, Mock.Of<IAIFileStore>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+
+        [Fact]
+        public async Task NewConversation_NoStoredMessages_ReturnsNull()
+        {
+            var provider = CreateProvider(RepositoryReturning());
+
+            var result = await provider.GetLastPersistedMessageIdAsync(ConversationId);
+
+            result.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task ReturnsTheLastStoredMessagesId()
+        {
+            var provider = CreateProvider(RepositoryReturning(
+                new ChatMessage(ChatRole.User, "Hello") { MessageId = "msg-1" },
+                new ChatMessage(ChatRole.Assistant, "Hi there") { MessageId = "msg-2" }));
+
+            var result = await provider.GetLastPersistedMessageIdAsync(ConversationId);
+
+            result.ShouldBe("msg-2");
+        }
+
+        [Fact]
+        public async Task EmptyConversationId_ReturnsNullWithoutQueryingTheRepository()
+        {
+            var repository = new Mock<IAIConversationRepository>(MockBehavior.Strict);
+            var provider = CreateProvider(repository);
+
+            var result = await provider.GetLastPersistedMessageIdAsync(Guid.Empty);
+
+            result.ShouldBeNull();
+        }
+    }
 }

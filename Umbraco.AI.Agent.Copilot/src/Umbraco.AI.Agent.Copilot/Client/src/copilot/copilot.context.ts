@@ -243,6 +243,14 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             }
         });
 
+        // A rebind attempted while a turn is in flight is deferred inside #handleEntitySelection --
+        // retry once the run settles, against whichever entity ends up selected by then.
+        this.observe(this.#runController.isRunning$, (running) => {
+            if (!running && this.#historyBound && this.#pendingEntityKey !== this.#boundEntityKey) {
+                this.#handleEntitySelection(this.#pendingEntityKey);
+            }
+        });
+
         this.#bindHistoryToUser();
         this.#bindHistoryToSession();
 
@@ -416,6 +424,15 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         // later re-open restores it. Don't rebind yet.
         if (newKey === undefined) {
             this.#boundEntityKey = undefined;
+            return;
+        }
+
+        // Never rebind while a turn is in flight -- a frontend tool call finishes asynchronously
+        // and would otherwise resume (or a still-open save-rekey snapshot would persist) against
+        // the wrong entity's thread once the code below replaces #activeHistoryKey / #messages,
+        // corrupting both conversations (#381). #pendingEntityKey already holds this key; the
+        // isRunning$ observer registered in the constructor retries once the run settles.
+        if (this.#runController.isRunning) {
             return;
         }
 

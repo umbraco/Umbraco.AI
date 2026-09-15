@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.FileStore;
 
 namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
@@ -192,6 +193,97 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             .ToList();
     }
 
+    /// <summary>
+    /// Drops the leading run of <paramref name="candidates"/> that exactly duplicates the tail of this
+    /// conversation's persisted history — the read-side counterpart of <see cref="DropAlreadyPersistedTailAsync"/>.
+    /// A dropped SSE connection can leave the client's own "already sent" boundary stale, so it resends
+    /// content the server already holds as if it were new. Left in place, MAF's bound
+    /// <c>ChatHistoryProvider.InvokingCoreAsync</c> unconditionally concatenates
+    /// <see cref="ProvideChatHistoryAsync"/>'s persisted copy ahead of whatever is passed to the run, so
+    /// the model ends up seeing the same tool call (and result) twice — a real provider rejects that
+    /// outright (Anthropic: "tool_use ids must be unique") (umbraco/Umbraco.AI#375). Never throws: a
+    /// comparison that finds no overlap just returns <paramref name="candidates"/> untouched.
+    /// </summary>
+    internal async Task<IReadOnlyList<ChatMessage>> DropAlreadyPersistedLeadingMessagesAsync(
+        Guid conversationId,
+        IReadOnlyList<ChatMessage> candidates,
+        CancellationToken cancellationToken = default)
+    {
+        if (conversationId == Guid.Empty || candidates.Count == 0)
+        {
+            return candidates;
+        }
+
+        var stored = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
+        var maxOverlap = Math.Min(candidates.Count, stored.Count);
+
+        for (var overlap = maxOverlap; overlap > 0; overlap--)
+        {
+            var isDuplicateTail = true;
+            for (var i = 0; i < overlap; i++)
+            {
+                if (!IsSameMessage(candidates[i], stored[stored.Count - overlap + i]))
+                {
+                    isDuplicateTail = false;
+                    break;
+                }
+            }
+
+            if (!isDuplicateTail)
+            {
+                continue;
+            }
+
+            _logger.LogInformation(
+                "Conversation {ConversationId}: dropped {Count} client-resent message(s) that duplicated " +
+                "already-persisted history before sending this turn to the model (umbraco/Umbraco.AI#375).",
+                conversationId,
+                overlap);
+
+            return candidates.Skip(overlap).ToList();
+        }
+
+        return candidates;
+    }
+
+    /// <summary>
+    /// Resolves the <see cref="ChatMessage.MessageId"/> of the last message durably persisted for this
+    /// conversation, or null when nothing is persisted yet. Called once a turn has finished (success or
+    /// interrupt) so the client can be told the true persisted boundary on <c>RUN_FINISHED</c> — see
+    /// <see cref="AIConversationPersistenceSync.ResolveLastPersistedMessageId"/> (umbraco/Umbraco.AI#375).
+    /// </summary>
+    public async Task<string?> GetLastPersistedMessageIdAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    {
+        if (conversationId == Guid.Empty)
+        {
+            return null;
+        }
+
+        var messages = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
+        return messages.Count == 0 ? null : messages[^1].MessageId;
+    }
+
+    /// <summary>
+    /// Prefers matching by <see cref="ChatMessage.MessageId"/> when both sides have one recorded — the
+    /// precise signal, since two genuinely different messages that happen to share identical text (the
+    /// user replying "ok" twice) still carry different ids. Falls back to same role + identical
+    /// serialized content (<see cref="AIJsonUtilities.DefaultOptions"/>, matching how each message was
+    /// persisted) when either side has no id.
+    /// </summary>
+    private static bool IsSameMessage(ChatMessage candidate, ChatMessage stored)
+    {
+        if (!string.IsNullOrEmpty(candidate.MessageId) && !string.IsNullOrEmpty(stored.MessageId))
+        {
+            return string.Equals(candidate.MessageId, stored.MessageId, StringComparison.Ordinal);
+        }
+
+        return candidate.Role == stored.Role &&
+            string.Equals(
+                JsonSerializer.Serialize(candidate, AIJsonUtilities.DefaultOptions),
+                JsonSerializer.Serialize(stored, AIJsonUtilities.DefaultOptions),
+                StringComparison.Ordinal);
+    }
+
     /// <inheritdoc />
     protected override async ValueTask<IEnumerable<ChatMessage>> ProvideChatHistoryAsync(
         InvokingContext context,
@@ -251,7 +343,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         for (var i = 0; i < message.Contents.Count; i++)
         {
             if (message.Contents[i] is not UriContent { AdditionalProperties: { } properties } reference ||
-                properties.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var value) is false ||
+                !properties.TryGetValue(AIFileContentMarker.FileIdPropertyKey, out var value) ||
                 !AIFileContentMarker.TryGetFileId(value, out var fileId))
             {
                 continue;

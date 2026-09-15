@@ -111,6 +111,16 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             // across requests the same way the chat messages do.
             LoadSessionState = async ct => await _historyProvider.GetSessionStateAsync(id, ct),
             SaveSessionState = async (state, ct) => await _historyProvider.SaveSessionStateAsync(id, state, ct),
+
+            // A dropped connection can leave the browser's own "already sent" bookkeeping stale, so a
+            // plain follow-up turn can resend a leading run of messages this conversation already holds,
+            // or the browser can carry on not knowing what actually got saved. PersistenceSync guards
+            // both ends of that gap (umbraco/Umbraco.AI#375).
+            PersistenceSync = new AIConversationPersistenceSync(
+                DropAlreadyPersistedLeadingMessages: async (messages, ct) =>
+                    await _historyProvider.DropAlreadyPersistedLeadingMessagesAsync(id, messages, ct),
+                ResolveLastPersistedMessageId: async ct =>
+                    await _historyProvider.GetLastPersistedMessageIdAsync(id, ct)),
         };
 
         var options = new AIAgentExecutionOptions

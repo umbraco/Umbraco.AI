@@ -103,6 +103,22 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
     }
 
     /**
+     * Corrects `#persisted` from the server's own authoritative report of what it actually holds,
+     * rather than only the arithmetic assumption in {@link onTurnComplete} — the assumption a dropped
+     * SSE connection breaks, since the turn that died never called `onTurnComplete` and its content
+     * lingers past `#persisted` on every subsequent `outbound()` call (umbraco/Umbraco.AI#375).
+     *
+     * `Math.max` keeps this monotonic: an out-of-order or duplicate report can only confirm the boundary
+     * has moved forward, never retreat it and risk re-marking already-sent content as pending again.
+     */
+    onServerPersistedBoundary(lastPersistedMessageId: string, allMessages: UaiChatMessage[]): void {
+        const index = allMessages.findIndex((m) => m.id === lastPersistedMessageId);
+        if (index >= 0) {
+            this.#persisted = Math.max(this.#persisted, index + 1);
+        }
+    }
+
+    /**
      * Regenerate: drop the stored answer to the last user message before the re-run, so the new one
      * replaces it instead of being appended after it. The cutoff is derived server-side — the display
      * list can't address stored rows — so this sends no positions, just the intent.

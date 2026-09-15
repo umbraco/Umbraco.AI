@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <!--
+        This project is deliberately NUnit + Shouldly instead of the repo-default xUnit stack (see
+        CLAUDE.md). It exists to reproduce https://github.com/umbraco/Umbraco.AI/issues/375 using
+        Umbraco CMS's REAL scope machinery (UmbracoIntegrationTest), which only ships as an
+        NUnit-based test harness - there is no way to drive it under xUnit. See
+        AmbientScopeRaceTests.cs for the full explanation and a link back to the issue.
+    -->
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NUnit" />
+        <PackageReference Include="NUnit3TestAdapter" />
+        <PackageReference Include="Shouldly" />
+        <PackageReference Include="Umbraco.Cms.Tests.Integration" />
+    </ItemGroup>
+
+</Project>

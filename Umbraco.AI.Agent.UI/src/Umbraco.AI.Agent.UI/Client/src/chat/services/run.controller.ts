@@ -171,15 +171,60 @@ export class UaiRunController extends UmbControllerBase {
         return this.#messages.value;
     }
 
+    /** Synchronous snapshot of {@link isRunning$} -- a turn (including an open interrupt) is in flight. */
+    get isRunning(): boolean {
+        return this.#agentState.value !== undefined;
+    }
+
     abortRun(): void {
         if (!this.#client) return;
 
         this.#client.reset();
         this.#streamingContent.next("");
+
+        // A frontend tool call that was still pending/executing when the run was aborted (e.g.
+        // the user hit Cancel, or the copilot rebound to a different entity, while a tool-call
+        // interrupt was in flight) never got a matching tool-result message. Left as-is, the next
+        // turn resends that tool_use with nothing after it, which providers such as Anthropic
+        // reject outright (#381).
+        this.#reconcileAbortedToolCalls();
+
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
         this.#resolvedAgent.next(undefined);
+    }
+
+    /** Marks any still-pending/executing tool call as aborted and appends a matching result. */
+    #reconcileAbortedToolCalls(): void {
+        const unresolved = this.#currentToolCalls.filter(
+            (tc) => tc.status === "pending" || tc.status === "executing",
+        );
+        if (unresolved.length === 0) return;
+
+        const unresolvedIds = new Set(unresolved.map((tc) => tc.id));
+
+        const updated = this.#messages.value.map((msg) => {
+            if (msg.role === "assistant" && msg.toolCalls?.some((tc) => unresolvedIds.has(tc.id))) {
+                return {
+                    ...msg,
+                    toolCalls: msg.toolCalls.map((tc) =>
+                        unresolvedIds.has(tc.id) ? { ...tc, status: "error" as UaiToolCallStatus, result: "Aborted" } : tc,
+                    ),
+                };
+            }
+            return msg;
+        });
+
+        const toolMessages: UaiChatMessage[] = unresolved.map((tc) => ({
+            id: crypto.randomUUID(),
+            role: "tool",
+            content: "Aborted",
+            toolCallId: tc.id,
+            timestamp: new Date(),
+        }));
+
+        this.#messages.next([...updated, ...toolMessages]);
     }
 
     async regenerateLastMessage(): Promise<void> {
@@ -237,7 +282,40 @@ export class UaiRunController extends UmbControllerBase {
      * server supplies the authoritative history to the model on each turn.
      */
     async loadInitialMessages(): Promise<void> {
-        this.#messages.next(await this.#strategy.loadInitial());
+        this.#messages.next(this.#sanitizeOrphanedToolCalls(await this.#strategy.loadInitial()));
+    }
+
+    /**
+     * Repairs a restored thread where an assistant `toolCalls` entry has no matching tool-role
+     * result message -- e.g. the turn was saved between the tool-call interrupt and the tool
+     * actually resolving (#381). Inserts a synthesized "result unavailable" tool message right
+     * after the assistant message so the history sent to the provider on the next turn never has
+     * a tool_use with nothing after it.
+     */
+    #sanitizeOrphanedToolCalls(messages: UaiChatMessage[]): UaiChatMessage[] {
+        const resultIds = new Set(messages.filter((m) => m.role === "tool").map((m) => m.toolCallId));
+        let changed = false;
+        const repaired: UaiChatMessage[] = [];
+
+        for (const msg of messages) {
+            repaired.push(msg);
+            if (msg.role !== "assistant" || !msg.toolCalls?.length) continue;
+
+            for (const tc of msg.toolCalls) {
+                if (!resultIds.has(tc.id)) {
+                    changed = true;
+                    repaired.push({
+                        id: crypto.randomUUID(),
+                        role: "tool",
+                        content: "Result unavailable (conversation was restored).",
+                        toolCallId: tc.id,
+                        timestamp: msg.timestamp,
+                    });
+                }
+            }
+        }
+
+        return changed ? repaired : messages;
     }
 
     #createClient(): void {
@@ -487,13 +565,23 @@ export class UaiRunController extends UmbControllerBase {
         if (event.outcome === "interrupt" && event.interrupt) {
             const context = this.#createInterruptContext(assistantMessageId, event.interrupt);
             if (this.#handlerRegistry.handle(event.interrupt, context)) {
-                // Advance the persisted boundary even though the run ends here for the display: whatever
-                // the server holds at this point is durably stored (an interrupt is a real HTTP response,
-                // not a dropped connection), and HTTP turns are serial, so it's current before the resume's
-                // next send. Skipping this stalled `#persisted` on every HITL/tool-approval turn, so the
-                // *next* turn re-sent (and the server re-persisted) the same prefix — the bug that made the
-                // duplication compound turn over turn. No-op for the client-owned default strategy.
-                this.#strategy.onTurnComplete?.(this.#messages.value);
+                // A "tool_call" interrupt only pauses here until UaiToolExecutionHandler runs the
+                // frontend tool and resumes -- persisting now would capture the assistant's tool_use
+                // with no matching tool_result yet, and a provider such as Anthropic rejects that
+                // shape on the very next turn (#381). The resumed run's own RUN_FINISHED calls
+                // onTurnComplete once the result is actually in.
+                //
+                // Every other interrupt reason (HITL approval, custom) advances the persisted
+                // boundary here even though the run ends for the display: whatever the server holds
+                // at this point is durably stored (an interrupt is a real HTTP response, not a
+                // dropped connection), and HTTP turns are serial, so it's current before the resume's
+                // next send. Skipping this stalled `#persisted` on every HITL/tool-approval turn, so
+                // the *next* turn re-sent (and the server re-persisted) the same prefix — the bug that
+                // made the duplication compound turn over turn. No-op for the client-owned default
+                // strategy either way.
+                if (event.interrupt.reason !== "tool_call") {
+                    this.#strategy.onTurnComplete?.(this.#messages.value);
+                }
                 return;
             }
         }

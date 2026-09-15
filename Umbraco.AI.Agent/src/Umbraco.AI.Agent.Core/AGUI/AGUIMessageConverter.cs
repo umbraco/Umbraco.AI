@@ -51,7 +51,7 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
 
         // Regular message
         var role = ConvertToChatRole(message.Role);
-        return new ChatMessage(role, message.Content ?? string.Empty);
+        return new ChatMessage(role, message.Content ?? string.Empty) { MessageId = message.Id };
     }
 
     /// <inheritdoc />
@@ -230,7 +230,7 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             }
         }
 
-        return new ChatMessage(role, contents);
+        return new ChatMessage(role, contents) { MessageId = message.Id };
     }
 
     private static string? GetFilename(IReadOnlyDictionary<string, object?>? metadata)
@@ -258,13 +258,13 @@ internal sealed class AGUIMessageConverter : IAGUIMessageConverter
             contents.Add(new FunctionCallContent(toolCall.Id, toolCall.Function.Name, args));
         }
 
-        return new ChatMessage(ChatRole.Assistant, contents);
+        return new ChatMessage(ChatRole.Assistant, contents) { MessageId = message.Id };
     }
 
     private static ChatMessage ConvertToolResultMessage(AGUIMessage message)
     {
         var result = new FunctionResultContent(message.ToolCallId!, message.Content ?? string.Empty);
-        return new ChatMessage(ChatRole.Tool, [result]);
+        return new ChatMessage(ChatRole.Tool, [result]) { MessageId = message.Id };
     }
 
     private static IDictionary<string, object?>? ParseArguments(string? argumentsJson)

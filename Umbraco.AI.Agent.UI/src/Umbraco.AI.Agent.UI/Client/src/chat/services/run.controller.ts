@@ -466,6 +466,13 @@ export class UaiRunController extends UmbControllerBase {
         if (event.outcome === "interrupt" && event.interrupt) {
             const context = this.#createInterruptContext(assistantMessageId, event.interrupt);
             if (this.#handlerRegistry.handle(event.interrupt, context)) {
+                // Advance the persisted boundary even though the run ends here for the display: whatever
+                // the server holds at this point is durably stored (an interrupt is a real HTTP response,
+                // not a dropped connection), and HTTP turns are serial, so it's current before the resume's
+                // next send. Skipping this stalled `#persisted` on every HITL/tool-approval turn, so the
+                // *next* turn re-sent (and the server re-persisted) the same prefix — the bug that made the
+                // duplication compound turn over turn. No-op for the client-owned default strategy.
+                this.#strategy.onTurnComplete?.(this.#messages.value);
                 return;
             }
         }

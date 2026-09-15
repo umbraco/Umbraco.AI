@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Core.FileStore;
@@ -33,7 +34,8 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton(sp =>
             new ConversationChatHistoryProvider(
                 sp.GetRequiredService<IAIConversationRepository>(),
-                sp.GetRequiredService<IAIFileStore>()));
+                sp.GetRequiredService<IAIFileStore>(),
+                sp.GetRequiredService<ILogger<ConversationChatHistoryProvider>>()));
 
         // Ownership-enforcing services over the internal repositories (repos registered by the
         // persistence layer). Controllers and the stream endpoint go through these, never the repos.

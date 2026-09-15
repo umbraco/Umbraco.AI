@@ -14,3 +14,7 @@ export * from "./analytics/index.js";
 export * from "./workspace-registry/index.js";
 export * from "./test/index.js";
 export * from "./guardrail/index.js";
+// client-ready.ts must be dual-reachable (also here, not just via app.ts/exports.ts) -- see the matching
+// comment in Umbraco.AI.Agent's index.ts for the full mechanism. Not yet consumed cross-package today,
+// but carries the identical latent vulnerability, so fixed here too for consistency.
+export * from "./client-ready.js";

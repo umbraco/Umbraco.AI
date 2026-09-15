@@ -71,6 +71,11 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
     #agentsLoading = new UmbBooleanState(false);
+    /** True once `loadInitialMessages()` has resolved for the *currently targeted* conversation — reset to
+     *  false the moment the target changes. Consumed by the view to gate the composer alongside the store's
+     *  `isResolved$`, so a user can't send before the server-persisted strategy's `#persisted` boundary is
+     *  correct (sending too early re-uploads already-stored messages as "new", duplicating them). */
+    #historyLoaded = new UmbBooleanState(false);
 
     /** Local mirror of the store's conversation (draft or persisted), for agent resolution + auto-titling. */
     #conversation?: UaiConversationDetailModel;
@@ -84,6 +89,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     readonly agents = this.#agents.asObservable();
     readonly selectedAgent = this.#selectedAgent.asObservable();
     readonly agentsLoading = this.#agentsLoading.asObservable();
+    readonly historyLoaded$ = this.#historyLoaded.asObservable();
 
     get messages$() {
         return this.#runController.messages$;
@@ -177,6 +183,11 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         if (key === this.#currentTargetKey) return;
         this.#currentTargetKey = key;
         this.#creating = false;
+        // Reset immediately (synchronously, before the async history load below) so a send racing the
+        // target change is blocked by the composer gate rather than falling through with a stale/zeroed
+        // `#persisted` boundary. Re-checked against `key` after the await so a target change that lands
+        // while this load is in flight doesn't have a now-stale load flip it back to true.
+        this.#historyLoaded.setValue(false);
 
         this.#runController.abortRun();
 
@@ -184,6 +195,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
             this.#strategy.setConversationId(undefined);
             this.#runController.setAgent({ id: "conversation:new", name: "Workspace", alias: "workspace" });
             await this.#runController.loadInitialMessages();
+            if (this.#currentTargetKey === key) this.#historyLoaded.setValue(true);
             return;
         }
 
@@ -191,6 +203,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.#strategy.setConversationId(id);
         this.#runController.setAgent({ id: `conversation:${id}`, name: "Workspace", alias: "workspace" });
         await this.#runController.loadInitialMessages();
+        if (this.#currentTargetKey === key) this.#historyLoaded.setValue(true);
 
         // If this open is the promotion of a draft, replay the turn stashed before navigation, now that
         // the (empty) history has loaded so the send appends onto it. Caught rather than left to reject:

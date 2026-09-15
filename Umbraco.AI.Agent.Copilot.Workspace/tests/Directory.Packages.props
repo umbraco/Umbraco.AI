@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Enable multi-level merging - test package versions are inherited from root Directory.Packages.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
+
+  <!--
+    Umbraco.AI.Agent.Copilot.Workspace.Tests.Integration is deliberately NUnit-based (repo default is
+    xUnit) because it must run on Umbraco CMS's own UmbracoIntegrationTest scope-testing harness, which
+    is NUnit-only. See that project's test file for the full explanation (issue #375).
+  -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Cms.Tests.Integration" Version="[17.5.0, 17.999.999)" />
+    <PackageVersion Include="NUnit" Version="3.14.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
+
+    <!--
+      Umbraco.Cms.Tests.Integration 17.5.x transitively requires Microsoft.NET.Test.Sdk >= 18.4.0,
+      higher than the repo-wide floor (17.13.0) pinned in the root Directory.Packages.props. Override
+      it here (scoped to this tests/ subtree only) so restore doesn't report a package downgrade.
+    -->
+    <PackageVersion Update="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+  </ItemGroup>
+</Project>

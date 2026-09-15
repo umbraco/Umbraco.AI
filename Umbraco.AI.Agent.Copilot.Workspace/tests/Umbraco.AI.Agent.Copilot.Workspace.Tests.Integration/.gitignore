@@ -1,0 +1,4 @@
+# Copied into this directory on every build by Umbraco.Cms.Tests.Integration's own MSBuild targets.
+appsettings-schema.json
+appsettings-schema.Umbraco.Cms.json
+umbraco-package-schema.json

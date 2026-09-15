@@ -16,5 +16,6 @@
   <Project Path="src/Umbraco.AI.Agent.Copilot.Workspace/Umbraco.AI.Agent.Copilot.Workspace.csproj" />
   <Folder Name="/Tests/">
     <Project Path="tests/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.csproj" />
+    <Project Path="tests/Umbraco.AI.Agent.Copilot.Workspace.Tests.Integration/Umbraco.AI.Agent.Copilot.Workspace.Tests.Integration.csproj" />
   </Folder>
 </Solution>

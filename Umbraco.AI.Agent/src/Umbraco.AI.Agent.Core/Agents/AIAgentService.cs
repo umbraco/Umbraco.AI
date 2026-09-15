@@ -482,11 +482,15 @@ internal sealed class AIAgentService : IAIAgentService
             }
         }
 
-        // Kick off the persisted session-state load in parallel with PrepareAgentExecutionAsync below —
-        // it only needs the conversation id, not anything PrepareAgentExecutionAsync resolves, so there's
-        // no reason to pay its DB round trip as pure added latency on top of prep's own I/O.
+        // Load the persisted session state before starting PrepareAgentExecutionAsync below. This used to
+        // be fired off without awaiting so its DB round trip overlapped with PrepareAgentExecutionAsync's
+        // own I/O — but both touch EF Core scopes, and Umbraco's ambient-scope tracking is an AsyncLocal
+        // stack built for sequential nesting, not two independently-progressing scoped operations. Letting
+        // them overlap could tear down a scope while it was no longer the ambient one, crashing the
+        // in-flight SSE stream with "Scope X is not the Ambient Scope Y" (umbraco/Umbraco.AI#375). Await it
+        // here instead — the DB round trip is cheap next to correctness.
         var historyBinding = options.ConversationHistory;
-        var sessionStateTask = StartLoadSessionStateAsync(historyBinding, cancellationToken);
+        var persistedState = await StartLoadSessionStateAsync(historyBinding, cancellationToken);
 
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools,
@@ -536,7 +540,7 @@ internal sealed class AIAgentService : IAIAgentService
                 // unmatched once a later turn's persisted history is reloaded. Keeping this decorator active
                 // (with its state correctly restored) avoids that; our own correlation layer stays in place
                 // too, since it's what supplies the correct request object for CreateResponse().
-                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, sessionStateTask, cancellationToken);
+                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, persistedState, cancellationToken);
 
                 // For an approval resume after a reload, the original tool call may only exist in persisted
                 // history — recover it (name + args) so the resume path can correlate instead of skipping (B2).
@@ -924,9 +928,13 @@ internal sealed class AIAgentService : IAIAgentService
     }
 
     /// <summary>
-    /// Starts loading the conversation's persisted session-state blob (if a loader is configured) without
-    /// awaiting it, so the DB round trip overlaps with the independent I/O in <see cref="PrepareAgentExecutionAsync"/>
-    /// (tool-permission lookup, agent-factory/profile resolution) instead of adding to it serially.
+    /// Loads the conversation's persisted session-state blob (if a loader is configured). Must be awaited
+    /// before any other EF Core-scoped work starts (e.g. <see cref="PrepareAgentExecutionAsync"/>'s
+    /// agent-factory/profile resolution) rather than fired off in the background — see
+    /// umbraco/Umbraco.AI#375: this loader and that other work each open their own EF Core scope, and
+    /// Umbraco's ambient-scope tracking is an AsyncLocal stack that assumes strictly sequential nesting.
+    /// Two independently-progressing scoped operations can tear one down while it's no longer the ambient
+    /// scope, throwing "Scope X is not the Ambient Scope Y" mid-request.
     /// </summary>
     private static Task<JsonElement?> StartLoadSessionStateAsync(
         AIConversationHistoryBinding? historyBinding,
@@ -936,17 +944,16 @@ internal sealed class AIAgentService : IAIAgentService
             : Task.FromResult<JsonElement?>(null);
 
     /// <summary>
-    /// Creates or restores the run's session from <paramref name="sessionStateTask"/> (started earlier via
+    /// Creates or restores the run's session from <paramref name="persistedState"/> (loaded earlier via
     /// <see cref="StartLoadSessionStateAsync"/>) and binds it via <paramref name="historyBinding"/>, so the
     /// attached ChatHistoryProvider has a conversation id to load/store against.
     /// </summary>
     private static async Task<AgentSession> CreateOrRestoreSessionAsync(
         MsAIAgent mafAgent,
         AIConversationHistoryBinding historyBinding,
-        Task<JsonElement?> sessionStateTask,
+        JsonElement? persistedState,
         CancellationToken cancellationToken)
     {
-        var persistedState = await sessionStateTask;
         var session = persistedState is { } state
             ? await mafAgent.DeserializeSessionAsync(state, cancellationToken: cancellationToken)
             : await mafAgent.CreateSessionAsync(cancellationToken);
@@ -1021,10 +1028,10 @@ internal sealed class AIAgentService : IAIAgentService
         var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
-        // Kick off the persisted session-state load in parallel with PrepareAgentExecutionAsync below —
-        // see StartLoadSessionStateAsync.
+        // Load the persisted session state before PrepareAgentExecutionAsync below — see the comment in
+        // StreamAgentAGUIAsync on why this is sequential rather than fired off in parallel (umbraco/Umbraco.AI#375).
         var historyBinding = options.ConversationHistory;
-        var sessionStateTask = StartLoadSessionStateAsync(historyBinding, cancellationToken);
+        var persistedState = await StartLoadSessionStateAsync(historyBinding, cancellationToken);
 
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
@@ -1054,7 +1061,7 @@ internal sealed class AIAgentService : IAIAgentService
                 // nothing is ever persisted to the conversation. Session setup lives inside this try so a
                 // failure restoring it (e.g. an incompatible persisted state blob) still reaches the
                 // finally below and publishes the executed notification.
-                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, sessionStateTask, cancellationToken);
+                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, persistedState, cancellationToken);
 
                 // Auto-deny any approval request left dangling by an earlier run of this conversation that
                 // never resolved it (e.g. the caller never resumed it). Left in place, MAF's bound
@@ -1100,10 +1107,10 @@ internal sealed class AIAgentService : IAIAgentService
         var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
-        // Kick off the persisted session-state load in parallel with PrepareAgentExecutionAsync below —
-        // see StartLoadSessionStateAsync.
+        // Load the persisted session state before PrepareAgentExecutionAsync below — see the comment in
+        // StreamAgentAGUIAsync on why this is sequential rather than fired off in parallel (umbraco/Umbraco.AI#375).
         var historyBinding = options.ConversationHistory;
-        var sessionStateTask = StartLoadSessionStateAsync(historyBinding, cancellationToken);
+        var persistedState = await StartLoadSessionStateAsync(historyBinding, cancellationToken);
 
         var context = await PrepareAgentExecutionAsync(
             agent, chatMessages, options, frontendTools: null,
@@ -1126,7 +1133,7 @@ internal sealed class AIAgentService : IAIAgentService
             var runMessages = chatMessages;
             if (historyBinding is not null)
             {
-                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, sessionStateTask, cancellationToken);
+                session = await CreateOrRestoreSessionAsync(context.MafAgent, historyBinding, persistedState, cancellationToken);
                 runMessages = await AppendDanglingApprovalDenialsAsync(chatMessages, historyBinding, cancellationToken);
             }
 

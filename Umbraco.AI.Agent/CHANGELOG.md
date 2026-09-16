@@ -5,6 +5,15 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0-rc.3...Umbraco.AI.Agent@17.2.0-rc.4) (2026-09-16)
+
+### fix
+
+* **agent,anthropic:** Stop the volatile runtime context from poisoning the cached prompt prefix ([a3d37fc](https://github.com/umbraco/Umbraco.AI/commit/a3d37fc877e36d34c2d99dd1d0cd4941acac866b))
+* **agent,copilot-workspace:** Load persisted session state before other scoped DB work ([9f0f457](https://github.com/umbraco/Umbraco.AI/commit/9f0f4570ddea48c352de52143d333218e1858e69)), closes [umbraco/Umbraco.AI#375](https://github.com/umbraco/Umbraco.AI/issues/375)
+* **agent,copilot-workspace:** Stop duplicate/stale conversation history on reconnect ([96ac859](https://github.com/umbraco/Umbraco.AI/commit/96ac8590b6cf394dadeb774c54f0d8d53c2cac5d)), closes [umbraco/Umbraco.AI#375](https://github.com/umbraco/Umbraco.AI/issues/375)
+* **agent,copilot:** Stop a restored/aborted thread ever holding a dangling tool_use ([a0c5ee6](https://github.com/umbraco/Umbraco.AI/commit/a0c5ee67878c9b7e5f8ba5009e7eb6c0f840de43)), closes [#381](https://github.com/umbraco/Umbraco.AI/issues/381)
+* **agent:** Clear stale "Calling <tool>..." status once its result arrives ([dc50908](https://github.com/umbraco/Umbraco.AI/commit/dc509082fdc4123fc657a3806b78db8ee9dada4f)), closes [#376](https://github.com/umbraco/Umbraco.AI/issues/376)
 
 ## [17.2.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0-rc.2...Umbraco.AI.Agent@17.2.0-rc.3) (2026-09-09)
 

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.1.0-rc.3...Umbraco.AI.Agent.Copilot@17.1.0-rc.4) (2026-09-16)
+
+### fix
+
+* **agent,copilot:** Stop a restored/aborted thread ever holding a dangling tool_use ([a0c5ee6](https://github.com/umbraco/Umbraco.AI/commit/a0c5ee67878c9b7e5f8ba5009e7eb6c0f840de43)), closes [#381](https://github.com/umbraco/Umbraco.AI/issues/381)
+
 ## [17.1.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.1.0-rc.2...Umbraco.AI.Agent.Copilot@17.1.0-rc.3) (2026-09-08)
 
 ## [17.1.0-rc.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.1.0-rc.1...Umbraco.AI.Agent.Copilot@17.1.0-rc.2) (2026-08-21)

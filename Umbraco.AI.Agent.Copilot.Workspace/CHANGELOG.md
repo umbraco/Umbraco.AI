@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.3...Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.4) (2026-09-16)
+
+### fix
+
+* **agent,copilot-workspace:** Load persisted session state before other scoped DB work ([9f0f457](https://github.com/umbraco/Umbraco.AI/commit/9f0f4570ddea48c352de52143d333218e1858e69)), closes [umbraco/Umbraco.AI#375](https://github.com/umbraco/Umbraco.AI/issues/375)
+* **agent,copilot-workspace:** Stop duplicate/stale conversation history on reconnect ([96ac859](https://github.com/umbraco/Umbraco.AI/commit/96ac8590b6cf394dadeb774c54f0d8d53c2cac5d)), closes [umbraco/Umbraco.AI#375](https://github.com/umbraco/Umbraco.AI/issues/375)
 
 ## [17.0.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.2...Umbraco.AI.Agent.Copilot.Workspace@17.0.0-rc.3) (2026-09-10)
 

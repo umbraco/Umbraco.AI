@@ -5,6 +5,15 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.4.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.3...Umbraco.AI@17.4.0-rc.4) (2026-09-16)
+
+### feat
+
+* **core:** Separate audit log message blocks with clear headers and spacing ([4d2d224](https://github.com/umbraco/Umbraco.AI/commit/4d2d22425eefa3e7adbd1fc4c21b75d121b8ff45))
+
+### fix
+
+* **core:** Disable the block entity adapter in the Copilot context selector ([c066322](https://github.com/umbraco/Umbraco.AI/commit/c066322c632fc9616ded3bb74edc3c064bb23dbf)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343)
 
 ## [17.4.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.4.0-rc.2...Umbraco.AI@17.4.0-rc.3) (2026-09-10)
 

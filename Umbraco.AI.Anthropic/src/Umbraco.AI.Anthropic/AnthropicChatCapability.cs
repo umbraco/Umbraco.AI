@@ -159,8 +159,15 @@ public class AnthropicChatCapability(
         // Cache-read tokens need no wrapper here: the SDK's adapter already reports them on
         // UsageDetails.CachedInputTokenCount, which is what core reads. See
         // AnthropicCachedTokenReportingTests.
-        return Provider.CreateSdkClient(settings)
-            .Beta.AsIChatClient(modelId);
+        //
+        // Wrapped with the block-level cache marker (umbraco/Umbraco.AI#382): the top-level cache_control
+        // field ApplyCapabilitySettings sets only reaches roughly the last ~20 blocks of the request, which
+        // in a longer conversation with tool calls never reaches back to the system prompt. This wrapper
+        // adds a second breakpoint directly on the last system-role message so the stable prefix (agent
+        // instructions, context resources -- see AIAgentSystemMessageChatClient) earns its own cache entry
+        // independent of how long the conversation tail has grown.
+        return new AnthropicSystemBlockCacheMarkingChatClient(
+            Provider.CreateSdkClient(settings).Beta.AsIChatClient(modelId));
     }
 
     /// <inheritdoc />
@@ -182,11 +189,20 @@ public class AnthropicChatCapability(
     /// applicability rules live in <see cref="ResolveEffort"/> and <see cref="ResolveCacheControl"/>.
     /// </para>
     /// <para>
-    /// Caching deliberately marks the request's last cacheable block (what the top-level field does) rather
-    /// than the end of the system prompt and tool definitions. A block-level marker is not reachable from
-    /// here: the adapter <em>appends</em> the caller's instructions after any <c>System</c> blocks this
-    /// representation supplies, so a marker placed on one of them would sit ahead of the content worth
-    /// caching. <c>AnthropicPromptCachingWireTests</c> pins that down.
+    /// Caching also marks the request's last cacheable block overall (what the top-level field does), as a
+    /// second, coarser breakpoint alongside the block-level one <see cref="AnthropicSystemBlockCacheMarkingChatClient"/>
+    /// adds directly on the last system-role message -- the top-level field cannot itself target that
+    /// message: the adapter <em>appends</em> the caller's instructions after any <c>System</c> blocks this
+    /// factory's representation supplies, so a marker placed here would sit ahead of the content worth
+    /// caching, not on it. <c>AnthropicPromptCachingWireTests</c> pins that constraint down; it's the reason
+    /// the block-level marker is applied by mutating the message list instead.
+    /// </para>
+    /// <para>
+    /// The resolved <see cref="BetaCacheControlEphemeral"/> is also stashed on <c>options.AdditionalProperties</c>
+    /// (dropped by the SDK's adapter before the wire request is built, so it never reaches Anthropic itself)
+    /// purely so <see cref="AnthropicSystemBlockCacheMarkingChatClient"/> -- which runs closer to the wire and
+    /// has no other way to learn this request's resolved caching decision -- can reuse it without
+    /// re-implementing <see cref="ResolveCacheControl"/>.
     /// </para>
     /// </remarks>
     protected override void ApplyCapabilitySettings(
@@ -197,6 +213,11 @@ public class AnthropicChatCapability(
         var model = modelId ?? DefaultChatModel;
         var effort = ResolveEffort(capabilitySettings.Effort, model);
         var cacheControl = ResolveCacheControl(capabilitySettings.PromptCaching);
+
+        if (cacheControl is not null)
+        {
+            (options.AdditionalProperties ??= [])[AnthropicSystemBlockCacheMarkingChatClient.CacheControlPropertyKey] = cacheControl;
+        }
 
         if (effort is null && cacheControl is null)
         {

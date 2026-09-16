@@ -12,11 +12,13 @@ namespace Umbraco.AI.Anthropic.Tests.Unit;
 /// body out.
 /// </summary>
 /// <remarks>
-/// <see cref="BlockLevelCacheControl_IsNotReachable_AdapterAppendsInstructionsAfterOurSystemBlocks"/> is the
-/// reason the capability marks the request's last cacheable block via the top-level field instead of the end
-/// of the system prompt: it records that the adapter appends the caller's instructions <em>after</em> any
-/// system blocks a raw representation supplies. If a future SDK changes that, it fails here rather than the
-/// marker silently caching nothing.
+/// <see cref="BlockLevelCacheControl_IsNotReachable_AdapterAppendsInstructionsAfterOurSystemBlocks"/> records
+/// why the capability cannot place a block-level marker via <see cref="ChatOptions.RawRepresentationFactory"/>
+/// itself: the adapter appends the caller's instructions <em>after</em> any system blocks a raw
+/// representation supplies, so a marker placed there would sit ahead of the content worth caching. If a
+/// future SDK changes that, it fails here rather than the marker silently caching nothing. That constraint is
+/// exactly why the block-level marker (umbraco/Umbraco.AI#382) is instead applied by
+/// <c>AnthropicSystemBlockCacheMarkingChatClient</c> mutating the message list, covered separately below.
 /// </remarks>
 public class AnthropicPromptCachingWireTests
 {
@@ -155,6 +157,75 @@ public class AnthropicPromptCachingWireTests
             + "{\"type\":\"text\",\"text\":\"the real system prompt\"}]");
     }
 
+    [Fact]
+    public async Task PromptCaching_MarksTheLastSystemMessage_WithBlockLevelCacheControl()
+    {
+        // Arrange — a system-role message simulates what AIAgentSystemMessageChatClient now puts first
+        // (agent instructions + context resources), with the volatile runtime-context prompt appended after
+        // via Instructions (umbraco/Umbraco.AI#382).
+        var handler = new CapturingHttpMessageHandler();
+        var chatClient = await CreateConfiguredClientAsync(
+            handler, new AnthropicChatCapabilitySettings { PromptCaching = "1h" });
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.System, "stable instructions and context resources"),
+            new(ChatRole.User, "hello"),
+        };
+        var options = new ChatOptions { MaxOutputTokens = 64, Instructions = "volatile entity context" };
+
+        // Act
+        await SendAndIgnoreFailureAsync(chatClient, messages, options);
+
+        // Assert — the stable system block gets its own block-level breakpoint, positioned before the
+        // volatile Instructions block, which stays unmarked; the top-level field (covering the conversation
+        // tail) is still set too, so both breakpoints coexist.
+        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        body.ShouldContain(
+            "\"system\":[{\"type\":\"text\",\"text\":\"stable instructions and context resources\","
+            + "\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},"
+            + "{\"type\":\"text\",\"text\":\"volatile entity context\"}]");
+        body.ShouldContain("\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}");
+    }
+
+    [Fact]
+    public async Task PromptCaching_WhenUnset_DoesNotMarkTheSystemMessage()
+    {
+        // Arrange — a system-role message is present, but caching is off, so it must stay unmarked
+        var handler = new CapturingHttpMessageHandler();
+        var chatClient = await CreateConfiguredClientAsync(handler, new AnthropicChatCapabilitySettings());
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.System, "stable instructions"),
+            new(ChatRole.User, "hello"),
+        };
+
+        // Act
+        await SendAndIgnoreFailureAsync(chatClient, messages);
+
+        // Assert
+        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        body.ShouldNotContain("cache_control");
+        body.ShouldContain("\"text\":\"stable instructions\"");
+    }
+
+    [Fact]
+    public async Task PromptCaching_WithNoSystemRoleMessage_StillSetsOnlyTheTopLevelMarker()
+    {
+        // Arrange — nothing for the block-level marker to attach to; must not throw
+        var handler = new CapturingHttpMessageHandler();
+        var chatClient = await CreateConfiguredClientAsync(
+            handler, new AnthropicChatCapabilitySettings { PromptCaching = "5m" });
+
+        // Act
+        await SendAndIgnoreFailureAsync(chatClient);
+
+        // Assert — exactly one cache_control marker (the top-level field), not a second block-level one
+        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        body.Split("cache_control").Length.ShouldBe(2); // one occurrence splits into 2 parts
+    }
+
     /// <summary>
     /// Builds the client the way production does: the capability-settings decorator over the declaration
     /// filter over the SDK client, with the settings under test baked in.
@@ -182,6 +253,19 @@ public class AnthropicPromptCachingWireTests
         try
         {
             await chatClient.GetResponseAsync("hello", options ?? new ChatOptions { MaxOutputTokens = 64 });
+        }
+        catch (Exception)
+        {
+            // The capturing handler always fails the request; only the captured body matters here.
+        }
+    }
+
+    private static async Task SendAndIgnoreFailureAsync(
+        IChatClient chatClient, IEnumerable<ChatMessage> messages, ChatOptions? options = null)
+    {
+        try
+        {
+            await chatClient.GetResponseAsync(messages, options ?? new ChatOptions { MaxOutputTokens = 64 });
         }
         catch (Exception)
         {

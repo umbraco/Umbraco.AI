@@ -6,59 +6,96 @@ using Xunit;
 namespace Umbraco.AI.Agent.Tests.Unit.Chat;
 
 /// <summary>
-/// Tests for where the runtime-context system prompt lands in the list actually sent to the model.
-/// It has to be index 0 of history plus the new turn: a block that slides further along with each turn
-/// moves the point where consecutive requests diverge back to the start, which defeats prompt caching.
+/// Tests for where the agent's stable instructions and the volatile runtime-context prompt each land in
+/// the request actually sent to the model (umbraco/Umbraco.AI#382). Stable instructions must lead the
+/// message list (index 0) -- provider prompt caching only reuses a request whose leading tokens match the
+/// previous one -- while the volatile prompt must land in <c>ChatOptions.Instructions</c>, which every
+/// provider adapter appends after any system content in the message list, so it never poisons that
+/// cacheable prefix.
 /// </summary>
 public class AIAgentSystemMessageChatClientTests
 {
-    private const string SystemPrompt = "## Current User\n- Name: Administrator";
+    private const string StableInstructions = "You are a helpful content editing assistant.";
+    private const string VolatilePrompt = "## Current User\n- Name: Administrator";
 
     [Fact]
-    public void Inject_WithStoredHistoryAndNewTurn_PutsTheBlockFirst()
+    public void Inject_WithStableInstructions_PutsThemAtIndexZeroAndClearsOptions()
     {
-        // Arrange — what a server-persisted surface sends on turn two: history, then the new question.
-        var messages = new List<ChatMessage>
-        {
-            new(ChatRole.User, "Say apple"),
-            new(ChatRole.Assistant, "apple"),
-            new(ChatRole.User, "Now say pear"),
-        };
+        // Arrange
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
+        var options = new ChatOptions { Instructions = StableInstructions };
 
         // Act
-        var result = AIAgentSystemMessageChatClient.Inject(messages, SystemPrompt);
+        var (resultMessages, resultOptions) = AIAgentSystemMessageChatClient.Inject(messages, options, null);
 
-        // Assert
-        result.Select(m => m.Role).ShouldBe([ChatRole.System, ChatRole.User, ChatRole.Assistant, ChatRole.User]);
-        result[0].Text.ShouldBe(SystemPrompt);
+        // Assert -- stable instructions lead the message list...
+        resultMessages.Select(m => m.Role).ShouldBe([ChatRole.System, ChatRole.User]);
+        resultMessages[0].Text.ShouldBe(StableInstructions);
+        // ...and are not left behind in Instructions too (would duplicate them on the wire).
+        resultOptions!.Instructions.ShouldBeNull();
     }
 
     [Fact]
-    public void Inject_AcrossTurns_KeepsAStableLeadingPrefix()
+    public void Inject_WithVolatilePromptOnly_SetsInstructionsAndLeavesMessagesAlone()
     {
-        // Arrange — the caching property itself: turn three must start with everything turn two started
-        // with. This is what the old agent-layer injection broke, by moving the block each turn.
-        var turnTwo = AIAgentSystemMessageChatClient.Inject(
-            [new(ChatRole.User, "Say apple"), new(ChatRole.Assistant, "apple"), new(ChatRole.User, "Now say pear")],
-            SystemPrompt);
+        // Arrange -- no agent instructions configured, only runtime context to inject
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
 
-        var turnThree = AIAgentSystemMessageChatClient.Inject(
+        // Act
+        var (resultMessages, resultOptions) = AIAgentSystemMessageChatClient.Inject(messages, null, VolatilePrompt);
+
+        // Assert
+        resultMessages.Count(m => m.Role == ChatRole.System).ShouldBe(0);
+        resultOptions!.Instructions.ShouldBe(VolatilePrompt);
+    }
+
+    [Fact]
+    public void Inject_WithBothStableAndVolatile_StableLeadsMessagesVolatileEndsUpInInstructions()
+    {
+        // Arrange -- the normal case: an agent with its own instructions, running with live entity context
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
+        var options = new ChatOptions { Instructions = StableInstructions };
+
+        // Act
+        var (resultMessages, resultOptions) = AIAgentSystemMessageChatClient.Inject(messages, options, VolatilePrompt);
+
+        // Assert -- on the wire, the adapter appends Instructions after the message list's system
+        // content, so this order puts the stable block first and the volatile one last.
+        resultMessages[0].Role.ShouldBe(ChatRole.System);
+        resultMessages[0].Text.ShouldBe(StableInstructions);
+        resultOptions!.Instructions.ShouldBe(VolatilePrompt);
+    }
+
+    [Fact]
+    public void Inject_AcrossTurns_KeepsAStableLeadingMessagePrefix()
+    {
+        // Arrange -- the caching property itself: turn three's message list must start with everything
+        // turn two's did, regardless of what the (per-turn, non-cacheable) volatile prompt is doing.
+        var (turnTwo, _) = AIAgentSystemMessageChatClient.Inject(
+            [new(ChatRole.User, "Say apple"), new(ChatRole.Assistant, "apple"), new(ChatRole.User, "Now say pear")],
+            new ChatOptions { Instructions = StableInstructions },
+            "entity: v1");
+
+        var (turnThree, _) = AIAgentSystemMessageChatClient.Inject(
             [
+                new(ChatRole.System, StableInstructions), // already injected on turn two, carried forward
                 new(ChatRole.User, "Say apple"),
                 new(ChatRole.Assistant, "apple"),
                 new(ChatRole.User, "Now say pear"),
                 new(ChatRole.Assistant, "pear"),
                 new(ChatRole.User, "And plum"),
             ],
-            SystemPrompt);
+            new ChatOptions { Instructions = StableInstructions },
+            "entity: v2");
 
         // Act
         var sharedPrefix = turnTwo
-            .Zip(turnThree, (a, b) => (a.Role == b.Role && a.Text == b.Text))
+            .Zip(turnThree, (a, b) => a.Role == b.Role && a.Text == b.Text)
             .TakeWhile(same => same)
             .Count();
 
-        // Assert — every message of the earlier request is reusable, not just the first couple.
+        // Assert -- every message of the earlier request is reusable, not just the first couple, even
+        // though the volatile entity value changed between the two turns.
         sharedPrefix.ShouldBe(turnTwo.Count);
     }
 
@@ -71,46 +108,68 @@ public class AIAgentSystemMessageChatClientTests
             new(ChatRole.System, "## Context\nBrand guidelines"),
             new(ChatRole.User, "Say apple"),
         };
+        var options = new ChatOptions { Instructions = StableInstructions };
 
         // Act
-        var result = AIAgentSystemMessageChatClient.Inject(messages, SystemPrompt);
+        var (resultMessages, _) = AIAgentSystemMessageChatClient.Inject(messages, options, null);
 
-        // Assert — runtime context leads, whatever was already there follows.
-        result.Count(m => m.Role == ChatRole.System).ShouldBe(1);
-        result[0].Text.ShouldBe($"{SystemPrompt}\n\n## Context\nBrand guidelines");
+        // Assert -- stable instructions lead, whatever was already there follows.
+        resultMessages.Count(m => m.Role == ChatRole.System).ShouldBe(1);
+        resultMessages[0].Text.ShouldBe($"{StableInstructions}\n\n## Context\nBrand guidelines");
     }
 
     [Fact]
-    public void Inject_CalledTwice_DoesNotStackASecondCopy()
+    public void Inject_CalledAgainOnAResumedTurn_DoesNotStackASecondCopyOfInstructions()
     {
-        // Arrange
+        // Arrange -- options.Instructions is re-supplied fresh (from the agent's fixed config) on every
+        // turn, but the message list already carries the prior turn's injection forward.
         var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
+        var (once, _) = AIAgentSystemMessageChatClient.Inject(
+            messages, new ChatOptions { Instructions = StableInstructions }, null);
 
-        // Act
-        var once = AIAgentSystemMessageChatClient.Inject(messages, SystemPrompt);
-        var twice = AIAgentSystemMessageChatClient.Inject(once, SystemPrompt);
+        // Act -- a resumed/retried run passes the same (now-injected) messages back in, with Instructions
+        // set fresh again from the agent's config, same as ChatClientAgent would supply it.
+        var (twice, twiceOptions) = AIAgentSystemMessageChatClient.Inject(
+            once, new ChatOptions { Instructions = StableInstructions }, null);
 
         // Assert
         twice.Count(m => m.Role == ChatRole.System).ShouldBe(1);
         twice.Count.ShouldBe(2);
+        // Instructions is still cleared even though nothing needed to move this time.
+        twiceOptions!.Instructions.ShouldBeNull();
     }
 
     [Fact]
-    public void Inject_WithATrailingSystemMessage_StillLeadsWithTheBlock()
+    public void Inject_WithATrailingSystemMessage_StillLeadsWithTheStableBlock()
     {
-        // Arrange — a system message elsewhere in the list is not the head, so it must not be folded into.
+        // Arrange -- a system message elsewhere in the list is not the head, so it must not be folded into.
         var messages = new List<ChatMessage>
         {
             new(ChatRole.User, "Say apple"),
             new(ChatRole.System, "stale block from an older turn"),
         };
+        var options = new ChatOptions { Instructions = StableInstructions };
 
         // Act
-        var result = AIAgentSystemMessageChatClient.Inject(messages, SystemPrompt);
+        var (resultMessages, _) = AIAgentSystemMessageChatClient.Inject(messages, options, null);
 
         // Assert
-        result[0].Role.ShouldBe(ChatRole.System);
-        result[0].Text.ShouldBe(SystemPrompt);
-        result.Count.ShouldBe(3);
+        resultMessages[0].Role.ShouldBe(ChatRole.System);
+        resultMessages[0].Text.ShouldBe(StableInstructions);
+        resultMessages.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Inject_WithNeitherStableNorVolatileContent_ReturnsInputUnchanged()
+    {
+        // Arrange
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
+
+        // Act
+        var (resultMessages, resultOptions) = AIAgentSystemMessageChatClient.Inject(messages, null, null);
+
+        // Assert
+        resultMessages.ShouldBeSameAs(messages);
+        resultOptions.ShouldBeNull();
     }
 }

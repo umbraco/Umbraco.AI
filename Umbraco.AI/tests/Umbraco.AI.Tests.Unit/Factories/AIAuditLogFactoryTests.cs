@@ -25,8 +25,8 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain("[system] You are a helpful assistant.");
-        snapshot.ShouldContain("[user] Hello!");
+        snapshot.ShouldContain($"===== [system] ====={Environment.NewLine}You are a helpful assistant.");
+        snapshot.ShouldContain($"===== [user] ====={Environment.NewLine}Hello!");
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldBe("[assistant]");
+        snapshot.ShouldBe("===== [assistant] =====");
     }
 
     #endregion
@@ -69,7 +69,7 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain("[assistant] Let me check the weather.");
+        snapshot.ShouldContain($"===== [assistant] ====={Environment.NewLine}Let me check the weather.");
         snapshot.ShouldContain("[tool_call:tc_001] get_weather({\"city\":\"London\"})");
     }
 
@@ -258,7 +258,7 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain("[user] Here is an image:");
+        snapshot.ShouldContain($"===== [user] ====={Environment.NewLine}Here is an image:");
         snapshot.ShouldContain("[data:image/png] (4 bytes)");
     }
 
@@ -296,12 +296,12 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain("[system] You are a helpful assistant with weather tools.");
-        snapshot.ShouldContain("[user] What's the weather in London?");
-        snapshot.ShouldContain("[assistant] Let me check the weather for you.");
+        snapshot.ShouldContain($"===== [system] ====={Environment.NewLine}You are a helpful assistant with weather tools.");
+        snapshot.ShouldContain($"===== [user] ====={Environment.NewLine}What's the weather in London?");
+        snapshot.ShouldContain($"===== [assistant] ====={Environment.NewLine}Let me check the weather for you.");
         snapshot.ShouldContain("[tool_call:tc_001] get_weather({\"city\":\"London\"})");
         snapshot.ShouldContain("[tool:tc_001] -> {\"temperature\":15,\"condition\":\"partly cloudy\"}");
-        snapshot.ShouldContain("[assistant] The weather in London is 15 degrees and partly cloudy.");
+        snapshot.ShouldContain($"===== [assistant] ====={Environment.NewLine}The weather in London is 15 degrees and partly cloudy.");
     }
 
     #endregion

@@ -17,7 +17,7 @@ public class AIChatMessageFormatterTests
         var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
-        result.ShouldBe("[assistant] Hello, world!");
+        result.ShouldBe($"===== [assistant] ====={Environment.NewLine}Hello, world!");
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class AIChatMessageFormatterTests
         var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
-        result.ShouldContain("[assistant] Let me check the weather.");
+        result.ShouldContain($"===== [assistant] ====={Environment.NewLine}Let me check the weather.");
         result.ShouldContain("[tool_call:tc_001] get_weather({\"city\":\"London\"})");
     }
 
@@ -100,7 +100,7 @@ public class AIChatMessageFormatterTests
         var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
-        result.ShouldBe("[assistant]");
+        result.ShouldBe("===== [assistant] =====");
     }
 
     #endregion
@@ -122,9 +122,9 @@ public class AIChatMessageFormatterTests
         var result = AIChatMessageFormatter.FormatChatMessages(messages);
 
         // Assert
-        result.ShouldContain("[system] You are a helpful assistant.");
-        result.ShouldContain("[user] Hello!");
-        result.ShouldContain("[assistant] Hi there! How can I help you?");
+        result.ShouldContain($"===== [system] ====={Environment.NewLine}You are a helpful assistant.");
+        result.ShouldContain($"===== [user] ====={Environment.NewLine}Hello!");
+        result.ShouldContain($"===== [assistant] ====={Environment.NewLine}Hi there! How can I help you?");
 
         // Verify they're on separate lines
         var lines = result.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -159,11 +159,11 @@ public class AIChatMessageFormatterTests
         var result = AIChatMessageFormatter.FormatChatMessages(messages);
 
         // Assert
-        result.ShouldContain("[user] What's the weather in London?");
-        result.ShouldContain("[assistant] Let me check the weather for you.");
+        result.ShouldContain($"===== [user] ====={Environment.NewLine}What's the weather in London?");
+        result.ShouldContain($"===== [assistant] ====={Environment.NewLine}Let me check the weather for you.");
         result.ShouldContain("[tool_call:tc_001] get_weather({\"city\":\"London\"})");
         result.ShouldContain("[tool:tc_001] -> {\"temperature\":15,\"condition\":\"partly cloudy\"}");
-        result.ShouldContain("[assistant] The weather in London is 15 degrees and partly cloudy.");
+        result.ShouldContain($"===== [assistant] ====={Environment.NewLine}The weather in London is 15 degrees and partly cloudy.");
     }
 
     #endregion

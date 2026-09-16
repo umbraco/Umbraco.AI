@@ -207,6 +207,61 @@ public class AITrackingChatClientTests
     }
 
     [Fact]
+    public async Task GetResponseAsync_WithInstructions_AddsALabelledContextEntryToTheAuditedPrompt()
+    {
+        // Arrange -- AIAgentSystemMessageChatClient moves the volatile runtime-context prompt into
+        // ChatOptions.Instructions (umbraco/Umbraco.AI#382), so nothing captures it unless the audited
+        // prompt snapshot picks it up separately; it must not silently disappear from the audit trail.
+        var fakeClient = new FakeChatClient("response");
+        var client = CreateClient(fakeClient);
+        var options = new ChatOptions { Instructions = "## Current Entity Context\n- Page: About Us" };
+
+        // Act
+        await client.GetResponseAsync(
+            [new ChatMessage(ChatRole.System, "You are a helpful assistant."), new ChatMessage(ChatRole.User, "Hi")],
+            options);
+
+        // Assert -- a separate "Context" entry (not "Instructions" -- it describes runtime context, not
+        // instructions) is inserted right after the real system message, and the actual message list sent
+        // to the provider is untouched (still 2 messages, no Context entry).
+        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
+            _auditLog,
+            It.Is<AIAuditPrompt?>(p =>
+                p != null &&
+                ((IReadOnlyList<ChatMessage>)p.Data!).Count == 3 &&
+                ((IReadOnlyList<ChatMessage>)p.Data!)[0].Role == ChatRole.System &&
+                ((IReadOnlyList<ChatMessage>)p.Data!)[1].Role.Value == "Context" &&
+                ((IReadOnlyList<ChatMessage>)p.Data!)[1].Text == "## Current Entity Context\n- Page: About Us" &&
+                ((IReadOnlyList<ChatMessage>)p.Data!)[2].Role == ChatRole.User),
+            It.IsAny<AIAuditResponse?>(),
+            CancellationToken.None), Times.Once);
+
+        var sentMessages = fakeClient.ReceivedMessages.ShouldHaveSingleItem().ToList();
+        sentMessages.Count.ShouldBe(2);
+        sentMessages.ShouldNotContain(m => m.Role.Value == "Context");
+    }
+
+    [Fact]
+    public async Task GetResponseAsync_WithoutInstructions_DoesNotAddAContextEntry()
+    {
+        // Arrange
+        var fakeClient = new FakeChatClient("response");
+        var client = CreateClient(fakeClient);
+
+        // Act
+        await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Hi")]);
+
+        // Assert
+        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
+            _auditLog,
+            It.Is<AIAuditPrompt?>(p =>
+                p != null &&
+                ((IReadOnlyList<ChatMessage>)p.Data!).Count == 1),
+            It.IsAny<AIAuditResponse?>(),
+            CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
     public async Task GetResponseAsync_ExtractsMetadataFromRuntimeContextLogKeys()
     {
         // Arrange — LogKeys declared in the runtime context must flow through to audit metadata.

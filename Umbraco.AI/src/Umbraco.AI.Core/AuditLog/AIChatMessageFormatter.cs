@@ -33,6 +33,7 @@ internal static class AIChatMessageFormatter
             if (!isFirst)
             {
                 sb.AppendLine();
+                sb.AppendLine();
             }
             isFirst = false;
 
@@ -56,64 +57,53 @@ internal static class AIChatMessageFormatter
 
     private static void FormatChatMessage(StringBuilder sb, ChatMessage message)
     {
-        var hasTextContent = false;
+        sb.Append($"===== [{message.Role}] =====");
+
+        var lastWasText = false;
 
         foreach (var content in message.Contents)
         {
             switch (content)
             {
                 case TextContent textContent:
-                    // Text content goes on the role line
-                    if (!hasTextContent)
+                    if (lastWasText)
                     {
-                        sb.Append($"[{message.Role}] {textContent.Text}");
-                        hasTextContent = true;
+                        // Additional text content continues on the same line
+                        sb.Append(textContent.Text);
                     }
                     else
                     {
-                        // Additional text content on same line
+                        sb.AppendLine();
                         sb.Append(textContent.Text);
                     }
+                    lastWasText = true;
                     break;
 
                 case FunctionCallContent functionCall:
-                    // Function calls need a new line if we already have text
-                    if (hasTextContent)
-                    {
-                        sb.AppendLine();
-                    }
+                    sb.AppendLine();
                     FormatFunctionCall(sb, functionCall);
+                    lastWasText = false;
                     break;
 
                 case FunctionResultContent functionResult:
-                    // Function results are shown as a tool role
+                    sb.AppendLine();
                     FormatFunctionResult(sb, functionResult);
-                    hasTextContent = true; // Mark as having content
+                    lastWasText = false;
                     break;
 
                 case DataContent dataContent:
-                    if (hasTextContent)
-                    {
-                        sb.AppendLine();
-                    }
+                    sb.AppendLine();
                     FormatDataContent(sb, dataContent);
+                    lastWasText = false;
                     break;
 
                 default:
                     // Unknown content types
-                    if (hasTextContent)
-                    {
-                        sb.AppendLine();
-                    }
+                    sb.AppendLine();
                     sb.Append($"  [unknown:{content.GetType().Name}]");
+                    lastWasText = false;
                     break;
             }
-        }
-
-        // If no content was added, just output the role
-        if (!hasTextContent && sb.Length == 0)
-        {
-            sb.Append($"[{message.Role}]");
         }
     }
 

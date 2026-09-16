@@ -158,11 +158,12 @@ public class AnthropicPromptCachingWireTests
     }
 
     [Fact]
-    public async Task PromptCaching_MarksTheLastSystemMessage_WithBlockLevelCacheControl()
+    public async Task PromptCaching_MarksTheFirstSystemMessage_WithBlockLevelCacheControl()
     {
         // Arrange — a system-role message simulates what AIAgentSystemMessageChatClient now puts first
-        // (agent instructions + context resources), with the volatile runtime-context prompt appended after
-        // via Instructions (umbraco/Umbraco.AI#382).
+        // (agent instructions + context resources). Instructions here is a plain, unrelated field a caller
+        // might set for its own reason -- it always lands after the message list's system content and is
+        // never marked.
         var handler = new CapturingHttpMessageHandler();
         var chatClient = await CreateConfiguredClientAsync(
             handler, new AnthropicChatCapabilitySettings { PromptCaching = "1h" });
@@ -172,20 +173,49 @@ public class AnthropicPromptCachingWireTests
             new(ChatRole.System, "stable instructions and context resources"),
             new(ChatRole.User, "hello"),
         };
-        var options = new ChatOptions { MaxOutputTokens = 64, Instructions = "volatile entity context" };
+        var options = new ChatOptions { MaxOutputTokens = 64, Instructions = "some other instructions" };
 
         // Act
         await SendAndIgnoreFailureAsync(chatClient, messages, options);
 
-        // Assert — the stable system block gets its own block-level breakpoint, positioned before the
-        // volatile Instructions block, which stays unmarked; the top-level field (covering the conversation
-        // tail) is still set too, so both breakpoints coexist.
+        // Assert — the stable system block gets its own block-level breakpoint, positioned before
+        // Instructions, which stays unmarked; the top-level field (covering the conversation tail) is
+        // still set too, so both breakpoints coexist.
+        var body = handler.RequestBodies.ShouldHaveSingleItem();
+        body.ShouldContain(
+            "\"system\":[{\"type\":\"text\",\"text\":\"stable instructions and context resources\","
+            + "\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},"
+            + "{\"type\":\"text\",\"text\":\"some other instructions\"}]");
+        body.ShouldContain("\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}");
+    }
+
+    [Fact]
+    public async Task PromptCaching_WithATrailingVolatileSystemMessage_MarksOnlyTheFirstOne()
+    {
+        // Arrange — the real shape AIAgentSystemMessageChatClient now produces: stable content folded into
+        // the leading message, the volatile runtime-context prompt appended as its own message at the end
+        // (umbraco/Umbraco.AI#382). The breakpoint must stay on the stable, turn-to-turn-identical block --
+        // marking the trailing one instead would mark a block that changes every turn.
+        var handler = new CapturingHttpMessageHandler();
+        var chatClient = await CreateConfiguredClientAsync(
+            handler, new AnthropicChatCapabilitySettings { PromptCaching = "1h" });
+
+        var messages = new List<ChatMessage>
+        {
+            new(ChatRole.System, "stable instructions and context resources"),
+            new(ChatRole.User, "hello"),
+            new(ChatRole.System, "volatile entity context"),
+        };
+
+        // Act
+        await SendAndIgnoreFailureAsync(chatClient, messages);
+
+        // Assert
         var body = handler.RequestBodies.ShouldHaveSingleItem();
         body.ShouldContain(
             "\"system\":[{\"type\":\"text\",\"text\":\"stable instructions and context resources\","
             + "\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}},"
             + "{\"type\":\"text\",\"text\":\"volatile entity context\"}]");
-        body.ShouldContain("\"cache_control\":{\"type\":\"ephemeral\",\"ttl\":\"1h\"}");
     }
 
     [Fact]

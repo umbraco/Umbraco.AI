@@ -9,9 +9,8 @@ namespace Umbraco.AI.Agent.Tests.Unit.Chat;
 /// Tests for where the agent's stable instructions and the volatile runtime-context prompt each land in
 /// the request actually sent to the model (umbraco/Umbraco.AI#382). Stable instructions must lead the
 /// message list (index 0) -- provider prompt caching only reuses a request whose leading tokens match the
-/// previous one -- while the volatile prompt must land in <c>ChatOptions.Instructions</c>, which every
-/// provider adapter appends after any system content in the message list, so it never poisons that
-/// cacheable prefix.
+/// previous one -- while the volatile prompt must land in a new message at the END of the list, after
+/// everything else, so it never poisons that cacheable prefix.
 /// </summary>
 public class AIAgentSystemMessageChatClientTests
 {
@@ -36,7 +35,7 @@ public class AIAgentSystemMessageChatClientTests
     }
 
     [Fact]
-    public void Inject_WithVolatilePromptOnly_SetsInstructionsAndLeavesMessagesAlone()
+    public void Inject_WithVolatilePromptOnly_AppendsItAsATrailingMessageAndLeavesOptionsAlone()
     {
         // Arrange -- no agent instructions configured, only runtime context to inject
         var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
@@ -45,12 +44,13 @@ public class AIAgentSystemMessageChatClientTests
         var (resultMessages, resultOptions) = AIAgentSystemMessageChatClient.Inject(messages, null, VolatilePrompt);
 
         // Assert
-        resultMessages.Count(m => m.Role == ChatRole.System).ShouldBe(0);
-        resultOptions!.Instructions.ShouldBe(VolatilePrompt);
+        resultMessages.Last().Role.ShouldBe(ChatRole.System);
+        resultMessages.Last().Text.ShouldBe(VolatilePrompt);
+        resultOptions.ShouldBeNull();
     }
 
     [Fact]
-    public void Inject_WithBothStableAndVolatile_StableLeadsMessagesVolatileEndsUpInInstructions()
+    public void Inject_WithBothStableAndVolatile_StableLeadsMessagesVolatileTrailsMessages()
     {
         // Arrange -- the normal case: an agent with its own instructions, running with live entity context
         var messages = new List<ChatMessage> { new(ChatRole.User, "Say apple") };
@@ -59,11 +59,13 @@ public class AIAgentSystemMessageChatClientTests
         // Act
         var (resultMessages, resultOptions) = AIAgentSystemMessageChatClient.Inject(messages, options, VolatilePrompt);
 
-        // Assert -- on the wire, the adapter appends Instructions after the message list's system
-        // content, so this order puts the stable block first and the volatile one last.
+        // Assert -- the provider adapter pulls every system-role message out of the list, in list order,
+        // so this order puts the stable block first and the volatile one last on the wire.
         resultMessages[0].Role.ShouldBe(ChatRole.System);
         resultMessages[0].Text.ShouldBe(StableInstructions);
-        resultOptions!.Instructions.ShouldBe(VolatilePrompt);
+        resultMessages.Last().Role.ShouldBe(ChatRole.System);
+        resultMessages.Last().Text.ShouldBe(VolatilePrompt);
+        resultOptions!.Instructions.ShouldBeNull();
     }
 
     [Fact]
@@ -88,15 +90,18 @@ public class AIAgentSystemMessageChatClientTests
             new ChatOptions { Instructions = StableInstructions },
             "entity: v2");
 
-        // Act
-        var sharedPrefix = turnTwo
-            .Zip(turnThree, (a, b) => a.Role == b.Role && a.Text == b.Text)
+        // Act -- compare everything up to (but not including) the trailing volatile message, which is
+        // expected to differ between the two turns.
+        var turnTwoLeading = turnTwo.Take(turnTwo.Count - 1).ToList();
+        var turnThreeLeading = turnThree.Take(turnThree.Count - 1).ToList();
+        var sharedPrefix = turnTwoLeading
+            .Zip(turnThreeLeading, (a, b) => a.Role == b.Role && a.Text == b.Text)
             .TakeWhile(same => same)
             .Count();
 
         // Assert -- every message of the earlier request is reusable, not just the first couple, even
         // though the volatile entity value changed between the two turns.
-        sharedPrefix.ShouldBe(turnTwo.Count);
+        sharedPrefix.ShouldBe(turnTwoLeading.Count);
     }
 
     [Fact]

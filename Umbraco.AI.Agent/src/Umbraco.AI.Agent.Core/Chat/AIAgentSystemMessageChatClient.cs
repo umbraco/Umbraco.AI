@@ -5,8 +5,8 @@ using Umbraco.AI.Core.RuntimeContext;
 namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
-/// Swaps which channel carries the agent's stable instructions and which carries the volatile
-/// runtime-context prompt, so the request's cacheable prefix survives turn-to-turn changes.
+/// Puts the agent's stable instructions at the head of the message list and the volatile
+/// runtime-context prompt at the tail, so the request's cacheable prefix survives turn-to-turn changes.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,19 +21,22 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// the model sees.
 /// </para>
 /// <para>
-/// A provider's chat-client adapter appends <c>options.Instructions</c> after any system content already
-/// in the message list (see <c>AnthropicPromptCachingWireTests</c>), so whatever sits in that field
-/// always lands LAST on the wire, and whatever leads the message list always lands FIRST. Putting the
-/// stable instructions at the head of the list -- where a later middleware (the context injector) still
-/// appends its own contribution right after them, into the same block -- keeps that combined prefix
-/// identical turn after turn. Moving the volatile prompt into <c>options.Instructions</c> instead means
-/// it lands after that stable prefix, where its changing content can no longer invalidate the cache
-/// entry the stable prefix would otherwise earn.
+/// A provider's chat-client adapter pulls every system-role <see cref="ChatMessage"/> out of the message
+/// list, in list order, ahead of anything in <c>options.Instructions</c> (see
+/// <c>AnthropicPromptCachingWireTests</c>) -- position within the list is what determines wire order, not
+/// which field carries the content. So both pieces of content are ordinary messages: the stable
+/// instructions are folded into the message at index 0 -- where a later middleware (the context injector)
+/// still appends its own contribution right after them, into the same block -- and the volatile prompt is
+/// appended as a new message at the end. That keeps the combined leading prefix identical turn after
+/// turn, with only the trailing block changing.
 /// </para>
 /// <para>
-/// This also preserves the turn-to-turn positional stability the previous "runtime context in the
-/// message list" approach relied on: <c>options.Instructions</c> is never part of stored/replayed
-/// history, so it can't slide to a new index as a conversation grows the way a message-list entry could.
+/// The volatile message is never left in <c>options.Instructions</c> to also be echoed there, and is
+/// never folded into an existing message the way the stable content is: it is freshly computed per
+/// request from the current runtime context, and this client's changes to the message list are local to
+/// the call -- nothing here is fed back into stored conversation history (see
+/// <c>ConversationChatHistoryProvider</c>, which persists from what was passed into the agent run, a
+/// layer above this one) -- so appending it fresh every time cannot accumulate stale copies.
 /// </para>
 /// <para>
 /// Only agent runs stage anything, so every other caller (the Prompt package composes its own system
@@ -92,8 +95,8 @@ internal sealed class AIAgentSystemMessageChatClient : DelegatingChatClient
     }
 
     /// <summary>
-    /// Runs the two steps that swap where each piece of system content lives. See the class remarks for
-    /// why each one goes where it does.
+    /// Runs the two steps that place each piece of system content. See the class remarks for why each
+    /// one goes where it does.
     /// </summary>
     internal static (IList<ChatMessage> Messages, ChatOptions? Options) Inject(
         IList<ChatMessage> messages,
@@ -101,7 +104,8 @@ internal sealed class AIAgentSystemMessageChatClient : DelegatingChatClient
         string? volatileSystemPrompt)
     {
         messages = MoveAgentInstructionsIntoMessageList(messages, options?.Instructions);
-        var newOptions = SetVolatileInstructions(options, volatileSystemPrompt);
+        var newOptions = ClearAgentInstructions(options);
+        messages = AppendVolatileContextMessage(messages, volatileSystemPrompt);
         return (messages, newOptions);
     }
 
@@ -128,22 +132,36 @@ internal sealed class AIAgentSystemMessageChatClient : DelegatingChatClient
     }
 
     /// <summary>
-    /// Replaces <c>options.Instructions</c> with <paramref name="volatileSystemPrompt"/> (or clears it if
-    /// there is none), so whatever was there before -- the agent's own instructions, already moved into
-    /// the message list by <see cref="MoveAgentInstructionsIntoMessageList"/> -- is never left behind here
-    /// too, duplicated on the wire. This is what puts the volatile prompt after the stable block instead
-    /// of before it: every provider adapter appends <c>Instructions</c> last.
+    /// Clears <c>options.Instructions</c> once its content has been moved into the message list by
+    /// <see cref="MoveAgentInstructionsIntoMessageList"/>, so it is never also echoed there, duplicated
+    /// on the wire.
     /// </summary>
-    private static ChatOptions? SetVolatileInstructions(ChatOptions? options, string? volatileSystemPrompt)
+    private static ChatOptions? ClearAgentInstructions(ChatOptions? options)
     {
-        if (options is null && string.IsNullOrEmpty(volatileSystemPrompt))
+        if (string.IsNullOrEmpty(options?.Instructions))
         {
             return options;
         }
 
-        var newOptions = options?.Clone() ?? new ChatOptions();
-        newOptions.Instructions = string.IsNullOrEmpty(volatileSystemPrompt) ? null : volatileSystemPrompt;
+        var newOptions = options.Clone();
+        newOptions.Instructions = null;
         return newOptions;
+    }
+
+    /// <summary>
+    /// Appends the volatile runtime-context prompt as a new system-role message at the end of the list,
+    /// so it lands after the stable block that leads it (the provider adapter pulls every system-role
+    /// message out of the list, in list order, ahead of anything in <c>options.Instructions</c>).
+    /// </summary>
+    private static IList<ChatMessage> AppendVolatileContextMessage(IList<ChatMessage> messages, string? volatileSystemPrompt)
+    {
+        if (string.IsNullOrEmpty(volatileSystemPrompt))
+        {
+            return messages;
+        }
+
+        messages.Add(new ChatMessage(ChatRole.System, volatileSystemPrompt));
+        return messages;
     }
 
     private static IList<ChatMessage> PrependSystemContent(IList<ChatMessage> messages, string content)

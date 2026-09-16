@@ -4,7 +4,7 @@ using Microsoft.Extensions.AI;
 namespace Umbraco.AI.Anthropic;
 
 /// <summary>
-/// Adds a block-level Anthropic <c>cache_control</c> marker to the last system-role message, so the
+/// Adds a block-level Anthropic <c>cache_control</c> marker to the first system-role message, so the
 /// stable system+tools prefix earns its own cache breakpoint independent of the request's tail.
 /// </summary>
 /// <remarks>
@@ -13,9 +13,11 @@ namespace Umbraco.AI.Anthropic;
 /// block in the whole request, and Anthropic's cache lookup walks back only roughly 20 content blocks from
 /// that single breakpoint. In a longer conversation with tool calls, that window never reaches back to the
 /// system prompt, so the stable prefix (agent instructions, context resources -- see
-/// <c>AIAgentSystemMessageChatClient</c> in Umbraco.AI.Agent.Core, which puts exactly that content first and
-/// only the volatile runtime-context prompt after, via <see cref="ChatOptions.Instructions"/>) never gets a
-/// breakpoint of its own. This client adds a second, block-level marker directly on that stable content.
+/// <c>AIAgentSystemMessageChatClient</c> in Umbraco.AI.Agent.Core, which always folds that content into the
+/// message list's leading entry, then appends the volatile runtime-context prompt as its own message at the
+/// end) never gets a breakpoint of its own. This client adds a second, block-level marker directly on that
+/// stable content -- the FIRST system-role message, which by construction is always the stable one, however
+/// many other system-role messages (e.g. the volatile trailing one) follow it.
 /// </para>
 /// <para>
 /// Verified against the Anthropic SDK's own message-to-request conversion (see
@@ -56,16 +58,16 @@ internal sealed class AnthropicSystemBlockCacheMarkingChatClient : DelegatingCha
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-        => base.GetResponseAsync(MarkLastSystemMessage(messages, options), options, cancellationToken);
+        => base.GetResponseAsync(MarkFirstSystemMessage(messages, options), options, cancellationToken);
 
     /// <inheritdoc />
     public override IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
-        => base.GetStreamingResponseAsync(MarkLastSystemMessage(messages, options), options, cancellationToken);
+        => base.GetStreamingResponseAsync(MarkFirstSystemMessage(messages, options), options, cancellationToken);
 
-    private static IEnumerable<ChatMessage> MarkLastSystemMessage(IEnumerable<ChatMessage> messages, ChatOptions? options)
+    private static IEnumerable<ChatMessage> MarkFirstSystemMessage(IEnumerable<ChatMessage> messages, ChatOptions? options)
     {
         if (options?.AdditionalProperties?.TryGetValue(CacheControlPropertyKey, out var raw) != true
             || raw is not BetaCacheControlEphemeral cacheControl)
@@ -75,22 +77,22 @@ internal sealed class AnthropicSystemBlockCacheMarkingChatClient : DelegatingCha
 
         var list = messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
 
-        var lastSystemIndex = -1;
-        for (var i = list.Count - 1; i >= 0; i--)
+        var firstSystemIndex = -1;
+        for (var i = 0; i < list.Count; i++)
         {
             if (list[i].Role == ChatRole.System)
             {
-                lastSystemIndex = i;
+                firstSystemIndex = i;
                 break;
             }
         }
 
-        if (lastSystemIndex < 0)
+        if (firstSystemIndex < 0)
         {
             return list;
         }
 
-        var target = list[lastSystemIndex];
+        var target = list[firstSystemIndex];
         var lastText = target.Contents.OfType<TextContent>().LastOrDefault();
         if (lastText is null)
         {
@@ -110,7 +112,7 @@ internal sealed class AnthropicSystemBlockCacheMarkingChatClient : DelegatingCha
         marked.Contents = markedContents;
 
         var result = list.ToList();
-        result[lastSystemIndex] = marked;
+        result[firstSystemIndex] = marked;
         return result;
     }
 }

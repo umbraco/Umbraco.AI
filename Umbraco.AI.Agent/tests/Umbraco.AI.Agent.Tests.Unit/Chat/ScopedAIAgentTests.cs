@@ -3,7 +3,6 @@ using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Core.RuntimeContext;
 using Xunit;
 using AgentConstants = Umbraco.AI.Agent.Core.Constants;
-using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Chat;
 
@@ -13,48 +12,31 @@ namespace Umbraco.AI.Agent.Tests.Unit.Chat;
 public class ScopedAIAgentTests
 {
     [Fact]
-    public void StageSystemMessageParts_WithParts_DeclaresPendingSystemMessageAsALogKey()
+    public void StageSystemMessageParts_WithParts_StagesThePendingSystemMessage()
     {
         // Arrange
         var context = new AIRuntimeContext([]);
-        context.SystemMessageParts.Add("## Current Entity Context\n- Page: About Us");
-
-        // Act
-        ScopedAIAgent.StageSystemMessageParts(context);
-
-        // Assert -- declared so the shared, cross-provider audit-logging client (which has no safe way to
-        // single this content out of ChatOptions.Instructions -- see umbraco/Umbraco.AI#382) captures it
-        // under its own name instead of silently dropping it.
-        context.TryGetValue<string[]>(CoreConstants.ContextKeys.LogKeys, out var logKeys).ShouldBeTrue();
-        logKeys.ShouldContain(AgentConstants.ContextKeys.PendingSystemMessage);
-    }
-
-    [Fact]
-    public void StageSystemMessageParts_WithParts_PreservesExistingLogKeys()
-    {
-        // Arrange -- a caller (e.g. AIAgentService) may have already declared its own keys (RunId, ThreadId)
-        var context = new AIRuntimeContext([]);
-        context.SetValue(CoreConstants.ContextKeys.LogKeys, new[] { "RunId", "ThreadId" });
-        context.SystemMessageParts.Add("context");
+        context.SystemMessageParts.Add("## Current Entity Context");
+        context.SystemMessageParts.Add("- Page: About Us");
 
         // Act
         ScopedAIAgent.StageSystemMessageParts(context);
 
         // Assert
-        context.TryGetValue<string[]>(CoreConstants.ContextKeys.LogKeys, out var logKeys).ShouldBeTrue();
-        logKeys.ShouldBe(["RunId", "ThreadId", AgentConstants.ContextKeys.PendingSystemMessage]);
+        context.TryGetValue<string>(AgentConstants.ContextKeys.PendingSystemMessage, out var staged).ShouldBeTrue();
+        staged.ShouldBe("## Current Entity Context\n\n- Page: About Us");
     }
 
     [Fact]
-    public void StageSystemMessageParts_WithNoParts_DoesNotDeclareALogKey()
+    public void StageSystemMessageParts_WithNoParts_StagesNothing()
     {
-        // Arrange -- nothing staged, so nothing to declare
+        // Arrange
         var context = new AIRuntimeContext([]);
 
         // Act
         ScopedAIAgent.StageSystemMessageParts(context);
 
         // Assert
-        context.TryGetValue<string[]>(CoreConstants.ContextKeys.LogKeys, out _).ShouldBeFalse();
+        context.TryGetValue<string>(AgentConstants.ContextKeys.PendingSystemMessage, out _).ShouldBeFalse();
     }
 }

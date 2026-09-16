@@ -205,27 +205,5 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
         }
 
         context.SetValue(Constants.ContextKeys.PendingSystemMessage, string.Join("\n\n", context.SystemMessageParts));
-
-        // Declare it for the audit log too. AIAgentSystemMessageChatClient routes this content through
-        // ChatOptions.Instructions so it lands after the stable, cacheable system content on the wire
-        // (umbraco/Umbraco.AI#382) -- but that field is an ordinary Microsoft.Extensions.AI one any
-        // caller might set for its own, genuine "these are the instructions" reason, so the shared,
-        // cross-provider audit-logging client has no safe way to single this value out by inspecting
-        // ChatOptions, and captures neither. LogKeys is the existing, established way a caller opts a
-        // runtime-context value into the audit trail by name (see AIAgentService.AppendLogKey, used the
-        // same way for RunId/ThreadId), without the logging code needing to know what it means.
-        context.SetValue(
-            CoreConstants.ContextKeys.LogKeys,
-            AppendLogKey(context.GetValue<object?>(CoreConstants.ContextKeys.LogKeys), Constants.ContextKeys.PendingSystemMessage));
-    }
-
-    /// <summary>
-    /// Returns a <c>LogKeys</c> string array containing the existing keys (if any) plus
-    /// <paramref name="keyToAppend"/>, de-duplicated. Mirrors <c>AIAgentService.AppendLogKey</c>.
-    /// </summary>
-    private static string[] AppendLogKey(object? existingLogKeys, string keyToAppend)
-    {
-        var keys = existingLogKeys as IEnumerable<string> ?? [];
-        return keys.Append(keyToAppend).Distinct(StringComparer.Ordinal).ToArray();
     }
 }

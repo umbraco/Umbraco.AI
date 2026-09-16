@@ -197,7 +197,7 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
     /// provider no longer stores a copy per turn.
     /// </remarks>
     /// <param name="context">The runtime context containing system message parts.</param>
-    private static void StageSystemMessageParts(AIRuntimeContext context)
+    internal static void StageSystemMessageParts(AIRuntimeContext context)
     {
         if (context.SystemMessageParts.Count == 0)
         {

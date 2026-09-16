@@ -4,11 +4,7 @@ import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/back
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import { UMB_CURRENT_USER_CONTEXT } from "@umbraco-cms/backoffice/current-user";
-import {
-    type Observable,
-    map,
-    distinctUntilChanged,
-} from "@umbraco-cms/backoffice/external/rxjs";
+import { type Observable, map, distinctUntilChanged } from "@umbraco-cms/backoffice/external/rxjs";
 import { debouncedHide } from "./utils/debounced-hide.js";
 import {
     UaiRunController,
@@ -20,10 +16,12 @@ import {
     UAI_ENTITY_CONTEXT,
     UaiHitlInterruptHandler,
     UaiDefaultInterruptHandler,
+    UaiStarterPromptsController,
     type UaiChatContextApi,
-    type UaiAgentItem,
+    type UaiStarterPromptEntry,
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
+import type { UaiCopilotAgentItem } from "./types.js";
 import {
     UaiEntityAdapterContext,
     UaiRequestContextCollector,
@@ -68,8 +66,9 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     #entityContext: UaiCopilotEntityContext;
     #requestContextCollector: UaiRequestContextCollector;
     #_toolRendererManager: UaiToolRendererManager;
-    #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
-    #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
+    #agents = new UmbArrayState<UaiCopilotAgentItem>([], (x) => x.id);
+    #selectedAgent = new UmbBasicState<UaiCopilotAgentItem | undefined>(undefined);
+    #starterPrompts: UaiStarterPromptsController;
     #agentsLoading = new UmbBooleanState(false);
 
     // ─── Per-node chat history ──────────────────────────────────────────────────
@@ -113,6 +112,16 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
     get resolvedAgent$() {
         return this.#runController.resolvedAgent$;
+    }
+
+    // ─── Starter Prompts (delegated to UaiStarterPromptsController from agent-ui) ──
+
+    get starterPrompts$() {
+        return this.#starterPrompts.starterPrompts$;
+    }
+
+    sendStarterPrompt(entry: UaiStarterPromptEntry): void {
+        this.#starterPrompts.sendStarterPrompt(entry);
     }
 
     // ─── Tool Management ───────────────────────────────────────────────────────
@@ -180,10 +189,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,
             frontendToolManager,
-            interruptHandlers: [
-                new UaiHitlInterruptHandler(this),
-                new UaiDefaultInterruptHandler(),
-            ],
+            interruptHandlers: [new UaiHitlInterruptHandler(this), new UaiDefaultInterruptHandler()],
             // Client-owned conversation that also persists per node in localStorage. The strategy
             // loads the active node's thread (loadInitial) and saves after each turn (onTurnComplete),
             // keyed by whichever node is currently bound (see #activeHistoryKey / #handleEntitySelection).
@@ -194,15 +200,18 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             ),
         });
 
+        this.#starterPrompts = new UaiStarterPromptsController(host, {
+            selectedAgent$: this.selectedAgent,
+            selectAgent: (agentId) => this.selectAgent(agentId),
+            sendUserMessage: (content) => this.sendUserMessage(content),
+        });
+
         this.observe(this.#agentRepository.agentItems$, (agents) => {
             let displayAgents = [...agents];
 
             // Add "Auto" option only when multiple agents are available
             if (agents.length > 1) {
-                displayAgents = [
-                    { id: "auto", name: "Auto", alias: "auto" },
-                    ...agents,
-                ];
+                displayAgents = [{ id: "auto", name: "Auto", alias: "auto" }, ...agents];
             }
 
             this.#agents.setValue(displayAgents);
@@ -211,9 +220,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
                 // Prefer the agent the user last chose over the default, so a reload doesn't quietly
                 // put them back on "Auto". Falls through to the default if it's since been removed.
                 const remembered = this.#historyStore.getLastAgentId();
-                this.#selectedAgent.setValue(
-                    displayAgents.find((a) => a.id === remembered) ?? displayAgents[0],
-                );
+                this.#selectedAgent.setValue(displayAgents.find((a) => a.id === remembered) ?? displayAgents[0]);
             }
 
             const currentSelected = this.#selectedAgent.getValue();
@@ -432,11 +439,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         ) {
             this.#activeHistoryKey = newStorageKey;
             this.#boundEntityKey = newKey;
-            this.#historyStore.save(
-                newStorageKey,
-                this.#runController.messages,
-                this.#selectedAgent.getValue()?.id,
-            );
+            this.#historyStore.save(newStorageKey, this.#runController.messages, this.#selectedAgent.getValue()?.id);
             return;
         }
 
@@ -475,7 +478,10 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
     // ─── Run Actions ───────────────────────────────────────────────────────────
 
-    async sendUserMessage(content: string, contentParts?: import("@umbraco-ai/agent-ui").UaiInputContent[]): Promise<void> {
+    async sendUserMessage(
+        content: string,
+        contentParts?: import("@umbraco-ai/agent-ui").UaiInputContent[],
+    ): Promise<void> {
         const items = await this.#requestContextCollector.collect();
         const context = items.map((item) => ({
             description: item.description,

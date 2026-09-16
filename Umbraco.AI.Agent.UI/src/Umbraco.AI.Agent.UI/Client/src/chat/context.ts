@@ -6,6 +6,26 @@ import type { PendingApproval } from "./services/hitl.context.js";
 import type { UaiToolRendererManager } from "./services/tool-renderer.manager.js";
 
 /**
+ * A single starter-prompt chip shown in an empty chat, ready to send as-is.
+ *
+ * `display` is kept separate from `prompt` so a future entry source (e.g. a clamped preview of a long
+ * prompt) can differ from what actually gets sent -- v1 always sets `display = prompt`.
+ */
+export interface UaiStarterPromptEntry {
+    /** The full prompt text sent when the chip is clicked. */
+    prompt: string;
+
+    /** The label shown on the chip. Equal to `prompt` in v1. */
+    display: string;
+
+    /** The agent this entry pins the conversation to when clicked, via `selectAgent`. */
+    agentId?: string;
+
+    /** Shown as a tag on the chip only when the surrounding list spans more than one agent. */
+    agentName?: string;
+}
+
+/**
  * Shared chat context interface.
  *
  * Both UaiCopilotContext and the future UaiChatContext implement this interface.
@@ -58,6 +78,21 @@ export interface UaiChatContextApi extends UmbContextMinimal {
 
     /** Respond to a HITL interrupt. */
     respondToHitl(response: string): void;
+
+    /**
+     * Optional observable of starter-prompt chips for the current empty state. Undefined for a
+     * surface that supplies no starters. `<uai-chat>` only renders the starter-prompts element when
+     * both this and {@link sendStarterPrompt} are present, so a surface supplying neither renders
+     * today's empty state unchanged.
+     */
+    starterPrompts$?: Observable<UaiStarterPromptEntry[]>;
+
+    /**
+     * Optional handler for clicking a starter-prompt chip: pins the conversation to the entry's agent
+     * (if any) via {@link selectAgent}, then sends its prompt via {@link sendUserMessage} -- the same
+     * path as typing, so a server-persisted surface's pending-first-message flow stays intact.
+     */
+    sendStarterPrompt?(entry: UaiStarterPromptEntry): void;
 }
 
 /**

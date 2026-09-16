@@ -20,3 +20,4 @@ import "./chat/components/agent-status.element.js";
 import "./chat/components/tool-renderer.element.js";
 import "./chat/components/tool-status.element.js";
 import "./chat/components/voice-button.element.js";
+import "./chat/components/starter-prompts.element.js";

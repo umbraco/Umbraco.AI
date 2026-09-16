@@ -11,8 +11,9 @@ import {
     UAI_CHAT_CONTEXT,
     UaiHitlInterruptHandler,
     UaiDefaultInterruptHandler,
+    UaiStarterPromptsController,
     type UaiChatContextApi,
-    type UaiAgentItem,
+    type UaiStarterPromptEntry,
     type UaiInputContent,
 } from "@umbraco-ai/agent-ui";
 import { UaiConversationRepository } from "../conversation/repository/conversation.repository.js";
@@ -23,12 +24,12 @@ import {
     type UaiConversationWorkspaceContext,
 } from "../conversation/workspace/conversation-workspace.context.js";
 import { UaiServerPersistedConversationStrategy } from "./server-persisted-conversation.strategy.js";
-import { UaiWorkspaceAgentRepository } from "./workspace-agent.repository.js";
+import { UaiWorkspaceAgentRepository, type UaiWorkspaceAgentItem } from "./workspace-agent.repository.js";
 import { stashPendingFirstMessage, takePendingFirstMessage } from "./pending-first-message.js";
 import { copilotWorkspaceConversationPath, navigateToWorkspacePath } from "../paths.js";
 
 /** The "Auto" agent option — persisted as agentIdOrAlias "auto"; the backend then auto-selects. */
-const AUTO_AGENT: UaiAgentItem = { id: "auto", name: "Auto", alias: "auto" };
+const AUTO_AGENT: UaiWorkspaceAgentItem = { id: "auto", name: "Auto", alias: "auto" };
 
 /** Max length of an auto-derived conversation title before it's truncated with an ellipsis. */
 const AUTO_TITLE_MAX_LENGTH = 60;
@@ -68,8 +69,9 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
     #store?: UaiConversationWorkspaceContext;
 
-    #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
-    #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
+    #agents = new UmbArrayState<UaiWorkspaceAgentItem>([], (x) => x.id);
+    #selectedAgent = new UmbBasicState<UaiWorkspaceAgentItem | undefined>(undefined);
+    #starterPrompts: UaiStarterPromptsController;
     #agentsLoading = new UmbBooleanState(false);
     /** True once `loadInitialMessages()` has resolved for the *currently targeted* conversation — reset to
      *  false the moment the target changes. Consumed by the view to gate the composer alongside the store's
@@ -106,6 +108,12 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     get resolvedAgent$() {
         return this.#runController.resolvedAgent$;
     }
+    get starterPrompts$() {
+        return this.#starterPrompts.starterPrompts$;
+    }
+    sendStarterPrompt(entry: UaiStarterPromptEntry): void {
+        this.#starterPrompts.sendStarterPrompt(entry);
+    }
     get toolRendererManager(): UaiToolRendererManager {
         return this.#toolRendererManager;
     }
@@ -131,6 +139,12 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
             frontendToolManager,
             conversationStrategy: this.#strategy,
             interruptHandlers: [new UaiHitlInterruptHandler(this), new UaiDefaultInterruptHandler()],
+        });
+
+        this.#starterPrompts = new UaiStarterPromptsController(host, {
+            selectedAgent$: this.selectedAgent,
+            selectAgent: (agentId) => this.selectAgent(agentId),
+            sendUserMessage: (content) => this.sendUserMessage(content),
         });
 
         // Maintain the picker's agent list (with an "Auto" option when >1 agent), keeping the current
@@ -220,7 +234,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     }
 
     /** Resolves which picker option should be selected from the conversation's stored agent choice. */
-    #resolveSelectedAgent(available: UaiAgentItem[]): UaiAgentItem | undefined {
+    #resolveSelectedAgent(available: UaiWorkspaceAgentItem[]): UaiWorkspaceAgentItem | undefined {
         const stored = this.#conversation?.agentIdOrAlias ?? undefined;
         if (stored && stored !== "auto") {
             const match = available.find((a) => a.id === stored || a.alias === stored);

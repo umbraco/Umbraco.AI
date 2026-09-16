@@ -1,7 +1,17 @@
-import { customElement, property, state, css, html, nothing, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
+import {
+    customElement,
+    property,
+    state,
+    css,
+    html,
+    nothing,
+    repeat,
+    ref,
+    createRef,
+} from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaiChatMessage, UaiAgentState } from "../types/index.js";
-import { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "../context.js";
+import { UAI_CHAT_CONTEXT, type UaiChatContextApi, type UaiStarterPromptEntry } from "../context.js";
 import type { PendingApproval } from "../services/hitl.context.js";
 import { isNearBottom } from "../utils/scroll.js";
 
@@ -52,6 +62,16 @@ export class UaiChatElement extends UmbLitElement {
     @state()
     private _isRunning = false;
 
+    @state()
+    private _starterPrompts: UaiStarterPromptEntry[] = [];
+
+    /**
+     * True only when the surface's context supplies both `starterPrompts$` and `sendStarterPrompt` --
+     * both optional, so a surface supplying neither renders today's empty state unchanged.
+     */
+    @state()
+    private _supportsStarterPrompts = false;
+
     #chatContext?: UaiChatContextApi;
     #messagesRef = createRef<HTMLElement>();
     #isFollowingBottom = true;
@@ -81,7 +101,18 @@ export class UaiChatElement extends UmbLitElement {
                     this._isRunning = false;
                 }
             });
+
+            this._supportsStarterPrompts = !!(context.starterPrompts$ && context.sendStarterPrompt);
+            if (context.starterPrompts$) {
+                this.observe(context.starterPrompts$, (entries) => {
+                    this._starterPrompts = entries;
+                });
+            }
         });
+    }
+
+    #handleStarterPromptSelect(e: CustomEvent<UaiStarterPromptEntry>) {
+        this.#chatContext?.sendStarterPrompt?.(e.detail);
     }
 
     #handleSendMessage(e: CustomEvent<{ text: string; contentParts?: import("../types/index.js").UaiInputContent[] }>) {
@@ -205,6 +236,14 @@ export class UaiChatElement extends UmbLitElement {
                                       <slot name="empty-state-message">
                                           <uui-icon name="icon-chat"></uui-icon>
                                           <p>Start a conversation with ${this._agentName || "an agent"}</p>
+                                      </slot>
+                                      <slot name="empty-state-suggestions">
+                                          ${this._supportsStarterPrompts
+                                              ? html`<uai-starter-prompts
+                                                    .entries=${this._starterPrompts}
+                                                    @select=${this.#handleStarterPromptSelect}
+                                                ></uai-starter-prompts>`
+                                              : nothing}
                                       </slot>
                                   </div>
                               `

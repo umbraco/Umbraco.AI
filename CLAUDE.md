@@ -219,6 +219,11 @@ When a fix or feature applies to an older supported version:
 
 Do **not** forward-merge one version line's branches into another's — each version line is maintained independently. Always create a *separate* worktree per version line (with an absolute path — see CLAUDE.local.md) rather than reusing one worktree for both; reusing one has caused a worktree to get created nested inside another.
 
+When backporting **worktree/tooling config**, note that some files hardcode the version line and must
+be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/feature/..."`) and
+`.worktreeinclude` (demo path `demos/v18/`). Leaving `v18` in place makes worktrees use the wrong branch
+prefix and PRs target the wrong `vN/dev` base.
+
 ## Release Management
 
 ### Skills Overview

@@ -61,6 +61,9 @@ public static class UmbracoBuilderExtensions
         // Register agent factory (scoped - depends on scoped IAIChatService)
         builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
 
+        // Register starter prompt suggester (backs the "Suggest starters" editor button)
+        builder.Services.AddSingleton<IAIStarterPromptSuggester, AIStarterPromptSuggester>();
+
         // Register AG-UI services
         builder.Services.AddSingleton<IAGUIMessageConverter, AGUIMessageConverter>();
         builder.Services.AddSingleton<IAGUIToolConverter, AGUIToolConverter>();

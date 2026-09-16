@@ -228,6 +228,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     <uai-agent-starter-prompts-editor
                         slot="editor"
                         .prompts=${this._model.starterPrompts}
+                        .agentId=${this._model.unique}
+                        .profileId=${this._model.profileId}
                         @change=${this.#onStarterPromptsChange}
                     ></uai-agent-starter-prompts-editor>
                 </umb-property-layout>

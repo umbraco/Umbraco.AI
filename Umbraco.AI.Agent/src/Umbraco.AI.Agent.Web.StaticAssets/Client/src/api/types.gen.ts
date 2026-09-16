@@ -223,6 +223,10 @@ export type StandardAgentConfigModel = {
     };
 };
 
+export type SuggestStartersResponseModel = {
+    starters: Array<string>;
+};
+
 export type TextChatContentPartModel = {
     $type: 'text';
     text: string;
@@ -509,6 +513,72 @@ export type StreamAgentAGUIResponses = {
 };
 
 export type StreamAgentAGUIResponse = StreamAgentAGUIResponses[keyof StreamAgentAGUIResponses];
+
+export type SuggestStartersData = {
+    body?: never;
+    path: {
+        agentIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/suggest-starters';
+};
+
+export type SuggestStartersErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type SuggestStartersError = SuggestStartersErrors[keyof SuggestStartersErrors];
+
+export type SuggestStartersResponses = {
+    /**
+     * OK
+     */
+    200: SuggestStartersResponseModel;
+};
+
+export type SuggestStartersResponse = SuggestStartersResponses[keyof SuggestStartersResponses];
+
+export type GetSuggestStartersAvailabilityData = {
+    body?: never;
+    path: {
+        agentIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/suggest-starters/availability';
+};
+
+export type GetSuggestStartersAvailabilityErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetSuggestStartersAvailabilityError = GetSuggestStartersAvailabilityErrors[keyof GetSuggestStartersAvailabilityErrors];
+
+export type GetSuggestStartersAvailabilityResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type GetSuggestStartersAvailabilityResponse = GetSuggestStartersAvailabilityResponses[keyof GetSuggestStartersAvailabilityResponses];
 
 export type AgentAliasExistsData = {
     body?: never;

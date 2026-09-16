@@ -26,6 +26,11 @@ export default {
         starterPrompts: "Starter prompts",
         starterPromptsDescription: "Up to 4 prompts shown as clickable chips in an empty chat for this agent",
         starterPromptTooLong: (max: number) => `A starter prompt cannot exceed ${max} characters.`,
+        suggestStarters: "Suggest starters",
+        suggestStartersUnsavedAgent: "Save the agent before suggesting starters.",
+        suggestStartersNoProfile:
+            "Select a profile for this agent, or configure a default chat profile in Settings, before suggesting starters.",
+        suggestStartersFailed: "Couldn't suggest starter prompts. Try again, or add them manually.",
     },
     uaiToolScope: {
         // Content scopes

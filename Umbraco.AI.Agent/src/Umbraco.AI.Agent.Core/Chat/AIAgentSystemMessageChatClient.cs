@@ -92,44 +92,58 @@ internal sealed class AIAgentSystemMessageChatClient : DelegatingChatClient
     }
 
     /// <summary>
-    /// Moves <paramref name="options"/>.Instructions to the head of <paramref name="messages"/> (folding
-    /// into a leading system message that is already there rather than adding a second one), then
-    /// replaces <paramref name="options"/>.Instructions with <paramref name="volatileSystemPrompt"/> so it
-    /// lands after that stable block instead of before it. See the class remarks for why each piece goes
-    /// where it does.
+    /// Runs the two steps that swap where each piece of system content lives. See the class remarks for
+    /// why each one goes where it does.
     /// </summary>
     internal static (IList<ChatMessage> Messages, ChatOptions? Options) Inject(
         IList<ChatMessage> messages,
         ChatOptions? options,
         string? volatileSystemPrompt)
     {
-        var stableInstructions = options?.Instructions;
+        messages = MoveAgentInstructionsIntoMessageList(messages, options?.Instructions);
+        var newOptions = SetVolatileInstructions(options, volatileSystemPrompt);
+        return (messages, newOptions);
+    }
 
-        if (!string.IsNullOrEmpty(stableInstructions))
+    /// <summary>
+    /// Takes the agent's own instructions out of <c>options.Instructions</c> and puts them at the head of
+    /// <paramref name="messages"/> instead -- folding into a leading system message that is already there
+    /// rather than adding a second one -- so they land first on the wire.
+    /// </summary>
+    private static IList<ChatMessage> MoveAgentInstructionsIntoMessageList(IList<ChatMessage> messages, string? agentInstructions)
+    {
+        if (string.IsNullOrEmpty(agentInstructions))
         {
-            // Idempotent: an agent run reaches this client once per HTTP turn, but options.Instructions is
-            // re-supplied fresh (from the agent's fixed configuration) on every turn/resume, while the
-            // message list carries a prior turn's injection forward -- so a later turn must not stack a
-            // second copy of the same block onto a list that already carries it.
-            var alreadyPresent = messages.Any(m =>
-                m.Role == ChatRole.System && (m.Text?.Contains(stableInstructions, StringComparison.Ordinal) ?? false));
-
-            if (!alreadyPresent)
-            {
-                messages = PrependSystemContent(messages, stableInstructions);
-            }
+            return messages;
         }
 
+        // Idempotent: an agent run reaches this client once per HTTP turn, but options.Instructions is
+        // re-supplied fresh (from the agent's fixed configuration) on every turn/resume, while the message
+        // list carries a prior turn's move forward -- so a later turn must not stack a second copy of the
+        // same block onto a list that already carries it.
+        var alreadyPresent = messages.Any(m =>
+            m.Role == ChatRole.System && (m.Text?.Contains(agentInstructions, StringComparison.Ordinal) ?? false));
+
+        return alreadyPresent ? messages : PrependSystemContent(messages, agentInstructions);
+    }
+
+    /// <summary>
+    /// Replaces <c>options.Instructions</c> with <paramref name="volatileSystemPrompt"/> (or clears it if
+    /// there is none), so whatever was there before -- the agent's own instructions, already moved into
+    /// the message list by <see cref="MoveAgentInstructionsIntoMessageList"/> -- is never left behind here
+    /// too, duplicated on the wire. This is what puts the volatile prompt after the stable block instead
+    /// of before it: every provider adapter appends <c>Instructions</c> last.
+    /// </summary>
+    private static ChatOptions? SetVolatileInstructions(ChatOptions? options, string? volatileSystemPrompt)
+    {
         if (options is null && string.IsNullOrEmpty(volatileSystemPrompt))
         {
-            return (messages, options);
+            return options;
         }
 
-        // Always replace Instructions -- even when volatileSystemPrompt is empty -- so the stable text
-        // just moved into the message list above is never left behind here too, duplicated on the wire.
         var newOptions = options?.Clone() ?? new ChatOptions();
         newOptions.Instructions = string.IsNullOrEmpty(volatileSystemPrompt) ? null : volatileSystemPrompt;
-        return (messages, newOptions);
+        return newOptions;
     }
 
     private static IList<ChatMessage> PrependSystemContent(IList<ChatMessage> messages, string content)

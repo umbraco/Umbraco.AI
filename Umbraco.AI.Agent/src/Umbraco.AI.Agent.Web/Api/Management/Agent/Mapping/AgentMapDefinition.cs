@@ -57,6 +57,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
+        target.StarterPrompts = MapStarterPromptsFromRequest(source.StarterPrompts);
         target.Config = MapConfigFromRequest(source.Config);
         target.IsActive = true;
     }
@@ -71,6 +72,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
+        target.StarterPrompts = MapStarterPromptsFromRequest(source.StarterPrompts);
         target.Config = MapConfigFromRequest(source.Config);
         target.IsActive = source.IsActive;
     }
@@ -87,6 +89,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.GuardrailIds = source.GuardrailIds;
         target.SurfaceIds = source.SurfaceIds;
         target.Scope = MapScopeToResponse(source.Scope);
+        target.StarterPrompts = MapStarterPromptsToResponse(source.StarterPrompts);
         target.Config = MapConfigToResponse(source);
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
@@ -105,6 +108,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.SurfaceIds = source.SurfaceIds;
         target.Scope = MapScopeToResponse(source.Scope);
+        target.StarterPrompts = MapStarterPromptsToResponse(source.StarterPrompts);
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
@@ -285,6 +289,22 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             }).ToList()
         };
     }
+
+    #endregion
+
+    #region StarterPrompts mapping
+
+    /// <summary>
+    /// Maps starter prompts from request models to domain models.
+    /// </summary>
+    private static IReadOnlyList<AIStarterPrompt> MapStarterPromptsFromRequest(IEnumerable<AIStarterPromptModel>? source)
+        => source?.Select(p => new AIStarterPrompt { Prompt = p.Prompt }).ToList() ?? [];
+
+    /// <summary>
+    /// Maps starter prompts from domain models to response models.
+    /// </summary>
+    private static IEnumerable<AIStarterPromptModel> MapStarterPromptsToResponse(IReadOnlyList<AIStarterPrompt> source)
+        => source.Select(p => new AIStarterPromptModel { Prompt = p.Prompt }).ToList();
 
     #endregion
 }

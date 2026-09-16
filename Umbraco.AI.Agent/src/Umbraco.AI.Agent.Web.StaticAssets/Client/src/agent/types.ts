@@ -25,6 +25,18 @@ export interface UaiAgentScope {
     denyRules: UaiAgentScopeRule[];
 }
 
+// ── Starter prompts ─────────────────────────────────────────────────────
+
+/**
+ * A single starter prompt shown as a clickable chip in an empty chat, authored on the agent.
+ *
+ * Kept as an object rather than a bare string so an optional `label` can be added later with no
+ * data migration.
+ */
+export interface UaiStarterPrompt {
+    prompt: string;
+}
+
 // ── Polymorphic config ──────────────────────────────────────────────────
 
 export interface UaiStandardAgentConfig {
@@ -92,6 +104,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     scope: UaiAgentScope | null;
     config: UaiAgentConfig;
     guardrailIds: string[];
+    starterPrompts: UaiStarterPrompt[];
     isActive: boolean;
     dateCreated: string | null;
     dateModified: string | null;
@@ -112,6 +125,7 @@ export interface UaiAgentItemModel extends UmbEntityModel {
     surfaceIds: string[];
     scope: UaiAgentScope | null;
     guardrailIds: string[];
+    starterPrompts: UaiStarterPrompt[];
     isActive: boolean;
     dateCreated: string | null;
     dateModified: string | null;

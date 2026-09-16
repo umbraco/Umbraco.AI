@@ -40,6 +40,17 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 internal sealed class AIAgentService : IAIAgentService
 {
+    /// <summary>
+    /// Maximum number of starter prompts an agent can carry. Also the chip window, so a single
+    /// selected agent fits on one page.
+    /// </summary>
+    private const int MaxStarterPrompts = 4;
+
+    /// <summary>
+    /// Maximum length, in characters, of a single starter prompt.
+    /// </summary>
+    private const int MaxStarterPromptLength = 200;
+
     private readonly IAIAgentRepository _repository;
     private readonly IAIEntityVersionService _versionService;
     private readonly IAIAgentFactory _agentFactory;
@@ -129,6 +140,22 @@ internal sealed class AIAgentService : IAIAgentService
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Alias);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Name);
+
+        // Starter prompts: cap of 4 is a service guard and an editor rule, never a database
+        // constraint — the column is a single JSON blob. Deploy import clamps instead of throwing
+        // (see UmbracoAIAgentServiceConnector), but authoring in the backoffice must be told no.
+        if (agent.StarterPrompts.Count > MaxStarterPrompts)
+        {
+            throw new InvalidOperationException(
+                $"An agent can have at most {MaxStarterPrompts} starter prompts.");
+        }
+
+        var overLongStarterPrompt = agent.StarterPrompts.FirstOrDefault(p => p.Prompt.Length > MaxStarterPromptLength);
+        if (overLongStarterPrompt is not null)
+        {
+            throw new InvalidOperationException(
+                $"A starter prompt cannot exceed {MaxStarterPromptLength} characters.");
+        }
 
         // Generate new ID if needed
         if (agent.Id == Guid.Empty)

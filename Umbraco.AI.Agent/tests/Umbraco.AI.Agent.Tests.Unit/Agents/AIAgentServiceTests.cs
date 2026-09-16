@@ -175,6 +175,40 @@ public class AIAgentServiceTests
 
     #endregion
 
+    #region SaveAgentAsync - StarterPrompts
+
+    [Fact]
+    public async Task SaveAgentAsync_WithMoreThanFourStarterPrompts_ThrowsWithClearMessage()
+    {
+        // Arrange
+        var agent = CreateAgent(Guid.NewGuid());
+        agent.StarterPrompts = Enumerable.Range(1, 5)
+            .Select(i => new AIStarterPrompt { Prompt = $"Starter {i}" })
+            .ToList();
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => _service.SaveAgentAsync(agent));
+
+        // Assert
+        exception.Message.ShouldContain("4");
+    }
+
+    [Fact]
+    public async Task SaveAgentAsync_WithStarterPromptOverTwoHundredChars_ThrowsWithClearMessage()
+    {
+        // Arrange
+        var agent = CreateAgent(Guid.NewGuid());
+        agent.StarterPrompts = [new AIStarterPrompt { Prompt = new string('a', 201) }];
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => _service.SaveAgentAsync(agent));
+
+        // Assert
+        exception.Message.ShouldContain("200");
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private static AIAgent CreateAgent(

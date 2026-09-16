@@ -89,6 +89,15 @@ public sealed class AIAgent : IAIVersionableEntity
     public AIAgentScope? Scope { get; set; }
 
     /// <summary>
+    /// Starter prompts shown as clickable chips in an empty chat for this agent.
+    /// </summary>
+    /// <remarks>
+    /// Limited to 4 entries, enforced by <see cref="AIAgentService.SaveAgentAsync"/> and by the
+    /// editor's own list control.
+    /// </remarks>
+    public IReadOnlyList<AIStarterPrompt> StarterPrompts { get; set; } = [];
+
+    /// <summary>
     /// Whether this agent is active and available for use.
     /// </summary>
     public bool IsActive { get; set; } = true;

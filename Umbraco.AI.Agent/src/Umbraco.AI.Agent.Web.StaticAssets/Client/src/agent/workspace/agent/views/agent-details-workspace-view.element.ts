@@ -5,7 +5,7 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiModelEditorChangeEventDetail } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem } from "../../../types.js";
+import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem, UaiStarterPrompt } from "../../../types.js";
 import { isStandardConfig, isOrchestratedConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
@@ -61,6 +61,14 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const profileId = picker.value ?? null;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId }, "profileId"),
+        );
+    }
+
+    #onStarterPromptsChange(event: CustomEvent<UaiStarterPrompt[]>) {
+        event.stopPropagation();
+        const starterPrompts = event.detail;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ starterPrompts }, "starterPrompts"),
         );
     }
 
@@ -209,6 +217,19 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.profileId || undefined}
                         @change=${this.#onProfileChange}
                     ></uai-profile-picker>
+                </umb-property-layout>
+            </uui-box>
+
+            <uui-box headline=${this.localize.term("uaiAgent_starterPrompts")}>
+                <umb-property-layout
+                    label=${this.localize.term("uaiAgent_starterPrompts")}
+                    description=${this.localize.term("uaiAgent_starterPromptsDescription")}
+                >
+                    <uai-agent-starter-prompts-editor
+                        slot="editor"
+                        .prompts=${this._model.starterPrompts}
+                        @change=${this.#onStarterPromptsChange}
+                    ></uai-agent-starter-prompts-editor>
                 </umb-property-layout>
             </uui-box>
 

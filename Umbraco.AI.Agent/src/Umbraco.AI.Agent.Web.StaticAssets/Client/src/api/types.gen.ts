@@ -19,6 +19,7 @@ export type AgentItemResponseModel = {
     profileId?: null | string;
     surfaceIds: Array<string>;
     scope?: null | AiAgentScopeModel;
+    starterPrompts: Array<AiStarterPromptModel>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -34,6 +35,7 @@ export type AgentResponseModel = {
     guardrailIds: Array<string>;
     surfaceIds: Array<string>;
     scope?: null | AiAgentScopeModel;
+    starterPrompts: Array<AiStarterPromptModel>;
     config?: null | AgentConfigModel;
     isActive: boolean;
     dateCreated: string;
@@ -131,6 +133,10 @@ export type AiAgentUserGroupPermissionsModel = {
     deniedToolScopeIds: Array<string>;
 };
 
+export type AiStarterPromptModel = {
+    prompt: string;
+};
+
 export type BinaryChatContentPartModel = {
     $type: 'binary';
     mimeType: string;
@@ -159,6 +165,7 @@ export type CreateAgentRequestModel = {
     guardrailIds?: null | Array<string>;
     surfaceIds?: null | Array<string>;
     scope?: null | AiAgentScopeModel;
+    starterPrompts?: null | Array<AiStarterPromptModel>;
     config?: null | AgentConfigModel;
 };
 
@@ -231,6 +238,7 @@ export type UpdateAgentRequestModel = {
     guardrailIds?: null | Array<string>;
     surfaceIds?: null | Array<string>;
     scope?: null | AiAgentScopeModel;
+    starterPrompts?: null | Array<AiStarterPromptModel>;
     config?: null | AgentConfigModel;
     isActive: boolean;
 };

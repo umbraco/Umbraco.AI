@@ -48,6 +48,11 @@ public class AgentItemResponseModel
     public AIAgentScopeModel? Scope { get; set; }
 
     /// <summary>
+    /// Starter prompts shown as clickable chips in an empty chat for this agent.
+    /// </summary>
+    public IEnumerable<AIStarterPromptModel> StarterPrompts { get; set; } = [];
+
+    /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }

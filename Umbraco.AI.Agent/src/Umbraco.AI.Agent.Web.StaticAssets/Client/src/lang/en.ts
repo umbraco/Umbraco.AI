@@ -21,6 +21,11 @@ export default {
         allowedToolScopes: "Allowed Tool Scopes",
         allowedToolIds: "Allowed Tools",
         noDefaultPermissions: "No default permissions configured",
+
+        // Starter prompts
+        starterPrompts: "Starter prompts",
+        starterPromptsDescription: "Up to 4 prompts shown as clickable chips in an empty chat for this agent",
+        starterPromptTooLong: (max: number) => `A starter prompt cannot exceed ${max} characters.`,
     },
     uaiToolScope: {
         // Content scopes

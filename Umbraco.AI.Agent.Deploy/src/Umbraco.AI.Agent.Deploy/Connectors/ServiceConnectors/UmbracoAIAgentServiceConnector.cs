@@ -28,6 +28,20 @@ public class UmbracoAIAgentServiceConnector(
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
+    /// <summary>
+    /// Maximum number of starter prompts an agent can carry (mirrors <c>AIAgentService</c>'s own
+    /// guard). Import clamps to this count rather than throwing — a transfer from another version
+    /// line, or after a future cap change, should never fail the whole agent over a presentation
+    /// rule.
+    /// </summary>
+    private const int MaxStarterPrompts = 4;
+
+    /// <summary>
+    /// Maximum length, in characters, of a single starter prompt (mirrors <c>AIAgentService</c>'s
+    /// own guard). Truncated on import for the same reason the count is clamped.
+    /// </summary>
+    private const int MaxStarterPromptLength = 200;
+
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
 
@@ -93,6 +107,7 @@ public class UmbracoAIAgentServiceConnector(
             GuardrailIds = entity.GuardrailIds.ToList(),
             SurfaceIds = entity.SurfaceIds.ToList(),
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
+            StarterPrompts = entity.StarterPrompts.ToList(),
             IsActive = entity.IsActive
         };
 
@@ -160,6 +175,16 @@ public class UmbracoAIAgentServiceConnector(
         agent.Config = config;
         agent.SurfaceIds = artifact.SurfaceIds.ToList();
         agent.Scope = scope;
+        // Clamp rather than throw: an artifact breaching either cap — from another version line, or
+        // after a future cap change — must not fail the whole transfer over this alone. Both of
+        // SaveAgentAsync's guards are mirrored here, count and length, or the one left unclamped
+        // would throw right below and defeat the point.
+        agent.StarterPrompts = artifact.StarterPrompts
+            .Take(MaxStarterPrompts)
+            .Select(p => p.Prompt.Length > MaxStarterPromptLength
+                ? p with { Prompt = p.Prompt[..MaxStarterPromptLength] }
+                : p)
+            .ToList();
         agent.IsActive = artifact.IsActive;
 
         state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);

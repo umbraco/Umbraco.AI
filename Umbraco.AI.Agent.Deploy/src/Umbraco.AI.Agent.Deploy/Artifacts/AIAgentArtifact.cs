@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
 using Umbraco.Deploy.Infrastructure.Artifacts;
@@ -45,6 +46,11 @@ public class AIAgentArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depen
     /// Scoping rules serialized as JSON (where the agent is available).
     /// </summary>
     public JsonElement? Scope { get; set; }
+
+    /// <summary>
+    /// Starter prompts shown as clickable chips in an empty chat for this agent.
+    /// </summary>
+    public IEnumerable<AIStarterPrompt> StarterPrompts { get; set; } = [];
 
     /// <summary>
     /// Whether the agent is active.

@@ -29,7 +29,7 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
         IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
         var messages = chatMessages.ToList();
-        var descriptor = BuildDescriptor(messages, options);
+        var descriptor = BuildDescriptor(messages);
 
         var tracked = await _tracker.TrackAsync(
             descriptor,
@@ -54,7 +54,7 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var messages = chatMessages.ToList();
-        var descriptor = BuildDescriptor(messages, options);
+        var descriptor = BuildDescriptor(messages);
 
         var scope = await _tracker.BeginAsync(descriptor, cancellationToken);
         var updates = new List<ChatResponseUpdate>();
@@ -104,35 +104,11 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
         }
     }
 
-    private AIOperationDescriptor BuildDescriptor(IReadOnlyList<ChatMessage> messages, ChatOptions? options) => new()
+    private AIOperationDescriptor BuildDescriptor(IReadOnlyList<ChatMessage> messages) => new()
     {
         Capability = AICapability.Chat,
-        PromptData = WithRuntimeContextSnapshot(messages, options?.Instructions),
+        PromptData = messages,
         Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
         RecordUsageWhenEmpty = true,
     };
-
-    /// <summary>
-    /// Builds a copy of <paramref name="messages"/> for the audit log only, with the volatile
-    /// runtime-context prompt -- moved to <c>ChatOptions.Instructions</c> by
-    /// <c>AIAgentSystemMessageChatClient</c> so it lands after the stable, cacheable system content on
-    /// the wire (see umbraco/Umbraco.AI#382) -- inserted as its own labelled entry, right after the real
-    /// system message. It's context (the current entity, page, etc.), not instructions, so it's labelled
-    /// that way here rather than reusing the wire field's name, which would misdescribe it to anyone
-    /// reading the log. Never mutates or reuses the list actually sent to the provider.
-    /// </summary>
-    private static IReadOnlyList<ChatMessage> WithRuntimeContextSnapshot(IReadOnlyList<ChatMessage> messages, string? runtimeContext)
-    {
-        if (string.IsNullOrEmpty(runtimeContext))
-        {
-            return messages;
-        }
-
-        var contextMessage = new ChatMessage(new ChatRole("Context"), runtimeContext);
-        var insertAt = messages.Count > 0 && messages[0].Role == ChatRole.System ? 1 : 0;
-
-        var snapshot = messages.ToList();
-        snapshot.Insert(insertAt, contextMessage);
-        return snapshot;
-    }
 }

@@ -102,6 +102,30 @@ describe("UaiRunController — interrupt path advances the persisted boundary", 
 
         expect(onTurnComplete).not.toHaveBeenCalled();
     });
+
+    /**
+     * Regression coverage for #381: a "tool_call" interrupt only pauses until the frontend tool
+     * resolves and the run controller resumes -- persisting here would capture the assistant's
+     * tool_use with no matching tool_result yet, which a provider such as Anthropic rejects on the
+     * very next turn. The resumed run's own RUN_FINISHED is what should call onTurnComplete.
+     */
+    it("does NOT advance the boundary on a tool_call interrupt", () => {
+        const { onTurnComplete, getCallbacks } = createHarness();
+
+        const event: RunFinishedEvent = {
+            outcome: "interrupt",
+            interrupt: {
+                id: "call-1",
+                reason: "tool_call",
+                type: "tool_call",
+                title: "Tool call",
+                message: "Executing a frontend tool",
+            },
+        };
+        getCallbacks()?.onRunFinished?.(event);
+
+        expect(onTurnComplete).not.toHaveBeenCalled();
+    });
 });
 
 /**

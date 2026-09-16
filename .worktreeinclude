@@ -2,6 +2,11 @@
 # Uses gitignore syntax: globs, directory patterns, ! for negation.
 # See: https://git-scm.com/docs/gitignore#_pattern_format
 
+# Claude Code local project instructions (not tracked in git, so worktrees
+# don't get it unless it's copied explicitly — without this, the mandatory
+# worktree-workflow rules in CLAUDE.local.md never reach a worktree session)
+CLAUDE.local.md
+
 # .NET config
 appsettings.Development.json
 appsettings.Local.json

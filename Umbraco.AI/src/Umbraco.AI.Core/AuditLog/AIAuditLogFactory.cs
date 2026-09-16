@@ -86,7 +86,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             return capability switch
             {
                 AICapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
-                    string.Join("\n", messages.Select(FormatChatMessage)),
+                    string.Join("\n\n", messages.Select(FormatChatMessage)),
 
                 AICapability.Embedding when promptObj is IEnumerable<string> values =>
                     string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),
@@ -107,28 +107,30 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
 
         foreach (var content in message.Contents)
         {
-            var formatted = FormatContent(content, message.Role);
+            var formatted = FormatContent(content);
             if (!string.IsNullOrEmpty(formatted))
             {
                 parts.Add(formatted);
             }
         }
 
-        // If no content was formatted, just return the role
+        var header = $"===== [{message.Role}] =====";
+
+        // If no content was formatted, just return the header
         if (parts.Count == 0)
         {
-            return $"[{message.Role}]";
+            return header;
         }
 
-        return string.Join("\n", parts);
+        return $"{header}\n{string.Join("\n", parts)}";
     }
 
-    private static string? FormatContent(AIContent content, ChatRole role)
+    private static string? FormatContent(AIContent content)
     {
         return content switch
         {
             TextContent textContent =>
-                $"[{role}] {textContent.Text}",
+                textContent.Text,
 
             FunctionCallContent functionCall =>
                 FormatFunctionCall(functionCall),

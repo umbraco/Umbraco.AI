@@ -5,6 +5,22 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.2.0-rc.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0-rc.3...Umbraco.AI.Agent@18.2.0-rc.4) (2026-09-16)
+
+### fix
+
+* **agent,anthropic:** Stop the volatile runtime context from poisoning the cached prompt prefix ([5b48997](https://github.com/umbraco/Umbraco.AI/commit/5b48997a283d6dd63fc45b7f5fa0081c17cd89a9)), closes [#382](https://github.com/umbraco/Umbraco.AI/issues/382)
+* **agent,copilot-workspace:** Load persisted session state before other scoped DB work ([07f2a9d](https://github.com/umbraco/Umbraco.AI/commit/07f2a9d0b546c407002b4ac411708eec99fa0aec)), closes [umbraco/Umbraco.AI#375](https://github.com/umbraco/Umbraco.AI/issues/375)
+* **agent,copilot-workspace:** Stop duplicate/stale conversation history on reconnect ([2fa3e7a](https://github.com/umbraco/Umbraco.AI/commit/2fa3e7ac4866bc3067592ea14092a5134497f19e)), closes [umbraco/Umbraco.AI#375](https://github.com/umbraco/Umbraco.AI/issues/375)
+* **agent,copilot:** Stop a restored/aborted thread ever holding a dangling tool_use ([c3accf4](https://github.com/umbraco/Umbraco.AI/commit/c3accf45298b7c9e61f169c1f839a69bb2bed823)), closes [#381](https://github.com/umbraco/Umbraco.AI/issues/381)
+* **agent:** Clear stale "Calling <tool>..." status once its result arrives ([921be67](https://github.com/umbraco/Umbraco.AI/commit/921be67441f495b7a5245ca3eaa440c89a562c53)), closes [#376](https://github.com/umbraco/Umbraco.AI/issues/376)
+* **agent:** Keep the runtime-context prompt in the audit trail after the Instructions move ([6e7178b](https://github.com/umbraco/Umbraco.AI/commit/6e7178b1bbd161ab6addc5c9e1e8e4f36a097d8b)), closes [#382](https://github.com/umbraco/Umbraco.AI/issues/382)
+
+### refactor
+
+* **agent,anthropic:** Carry the volatile prompt as a trailing message, not via Instructions ([8d11d0d](https://github.com/umbraco/Umbraco.AI/commit/8d11d0d6fcfcb1c03c7e15eb0b37bc9855e99aa4))
+* **agent:** Declare the audited runtime-context prompt via LogKeys, not a ChatOptions marker ([12958f9](https://github.com/umbraco/Umbraco.AI/commit/12958f9b18099253a6511503fea1ec76810c7a62))
+* **agent:** Split the instructions swap into two clearly-named steps ([b448d25](https://github.com/umbraco/Umbraco.AI/commit/b448d25e5c6d69a13b414de4498446248a671cac))
 
 ## [18.2.0-rc.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0-rc.2...Umbraco.AI.Agent@18.2.0-rc.3) (2026-09-08)
 

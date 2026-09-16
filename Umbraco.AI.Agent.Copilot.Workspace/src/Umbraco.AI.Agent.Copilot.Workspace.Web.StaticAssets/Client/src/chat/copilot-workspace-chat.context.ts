@@ -143,6 +143,10 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
 
         this.#starterPrompts = new UaiStarterPromptsController(host, {
             selectedAgent$: this.selectedAgent,
+            // The repository's own list, filtered to agents on the copilot-workspace surface, but never
+            // carrying the synthetic AUTO_AGENT option -- so it doubles as both the "is a real agent
+            // selected" check and the Auto-mode merge source. No new availability logic.
+            availableAgents$: this.#agentRepository.agentItems$,
             selectAgent: (agentId) => this.selectAgent(agentId),
             sendUserMessage: (content) => this.sendUserMessage(content),
         });

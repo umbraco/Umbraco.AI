@@ -177,7 +177,7 @@ Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions ma
 
 ### Branch Model
 
-All branches are version-prefixed. The `claude/` prefix is exempt (auto-created by Claude Code).
+All branches are version-prefixed. The `claude/` prefix is exempt (auto-created by Claude Code). There is no separate `support/X.x` branch — that naming was retired when the repo moved to this `vN/`-prefixed model (see `project_branch_model` in memory for the history; a stale reference to `support/X.x` was found and fixed in the v17 line's copy of this file).
 
 | Branch pattern | Role |
 |----------------|------|
@@ -214,12 +214,12 @@ A bug fix or feature is developed against one version line but usually applies t
 
 When a fix or feature applies to an older supported version:
 
-1. Branch from `vN/dev` (e.g. `v17/dev`), naming it `vN/feature/<name>`
-2. Apply and commit the change on the feature/fix branch
-3. Merge back into `vN/dev`
+1. Branch from `vN/dev` for the target version line (not from the line you originally fixed), naming it `vN/feature/<name>` or `vN/hotfix/<name>`
+2. Apply and commit the change on that branch
+3. Open a PR back into `vN/dev` (or the relevant `vN/release/*` branch if it's a hotfix against an in-progress release) — always as a PR, never merged automatically, even when this step is done by an agent
 4. Release via the normal release flow on that branch
 
-Do **not** forward-merge `vN/dev` into a newer version's `dev` — each version line is maintained independently.
+Do **not** forward-merge one version line's branches into another's — each version line is maintained independently. Always create a *separate* worktree per version line (with an absolute path — see CLAUDE.local.md) rather than reusing one worktree for both; reusing one has caused a worktree to get created nested inside another.
 
 When backporting **worktree/tooling config**, note that some files hardcode the version line and must
 be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/feature/..."`) and
@@ -263,6 +263,10 @@ Prerelease identifiers **must** be dot-separated with a numeric segment: `-alpha
 **Never use the non-dotted form** (`-beta1`, `-alpha2`). NuGet/SemVer treats `beta10` as a single alphanumeric identifier and compares it as a *string*, so it sorts **below** `beta9` (`'1' < '9'`). The result: a published `1.0.0-beta10` is lower-precedence than `1.0.0-beta9`, so `--prerelease` installs and range resolution silently pick the *older* build. Dotted `-beta.10` compares the `10` numerically and sorts correctly.
 
 Note you cannot retrofit a broken line: `-beta.11` (dotted) sorts *below* an existing non-dotted `-beta9` (because identifier `beta` < `beta9`). So a line that already shipped non-dotted betas can only be escaped by advancing the stage (`-rc.1`) or the base version, not by dotifying. Apply the dotted rule to every prerelease line. See [[project_release_tag_sort_prerelease_bug]].
+
+### RC / Prerelease Number Bumps
+
+Only advance a prerelease number (`-rc.1` → `-rc.2`, etc.) when a real package was actually published to NuGet.org from that number. Never bump it just because a MyGet nightly build ran, and never skip a number "to be safe." If an RC never went out publicly, reset back to `-rc.1` rather than continuing to climb — publishing a gap (e.g. jumping straight to `-rc.4`) leaves no way to know what `-rc.2`/`-rc.3` were. When in doubt, check whether the specific version actually exists on NuGet.org before bumping.
 
 ### Release Manifest
 
@@ -410,6 +414,10 @@ Never break a public API. When a new method replaces an old one, keep the old si
 message `"Will be removed in vX"`, where **X = current major version + 2** (currently v18, so
 `"Will be removed in v20"`). This gives consumers two major versions to migrate.
 
+### Verify, Don't Assert
+
+Before saying a task is done, actually run the relevant build/test command and look at its real output — `dotnet build <Product>.slnx` for the touched product, or `npm run build:<target>` for a touched frontend package. Don't report success from reading the diff alone. If a build/test failure looks "unrelated," confirm that by actually running the failing test in isolation or checking it fails the same way on a clean `dev` checkout — don't wave it away.
+
 ## Excluded Folders
 
 - `Ref/` - External reference projects
@@ -419,3 +427,5 @@ message `"Will be removed in vX"`, where **X = current major version + 2** (curr
 
 - Never import Lit components by path; export through the barrel chain — see [.claude/memory/frontend-entry-points.md](.claude/memory/frontend-entry-points.md) for which entry point (`app.ts`/`exports.ts`/`index.ts`/`internal-components.ts`) a new export belongs in
 - Avoid god objects
+- Provider packages are named after the *company* (e.g. `Umbraco.AI.ZAI`, `Umbraco.AI.Alibaba`), never after the specific model they happen to ship first (e.g. not `Umbraco.AI.Qwen`) — see the `add-provider` skill
+- Worktrees pile up because cleanup is easy to forget — `ExitWorktree` alone does not delete anything. See CLAUDE.local.md's "Finishing a worktree" section, and actually run `/worktree-cleanup` or `/worktree-merge` before considering a worktree task done

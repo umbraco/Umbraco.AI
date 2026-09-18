@@ -127,7 +127,7 @@ Execute stop operation, wait 3 seconds, then execute start operation.
 The demo site's port is assigned once (by `Umbraco.Community.WorktreeDevPort` on first run) and stored in this worktree's own git config — a plain read, no server round-trip needed to discover it:
 
 ```bash
-git config --worktree --get worktreedevport.port
+git config --worktree --get wdp.port
 ```
 
 Empty/no output means the site has never been started in this worktree yet. A value means that's the port to use — probe `https://127.0.0.1:<port>` to confirm the site is actually up right now (the config value persists across restarts, so its presence alone doesn't mean the process is currently running).

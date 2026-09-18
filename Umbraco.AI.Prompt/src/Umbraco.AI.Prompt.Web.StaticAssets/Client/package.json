@@ -19,6 +19,6 @@
         "cross-env": "^10.0.0",
         "typescript": "^5.9.2",
         "vite": "^8.0.16",
-        "worktree-dev-port": "^0.1.2"
+        "worktree-dev-port": "^0.2.0"
     }
 }

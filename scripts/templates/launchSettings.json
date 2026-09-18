@@ -4,14 +4,6 @@
         "DemoSite": {
             "commandName": "Project",
             "dotnetRunMessages": true,
-            "applicationUrl": "https://localhost:44355",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            }
-        },
-        "DemoSite-Claude": {
-            "commandName": "Project",
-            "dotnetRunMessages": true,
             "environmentVariables": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             }

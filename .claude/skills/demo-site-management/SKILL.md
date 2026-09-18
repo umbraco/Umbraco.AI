@@ -1,12 +1,12 @@
 ---
 name: demo-site-management
-description: Manages the Umbraco.AI demo site for development. Handles starting with DemoSite-Claude profile, port discovery via named pipes, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
+description: Manages the Umbraco.AI demo site for development. Handles starting with DemoSite-Claude profile, per-worktree port lookup via git config, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
 argument-hint: [start|stop|generate-client|status|restart|open]
 ---
 
 # Demo Site Management
 
-Manage the Umbraco.AI demo site with automatic port discovery via named pipes.
+Manage the Umbraco.AI demo site. Each worktree gets its own stable dev port, assigned once by [Umbraco.Community.WorktreeDevPort](https://github.com/mattbrailsford/Umbraco.Community.WorktreeDevPort) and stored in that worktree's own git config — no named pipe, socket, or discovery endpoint to query.
 
 ## Command: $ARGUMENTS
 
@@ -14,12 +14,12 @@ Execute the requested demo site operation.
 
 ### Available commands
 
-- **start**: Start demo site with DemoSite-Claude profile on dynamic port
+- **start**: Start demo site with DemoSite-Claude profile
 - **stop**: Stop the running demo site
 - **generate-client**: Generate OpenAPI clients (starts site if needed)
-- **status**: Check if site is running and show port/pipe info
+- **status**: Check if site is running and show its port
 - **restart**: Stop and restart the demo site
-- **open**: Open the demo site in default browser (discovers port automatically)
+- **open**: Open the demo site in default browser
 
 ## Current Environment
 
@@ -32,20 +32,19 @@ Execute the requested demo site operation.
 ### For "start"
 
 1. Check if already running using multi-method detection:
-    - Try querying site address endpoint via named pipe (see "Query site address via named pipe" section)
+    - Try reading the port (see "Get the worktree's dev port" section) and connecting to it
     - Check if background tasks exist with "DemoSite" in description
     - If running, report and exit
 2. Detect demo site path:
     - Read `Directory.Packages.props` and extract the major from the `Umbraco.Cms.Core` lower bound (e.g. `[18.0.0, …)` → `18`)
     - Demo site path: `demos/v{major}/Umbraco.AI.DemoSite`
 3. If not running, start in background: `cd demos/v{major}/Umbraco.AI.DemoSite && dotnet run --launch-profile DemoSite-Claude`
-3. Wait 15-20 seconds for startup
-4. Query site address endpoint via named pipe to get port and pipe name (see "Query site address via named pipe" section)
-5. Report:
+4. Wait 15-20 seconds for startup (the package picks a free port on first run in this worktree, or reuses the one it already picked)
+5. Read the port (see "Get the worktree's dev port" section)
+6. Report:
     - Task ID for later stopping (save this for future commands)
-    - Port number (from site address endpoint)
-    - Pipe name (format: umbraco.demosite.{branch-or-worktree})
-    - Site URL
+    - Port number
+    - Site URL (`https://127.0.0.1:<port>`)
 
 ### For "stop"
 
@@ -68,46 +67,40 @@ Execute the requested demo site operation.
 5. Report results:
     - Success: "Demo site stopped (task ID: {id})"
     - Failure: "Could not find running demo site"
-    - Note: Pipes are automatically cleaned up when process exits
+    - Note: the assigned port is remembered in git config and reused on the next start — nothing to clean up
 
 ### For "generate-client"
 
 1. Check if site is running:
-    - Try querying site address endpoint via named pipe (see "Query site address via named pipe" section)
+    - Try reading the port (see "Get the worktree's dev port" section) and connecting to it
     - Check if any background bash tasks are related to DemoSite
 2. If not running, report error with suggestion: "Demo site not running. Start it with `/demo-site-management start`"
 3. Run: `npm run generate-client` (runs all three packages concurrently)
 4. Monitor output for:
-    - "Using named pipe: umbraco.demosite.{identifier}" (should appear 3 times)
+    - "Using port <port> for this worktree" (should appear 3 times)
     - "✓ TypeScript client generated successfully" (should appear 3 times)
-    - No errors (EPIPE, connection refused, etc.)
+    - No errors (connection refused, certificate errors, etc.)
 5. Report summary:
     - Success/failure for each package (core, prompt, agent)
-    - Pipe name used
+    - Port used
     - Whether concurrent connections worked (no errors)
 
 ### For "status"
 
 Use multi-method detection to determine site status:
 
-1. **Query site address endpoint**: Try querying via named pipe (see "Query site address via named pipe" section)
-    - If successful, site is running and you have port info
-    - If fails, continue to other methods
+1. **Read the port and probe it**: see "Get the worktree's dev port" section
+    - If a port is set and reachable, site is running
+    - If no port is set yet, the site has never been started in this worktree
+    - If a port is set but unreachable, the site isn't currently running
 
 2. **Check background tasks**: Look for tasks with "DemoSite" or "demo-site" in name/output
     - If found, extract task ID
 
-3. **Determine git context**:
-    - Run `git rev-parse --git-dir` to check if worktree
-    - If worktree, extract name from `.git/worktrees/{name}`
-    - Otherwise use `git branch --show-current`
-    - If no git, identifier is "default"
-
-4. **Report comprehensive status**:
-    - Running: yes/no (based on site address endpoint response)
+3. **Report comprehensive status**:
+    - Running: yes/no
     - Task ID: if background task found
-    - Port: from site address endpoint
-    - Pipe name: `umbraco.demosite.{identifier}`
+    - Port: from git config (if set)
     - Git context: branch name, worktree name, or "not in git repo"
     - Suggestion: How to start if not running, or how to connect if running
 
@@ -117,9 +110,8 @@ Execute stop operation, wait 3 seconds, then execute start operation.
 
 ### For "open"
 
-1. Check if demo site is running and get port info:
-    - Query site address endpoint via named pipe (see "Query site address via named pipe" section)
-    - If fails, report error: "Demo site not running. Start it with `/demo-site-management start`"
+1. Check if demo site is running and get its port (see "Get the worktree's dev port" section)
+    - If no port is set or it's unreachable, report error: "Demo site not running. Start it with `/demo-site-management start`"
 2. Launch default browser with discovered URL:
     - Windows: `powershell.exe -Command "Start-Process 'https://127.0.0.1:<port>'"`
     - Linux: `xdg-open https://127.0.0.1:<port>`
@@ -130,119 +122,38 @@ Execute stop operation, wait 3 seconds, then execute start operation.
     - Note about certificate warning (self-signed HTTPS)
     - Credentials reminder: admin@example.com / password1234
 
-## Query Site Address via Named Pipe
+## Get the Worktree's Dev Port
 
-The demo site exposes a `/site-address` endpoint that returns port and pipe information as JSON.
-Query it via HTTP over named pipes without needing to know the port:
-
-**Using Node.js** (recommended, cross-platform):
-
-```javascript
-import http from "http";
-import { execSync } from "child_process";
-
-// Get pipe name from git context
-function getIdentifier() {
-    try {
-        const gitDir = execSync("git rev-parse --git-dir", { encoding: "utf-8" }).trim();
-        if (gitDir.includes("worktrees")) {
-            return gitDir.split(/[\\\/]/).find((p, i, arr) => arr[i - 1] === "worktrees") || "default";
-        }
-        return execSync("git branch --show-current", { encoding: "utf-8" }).trim() || "default";
-    } catch {
-        return "default";
-    }
-}
-
-const identifier = getIdentifier().replace(/[^a-zA-Z0-9\-_.]/g, "") || "default";
-const pipeName = `umbraco.demosite.${identifier}`;
-const socketPath = process.platform === "win32" ? `\\\\.\\pipe\\${pipeName}` : `/tmp/${pipeName}`;
-
-const address = await new Promise((resolve, reject) => {
-    http.get({ socketPath, path: "/site-address" }, (res) => {
-        let body = "";
-        res.on("data", (chunk) => (body += chunk));
-        res.on("end", () => (res.statusCode === 200 ? resolve(body) : reject(new Error(`HTTP ${res.statusCode}`))));
-    }).on("error", reject);
-});
-
-// address = "https://127.0.0.1:44355"
-```
-
-**Using curl** (PowerShell on Windows):
-
-```powershell
-$identifier = (git branch --show-current).Trim() -replace '[^a-zA-Z0-9\-_]', ''
-$pipeName = "umbraco.demosite.$identifier"
-curl.exe --unix-socket "//./pipe/$pipeName" http://localhost/site-address
-```
-
-**Response format:** Plain text HTTPS address
-
-```
-https://127.0.0.1:44355
-```
-
-## Detection Helper Commands
-
-Use these commands for reliable cross-platform detection:
-
-**Check for background tasks:**
+The demo site's port is assigned once (by `Umbraco.Community.WorktreeDevPort` on first run) and stored in this worktree's own git config — a plain read, no server round-trip needed to discover it:
 
 ```bash
-# Look for tasks with DemoSite in output (path varies by platform)
-# Use /tasks command or check TaskOutput for running demo site tasks
+git config --worktree --get worktreedevport.port
 ```
 
-**Determine git identifier:**
+Empty/no output means the site has never been started in this worktree yet. A value means that's the port to use — probe `https://127.0.0.1:<port>` to confirm the site is actually up right now (the config value persists across restarts, so its presence alone doesn't mean the process is currently running).
 
-```bash
-# Get worktree or branch name
-git_dir=$(git rev-parse --git-dir 2>/dev/null)
-if [[ "$git_dir" == *"worktrees"* ]]; then
-  echo "worktree: $(basename $(dirname $git_dir))"
-else
-  echo "branch: $(git branch --show-current 2>/dev/null || echo 'not-in-git')"
-fi
-```
-
-## Port Discovery Details
-
-The demo site uses HTTP over named pipes for automatic port discovery:
-
-- **Pipe naming**: `umbraco.demosite.<identifier>`
-- **Identifier logic**:
-    - Worktree: extracted from `.git/worktrees/<name>`
-    - Main repo: current branch name
-    - No git: `default`
-- **Site address endpoint**: `/site-address` (returns HTTPS address as plain text)
-- **HTTP transport**: Kestrel listens on both named pipe and HTTP/HTTPS
-- **Concurrent support**: Multiple clients can connect simultaneously
-- **Implementation**: `demos/v{major}/Umbraco.AI.DemoSite/Composers/NamedPipeListenerComposer.cs`
+This works identically whether you're in the main checkout or a linked worktree — git scopes `--worktree` config to whichever one you're currently in.
 
 ## Common Issues
 
-### Pipe not found
+### No port set yet
 
-- Demo site not running or still starting up
-- Solution: Wait 15-20 seconds after start, or check status with `/demo-site-management status`
+- The demo site has never been started in this worktree
+- Solution: `/demo-site-management start`
 
-### Connection refused
+### Port set but connection refused
 
-- Pipe doesn't exist or connection failed
-- Check that site is running: `/demo-site-management status`
-- Verify pipe name matches git context (branch/worktree)
+- The value is stale from a previous run; the process isn't currently up
+- Check with `/demo-site-management status`, then start it if needed — the same port will be reused
 
-### Multiple instances conflict
+### Multiple worktrees
 
-- Each worktree/branch gets unique pipe name
-- Main branch: `umbraco.demosite.<branch-name>`
-- Worktree: `umbraco.demosite.<worktree-name>`
-- No git: `umbraco.demosite.default`
+- Each worktree gets its own port automatically, with no collisions (a free port is verified before being assigned)
+- Removing a worktree (`git worktree remove`) removes its saved port with it — nothing to clean up by hand
 
 ## Success Criteria
 
-**After start**: Report task ID, pipe name, port, and URL
+**After start**: Report task ID, port, and URL
 **After stop**: Confirm process stopped successfully
 **After generate-client**: Show success for all three packages (core, prompt, agent)
-**After status**: Show running state, port, and pipe connection details
+**After status**: Show running state and port

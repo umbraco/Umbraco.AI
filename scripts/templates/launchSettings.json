@@ -12,7 +12,6 @@
         "DemoSite-Claude": {
             "commandName": "Project",
             "dotnetRunMessages": true,
-            "applicationUrl": "https://127.0.0.1:0",
             "environmentVariables": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             }

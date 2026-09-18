@@ -1,37 +1,49 @@
 {
-    "hooks": {
-        "SessionStart": [
-            {
-                "matcher": "",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash .claude/scripts/setup-dotnet-proxy.sh"
-                    }
-                ]
-            }
-        ],
-        "WorktreeCreate": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worktree-create.sh",
-                        "timeout": 120
-                    }
-                ]
-            }
-        ],
-        "WorktreeRemove": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worktree-remove.sh",
-                        "timeout": 30
-                    }
-                ]
-            }
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/setup-dotnet-proxy.sh"
+          }
         ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worktree-create.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worktree-remove.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "umbraco-backoffice-marketplace": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/umbraco/Umbraco-CMS-Backoffice-Skills.git",
+        "ref": "main"
+      }
     }
+  },
+  "enabledPlugins": {
+    "umbraco-cms-backoffice-skills@umbraco-backoffice-marketplace": true
+  }
 }

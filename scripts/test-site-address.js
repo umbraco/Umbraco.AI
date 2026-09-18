@@ -1,51 +1,27 @@
 #!/usr/bin/env node
-// Test script for site address endpoint via named pipe
-import http from "http";
-import { execSync } from "child_process";
+// Test script: confirms the demo site is up at this worktree's assigned port
+import https from "https";
+import { getPort } from "worktree-dev-port";
 
-function getUniqueIdentifier() {
-    const sanitize = (name) => name.replace(/[^a-zA-Z0-9\-_.]/g, "") || "default";
-
-    try {
-        const gitDir = execSync("git rev-parse --git-dir", { encoding: "utf-8" }).trim();
-
-        // Check if this is a worktree
-        if (gitDir.includes("worktrees")) {
-            const parts = gitDir.split(/[\\\/]/);
-            const worktreeIndex = parts.findIndex((p) => p === "worktrees");
-            if (worktreeIndex >= 0 && worktreeIndex + 1 < parts.length) {
-                return sanitize(parts[worktreeIndex + 1]);
-            }
-        }
-
-        // Main worktree - use branch name
-        const branch = execSync("git branch --show-current", { encoding: "utf-8" }).trim();
-        return sanitize(branch || "default");
-    } catch {
-        return "default";
-    }
+let port;
+try {
+    port = getPort();
+} catch (error) {
+    console.error(`\nError: ${error.message}`);
+    process.exit(1);
 }
 
-const identifier = getUniqueIdentifier();
-const pipeName = `umbraco.demosite.${identifier}`;
-const socketPath = process.platform === "win32" ? `\\\\.\\pipe\\${pipeName}` : `/tmp/${pipeName}`;
+console.log(`Testing demo site at https://127.0.0.1:${port}`);
 
-console.log(`Testing site address endpoint via named pipe: ${pipeName}`);
-
-http.get({ socketPath, path: "/site-address" }, (res) => {
-    let data = "";
-    res.setEncoding("utf8");
-    res.on("data", (chunk) => (data += chunk));
-    res.on("end", () => {
-        if (res.statusCode === 200) {
-            console.log(`\nSite address: ${data}`);
+https
+    .get({ hostname: "127.0.0.1", port, path: "/", rejectUnauthorized: false }, (res) => {
+        if (res.statusCode) {
+            console.log(`\nSite address: https://127.0.0.1:${port}`);
             console.log("\nSuccess! Demo site is running.");
-        } else {
-            console.error(`\nError: HTTP ${res.statusCode} ${res.statusMessage}`);
-            console.error(data);
         }
+        res.resume();
+    })
+    .on("error", (err) => {
+        console.error(`\nError: ${err.message}`);
+        console.error("Make sure the demo site is running with: /demo-site-management start");
     });
-}).on("error", (err) => {
-    console.error(`\nError: ${err.message}`);
-    console.error("Make sure the demo site is running with: /demo-site-management start");
-});

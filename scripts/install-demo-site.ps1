@@ -171,12 +171,11 @@ $launchSettingsPath = "$DemoSiteDir\Properties\launchSettings.json"
 New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
 Copy-Item -Path $launchSettingsSource -Destination $launchSettingsPath -Force
 
-# Step 3.4: Add NamedPipeListenerComposer for HTTP over named pipes
-Write-Host "Adding NamedPipeListenerComposer for HTTP over named pipes..." -ForegroundColor Green
-$composerSourcePath = Join-Path $ScriptDir "templates\NamedPipeListenerComposer.cs"
-$composerDestPath = "$DemoSiteDir\Composers\NamedPipeListenerComposer.cs"
-New-Item -ItemType Directory -Path (Split-Path $composerDestPath) -Force | Out-Null
-Copy-Item -Path $composerSourcePath -Destination $composerDestPath -Force
+# Step 3.4: Add Umbraco.Community.WorktreeDevPort for a stable per-worktree dev port
+Write-Host "Adding Umbraco.Community.WorktreeDevPort for a stable per-worktree dev port..." -ForegroundColor Green
+Push-Location $DemoSiteDir
+dotnet add package Umbraco.Community.WorktreeDevPort
+Pop-Location
 
 # Step 3.5: Add UmbracoAISeedData for demo data on first startup
 Write-Host "Adding UmbracoAISeedData..." -ForegroundColor Green

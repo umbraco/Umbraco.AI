@@ -183,10 +183,11 @@ echo "Configuring fixed port (44355)..."
 mkdir -p "$DEMO_SITE_DIR/Properties"
 cp "$SCRIPT_DIR/templates/launchSettings.json" "$DEMO_SITE_DIR/Properties/launchSettings.json"
 
-# Step 3.4: Add NamedPipeListenerComposer for HTTP over named pipes
-echo "Adding NamedPipeListenerComposer for HTTP over named pipes..."
-mkdir -p "$DEMO_SITE_DIR/Composers"
-cp "$SCRIPT_DIR/templates/NamedPipeListenerComposer.cs" "$DEMO_SITE_DIR/Composers/NamedPipeListenerComposer.cs"
+# Step 3.4: Add Umbraco.Community.WorktreeDevPort for a stable per-worktree dev port
+echo "Adding Umbraco.Community.WorktreeDevPort for a stable per-worktree dev port..."
+pushd "$DEMO_SITE_DIR" > /dev/null
+dotnet add package Umbraco.Community.WorktreeDevPort
+popd > /dev/null
 
 # Step 3.5: Add UmbracoAISeedData for demo data on first startup
 echo "Adding UmbracoAISeedData..."

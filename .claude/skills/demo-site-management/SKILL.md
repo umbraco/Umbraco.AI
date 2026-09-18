@@ -1,6 +1,6 @@
 ---
 name: demo-site-management
-description: Manages the Umbraco.AI demo site for development. Handles starting with DemoSite-Claude profile, per-worktree port lookup via git config, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
+description: Manages the Umbraco.AI demo site for development. Handles starting with the DemoSite profile, per-worktree port lookup via git config, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
 argument-hint: [start|stop|generate-client|status|restart|open]
 ---
 
@@ -14,7 +14,7 @@ Execute the requested demo site operation.
 
 ### Available commands
 
-- **start**: Start demo site with DemoSite-Claude profile
+- **start**: Start demo site with the DemoSite profile
 - **stop**: Stop the running demo site
 - **generate-client**: Generate OpenAPI clients (starts site if needed)
 - **status**: Check if site is running and show its port
@@ -38,7 +38,7 @@ Execute the requested demo site operation.
 2. Detect demo site path:
     - Read `Directory.Packages.props` and extract the major from the `Umbraco.Cms.Core` lower bound (e.g. `[18.0.0, …)` → `18`)
     - Demo site path: `demos/v{major}/Umbraco.AI.DemoSite`
-3. If not running, start in background: `cd demos/v{major}/Umbraco.AI.DemoSite && dotnet run --launch-profile DemoSite-Claude`
+3. If not running, start in background: `cd demos/v{major}/Umbraco.AI.DemoSite && dotnet run --launch-profile DemoSite`
 4. Wait 15-20 seconds for startup (the package picks a free port on first run in this worktree, or reuses the one it already picked)
 5. Read the port (see "Get the worktree's dev port" section)
 6. Report:
@@ -131,6 +131,8 @@ git config --worktree --get wdp.port
 ```
 
 Empty/no output means the site has never been started in this worktree yet. A value means that's the port to use — probe `https://127.0.0.1:<port>` to confirm the site is actually up right now (the config value persists across restarts, so its presence alone doesn't mean the process is currently running).
+
+The main checkout (not a linked worktree) gets `44355` when it's free; other worktrees get the next free port from the pool (`44300` upward), so `44355` stays reserved for the main checkout.
 
 This works identically whether you're in the main checkout or a linked worktree — git scopes `--worktree` config to whichever one you're currently in.
 

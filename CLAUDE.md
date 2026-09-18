@@ -98,7 +98,7 @@ Built on Microsoft.Extensions.AI (M.E.AI), "thin wrapper" philosophy.
 ```
 
 - **Path convention:** demo sites live under `demos/vN/` — one directory per CMS major version line (e.g. `demos/v18/`, `demos/v17/`). Never the old top-level `demo/`. The whole `demos/` tree is gitignored and generated per-developer.
-- Uses `DemoSite-Claude` profile — each worktree gets its own stable port, assigned once by the `Umbraco.Community.WorktreeDevPort` NuGet package and stored in that worktree's own git config (avoids worktree conflicts)
+- One `DemoSite` profile for everyone — each worktree gets its own stable port, assigned once by the `Umbraco.Community.WorktreeDevPort` NuGet package and stored in that worktree's own git config. The main checkout gets the familiar `44355` when free; other worktrees get the next free port from the pool
 - Port lookup: `git config --worktree --get wdp.port`
 
 ### Package Testing Site

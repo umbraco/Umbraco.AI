@@ -45,6 +45,82 @@ public sealed class BlockGridPropertyValueHandler : BlockEditorHandlerBase
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// v1 can only rewrite the root layout array, so it cannot correctly remove a block nested
+    /// inside another block's area: the layout entry lives out of reach (inside the parent's
+    /// <c>areas</c>), but <c>contentData</c> is keyed flat, so a naive removal would delete the
+    /// nested block's content while leaving its layout entry (and settings) behind. Reject the key
+    /// instead of partially applying the removal.
+    /// </remarks>
+    public override AIValidationResult ValidateRemoveItem(JsonNode? value, Guid blockKey, AIPropertyValueOperationContext context)
+    {
+        if (value is JsonObject envelope && IsNestedInArea(envelope, blockKey))
+        {
+            return AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.OperationNotSupported,
+                $"Block '{blockKey}' is nested inside a block-grid area. Block-grid v1 supports only root-level removal.",
+                Details: new JsonObject { ["blockKey"] = blockKey.ToString() }));
+        }
+
+        return AIValidationResult.Valid;
+    }
+
+    private bool IsNestedInArea(JsonObject envelope, Guid contentKey)
+    {
+        if (envelope[BlockEnvelopeOps.LayoutPropertyName] is not JsonObject layoutObj ||
+            layoutObj[LayoutKey] is not JsonArray rootLayoutArray)
+        {
+            return false;
+        }
+
+        foreach (var rootEntry in rootLayoutArray)
+        {
+            if (rootEntry is JsonObject rootObj && ContainsNestedContentKey(rootObj, contentKey))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ContainsNestedContentKey(JsonObject layoutItem, Guid contentKey)
+    {
+        if (layoutItem["areas"] is not JsonArray areas)
+        {
+            return false;
+        }
+
+        foreach (var area in areas)
+        {
+            if (area is not JsonObject areaObj || areaObj["items"] is not JsonArray items)
+            {
+                continue;
+            }
+
+            foreach (var item in items)
+            {
+                if (item is not JsonObject itemObj)
+                {
+                    continue;
+                }
+
+                if (BlockEnvelopeOps.GetGuid(itemObj, BlockEnvelopeOps.ContentKeyPropertyName) == contentKey)
+                {
+                    return true;
+                }
+
+                if (ContainsNestedContentKey(itemObj, contentKey))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc />
     protected override JsonObject BuildLayoutEntry(Guid contentKey, Guid? settingsKey, AIAddItemArgs args)
     {
         // v1 emits root-level entries with no areas and a sensible default span.

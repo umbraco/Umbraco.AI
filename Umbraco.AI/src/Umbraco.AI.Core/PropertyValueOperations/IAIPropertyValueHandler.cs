@@ -136,6 +136,24 @@ public interface IAIPropertyValueHandler : IDiscoverable
         JsonNode? value,
         AIAddItemArgs args,
         AIPropertyValueOperationContext context) => AIValidationResult.Valid;
+
+    /// <summary>
+    /// Performs handler-specific validation before <see cref="RemoveItemAsync"/> mutates the value.
+    /// Default implementation accepts all input.
+    /// </summary>
+    /// <remarks>
+    /// Lets a handler reject a key it cannot safely remove (e.g. an item nested somewhere the
+    /// handler cannot reach and rewrite) instead of <see cref="RemoveItemAsync"/> partially
+    /// applying the removal.
+    /// </remarks>
+    /// <param name="value">The current value of the collection property.</param>
+    /// <param name="blockKey">The item's block key.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>A validation result; <see cref="AIValidationResult.Valid"/> when the removal is acceptable.</returns>
+    AIValidationResult ValidateRemoveItem(
+        JsonNode? value,
+        Guid blockKey,
+        AIPropertyValueOperationContext context) => AIValidationResult.Valid;
 }
 
 /// <summary>

@@ -23,7 +23,7 @@ export default {
         noDefaultPermissions: "No default permissions configured",
 
         // Starter prompts
-        starterPrompts: "Starter prompts",
+        starterPrompts: "Starter Prompts",
         starterPromptsDescription: "Up to 4 prompts shown as clickable chips in an empty chat for this agent",
         starterPromptTooLong: (max: number) => `A starter prompt cannot exceed ${max} characters.`,
         suggestStarters: "Suggest starters",

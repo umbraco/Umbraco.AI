@@ -222,25 +222,32 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
-            <uui-box headline=${this.localize.term("uaiAgent_starterPrompts")}>
-                <umb-property-layout
-                    label=${this.localize.term("uaiAgent_starterPrompts")}
-                    description=${this.localize.term("uaiAgent_starterPromptsDescription")}
-                >
-                    <umb-property-action-menu
-                        slot="action-menu"
-                        .propertyEditorUiAlias=${UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS}
-                    ></umb-property-action-menu>
-                    <uai-agent-starter-prompts-editor
-                        slot="editor"
-                        .prompts=${this._model.starterPrompts}
-                        @change=${this.#onStarterPromptsChange}
-                    ></uai-agent-starter-prompts-editor>
-                </umb-property-layout>
-            </uui-box>
-
             ${this.#renderStandardSection()}
             ${this.#renderOrchestratedSection()}
+        `;
+    }
+
+    // A bare property rather than a box of its own: it belongs with the behaviour it seeds, and
+    // "Suggest starters" drafts from the Instructions directly above it.
+    #renderStarterPromptsProperty() {
+        const model = this._model;
+        if (!model) return nothing;
+
+        return html`
+            <umb-property-layout
+                label=${this.localize.term("uaiAgent_starterPrompts")}
+                description=${this.localize.term("uaiAgent_starterPromptsDescription")}
+            >
+                <umb-property-action-menu
+                    slot="action-menu"
+                    .propertyEditorUiAlias=${UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS}
+                ></umb-property-action-menu>
+                <uai-agent-starter-prompts-editor
+                    slot="editor"
+                    .prompts=${model.starterPrompts}
+                    @change=${this.#onStarterPromptsChange}
+                ></uai-agent-starter-prompts-editor>
+            </umb-property-layout>
         `;
     }
 
@@ -271,6 +278,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         ${umbBindToValidation(this, "$.config.instructions", config.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
+
+                ${this.#renderStarterPromptsProperty()}
             </uui-box>
 
             <uui-box headline="Output">
@@ -329,6 +338,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         @workflow-loaded=${this.#onWorkflowLoaded}
                     ></uai-workflow-picker>
                 </umb-property-layout>
+
+                ${this.#renderStarterPromptsProperty()}
             </uui-box>
 
             ${this.#renderWorkflowSettings()}

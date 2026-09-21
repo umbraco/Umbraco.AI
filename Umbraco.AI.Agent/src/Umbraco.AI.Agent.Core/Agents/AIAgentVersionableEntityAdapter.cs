@@ -35,7 +35,9 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             entity.Description,
             entity.AgentType,
             entity.ProfileId,
+            entity.GuardrailIds,
             SurfaceIds = entity.SurfaceIds.Count > 0 ? string.Join(',', entity.SurfaceIds) : null,
+            entity.Scope,
             Config = AIAgentConfigSerializer.Serialize(entity.Config),
             entity.IsActive,
             entity.Version,
@@ -74,12 +76,33 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 }
             }
 
-            var agentType = root.TryGetProperty("agentType", out var atEl) && atEl.ValueKind == JsonValueKind.Number
-                ? (AIAgentType)atEl.GetInt32()
-                : AIAgentType.Standard;
+            var agentType = AIAgentType.Standard;
+            if (root.TryGetProperty("agentType", out var atEl))
+            {
+                if (atEl.ValueKind == JsonValueKind.String)
+                {
+                    Enum.TryParse(atEl.GetString(), ignoreCase: true, out agentType);
+                }
+                else if (atEl.ValueKind == JsonValueKind.Number)
+                {
+                    agentType = (AIAgentType)atEl.GetInt32();
+                }
+            }
 
             string? configJson = root.TryGetProperty("config", out var configEl) && configEl.ValueKind == JsonValueKind.String
                 ? configEl.GetString()
+                : null;
+
+            IReadOnlyList<Guid> guardrailIds = Array.Empty<Guid>();
+            if (root.TryGetProperty("guardrailIds", out var guardrailIdsElement) &&
+                guardrailIdsElement.ValueKind == JsonValueKind.Array)
+            {
+                guardrailIds = guardrailIdsElement.Deserialize<IReadOnlyList<Guid>>(CoreConstants.DefaultJsonSerializerOptions)
+                    ?? Array.Empty<Guid>();
+            }
+
+            AIAgentScope? scope = root.TryGetProperty("scope", out var scopeElement) && scopeElement.ValueKind == JsonValueKind.Object
+                ? scopeElement.Deserialize<AIAgentScope>(CoreConstants.DefaultJsonSerializerOptions)
                 : null;
 
             return new AIAgent
@@ -91,7 +114,9 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                     ? descEl.GetString() : null,
                 AgentType = agentType,
                 ProfileId = root.GetProperty("profileId").GetGuid(),
+                GuardrailIds = guardrailIds,
                 SurfaceIds = surfaceIds,
+                Scope = scope,
                 Config = AIAgentConfigSerializer.Deserialize(agentType, configJson),
                 IsActive = root.GetProperty("isActive").GetBoolean(),
                 Version = root.GetProperty("version").GetInt32(),
@@ -135,12 +160,33 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             changes.Add(new AIValueChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
         }
 
-        // Compare scope IDs
+        // Compare surface IDs
         var fromSurfaceIds = string.Join(",", from.SurfaceIds);
         var toSurfaceIds = string.Join(",", to.SurfaceIds);
         if (fromSurfaceIds != toSurfaceIds)
         {
             changes.Add(new AIValueChange("SurfaceIds", fromSurfaceIds.Length > 0 ? fromSurfaceIds : "(none)", toSurfaceIds.Length > 0 ? toSurfaceIds : "(none)"));
+        }
+
+        // Compare guardrail IDs
+        var fromGuardrailIds = string.Join(",", from.GuardrailIds);
+        var toGuardrailIds = string.Join(",", to.GuardrailIds);
+        if (fromGuardrailIds != toGuardrailIds)
+        {
+            changes.Add(new AIValueChange("GuardrailIds", fromGuardrailIds.Length > 0 ? fromGuardrailIds : "(none)", toGuardrailIds.Length > 0 ? toGuardrailIds : "(none)"));
+        }
+
+        // Compare scope (serialized for a stable, order-sensitive comparison of allow/deny rules)
+        var fromScope = JsonSerializer.Serialize(from.Scope, CoreConstants.DefaultJsonSerializerOptions);
+        var toScope = JsonSerializer.Serialize(to.Scope, CoreConstants.DefaultJsonSerializerOptions);
+        if (fromScope != toScope)
+        {
+            changes.Add(new AIValueChange("Scope", from.Scope is null ? "(none)" : "(modified)", to.Scope is null ? "(none)" : "(modified)"));
+        }
+
+        if (from.AgentType != to.AgentType)
+        {
+            changes.Add(new AIValueChange("AgentType", from.AgentType.ToString(), to.AgentType.ToString()));
         }
 
         // Compare serialized config blobs

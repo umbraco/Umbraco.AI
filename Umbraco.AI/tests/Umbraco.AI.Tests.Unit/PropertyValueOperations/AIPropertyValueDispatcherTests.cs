@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Umbraco.AI.Core.PropertyValueOperations;
+using Umbraco.AI.Core.PropertyValueOperations.Handlers;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.PropertyEditors;
@@ -198,6 +199,81 @@ public class AIPropertyValueDispatcherTests
         result.Success.ShouldBeFalse();
         result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.InvalidPath);
         result.Error.Message.ShouldContain("blockKey");
+    }
+
+    [Fact]
+    public async Task DispatchAsync_RemoveItem_BlockGrid_NestedInArea_RejectsWithoutMutatingContentData()
+    {
+        // Arrange — regression test for umbraco/Umbraco.AI#397: deleting a block nested inside
+        // another block's area must not silently delete its contentData while leaving the layout
+        // entry (and settings) behind.
+        const string layoutKey = "Umbraco.BlockGrid";
+        var rootContentKey = Guid.NewGuid();
+        var nestedContentKey = Guid.NewGuid();
+
+        var handler = new BlockGridPropertyValueHandler(new Mock<IContentTypeService>().Object);
+        var dispatcher = BuildDispatcher(
+            handlers: [handler],
+            rootProperties: new Dictionary<string, string> { ["content"] = "Umbraco.BlockGrid" });
+
+        var rootValue = new JsonObject
+        {
+            ["layout"] = new JsonObject
+            {
+                [layoutKey] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["contentKey"] = rootContentKey,
+                        ["columnSpan"] = 12,
+                        ["rowSpan"] = 1,
+                        ["areas"] = new JsonArray
+                        {
+                            new JsonObject
+                            {
+                                ["key"] = Guid.NewGuid(),
+                                ["items"] = new JsonArray
+                                {
+                                    new JsonObject
+                                    {
+                                        ["contentKey"] = nestedContentKey,
+                                        ["columnSpan"] = 12,
+                                        ["rowSpan"] = 1,
+                                        ["areas"] = new JsonArray(),
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            ["contentData"] = new JsonArray
+            {
+                new JsonObject { ["key"] = rootContentKey, ["contentTypeKey"] = Guid.NewGuid(), ["values"] = new JsonArray() },
+                new JsonObject { ["key"] = nestedContentKey, ["contentTypeKey"] = Guid.NewGuid(), ["values"] = new JsonArray() },
+            },
+            ["settingsData"] = new JsonArray(),
+            ["expose"] = new JsonArray(),
+        };
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("content")],
+            Operation: AIPropertyOperation.RemoveItem,
+            Args: new JsonObject { ["blockKey"] = nestedContentKey.ToString() },
+            RootValue: rootValue,
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.OperationNotSupported);
+
+        // The root value handed back on failure is the dispatcher's default (unset); the caller
+        // must not persist a mutated value. Confirm the source root value itself was untouched.
+        var contentData = rootValue["contentData"] as JsonArray;
+        contentData!.Count.ShouldBe(2);
     }
 
     [Fact]

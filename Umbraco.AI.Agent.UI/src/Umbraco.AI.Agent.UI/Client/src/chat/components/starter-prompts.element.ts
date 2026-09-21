@@ -51,16 +51,23 @@ export class UaiStarterPromptsElement extends UmbLitElement {
 
         return html`
             <div class="starter-prompts">
-                ${repeat(
-                    visible,
-                    (entry, index) => `${entry.agentId ?? ""}:${index}:${entry.prompt}`,
-                    (entry) => html`
-                        <button type="button" class="starter-chip" @click=${() => this.#handleClick(entry)}>
-                            ${entry.display}
-                            ${entry.agentName ? html`<uui-tag look="secondary">${entry.agentName}</uui-tag>` : nothing}
-                        </button>
-                    `,
-                )}
+                <div class="chips">
+                    ${repeat(
+                        visible,
+                        (entry, index) => `${entry.agentId ?? ""}:${index}:${entry.prompt}`,
+                        (entry) => html`
+                            <button type="button" class="starter-chip" @click=${() => this.#handleClick(entry)}>
+                                ${entry.agentName
+                                    ? html`<span class="agent-attribution">
+                                          <uui-icon name="icon-bot"></uui-icon>
+                                          ${entry.agentName}
+                                      </span>`
+                                    : nothing}
+                                <span class="prompt">${entry.display}</span>
+                            </button>
+                        `,
+                    )}
+                </div>
                 ${showRotate
                     ? html`
                           <uui-button compact look="secondary" @click=${this.#handleRotate} title="Show more suggestions">
@@ -73,19 +80,47 @@ export class UaiStarterPromptsElement extends UmbLitElement {
     }
 
     static override styles = css`
+        /*
+         * The host is the query container, so the chips respond to the space the surface actually gives
+         * them rather than to the viewport: full width in the narrow Copilot sidebar, hugging their own
+         * text once there's room (Copilot Workspace caps its column at 860px).
+         *
+         * The explicit width matters: the host is a flex item of a centred column (.empty-state uses
+         * align-items: center), so it would otherwise be sized shrink-to-fit -- and inline-size
+         * containment makes a shrink-to-fit box report no intrinsic width at all, collapsing the chips
+         * into one-word columns.
+         */
         :host {
             display: block;
+            width: 100%;
+            align-self: stretch;
+            container-type: inline-size;
         }
 
+        /* Column so the rotate control always sits on its own row under the chips, never beside them. */
         .starter-prompts {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--uui-size-space-4);
+            margin-top: var(--uui-size-space-6);
+        }
+
+        .chips {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: stretch;
             gap: var(--uui-size-space-3);
-            margin-top: var(--uui-size-space-5);
+            width: 100%;
         }
 
         .starter-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--uui-size-space-1);
+            flex: 1 1 100%;
             font: inherit;
             color: var(--uui-color-text);
             background: var(--uui-color-surface-alt);
@@ -99,15 +134,30 @@ export class UaiStarterPromptsElement extends UmbLitElement {
                 border-color 0.15s ease;
         }
 
+        @container (min-width: 560px) {
+            .starter-chip {
+                flex: 0 1 auto;
+            }
+        }
+
         .starter-chip:hover,
         .starter-chip:focus-visible {
             background: var(--uui-color-surface);
             border-color: var(--uui-color-focus);
         }
 
-        .starter-chip uui-tag {
-            margin-left: var(--uui-size-space-3);
-            vertical-align: middle;
+        /* Same treatment as the agent attribution above an assistant message, for one visual language. */
+        .agent-attribution {
+            display: flex;
+            align-items: center;
+            gap: var(--uui-size-space-1);
+            font-size: 0.75rem;
+            color: var(--uui-color-text-alt);
+            opacity: 0.8;
+        }
+
+        .agent-attribution uui-icon {
+            font-size: 0.875rem;
         }
     `;
 }

@@ -157,9 +157,13 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             }
         }
 
-        // Phase 2: Stream with code-based post-generate evaluation
-        // Note: Post-generate Redact rules degrade to Warn during streaming
-        // because already-yielded chunks cannot be retroactively redacted.
+        // Phase 2: Stream with code-based post-generate evaluation.
+        // Text isn't released to the caller as soon as it arrives — the trailing SlidingWindowSize
+        // characters are always held back first, so a match that completes shortly after it first
+        // appears can still be caught (Block) or scrubbed (Redact) before it's ever yielded. Only
+        // text older than that trailing window is safe to release. A match that never fully fits
+        // inside the window can still slip through partially exposed — an inherent limit of scanning
+        // a live stream rather than a completed response.
         var codeBasedPostRules = resolved.PostGenerateRules
             .Where(r => _evaluators.GetById(r.EvaluatorId)?.Type == AIGuardrailEvaluatorType.CodeBased)
             .ToList();
@@ -167,45 +171,62 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
             .Where(r => _evaluators.GetById(r.EvaluatorId)?.Type == AIGuardrailEvaluatorType.ModelBased)
             .ToList();
 
-        var slidingWindow = new StringBuilder();
+        var pendingText = new StringBuilder();
         var fullContent = new StringBuilder();
-        var bufferedUpdates = new List<ChatResponseUpdate>();
+        ChatResponseUpdate? lastUpdate = null;
 
         await foreach (var update in InnerClient.GetStreamingResponseAsync(messagesList, options, cancellationToken))
         {
-            var text = update.Text;
-            if (!string.IsNullOrEmpty(text))
-            {
-                fullContent.Append(text);
-                slidingWindow.Append(text);
+            lastUpdate = update;
 
-                // Evaluate code-based rules on sliding window
-                if (codeBasedPostRules.Count > 0)
+            if (codeBasedPostRules.Count == 0)
+            {
+                if (modelBasedPostRules.Count > 0 && !string.IsNullOrEmpty(update.Text))
                 {
-                    var windowContent = slidingWindow.ToString();
-                    var chunkResult = await EvaluateRulesAsync(
-                        windowContent, messagesList, codeBasedPostRules, AIGuardrailPhase.PostGenerate, cancellationToken);
-
-                    if (chunkResult.Action == AIGuardrailAction.Block)
-                    {
-                        throw new AIGuardrailBlockedException(chunkResult);
-                    }
-
-                    // Trim sliding window to keep it bounded
-                    if (slidingWindow.Length > SlidingWindowSize * 2)
-                    {
-                        slidingWindow.Remove(0, slidingWindow.Length - SlidingWindowSize);
-                    }
+                    fullContent.Append(update.Text);
                 }
+
+                yield return update;
+                continue;
             }
 
-            // If we have model-based rules, buffer updates for potential post-stream evaluation
-            if (modelBasedPostRules.Count > 0)
+            if (!string.IsNullOrEmpty(update.Text))
             {
-                bufferedUpdates.Add(update);
+                fullContent.Append(update.Text);
+                pendingText.Append(update.Text);
             }
 
-            yield return update;
+            // A boundary (non-text content, e.g. a tool call, or the terminating update) can't be
+            // held back like ordinary text deltas, so release everything still pending up to it now.
+            var isBoundary = update.FinishReason is not null || update.Contents.Any(c => c is not TextContent);
+
+            var released = await ReleasePendingTextAsync(
+                pendingText, codeBasedPostRules, messagesList, flushAll: isBoundary, cancellationToken);
+
+            if (released.Length > 0)
+            {
+                yield return CreateTextOnlyUpdate(update, released);
+            }
+
+            if (isBoundary)
+            {
+                yield return update.Contents.Any(c => c is TextContent)
+                    ? CreateWithoutTextContent(update)
+                    : update;
+            }
+        }
+
+        // Safety net: release anything still held back if the stream ended without a boundary
+        // update (e.g. FinishReason was never set) so no trailing text is silently dropped.
+        if (pendingText.Length > 0)
+        {
+            var released = await ReleasePendingTextAsync(
+                pendingText, codeBasedPostRules, messagesList, flushAll: true, cancellationToken);
+
+            if (released.Length > 0)
+            {
+                yield return CreateTextOnlyUpdate(lastUpdate ?? new ChatResponseUpdate(ChatRole.Assistant, string.Empty), released);
+            }
         }
 
         // Phase 3: Post-stream model-based evaluation on full content
@@ -219,6 +240,82 @@ internal sealed class AIGuardrailChatClient : DelegatingChatClient
                 throw new AIGuardrailBlockedException(postResult);
             }
         }
+    }
+
+    /// <summary>
+    /// Evaluates code-based post-generate rules against everything currently held back, applies
+    /// redactions to the held-back buffer in place, then releases whatever is now safe to emit —
+    /// everything when <paramref name="flushAll"/> is set, otherwise everything except the trailing
+    /// <see cref="SlidingWindowSize"/> characters, which stay buffered as lookback for the next chunk.
+    /// </summary>
+    private async Task<string> ReleasePendingTextAsync(
+        StringBuilder pendingText,
+        IReadOnlyList<AIGuardrailRule> codeBasedPostRules,
+        IReadOnlyList<ChatMessage> conversationHistory,
+        bool flushAll,
+        CancellationToken cancellationToken)
+    {
+        if (pendingText.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var bufferedContent = pendingText.ToString();
+        var result = await EvaluateRulesAsync(
+            bufferedContent, conversationHistory, codeBasedPostRules, AIGuardrailPhase.PostGenerate, cancellationToken);
+
+        if (result.Action == AIGuardrailAction.Block)
+        {
+            throw new AIGuardrailBlockedException(result);
+        }
+
+        if (result.Action == AIGuardrailAction.Redact)
+        {
+            var matches = await CollectRedactionCandidateesAsync(bufferedContent, result, cancellationToken);
+            if (matches.Count > 0)
+            {
+                bufferedContent = ApplyRedactions(bufferedContent, matches);
+                pendingText.Clear();
+                pendingText.Append(bufferedContent);
+            }
+        }
+
+        var releaseLength = flushAll
+            ? pendingText.Length
+            : Math.Max(0, pendingText.Length - SlidingWindowSize);
+
+        if (releaseLength == 0)
+        {
+            return string.Empty;
+        }
+
+        var released = pendingText.ToString(0, releaseLength);
+        pendingText.Remove(0, releaseLength);
+        return released;
+    }
+
+    /// <summary>
+    /// Clones an update's metadata (role, ids, model, etc.) but replaces its contents with a single
+    /// text block — used to emit text that was held back and released on a later update than the one
+    /// that originally produced it.
+    /// </summary>
+    private static ChatResponseUpdate CreateTextOnlyUpdate(ChatResponseUpdate source, string text)
+    {
+        var clone = source.Clone();
+        clone.Contents = [new TextContent(text)];
+        return clone;
+    }
+
+    /// <summary>
+    /// Clones a boundary update with its <see cref="TextContent"/> items removed, since that text was
+    /// already released separately — leaves non-text content (e.g. function calls) and metadata (e.g.
+    /// FinishReason) intact.
+    /// </summary>
+    private static ChatResponseUpdate CreateWithoutTextContent(ChatResponseUpdate source)
+    {
+        var clone = source.Clone();
+        clone.Contents = source.Contents.Where(c => c is not TextContent).ToList();
+        return clone;
     }
 
     private bool IsGuardrailEvaluation()

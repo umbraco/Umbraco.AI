@@ -10,6 +10,8 @@ public class FakeChatClient : IChatClient
 {
     private readonly Func<IEnumerable<ChatMessage>, ChatOptions?, CancellationToken, Task<ChatResponse>>? _getResponseHandler;
     private readonly string _defaultResponse;
+    private readonly IReadOnlyList<string>? _streamingChunks;
+    private readonly ChatFinishReason? _streamingFinishReason;
 
     public FakeChatClient(string defaultResponse = "This is a fake response.")
     {
@@ -20,6 +22,18 @@ public class FakeChatClient : IChatClient
     {
         _getResponseHandler = getResponseHandler;
         _defaultResponse = string.Empty;
+    }
+
+    /// <summary>
+    /// Creates a fake client that streams exactly the given chunks, in order, with no re-splitting —
+    /// use this when a test needs to control precisely where a chunk boundary falls (e.g. splitting a
+    /// matched phrase across two chunks).
+    /// </summary>
+    public FakeChatClient(IReadOnlyList<string> streamingChunks, ChatFinishReason? streamingFinishReason = null)
+    {
+        _streamingChunks = streamingChunks;
+        _streamingFinishReason = streamingFinishReason;
+        _defaultResponse = string.Concat(streamingChunks);
     }
 
     /// <summary>
@@ -57,6 +71,25 @@ public class FakeChatClient : IChatClient
     {
         ReceivedMessages.Add(chatMessages);
         ReceivedOptions.Add(options);
+
+        if (_streamingChunks is not null)
+        {
+            for (var i = 0; i < _streamingChunks.Count; i++)
+            {
+                await Task.Delay(1, cancellationToken);
+
+                var isLast = i == _streamingChunks.Count - 1;
+                var update = new ChatResponseUpdate(ChatRole.Assistant, _streamingChunks[i]);
+                if (isLast && _streamingFinishReason is not null)
+                {
+                    update.FinishReason = _streamingFinishReason;
+                }
+
+                yield return update;
+            }
+
+            yield break;
+        }
 
         // Simulate streaming by yielding word by word
         var words = _defaultResponse.Split(' ');

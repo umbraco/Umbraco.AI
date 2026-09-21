@@ -465,6 +465,119 @@ public class AIGuardrailChatClientTests
         aggregated.ShouldBe(leadIn + "[REDACTED] is a good vendor.");
     }
 
+    [Fact]
+    public async Task GetStreamingResponseAsync_PostGenerateRedactRule_MatchAtWindowSize_IsCaughtEvenAfterEarlierReleases()
+    {
+        // Arrange — a match exactly as long as the lookback window (100 chars, matching
+        // AIGuardrailChatClient's SlidingWindowSize), preceded by enough filler text that at least
+        // one release has already happened before the match itself starts, and delivered as two
+        // chunks so the match is still in progress (not yet a full match) when the second release
+        // for this text is evaluated. Proves the retained window survives real release pressure.
+        var match = new string('x', 100);
+        var rule = new AIGuardrailRuleBuilder()
+            .WithEvaluatorId("regex")
+            .WithName("Long Match")
+            .AsPostGenerate()
+            .AsRedact()
+            .WithConfig(new { pattern = match, ignoreCase = false })
+            .Build();
+
+        var evaluator = new RegexGuardrailEvaluator(CreateEvaluatorInfrastructure());
+
+        var resolved = new AIResolvedGuardrails
+        {
+            AllRules = [rule],
+            PreGenerateRules = [],
+            PostGenerateRules = [rule]
+        };
+
+        _resolutionServiceMock
+            .Setup(x => x.ResolveGuardrailsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(resolved);
+
+        var leadIn = new string('a', 250);
+        var fakeClient = new FakeChatClient([leadIn, new string('x', 60), new string('x', 40)]);
+        var evaluatorCollection = CreateEvaluatorCollection(evaluator);
+
+        var client = new AIGuardrailChatClient(
+            fakeClient,
+            _runtimeContextAccessorMock.Object,
+            _resolutionServiceMock.Object,
+            evaluatorCollection,
+            NullLogger.Instance);
+
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Trigger the long match") };
+
+        // Act
+        var updates = new List<ChatResponseUpdate>();
+        await foreach (var update in client.GetStreamingResponseAsync(messages))
+        {
+            updates.Add(update);
+        }
+
+        // Assert — the full match never appears raw in any released chunk, and it was redacted
+        updates.ShouldAllBe(u => !u.Text.Contains(match));
+        var aggregated = string.Concat(updates.Select(u => u.Text));
+        aggregated.ShouldBe(leadIn + "[REDACTED]");
+    }
+
+    [Fact]
+    public async Task GetStreamingResponseAsync_PostGenerateRedactRule_MatchLongerThanWindow_CanBeMissedEntirely()
+    {
+        // Documents a known limitation (see the Guardrails "Streaming Behavior" docs): a match longer
+        // than the lookback window can slip through, because the window releases text as soon as it's
+        // no longer needed for a match *currently in progress* — it can't know a longer match is still
+        // being assembled. Here the match (121 chars) never fits inside the 100-char window all at
+        // once while incomplete, so pieces of it are released as ordinary text before it ever
+        // completes, and the match is never found at all. This test intentionally asserts the leak so
+        // a future change to the window strategy has to consciously update this test (and the docs)
+        // rather than silently regressing back to "no protection at all" without anyone noticing either way.
+        var match = new string('x', 121);
+        var rule = new AIGuardrailRuleBuilder()
+            .WithEvaluatorId("regex")
+            .WithName("Long Match")
+            .AsPostGenerate()
+            .AsRedact()
+            .WithConfig(new { pattern = match, ignoreCase = false })
+            .Build();
+
+        var evaluator = new RegexGuardrailEvaluator(CreateEvaluatorInfrastructure());
+
+        var resolved = new AIResolvedGuardrails
+        {
+            AllRules = [rule],
+            PreGenerateRules = [],
+            PostGenerateRules = [rule]
+        };
+
+        _resolutionServiceMock
+            .Setup(x => x.ResolveGuardrailsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(resolved);
+
+        var fakeClient = new FakeChatClient([new string('x', 60), new string('x', 60), new string('x', 1)]);
+        var evaluatorCollection = CreateEvaluatorCollection(evaluator);
+
+        var client = new AIGuardrailChatClient(
+            fakeClient,
+            _runtimeContextAccessorMock.Object,
+            _resolutionServiceMock.Object,
+            evaluatorCollection,
+            NullLogger.Instance);
+
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Trigger the over-long match") };
+
+        // Act
+        var updates = new List<ChatResponseUpdate>();
+        await foreach (var update in client.GetStreamingResponseAsync(messages))
+        {
+            updates.Add(update);
+        }
+
+        // Assert — the match is never fully redacted; it leaks out unmodified
+        var aggregated = string.Concat(updates.Select(u => u.Text));
+        aggregated.ShouldBe(match);
+    }
+
     #endregion
 
     #region Helpers

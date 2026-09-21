@@ -8,10 +8,12 @@ import type { UaiModelEditorChangeEventDetail } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem, UaiStarterPrompt } from "../../../types.js";
 import { isStandardConfig, isOrchestratedConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
+import { UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS } from "../../../property-actions/constants.js";
 import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
 import "@umbraco-cms/backoffice/code-editor";
+import "@umbraco-cms/backoffice/property-action";
 
 /**
  * Workspace view for Agent settings.
@@ -225,11 +227,13 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     label=${this.localize.term("uaiAgent_starterPrompts")}
                     description=${this.localize.term("uaiAgent_starterPromptsDescription")}
                 >
+                    <umb-property-action-menu
+                        slot="action-menu"
+                        .propertyEditorUiAlias=${UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS}
+                    ></umb-property-action-menu>
                     <uai-agent-starter-prompts-editor
                         slot="editor"
                         .prompts=${this._model.starterPrompts}
-                        .agentId=${this._model.unique}
-                        .profileId=${this._model.profileId}
                         @change=${this.#onStarterPromptsChange}
                     ></uai-agent-starter-prompts-editor>
                 </umb-property-layout>

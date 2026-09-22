@@ -183,10 +183,11 @@ echo "Configuring fixed port (44355)..."
 mkdir -p "$DEMO_SITE_DIR/Properties"
 cp "$SCRIPT_DIR/templates/launchSettings.json" "$DEMO_SITE_DIR/Properties/launchSettings.json"
 
-# Step 3.4: Add NamedPipeListenerComposer for HTTP over named pipes
-echo "Adding NamedPipeListenerComposer for HTTP over named pipes..."
-mkdir -p "$DEMO_SITE_DIR/Composers"
-cp "$SCRIPT_DIR/templates/NamedPipeListenerComposer.cs" "$DEMO_SITE_DIR/Composers/NamedPipeListenerComposer.cs"
+# Step 3.4: Add Umbraco.Community.WorktreeDevPort for a stable per-worktree dev port
+echo "Adding Umbraco.Community.WorktreeDevPort for a stable per-worktree dev port..."
+pushd "$DEMO_SITE_DIR" > /dev/null
+dotnet add package Umbraco.Community.WorktreeDevPort
+popd > /dev/null
 
 # Step 3.5: Add UmbracoAISeedData for demo data on first startup
 echo "Adding UmbracoAISeedData..."
@@ -241,6 +242,9 @@ add_product_projects "Umbraco.AI.Anthropic" "Providers/Anthropic"
 echo "Adding Umbraco.AI.Amazon projects..."
 add_product_projects "Umbraco.AI.Amazon" "Providers/Amazon"
 
+echo "Adding Umbraco.AI.Alibaba projects..."
+add_product_projects "Umbraco.AI.Alibaba" "Providers/Alibaba"
+
 echo "Adding Umbraco.AI.DeepSeek projects..."
 add_product_projects "Umbraco.AI.DeepSeek" "Providers/DeepSeek"
 
@@ -259,8 +263,17 @@ add_product_projects "Umbraco.AI.MicrosoftFoundry" "Providers/MicrosoftFoundry"
 echo "Adding Umbraco.AI.Mistral projects..."
 add_product_projects "Umbraco.AI.Mistral" "Providers/Mistral"
 
+echo "Adding Umbraco.AI.Moonshot projects..."
+add_product_projects "Umbraco.AI.Moonshot" "Providers/Moonshot"
+
+echo "Adding Umbraco.AI.OpenRouter projects..."
+add_product_projects "Umbraco.AI.OpenRouter" "Providers/OpenRouter"
+
 echo "Adding Umbraco.AI.TogetherAI projects..."
 add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
+
+echo "Adding Umbraco.AI.ZAI projects..."
+add_product_projects "Umbraco.AI.ZAI" "Providers/ZAI"
 
 # Step 7: Add add-on projects
 echo "Adding Umbraco.AI.Prompt projects..."
@@ -336,6 +349,11 @@ if [ -f "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj" ]; th
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 fi
 
+# Alibaba provider
+if [ -f "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj"
+fi
+
 # FireworksAI provider
 if [ -f "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.FireworksAI/src/Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.csproj"
@@ -351,9 +369,24 @@ if [ -f "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj" ];
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Mistral/src/Umbraco.AI.Mistral/Umbraco.AI.Mistral.csproj"
 fi
 
+# Moonshot provider
+if [ -f "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Moonshot/src/Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.csproj"
+fi
+
+# OpenRouter provider
+if [ -f "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.OpenRouter/src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj"
+fi
+
 # TogetherAI provider
 if [ -f "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj"
+fi
+
+# Z.AI provider
+if [ -f "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

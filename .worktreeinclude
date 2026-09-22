@@ -15,6 +15,12 @@ appsettings.Local.json
 demos/v17/
 *.local.slnx
 
+# Local Claude/agent config (workflow rules + local settings) — without this,
+# a worktree session never sees the mandatory worktree-workflow rules in
+# CLAUDE.local.md, since that file isn't tracked in git
+CLAUDE.local.md
+.claude/settings.local.json
+
 # Exclude non-source directories that contain pattern matches
 !refs/**
 !node_modules/**

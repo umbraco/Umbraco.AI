@@ -53,6 +53,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **core,agent,agent-ui,copilot,copilot-workspace,ci:** Stop leaking internal components into the shared entry file (#328) ([0431da5](https://github.com/umbraco/Umbraco.AI/commit/0431da59443dfcf2ebbadf3d59f9d1709bcd2177)), closes [#328](https://github.com/umbraco/Umbraco.AI/issues/328) [#324](https://github.com/umbraco/Umbraco.AI/issues/324) [#324](https://github.com/umbraco/Umbraco.AI/issues/324)
 * **core,agent:** Pass the real filename to file processing handlers ([85a9292](https://github.com/umbraco/Umbraco.AI/commit/85a92927c6f44bfb2182b6fed00fe464c2adeb28)), closes [#304](https://github.com/umbraco/Umbraco.AI/issues/304)
 * **core,agent:** Suppress execution-context flow for recurring hosted services ([680fc53](https://github.com/umbraco/Umbraco.AI/commit/680fc53e945113cb9e0e6acdea59dad6c66ff7d4)), closes [#22331](https://github.com/umbraco/Umbraco.AI/issues/22331)
+
+## [17.1.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.4...Umbraco.AI.Agent@17.1.6) (2026-09-10)
+
+### fix
+
+* **agent,core:** Make client-ready dual-reachable to fix hanging agent-load promise ([5107b19](https://github.com/umbraco/Umbraco.AI/commit/5107b19a97329a0d49e0828685fddfd63cf1d477))
+* **agent:** Populate runtime context asynchronously on the Copilot chat path ([40c12ae](https://github.com/umbraco/Umbraco.AI/commit/40c12ae801d5e5909dd7d3b0cc407d5e380cf4ce))
+* **core,agent:** Turn on throwOnError so a failed request always shows a notification ([f298972](https://github.com/umbraco/Umbraco.AI/commit/f29897201dd618604d709beaf73cb00bfbceba60))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([1030097](https://github.com/umbraco/Umbraco.AI/commit/10300979802a28f8da0f648035162b7854323f53))
+
 ## [17.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.1.3...Umbraco.AI.Agent@17.1.4) (2026-08-17)
 
 ### feat

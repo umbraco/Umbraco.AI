@@ -68,6 +68,8 @@ git checkout -b feature/<provider-id>-provider
 
 ## 4. Scaffold the provider
 
+**`<ProviderName>` is the vendor/company name, never the model name.** E.g. `Umbraco.AI.ZAI` and `Umbraco.AI.Alibaba` (Qwen), not `Umbraco.AI.GLM` or `Umbraco.AI.Qwen` — a vendor may ship several model families under one provider package, so naming it after whichever model shipped first is wrong even if that's the only model supported today.
+
 Directory layout (use Anthropic as the template):
 
 ```
@@ -85,9 +87,9 @@ Umbraco.AI.<ProviderName>/
 │       └── lang/en.js
 ├── Umbraco.AI.<ProviderName>.slnx
 ├── Directory.Build.props
-├── version.json                                     # start at "1.0.0"
+├── version.json                                     # start at "N.0.0", N = the target branch's CMS major (NOT "1.0.0")
 ├── changelog.config.json                            # { "scopes": ["<provider-id>"] }
-├── CHANGELOG.md
+├── CHANGELOG.md                                      # must include an actual initial entry, not just the header
 ├── README.md
 ├── CLAUDE.md
 ├── umbraco-marketplace.json
@@ -179,9 +181,9 @@ The `uaiFields.<providerId><PropertyName>Label` / `Description` convention is wh
 Copy Anthropic's versions and adjust:
 - **`Directory.Build.props`** — change `<Product>` and `<PackageProjectUrl>`. Shared logo reference (`../assets/logo-128.png`) and LICENSE stay as-is. The `..` path resolves only because every provider sits one level under the repo root — keep the provider folder at the top level, don't nest it.
 - **`Umbraco.AI.<ProviderName>.slnx`** — single project reference
-- **`version.json`** — start at `"1.0.0"`, copy rest verbatim
+- **`version.json`** — start at `"N.0.0"` where N is the target branch's CMS major (e.g. `18.0.0` on `v18/dev`, `17.0.0` on `v17/dev`) — **not** `"1.0.0"`. Package major versions track the CMS major version (see root `CLAUDE.md` "Major version alignment"); every other file/field that mentions a version floor (README/marketplace-readme "Umbraco.AI X.0.0+", CHANGELOG.md's version heading) must use the same N, not `1.0.0`.
 - **`changelog.config.json`** — `{ "scopes": ["<provider-id>"] }` — this is what makes the scope valid for commitlint
-- **`CHANGELOG.md`** — Initial release entry with today's date
+- **`CHANGELOG.md`** — must have a real initial entry, not just the boilerplate header: `## [N.0.0](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.<ProviderName>@N.0.0) (unreleased)` followed by `### feat` / `* **<provider-id>:** Add <ProviderName> AI provider`. After scaffolding, diff it against a reference provider's CHANGELOG.md to confirm the entry is actually there — it's easy to copy the header and forget the entry.
 - **`README.md`** — describe features, models, requirements
 - **`CLAUDE.md`** — per-package dev guide. Note: the Anthropic/OpenAI CLAUDE.mds have slightly stale examples — always read actual source for current conventions.
 - **`umbraco-marketplace.json`** — `Category: "Artificial Intelligence"`, list provider-appropriate tags. Update `DocumentationUrl` to `https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.<ProviderName>` and `RelatedPackages` to point to two or three other providers.
@@ -264,6 +266,7 @@ Then open the PR via the URL GitHub prints, or `gh pr create`.
 - **Modeld filtering relies on conventions** — if the vendor adds a new model family next year, your regex won't cover it. Prefer broader patterns (e.g., `^mistral-` catches all current and future `mistral-*` families) over hard-coded model lists.
 - **Vendor SDK may not bake modelId into its IChatClient** — use the `ChatClientBuilder.ConfigureOptions(o => o.ModelId ??= …)` pattern in that case. Same for embeddings with `EmbeddingGeneratorBuilder`.
 - **`npm install` sometimes times out** on first run — `npm install --fetch-timeout=600000` is the workaround.
+- **Learned from a sweep of Alibaba/Moonshot/OpenRouter/ZAI:** two of those four providers shipped with `version.json` left at `"1.0.0"` (this doc used to say to start there) instead of the CMS-major-aligned version, and two others were scaffolded with an empty `CHANGELOG.md` (header only, no initial entry). Both are now fixed on `v17/dev`/`v18/dev`, and this doc's instructions above are corrected — but if you're eyeballing an existing provider as a reference, verify it actually matches convention before copying from it; don't assume every already-merged provider is a clean example.
 
 ## Reference providers (by complexity)
 

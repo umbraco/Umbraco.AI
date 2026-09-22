@@ -16,43 +16,47 @@ This is a monorepo containing multiple Umbraco.AI packages:
 
 ### Core
 
-| Product                       | Description               | Version | Location      |
-| ----------------------------- | ------------------------- | ------- | ------------- |
-| [**Umbraco.AI**](Umbraco.AI/) | Core AI integration layer | 1.x     | `Umbraco.AI/` |
+| Product                       | Description               | Location      |
+| ----------------------------- | -------------------------- | ------------- |
+| [**Umbraco.AI**](Umbraco.AI/) | Core AI integration layer | `Umbraco.AI/` |
 
 ### Addons
 
-| Product                                                   | Description                                | Version     | Location                    |
-| --------------------------------------------------------- | ------------------------------------------ | ----------- | --------------------------- |
-| [**Umbraco.AI.Agent**](Umbraco.AI.Agent/)                 | AI agent management and runtime            | 1.x         | `Umbraco.AI.Agent/`         |
-| [**Umbraco.AI.Agent.UI**](Umbraco.AI.Agent.UI/)           | Reusable chat UI infrastructure (library)  | 1.x         | `Umbraco.AI.Agent.UI/`      |
-| [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/) | Copilot chat UI for agents (frontend-only) | 1.x         | `Umbraco.AI.Agent.Copilot/` |
-| [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/)               | Prompt template management                 | 1.x         | `Umbraco.AI.Prompt/`        |
-| [**Umbraco.AI.Search**](Umbraco.AI.Search/)               | AI-powered semantic vector search          | 1.x (beta)  | `Umbraco.AI.Search/`        |
-| [**Umbraco.AI.Automate**](Umbraco.AI.Automate/)           | Umbraco Automate integration for AI agents | 1.x (alpha) | `Umbraco.AI.Automate/`      |
+| Product                                                   | Description                                | Location                    |
+| --------------------------------------------------------- | ------------------------------------------ | --------------------------- |
+| [**Umbraco.AI.Agent**](Umbraco.AI.Agent/)                 | AI agent management and runtime            | `Umbraco.AI.Agent/`         |
+| [**Umbraco.AI.Agent.UI**](Umbraco.AI.Agent.UI/)           | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`      |
+| [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/) | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
+| [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/)               | Prompt template management                 | `Umbraco.AI.Prompt/`        |
+| [**Umbraco.AI.Search**](Umbraco.AI.Search/)               | AI-powered semantic vector search          | `Umbraco.AI.Search/`        |
+| [**Umbraco.AI.Automate**](Umbraco.AI.Automate/)           | Umbraco Automate integration for AI agents | `Umbraco.AI.Automate/`      |
 
 ### Deploy
 
-| Product                                                   | Description                    | Version | Location                    |
-| --------------------------------------------------------- | ------------------------------ | ------- | --------------------------- |
-| [**Umbraco.AI.Deploy**](Umbraco.AI.Deploy/)               | Deploy support for AI entities | 1.x     | `Umbraco.AI.Deploy/`        |
-| [**Umbraco.AI.Prompt.Deploy**](Umbraco.AI.Prompt.Deploy/) | Deploy support for prompts     | 1.x     | `Umbraco.AI.Prompt.Deploy/` |
-| [**Umbraco.AI.Agent.Deploy**](Umbraco.AI.Agent.Deploy/)   | Deploy support for agents      | 1.x     | `Umbraco.AI.Agent.Deploy/`  |
+| Product                                                   | Description                    | Location                    |
+| --------------------------------------------------------- | ------------------------------ | --------------------------- |
+| [**Umbraco.AI.Deploy**](Umbraco.AI.Deploy/)               | Deploy support for AI entities | `Umbraco.AI.Deploy/`        |
+| [**Umbraco.AI.Prompt.Deploy**](Umbraco.AI.Prompt.Deploy/) | Deploy support for prompts     | `Umbraco.AI.Prompt.Deploy/` |
+| [**Umbraco.AI.Agent.Deploy**](Umbraco.AI.Agent.Deploy/)   | Deploy support for agents      | `Umbraco.AI.Agent.Deploy/`  |
 
 ### Providers
 
-| Product                                                         | Description                               | Version | Location                       |
-| --------------------------------------------------------------- | ----------------------------------------- | ------- | ------------------------------ |
-| [**Umbraco.AI.OpenAI**](Umbraco.AI.OpenAI/)                     | OpenAI provider                           | 1.x     | `Umbraco.AI.OpenAI/`           |
-| [**Umbraco.AI.Anthropic**](Umbraco.AI.Anthropic/)               | Anthropic provider                        | 1.x     | `Umbraco.AI.Anthropic/`        |
-| [**Umbraco.AI.Amazon**](Umbraco.AI.Amazon/)                     | Amazon Bedrock provider                   | 1.x     | `Umbraco.AI.Amazon/`           |
-| [**Umbraco.AI.Google**](Umbraco.AI.Google/)                     | Google Gemini provider                    | 1.x     | `Umbraco.AI.Google/`           |
-| [**Umbraco.AI.MicrosoftFoundry**](Umbraco.AI.MicrosoftFoundry/) | Microsoft AI Foundry provider             | 1.x     | `Umbraco.AI.MicrosoftFoundry/` |
-| [**Umbraco.AI.Mistral**](Umbraco.AI.Mistral/)                   | Mistral provider                          | 1.x     | `Umbraco.AI.Mistral/`          |
-| [**Umbraco.AI.DeepSeek**](Umbraco.AI.DeepSeek/)                 | DeepSeek provider                         | 1.x     | `Umbraco.AI.DeepSeek/`         |
-| [**Umbraco.AI.HuggingFace**](Umbraco.AI.HuggingFace/)           | Hugging Face Inference Providers provider | 1.x     | `Umbraco.AI.HuggingFace/`      |
-| [**Umbraco.AI.FireworksAI**](Umbraco.AI.FireworksAI/)           | Fireworks AI provider                     | 1.x     | `Umbraco.AI.FireworksAI/`      |
-| [**Umbraco.AI.TogetherAI**](Umbraco.AI.TogetherAI/)             | Together AI provider                      | 1.x     | `Umbraco.AI.TogetherAI/`       |
+| Product                                                         | Description                               | Location                       |
+| --------------------------------------------------------------- | ----------------------------------------- | ------------------------------ |
+| [**Umbraco.AI.OpenAI**](Umbraco.AI.OpenAI/)                     | OpenAI provider                           | `Umbraco.AI.OpenAI/`           |
+| [**Umbraco.AI.Anthropic**](Umbraco.AI.Anthropic/)               | Anthropic provider                        | `Umbraco.AI.Anthropic/`        |
+| [**Umbraco.AI.Amazon**](Umbraco.AI.Amazon/)                     | Amazon Bedrock provider                   | `Umbraco.AI.Amazon/`           |
+| [**Umbraco.AI.Google**](Umbraco.AI.Google/)                     | Google Gemini provider                    | `Umbraco.AI.Google/`           |
+| [**Umbraco.AI.MicrosoftFoundry**](Umbraco.AI.MicrosoftFoundry/) | Microsoft AI Foundry provider             | `Umbraco.AI.MicrosoftFoundry/` |
+| [**Umbraco.AI.Mistral**](Umbraco.AI.Mistral/)                   | Mistral provider                          | `Umbraco.AI.Mistral/`          |
+| [**Umbraco.AI.DeepSeek**](Umbraco.AI.DeepSeek/)                 | DeepSeek provider                         | `Umbraco.AI.DeepSeek/`         |
+| [**Umbraco.AI.HuggingFace**](Umbraco.AI.HuggingFace/)           | Hugging Face Inference Providers provider | `Umbraco.AI.HuggingFace/`      |
+| [**Umbraco.AI.FireworksAI**](Umbraco.AI.FireworksAI/)           | Fireworks AI provider                     | `Umbraco.AI.FireworksAI/`      |
+| [**Umbraco.AI.TogetherAI**](Umbraco.AI.TogetherAI/)             | Together AI provider                      | `Umbraco.AI.TogetherAI/`       |
+| [**Umbraco.AI.Alibaba**](Umbraco.AI.Alibaba/)                   | Alibaba Cloud (Qwen) provider             | `Umbraco.AI.Alibaba/`          |
+| [**Umbraco.AI.Moonshot**](Umbraco.AI.Moonshot/)                 | Moonshot AI (Kimi) provider                | `Umbraco.AI.Moonshot/`         |
+| [**Umbraco.AI.OpenRouter**](Umbraco.AI.OpenRouter/)             | OpenRouter provider                        | `Umbraco.AI.OpenRouter/`       |
+| [**Umbraco.AI.ZAI**](Umbraco.AI.ZAI/)                           | Z.AI provider                              | `Umbraco.AI.ZAI/`              |
 
 ## Quick Start
 
@@ -118,6 +122,10 @@ dotnet build Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.slnx
 dotnet build Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.slnx
 dotnet build Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.slnx
 dotnet build Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.slnx
+dotnet build Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.slnx
+dotnet build Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.slnx
+dotnet build Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.slnx
+dotnet build Umbraco.AI.ZAI/Umbraco.AI.ZAI.slnx
 ```
 
 ### Frontend Development (npm Workspaces)
@@ -153,7 +161,8 @@ npm run watch:agent
 Umbraco.AI (Core)
     ├── Providers (depend on Core):
     │       OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry,
-    │       Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI
+    │       Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI,
+    │       Alibaba, Moonshot, OpenRouter, ZAI
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
     │   └── Umbraco.AI.Prompt.Deploy (Deploy - depends on Prompt + Deploy)
     ├── Umbraco.AI.Agent (Add-on - depends on Core)

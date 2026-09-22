@@ -68,7 +68,12 @@ public class UpdateUmbracoContentTool(
         var explicitAliases = (args.PropertyValues ?? []).Keys.ToHashSet();
 
         var properties = (args.PropertyValues ?? [])
-            .Select(kvp => new PropertyValueModel { Alias = kvp.Key, Value = kvp.Value, Culture = args.Culture })
+            .Select(kvp => new PropertyValueModel
+            {
+                Alias = kvp.Key,
+                Value = ContentPropertyValueOperationHelper.NormalizeIncomingValue(kvp.Value),
+                Culture = args.Culture,
+            })
             .ToList();
 
         // ContentEditingServiceBase.RemoveMissingProperties clears every property alias NOT present in
@@ -86,7 +91,12 @@ public class UpdateUmbracoContentTool(
 
             var propertyCulture = property.PropertyType.VariesByCulture() ? args.Culture : null;
             var currentValue = ContentPropertyValueOperationHelper.ToJsonNode(property.GetValue(propertyCulture))?.Deserialize<JsonElement>();
-            properties.Add(new PropertyValueModel { Alias = property.Alias, Value = currentValue, Culture = propertyCulture });
+            properties.Add(new PropertyValueModel
+            {
+                Alias = property.Alias,
+                Value = currentValue is { } cv ? ContentPropertyValueOperationHelper.NormalizeIncomingValue(cv) : null,
+                Culture = propertyCulture,
+            });
         }
 
         // ContentEditingServiceBase.TryGetAndValidateContentType requires at least one Variants entry

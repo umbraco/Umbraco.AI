@@ -1,8 +1,7 @@
 ---
 name: vector-store-abstraction
 description: Decision to keep the custom IAIVectorStore abstraction over adopting Microsoft.Extensions.VectorData, and the adapter path for when external backends are needed
-metadata:
-  type: decision
+type: decision
 ---
 
 **Decision:** Keep the custom `IAIVectorStore` abstraction (`Umbraco.AI.Search.Core/VectorStore/`)

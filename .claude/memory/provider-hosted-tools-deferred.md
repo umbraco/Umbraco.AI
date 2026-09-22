@@ -1,8 +1,7 @@
 ---
 name: provider-hosted-tools-deferred
 description: Decision to defer MEAI provider-hosted tools (hosted web search, code interpreter, remote MCP) until concrete demand exists
-metadata:
-  type: decision
+type: decision
 ---
 
 **Decision:** Defer provider-hosted tools (MEAI 10.6's `HostedWebSearchTool`,

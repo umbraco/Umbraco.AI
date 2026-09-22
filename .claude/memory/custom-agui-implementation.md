@@ -1,8 +1,7 @@
 ---
 name: custom-agui-implementation
 description: Why Umbraco.AI.AGUI is a hand-built AG-UI protocol package instead of reusing Microsoft Agent Framework's implementation
-metadata:
-  type: decision
+type: decision
 ---
 
 **Decision:** Build and own `Umbraco.AI.AGUI` as a pure protocol package, independent of Microsoft

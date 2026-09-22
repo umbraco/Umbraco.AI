@@ -1,603 +1,523 @@
-# Starter Prompts Plan
+---
+task: copilot-prompt-suggestions-and-storage-system-yi81tz
+type: structure-outline
+repo: Umbraco.AI
+branch: v17/dev
+sha: 0ae8ebeae50ecabf27b1679c395cb1bb4ee48b10
+base: v18/release/2026.08.1 @ 2fa3e7ac4866bc3067592ea14092a5134497f19e
+---
 
-> Status: partially built — `AIStarterPrompt`/`AIStarterPromptSuggester` + tests exist, but only in
-> the `v18-copilot-starter-prompts` worktree (`v18/feature/copilot-starter-prompts`), not yet merged
-> to `v18/dev`. Owner: Matt Brailsford. Created 04-08-2026.
+> **Status:** Open PR — [#407](https://github.com/umbraco/Umbraco.AI/pull/407), targeting `v18/dev`.
+> This supersedes the earlier draft plan (04-08-2026), which is fully consolidated into
+> `03-design-discussion.md` in this folder — see that file's own header for what changed.
 
-## Overview
+# Starter prompts for the chat empty state
 
-Give every chat surface a useful empty state by showing clickable starter prompts. Two sources, one
-surface:
+Give every chat surface a useful empty state by showing clickable starter prompts, authored on the agent definition. They render through `UAI_CHAT_CONTEXT`, so Copilot and Copilot Workspace both get them with a few lines of wiring each.
 
-1. **Agent-defined starters**: authored on the agent definition, shipped/deployed with the agent.
-2. **User-saved starters**: a backoffice user saves a prompt they typed so they can re-run it later.
-   Private to that user.
+Built on `v18/release/2026.08.1`, because that is the only branch where the `empty-state-message` slot and the `Umbraco.AI.Agent.Copilot.Workspace` surface exist.
 
-This is deliberately **outside** the Copilot Workspace plan
-(`copilot-workspace-plan.md`). Starter prompts are a chat-surface feature, consumed by the existing
-Copilot sidebar today and by Copilot Workspace when it lands. Neither depends on the other.
+> **Scope cut, 16-09-2026.** v1 is **agent starters only**. User-saved prompts are deferred to a follow-up; the design for them is preserved in the [design discussion appendix](03-design-discussion.md#deferred-user-saved-prompts). The four seams that keep that half additive are carried in Phases 2 and 3 and cost under ten lines. The phases that built it — the per-user table, its API, the save button and the inline management UI — are gone from this outline.
 
-### Goals
+## Desired End State
 
-1. An agent can advertise what it is good at, without the user knowing what to ask.
-2. A user can save a prompt they keep retyping, for their own reuse only.
-3. Both sets render in the same empty state, clearly separated, and clicking one sends it.
-4. Works in any surface that consumes `UAI_CHAT_CONTEXT`: no per-surface code.
-5. Cycling/rotation when there are more starters than fit.
+- An agent author can add, reorder and remove up to four starter prompts on an agent, and can press **Suggest starters** to draft them from the agent's `Instructions`.
+- Starters are versioned, travel through Deploy, and ride the existing agent list response, so the chat needs no extra request.
+- Opening an empty chat in Copilot or Copilot Workspace shows those starters as chips; clicking one sends it immediately and pins the conversation to that starter's agent.
+- In Auto mode the chips aggregate across every available agent, deduped and round-robin interleaved, each tagged with its agent name when the list spans more than one agent.
+- A surface that supplies neither of the two new optional context members renders today's empty state, byte for byte.
 
-### Non-goals (this plan)
+## Implementation Overview
 
-- Team/organisation-shared prompt libraries. Deliberately deferred: see [Later, not now](#later-not-now).
-- Auto-detecting repeated prompts and offering to save them.
-- Follow-up suggestions generated after each assistant reply. Different feature, different lifetime.
-- Reusing `AIPrompt` (Umbraco.AI.Prompt) entities. Those are field-level property actions, not chat
-  conversation starters.
+- [x] Phase 0: Worktree off the release branch
+- [ ] Phase 1: Agent starters — authored, stored, versioned, deployed
+- [x] Phase 2: Starters render and send in both chat surfaces
+- [x] Phase 3: Auto mode — aggregate, tag, rotate, pin
+- [x] Phase 4: Suggest starters from the agent's instructions (automated verification; manual verification pending)
+- [ ] Phase 5: Docs and port to v17
 
 ---
 
-## Prior art
+## Phase 0: Worktree off the release branch
 
-Full survey lives in `docs/internal/agent/research/cms-ai-copilot-patterns.md`. Condensed, for the
-decisions below:
+Everything is built on `v18/release/2026.08.1` and merged into `v18/dev` **after** that release branch merges down. Nothing lands on the release branch itself.
 
-| Platform                    | Where starters live                          | User can add their own?              |
-| --------------------------- | -------------------------------------------- | ------------------------------------ |
-| Teams agents                | App manifest, max 12, explicitly not dynamic | No                                   |
-| Copilot Studio              | Agent definition, max 10, can auto-generate  | No                                   |
-| OpenAI custom GPTs          | GPT config ("conversation starters")         | Only by making their own private GPT |
-| Slack agents                | Pushed at runtime per conversation, via API  | No                                   |
-| M365 Copilot Prompt Gallery | Separate pool: vendor / user / team / tenant | Yes: "Your prompts", private        |
-| VS Code Copilot             | User-profile prompt files, run as `/name`    | Yes: personal, syncs across devices |
-| Gemini Gems                 | A saved instruction set as a mini agent      | Yes: "Only me" by default           |
+```text
+EnterWorktree  name: starter-prompts
+  branch from origin/v18/release/2026.08.1   (not v18/dev, not the current v17/dev checkout)
+  branch name  v18/feature/starter-prompts
+npm install                                   (root, never inside a nested Client/)
+TaskCreate  "Worktree: starter-prompts"  Path: <abs> | Branch: v18/feature/starter-prompts
+```
 
-Takeaways applied here:
+> **Done 16-09-2026.** The worktree already existed as `v18-copilot-starter-prompts` on branch
+> **`v18/feature/copilot-starter-prompts`**, originally cut from `v18/dev`. Since `v18/dev` has neither
+> the `empty-state-message` slot nor the `Umbraco.AI.Agent.Copilot.Workspace` surface that Phases 2–3
+> require, the branch was reset onto `origin/v18/release/2026.08.1` (tip `e0af97f5`, three commits past
+> the `2fa3e7ac` recorded in this outline's front matter). It had no unique commits, so nothing was lost.
+> **The branch name is `v18/feature/copilot-starter-prompts`, not `v18/feature/starter-prompts`.**
 
-- Starters shown on an empty chat are **authored**, never inferred from usage.
-- The personal layer is a **separate store**, not an override of the agent's list.
-- Usage data is for ranking and reporting, not for defining the list.
+### Validation
 
----
+#### Automated Verification
 
-## How long are prompts really
-
-Two different populations, and conflating them is the main design risk in this plan.
-
-**Agent-defined starters are seeds.** One line, roughly 40 to 120 characters, phrased as a task:
-"Summarise this page and suggest three SEO improvements." The published examples bear this out - the
-Teams docs' own sample starters are single sentences, and OpenAI's conversation starters are short
-enough that the starter text *is* the payload, with no separate label.
-
-**Personal saved prompts skew long.** People save the prompt that is tedious to retype, which means
-structure, constraints, tone rules and output format. Hundreds to a couple of thousand characters,
-often multi-line. VS Code's personal prompts are entire markdown files, which is why it displays them
-by *filename* and runs them as `/name`.
-
-What every platform does about it:
-
-| Platform             | Shown in the list                              | Actually sent      |
-| -------------------- | ---------------------------------------------- | ------------------ |
-| M365 org prompts     | "display prompt", max 132 chars (title max 35) | prompt, max 8,000  |
-| Teams agents         | title + description                            | prompt, max 4,000  |
-| Slack agents         | title                                          | message            |
-| VS Code Copilot      | file name, run as `/name`                      | whole file         |
-| OpenAI GPTs          | the starter text itself                        | the same text      |
-
-The pattern is unambiguous: **the moment a platform allows a long payload, it stops showing the
-payload.** Only OpenAI shows the raw text, and only because its starters are always short.
-
-One rule cannot serve both populations. D3 therefore splits them: agent starters are capped short and
-carry no label, saved prompts may be long and carry an optional one.
-
-Consequences carried into the phases below:
-
-- Agent starters cap at 200 chars. The cap is the design, not a limitation - depth belongs in the
-  agent's `Instructions`.
-- Saved prompts allow the full 4,000 and never truncate what is *sent*, only what is *shown*.
-- A long saved prompt shows its opening line, which is usually the instruction anyway ("Rewrite this
-  page for a Danish audience..." then 800 characters of rules), until the user renames it.
-- Saved prompts are capped at 10 per agent so the whole list can always be shown, which removes the
-  need for a manage screen entirely (Phase 5). Editing a long one happens in a sidebar modal.
+- [x] `git branch --show-current` reports `v18/feature/copilot-starter-prompts`, based on `origin/v18/release/2026.08.1`
+- [x] `Umbraco.AI.Agent.Copilot.Workspace` and the `empty-state-message` slot both present on the base
+- [x] `dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx` succeeds on the untouched branch (0 errors)
+- [x] `npm install` clean at the root
 
 ---
 
-## Design decisions
+## Phase 1: Agent starters — authored, stored, versioned, deployed
 
-**D1: Starters live top-level on `AIAgent`, not inside `Config`.**
-`Config` is per-agent-type (`AIStandardAgentConfig` / `AIOrchestratedAgentConfig`). Starters apply to
-both types, so putting them in `Config` means duplicating the property and the editor. Top-level
-costs one migration; that is the cheaper trade.
+The first vertical slice: a new collection field on `AIAgent` that an author can edit in the backoffice, which survives save/reload, shows up in version history, and round-trips through Deploy. Nothing renders in the chat yet — that is Phase 2.
 
-**D2: Stored as a JSON string column, matching `Scope` / `GuardrailIds` / `SurfaceIds`.**
-`AIAgentEntity.StarterPrompts` as `string?`. No new table, no relational shape to maintain, same
-pattern reviewers already know.
+The record stays an object rather than a bare string (seam 4), so an optional `Label` can be added later with no data migration.
 
-**D3: Agent starters are prompt-only. `Label` exists only on user-saved prompts, and is optional there.**
-The label solves one problem: a prompt too long to show. That problem only exists in the personal
-layer, so that is the only place the field goes.
+```csharp
+// Umbraco.AI.Agent.Core/Agents/AIStarterPrompt.cs  — new
+public sealed record AIStarterPrompt
+{
+    public required string Prompt { get; init; }   // max 200 chars
+}
 
-Why agent starters do not need one:
+// AIAgent.cs
+public IReadOnlyList<AIStarterPrompt> StarterPrompts { get; set; } = [];   // max 4 per agent
+```
 
-- They are seeds by design - one line, 40 to 120 chars (see
-  [How long are prompts really](#how-long-are-prompts-really)). A seed is already its own best label.
-- **An agent already has a home for long text: its `Instructions`.** A starter that needs a briefing
-  is a starter doing the agent's job. Capping it short pushes depth to where it belongs.
-- OpenAI's conversation starters work exactly this way, with the starter text as the payload.
-- One less field the author can leave inconsistent with the prompt beside it.
+The cap of **4** is a service guard and an editor rule, never a database constraint — the column is a single JSON blob and could never count rows anyway. Four is also the chip window, so a single selected agent now fits on one page. Caps are cheap to raise and painful to lower, so it starts where the UI actually is.
 
-So: `AIStarterPrompt` is `{ prompt }`, max 10 per agent, prompt max 200 chars. A hard-ish cap here, not
-the 4000 used for saved prompts, because the cap *is* the design.
+Storage matches the three JSON blobs already on the entity, so the column is additive and `null` means "none".
 
-`AIUserStarterPrompt` keeps `Label?` (max 100 chars), because a user cannot edit the agent's
-instructions and so genuinely does need somewhere to keep a long prompt. It is never asked for at save
-time; the row falls back to the front of the prompt, and the label is set in the edit modal (Phase 5),
-where the full text is readable.
+```diff
+ umbracoAIAgent
+   Id                 uniqueidentifier primary key
+   Config             nvarchar(max)        # existing JSON blob
+   GuardrailIds       nvarchar(4000)       # existing JSON array
+   Scope              nvarchar(max)        # existing JSON object
++  StarterPrompts     nvarchar(max)        + JSON array of { prompt }, null when empty
+```
 
-Both stay one-field-or-more **objects** in JSON, so adding `Label` to agent starters later is additive
-with no data migration. If an author ever makes a real case for a long agent starter, that is the door.
+Backend files. `AIAgentService.SaveAgentAsync` validates with guard clauses that throw, because that is what the rest of that method does — there is no `Attempt`/`OperationStatus` wrapper in this service.
 
-Rendering is uniform either way: the merged chat entry carries a display string, set or derived, so the
-chip component does not care which source it came from.
+```diff
+ Umbraco.AI.Agent/src/
+ ├── Umbraco.AI.Agent.Core/Agents/
++│   ├── AIStarterPrompt.cs                        + the record above
++│   ├── AIAgent.cs                                ~ + StarterPrompts
++│   ├── AIAgentService.cs                         ~ count (4) + length (200) guards in SaveAgentAsync
++│   └── AIAgentVersionableEntityAdapter.cs        ~ snapshot, restore and compare the new field
+ ├── Umbraco.AI.Agent.Persistence/
++│   ├── Agents/AIAgentEntity.cs                   ~ + string? StarterPrompts
++│   ├── Agents/AIAgentEntityFactory.cs            ~ Serialize/DeserializeStarterPrompts, [] on bad JSON
++│   └── UmbracoAIAgentDbContext.cs                ~ register the column (no max length, like Scope)
++├── Umbraco.AI.Agent.Persistence.SqlServer/Migrations/2026…_UmbracoAIAgent_AddStarterPrompts{,.Designer}.cs
++├── Umbraco.AI.Agent.Persistence.Sqlite/Migrations/2026…_UmbracoAIAgent_AddStarterPrompts{,.Designer}.cs
++│   └── (both ModelSnapshot.cs files updated)     ~ timestamps must sort after 20260316100000
+ ├── Umbraco.AI.Agent.Web/Api/Management/Agent/
++│   ├── Models/AgentResponseModel.cs              ~ + starterPrompts
++│   ├── Models/AgentItemResponseModel.cs          ~ + starterPrompts   ← what the chat will read
++│   ├── Models/CreateAgentRequestModel.cs         ~ + starterPrompts
++│   ├── Models/UpdateAgentRequestModel.cs         ~ + starterPrompts
++│   └── Mapping/AgentMapDefinition.cs             ~ all four maps, both directions
+ └── Umbraco.AI.Agent.Web.StaticAssets/Client/src/
++    ├── api/**                                    ~ regenerated, committed (never hand-edited)
++    ├── agent/types.ts                            ~ + starterPrompts on detail and item models
++    ├── agent/type-mapper.ts                      ~ + both directions
++    ├── agent/components/agent-starter-prompts-editor/   + thin wrapper over the CMS list input
++    ├── agent/workspace/agent/views/agent-details-workspace-view.element.ts
++    │                                             ~ new "Starter prompts" uui-box section
++    └── lang/en.ts                                ~ labels, help text, validation message
+```
 
-**D4: User-saved prompts are a new entity and table, never merged into the agent definition.**
-Different lifecycle (per user, no versioning, no Deploy), different permissions (any user who can
-chat may save; only agent managers may edit agent starters). Merging them would leak one user's
-prompts into a deployable artifact.
+Deploy carries them so a transfer does not silently drop an agent's starters.
 
-**D5: User-saved prompts are scoped to `(UserId, AgentId?)`, but the UI always sets an agent.**
-The model and API keep `AgentId` nullable, where null means "show for any agent". The UI never writes
-null in v1: saving always assigns the agent that was in use, with no toggle to decide. Prompts are
-written for a specific agent's tools, so agent-scoped is the honest default, and it keeps the save
-flow to a single click with nothing to choose (D3).
+```diff
+ Umbraco.AI.Agent.Deploy/
++├── Artifacts/AIAgentArtifact.cs                              ~ + IEnumerable<AIStarterPrompt> StarterPrompts
++└── Connectors/ServiceConnectors/UmbracoAIAgentServiceConnector.cs
++                                                              ~ export in GetArtifactAsync, import in Pass3Async
++                                                              ~ import clamps to the first 4, never throws
+```
 
-The null path stays implemented and tested, because it is the shape a future shared/global layer
-needs and it costs nothing to honour on read. It is simply unreachable from the backoffice for now.
+Clamping rather than throwing on import is deliberate: `Pass3Async` goes through `SaveAgentAsync`, so an artifact carrying five starters — from another version line, or after a future cap change — would otherwise fail the whole transfer over a presentation rule.
 
-**D6: Read path piggybacks the existing agent load; saved prompts get their own endpoint.**
-Agent starters ride on `AgentResponseModel` and `AgentItemResponseModel`, so the chat context already
-has them the moment an agent is selected: no extra request. Saved prompts get a small
-current-user-scoped CRUD controller.
+The rows are **not** hand-rolled. `<umb-input-multiple-text-string>` is the CMS's own repeatable-string list — the component behind the Repeatable Text String property editor — and it is publicly exported from `@umbraco-cms/backoffice/components`, an import path this repo already uses in eleven places. It brings add, remove, drag-to-reorder (`UmbSorterController`) and a `max` item-count validator with no code from us.
 
-**D7: Rendering lives in `uai-chat`'s empty state, fed by the chat context.**
-`UAI_CHAT_CONTEXT` gains a `starterPrompts$` observable that merges agent starters and the current
-user's saved prompts. `uai-chat` renders them; the Copilot sidebar (and later Copilot Workspace)
-inherits it for free.
+The property editor UI that wraps it, `umb-property-editor-ui-multiple-text-string`, is **not** exported from any entry point — it is only reachable through its manifest alias inside a document-type property context, so it cannot be used here. The inner component is the reusable piece.
 
-**D8: No usage-driven behaviour in v1.**
-Click tracking and "you have asked this 4 times, save it?" are explicitly Phase 6+. Nothing about
-the v1 data model blocks them.
+```text
+uai-agent-starter-prompts-editor          (thin wrapper, value in / change out)
+  <umb-input-multiple-text-string
+      max=4                                # enforced by the component's own rangeOverflow validator
+      .items=${prompts.map(p => p.prompt)}
+      @change>                             # items back out as string[]
+  -> map to AIStarterPrompt[] and dispatch UaiPartialUpdateCommand onto the workspace context
+```
 
-**D9: Cycling for agent starters. A plain list for saved prompts.**
-Agent starters render as chips, 4 at a time in definition order, with a small rotate control if there
-are more. Saved prompts render as rows under their own heading, all of them, most-recently-used first,
-scrolling if needed. Chips suit short seeds; rows suit longer text and need somewhere to hang the edit
-and delete actions. No paging anywhere.
+The wrapper exists for three reasons, all of which stay small: it maps `string[]` to `AIStarterPrompt[]` and back (seam 4 keeps the stored shape an object), it enforces the 200-character cap the CMS component does not know about, and in Phase 4 it is where the **Suggest starters** button lives.
+
+Two divergences from the CMS component worth knowing before the work starts, neither a blocker:
+
+- **No character limit.** `umb-input-multiple-text-string` has no `maxlength` and no per-item counter. The 200-char cap is checked in the wrapper's change handler and surfaced as a validation message on the `umb-property-layout`, with the service guard from `SaveAgentAsync` as the real enforcement.
+- **Delete opens a confirm dialog.** The component calls `umbConfirmModal` before removing a row. Every other list in this repo removes immediately. Accepted as the cost of reuse rather than worked around.
+
+When an optional `Label` is added to `AIStarterPrompt` later, this component no longer fits and the wrapper's insides become hand-rolled rows — a UI change with no data change, which is the whole point of seam 4.
+
+Tests follow the existing unit-test shapes in `Umbraco.AI.Agent.Tests.Unit`.
+
+```diff
+ Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Unit/Agents/
++├── AIStarterPromptSerializationTests.cs     + round trip, malformed JSON -> [], null column -> []
++├── AIAgentServiceTests.cs                   ~ + over-4 and over-200 rejected with a clear message
++├── AIAgentVersionableEntityAdapterTests.cs  + first coverage of this class; snapshot/restore/compare
+ Umbraco.AI.Agent/tests/… /Api/
++└── AgentMapDefinitionTests.cs               + starters survive create -> AIAgent -> response AND item model
+ Umbraco.AI.Agent.Deploy/tests/… /
++└── UmbracoAIAgentServiceConnectorTests.cs   ~ + export/import round trip preserves starters
++                                             ~ + a 5-starter artifact imports 4, not an exception
+```
+
+The mapping test earns its place: a silent drop in `AgentMapDefinition` is the most likely failure mode, and `AgentItemResponseModel` is what every later phase reads.
+
+### Validation
+
+#### Automated Verification
+
+- [x] `dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx`
+- [x] `dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx`
+- [x] `dotnet test Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.slnx`
+- [x] `npm run build:core && npm run build:agent`
+
+#### Manual Verification
+
+- [ ] `/demo-site-management start` on SQLite, then a second run against SQL Server: add 4 starters to an agent, save, reload — all 4 come back in order
+- [ ] An existing agent created before the migration opens with an empty list and saves without error
+- [ ] A fifth row is refused by the component's own max validator
+- [ ] Rows drag-reorder, and the new order is what saves
+- [ ] Pasting a 250-character starter is rejected with a readable message, not truncated
+- [ ] Version history lists a starter change as a change
+- [ ] Works on both Standard and Orchestrated agents
 
 ---
 
-## Auto mode
+## Phase 2: Starters render and send in both chat surfaces
 
-The Copilot picker gains an "Auto" entry whenever more than one agent is available
-(`copilot.context.ts`, the `agentItems$` observer). Picking Auto sends the alias `auto`;
-`StreamAgentAGUIController` then calls `AIAgentService.SelectAgentForPromptAsync`, which scope-filters
-the surface's agents and, if more than one survives, asks an LLM classifier to choose. The chosen
-agent comes back to the UI as an `agent_selected` AG-UI event.
+Now the field becomes visible. This slice spans the agent client, the behaviour layer in `agent-ui`, the dumb element, and the wiring in both surfaces. Scope is deliberately narrow: **the selected agent's** starters only, as chips. Auto-mode aggregation is Phase 3.
 
-That raises two questions this plan has to answer.
+Two optional members go on `UaiChatContextApi`. Optional is seam 1: the interface is public API through the agent-ui rollup, so the deferred write members can land later as pure additions.
 
-**D10: In auto mode the empty state aggregates starters from every available agent.**
-The list to aggregate already exists: `UaiCopilotAgentRepository.agentItems$` is filtered by surface
-(`copilot`) and by the live entity context, using the same allow/deny scope rules the server applies.
-So no new availability logic - just read starters off the items we already have. Rules:
+```diff
+ interface UaiChatContextApi extends UmbContextMinimal {
+   …existing members unchanged…
++  starterPrompts$?: Observable<UaiStarterPromptEntry[]>;
++  sendStarterPrompt?(entry: UaiStarterPromptEntry): void;
+ }
+```
 
-- Dedupe on prompt text. Two agents can legitimately ship the same starter.
-- Interleave round-robin, one per agent per pass, so an agent with 10 starters cannot crowd out an
-  agent with 2.
-- Label each chip with its agent name in auto mode only. This is the discovery win: the user learns
-  the roster by reading the empty state. In single-agent mode the label is noise, so hide it.
-- The window stays at 4 with the rotate control from D9. Aggregation makes overflow the normal case,
-  so rotation stops being an edge feature.
+`<uai-chat>` renders the element only when **both** are present.
 
-**D11: Clicking a starter pins its agent. The classifier is not consulted.**
-The prompt was authored against one agent's instructions and tools, so re-deciding at click time is
-both slower (an extra LLM round trip) and riskier (it can route to a different agent than the author
-intended). Clicking sets the selected agent to the starter's agent and then sends.
-
-This is cheap because of how `run.controller.ts` already works: `setAgent()` recreates the client for
-one `agentId` and calls `resetConversation()`. Starters are only ever clicked on an **empty** thread,
-so the reset is a no-op. Consequences, stated plainly:
-
-- The picker visibly moves from "Auto" to that agent. The user can flip back to Auto whenever.
-- The rest of that thread stays with the pinned agent, rather than being re-classified per message
-  the way an auto thread is today. For a thread that started from a purpose-written prompt, that is
-  the behaviour we want.
-- A per-send override that keeps the thread on Auto is the alternative. It needs a new `agentId`
-  argument threaded through `sendUserMessage` / `UaiAgentClient`, for no user-visible gain. Rejected
-  for v1; see [Open questions](#open-questions).
-
-**D12: User-saved prompts follow the same rule, and in v1 they always have an agent to pin.**
-- Agent-scoped saved prompt (every one the UI creates): shows only when that agent is in the available
-  list; clicking pins it, same as an agent-defined starter.
-- Saving while in auto mode records the agent the classifier resolved to, taken from the
-  `agent_selected` event. There is always one by the time a message has been sent.
-- `AgentId = null` (API-only, per D5): always shows, and clicking leaves the selection on Auto so the
-  classifier routes it. The only path where a starter click costs an LLM call. Implemented and tested,
-  not reachable from the UI.
-
-**Fallbacks.**
-- Agent inactive or scoped out of the current context: its starters simply are not in the list, since
-  the list is derived from available agents.
-- Agent-scoped saved prompt whose agent is unavailable right now: hide the prompt rather than show a
-  chip that cannot run. Do not delete it - the user may navigate somewhere it applies again.
-- Agent deleted: agent-scoped saved prompts are deleted with it (Phase 4), so nothing dangles.
-- Exactly one agent available: no Auto entry exists, so this is just that agent's starters plus the
-  user's own. No aggregation, no labels.
-
----
-
-## Architecture: core chat feature, not a slot
-
-**A core feature of `uai-chat`, behind an optional context capability.** Not a slot each surface fills,
-and not a manifest extension point.
-
-### Why
-
-The *behaviour* is surface-agnostic: merge, dedupe, rotate, send, pin, save, edit. Only the *inputs*
-are surface-specific (which agents are available, how selection changes), and those already flow
-through `UAI_CHAT_CONTEXT`. A slot would mean the Copilot sidebar and Copilot Workspace each build
-their own empty state and then drift apart.
-
-An `umb-extension-slot` with its own manifest kind was considered and rejected for v1. The repo already
-uses that pattern where it earns its keep - `uai-agent-tool-renderer` exists because third parties
-genuinely need to render arbitrary tool output. Nobody outside this repo needs to inject empty-state
-widgets, and a kind means a registry, a schema and a public contract to keep stable. Promote it later if
-real demand appears.
-
-### Three layers
-
-| Layer                                        | Holds                                                                                                       |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Data** - `@umbraco-ai/agent`               | Generated client for the saved-prompt endpoints, plus `UaiUserStarterPromptRepository`. Agent starters need nothing new: they ride on the agent item (D6). |
-| **Behaviour** - `@umbraco-ai/agent-ui`       | `UaiStarterPromptsController` (an `UmbControllerBase`) that merges the two sources and exposes `starterPrompts$`; the dumb `uai-starter-prompts` element; the edit modal. |
-| **Inputs** - the surface (Copilot, Workspace) | Supplies the available-agent list and the selection setter used for pinning (D11). Copilot already has both. |
-
-`agent-ui` depends on `@umbraco-ai/agent`, so the behaviour layer can reach the repository directly.
-No plumbing through the surface for data.
-
-### The contract
-
-Two **optional** additions to `UAI_CHAT_CONTEXT`:
+One entry type, shaped so a second source is additive later. `source` keeps both union members (seam 2) and `display` stays separate from `prompt` (seam 3) even though v1 only ever sets `display = prompt`.
 
 ```ts
-starterPrompts$?: Observable<UaiStarterPromptEntry[]>;
-sendStarterPrompt?(entry: UaiStarterPromptEntry): void;
+export interface UaiStarterPromptEntry {
+    prompt: string;              // what gets sent, in full
+    display: string;             // label, or the clamped front of the prompt — seam 3
+    agentId?: string;            // the agent to pin
+    agentName?: string;          // shown as a tag only when the list spans >1 agent
+}
 ```
 
-- `uai-chat` renders `<uai-starter-prompts>` in its empty state **only when both are present**. A
-  surface that provides neither keeps today's empty state, byte for byte.
-- Optional keeps this additive. `UAI_CHAT_CONTEXT` is exported public API through the agent-ui rollup,
-  so a required member would be a breaking change for anyone implementing it.
-- The Copilot context gets these by instantiating `UaiStarterPromptsController` and delegating. Roughly
-  three lines, and Copilot Workspace will do the same.
+> **Decision 16-09-2026: seam 2 dropped.** `source` is **not** added in v1. Adding an optional
+> `source?: "agent" | "saved"` later is a one-line widening and is not a breaking change, so carrying
+> it now buys nothing. Do not add the field.
 
-### Escape hatches: two narrow slots, not one wide one
+The empty state gains a **sibling** slot. Filling one leaves the other on its default — native slot behaviour, no precedence rule to get wrong.
 
-The empty state does two unrelated jobs - it greets you and it suggests what to ask. One slot over the
-whole region couples them: a surface that only wants to reword the greeting would be forced to
-re-supply the starters too, and would silently lose them the moment the default changes.
-
-**PR #292 has already added the first of these slots**, and it was renamed to `empty-state-message`
-there (commit `5a43dd4`) while still in draft. It wraps only the greeting paragraph:
-
-```html
-<slot name="empty-state-message">
-    <p>Start a conversation with ${this._agentName || "an agent"}</p>
-</slot>
+```diff
+ <uai-chat>  _messages.length === 0
+   <div class="empty-state">
+     <slot name="empty-state-message">        # exists today; Copilot fills it with .copilot-intro
+       <uui-icon name="icon-chat">
+       <p>Start a conversation with {agent}</p>
++    <slot name="empty-state-suggestions">    + new sibling, never the same slot
++      <uai-starter-prompts>                  + only when starterPrompts$ AND sendStarterPrompt exist
+   <uai-chat-input>
 ```
 
-and the Copilot sidebar fills it with a contextual `.copilot-intro`. That is the message seam, and it is
-the right shape. Starters get a **sibling** slot, never the same one:
+No group heading in v1 — with one source a heading labels nothing, and adding one later is a render change with no contract change.
 
-```html
-<slot name="empty-state-message">     <!-- #292: the greeting. Untouched by this plan. -->
-<slot name="empty-state-suggestions"> <!-- new: default <uai-starter-prompts>, when the context supplies it -->
+```diff
+ Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Client/
++├── vitest.config.ts                              + copied from the Copilot package (happy-dom)
++├── package.json                                  ~ + vitest devDep and "test" script
+ └── src/chat/
++    ├── context.ts                                ~ + the two optional members, + UaiStarterPromptEntry
++    ├── services/starter-prompts.controller.ts    + UaiStarterPromptsController: the behaviour layer
++    ├── services/starter-prompts.controller.test.ts  + pure-logic coverage
++    ├── components/starter-prompts.element.ts     + dumb: entries in, select event out
++    ├── components/chat.element.ts                ~ + the sibling slot, gated on both members
++    └── index.ts / exports.ts                     ~ barrel chain; entry type + controller are public
 ```
 
-- Filling one leaves the other on its default. Native slot behaviour, no wiring needed.
-- Deliberately **no** coarse whole-region slot. Two overlapping slots would need a precedence rule,
-  which is a bug waiting to happen. A surface that wants to replace everything fills both.
-- No manifest, no registry. If third parties ever need to *contribute* rather than *replace*, that is
-  when an extension kind earns its keep.
+The starters themselves need no new request — they ride the agent item both surfaces already load.
 
----
+```diff
+ Umbraco.AI.Agent.Copilot/…/copilot/
++├── types.ts                                      ~ UaiCopilotAgentItem + starterPrompts
++├── repository/copilot-agent.repository.ts        ~ include starters in the projection (~line 84)
++└── copilot.context.ts                            ~ instantiate the controller, delegate 2 members
 
-## Sequencing against open PRs
-
-Three open PRs land in the same code. Checked on 04-08-2026:
-
-| PR       | What                                                        | Base                            | State |
-| -------- | ----------------------------------------------------------- | ------------------------------- | ----- |
-| **#255** | Copilot Workspace: persisted conversations + projects       | `v18/dev`                       | open  |
-| **#259** | The same, v17 backport                                      | `v17/dev`                       | open  |
-| **#292** | Contextual copilot refocus: trigger, edit lock, per-node history | `v17/feature/copilot-workspace` (stacked on #259) | draft |
-
-### What collides
-
-Only the chat UI. The backend does not overlap at all.
-
-- **`chat/components/chat.element.ts`** is edited by both #255 and #292 - and #292 is the one that adds
-  the `empty-state` slot. This plan rewrites the same block. Highest conflict risk in the whole plan.
-- **`copilot/copilot.context.ts`** is substantially rewritten by #292 (FAB, per-node history, section
-  registry). Phase 3 needs to add controller wiring to exactly that file.
-- **#255 adds a third chat surface**, `Umbraco.AI.Agent.Copilot.Workspace`, with its own
-  `copilot-workspace-chat.context.ts` and `workspace-agent.repository.ts`. Building before it merges
-  means Copilot Workspace ships without starters and someone has to retrofit them.
-- **#255 adds `conversation-strategy.ts` and pending-first-message handling.** A starter click must go
-  through the same send path as typing, or a persisted conversation will not be created correctly.
-- **#292 gives every node its own thread**, so the empty state appears far more often. That makes
-  starters more valuable and changes what "a fresh chat" means. Worth designing against the new
-  behaviour rather than today's.
-
-### What does not collide
-
-- `AIAgent.cs`, the persistence entity, the migrations, the Web models and mapping, the Deploy artifact,
-  the agent editor views, and the whole saved-prompt table and API. None of the three PRs touch any of it.
-- `AIAgentService.cs` is touched by #255 and by Phase 1 (validation), but in different methods. Trivial.
-- Our agent migration is in a different `DbContext` from the Conversations migrations, so no ordering
-  problem.
-
-### So: split the start
-
-1. **Start now** - Phases 1, 2 and 4. Backend, agent editor, saved-prompt table and API. That is the
-   bulk of the work and it cannot conflict.
-2. **Hold** Phases 3 and 5 until the **v18** versions of #255 and #292 have landed. #292 is v17-based
-   and still a draft, so its v18 twin is the real gate for this plan.
-3. Slot naming is settled: #292 now exposes `empty-state-message` (commit `5a43dd4`).
-
----
-
-## Phase 0: Worktree setup
-
-Target line is **`v18/dev`**, with a backport to `v17/dev` in Phase 6.
-
-1. Branch from `v18/dev`, not the current checkout. This plan was drafted while sitting on `v17/dev`,
-   so the doc itself needs to land on `v18/dev` too.
-2. `EnterWorktree` with name `starter-prompts`.
-3. `npm install` in the worktree.
-4. `TaskCreate`: title `Worktree: starter-prompts`, description `Path: <abs path> | Branch: v18/feature/starter-prompts`.
-5. All work and commits happen in that worktree.
-
----
-
-## Phase 1: Agent-defined starters (backend)
-
-### Files
-
-| File                                                                    | Change                                                                  |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `Umbraco.AI.Agent.Core/Agents/AIStarterPrompt.cs`                       | **New.** `Prompt` only, max 200 chars (D3).                             |
-| `Umbraco.AI.Agent.Core/Agents/AIAgent.cs`                               | Add `IReadOnlyList<AIStarterPrompt> StarterPrompts { get; set; } = [];`  |
-| `Umbraco.AI.Agent.Core/Agents/AIAgentVersionableEntityAdapter.cs`       | Include `StarterPrompts` in snapshot + restore.                         |
-| `Umbraco.AI.Agent.Core/Agents/AIAgentService.cs`                        | Validate count/length on save.                                          |
-| `Umbraco.AI.Agent.Persistence/Agents/AIAgentEntity.cs`                  | Add `string? StarterPrompts`.                                           |
-| `Umbraco.AI.Agent.Persistence/Agents/AIAgentEntityFactory.cs`           | Serialize/deserialize the JSON both ways.                               |
-| `Umbraco.AI.Agent.Persistence/UmbracoAIAgentDbContext.cs`               | Register the property.                                                  |
-| `Umbraco.AI.Agent.Persistence.SqlServer/Migrations/…AddStarterPrompts`  | **New migration.** Copy `20260316100000_UmbracoAIAgent_AddGuardrailIds` as the template. |
-| `Umbraco.AI.Agent.Persistence.Sqlite/Migrations/…AddStarterPrompts`     | **New migration.** Same.                                                |
-| `Umbraco.AI.Agent.Web/…/Models/AgentResponseModel.cs`                   | Add starters.                                                           |
-| `Umbraco.AI.Agent.Web/…/Models/AgentItemResponseModel.cs`               | Add starters (this is what the chat picker reads).                      |
-| `Umbraco.AI.Agent.Web/…/Models/Create/UpdateAgentRequestModel.cs`       | Add starters.                                                           |
-| `Umbraco.AI.Agent.Web/…/Mapping/*`                                      | Map both directions.                                                    |
-| `Umbraco.AI.Agent.Deploy/Artifacts/AIAgentArtifact.cs`                  | Add starters so they deploy with the agent.                             |
-| `Umbraco.AI.Agent.Deploy/Connectors/ServiceConnectors/UmbracoAIAgentServiceConnector.cs` | Map artifact to/from entity.                                  |
-
-### Acceptance
-
-- Existing agents load with an empty list; no null blow-ups on rows written before the migration.
-- Save/reload round-trips 10 starters intact, on SQLite and SQL Server.
-- Over-limit input is rejected with a clear validation message, not silently truncated.
-- Agent version history shows a starter change as a change.
-- Deploy artifact includes starters; a Deploy round-trip preserves them.
-
-> Note found while planning: `AIAgentVersionableEntityAdapter.CreateSnapshot` already omits
-> `GuardrailIds` and `Scope`. That looks like a pre-existing bug. Out of scope here, but worth a
-> separate issue.
-
----
-
-## Phase 2: Agent editor UI
-
-### Files
-
-- `Umbraco.AI.Agent.Web.StaticAssets/Client/src/agent/workspace/agent/views/agent-details-workspace-view.element.ts`
- : add a "Starter prompts" section. Repeatable single-input rows, add/remove/reorder, with a char
-   counter against the 200 cap.
-- `agent/types.ts`, `agent/type-mapper.ts`: carry the new field.
-- `agent/repository/*`: nothing beyond the generated client refresh.
-- `lang/*`: labels and help text.
-
-### Acceptance
-
-- Editor can add, edit, reorder and remove starters, and the order is what the chat shows.
-- Client-side limit matches server-side limit, with the same message.
-- The 200-char cap is visible as a counter, and the help text points long text at the agent's
-  `Instructions` instead.
-- Works for both Standard and Orchestrated agents.
-
----
-
-## Phase 3: Render in the chat empty state
-
-### Files
-
-Layering follows [Architecture](#architecture-core-chat-feature-not-a-slot).
-
-- `Umbraco.AI.Agent.UI/Client/src/chat/context.ts`: add the two **optional** members
-  (`starterPrompts$`, `sendStarterPrompt`) and the `UaiStarterPromptEntry` type - prompt text, display
-  string, source (agent or saved), and the agent to pin.
-- `Umbraco.AI.Agent.UI/Client/src/chat/services/starter-prompts.controller.ts`: **new.** The behaviour
-  layer: merges agent starters with the user's saved prompts, dedupes, applies the D10 round-robin,
-  derives display strings, and pins on send. Surfaces instantiate it; they do not reimplement it.
-- `Umbraco.AI.Agent.UI/Client/src/chat/components/chat.element.ts`: add a second slotted region beside
-  #292's `empty-state` greeting slot - `empty-state-suggestions`, falling back to
-  `<uai-starter-prompts>` and rendered only when the context provides both optional members. Apply this
-  on top of the merged #292 shape, not today's.
-- `Umbraco.AI.Agent.UI/Client/src/chat/components/starter-prompts.element.ts`: **new**, and dumb -
-  takes entries, emits a select event. Renders the chips window of 4 plus the saved-prompt rows, clamps
-  to two lines with a full-text tooltip, handles the rotate control, groups "Suggested" vs "Saved
-  prompts", shows the agent name per chip in auto mode only.
-- `Umbraco.AI.Agent/Client/src/agent/repository/user-starter-prompt.repository.ts`: **new.** Data layer
-  over the Phase 4 endpoints, exported through the package's `exports.ts` (never imported by path).
-- `Umbraco.AI.Agent.Copilot/Client/src/copilot/repository/copilot-agent.repository.ts`: include
-  starters in the `UaiCopilotAgentItem` projection (the push at line ~84). Without this the aggregated
-  list is empty in auto mode.
-- `Umbraco.AI.Agent.Copilot/Client/src/copilot/copilot.context.ts`: instantiate the controller, feed it
-  the available-agent list, and delegate the two optional members to it. Three lines, not a
-  reimplementation.
-
-### Acceptance
-
-- Empty chat with no starters looks exactly like today (no empty box, no dead control).
-- Clicking a starter sends it immediately and the empty state disappears.
-- Switching the selected agent swaps the starters.
-- More than 4 starters shows the rotate control; fewer hides it.
-- A 1,500-character saved prompt renders as a two-line row, not a wall of text, and still sends in
-  full.
-- Auto mode shows starters from every available agent, deduped, no single agent dominating, each chip
-  naming its agent.
-- Clicking an auto-mode starter runs it on that starter's agent with no classifier call, and the
-  picker reflects the switch.
-- Navigating to a context where an agent is scoped out removes that agent's starters from the list.
-- Copilot sidebar picks this up with only the two wiring changes above; no new components there.
-- A surface that does not provide the two optional context members compiles and renders today's empty
-  state unchanged. No breaking change to `UAI_CHAT_CONTEXT`.
-- Filling `empty-state-message` leaves the starter prompts on their default, and filling
-  `empty-state-suggestions` leaves the greeting on its default. Neither slot drags the other with it.
-
----
-
-## Phase 4: User-saved prompts (backend)
-
-### Files
-
-| File                                                                | Change                                                                                     |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `Umbraco.AI.Agent.Core/StarterPrompts/AIUserStarterPrompt.cs`        | **New.** `Id`, `UserId`, `AgentId?`, `Prompt`, `Label?`, `DateCreated`, `DateLastUsed?`.      |
-| `Umbraco.AI.Agent.Core/StarterPrompts/IAIUserStarterPromptService.cs` + impl | **New.** Current-user scoped; resolves user via `IBackOfficeSecurityAccessor`.      |
-| `Umbraco.AI.Agent.Core/StarterPrompts/IAIUserStarterPromptRepository.cs` | **New.** `internal` per repo convention.                                               |
-| `Umbraco.AI.Agent.Persistence/StarterPrompts/*`                     | **New** entity + factory + `DbSet`, table `umbracoAIAgentUserStarterPrompt`.               |
-| `…Persistence.SqlServer` / `…Persistence.Sqlite` migrations         | **New table.** Index on `(UserId, AgentId)`.                                               |
-| `Umbraco.AI.Agent.Web/…/UserStarterPrompt/*`                        | **New** controllers: list (mine), create, update, delete, mark-used.                       |
-
-### Rules
-
-- The service **never** takes a user id from the request. It reads the current user, always.
-- Cap at 10 per user, per agent, so the whole list always fits in the chat surface (Phase 5). Over the
-  cap, the API rejects with a message telling them to remove one.
-- Deleting an agent deletes its scoped saved prompts (notification handler, mirrors existing
-  `AIProfileDeletingAgentNotificationHandler`).
-- Not versioned. Not deployed. Not in the Deploy artifact.
-
-### Acceptance
-
-- User A never sees user B's saved prompts, even with a hand-crafted request.
-- A user with chat access but no agent-management permission can still save and delete their own.
-- Deleting an agent leaves no orphan rows.
-
----
-
-## Phase 5: Save UX
-
-### Files
-
-- `chat/components/message.element.ts`: add a "Save as starter" action next to the existing copy
-  button, on **user** messages. One click, no modal, no title to invent (D3). Toast confirms, with an
-  undo.
-- `chat/components/starter-prompts.element.ts`: saved-prompt rows get pencil and trash actions.
-- `chat/modals/saved-prompt-editor/*`: **new** modal element + `UmbModalToken`, registered through
-  `chat/manifests/`. Mirrors the existing `UAI_TOOL_PERMISSIONS_OVERRIDE_EDITOR_MODAL` pattern
-  (`type: "sidebar"`), so it looks like the rest of the backoffice.
-- `lang/*`: strings.
-
-### There is no separate manage screen
-
-Editing happens where the prompts already are, using standard backoffice pieces. No drill-down panel,
-no dedicated management view.
-
-```
-Suggested                                    ← agent starters, chips, rotate control
-┌──────────────────┐ ┌──────────────────┐
-│ Audit this page… │ │ Draft a summary… │
-└──────────────────┘ └──────────────────┘
-
-Saved prompts                                ← the user's own, as rows with actions
-  Rewrite this page for a Danish audience…      ✎  🗑
-  Check every link on this page and report…     ✎  🗑
+ Umbraco.AI.Agent.Copilot.Workspace/…/chat/
++├── workspace-agent.repository.ts                 ~ same projection change (~line 27)
++└── copilot-workspace-chat.context.ts             ~ same delegation
 ```
 
-- **Two treatments, on purpose.** Agent starters stay chips: short, nothing to manage. Saved prompts
-  become a compact list, because rows take a clamp better than chips do and they need room for actions.
-- **Click the row text** to send it, same as clicking a chip, with the same agent pinning (D11).
-- **Trash** deletes inline, with an undo toast. The common case never opens a modal.
-- **Pencil** opens the sidebar modal: the full prompt in a textarea, plus the optional `Label` field
-  (D3). This is where a long prompt is readable and editable, and the only place the label is asked for.
-- **The list shows everything, so nothing needs a "see all".** That is why the per-agent cap drops from
-  25 to 10 (Phase 4): a list that always fits is simpler than any paging or overflow affordance. The
-  group scrolls if it has to.
-- **No search, no manual ordering, in v1.** Ten rows ordered most-recently-used is findable by eye.
-- **Empty state.** The "Saved prompts" heading only appears once the user has one. No empty group.
+Pinning goes through `chatContext.selectAgent(agentId)`, **not** `runController.setAgent(...)`. Two reasons found while checking the release branch: `setAgent` there takes a `UaiAgentItem` and deliberately preserves the conversation (it no longer resets), and in Workspace the run controller's agent is the *conversation* (`conversation:{id}`), not the agent. `selectAgent` is already on the shared interface and is what both surfaces implement.
 
-Scope on save follows D5: always the agent in use, or Auto's resolved agent if the thread was in auto
-mode. No toggle, no choice to make. Saving never asks for a label; renaming happens later in the
-manage view, where the user can see whether the derived one reads well.
+```text
+click chip
+  sendStarterPrompt(entry)                 UaiStarterPromptsController
+    if entry.agentId && entry.agentId !== current
+      chatContext.selectAgent(entry.agentId)     # picker moves Auto -> that agent
+    chatContext.sendUserMessage(entry.prompt)    # same path as typing; keeps pending-first-message intact
+```
 
-### Acceptance
+`sendUserMessage` is the single send path on purpose — Workspace creates a persisted conversation from a pending first message, and bypassing it would skip that.
 
-- Saving from a sent message is one click. Nothing to fill in, nothing to retype.
-- A long saved prompt can be given a label afterwards, from the manage view, and the chip updates.
-- Saving twice from the same text does not create a duplicate.
-- A saved prompt appears in the next fresh chat's empty state under "Yours".
-- Clicking a saved prompt bumps `DateLastUsed`, which drives its order.
-- Removing it is possible without leaving the chat.
-- With 10 saved prompts, all 10 are reachable without paging, and the sidebar stays usable.
-- Deleting is one click plus undo, and never opens a modal.
-- A 4,000-character prompt is fully readable and editable in the pencil modal.
+`message.element.ts` is untouched in v1. Its assistant-only guard in `#renderActions()` only changes when the deferred save action arrives.
 
----
+### Validation
 
-## Phase 6: Docs and port
+#### Automated Verification
 
-- `Umbraco.Docs`: starter prompts on the agent page, plus a short user-facing note on saving your own.
-- Port the whole feature to the other active version line per the Backport Workflow in `CLAUDE.md`.
-  Both v17 and v18 are in active support, so both get it.
+- [x] `npm run build:core && npm run build:agent && npm run build:agent-ui && npm run build:copilot && npm run build:copilot-workspace`
+- [x] `npm run test:agent-ui` (new script, wired into the root `test`) — entries derive a display string, missing context members yield no render
+- [x] `npm run test:copilot && npm run test:copilot-workspace` still pass
+
+#### Manual Verification
+
+Approved by the user on 21-09-2026, after the presentation fixes recorded under Phase 3.
+
+- [x] Copilot sidebar on an agent with starters: chips show under the greeting; clicking one sends it and the empty state disappears
+- [x] Copilot Workspace: same chips, same behaviour, with no code beyond the two wiring changes
+- [x] An agent with no starters looks exactly like today — no empty box, no dead control
+- [x] Switching the selected agent swaps the chips
+- [x] The Copilot sidebar's existing `.copilot-intro` greeting is unchanged
 
 ---
 
-## Later, not now
+## Phase 3: Auto mode — aggregate, tag, rotate, pin
 
-Ordered by how much I think they are worth:
+Auto is what most users have selected when they open Copilot, so without this the empty state stays empty for the majority. The controller starts reading starters off *every* available agent rather than just the selected one. No new availability logic: both surface repositories already filter by surface and by live entity scope using the same allow/deny rules the server applies.
 
-1. **Generate starters from the agent's instructions.** Copilot Studio does this and it removes the
-   blank-page problem for the person creating the agent. Cheap: one AI call, prefill the editor rows.
-2. **Promotion path.** Mine → shared with a user group → promoted into the agent's starters. This is
-   Microsoft's mine/team/org ladder. Needs a sharing model, so it is its own plan.
-3. **Click tracking and ordering.** Record which starters get used, order by that, report on it.
-   Ranking only: it must never change the list on its own.
-4. **Repeat detection.** "You have asked this 4 times, save it?" Nothing surveyed does this. Genuinely
-   novel, but only worth it once the personal layer is proven.
-5. **Runtime/contextual starters.** A developer-facing hook to replace the list per conversation, the
-   way Slack does. Wait for a real request before building it.
+```diff
+ starterPrompts$ =
+-  selectedAgent.starterPrompts
++  if a single agent is selected -> that agent's starters, in authoring order  # never more than 4
++  if Auto                       -> merge across all available agents
++    dedupe on exact prompt text                  # two agents may ship the same seed
++    round-robin, one per agent per pass          # a 4-starter agent cannot crowd out a 1-starter one
++    tag each entry with its agent name
++  suppress the agent tag whenever the merged list spans exactly one agent
+```
+
+The merge step is also where the deferred saved-prompt source plugs in later — it is not speculative, Auto mode needs it now.
+
+The cap of 4 means a single selected agent always fits the window, so the rotate control only ever appears in Auto mode with more than one agent supplying starters. It still has to exist: three agents at four each is twelve entries.
+
+Everything lands in two files plus their tests; no new layers.
+
+```diff
+ Umbraco.AI.Agent.UI/…/chat/
++├── services/starter-prompts.controller.ts        ~ aggregation, dedupe, round robin, tag suppression
++├── services/starter-prompts.controller.test.ts   ~ + the five cases below
++└── components/starter-prompts.element.ts         ~ window of 4 + rotate control + agent attribution
+```
+
+> **Decision 21-09-2026: the agent name is a header, not a trailing tag.** `<uui-tag look="secondary">`
+> at the end of the chip text was unreadable — on the Copilot sidebar's surface the tag's own background
+> is the same colour as the chip's. It is replaced by the same `.agent-attribution` treatment used above
+> an assistant message in `message.element.ts` (`icon-bot` + name, 0.75rem, `--uui-color-text-alt`, 0.8
+> opacity), sitting above the prompt text inside the chip.
+>
+> **Decision 21-09-2026: chips are container-responsive.** `:host` becomes an inline-size query
+> container, so the chips size to the space the surface gives them rather than to the viewport: below
+> 560px (the Copilot sidebar) each chip is `flex: 1 1 100%` and fills the width; at or above it they
+> revert to `flex: 0 1 auto` and hug their own text, which is what Copilot Workspace's 860px column
+> already showed.
+>
+> Two follow-ups fell out of verifying that on the demo site:
+>
+> - **The host needs an explicit `width: 100%` / `align-self: stretch`.** It is a flex item of
+>   `.empty-state`, which centres its children, so it was sized shrink-to-fit — and inline-size
+>   containment makes a shrink-to-fit box report *no* intrinsic width, which collapsed every chip to
+>   one word per line. The container query is only meaningful once the host has a definite width.
+> - **The rotate control gets its own row.** `.starter-prompts` is now a centred column holding a
+>   `.chips` row-wrap box and the rotate button beneath it, rather than one flat wrap where the button
+>   trailed the last chip. Chips in a row also `align-items: stretch` so a two-line prompt no longer
+>   leaves its neighbour short. Top margin raised from `--uui-size-space-5` to `-6`.
+
+This is the phase that earns the vitest install from Phase 2 — the logic is pure and cheap to pin down:
+
+- dedupe on identical prompt text across two agents
+- round-robin so a 4-starter agent cannot crowd out a 1-starter one
+- agent tag suppressed when the merged list spans one agent
+- rotate control hidden at 4 or fewer entries, shown above — so never for a single selected agent
+- clicking pins the entry's agent and never consults the classifier
+
+### Validation
+
+#### Automated Verification
+
+- [x] `npm run test:agent-ui` covers all five cases above
+- [x] `npm run build:agent-ui && npm run build:copilot && npm run build:copilot-workspace`
+
+#### Manual Verification
+
+Approved by the user on 21-09-2026.
+
+- [x] With three copilot agents, Auto shows a mix from all three, each chip tagged with its agent
+- [x] Clicking an Auto chip switches the picker to that agent and answers as that agent, with no classifier delay
+- [x] Navigating to a section where an agent is scoped out removes that agent's chips
+- [x] With one agent available there is no Auto entry, no agent tags and no rotate control
+- [x] Two agents with four starters each shows the rotate control and reaches all eight
 
 ---
 
-## Open questions
+## Phase 4: Suggest starters from the agent's instructions
 
-1. **Should "generate from instructions" be pulled into v1?** It is small and it directly improves the
-   odds that agents actually ship with starters.
-2. **Pin for the thread, or pin for one message?** D11 pins for the thread because it is nearly free.
-   Keeping the thread on Auto after a starter click needs an `agentId` argument plumbed through
-   `sendUserMessage` and `UaiAgentClient`. Only worth doing if thread-level pinning tests badly.
-3. **Agent name on chips in auto mode.** D10 says show it. It aids discovery but costs vertical space
-   in a narrow sidebar, so it is worth a look at the real thing before committing.
-4. **Is 200 chars the right cap on agent starters?** D3 treats the cap as the design, on the basis that
-   depth belongs in the agent's `Instructions`. If authors keep hitting it for good reasons, the fix is
-   to add `Label` to agent starters (additive, no migration) rather than to raise the cap.
+The main threat to this whole feature is agents shipping with no starters. The scope cut sharpens that: agent starters are now the *only* source, so an agent with none means an empty state with nothing in it. One button on the editor turns the agent's `Instructions` into draft rows the author edits or discards. It never saves on its own.
+
+There is no "generate a list and prefill rows" pattern in the repo yet, so this combines two that do exist: the structured-output chat call from `AIPromptService`, and the inline button-with-loading-state from the connection editor's **Test connection**.
+
+```csharp
+// one chat call, structured output, no agent run
+var response = await _chatService.GetChatResponseAsync(chat =>
+{
+    chat.WithAlias("agent-suggest-starters");
+    if (agent.ProfileId.HasValue) chat.WithProfile(agent.ProfileId.Value);  // else falls back to
+    chat.WithOutputSchema(AIOutputSchema.FromType<SuggestedStartersResponse>()); // the default chat profile
+}, messages, cancellationToken);
+
+response.TryGetResult<SuggestedStartersResponse>(out var parsed);   // { IReadOnlyList<string> Starters }
+```
+
+```text
+POST /umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/suggest-starters
+  response 200  { starters: string[] }        each already clamped to 200 chars, max 4
+  response 400  ProblemDetails                no profile, or the model returned nothing usable
+```
+
+```diff
+ Umbraco.AI.Agent/src/
++├── Umbraco.AI.Agent.Core/Agents/AIStarterPromptSuggester.cs   + prompt + schema + clamping
+ ├── Umbraco.AI.Agent.Web/Api/Management/Agent/
++│   ├── Controllers/SuggestStartersAgentController.cs          + same base/policy as RunAgentController
++│   └── Models/SuggestStartersResponseModel.cs
+ └── Umbraco.AI.Agent.Web.StaticAssets/Client/src/
++    ├── api/**                                                 ~ regenerated, committed
++    └── agent/components/agent-starter-prompts-editor/…         ~ + Suggest starters button
+```
+
+The button sits in the wrapper, below `<umb-input-multiple-text-string>`, since the CMS component owns its own add control and we do not reach inside it. Drafts replace the `items` array only on success; a failed call surfaces a message and leaves existing rows alone.
+
+> **Decision 16-09-2026: disable the button when no profile can serve it.** Rather than letting the
+> click fail with a 400, the editor resolves whether a profile is available — the agent's own
+> `ProfileId`, else a default chat profile — and renders the button `disabled` with an explanatory
+> `title` tooltip when neither exists. The 400 path stays implemented server-side as the backstop, but
+> the common case never reaches it.
+
+> **Decision 21-09-2026: it is a property action, not an inline button.** The button below the list is
+> replaced by a `propertyAction` extension, so it appears in the `...` menu against the property label
+> — where the CMS puts Clear, Copy and Paste. `umb-property-action-menu` filters on nothing but the
+> string handed to `.propertyEditorUiAlias`, so the property declares a namespaced alias of its own
+> (`Uai.PropertyEditorUi.AgentStarterPrompts`) and the action registers against that; no document-type
+> property stack is involved. The action writes through `UAI_AGENT_WORKSPACE_CONTEXT.handleCommand`,
+> which leaves `uai-agent-starter-prompts-editor` a plain wrapper over the CMS list again.
+>
+> The default property-action element can carry neither the disabled tooltip nor an in-flight state, so
+> the menu item is a custom element in the same shape as the CMS's own sort-mode action — the decision
+> above is preserved verbatim, as a disabled `uui-menu-item` with the same tooltip, plus the menu
+> item's own loading indicator while the model is being asked.
+>
+> ```diff
+>  Umbraco.AI.Agent.Web.StaticAssets/Client/src/agent/
+> +├── property-actions/constants.ts                              + synthetic UI alias + action alias
+> +├── property-actions/suggest-starter-prompts.property-action.ts        + availability + execute
+> +├── property-actions/suggest-starter-prompts.property-action.element.ts + disabled/loading menu item
+> +├── property-actions/{manifests,index}.ts
+> +├── manifests.ts / index.ts                                    ~ register and export
+> +├── components/agent-starter-prompts-editor/…                  ~ button, availability and API calls removed
+> +└── workspace/agent/views/agent-details-workspace-view.element.ts
+> +                                                               ~ umb-property-action-menu in the action-menu slot
+> ```
+
+### Validation
+
+#### Automated Verification
+
+- [x] `dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx` — with a mocked `IAIChatService`: results are clamped to 4 × 200 chars even when the model returns more, an empty or malformed model response returns a 400 rather than empty rows, and nothing is persisted
+- [x] `dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.slnx && npm run build:agent`
+
+#### Manual Verification
+
+- [x] On an agent with real instructions, the action fills the rows with plausible one-line starters and saves nothing until the author hits save — verified 21-09-2026 on the demo site
+- [ ] With no default chat profile configured, the failure is a readable message and existing rows survive
+- [ ] The menu item shows a loading state and cannot be double-fired
+- [x] The `...` menu renders against the "Starter prompts" property label and holds the action — verified 21-09-2026
+
+---
+
+## Phase 5: Docs and port to v17
+
+```text
+Umbraco.Docs
+  agent page      + Starter prompts: what they are, the cap of 4 × 200 chars, why depth belongs
+                    in Instructions
+                  + Suggest starters, and that it never saves on its own
+
+v17 line
+  port the whole feature per the Backport Workflow in CLAUDE.md
+  base on v17/release/2026.08.1 (or v17/dev once that has merged down — whichever the timing favours)
+  migrations authored on that line's own branch; never forward-merge support lines
+```
+
+Both v17 and v18 are in active support, so both get the feature. Confirm the port before treating the work as done.
+
+### Validation
+
+#### Automated Verification
+
+- [ ] `dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.slnx` and `npm run test` both green on the v17 branch
+- [ ] Migrations apply cleanly on a fresh v17 demo site, SQLite and SQL Server
+
+#### Manual Verification
+
+- [ ] The docs pages read correctly against the shipped UI
+- [ ] A v17 demo site shows starters in Copilot with the same behaviour as v18
+
+---
+
+## Deferred to a follow-up
+
+Cut on 16-09-2026 and **not built here**. The design is finished and preserved in the [design discussion appendix](03-design-discussion.md#deferred-user-saved-prompts).
+
+```text
+user-saved prompts
+  umbracoAIAgentUserStarterPrompt table + migration pair
+  AIUserStarterPrompt entity, service, internal repository, cascade notification handler
+  5 current-user-scoped controllers + map definition + frontend repository
+  saveStarterPrompt / updateStarterPrompt / deleteStarterPrompt on UaiChatContextApi
+  "Save as starter" action on user messages (the per-role branch in message.element.ts)
+  "Saved prompts" rows, the sidebar edit modal, undo toast, DateLastUsed ordering
+  the ownership test suite
+```
+
+What v1 carries so that half stays additive: every new context member is optional, `source` is already a two-member union, `display` is already separate from `prompt`, and `AIStarterPrompt` is already a JSON object rather than a bare string.
+
+## Open Questions
+
+- ~~**Merge target.**~~ **Confirmed 16-09-2026:** branch *from* `v18/release/2026.08.1`, merge *into* `v18/dev` once that release branch has merged down. Nothing lands on the release branch itself, so the feature never enters the 2026.08.1 release or its `release-manifest.json`.
+- ~~**Seam 2.**~~ **Resolved 16-09-2026: dropped.** `source` is not added in v1. Three seams carried, not four. Re-adding it later is an optional-field widening, not a breaking change.
+- ~~**Phase 4 profile.**~~ **Resolved 16-09-2026: disable the button.** When neither the agent's `ProfileId` nor a default chat profile is available, the **Suggest starters** button renders disabled with an explanatory tooltip. The server-side 400 remains as a backstop.

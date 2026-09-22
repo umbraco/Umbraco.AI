@@ -184,9 +184,13 @@ The rest of `docs/` is organized by genre, not by product:
 |--------|-------|
 | `docs/plans/<feature-slug>/` | Active feature plans, in the shape above |
 | `docs/archive/<feature-slug>/` | Plans that are fully shipped, abandoned, or superseded — kept for history, not active work. Each file carries a `> **Status:**` line explaining why it's archived |
-| `docs/adr/` | Architecture decision records — a standing decision and its rejected alternatives, not a task list |
 | `docs/reference/` | Evergreen concept/how-to docs describing how the system works today (not a plan, nothing to check off) |
 | `docs/ideas/` | Lightweight, not-yet-scoped ideas that haven't been through `umb-explore` yet — promote to `docs/plans/<slug>/BRIEF.md` when someone actually starts one |
+
+A standing, project-wide architectural decision (an ADR — a call with rejected alternatives and
+revisit triggers that outlives one feature, e.g. "why we hand-built our own AG-UI protocol") does
+**not** get its own `docs/` folder — it's a `decision`-type memory in `.claude/memory/` instead. See
+`.claude/memory/README.md` for the format.
 
 ## Multi-Version Support
 

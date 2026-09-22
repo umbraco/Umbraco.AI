@@ -231,6 +231,14 @@ Check [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-t
 
 A bug fix or feature is developed against one version line but usually applies to every version still in an active phase (see the table above and [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/)). **Before treating any fix or feature as done, ask whether it should be ported to the other active version(s) and confirm with the user.** This applies in both directions — e.g. a fix on `v18/dev` may need backporting to `v17/dev`, and a fix on `v17/dev` may need porting up to `v18/dev`. Respect each version's phase: security phase → security patches only; EOL → skip unless explicitly requested. Lines are maintained independently (no forward-merge), so port each one via the Backport Workflow below.
 
+This applies to more than code. `docs/reference/`, `docs/ideas/`, and `.claude/memory/` decisions
+describe the product's architecture, not the CMS version targeted — they're almost always true on
+every active line at once. There's no shared/forward-merged copy (same no-forward-merge model as
+code), so a change to one of these on one line should be treated as a sync candidate too: ask
+whether it needs porting to the other active line(s), the same as a bug fix. `docs/plans/` and
+`docs/archive/` are the exception — feature work is genuinely branch-specific (a feature can ship
+on one line before the other), so those are expected to differ.
+
 ### Backport Workflow
 
 When a fix or feature applies to an older supported version:

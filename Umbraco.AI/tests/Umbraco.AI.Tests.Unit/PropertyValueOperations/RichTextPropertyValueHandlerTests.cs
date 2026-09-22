@@ -6,11 +6,15 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
 using Umbraco.Cms.Core.PropertyEditors;
+using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Tests.Unit.PropertyValueOperations;
 
 public class RichTextPropertyValueHandlerTests
 {
+    private const string LayoutKey = CmsConstants.PropertyEditors.Aliases.RichText;
+
+
     [Fact]
     public void ValidateAddItem_AlwaysRejects_WithMarkupGuidance()
     {
@@ -39,7 +43,7 @@ public class RichTextPropertyValueHandlerTests
             {
                 ["layout"] = new JsonObject
                 {
-                    ["Umbraco.RichText.Blocks"] = new JsonArray
+                    [LayoutKey] = new JsonArray
                     {
                         new JsonObject { ["contentKey"] = keep },
                         new JsonObject { ["contentKey"] = remove },
@@ -60,9 +64,50 @@ public class RichTextPropertyValueHandlerTests
         var rte = (JsonObject)result!;
         rte["markup"]!.GetValue<string>().ShouldBe("<p>Hello</p>");
         var inner = (JsonObject)rte["blocks"]!;
-        var layout = (JsonArray)inner["layout"]!["Umbraco.RichText.Blocks"]!;
+        var layout = (JsonArray)inner["layout"]![LayoutKey]!;
         layout.Count.ShouldBe(1);
         layout[0]!["contentKey"]!.GetValue<Guid>().ShouldBe(keep);
+    }
+
+    [Fact]
+    public async Task MoveItemAsync_ReordersBlockWithinInnerLayout()
+    {
+        var handler = new RichTextPropertyValueHandler(new Mock<IContentTypeService>().Object);
+
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+
+        var rteValue = new JsonObject
+        {
+            ["markup"] = "<p>Hello</p>",
+            ["blocks"] = new JsonObject
+            {
+                ["layout"] = new JsonObject
+                {
+                    [LayoutKey] = new JsonArray
+                    {
+                        new JsonObject { ["contentKey"] = first },
+                        new JsonObject { ["contentKey"] = second },
+                    },
+                },
+                ["contentData"] = new JsonArray
+                {
+                    new JsonObject { ["key"] = first, ["values"] = new JsonArray() },
+                    new JsonObject { ["key"] = second, ["values"] = new JsonArray() },
+                },
+                ["settingsData"] = new JsonArray(),
+                ["expose"] = new JsonArray(),
+            },
+        };
+
+        var result = await handler.MoveItemAsync(rteValue, second, 0, BuildContext());
+
+        var rte = (JsonObject)result!;
+        var inner = (JsonObject)rte["blocks"]!;
+        var layout = (JsonArray)inner["layout"]![LayoutKey]!;
+        layout.Count.ShouldBe(2);
+        layout[0]!["contentKey"]!.GetValue<Guid>().ShouldBe(second);
+        layout[1]!["contentKey"]!.GetValue<Guid>().ShouldBe(first);
     }
 
     [Fact]
@@ -80,7 +125,7 @@ public class RichTextPropertyValueHandlerTests
 
         var rte = (JsonObject)result!;
         rte["markup"]!.GetValue<string>().ShouldBe(string.Empty);
-        rte["blocks"]!["layout"]!["Umbraco.RichText.Blocks"].ShouldBeOfType<JsonArray>();
+        rte["blocks"]!["layout"]![LayoutKey].ShouldBeOfType<JsonArray>();
     }
 
     private static AIPropertyValueOperationContext BuildContext()

@@ -172,11 +172,11 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 
 ## Feature Planning
 
-Uses the `umbraco-claude-playbook` skill chain: `umb-explore` → `umb-design` → `umb-plan` →
-`umb-build-loop`. Each feature gets one folder at `docs/plans/<feature-slug>/` — one file per
-pipeline phase (`BRIEF.md`, `ARCHITECTURE.md`, `SPEC.md`, `STORIES.md`, `PLAN.md`,
-`DECISION-LOG.md`, `BUILD-LOG.md`). This is a monorepo, but the convention stays flat (no
-per-product subfolder) — feature slugs are unique enough on their own.
+Each feature gets one folder at `docs/plans/<feature-slug>/` — one file per phase (`BRIEF.md`
+for the problem/why, `ARCHITECTURE.md`/`SPEC.md` for the design, `STORIES.md`/`PLAN.md` for the
+task breakdown, `DECISION-LOG.md` for dated decisions, `BUILD-LOG.md` for the build history —
+use whichever apply). This is a monorepo, but the convention stays flat (no per-product
+subfolder) — feature slugs are unique enough on their own.
 
 The rest of `docs/` is organized by genre, not by product:
 
@@ -185,7 +185,7 @@ The rest of `docs/` is organized by genre, not by product:
 | `docs/plans/<feature-slug>/` | Active feature plans, in the shape above |
 | `docs/archive/<feature-slug>/` | Plans that are fully shipped, abandoned, or superseded — kept for history, not active work. Each file carries a `> **Status:**` line explaining why it's archived |
 | `docs/reference/` | Evergreen concept/how-to docs describing how the system works today (not a plan, nothing to check off) |
-| `docs/ideas/` | Lightweight, not-yet-scoped ideas that haven't been through `umb-explore` yet — promote to `docs/plans/<slug>/BRIEF.md` when someone actually starts one |
+| `docs/ideas/` | Lightweight, not-yet-scoped ideas — promote to `docs/plans/<slug>/BRIEF.md` when someone actually starts one |
 
 A standing, project-wide architectural decision (an ADR — a call with rejected alternatives and
 revisit triggers that outlives one feature, e.g. "why we hand-built our own AG-UI protocol") does

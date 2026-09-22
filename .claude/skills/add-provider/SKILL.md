@@ -73,6 +73,8 @@ Per the repo's mandatory worktree workflow, use the `EnterWorktree` tool rather 
 
 ## 4. Scaffold the provider
 
+**`<ProviderName>` is the vendor/company name, never the model name.** E.g. `Umbraco.AI.ZAI` and `Umbraco.AI.Alibaba` (Qwen), not `Umbraco.AI.GLM` or `Umbraco.AI.Qwen` — a vendor may ship several model families under one provider package, so naming it after whichever model shipped first is wrong even if that's the only model supported today.
+
 Directory layout (use Anthropic as the template):
 
 ```

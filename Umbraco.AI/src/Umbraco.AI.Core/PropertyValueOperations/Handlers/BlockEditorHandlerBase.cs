@@ -43,6 +43,10 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
         => AIValidationResult.Valid;
 
     /// <inheritdoc />
+    public virtual AIValidationResult ValidateRemoveItem(JsonNode? value, Guid blockKey, AIPropertyValueOperationContext context)
+        => AIValidationResult.Valid;
+
+    /// <inheritdoc />
     public Task<AIAddItemHandlerResult> AddItemAsync(
         JsonNode? value,
         AIAddItemArgs args,

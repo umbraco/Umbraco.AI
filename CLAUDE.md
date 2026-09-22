@@ -170,6 +170,24 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 | `<Product>/changelog.config.json` | Per-product scopes for changelog |
 | `<Product>/CHANGELOG.md` | Per-product changelog (auto-generated) |
 
+## Feature Planning
+
+Uses the `umbraco-claude-playbook` skill chain: `umb-explore` → `umb-design` → `umb-plan` →
+`umb-build-loop`. Each feature gets one folder at `docs/plans/<feature-slug>/` — one file per
+pipeline phase (`BRIEF.md`, `ARCHITECTURE.md`, `SPEC.md`, `STORIES.md`, `PLAN.md`,
+`DECISION-LOG.md`, `BUILD-LOG.md`). This is a monorepo, but the convention stays flat (no
+per-product subfolder) — feature slugs are unique enough on their own.
+
+The rest of `docs/` is organized by genre, not by product:
+
+| Folder | Holds |
+|--------|-------|
+| `docs/plans/<feature-slug>/` | Active feature plans, in the shape above |
+| `docs/archive/<feature-slug>/` | Plans that are fully shipped, abandoned, or superseded — kept for history, not active work. Each file carries a `> **Status:**` line explaining why it's archived |
+| `docs/adr/` | Architecture decision records — a standing decision and its rejected alternatives, not a task list |
+| `docs/reference/` | Evergreen concept/how-to docs describing how the system works today (not a plan, nothing to check off) |
+| `docs/ideas/` | Lightweight, not-yet-scoped ideas that haven't been through `umb-explore` yet — promote to `docs/plans/<slug>/BRIEF.md` when someone actually starts one |
+
 ## Multi-Version Support
 
 Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions may be in active support simultaneously, following the [Umbraco CMS LTS/EOL policy](https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/).

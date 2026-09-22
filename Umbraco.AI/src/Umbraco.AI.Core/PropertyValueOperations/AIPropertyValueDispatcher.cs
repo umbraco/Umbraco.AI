@@ -271,6 +271,12 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                             "RemoveItem requires a 'blockKey' GUID argument.");
                     }
 
+                    var removeValidation = handler.ValidateRemoveItem(leafValue, blockKey, context);
+                    if (!removeValidation.IsValid)
+                    {
+                        return AIPropertyValueDispatchResult.Fail(removeValidation.Error!);
+                    }
+
                     var newValue = await handler.RemoveItemAsync(leafValue, blockKey, context, cancellationToken).ConfigureAwait(false);
                     return AIPropertyValueDispatchResult.Ok(newValue);
                 }

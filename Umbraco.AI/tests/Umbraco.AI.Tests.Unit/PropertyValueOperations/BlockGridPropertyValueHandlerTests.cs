@@ -66,6 +66,88 @@ public class BlockGridPropertyValueHandlerTests
         result.IsValid.ShouldBeTrue();
     }
 
+    [Fact]
+    public void ValidateRemoveItem_AcceptsRootLevelBlock()
+    {
+        // Arrange
+        var handler = new BlockGridPropertyValueHandler(new Mock<IContentTypeService>().Object);
+        var rootContentKey = Guid.NewGuid();
+        var envelope = BuildEnvelopeWithNestedBlock(rootContentKey, out _);
+
+        // Act
+        var result = handler.ValidateRemoveItem(envelope, rootContentKey, BuildContext());
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ValidateRemoveItem_RejectsBlockNestedInArea()
+    {
+        // Arrange
+        var handler = new BlockGridPropertyValueHandler(new Mock<IContentTypeService>().Object);
+        var envelope = BuildEnvelopeWithNestedBlock(Guid.NewGuid(), out var nestedContentKey);
+
+        // Act
+        var result = handler.ValidateRemoveItem(envelope, nestedContentKey, BuildContext());
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.OperationNotSupported);
+    }
+
+    /// <summary>
+    /// Builds an envelope with one root-level block containing a single nested block inside its
+    /// first area, mirroring content a third party (or a future v2) could have produced directly
+    /// via the CMS backoffice.
+    /// </summary>
+    private static JsonObject BuildEnvelopeWithNestedBlock(Guid rootContentKey, out Guid nestedContentKey)
+    {
+        nestedContentKey = Guid.NewGuid();
+        var rootContentTypeKey = Guid.NewGuid();
+        var nestedContentTypeKey = Guid.NewGuid();
+
+        return new JsonObject
+        {
+            [BlockEnvelopeOps.LayoutPropertyName] = new JsonObject
+            {
+                [LayoutKey] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["contentKey"] = rootContentKey,
+                        ["columnSpan"] = 12,
+                        ["rowSpan"] = 1,
+                        ["areas"] = new JsonArray
+                        {
+                            new JsonObject
+                            {
+                                ["key"] = Guid.NewGuid(),
+                                ["items"] = new JsonArray
+                                {
+                                    new JsonObject
+                                    {
+                                        ["contentKey"] = nestedContentKey,
+                                        ["columnSpan"] = 12,
+                                        ["rowSpan"] = 1,
+                                        ["areas"] = new JsonArray(),
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            [BlockEnvelopeOps.ContentDataPropertyName] = new JsonArray
+            {
+                new JsonObject { ["key"] = rootContentKey, ["contentTypeKey"] = rootContentTypeKey, ["values"] = new JsonArray() },
+                new JsonObject { ["key"] = nestedContentKey, ["contentTypeKey"] = nestedContentTypeKey, ["values"] = new JsonArray() },
+            },
+            [BlockEnvelopeOps.SettingsDataPropertyName] = new JsonArray(),
+            [BlockEnvelopeOps.ExposePropertyName] = new JsonArray(),
+        };
+    }
+
     private static IContentTypeService BuildContentTypeService(Guid contentTypeKey)
     {
         var contentType = new Mock<IContentType>();

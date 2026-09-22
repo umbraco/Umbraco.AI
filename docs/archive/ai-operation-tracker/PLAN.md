@@ -1,5 +1,7 @@
 # Capability-agnostic `IAIOperationTracker` Implementation Plan
 
+> **Status:** Shipped. Merged via PR #226 (v18) and #235 (v17). Kept here for historical reference only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extract one capability-agnostic `IAIOperationTracker` from `AIImageGenerationTracker` and route Chat / Embedding / SpeechToText / ImageGeneration usage + audit recording through it, collapsing each capability's three pipeline wrappers into one.

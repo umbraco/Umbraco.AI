@@ -1,6 +1,12 @@
 # AI Workflows - Future Consideration
 
-## Status: Under Consideration
+## Status: Not built as envisioned
+
+`Umbraco.AI.Automate` shipped instead, using a different (agent-run-trigger-based) shape rather
+than the `ContentSaving`/`PublishingNotification` hooks this doc describes. Kept for historical
+reference in case the original event-driven vision is revisited.
+
+## Original status: Under Consideration
 
 This document explores **AI Workflows**, a system for automating field population and content transformation using AI. Inspired by [Drupal AI Automators](https://www.drupal.org/project/ai), adapted to fit Umbraco's architecture and Umbraco.AI's design philosophy.
 

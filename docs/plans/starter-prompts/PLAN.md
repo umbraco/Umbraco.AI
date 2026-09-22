@@ -1,6 +1,8 @@
 # Starter Prompts Plan
 
-> Status: draft, not started. Owner: Matt Brailsford. Created 04-08-2026.
+> Status: partially built — `AIStarterPrompt`/`AIStarterPromptSuggester` + tests exist, but only in
+> the `v18-copilot-starter-prompts` worktree (`v18/feature/copilot-starter-prompts`), not yet merged
+> to `v18/dev`. Owner: Matt Brailsford. Created 04-08-2026.
 
 ## Overview
 

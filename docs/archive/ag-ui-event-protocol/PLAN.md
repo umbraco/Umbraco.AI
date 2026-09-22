@@ -1,5 +1,7 @@
 # AG-UI Event Protocol Integration Plan
 
+> **Status:** Shipped (`AGUIStreamingService` and related code exist in the Agent product). Kept here for historical reference only.
+
 ## Overview
 
 This plan introduces AG-UI (Agent User Interface Protocol) event patterns into Umbraco.AI using a **two-tier approach**:

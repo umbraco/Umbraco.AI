@@ -1,6 +1,10 @@
 # AI Context - Future Consideration
 
-## Status: Under Consideration
+## Status: Shipped
+
+The `AIContext` concept exists in `Umbraco.AI.Core`. Kept here for historical reference only.
+
+## Original status: Under Consideration
 
 This document explores **AI Context**, a system for attaching contextual resources (brand voice, documents, reference materials) that automatically enrich all AI operations. Inspired by [Perplex AI ContentBuddy](https://marketplace.umbraco.com/package/perplex.ai.contentbuddy)'s centralized tone of voice feature.
 

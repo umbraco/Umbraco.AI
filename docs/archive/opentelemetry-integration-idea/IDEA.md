@@ -1,5 +1,7 @@
 # OpenTelemetry Integration Plan for Umbraco.AI
 
+> **Status:** Shipped (`AIOpenTelemetryChatMiddleware`/`AIOpenTelemetryEmbeddingMiddleware` exist with tests). Kept here for historical reference only.
+
 ## Overview
 
 This plan adds OpenTelemetry support to Umbraco.AI by delegating to M.E.AI's built-in `OpenTelemetryChatClient` / `OpenTelemetryEmbeddingGenerator` for standard `gen_ai.*` tracing and metrics, then enriching with Umbraco-specific context (profile, entity, feature, user, audit log ID) in the existing auditing middleware.

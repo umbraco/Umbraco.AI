@@ -1,5 +1,7 @@
 # File Content Extraction — Phase 1a Implementation Plan
 
+> **Status:** Shipped (`.txt`/`.csv`/`.md` attachment support). Kept here for historical reference only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let the AI actually read `.txt`, `.csv`, and `.md` files (and, as a free side effect,

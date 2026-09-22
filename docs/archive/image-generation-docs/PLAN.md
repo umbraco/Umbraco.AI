@@ -1,5 +1,7 @@
 # Image Generation Capability Documentation — Implementation Plan
 
+> **Status:** The actual doc pages were written in the separate `Umbraco.Docs` repo (branch `ai/image-generation-docs`, draft PR #8222), held pending the Image Generation feature release. This plan is kept here only as a pointer/record — check that repo/PR for live status.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Document the experimental Image Generation capability across the `17/` and `18/` Umbraco.AI doc lines, at full parity with the existing Speech-to-Text capability docs.

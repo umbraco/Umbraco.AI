@@ -1,6 +1,11 @@
 # TipTap AI Integration - Future Consideration
 
-## Status: Under Consideration
+## Status: Shipped, differently than described
+
+The TipTap AI toolbar lives inside `Umbraco.AI.Prompt` rather than as a standalone package. Kept
+here for historical reference only.
+
+## Original status: Under Consideration
 
 This document explores integrating AI capabilities into Umbraco v17's TipTap-based Rich Text Editor through a standalone plugin package. This feature depends on and extends the [AI Prompts](./ai-prompts.md) system.
 

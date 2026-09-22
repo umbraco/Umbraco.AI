@@ -1,6 +1,10 @@
 # AI Prompts - Future Consideration
 
-## Status: Under Consideration
+## Status: Shipped
+
+Shipped as the `Umbraco.AI.Prompt` product. Kept here for historical reference only.
+
+## Original status: Under Consideration
 
 This document explores **AI Prompts**, a system for executing pre-defined, single-step AI operations directly from property editors. Inspired by [Perplex AI ContentBuddy](https://marketplace.umbraco.com/package/perplex.ai.contentbuddy), adapted to fit Umbraco.AI's design philosophy.
 

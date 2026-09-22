@@ -1,5 +1,7 @@
 # Plan: Shared Infrastructure for Entity Snapshot Service & Nested Element Support
 
+> **Status:** Not built — this depended on the entity-snapshot-service plan (see `docs/archive/entity-snapshot-service/`), which was itself abandoned. Kept for historical reference only.
+
 ## Summary
 
 Create shared infrastructure in `Umbraco.AI.Core` that serves both the Entity Snapshot Service and the Nested Element Support feature for the Prompt add-on. The Prompt service will leverage `IAIEntitySnapshotService.CreateSnapshot(IPublishedElement)` for rich template context.

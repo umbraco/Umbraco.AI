@@ -1,5 +1,7 @@
 # AIEntitySnapshotService Design Plan
 
+> **Status:** Abandoned — never built. No `Snapshots/` folder or `AIEntitySnapshotService` exists in the current codebase; the need this was meant to serve was addressed differently inside `Umbraco.AI.Prompt`. Kept for historical reference only.
+
 ## Overview
 
 The `AIEntitySnapshotService` creates simplified, consistent snapshots of Umbraco entities (Content, Media, Member) to provide context for AI requests. These snapshots support mustache-style placeholder templates that allow dynamic property access via dot notation.

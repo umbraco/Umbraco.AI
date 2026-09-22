@@ -1,5 +1,8 @@
 # Brief
 
+> **Status:** Not started — blocked on the Copilot Workspace product itself, which doesn't exist on
+> `v18/dev` yet (only on RC branches).
+
 ## Problem
 
 Copilot Workspace conversations are persisted per-user today — `AIConversationService` enforces

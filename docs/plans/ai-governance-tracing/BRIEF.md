@@ -1,5 +1,8 @@
 # Brief: Local-First AI Governance & Tracing for Umbraco 17
 
+> **Status:** Foundation shipped (audit logging, OpenTelemetry tracing). The backoffice UX layer
+> this brief describes on top of that foundation has not been built.
+
 ## Context
 
 **Umbraco.AI is already implemented using Microsoft.Extensions.AI (MEAI) and Microsoft Agent Framework (MAF)**.

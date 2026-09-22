@@ -1,5 +1,10 @@
 # Settings Editor Expansion Plan
 
+> **Status:** Not started. Distinct from the already-shipped capability-settings work (PRs
+> #269-#285) — that series covered per-capability editors for existing settings; this plan covers
+> exposing audit/analytics/web-fetch settings that still have no UI. Confirm this is still wanted
+> before picking it up.
+
 ## Overview
 
 Expand the settings editor to expose additional configuration options beyond the current default profile settings. This enables administrators to control audit logging, analytics, and security settings through the UI rather than requiring `appsettings.json` changes.

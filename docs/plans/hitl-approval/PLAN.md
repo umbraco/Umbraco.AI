@@ -1,5 +1,9 @@
 # Backend Tool HITL Approval Implementation Plan
 
+> **Status:** Shipped (`AGUIInterruptKind` + backend content/media write tools, PRs #329/#330). The
+> companion Automate-side wiring described in `BRIEF.md` in this folder has not been independently
+> re-verified since — confirm before treating the whole feature as fully done.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add server-side human-in-the-loop (HITL) approval for destructive *backend* agent tools, so a destructive backend tool pauses for user approve/deny before it executes — reusing the existing AG-UI interrupt/resume plumbing and the already-present `human_approval` client handler.

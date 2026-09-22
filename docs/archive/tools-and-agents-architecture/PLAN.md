@@ -1,5 +1,7 @@
 # Umbraco.AI Tools & Agents Architecture Plan
 
+> **Status:** Shipped (`IAITool` and the Agent product exist as described). Kept here for historical reference only.
+
 ## Summary
 
 Add tool infrastructure to Umbraco.AI.Core and implement the full Umbraco.AI.Agents layer for governed AI assistant capabilities.

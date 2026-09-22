@@ -1,5 +1,7 @@
 # Umbraco.AI v1 Core Implementation Plan
 
+> **Status:** Shipped — the document is self-marked "COMPLETED" throughout. Kept for historical reference only.
+
 ## Overview
 
 Complete the v1 core implementation of Umbraco.AI with:

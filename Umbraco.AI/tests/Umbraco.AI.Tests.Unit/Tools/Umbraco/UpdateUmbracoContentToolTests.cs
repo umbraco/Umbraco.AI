@@ -171,6 +171,44 @@ public class UpdateUmbracoContentToolTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_BooleanPropertyValue_NormalizesToClrBoolNotJsonElement()
+    {
+        // Reproduces umbraco/Umbraco.AI#408: { "propertyValues": { "excludeFromBreadcrumb": true } } on a
+        // Umbraco.TrueFalse property reported success:true while silently coercing the stored value back
+        // to false, because FromEditor's bool/int/string switch never matches a raw JsonElement.
+        var userKey = Guid.NewGuid();
+        var key = Guid.NewGuid();
+        var propertyValues = new Dictionary<string, JsonElement>
+        {
+            ["excludeFromBreadcrumb"] = JsonDocument.Parse("true").RootElement,
+        };
+        var args = new UpdateUmbracoContentArgs(key, null, propertyValues);
+
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(key, "Existing Name", "personPage").Object);
+
+        ContentUpdateModel? capturedModel = null;
+        var updatedContentMock = CreateContentMock(key, "Existing Name", "personPage");
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult { Content = updatedContentMock.Object }));
+
+        var result = await _tool.ExecuteAsync(args, CancellationToken.None);
+
+        result.ShouldBeOfType<UpdateUmbracoContentResult>().Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        var property = capturedModel!.Properties.Single(p => p.Alias == "excludeFromBreadcrumb");
+        property.Value.ShouldBeOfType<bool>();
+        property.Value.ShouldBe(true);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_PropertyValuesOmitsExistingProperty_ResubmitsItsCurrentValueSoItSurvives()
     {
         // ContentEditingServiceBase.RemoveMissingProperties wipes any property alias not present in the
@@ -212,13 +250,13 @@ public class UpdateUmbracoContentToolTests
         capturedModel.ShouldNotBeNull();
         capturedModel!.Properties.Count().ShouldBe(2);
 
+        // Normalized via NormalizeIncomingValue (umbraco/Umbraco.AI#408) -- a JSON string arrives as a
+        // plain CLR string, not a JsonElement, matching what the real backoffice save path produces.
         var summary = capturedModel.Properties.Single(p => p.Alias == "summary");
-        summary.Value.ShouldBeOfType<JsonElement>();
-        ((JsonElement)summary.Value!).GetString().ShouldBe("Updated Summary");
+        summary.Value.ShouldBe("Updated Summary");
 
         var bodyText = capturedModel.Properties.Single(p => p.Alias == "bodyText");
-        bodyText.Value.ShouldBeOfType<JsonElement>();
-        ((JsonElement)bodyText.Value!).GetString().ShouldBe("Old Body");
+        bodyText.Value.ShouldBe("Old Body");
     }
 
     [Fact]

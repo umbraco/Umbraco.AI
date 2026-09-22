@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { createClient } from "@hey-api/openapi-ts";
-import http from "http";
-import { execSync } from "child_process";
+import https from "https";
+import { getPort } from "worktree-dev-port";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
@@ -25,47 +25,43 @@ const openApiPath = `umbraco/openapi/${documentName}.json`;
 // Start notifying user we are generating the TypeScript client
 console.log(chalk.green("Generating OpenAPI client..."));
 
-function getUniqueIdentifier() {
-    const sanitize = (name) => name.replace(/[^a-zA-Z0-9\-_.]/g, "") || "default";
-
-    try {
-        const gitDir = execSync("git rev-parse --git-dir", { encoding: "utf-8" }).trim();
-
-        // Check if this is a worktree
-        if (gitDir.includes("worktrees")) {
-            const parts = gitDir.split(/[\\/]/);
-            const worktreeIndex = parts.findIndex((p) => p === "worktrees");
-            if (worktreeIndex >= 0 && worktreeIndex + 1 < parts.length) {
-                return sanitize(parts[worktreeIndex + 1]);
-            }
-        }
-
-        // Main worktree - use branch name
-        const branch = execSync("git branch --show-current", { encoding: "utf-8" }).trim();
-        return sanitize(branch || "detached");
-    } catch {
-        return "default";
-    }
+// Get the dev port already assigned to this worktree by the demo site (via
+// Umbraco.Community.WorktreeDevPort). The site must already be running.
+let port;
+try {
+    port = getPort();
+} catch (error) {
+    console.error(chalk.red(`ERROR: ${error.message}`));
+    process.exit(1);
 }
 
-// Get named pipe path based on git worktree/branch
-const identifier = getUniqueIdentifier();
-const pipeName = `umbraco.demosite.${identifier}`;
-const socketPath = process.platform === "win32" ? `\\\\.\\pipe\\${pipeName}` : `/tmp/${pipeName}`;
+console.log(chalk.cyan(`Using port ${port} for this worktree`));
+console.log(`Fetching ${chalk.yellow(`https://127.0.0.1:${port}/${openApiPath}`)}`);
 
-console.log(chalk.cyan(`Using named pipe: ${pipeName}`));
-console.log(`Fetching ${chalk.yellow(`pipe://${pipeName}/${openApiPath}`)}`);
-
-// Fetch OpenAPI spec via named pipe
+// Fetch OpenAPI spec over HTTPS using the ASP.NET Core dev cert (self-signed, so skip verification).
+// The Host header is pinned to "localhost" (rather than the real 127.0.0.1:<port>) so the server's
+// generated OpenAPI doc — and the client baseUrl hey-api derives from it — doesn't bake in this
+// worktree's own ephemeral port.
 const specData = await new Promise((resolve, reject) => {
-    http.get({ socketPath, path: `/${openApiPath}` }, (res) => {
-        let data = "";
-        res.setEncoding("utf8");
-        res.on("data", (chunk) => (data += chunk));
-        res.on("end", () => {
-            res.statusCode === 200 ? resolve(data) : reject(new Error(`HTTP ${res.statusCode} ${res.statusMessage}`));
-        });
-    }).on("error", reject);
+    https
+        .get(
+            {
+                hostname: "127.0.0.1",
+                port,
+                path: `/${openApiPath}`,
+                rejectUnauthorized: false,
+                headers: { Host: "localhost" },
+            },
+            (res) => {
+                let data = "";
+                res.setEncoding("utf8");
+                res.on("data", (chunk) => (data += chunk));
+                res.on("end", () => {
+                    res.statusCode === 200 ? resolve(data) : reject(new Error(`HTTP ${res.statusCode} ${res.statusMessage}`));
+                });
+            }
+        )
+        .on("error", reject);
 });
 
 console.log(`OpenAPI spec fetched successfully`);

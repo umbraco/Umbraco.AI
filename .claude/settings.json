@@ -34,6 +34,10 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "umbraco-cms-backoffice-skills@umbraco-backoffice-marketplace": true,
+    "umbraco-claude-playbook@umbraco-claude-playbook": true
+  },
   "extraKnownMarketplaces": {
     "umbraco-backoffice-marketplace": {
       "source": {
@@ -41,9 +45,12 @@
         "url": "https://github.com/umbraco/Umbraco-CMS-Backoffice-Skills.git",
         "ref": "main"
       }
+    },
+    "umbraco-claude-playbook": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/mattbrailsford/umbraco-claude-playbook.git"
+      }
     }
-  },
-  "enabledPlugins": {
-    "umbraco-cms-backoffice-skills@umbraco-backoffice-marketplace": true
   }
 }

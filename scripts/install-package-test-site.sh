@@ -232,6 +232,9 @@ dotnet add package Umbraco.AI.Google $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Amazon..."
 dotnet add package Umbraco.AI.Amazon $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.Alibaba..."
+dotnet add package Umbraco.AI.Alibaba $PRERELEASE_FLAG
+
 echo "  Installing Umbraco.AI.MicrosoftFoundry..."
 dotnet add package Umbraco.AI.MicrosoftFoundry $PRERELEASE_FLAG
 
@@ -244,8 +247,17 @@ dotnet add package Umbraco.AI.HuggingFace $PRERELEASE_FLAG
 echo "  Installing Umbraco.AI.Mistral..."
 dotnet add package Umbraco.AI.Mistral $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.Moonshot..."
+dotnet add package Umbraco.AI.Moonshot $PRERELEASE_FLAG
+
+echo "  Installing Umbraco.AI.OpenRouter..."
+dotnet add package Umbraco.AI.OpenRouter $PRERELEASE_FLAG
+
 echo "  Installing Umbraco.AI.TogetherAI..."
 dotnet add package Umbraco.AI.TogetherAI $PRERELEASE_FLAG
+
+echo "  Installing Umbraco.AI.ZAI..."
+dotnet add package Umbraco.AI.ZAI $PRERELEASE_FLAG
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI.Prompt..."

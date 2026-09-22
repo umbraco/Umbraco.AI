@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **agent-ui,copilot:** Rename the empty-state slot to empty-state-message ([7b7445a](https://github.com/umbraco/Umbraco.AI/commit/7b7445a7596686f1908273cbe4b7c1261f23117c))
 
+## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.2...Umbraco.AI.Agent.UI@18.0.4) (2026-09-10)
+
+### fix
+
+* **agent-ui:** Re-arm auto-follow when a consumer swaps the message source ([0adb51a](https://github.com/umbraco/Umbraco.AI/commit/0adb51a96200b95fb77f28e39d79c79a2096dabd))
+* **agent-ui:** Stop chat auto-scroll from overriding a manual scroll during streaming ([87e06b1](https://github.com/umbraco/Umbraco.AI/commit/87e06b1a0bf07de8af91f40d50b06761277473c3))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([edadf41](https://github.com/umbraco/Umbraco.AI/commit/edadf41d9a20c38d16cbda44336a57d99edc0d4c))
+
 ## [18.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.1...Umbraco.AI.Agent.UI@18.0.2) (2026-08-17)
 
 ### fix

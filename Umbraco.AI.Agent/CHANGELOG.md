@@ -70,6 +70,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### refactor
 
 * **core,agent,copilot-workspace:** Render entity pickers as flat rows ([601fadb](https://github.com/umbraco/Umbraco.AI/commit/601fadb0b33aeb9c27fbde4b774bd000e0e4f5a6))
+
+## [18.1.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.4...Umbraco.AI.Agent@18.1.6) (2026-09-10)
+
+### fix
+
+* **agent,core:** Make client-ready dual-reachable to fix hanging agent-load promise ([635e5f2](https://github.com/umbraco/Umbraco.AI/commit/635e5f24ed8f28a9042ae9c121ed40602d99d015))
+* **agent:** Populate runtime context asynchronously on the Copilot chat path ([62dc072](https://github.com/umbraco/Umbraco.AI/commit/62dc072479a93ea4fd49ec126cad0efdd6406d5b))
+* **core,agent:** Turn on throwOnError so a failed request always shows a notification ([ff9cb17](https://github.com/umbraco/Umbraco.AI/commit/ff9cb17b4bec6515ce23a26d71f61e9510550543))
+* **frontend,agent,agent-ui:** Stop custom elements double-registering in the backoffice ([edadf41](https://github.com/umbraco/Umbraco.AI/commit/edadf41d9a20c38d16cbda44336a57d99edc0d4c))
+
 ## [18.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.3...Umbraco.AI.Agent@18.1.4) (2026-08-17)
 
 ### feat

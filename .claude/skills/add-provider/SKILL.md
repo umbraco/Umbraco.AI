@@ -23,11 +23,12 @@ User asks to "add a provider for X", "wire up Y to Umbraco.AI", or similar.
 
 1. Research the vendor's .NET SDK
 2. Decide capabilities and scope
-3. Create feature branch
+3. Set up an isolated worktree on the target version line
 4. Scaffold the provider
 5. Register across the monorepo
 6. Build + smoke-test in the demo site
 7. Commit + push + PR
+8. Consider backporting to other active version lines
 
 ---
 
@@ -60,13 +61,19 @@ Match the user's intent. By default, if unsure:
 
 Skip unusual capabilities (moderation, OCR, image gen) unless Umbraco.AI.Core has a capability base class for them. Check `Umbraco.AI/src/Umbraco.AI.Core/Providers/` for `AI*CapabilityBase` classes before promising support.
 
-## 3. Feature branch
+## 3. Set up an isolated worktree
 
-```bash
-git checkout -b feature/<provider-id>-provider
-```
+Branches are version-prefixed (`vN/dev`, `vN/main`, `vN/feature/<name>`, …) — see the root `CLAUDE.md` Branch Model. A new provider is a feature, so it targets a single version line's `vN/feature/<name>` branch, normally cut from the latest active line's `vN/dev` (currently `v18/dev`) unless the user asks to start from an older supported line instead.
+
+Per the repo's mandatory worktree workflow, use the `EnterWorktree` tool rather than a bare `git checkout -b`:
+
+1. `EnterWorktree` with a descriptive name (e.g. `add-<provider-id>-provider`) — this creates `vN/feature/add-<provider-id>-provider` off the current default branch and switches the session into it.
+2. If it branched from the wrong version line (it follows whatever branch/default was current, not necessarily the latest), exit and remove it, `git checkout vN/dev` (the intended line) in the original checkout, then `EnterWorktree` again.
+3. Keep a tracking task open (`Worktree: <name>` — path + branch) per `CLAUDE.local.md` so the location survives context compression.
 
 ## 4. Scaffold the provider
+
+**`<ProviderName>` is the vendor/company name, never the model name.** E.g. `Umbraco.AI.ZAI` and `Umbraco.AI.Alibaba` (Qwen), not `Umbraco.AI.GLM` or `Umbraco.AI.Qwen` — a vendor may ship several model families under one provider package, so naming it after whichever model shipped first is wrong even if that's the only model supported today.
 
 Directory layout (use Anthropic as the template):
 
@@ -85,9 +92,9 @@ Umbraco.AI.<ProviderName>/
 │       └── lang/en.js
 ├── Umbraco.AI.<ProviderName>.slnx
 ├── Directory.Build.props
-├── version.json                                     # start at "1.0.0"
+├── version.json                                     # start at "N.0.0", N = the target branch's CMS major (NOT "1.0.0")
 ├── changelog.config.json                            # { "scopes": ["<provider-id>"] }
-├── CHANGELOG.md
+├── CHANGELOG.md                                      # must include an actual initial entry, not just the header
 ├── README.md
 ├── CLAUDE.md
 ├── umbraco-marketplace.json
@@ -179,9 +186,9 @@ The `uaiFields.<providerId><PropertyName>Label` / `Description` convention is wh
 Copy Anthropic's versions and adjust:
 - **`Directory.Build.props`** — change `<Product>` and `<PackageProjectUrl>`. Shared logo reference (`../assets/logo-128.png`) and LICENSE stay as-is. The `..` path resolves only because every provider sits one level under the repo root — keep the provider folder at the top level, don't nest it.
 - **`Umbraco.AI.<ProviderName>.slnx`** — single project reference
-- **`version.json`** — start at `"1.0.0"`, copy rest verbatim
+- **`version.json`** — start at `"N.0.0"` where N is the target branch's CMS major (e.g. `18.0.0` on `v18/dev`, `17.0.0` on `v17/dev`) — **not** `"1.0.0"`. Package major versions track the CMS major version (see root `CLAUDE.md` "Major version alignment"); every other file/field that mentions a version floor (README/marketplace-readme "Umbraco.AI X.0.0+", CHANGELOG.md's version heading) must use the same N, not `1.0.0`.
 - **`changelog.config.json`** — `{ "scopes": ["<provider-id>"] }` — this is what makes the scope valid for commitlint
-- **`CHANGELOG.md`** — Initial release entry with today's date
+- **`CHANGELOG.md`** — must have a real initial entry, not just the boilerplate header: `## [N.0.0](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.<ProviderName>@N.0.0) (unreleased)` followed by `### feat` / `* **<provider-id>:** Add <ProviderName> AI provider`. After scaffolding, diff it against a reference provider's CHANGELOG.md to confirm the entry is actually there — it's easy to copy the header and forget the entry.
 - **`README.md`** — describe features, models, requirements
 - **`CLAUDE.md`** — per-package dev guide. Note: the Anthropic/OpenAI CLAUDE.mds have slightly stale examples — always read actual source for current conventions.
 - **`umbraco-marketplace.json`** — `Category: "Artificial Intelligence"`, list provider-appropriate tags. Update `DocumentationUrl` to `https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.<ProviderName>` and `RelatedPackages` to point to two or three other providers.
@@ -248,12 +255,16 @@ git commit -m "feat(<provider-id>): Add <ProviderName> AI provider"
 git add azure-pipelines.yml scripts/install-demo-site.{sh,ps1} scripts/install-package-test-site.{sh,ps1}
 git commit -m "chore(<provider-id>,ci): Register <ProviderName> in install scripts and CI pipeline"
 
-git push -u origin feature/<provider-id>-provider
+git push -u origin vN/feature/add-<provider-id>-provider
 ```
 
 Commitlint enforces: sentence-case subject, scope declared in a `changelog.config.json`, valid types. Your new `<provider-id>` scope is picked up automatically from the `changelog.config.json` you added.
 
-Then open the PR via the URL GitHub prints, or `gh pr create`.
+Open the PR against `vN/dev` (the same line the branch was cut from) via the URL GitHub prints, or `gh pr create --base vN/dev`.
+
+## 8. Consider backporting
+
+Per the root `CLAUDE.md` "Keep Active Versions in Sync" policy: before treating the new provider as done, ask the user whether it should also ship on the other active version line(s) (e.g. a provider added on `v18/dev` may also be wanted on `v17/dev`). If so, follow the repo's Backport Workflow — branch a fresh `vN/feature/<name>` off the older line's `vN/dev` (not a forward-merge) and repeat steps 3-7 there. Respect each line's support phase (security phase → skip; EOL → skip unless explicitly requested).
 
 ## Gotchas (learned from adding Mistral)
 
@@ -264,6 +275,7 @@ Then open the PR via the URL GitHub prints, or `gh pr create`.
 - **Modeld filtering relies on conventions** — if the vendor adds a new model family next year, your regex won't cover it. Prefer broader patterns (e.g., `^mistral-` catches all current and future `mistral-*` families) over hard-coded model lists.
 - **Vendor SDK may not bake modelId into its IChatClient** — use the `ChatClientBuilder.ConfigureOptions(o => o.ModelId ??= …)` pattern in that case. Same for embeddings with `EmbeddingGeneratorBuilder`.
 - **`npm install` sometimes times out** on first run — `npm install --fetch-timeout=600000` is the workaround.
+- **Learned from a sweep of Alibaba/Moonshot/OpenRouter/ZAI:** two of those four providers shipped with `version.json` left at `"1.0.0"` (this doc used to say to start there) instead of the CMS-major-aligned version, and two others were scaffolded with an empty `CHANGELOG.md` (header only, no initial entry). Both are now fixed on `v17/dev`/`v18/dev`, and this doc's instructions above are corrected — but if you're eyeballing an existing provider as a reference, verify it actually matches convention before copying from it; don't assume every already-merged provider is a clean example.
 
 ## Reference providers (by complexity)
 

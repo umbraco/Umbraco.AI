@@ -23,6 +23,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - No C# code
 - No backend APIs (uses `Umbraco.AI.Agent` APIs)
 - No database access
+
+### Tool capability boundaries (verify against current manifests before relying on this)
+
+This has come up as a live correction more than once, so it's worth stating even though it hasn't been checked against the current tool-registration code as of this note:
+
+- The **contextual copilot** (this package) is not meant to call destructive backend tools — only contextual frontend tools, or read-only backend tools.
+- **Copilot Workspace** (the persisted-conversation/projects surface being built on top of `Umbraco.AI.Agent`, see `project_assistant_section` in memory) does not have frontend tools at all.
+
+Before building a tool for either surface, confirm which bucket it falls into by checking the actual manifest/tool-registration code rather than assuming — this note records the rule that's been stated in chat, not a verified capability matrix.
 - No Umbraco Composer
 - No shared chat components (provided by `Umbraco.AI.Agent.UI`)
 

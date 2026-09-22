@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Media;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Extensions;
 
@@ -119,7 +120,27 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
                     }
                 }
 
-                var handler = await FindHandlerAsync(dataContent.MediaType, cancellationToken);
+                var effectiveMimeType = dataContent.MediaType;
+                var handler = await FindHandlerAsync(effectiveMimeType, cancellationToken);
+
+                if (handler is null && filename is not null)
+                {
+                    // The browser/client-reported MIME type is frequently wrong for the exact
+                    // file types this feature targets (e.g. Windows often reports .md as
+                    // application/octet-stream, and .csv as application/vnd.ms-excel). Fall back
+                    // to resolving a MIME type from the filename's extension and retry.
+                    var extension = Path.GetExtension(filename);
+                    if (AIMediaExtensionResolver.TryGetMediaType(extension, out var extensionMimeType))
+                    {
+                        var extensionHandler = await FindHandlerAsync(extensionMimeType, cancellationToken);
+                        if (extensionHandler is not null)
+                        {
+                            handler = extensionHandler;
+                            effectiveMimeType = extensionMimeType;
+                        }
+                    }
+                }
+
                 if (handler is null)
                 {
                     // No handler for this type — pass through (images, PDFs, etc.)
@@ -129,7 +150,7 @@ internal sealed class AIFileProcessingChatClient : DelegatingChatClient
 
                 var processingResult = await handler.ProcessAsync(
                     dataContent.Data,
-                    dataContent.MediaType,
+                    effectiveMimeType,
                     filename,
                     cancellationToken);
 

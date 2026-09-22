@@ -271,6 +271,12 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
                             "RemoveItem requires a 'blockKey' GUID argument.");
                     }
 
+                    var removeValidation = handler.ValidateRemoveItem(leafValue, blockKey, context);
+                    if (!removeValidation.IsValid)
+                    {
+                        return AIPropertyValueDispatchResult.Fail(removeValidation.Error!);
+                    }
+
                     var newValue = await handler.RemoveItemAsync(leafValue, blockKey, context, cancellationToken).ConfigureAwait(false);
                     return AIPropertyValueDispatchResult.Ok(newValue);
                 }
@@ -344,8 +350,14 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher
             return false;
         }
 
-        var raw = node.GetValue<string?>();
-        return Guid.TryParse(raw, out value);
+        try
+        {
+            return Guid.TryParse(node.GetValue<string?>(), out value);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static bool TryReadIntArg(JsonNode? args, string propertyName, out int value)

@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Umbraco.Cms.Core.Services;
+using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 
@@ -25,8 +26,8 @@ namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 /// </remarks>
 public sealed class RichTextPropertyValueHandler : IAIPropertyValueHandler
 {
-    private const string EditorSchemaAlias = "Umbraco.RichText";
-    private const string InnerBlocksLayoutKey = "Umbraco.RichText.Blocks";
+    private const string EditorSchemaAlias = CmsConstants.PropertyEditors.Aliases.RichText;
+    private const string InnerBlocksLayoutKey = CmsConstants.PropertyEditors.Aliases.RichText;
     private const string MarkupPropertyName = "markup";
     private const string BlocksPropertyName = "blocks";
 

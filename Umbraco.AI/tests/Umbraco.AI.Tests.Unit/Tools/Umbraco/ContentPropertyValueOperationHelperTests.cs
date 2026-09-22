@@ -351,7 +351,9 @@ public class ContentPropertyValueOperationHelperTests
         capturedModel.ShouldNotBeNull();
         var property = capturedModel!.Properties.Single();
         property.Alias.ShouldBe("contentBlocks");
-        ((JsonElement)property.Value!).GetString().ShouldBe("new value");
+        // Normalized via NormalizeIncomingValue (umbraco/Umbraco.AI#408) -- a JSON string arrives as a
+        // plain CLR string, not a JsonElement, matching what the real backoffice save path produces.
+        property.Value.ShouldBe("new value");
 
         // ContentEditingServiceBase.TryGetAndValidateContentType requires an invariant Variants entry
         // (Culture and Segment both null) for an invariant content type, or the whole update fails with
@@ -402,13 +404,13 @@ public class ContentPropertyValueOperationHelperTests
         capturedModel!.Properties.Count().ShouldBe(3);
 
         var root = capturedModel.Properties.Single(p => p.Alias == "contentBlocks");
-        ((JsonElement)root.Value!).GetString().ShouldBe("new value");
+        root.Value.ShouldBe("new value");
 
         var title = capturedModel.Properties.Single(p => p.Alias == "title");
-        ((JsonElement)title.Value!).GetString().ShouldBe("Old Title");
+        title.Value.ShouldBe("Old Title");
 
         var employee = capturedModel.Properties.Single(p => p.Alias == "employee");
-        ((JsonElement)employee.Value!).GetString().ShouldBe("Old Employee");
+        employee.Value.ShouldBe("Old Employee");
     }
 
     [Fact]
@@ -449,4 +451,107 @@ public class ContentPropertyValueOperationHelperTests
         capturedModel.ShouldNotBeNull();
         capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "contentBlocks", "title" });
     }
+
+    #region umbraco/Umbraco.AI#408 -- JsonElement values must be normalized before reaching FromEditor
+
+    [Fact]
+    public async Task ExecuteAsync_DispatcherReturnsJsonBoolean_NormalizesToClrBoolNotJsonElement()
+    {
+        // Umbraco.TrueFalse's FromEditor pattern-matches on bool/int/string -- an un-normalized JsonElement
+        // matches none of those and silently coerces to false, even though the dispatcher said "true".
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        var contentTypeKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(CreateContentMock(contentTypeKey, 0).Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(JsonValue.Create(true)));
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+
+        var result = await ExecuteAsync(key, [RootSegment]);
+
+        result.Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        var property = capturedModel!.Properties.Single(p => p.Alias == "contentBlocks");
+        property.Value.ShouldBeOfType<bool>();
+        property.Value.ShouldBe(true);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OtherPropertyStoresTrueFalseValueOne_ResubmitsAsClrIntNotJsonElement()
+    {
+        // Reproduces the latent half of umbraco/Umbraco.AI#408: a TrueFalse property currently storing
+        // `1` (true) gets resubmitted here as an untouched sibling on every save. Before the fix, the
+        // round-tripped value stayed a JsonElement -- which FromEditor's bool/int/string switch doesn't
+        // match -- so ANY save through these tools would silently flip an untouched `true` toggle back
+        // to `false`, not just an explicit write to it.
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        var contentTypeKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+
+        var otherProperties = new List<IProperty> { CreatePropertyMock("isFeatured", 1).Object };
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(contentTypeKey, null, otherProperties: otherProperties).Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(JsonValue.Create("new value")));
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+
+        var result = await ExecuteAsync(key, [RootSegment]);
+
+        result.Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        var isFeatured = capturedModel!.Properties.Single(p => p.Alias == "isFeatured");
+        isFeatured.Value.ShouldBeOfType<int>();
+        isFeatured.Value.ShouldBe(1);
+    }
+
+    [Fact]
+    public void NormalizeIncomingValue_JsonArrayOfObjects_ReturnsJsonArrayNotJsonElement()
+    {
+        // Umbraco.MultiNodeTreePicker's FromEditor requires `editorValue.Value is JsonArray` -- an
+        // un-normalized JsonElement array never satisfies that type check either, and the picker silently
+        // clears instead of erroring.
+        var value = JsonDocument.Parse("""[{"type":"document","unique":"11111111-1111-1111-1111-111111111111"}]""").RootElement;
+
+        var normalized = ContentPropertyValueOperationHelper.NormalizeIncomingValue(value);
+
+        normalized.ShouldBeOfType<JsonArray>();
+        ((JsonArray)normalized!).Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData("true", true)]
+    [InlineData("false", false)]
+    [InlineData("42", 42)]
+    [InlineData("\"Hello World\"", "Hello World")]
+    public void NormalizeIncomingValue_ScalarShapes_ReturnClrPrimitivesNotJsonElement(string json, object expected)
+    {
+        var value = JsonDocument.Parse(json).RootElement;
+
+        var normalized = ContentPropertyValueOperationHelper.NormalizeIncomingValue(value);
+
+        normalized.ShouldBe(expected);
+    }
+
+    #endregion
 }

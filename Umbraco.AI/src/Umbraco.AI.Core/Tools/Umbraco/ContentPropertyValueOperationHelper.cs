@@ -7,6 +7,7 @@ using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Infrastructure.Serialization;
 using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -119,7 +120,9 @@ internal static class ContentPropertyValueOperationHelper
             new()
             {
                 Alias = rootAlias,
-                Value = dispatchResult.NewRootValue?.Deserialize<JsonElement>(),
+                Value = dispatchResult.NewRootValue is { } newRootValue
+                    ? NormalizeIncomingValue(newRootValue.Deserialize<JsonElement>())
+                    : null,
                 Culture = culture,
                 Segment = segment,
             },
@@ -140,7 +143,12 @@ internal static class ContentPropertyValueOperationHelper
 
             var propertyCulture = property.PropertyType.VariesByCulture() ? culture : null;
             var currentValue = ToJsonNode(property.GetValue(propertyCulture))?.Deserialize<JsonElement>();
-            properties.Add(new PropertyValueModel { Alias = property.Alias, Value = currentValue, Culture = propertyCulture });
+            properties.Add(new PropertyValueModel
+            {
+                Alias = property.Alias,
+                Value = currentValue is { } cv ? NormalizeIncomingValue(cv) : null,
+                Culture = propertyCulture,
+            });
         }
 
         var updateModel = new ContentUpdateModel
@@ -198,4 +206,24 @@ internal static class ContentPropertyValueOperationHelper
                 return JsonSerializer.SerializeToNode(value);
         }
     }
+
+    /// <summary>
+    /// Converts a <see cref="JsonElement"/> — the shape a tool's JSON arguments and a round-tripped
+    /// current value both arrive as — into the same CLR shape the real backoffice save path produces,
+    /// by reusing <see cref="JsonObjectConverter"/> (the converter the Management API registers for its
+    /// <c>object</c>-typed property-value model). Left as a raw <see cref="JsonElement"/>, a JSON
+    /// <c>true</c>/number/array doesn't match the concrete CLR types or <see cref="JsonNode"/> subtypes
+    /// that some property editors' <c>FromEditor</c> override pattern-matches on (e.g.
+    /// <c>Umbraco.TrueFalse</c> checks for <c>bool</c>/<c>int</c>/<c>string</c>,
+    /// <c>Umbraco.MultiNodeTreePicker</c> checks for <see cref="JsonArray"/>) — those checks silently
+    /// fall through to a default/empty value instead of erroring, so the save reports success while the
+    /// value doesn't persist. See umbraco/Umbraco.AI#408.
+    /// </summary>
+    internal static object? NormalizeIncomingValue(JsonElement value)
+        => JsonSerializer.Deserialize<object?>(value.GetRawText(), NormalizationSerializerOptions);
+
+    private static readonly JsonSerializerOptions NormalizationSerializerOptions = new()
+    {
+        Converters = { new JsonObjectConverter() },
+    };
 }

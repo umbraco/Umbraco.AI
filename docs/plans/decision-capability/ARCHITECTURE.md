@@ -42,6 +42,12 @@ yes/no/choice/score decision.** This capability introduces
 `Umbraco.AI.Core.Decision.IAIDecisionClient` — the first client type in this
 codebase that isn't an M.E.AI type Umbraco AI is merely wrapping.
 
+`AskAsync` intentionally doesn't follow this repo's `[Action][Entity]Async`
+naming convention (root `CLAUDE.md`'s "Async Methods" section) — it matches M.E.AI's own client
+method naming (`GetResponseAsync`, `GetTextAsync`, etc.) as precedent, since
+`IAIDecisionClient` sits at the same layer as those M.E.AI client types even
+though it isn't one. Not an oversight.
+
 ```csharp
 namespace Umbraco.AI.Core.Decision;
 
@@ -82,7 +88,7 @@ public sealed class AIDecisionResponse
     public double? Score { get; init; }           // set iff Kind == Score
     public required double Confidence { get; init; } // 0.0–1.0, always present
     public string? ModelId { get; init; }
-    public AIDecisionUsage? Usage { get; init; }
+    public UsageDetails? Usage { get; init; } // Microsoft.Extensions.AI — see T2 review note in DECISION-LOG.md
 }
 ```
 

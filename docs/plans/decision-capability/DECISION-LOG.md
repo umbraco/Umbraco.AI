@@ -99,3 +99,22 @@ Discovered/decided while running `bdd-specs`:
   `HttpClient` pipeline and the real spike client class — the closest
   automatable proxy for "real entry point" without spending a real API call
   in every test run.
+
+## 2026-09-23 — T2 review: `AIDecisionResponse.Usage` reuses M.E.AI's `UsageDetails`
+
+Found/decided during T2's review:
+
+- `AIDecisionResponse.Usage` is `Microsoft.Extensions.AI.UsageDetails`, not a
+  fresh Umbraco-owned `AIDecisionUsage` type. The tracking pipeline this
+  capability must plug into (`AIOperationScope.CompleteAsync`,
+  `AIOperationTracker.RecordUsageAsync`, `AIUsageRecordResult.Usage`,
+  `AIAuditResponse.Usage`, `AITrackedOperationResult.Usage`) all take
+  `UsageDetails` already, and `ImageGeneration.AITrackedImageResult.Usage`
+  sets the precedent of using `UsageDetails` even on an Umbraco-owned
+  wrapper type. A custom type here would have forced T7's
+  `AITrackingDecisionClient` to write an unplanned converter, and would have
+  silently dropped `CachedInputTokenCount`/`ReasoningTokenCount`/
+  `AdditionalCounts` that existing usage-recording/dashboard code reads via
+  `UsageDetailsExtensions`. "`IAIDecisionClient` isn't an M.E.AI wrapper" is
+  about the client contract, not every field's data type — `AIDecisionUsage`
+  is deleted.

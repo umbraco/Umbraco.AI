@@ -96,7 +96,7 @@ provider.
   `AIImageGenerationMiddleware()` is today.
   depends-on: T7.
 
-- [ ] **T9** — story: DC-1 (AC4, AC5, AC6) — **wire task**. Using a minimal
+- [x] **T9** — story: DC-1 (AC4, AC5, AC6) — **wire task**. Using a minimal
   test-double `IAICapability` with `Kind = AICapability.Decision` (does not
   need T5's real base class), write and pass the specs proving
   `AIConnectionService`'s capability listing / `GetConnectionsByCapabilityAsync`

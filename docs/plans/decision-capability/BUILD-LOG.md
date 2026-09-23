@@ -97,3 +97,13 @@
      small suggested cleanups (null/blank-alias guard, a misleading `ConfigureLegacy` name,
      inaccurate test doc comments).
   PASS on a 4th, dedicated confirmation pass — 1202/1202 full suite (unit + integration).
+
+- **T9** — `3cb3ff66` — Proved (didn't assume) that `AIConnectionService`/`AIProfileService`'s
+  generic `IsCapabilityEnabled(cap.Kind)` gating already covers `AICapability.Decision`
+  correctly, with zero production changes. FAILed once: the 5 pre-written specs used a
+  mocked `IAIExperimentalFeatures`, but PLAN.md's acceptance criteria explicitly required a
+  real one. Fixed: built a real `AIExperimentalFeatures` (backed by a mocked
+  `IOptionsMonitor<AIExperimentalOptions>`) for just those 5 tests via local-only helpers,
+  left every other test's shared mock untouched, added a 6th test for the previously-uncovered
+  "enabled" case on `GetConnectionsByCapabilityAsync`. PASS on confirmation — 1171/1171 unit +
+  32/32 integration.

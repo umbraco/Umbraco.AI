@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Moq;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.ImageGeneration;
@@ -14,6 +15,7 @@ using Umbraco.AI.Tests.Common.Fakes;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Exercises the experimental image-generation capability surface
+#pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability surface
 
 namespace Umbraco.AI.Tests.Unit.Providers;
 
@@ -160,6 +162,45 @@ public class CapabilitySettingsRoundTripTests
 
         // Assert
         AssertApplied(recorder.ReceivedOptions.ShouldHaveSingleItem()?.AdditionalProperties);
+    }
+
+    /// <summary>
+    /// Decision has no factory/service yet (that lands in a later task), so unlike its three siblings
+    /// above this goes through the capability's own <see cref="IAIDecisionCapability"/> seam directly
+    /// rather than a real <c>AIDecisionClientFactory</c> — the earliest real entry point that exists
+    /// today for "capability settings reach the request".
+    /// </summary>
+    [Fact]
+    public async Task Decision_CapabilitySettings_ReachTheRequestOptions()
+    {
+        // Arrange
+        var recorder = new FakeDecisionClient();
+        var provider = new FakeAIProvider(ProviderId, "Fake Provider");
+        var capability = new TestDecisionCapability(provider, recorder);
+        var capabilitySettings = new TestCapabilitySettings { Applied = StoredValue };
+        var callerOptions = new AIDecisionOptions();
+
+        // Act
+        var client = await ((IAIDecisionCapability)capability).CreateClientAsync(
+            ConnectionSettings, capabilitySettings, ModelId, CancellationToken.None);
+        await client.AskAsync(
+            new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" },
+            callerOptions);
+
+        // Assert — the hook ran once, and fell back to the model the client was created for since the
+        // caller's options didn't set one.
+        var (appliedSettings, appliedModelId) = capability.AppliedCalls.ShouldHaveSingleItem();
+        appliedSettings.Applied.ShouldBe(StoredValue);
+        appliedModelId.ShouldBe(ModelId);
+
+        // The mutated per-request copy — not just the hook's inputs — is what actually reached the
+        // inner client, proving the applied value survives the trip rather than only proving the hook
+        // ran.
+        recorder.ReceivedRequests.ShouldHaveSingleItem().Options!.ModelId.ShouldBe(AppliedModelId);
+
+        // The caller's own options instance is never mutated — Clone() copied it rather than sharing
+        // the reference, so only the per-request copy carries the applied value.
+        callerOptions.ModelId.ShouldBeNull();
     }
 
     [Fact]
@@ -319,6 +360,40 @@ public class CapabilitySettingsRoundTripTests
             ImageGenerationOptions options)
             => Record(options.AdditionalProperties ??= new AdditionalPropertiesDictionary(), capabilitySettings, modelId);
     }
+
+    private sealed class TestDecisionCapability(IAIProvider provider, IAIDecisionClient inner)
+        : AIDecisionCapabilityBase<FakeProviderSettings, TestCapabilitySettings>(provider)
+    {
+        /// <summary>Every (settings, modelId) pair the hook was called with — the observable side
+        /// channel this test asserts on, since <see cref="AIDecisionOptions"/> carries no bag of its
+        /// own for a provider to stash a value into (unlike the other capabilities' request options).</summary>
+        public List<(TestCapabilitySettings Settings, string? ModelId)> AppliedCalls { get; } = [];
+
+        protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+            FakeProviderSettings settings,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(Models);
+
+        protected override IAIDecisionClient CreateClient(FakeProviderSettings settings, string? modelId)
+            => inner;
+
+        protected override void ApplyCapabilitySettings(
+            TestCapabilitySettings capabilitySettings,
+            string? modelId,
+            AIDecisionOptions options)
+        {
+            AppliedCalls.Add((capabilitySettings, modelId));
+
+            // Mutate the per-request copy in place, exactly like the other capabilities' fixtures mutate
+            // their options' AdditionalProperties — AIDecisionOptions is a mutable class (mirroring
+            // M.E.AI's own ChatOptions/SpeechToTextOptions), not an immutable record. ModelId is
+            // repurposed here purely as the fixture's stand-in "applied" slot, since AIDecisionOptions
+            // carries no other bag of its own to stash a value into.
+            options.ModelId = AppliedModelId;
+        }
+    }
+
+    private const string AppliedModelId = "applied-model";
 
     private static IReadOnlyList<AIModelDescriptor> Models =>
         [new AIModelDescriptor(new AIModelRef(ProviderId, ModelId), "Fake Model 1")];

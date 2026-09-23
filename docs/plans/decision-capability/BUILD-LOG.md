@@ -57,3 +57,20 @@
      mutates the clone via the hook, returns the clone — line-for-line the same shape as
      `CapabilitySettingsChatClient.Apply()`. PASS on the third review pass, independently
      verified (1156/1156 full suite).
+
+- **T7** — `c1fce312` — Remaining `Decision/` plumbing: client factory, middleware collection,
+  tracking client/middleware, OpenTelemetry middleware, error classifier, executing/executed
+  notifications, scoped profile/inline clients — plus unplanned-but-necessary supporting
+  pieces (`IAIConfiguredDecisionCapability`/`AIConfiguredDecisionCapability`,
+  `Constants.FeatureTypes.InlineDecision`, a minimal `AIDecisionBuilder` that T8 should extend
+  not replace). FAILed once: no committed test locked in the critical wrapping order (T4's
+  carry-forward warning — `ValidatingDecisionClient` must be outermost, outside the error
+  classifier/tracking, or caller errors get miscategorized as provider failures), plus the
+  usual stranded-spec-file gap. Fixed: added `AIDecisionClientFactoryTests.cs` (4 tests
+  through the *real* factory — invalid question → `ArgumentException` not
+  `AIProviderException`; provider never invoked; tracker never invoked; genuine provider
+  failure still becomes `AIProviderException`), fixed a stale round-trip test to go through
+  the real factory like its siblings, committed `AITrackingDecisionClientTests.cs` alongside.
+  PASS on second pass — reviewer confirmed the ordering-protection reasoning holds (traced
+  both `AIErrorClassifyingDecisionClient`'s catch behavior and the tracker wiring) and
+  reproduced 1161/1161 full suite + Integration 30/30.

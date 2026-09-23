@@ -50,7 +50,7 @@ provider.
   `DeclaredSettingsSpeechToTextClient`/`CapabilitySettingsSpeechToTextClient`.
   depends-on: T5. (Built together with T5 — inseparable, see BUILD-LOG.)
 
-- [ ] **T7** — story: DC-3 (AC2). Add the remaining `Decision/` feature-folder
+- [x] **T7** — story: DC-3 (AC2). Add the remaining `Decision/` feature-folder
   plumbing, file-for-file from `SpeechToText/`: `IAIDecisionClientFactory` +
   `AIDecisionClientFactory`, `IAIDecisionMiddleware` +
   `AIDecisionMiddlewareCollection(Builder)`, `AITrackingDecisionClient` +

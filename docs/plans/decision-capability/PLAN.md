@@ -11,9 +11,10 @@ provider.
   comment to stay accurate now that `8` is taken.
   depends-on: none. parallel-group: A
 
-- [ ] **T2** — story: DC-2. Create `Umbraco.AI.Core/Decision/` and add the
+- [x] **T2** — story: DC-2. Create `Umbraco.AI.Core/Decision/` and add the
   core types: `AIDecisionKind`, `AIDecisionQuestion`, `AIDecisionOptions`,
-  `AIDecisionResponse`, `IAIDecisionClient`, `AIDecisionUsage`, and
+  `AIDecisionResponse` (`Usage` is M.E.AI `UsageDetails`, see DECISION-LOG
+  2026-09-23 — not a fresh `AIDecisionUsage` type), `IAIDecisionClient`, and
   `AIDecisionDiagnostics` (`DiagnosticId = "UMBRACOAI_DECISION"`), per
   `ARCHITECTURE.md`'s type sketch. No validation logic yet — plain types.
   depends-on: none. parallel-group: A

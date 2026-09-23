@@ -29,3 +29,31 @@
   miscategorized as provider failures. PLAN.md's T7/T8 entries were updated with explicit
   acceptance criteria for this. Also applied a small suggested fix (`ArgumentNullException.
   ThrowIfNull(question)`) before committing.
+
+- **T5+T6** — `be8bac70` — `IAIDecisionCapability` + 3-arity `AIDecisionCapabilityBase*`, plus
+  `DeclaredSettingsDecisionClient`/`CapabilitySettingsDecisionClient` (built together —
+  inseparable). Also landed: `391d2722` (stranded T3 spec file) and `6ba224f4` (stranded T2
+  spec file), both caught by review as commit-hygiene gaps.
+
+  Took 3 review rounds:
+  1. FAIL — broke an existing test (`CapabilitySettingsSurfaceTests`, a guard that fires
+     whenever a new capability interface appears unregistered) + `AIDecisionOptions` as a
+     sealed class gave `ApplyCapabilitySettings` nothing it could actually change + no
+     round-trip test proved Decision's settings reached a request. Fixed: registered the new
+     `ClientNoun`; converted `AIDecisionOptions`/`AIDecisionQuestion` to records + `with {}`;
+     added a round-trip test.
+  2. FAIL — the record-based fix only solved the *copy* problem, not the *mutate* problem: an
+     immutable record + a `void` hook still can't produce a changed value. Fixed by switching
+     `ApplyCapabilitySettings` to return the new `AIDecisionOptions` (`Func<...>` instead of
+     `Action<...>`).
+  3. **User redirected mid-fix**: since `IAIDecisionClient` stands in for what M.E.AI would
+     provide, its options type should follow M.E.AI's own convention
+     (`ChatOptions`/`SpeechToTextOptions` — mutable classes with `Clone()`), not become a
+     record. Reverted the `Func<...>` approach; `AIDecisionOptions` is a mutable class with
+     `Clone()` (mirroring `ChatOptions.Clone()` exactly); `AIDecisionQuestion` reverted to its
+     original T2 shape (it was never part of the clone-and-mutate lifecycle, converting it was
+     unnecessary); `ApplyCapabilitySettings` is `void` again, byte-for-byte matching the
+     SpeechToText sibling's signature/docs; `CapabilitySettingsDecisionClient.Apply()` clones,
+     mutates the clone via the hook, returns the clone — line-for-line the same shape as
+     `CapabilitySettingsChatClient.Apply()`. PASS on the third review pass, independently
+     verified (1156/1156 full suite).

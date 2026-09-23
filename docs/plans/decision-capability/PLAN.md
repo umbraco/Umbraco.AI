@@ -35,7 +35,7 @@ provider.
   spot `AIErrorClassifyingSpeechToTextClient` wraps for SpeechToText.
   depends-on: T2. parallel-group: B
 
-- [ ] **T5** — story: DC-2 (AC1–AC4), DC-3. Add `IAIDecisionCapability` and
+- [x] **T5** — story: DC-2 (AC1–AC4), DC-3. Add `IAIDecisionCapability` and
   `AIDecisionCapabilityBase` / `AIDecisionCapabilityBase<TSettings>` /
   `AIDecisionCapabilityBase<TSettings, TCapabilitySettings>` to
   `Umbraco.AI.Core/Providers/IAICapability.cs`, mirroring
@@ -44,11 +44,11 @@ provider.
   `[Experimental(AIDecisionDiagnostics.DiagnosticId)]`.
   depends-on: T1, T2.
 
-- [ ] **T6** — story: DC-3 (AC1). Add `DeclaredSettingsDecisionClient` and
+- [x] **T6** — story: DC-3 (AC1). Add `DeclaredSettingsDecisionClient` and
   `CapabilitySettingsDecisionClient<TCapabilitySettings>` to
   `Umbraco.AI.Core/Providers/`, mirroring
   `DeclaredSettingsSpeechToTextClient`/`CapabilitySettingsSpeechToTextClient`.
-  depends-on: T5.
+  depends-on: T5. (Built together with T5 — inseparable, see BUILD-LOG.)
 
 - [ ] **T7** — story: DC-3 (AC2). Add the remaining `Decision/` feature-folder
   plumbing, file-for-file from `SpeechToText/`: `IAIDecisionClientFactory` +

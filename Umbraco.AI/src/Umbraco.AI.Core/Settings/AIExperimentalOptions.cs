@@ -27,4 +27,13 @@ public sealed class AIExperimentalOptions
     /// profiles using it cannot be created, and its REST endpoint returns 404.
     /// </remarks>
     public bool ImageGeneration { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether the decision capability is enabled. Default is <c>false</c>.
+    /// </summary>
+    /// <remarks>
+    /// When disabled the capability is hidden from discovery (not selectable in the profile editor),
+    /// profiles using it cannot be created, and its REST endpoint returns 404.
+    /// </remarks>
+    public bool Decision { get; set; } = false;
 }

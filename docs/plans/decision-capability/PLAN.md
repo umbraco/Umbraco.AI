@@ -83,9 +83,12 @@ provider.
   provider client underneath is never invoked. This is the test that would
   catch T7's ordering mistake described above if it happens anyway.
 
-  Add `IAIDecisionService`/`AIDecisionService`
-  (profile-alias resolution via `IdOrAlias`, mirroring
-  `IAISpeechToTextService`/`AISpeechToTextService`) and register everything
+  Add `IAIDecisionService`/`AIDecisionService` — three overloads:
+  `AskAsync(Guid profileId, ...)`, `AskAsync(string profileAlias, ...)`
+  (profile-alias resolution; no combined "ID or alias" parameter type —
+  mirrors `IAISpeechToTextService`/`AISpeechToTextService`'s actual pattern,
+  not the originally-assumed `IdOrAlias`), and the builder-based
+  `AskAsync(Action<AIDecisionBuilder> configure, ...)` — and register everything
   from T5–T8 in DI: `AIDecisionBuilder` +
   `UmbracoBuilderExtensions.Collections.cs` entries (the
   `builder.AIDecisionMiddleware()` collection-builder accessor), each also

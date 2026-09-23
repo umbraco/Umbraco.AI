@@ -118,3 +118,71 @@ Found/decided during T2's review:
   `UsageDetailsExtensions`. "`IAIDecisionClient` isn't an M.E.AI wrapper" is
   about the client contract, not every field's data type — `AIDecisionUsage`
   is deleted.
+
+## 2026-09-23 — T8 review: no Core-only `IdOrAlias` type; Decision follows Chat/SpeechToText's actual pattern
+
+Found/decided during T8's review:
+
+- `STORIES.md`'s DC-3 AC3 assumed `IAIDecisionService.AskAsync` would take a
+  single "ID or alias" parameter, and T8's first pass built a Core-only
+  `Decision.IdOrAlias` type for it (since `Umbraco.AI.Core` can't reference
+  `Umbraco.AI.Web.Api.Common.Models.IdOrAlias`, which carries ASP.NET
+  model-binding concerns anyway). That assumption didn't hold once checked
+  against how `IAIChatService`/`IAISpeechToTextService` actually resolve
+  profiles: neither takes an `IdOrAlias`-shaped parameter anywhere in Core.
+  Their non-obsolete surface is the builder pattern
+  (`Action<AIChatBuilder>`/`Action<AISpeechToTextBuilder>`), whose builders
+  expose two distinct, separately-typed methods -- `WithProfile(Guid)` and
+  `WithProfile(string)` -- never one type that could be either. Their
+  obsolete legacy overloads mirror that split: a `Guid profileId` overload
+  and a separate one for the default-profile case, never a combined
+  ID-or-alias parameter.
+- Deleted `Decision/IdOrAlias.cs` entirely. `IAIDecisionService.AskAsync` is
+  now three overloads: `AskAsync(Guid profileId, ...)`,
+  `AskAsync(string profileAlias, ...)`, and the builder-based
+  `AskAsync(Action<AIDecisionBuilder> configure, ...)` (added for Finding 2's
+  inline execution path). The two typed overloads delegate to the
+  builder-based one via `AIDecisionBuilder.WithProfile(Guid)`/
+  `WithProfile(string)` -- mirroring exactly how Chat's/SpeechToText's
+  obsolete profile-id overloads delegate to their own builder-based main
+  path -- collapsing what would otherwise be two separate implementations
+  (direct profile resolution vs. builder resolution) into one real entry
+  point. Neither typed overload is marked `[Obsolete]`: Decision has no
+  shipped legacy surface to preserve, unlike Chat/SpeechToText.
+- `AIDecisionBuilder` (T7) gained one more method on top of its original
+  surface -- `WithDecisionOptions(AIDecisionOptions)` -- so the two typed
+  overloads' `AIDecisionOptions? options` parameter has somewhere to go once
+  routed through the builder. This is exactly the kind of addition T7's own
+  doc comment anticipated ("T8 is expected to add whatever further
+  configuration surface it needs on top of this rather than replace it").
+- `ScopedInlineDecisionClient` (T7) is consumed on `AIDecisionService`'s
+  execute path (`ExecuteDecisionAsync`), not just a "create a client" path --
+  a deliberate choice to reuse the wrapper T7 already built rather than
+  duplicate Chat's/SpeechToText's inline scope-management code a second time
+  inside `AIDecisionService`. This makes Decision the first capability where
+  a `Scoped*Inline*` wrapper sits on the execute path, which mattered for the
+  feature-metadata decision below.
+- The two typed overloads (`AskAsync(Guid, ...)`/`AskAsync(string, ...)`)
+  delegate to the builder-based main path and therefore publish notifications
+  via that delegation, exactly matching how Chat's/SpeechToText's obsolete
+  profile-id overloads behave -- confirmed correct during T8's review, not a
+  deviation needing its own fix.
+
+## 2026-09-23 — T8 review round 2: feature-metadata rule follows the execute-path precedent, not the create-client-path one
+
+Found/decided during T8's second review:
+
+- Because `ScopedInlineDecisionClient` sits on the execute path (see above),
+  its feature-metadata decision must follow the rule Chat's/SpeechToText's
+  own execute paths use -- `setFeatureMetadata: !builder.IsPassThrough` --
+  not the rule their `Scoped*Inline*` wrappers use on their create-client
+  path (`setFeatureMetadata: !scopeExisted`). Those two rules disagree in
+  two cases, not one: (1) a pass-through call made with no parent scope --
+  the old rule wrongly stamped metadata, the new rule correctly doesn't --
+  and (2) a normal, non-pass-through call made inside an already-existing
+  parent scope (e.g. an agent run) -- the old rule wrongly skipped metadata,
+  the new rule correctly stamps it. The first review round got case (1)
+  backwards: a normal call inside an existing scope skipped metadata, while
+  a pass-through call with no parent scope stamped it -- the opposite of
+  `AsPassThrough()`'s own doc comment. Fixed by reading `_builder.IsPassThrough`
+  directly (the class already holds the builder), no new parameter needed.

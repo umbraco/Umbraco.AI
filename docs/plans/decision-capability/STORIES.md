@@ -188,11 +188,16 @@ Then   AITrackingDecisionMiddleware records the request's usage/audit informatio
 **AC3 — Profile-alias resolution**
 ```
 Given  a Decision profile saved under a known alias
-When   IAIDecisionService.AskAsync(IdOrAlias, AIDecisionQuestion, ...) is called with that
+When   IAIDecisionService.AskAsync(string, AIDecisionQuestion, ...) is called with that
        alias
 Then   it resolves the profile, builds the client via the capability's factory, and returns
        an AIDecisionResponse
 ```
+
+(Final shape: `IAIDecisionService.AskAsync` has three overloads — `AskAsync(Guid profileId, ...)`,
+`AskAsync(string profileAlias, ...)`, and the builder-based
+`AskAsync(Action<AIDecisionBuilder> configure, ...)`. There is no single "ID or alias" parameter
+type — `IdOrAlias` doesn't exist in Core; see T8's `DECISION-LOG.md` entry.)
 
 ### Out of scope
 

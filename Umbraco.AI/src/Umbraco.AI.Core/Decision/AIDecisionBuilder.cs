@@ -28,6 +28,7 @@ public sealed class AIDecisionBuilder
     private IEnumerable<AIRequestContextItem>? _contextItems;
     private bool _isPassThrough;
     private Guid? _id;
+    private AIDecisionOptions? _options;
 
     /// <summary>
     /// Sets the alias for the inline decision. Required for auditing and telemetry.
@@ -95,6 +96,20 @@ public sealed class AIDecisionBuilder
     }
 
     /// <summary>
+    /// Sets per-call options (e.g. a model override) for the inline decision.
+    /// </summary>
+    /// <remarks>
+    /// Added by <c>AIDecisionService</c> (T8) on top of T7's original surface — see the class remarks.
+    /// </remarks>
+    /// <param name="options">The per-call decision options.</param>
+    /// <returns>The builder for chaining.</returns>
+    public AIDecisionBuilder WithDecisionOptions(AIDecisionOptions options)
+    {
+        _options = options;
+        return this;
+    }
+
+    /// <summary>
     /// Marks this inline decision as a pass-through execution within a parent feature.
     /// </summary>
     /// <remarks>
@@ -148,6 +163,11 @@ public sealed class AIDecisionBuilder
     /// Gets whether this execution is a pass-through within a parent feature.
     /// </summary>
     internal bool IsPassThrough => _isPassThrough;
+
+    /// <summary>
+    /// Gets the per-call options configured on this builder, if any.
+    /// </summary>
+    internal AIDecisionOptions? Options => _options;
 
     /// <summary>
     /// Validates the builder configuration.

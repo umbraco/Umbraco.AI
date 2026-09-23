@@ -11,9 +11,20 @@ namespace Umbraco.AI.Core.Decision;
 /// <remarks>
 /// <para>
 /// Each call to <see cref="AskAsync"/> ensures a scope exists, populates it via contributors if newly
-/// created, sets inline decision feature metadata (only when no parent scope already set it), delegates
-/// to the inner client, and disposes any scope it created. Mirrors
-/// <c>ScopedInlineSpeechToTextClient</c>/<c>ScopedProfileDecisionClient</c>.
+/// created, sets inline decision feature metadata (skipped only for a pass-through execution — see
+/// <see cref="AIDecisionBuilder.AsPassThrough"/>), delegates to the inner client, and disposes any scope
+/// it created.
+/// </para>
+/// <para>
+/// Unlike <c>ScopedInlineSpeechToTextClient</c>/<c>ScopedInlineChatClient</c> — which only ever sit on
+/// their capability's "create a client" path, where pass-through doesn't apply — <c>AIDecisionService</c>
+/// (T8) also puts this wrapper on its execute path (<see cref="AIDecisionService.AskAsync(Action{AIDecisionBuilder}, AIDecisionQuestion, System.Threading.CancellationToken)"/>).
+/// So the feature-metadata decision here follows the execute-path rule Chat's/SpeechToText's own execute
+/// paths use (<c>!builder.IsPassThrough</c>), not the create-client-path rule those two
+/// <c>Scoped*Inline*</c> wrappers use (<c>!scopeExisted</c>) — those two rules disagree in two cases: a
+/// pass-through call made with no parent scope (old rule wrongly stamps metadata, new rule correctly
+/// doesn't), and a normal, non-pass-through call made inside an already-existing parent scope (old rule
+/// wrongly skips metadata, new rule correctly stamps it). This class must get both right.
 /// </para>
 /// <para>
 /// This client does not publish notifications — that is the caller's (<c>IAIDecisionService</c>'s)
@@ -67,7 +78,7 @@ internal sealed class ScopedInlineDecisionClient : IAIDecisionClient
                 _contributors.Populate(createdScope.Context);
             }
 
-            _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
+            _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !_builder.IsPassThrough);
             return await _innerClient.AskAsync(question, options, cancellationToken);
         }
         finally

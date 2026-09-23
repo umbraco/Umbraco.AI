@@ -74,3 +74,26 @@
   PASS on second pass — reviewer confirmed the ordering-protection reasoning holds (traced
   both `AIErrorClassifyingDecisionClient`'s catch behavior and the tracker wiring) and
   reproduced 1161/1161 full suite + Integration 30/30.
+
+- **T8** — `cbc26ab5` — `IAIDecisionService`/`AIDecisionService` (3 overloads: `Guid`, `string`
+  alias, `Action<AIDecisionBuilder>`) + DI registration. Took 3 review rounds:
+  1. FAIL — a new Core-only `IdOrAlias` type had no experimental gate, and T7's
+     `ScopedInlineDecisionClient`/notifications/builder were built but left unconsumed,
+     contradicting ARCHITECTURE.md §3. **User decided: wire the inline path in, don't delete
+     it.** Mid-fix, further correction (from checking `IAIChatService.cs` directly): Chat/
+     SpeechToText never use an `IdOrAlias`-shaped param at the Core layer — dropped that type
+     entirely in favor of `Guid`/`string` overloads delegating into the builder path, matching
+     precedent exactly.
+  2. FAIL — real behavior bug: `ScopedInlineDecisionClient` decided feature-metadata
+     stamping via `!scopeExisted` instead of `!builder.IsPassThrough` (Chat/SpeechToText's
+     actual execute-path rule) — inverted attribution (pass-through calls wrongly stamped,
+     normal calls from inside a parent scope wrongly didn't). Fixed with a real red→green
+     demonstration (reverted the fix, watched the new test fail, restored it, watched it
+     pass). Also added 3 more specs mirroring STT's coverage (pass-through, default-profile
+     fallback, wrong-capability).
+  3. FAIL — the fix's own documentation claimed the two rules "coincide except one case"
+     when they actually diverge in two; the second case (normal call from inside an existing
+     parent scope) had no test. Fixed: corrected the docs, added the missing test, plus 3
+     small suggested cleanups (null/blank-alias guard, a misleading `ConfigureLegacy` name,
+     inaccurate test doc comments).
+  PASS on a 4th, dedicated confirmation pass — 1202/1202 full suite (unit + integration).

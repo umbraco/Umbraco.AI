@@ -76,7 +76,7 @@ provider.
     provider failure) and would falsely log/audit it as a provider error
     too.
 
-- [ ] **T8** — story: DC-3 (AC3). **Also add one sad-path spec** (not in the
+- [x] **T8** — story: DC-3 (AC3). **Also add one sad-path spec** (not in the
   original story) proving T7's wiring actually holds at the real entry
   point: `IAIDecisionService.AskAsync` called with an invalid question
   (e.g. `Choice` with one entry) throws `ArgumentException`, and the fake

@@ -12,3 +12,10 @@
   usage fields the tracking pipeline already reads, and the response factories couldn't set
   `ModelId`/`Usage`. Both fixed (switched `Usage` to M.E.AI `UsageDetails`, added optional
   `modelId`/`usage` params to the factories) and re-reviewed. PASS on second review pass.
+
+- **T3** — `2f0389eb` — `AIExperimentalOptions.Decision` (default off) + the
+  `AIExperimentalFeatures.IsCapabilityEnabled` switch case added, mirroring `ImageGeneration`
+  exactly. Verified for real: reviewer built a scratch xUnit project (assembly named
+  `Umbraco.AI.Tests.Unit` for `InternalsVisibleTo`) referencing the freshly built
+  `Umbraco.AI.Core.dll`, compiled only `AIExperimentalFeaturesTests.cs`, ran it — 7/7 passed,
+  including both new Decision cases. PASS on first review pass.

@@ -19,7 +19,7 @@ provider.
   `ARCHITECTURE.md`'s type sketch. No validation logic yet — plain types.
   depends-on: none. parallel-group: A
 
-- [ ] **T3** — story: DC-1 (AC2, AC3, AC7). Add
+- [x] **T3** — story: DC-1 (AC2, AC3, AC7). Add
   `AIExperimentalOptions.Decision` (bool, default `false`) and the
   `AICapability.Decision => _options.CurrentValue.Decision` case in
   `AIExperimentalFeatures.IsCapabilityEnabled`'s switch

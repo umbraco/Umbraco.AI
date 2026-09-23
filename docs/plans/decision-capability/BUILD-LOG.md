@@ -19,3 +19,13 @@
   `Umbraco.AI.Tests.Unit` for `InternalsVisibleTo`) referencing the freshly built
   `Umbraco.AI.Core.dll`, compiled only `AIExperimentalFeaturesTests.cs`, ran it — 7/7 passed,
   including both new Decision cases. PASS on first review pass.
+
+- **T4** — `3078ecab` — `ValidatingDecisionClient` added (sad-path enforcement: empty/whitespace
+  `Prompt` and `Choice` with <2 `Choices` both throw `ArgumentException` before reaching any
+  inner client). Verified: reviewer independently built a scratch project and got 5/5 real
+  passes on `ValidatingDecisionClientTests.cs`. PASS with carry-forward items (not defects):
+  the class isn't wired into any factory yet (that's T7), and — important — T7 must place it
+  *outside* `AIErrorClassifyingDecisionClient`/tracking, not innermost, or caller errors get
+  miscategorized as provider failures. PLAN.md's T7/T8 entries were updated with explicit
+  acceptance criteria for this. Also applied a small suggested fix (`ArgumentNullException.
+  ThrowIfNull(question)`) before committing.

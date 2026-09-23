@@ -28,7 +28,7 @@ provider.
   existing `ImageGeneration` cases.
   depends-on: T1. parallel-group: B
 
-- [ ] **T4** — story: DC-2 (AC5, AC6). Add the validating wrapper that
+- [x] **T4** — story: DC-2 (AC5, AC6). Add the validating wrapper that
   enforces `AskAsync`'s sad-path rules (empty/whitespace `Prompt` → always
   `ArgumentException`; `Kind = Choice` with fewer than 2 `Choices` →
   `ArgumentException`) in front of every `IAIDecisionClient`, in the same
@@ -55,11 +55,35 @@ provider.
   `AIDecisionClientFactory`, `IAIDecisionMiddleware` +
   `AIDecisionMiddlewareCollection(Builder)`, `AITrackingDecisionClient` +
   `AITrackingDecisionMiddleware`, `AIOpenTelemetryDecisionMiddleware`,
+  `AIErrorClassifyingDecisionClient`,
   `AIDecisionExecutingNotification`/`AIDecisionExecutedNotification`,
   `ScopedProfileDecisionClient`/`ScopedInlineDecisionClient`.
   depends-on: T5, T6.
 
-- [ ] **T8** — story: DC-3 (AC3). Add `IAIDecisionService`/`AIDecisionService`
+  **Explicit acceptance criteria added after T4's review** (T4 built
+  `ValidatingDecisionClient` — DC-2 AC5/AC6's sad-path enforcer — but it's
+  unwired until this task; these two points must hold once T7 is done):
+  - `AIDecisionClientFactory` must wrap every provider's raw `IAIDecisionClient`
+    in `ValidatingDecisionClient`.
+  - **Wrapping order matters and must NOT mirror "innermost" literally
+    from the SpeechToText precedent**: `ValidatingDecisionClient` must sit
+    **outside** `AIErrorClassifyingDecisionClient` (and outside the tracking
+    middleware / executing-notification layer too) — not inside it. If a
+    caller's `ArgumentException` (invalid question shape) passes through
+    the error classifier first, it gets caught and rethrown as
+    `AIProviderException`, which breaks DC-2 AC5/AC6's contract (a caller
+    error must be rejected as `ArgumentException`, not misreported as a
+    provider failure) and would falsely log/audit it as a provider error
+    too.
+
+- [ ] **T8** — story: DC-3 (AC3). **Also add one sad-path spec** (not in the
+  original story) proving T7's wiring actually holds at the real entry
+  point: `IAIDecisionService.AskAsync` called with an invalid question
+  (e.g. `Choice` with one entry) throws `ArgumentException`, and the fake
+  provider client underneath is never invoked. This is the test that would
+  catch T7's ordering mistake described above if it happens anyway.
+
+  Add `IAIDecisionService`/`AIDecisionService`
   (profile-alias resolution via `IdOrAlias`, mirroring
   `IAISpeechToTextService`/`AISpeechToTextService`) and register everything
   from T5–T8 in DI: `AIDecisionBuilder` +

@@ -5,7 +5,7 @@ worktree branched from it) — no backport, per the brief. Every task is
 Umbraco.AI.Core-only C# except T10/T11, which add one disposable spike
 provider.
 
-- [ ] **T1** — story: DC-1. Add `AICapability.Decision = 8` to
+- [x] **T1** — story: DC-1. Add `AICapability.Decision = 8` to
   `Umbraco.AI.Core/Models/AICapability.cs`; leave `Moderation = 3` untouched;
   update the trailing `// Future: TextToSpeech = 6, SpeechToSpeech = 7`
   comment to stay accurate now that `8` is taken.

@@ -108,7 +108,7 @@ provider.
   `IAIExperimentalFeatures`.
   depends-on: T1, T3. parallel-group: C (runs alongside T5→T8 and T4)
 
-- [ ] **T10** — story: DC-4 (AC1). Build the disposable spike provider: an
+- [x] **T10** — story: DC-4 (AC1). Build the disposable spike provider: an
   `[AIProvider]`-attributed class (e.g. `"typesafe-jev-spike"`) whose
   `AIDecisionCapabilityBase`-derived capability returns an
   `IAIDecisionClient` implementation that calls Jev's HTTP API directly via

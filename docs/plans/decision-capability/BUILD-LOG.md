@@ -107,3 +107,19 @@
   left every other test's shared mock untouched, added a 6th test for the previously-uncovered
   "enabled" case on `GetConnectionsByCapabilityAsync`. PASS on confirmation — 1171/1171 unit +
   32/32 integration.
+
+- **T10** — `62b382a5` — Disposable Jev spike provider (`JevSpikeProvider`/`JevSpikeDecisionCapability`/
+  `JevSpikeDecisionClient`/`JevSpikeProviderSettings`/`JevAnswerDto`), deliberately placed in
+  `Umbraco.AI.Tests.Common/Decision/Spike/` rather than any `src/` project — an
+  `[AIProvider]`-attributed class there would auto-discover into every real Umbraco.AI
+  install via `IDiscoverable`, which a throwaway spike must never do. Implements all three
+  `AIDecisionKind`s (not just Binary — the DTO mapping cost nothing extra to generalize).
+  FAILed once: the capability created its own `HttpClient` per call with nothing ever
+  disposing it (socket-exhaustion pattern), and the error paths (bad JSON, unknown kind,
+  missing API key) were implemented but had zero test coverage. Fixed: switched to
+  `IHttpClientFactory`, mirroring `FireworksAIProvider`'s exact pattern (factory-owned,
+  pooled client — the client wrapper's `Dispose()` is now a correct no-op); added 5 error-path
+  tests including one that asserts the real outgoing request's bearer header and path. PASS
+  on confirmation — 10/10 on the spike's own tests, 1178/1178 unit + 32/32 integration full
+  suite. T11/T12 remain — both explicitly manual/flag-toggle verification against real Jev
+  credentials, not more production code.

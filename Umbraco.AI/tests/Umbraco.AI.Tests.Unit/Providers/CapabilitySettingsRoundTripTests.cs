@@ -164,12 +164,6 @@ public class CapabilitySettingsRoundTripTests
         AssertApplied(recorder.ReceivedOptions.ShouldHaveSingleItem()?.AdditionalProperties);
     }
 
-    /// <summary>
-    /// Decision has no factory/service yet (that lands in a later task), so unlike its three siblings
-    /// above this goes through the capability's own <see cref="IAIDecisionCapability"/> seam directly
-    /// rather than a real <c>AIDecisionClientFactory</c> — the earliest real entry point that exists
-    /// today for "capability settings reach the request".
-    /// </summary>
     [Fact]
     public async Task Decision_CapabilitySettings_ReachTheRequestOptions()
     {
@@ -177,12 +171,25 @@ public class CapabilitySettingsRoundTripTests
         var recorder = new FakeDecisionClient();
         var provider = new FakeAIProvider(ProviderId, "Fake Provider");
         var capability = new TestDecisionCapability(provider, recorder);
-        var capabilitySettings = new TestCapabilitySettings { Applied = StoredValue };
+        provider.WithCapability<IAIDecisionCapability>(capability);
+
+        var profile = ArrangeProfile<IAIConfiguredDecisionCapability>(
+            provider,
+            AICapability.Decision,
+            new AIConfiguredDecisionCapability(capability, ConnectionSettings));
+
+        var factory = new AIDecisionClientFactory(
+            _connectionService.Object,
+            new AIDecisionMiddlewareCollection(Enumerable.Empty<IAIDecisionMiddleware>),
+            _contextAccessor.Object,
+            _scopeProvider.Object,
+            _contributors,
+            _modelResolver.Object);
+
         var callerOptions = new AIDecisionOptions();
 
         // Act
-        var client = await ((IAIDecisionCapability)capability).CreateClientAsync(
-            ConnectionSettings, capabilitySettings, ModelId, CancellationToken.None);
+        var client = await factory.CreateClientAsync(profile);
         await client.AskAsync(
             new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" },
             callerOptions);

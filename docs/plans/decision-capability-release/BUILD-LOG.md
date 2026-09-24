@@ -198,3 +198,17 @@
   `[18.3.4` to the Core version that ships Decision (next minor, 18.4.0). Precedent only raises
   it in release prep. The ranged pack recompile is the safety net: a solo Deploy pack against
   18.3.4 fails to compile.
+
+- **T19** (wire) — no code change — Real host with the demo site referencing
+  `Umbraco.AI.Deploy` and `Umbraco.Deploy.OnPrem` 18.1.1 (gitignored demo edits; OnPrem is the
+  package whose composer registers `IServiceConnectorFactory`, and it has an unlicensed grace
+  period). Connectors were resolved via `IServiceConnectorFactory`. The settings export has
+  `DefaultDecisionProfileUdi` and the profile as a dependency. After clearing the setting,
+  `ProcessAsync` import restored it. The Decision profile import gives non-null
+  `AIDecisionProfileSettings`. Re-run by the orchestrator: all PASS.
+  Notes: (1) `install-demo-site.sh` has no option to reference Deploy from the demo csproj, a
+  tooling gap outside this feature. (2) The demo SQLite DB throws "database table is locked"
+  under background-job load when an EF scope stays open for tens of seconds. Deploy's
+  directory-wide export hit this, as did unrelated jobs (`AIUsageHourlyAggregationJob`, Automate
+  outbox cleanup). That's an environment limit, not a Decision defect, and was worked around by
+  calling `GetArtifactAsync`/`ProcessAsync` directly.

@@ -146,7 +146,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   `Umbraco.AI.Core`'s floor if needed.
   depends-on: T3, T4. parallel-group: B
 
-- [ ] **T19** — **wire: Deploy connector in a real host.** story: DR-8. Resolve the settings
+- [x] **T19** — **wire: Deploy connector in a real host.** story: DR-8. Resolve the settings
   and profile connectors from a running demo site (with `Umbraco.AI.Deploy` referenced).
   Export a real settings artifact containing `DefaultDecisionProfileUdi` and import it back.
   depends-on: T18, T12.

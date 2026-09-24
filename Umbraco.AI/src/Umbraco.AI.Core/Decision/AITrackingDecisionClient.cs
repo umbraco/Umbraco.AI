@@ -78,24 +78,22 @@ internal sealed class AITrackingDecisionClient : IAIDecisionClient
     /// <summary>
     /// Builds a descriptive prompt data object for audit logging.
     /// </summary>
-    private static object BuildPromptData(AIDecisionQuestion question) => new
+    private static object BuildPromptData(AIDecisionQuestion question) => question switch
     {
-        question.Kind,
-        question.Prompt,
-        question.Choices,
-        question.ScoreRange,
+        AIBinaryDecisionQuestion q => new { Kind = "binary", q.Instructions, q.Context, q.TrueCriteria, q.FalseCriteria },
+        AIChoiceDecisionQuestion q => new { Kind = "choice", q.Instructions, q.Context, Options = q.Options.Select(o => o.Key) },
+        AIScoreDecisionQuestion q => new { Kind = "score", q.Instructions, q.Context, q.Levels },
+        _ => new { Kind = question.GetType().Name, question.Instructions, question.Context },
     };
 
     /// <summary>
     /// Builds a descriptive response data object for audit logging.
     /// </summary>
-    private static object BuildAuditData(AIDecisionResponse response) => new
+    private static object BuildAuditData(AIDecisionResponse response) => response switch
     {
-        response.Kind,
-        response.BinaryAnswer,
-        response.SelectedChoice,
-        response.Score,
-        response.Confidence,
-        response.ModelId,
+        AIBinaryDecisionResponse r => new { Kind = "binary", r.Answer, r.Probability, r.Confidence, r.ModelId },
+        AIChoiceDecisionResponse r => new { Kind = "choice", r.Choice, r.ChoiceConfidence, r.Confidence, r.ModelId },
+        AIScoreDecisionResponse r => new { Kind = "score", r.Score, r.Level, r.ScoreConfidence, r.Confidence, r.ModelId },
+        _ => new { Kind = response.GetType().Name, response.Confidence, response.ModelId },
     };
 }

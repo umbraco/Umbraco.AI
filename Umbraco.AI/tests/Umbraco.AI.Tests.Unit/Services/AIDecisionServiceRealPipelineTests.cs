@@ -37,11 +37,10 @@ public class AIDecisionServiceRealPipelineTests
         var throwingClient = new FakeDecisionClient(_ => throw new InvalidOperationException(
             "The provider client must never be reached for a caller error."));
         var (service, _, _, _, _, _) = ArrangeService(throwingClient);
-        var invalidQuestion = new AIDecisionQuestion
+        var invalidQuestion = new AIChoiceDecisionQuestion
         {
-            Kind = AIDecisionKind.Choice,
-            Prompt = "pick one",
-            Choices = ["only-one"],
+            Instructions = "pick one",
+            Options = [new AIDecisionOption("only-one")],
         };
 
         // Act
@@ -58,11 +57,10 @@ public class AIDecisionServiceRealPipelineTests
         var throwingClient = new FakeDecisionClient(_ => throw new InvalidOperationException(
             "The provider client must never be reached for a caller error."));
         var (service, _, _, _, _, _) = ArrangeService(throwingClient);
-        var invalidQuestion = new AIDecisionQuestion
+        var invalidQuestion = new AIChoiceDecisionQuestion
         {
-            Kind = AIDecisionKind.Choice,
-            Prompt = "pick one",
-            Choices = ["only-one"],
+            Instructions = "pick one",
+            Options = [new AIDecisionOption("only-one")],
         };
 
         // Act
@@ -87,9 +85,9 @@ public class AIDecisionServiceRealPipelineTests
     public async Task AskAsync_WithBuilder_PublishesNotificationsAndReturnsResponse()
     {
         // Arrange
-        var respondingClient = new FakeDecisionClient(_ => AIDecisionResponse.ForBinary(true, 0.87));
+        var respondingClient = new FakeDecisionClient(_ => new AIBinaryDecisionResponse { Probability = 0.87 });
         var (service, eventAggregatorMock, context, _, _, _) = ArrangeService(respondingClient);
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act
         var response = await service.AskAsync(
@@ -97,7 +95,7 @@ public class AIDecisionServiceRealPipelineTests
             question);
 
         // Assert
-        response.BinaryAnswer.ShouldBe(true);
+        response.ShouldBeOfType<AIBinaryDecisionResponse>().Answer.ShouldBe(true);
         eventAggregatorMock.Verify(
             x => x.PublishAsync(It.IsAny<AIDecisionExecutingNotification>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -119,9 +117,9 @@ public class AIDecisionServiceRealPipelineTests
     public async Task AskAsync_WithBuilder_AsPassThrough_SkipsNotificationsAndFeatureMetadata()
     {
         // Arrange
-        var respondingClient = new FakeDecisionClient(_ => AIDecisionResponse.ForBinary(true, 0.87));
+        var respondingClient = new FakeDecisionClient(_ => new AIBinaryDecisionResponse { Probability = 0.87 });
         var (service, eventAggregatorMock, context, _, _, _) = ArrangeService(respondingClient);
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act
         await service.AskAsync(
@@ -150,14 +148,14 @@ public class AIDecisionServiceRealPipelineTests
     public async Task AskAsync_WithBuilder_CalledFromExistingScope_StampsMetadataWithoutCreatingNewScope()
     {
         // Arrange
-        var respondingClient = new FakeDecisionClient(_ => AIDecisionResponse.ForBinary(true, 0.87));
+        var respondingClient = new FakeDecisionClient(_ => new AIBinaryDecisionResponse { Probability = 0.87 });
         var (service, _, _, _, contextAccessorMock, scopeProviderMock) = ArrangeService(respondingClient);
 
         // Simulate a parent scope already open (e.g. an agent run) before this call is made.
         var parentContext = new AIRuntimeContext([]);
         contextAccessorMock.Setup(x => x.Context).Returns(parentContext);
 
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act
         await service.AskAsync(
@@ -180,15 +178,15 @@ public class AIDecisionServiceRealPipelineTests
     public async Task AskAsync_WithBuilder_NoProfileConfigured_UsesDefaultProfile()
     {
         // Arrange
-        var respondingClient = new FakeDecisionClient(_ => AIDecisionResponse.ForBinary(true, 0.87));
+        var respondingClient = new FakeDecisionClient(_ => new AIBinaryDecisionResponse { Probability = 0.87 });
         var (service, _, _, profileServiceMock, _, _) = ArrangeService(respondingClient);
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act
         var response = await service.AskAsync(b => b.WithAlias("default-profile-check"), question);
 
         // Assert
-        response.BinaryAnswer.ShouldBe(true);
+        response.ShouldBeOfType<AIBinaryDecisionResponse>().Answer.ShouldBe(true);
         profileServiceMock.Verify(
             x => x.GetDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -206,7 +204,7 @@ public class AIDecisionServiceRealPipelineTests
         var throwingClient = new FakeDecisionClient(_ => throw new InvalidOperationException(
             "The provider client must never be reached when the resolved profile is the wrong capability."));
         var (service, _, _, _, _, _) = ArrangeService(throwingClient, profileCapability: AICapability.Chat);
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act
         var act = () => service.AskAsync(

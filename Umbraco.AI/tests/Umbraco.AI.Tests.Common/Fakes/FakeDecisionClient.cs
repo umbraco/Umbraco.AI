@@ -13,7 +13,7 @@ public class FakeDecisionClient : IAIDecisionClient
 
     public FakeDecisionClient(Func<AIDecisionQuestion, AIDecisionResponse>? respond = null)
     {
-        _respond = respond ?? (q => AIDecisionResponse.ForBinary(true, 0.9));
+        _respond = respond ?? (q => new AIBinaryDecisionResponse { Probability = 0.9 });
     }
 
     /// <summary>

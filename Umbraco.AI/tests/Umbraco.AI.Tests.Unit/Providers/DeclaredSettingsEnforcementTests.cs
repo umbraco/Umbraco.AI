@@ -213,10 +213,10 @@ public class DeclaredSettingsEnforcementTests
     }
 
     // DC-3 AC1. Unlike Chat/Embedding/SpeechToText/ImageGeneration, AIDecisionOptions currently
-    // declares no strippable per-request settings (Jev has no sampling-style knobs) — so there is
-    // nothing yet to prove gets removed. This proves the wrapper still exists and participates in
-    // the same pattern; a "declared unsupported X is removed" test can be added once/if
-    // AIDecisionOptions grows a settable field a provider can decline.
+    // declares no strippable per-request settings (no shipped provider declares any sampling-style
+    // knobs yet) — so there is nothing yet to prove gets removed. This proves the wrapper still
+    // exists and participates in the same pattern; a "declared unsupported X is removed" test can be
+    // added once/if AIDecisionOptions grows a settable field a provider can decline.
     [Fact]
     public async Task Decision_ModelWithNoDeclaration_OptionsAreUntouched()
     {
@@ -226,7 +226,7 @@ public class DeclaredSettingsEnforcementTests
         var client = await ((IAIDecisionCapability)capability)
             .CreateClientAsync(Settings, "any-model", CancellationToken.None);
         var options = new AIDecisionOptions { ModelId = "any-model" };
-        await client.AskAsync(new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" }, options);
+        await client.AskAsync(new AIBinaryDecisionQuestion { Instructions = "is this spam?" }, options);
 
         // The very same instance, not a filtered copy: nothing needed changing.
         recorder.ReceivedRequests.ShouldHaveSingleItem().Options.ShouldBeSameAs(options);

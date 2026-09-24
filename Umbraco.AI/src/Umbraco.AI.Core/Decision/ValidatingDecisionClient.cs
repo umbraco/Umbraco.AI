@@ -9,12 +9,18 @@ namespace Umbraco.AI.Core.Decision;
 /// <remarks>
 /// Applied in front of every provider's <see cref="IAIDecisionClient"/>, mirroring how
 /// <c>AIErrorClassifyingSpeechToTextClient</c> wraps every <c>ISpeechToTextClient</c> today — a
-/// caller error (an empty prompt, a <see cref="AIDecisionKind.Choice"/> question with fewer than two
-/// choices) is rejected here, before any provider SDK call is made.
+/// caller error (blank instructions, an <see cref="AIChoiceDecisionQuestion"/> with too few/too many
+/// options, an <see cref="AIScoreDecisionQuestion"/> with too few/too many levels) is rejected here,
+/// before any provider SDK call is made.
 /// </remarks>
 [Experimental(AIDecisionDiagnostics.DiagnosticId)]
 internal sealed class ValidatingDecisionClient : IAIDecisionClient
 {
+    private const int MinChoiceOptions = 2;
+    private const int MaxChoiceOptions = 255;
+    private const int MinScoreLevels = 2;
+    private const int MaxScoreLevels = 10;
+
     private readonly IAIDecisionClient _innerClient;
 
     public ValidatingDecisionClient(IAIDecisionClient innerClient)
@@ -44,16 +50,63 @@ internal sealed class ValidatingDecisionClient : IAIDecisionClient
     {
         ArgumentNullException.ThrowIfNull(question);
 
-        if (string.IsNullOrWhiteSpace(question.Prompt))
+        if (string.IsNullOrWhiteSpace(question.Instructions))
         {
-            throw new ArgumentException("Prompt must not be empty or whitespace.", nameof(question));
+            throw new ArgumentException("Instructions must not be empty or whitespace.", nameof(question));
         }
 
-        if (question.Kind == AIDecisionKind.Choice && (question.Choices is null || question.Choices.Count < 2))
+        switch (question)
+        {
+            case AIChoiceDecisionQuestion choiceQuestion:
+                ValidateChoice(choiceQuestion);
+                break;
+            case AIScoreDecisionQuestion scoreQuestion:
+                ValidateScore(scoreQuestion);
+                break;
+        }
+    }
+
+    private static void ValidateChoice(AIChoiceDecisionQuestion question)
+    {
+        if (question.Options is null || question.Options.Count is < MinChoiceOptions or > MaxChoiceOptions)
         {
             throw new ArgumentException(
-                "Choices must contain at least two entries when Kind is Choice.",
+                $"Options must contain between {MinChoiceOptions} and {MaxChoiceOptions} entries.",
                 nameof(question));
+        }
+
+        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var option in question.Options)
+        {
+            if (option is null)
+            {
+                throw new ArgumentException("Options must not contain null entries.", nameof(question));
+            }
+
+            if (string.IsNullOrWhiteSpace(option.Key))
+            {
+                throw new ArgumentException("Option keys must not be empty or whitespace.", nameof(question));
+            }
+
+            if (!seenKeys.Add(option.Key))
+            {
+                throw new ArgumentException($"Duplicate option key '{option.Key}'.", nameof(question));
+            }
+        }
+    }
+
+    private static void ValidateScore(AIScoreDecisionQuestion question)
+    {
+        if (question.Levels is null || question.Levels.Count is < MinScoreLevels or > MaxScoreLevels)
+        {
+            throw new ArgumentException(
+                $"Levels must contain between {MinScoreLevels} and {MaxScoreLevels} entries.",
+                nameof(question));
+        }
+
+        if (question.Levels.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new ArgumentException("Levels must not contain empty or whitespace entries.", nameof(question));
         }
     }
 }

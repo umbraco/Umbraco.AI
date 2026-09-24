@@ -30,9 +30,9 @@ public interface IAIDecisionService
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The typed decision response.</returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="question"/> is shaped incorrectly for its <see cref="AIDecisionQuestion.Kind"/>
-    /// (e.g. an empty prompt, or a <see cref="AIDecisionKind.Choice"/> question with fewer than two
-    /// choices). Rejected before any provider is reached — see <see cref="ValidatingDecisionClient"/>.
+    /// <paramref name="question"/> is shaped incorrectly for its concrete type (e.g. blank instructions,
+    /// or an <see cref="AIChoiceDecisionQuestion"/> with fewer than two options). Rejected before any
+    /// provider is reached — see <see cref="ValidatingDecisionClient"/>.
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// No profile matches <paramref name="profileId"/>, or it isn't a Decision profile.
@@ -52,9 +52,9 @@ public interface IAIDecisionService
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The typed decision response.</returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="question"/> is shaped incorrectly for its <see cref="AIDecisionQuestion.Kind"/>
-    /// (e.g. an empty prompt, or a <see cref="AIDecisionKind.Choice"/> question with fewer than two
-    /// choices). Rejected before any provider is reached — see <see cref="ValidatingDecisionClient"/>.
+    /// <paramref name="question"/> is shaped incorrectly for its concrete type (e.g. blank instructions,
+    /// or an <see cref="AIChoiceDecisionQuestion"/> with fewer than two options). Rejected before any
+    /// provider is reached — see <see cref="ValidatingDecisionClient"/>.
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// No profile matches <paramref name="profileAlias"/>, or it isn't a Decision profile.
@@ -80,7 +80,7 @@ public interface IAIDecisionService
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The typed decision response.</returns>
     /// <exception cref="ArgumentException">
-    /// <paramref name="question"/> is shaped incorrectly for its <see cref="AIDecisionQuestion.Kind"/>.
+    /// <paramref name="question"/> is shaped incorrectly for its concrete type.
     /// Rejected before any provider is reached — see <see cref="ValidatingDecisionClient"/>.
     /// </exception>
     /// <exception cref="InvalidOperationException">

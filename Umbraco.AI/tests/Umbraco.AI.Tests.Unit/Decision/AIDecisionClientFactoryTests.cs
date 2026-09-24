@@ -132,17 +132,15 @@ public class AIDecisionClientFactoryTests
         await Should.ThrowAsync<AIProviderException>(act);
     }
 
-    private static AIDecisionQuestion InvalidQuestion() => new()
+    private static AIDecisionQuestion InvalidQuestion() => new AIChoiceDecisionQuestion
     {
-        Kind = AIDecisionKind.Choice,
-        Prompt = "pick one",
-        Choices = ["only-one"],
+        Instructions = "pick one",
+        Options = [new AIDecisionOption("only-one")],
     };
 
-    private static AIDecisionQuestion ValidQuestion() => new()
+    private static AIDecisionQuestion ValidQuestion() => new AIBinaryDecisionQuestion
     {
-        Kind = AIDecisionKind.Binary,
-        Prompt = "is this spam?",
+        Instructions = "is this spam?",
     };
 
     /// <summary>

@@ -70,7 +70,7 @@ public class AIDecisionServiceTests
             .WithAlias("spam-check")
             .WithCapability(AICapability.Decision)
             .Build();
-        var fakeClient = new FakeDecisionClient(_ => AIDecisionResponse.ForBinary(true, 0.95));
+        var fakeClient = new FakeDecisionClient(_ => new AIBinaryDecisionResponse { Probability = 0.95 });
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync("spam-check", It.IsAny<CancellationToken>()))
@@ -83,13 +83,13 @@ public class AIDecisionServiceTests
             .ReturnsAsync(fakeClient);
 
         var service = CreateService();
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act
         var response = await service.AskAsync("spam-check", question);
 
         // Assert
-        response.BinaryAnswer.ShouldBe(true);
+        response.ShouldBeOfType<AIBinaryDecisionResponse>().Answer.ShouldBe(true);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class AIDecisionServiceTests
             .ReturnsAsync((AIProfile?)null);
 
         var service = CreateService();
-        var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this spam?" };
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(

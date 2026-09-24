@@ -77,6 +77,14 @@ public sealed class AIOpenTelemetryDecisionMiddleware : IAIDecisionMiddleware
             }
         }
 
+        private static string QuestionKind(AIDecisionQuestion question) => question switch
+        {
+            AIBinaryDecisionQuestion => "binary",
+            AIChoiceDecisionQuestion => "choice",
+            AIScoreDecisionQuestion => "score",
+            _ => question.GetType().Name,
+        };
+
         public object? GetService(Type serviceType, object? serviceKey = null)
         {
             if (serviceType == GetType())
@@ -92,7 +100,7 @@ public sealed class AIOpenTelemetryDecisionMiddleware : IAIDecisionMiddleware
         private static void EnrichActivity(Activity activity, AIDecisionQuestion question, AIDecisionOptions? options)
         {
             activity.SetTag("gen_ai.operation.name", "decision");
-            activity.SetTag("gen_ai.request.kind", question.Kind.ToString());
+            activity.SetTag("gen_ai.request.kind", QuestionKind(question));
 
             if (options?.ModelId is not null)
             {

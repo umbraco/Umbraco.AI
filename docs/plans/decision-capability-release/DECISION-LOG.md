@@ -82,3 +82,9 @@
   Spec-writing found SPEC's "same check as the other default slots" was wrong: no default
   slot validates capability today. User chose to match the existing slots rather than add a
   Decision-only check or change every slot's API behavior.
+
+## 24-09-2026 — Found during `umb-build-loop`
+
+- **T2: choice option keys are unique by ordinal (case-sensitive) comparison.** `"a"` and
+  `"A"` are distinct options. Keys are machine identifiers the caller supplies (e.g. agent
+  ids) and come back verbatim as the answer, so they're matched exactly rather than folded.

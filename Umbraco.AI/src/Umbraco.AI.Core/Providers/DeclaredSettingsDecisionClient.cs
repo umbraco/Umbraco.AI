@@ -10,8 +10,9 @@ namespace Umbraco.AI.Core.Providers;
 /// </summary>
 /// <remarks>
 /// The decision counterpart of <see cref="DeclaredSettingsSpeechToTextClient"/>. Unlike its siblings,
-/// <see cref="AIDecisionOptions"/> currently exposes no strippable per-request settings (Jev has no
-/// sampling-style knobs), so <see cref="Filter"/> is a pass-through today. It still exists so
+/// <see cref="AIDecisionOptions"/> currently exposes no strippable per-request settings (no shipped
+/// provider declares any sampling-style knobs yet), so <see cref="Filter"/> is a pass-through today. It
+/// still exists so
 /// <see cref="AIDecisionCapabilityBase{TSettings}"/> wraps every client it builds in the same seam every
 /// other capability base does, ready for the day <see cref="AIDecisionOptions"/> grows a field a provider
 /// can decline — at which point this needs the capability/boundModelId/logger the other DeclaredSettings*

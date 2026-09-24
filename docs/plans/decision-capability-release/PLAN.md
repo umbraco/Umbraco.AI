@@ -41,7 +41,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   switches in `AIProfileService` (lines ~85/105/124), mirroring ImageGeneration.
   depends-on: T1. parallel-group: A
 
-- [ ] **T4** — story: DR-7 (AC3). Add empty sealed `AIDecisionProfileSettings` next to
+- [x] **T4** — story: DR-7 (AC3). Add empty sealed `AIDecisionProfileSettings` next to
   `AIImageGenerationProfileSettings` and its case in `AIProfileSettingsSerializer`.
   depends-on: T1. parallel-group: A
 

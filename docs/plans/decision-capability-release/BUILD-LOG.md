@@ -36,3 +36,10 @@
   Process note: the builder used `git stash` for a baseline warning check and left an applied
   entry (`T3-baseline-check-*`) on the shared stash stack. The user was asked to drop it. Later
   builders are told not to stash.
+
+- **T4** — `35095a45` — Empty sealed `AIDecisionProfileSettings` + deserialize case in
+  `AIProfileSettingsSerializer` (serialize goes by runtime type). Not `[Experimental]`,
+  matching the unmarked `AIImageGenerationProfileSettings`; only `Core/Decision/` types carry
+  it. Reviewer confirmed `{}` round-trips non-null through the serializer, `AIProfileFactory`
+  and the Deploy profile connector. Reran 1200/1200 unit + 32/32 integration. PASS on first
+  review.

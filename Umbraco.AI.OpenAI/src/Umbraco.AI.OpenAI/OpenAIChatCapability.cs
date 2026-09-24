@@ -126,9 +126,11 @@ public class OpenAIChatCapability(
         // The declaration above is enforced by the base, which wraps this client so the sampling
         // parameters are stripped for a model that rejects them no matter which caller assembled the
         // ChatOptions. See DeclaredSettingsChatClient.
-        return OpenAIProvider.CreateOpenAIClient(settings)
+        var client = OpenAIProvider.CreateOpenAIClient(settings)
             .GetResponsesClient()
             .AsIChatClient(resolvedModelId);
+
+        return new OpenAIIncompleteResponseChatClient(client);
     }
 
     /// <inheritdoc />

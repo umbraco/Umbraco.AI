@@ -51,12 +51,13 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         Exception? streamError = null;
+        var streamState = new StreamState();
 
         // Emit RunStarted (outside try block)
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, streamState, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -120,6 +121,17 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
             yield return emitter.EmitError(userMessage, code);
         }
+        else if (streamState.LastFinishReason == ChatFinishReason.Length)
+        {
+            // The model stopped because it hit the output token limit. For a thinking model this can
+            // happen before any text or tool call is produced, so finishing normally would leave the
+            // user with an apparently idle chat and no idea why (#414).
+            _logger.LogWarning(
+                "Agent run {RunId} was cut off at the output token limit.",
+                request.RunId);
+
+            yield return emitter.EmitError(OutputLimitReachedMessage, AIProviderErrorCategory.InvalidRequest.ToString());
+        }
         else
         {
             yield return emitter.EmitRunFinished();
@@ -135,6 +147,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AGUIRunRequest request,
         AGUIEventEmitter emitter,
         HashSet<string> frontendToolNames,
+        StreamState streamState,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Process file content: store base64, resolve id references
@@ -181,6 +194,11 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // Use MAF streaming with options (session=null for new session)
         await foreach (var update in agent.RunStreamingAsync(chatMessages, session: null, cancellationToken: cancellationToken))
         {
+            if (update.FinishReason is { } finishReason)
+            {
+                streamState.LastFinishReason = finishReason;
+            }
+
             // Process content items (tool calls and results first, then text)
             if (update.Contents != null)
             {
@@ -275,6 +293,22 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
+    }
+
+    private const string OutputLimitReachedMessage =
+        "The response was cut off because it reached the maximum output tokens. "
+        + "Increase Max tokens on the agent's profile and try again.";
+
+    /// <summary>
+    /// State the core stream reports back to <see cref="StreamAgentAsync"/>, which an iterator cannot return.
+    /// </summary>
+    private sealed class StreamState
+    {
+        /// <summary>
+        /// The last finish reason the model reported. A run that calls tools reports one per model call,
+        /// so only the last says why the run as a whole stopped.
+        /// </summary>
+        public ChatFinishReason? LastFinishReason { get; set; }
     }
 
     /// <summary>
@@ -400,8 +434,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     ///   </item>
     /// </list>
     /// <para>
-    /// Cancelled entries are skipped — we don't synthesise a result when the user
-    /// abandoned the interrupt without input.
+    /// A cancelled tool-call interrupt (the user abandoned it without input) still gets a
+    /// synthesised <see cref="FunctionResultContent"/> saying so: the model already emitted the
+    /// corresponding <c>tool_use</c> block, and a provider such as Anthropic rejects any later
+    /// turn whose history has a <c>tool_use</c> with no matching <c>tool_result</c>. A cancelled
+    /// approval interrupt is still skipped — it never reached the provider as a raw tool call
+    /// (FICC intercepts it before that), so there is nothing to reconcile.
     /// </para>
     /// </remarks>
     private List<ChatMessage> ExtractToolResultsFromResume(
@@ -412,8 +450,15 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
         foreach (var entry in resume)
         {
-            if (entry.Status != AGUIResumeStatus.Resolved)
+            if (entry.Status == AGUIResumeStatus.Cancelled)
             {
+                if (string.IsNullOrEmpty(entry.InterruptId) || AGUIInterruptKind.IsApproval(entry.InterruptId))
+                {
+                    continue;
+                }
+
+                results.Add(new ChatMessage(ChatRole.Tool,
+                    [new FunctionResultContent(entry.InterruptId, "The user cancelled this tool call.")]));
                 continue;
             }
 

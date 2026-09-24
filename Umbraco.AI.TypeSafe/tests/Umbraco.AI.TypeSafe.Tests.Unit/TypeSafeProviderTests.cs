@@ -13,19 +13,19 @@ public class TypeSafeProviderTests
     {
         private readonly TypeSafeProvider _provider = TypeSafeTestHost.CreateProvider();
 
-        [Fact(Skip = "Pending T6")]
+        [Fact]
         public void HasTheTypeSafeProviderId()
         {
             _provider.Id.ShouldBe("typesafe");
         }
 
-        [Fact(Skip = "Pending T6")]
+        [Fact]
         public void ExposesOnlyTheDecisionCapability()
         {
             _provider.GetCapabilities().Select(c => c.Kind).ShouldBe([AICapability.Decision]);
         }
 
-        [Fact(Skip = "Pending T6")]
+        [Fact]
         public async Task ListsJevLatestAsItsOnlyModel()
         {
             var capability = (IAIDecisionCapability)_provider.GetCapability<TypeSafeDecisionCapability>();
@@ -38,7 +38,7 @@ public class TypeSafeProviderTests
 
     public class GivenSettingsWithNoEndpoint
     {
-        [Fact(Skip = "Pending T6")]
+        [Fact]
         public void DefaultsTheEndpointToTheTypeSafeApi()
         {
             new TypeSafeProviderSettings().Endpoint.ShouldBe("https://api.typesafe.ai");
@@ -50,7 +50,7 @@ public class TypeSafeProviderTests
         private readonly IAIDecisionCapability _capability =
             (IAIDecisionCapability)TypeSafeTestHost.CreateProvider().GetCapability<TypeSafeDecisionCapability>();
 
-        [Fact(Skip = "Pending T6")]
+        [Fact]
         public async Task CreatingAClientFailsBeforeAnyNetworkCall()
         {
             await Should.ThrowAsync<InvalidOperationException>(

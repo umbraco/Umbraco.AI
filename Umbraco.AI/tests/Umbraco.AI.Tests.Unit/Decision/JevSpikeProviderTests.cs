@@ -337,18 +337,7 @@ public class JevSpikeProviderTests
     }
 
     private static JevSpikeProvider BuildProvider(IHttpClientFactory? httpClientFactory = null)
-    {
-        var infrastructureMock = new Mock<IAIProviderInfrastructure>();
-        var capabilityFactoryMock = new Mock<IAICapabilityFactory>();
-        infrastructureMock.Setup(x => x.CapabilityFactory).Returns(capabilityFactoryMock.Object);
-        infrastructureMock.Setup(x => x.SchemaBuilder).Returns(Mock.Of<IAIEditableModelSchemaBuilder>());
-
-        capabilityFactoryMock
-            .Setup(x => x.Create<JevSpikeDecisionCapability>(It.IsAny<IAIProvider>()))
-            .Returns<IAIProvider>(p => new JevSpikeDecisionCapability((JevSpikeProvider)p));
-
-        return new JevSpikeProvider(infrastructureMock.Object, httpClientFactory ?? Mock.Of<IHttpClientFactory>());
-    }
+        => JevSpikeProviderFactory.Create(httpClientFactory);
 
     private sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler
     {

@@ -1,3 +1,5 @@
+#pragma warning disable UMBRACOAI_DECISION // T12 exercises the real, experimental Jev spike provider
+
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.EditableModels;
@@ -6,6 +8,7 @@ using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Decision.Spike;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Events;
 
@@ -63,6 +66,13 @@ public class AIConnectionServiceTests
         monitor.Setup(x => x.CurrentValue).Returns(new AIExperimentalOptions { Decision = decisionEnabled });
         return new AIExperimentalFeatures(monitor.Object);
     }
+
+    // T12: the real spike provider, not FakeDecisionCapability - proves gating holds for the actual
+    // AIDecisionCapabilityBase-derived implementation, not just a minimal test double. Wired via the
+    // shared JevSpikeProviderFactory (mirrors JevSpikeProviderTests.BuildProvider()) - no API
+    // key/network call happens in these specs, since capability visibility (GetCapabilities()) is
+    // resolved before any client is ever created.
+    private static JevSpikeProvider CreateJevSpikeProvider() => JevSpikeProviderFactory.Create();
 
     #region GetConnectionAsync
 
@@ -867,6 +877,82 @@ public class AIConnectionServiceTests
         _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
 
         var provider = new FakeAIProvider("decision-provider").WithCapability(new FakeDecisionCapability());
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: true), provider);
+
+        // Act
+        var connections = await service.GetConnectionsByCapabilityAsync(AICapability.Decision);
+
+        // Assert
+        connections.ShouldContain(c => c.Id == connection.Id);
+    }
+
+    #endregion
+
+    #region Decision capability gating (experimental) — DC-1 / DC-4 (AC2), T12: real JevSpikeProvider
+
+    [Fact]
+    public async Task GetAvailableCapabilitiesAsync_DecisionDisabled_HidesDecisionCapability_ForRealJevSpikeProvider()
+    {
+        // Arrange
+        var provider = CreateJevSpikeProvider();
+        var connection = new AIConnectionBuilder().WithProviderId(provider.Id).Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: false), provider);
+
+        // Act
+        var capabilities = await service.GetAvailableCapabilitiesAsync();
+
+        // Assert
+        capabilities.ShouldNotContain(AICapability.Decision);
+    }
+
+    [Fact]
+    public async Task GetConnectionsByCapabilityAsync_DecisionDisabled_ReturnsEmpty_ForRealJevSpikeProvider()
+    {
+        // Arrange
+        var provider = CreateJevSpikeProvider();
+        var connection = new AIConnectionBuilder().WithProviderId(provider.Id).Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: false), provider);
+
+        // Act
+        var connections = await service.GetConnectionsByCapabilityAsync(AICapability.Decision);
+
+        // Assert
+        connections.ShouldBeEmpty();
+    }
+
+    // Positive control for the two specs above: proves the real JevSpikeProvider genuinely exposes
+    // AICapability.Decision when the flag is on, so a deletion of WithCapability<JevSpikeDecisionCapability>()
+    // from its constructor would fail this test rather than only the disabled-side ones (which pass
+    // regardless of whether the provider is even resolved).
+    [Fact]
+    public async Task GetAvailableCapabilitiesAsync_DecisionEnabled_IncludesDecisionCapability_ForRealJevSpikeProvider()
+    {
+        // Arrange
+        var provider = CreateJevSpikeProvider();
+        var connection = new AIConnectionBuilder().WithProviderId(provider.Id).Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: true), provider);
+
+        // Act
+        var capabilities = await service.GetAvailableCapabilitiesAsync();
+
+        // Assert
+        capabilities.ShouldContain(AICapability.Decision);
+    }
+
+    [Fact]
+    public async Task GetConnectionsByCapabilityAsync_DecisionEnabled_ReturnsConnection_ForRealJevSpikeProvider()
+    {
+        // Arrange
+        var provider = CreateJevSpikeProvider();
+        var connection = new AIConnectionBuilder().WithProviderId(provider.Id).Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
         var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: true), provider);
 
         // Act

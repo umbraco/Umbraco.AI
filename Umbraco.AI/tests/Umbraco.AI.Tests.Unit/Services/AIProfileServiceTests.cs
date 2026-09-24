@@ -1,3 +1,5 @@
+#pragma warning disable UMBRACOAI_DECISION // T12 exercises the real, experimental Jev spike provider
+
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -52,6 +54,12 @@ public class AIProfileServiceTests
 
         return new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object, experimentalFeatures);
     }
+
+    // T12: only the real spike provider's id is needed here (to point the connection at it), since
+    // SaveProfileAsync's gating check keys off profile.Capability alone and never resolves the
+    // connection's provider - so the literal id avoids constructing a full mocked provider just to
+    // read one property. Matches JevSpikeProvider's [AIProvider("typesafe-jev-spike", ...)] attribute.
+    private const string JevSpikeProviderId = "typesafe-jev-spike";
 
     #region GetProfileAsync
 
@@ -423,6 +431,34 @@ public class AIProfileServiceTests
 
         // Assert
         result.Capability.ShouldBe(AICapability.Decision);
+    }
+
+    // T12 (DC-4 AC2): the real JevSpikeProvider's connection, not FakeDecisionCapability - proves
+    // gating rejects a profile aimed at the real provider, not just a minimal test double.
+    //
+    // No enabled=true counterpart: unlike the AIConnectionService positive controls (which resolve
+    // and interrogate the actual provider/capability), SaveProfileAsync's gate never touches the
+    // connection or provider at all - it only checks profile.Capability. So this spec (and
+    // SaveProfileAsync_DecisionCapabilityEnabled_Succeeds above) are not testing the real provider's
+    // capability exposure the way AIConnectionServiceTests' positive controls are; the connection
+    // here exists only to give the profile a valid ConnectionId, never to prove the provider exposes
+    // Decision.
+    [Fact]
+    public async Task SaveProfileAsync_DecisionCapabilityDisabled_ThrowsInvalidOperationException_ForRealJevSpikeProviderConnection()
+    {
+        // Arrange
+        var connection = new AIConnectionBuilder().WithProviderId(JevSpikeProviderId).Build();
+        var service = CreateServiceWithRealExperimentalFeatures(decisionEnabled: false);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("decision-profile-real-provider")
+            .WithCapability(AICapability.Decision)
+            .WithConnectionId(connection.Id)
+            .Build();
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<InvalidOperationException>(() => service.SaveProfileAsync(profile));
+        ex.Message.ShouldContain("Umbraco:AI:Experimental");
     }
 
     #endregion

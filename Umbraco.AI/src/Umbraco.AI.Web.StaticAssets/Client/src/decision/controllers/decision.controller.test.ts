@@ -12,6 +12,13 @@ vi.mock("../repository/decision.repository.js", () => ({
 }));
 
 import { UaiDecisionController } from "./decision.controller.js";
+import type {
+    UaiBinaryDecisionResult,
+    UaiChoiceDecisionResult,
+    UaiDecisionQuestion,
+    UaiDecisionResult,
+    UaiScoreDecisionResult,
+} from "../types.js";
 
 function createHost(): UmbControllerHost {
     const element = document.createElement("div");
@@ -21,9 +28,15 @@ function createHost(): UmbControllerHost {
     return host;
 }
 
+// Returns a value typed only as the union, never narrowed to a specific `kind` literal, so a
+// caller holding this can only be served by the union overload — not one of the concrete ones.
+function asUnionTypedQuestion(question: UaiDecisionQuestion): UaiDecisionQuestion {
+    return question;
+}
+
 describe("Feature: UaiDecisionController", () => {
     describe("Scenario: a binary question is answered", () => {
-        let result: Awaited<ReturnType<UaiDecisionController["ask"]>>;
+        let result: { data?: UaiBinaryDecisionResult; error?: unknown };
 
         beforeEach(async () => {
             ask.mockResolvedValue({
@@ -33,14 +46,13 @@ describe("Feature: UaiDecisionController", () => {
             result = await controller.ask({ kind: "binary", instructions: "Is this spam?" });
         });
 
-        // Pending T14
-        it.skip("returns a binary result with the answer", () => {
+        it("returns a binary result with the answer", () => {
             expect(result.data).toMatchObject({ kind: "binary", answer: true, probability: 0.97, confidence: 0.97 });
         });
     });
 
     describe("Scenario: a choice question is answered", () => {
-        let result: Awaited<ReturnType<UaiDecisionController["ask"]>>;
+        let result: { data?: UaiChoiceDecisionResult; error?: unknown };
 
         beforeEach(async () => {
             ask.mockResolvedValue({
@@ -54,14 +66,13 @@ describe("Feature: UaiDecisionController", () => {
             });
         });
 
-        // Pending T14
-        it.skip("returns a choice result with the chosen key", () => {
+        it("returns a choice result with the chosen key", () => {
             expect(result.data).toMatchObject({ kind: "choice", choice: "b", confidence: 0.9 });
         });
     });
 
     describe("Scenario: a score question is answered", () => {
-        let result: Awaited<ReturnType<UaiDecisionController["ask"]>>;
+        let result: { data?: UaiScoreDecisionResult; error?: unknown };
 
         beforeEach(async () => {
             ask.mockResolvedValue({
@@ -71,15 +82,52 @@ describe("Feature: UaiDecisionController", () => {
             result = await controller.ask({ kind: "score", instructions: "Rate it", levels: ["poor", "ok", "good"] });
         });
 
-        // Pending T14
-        it.skip("returns a score result with score and level", () => {
+        it("returns a score result with score and level", () => {
             expect(result.data).toMatchObject({ kind: "score", score: 1.8, level: "good" });
+        });
+    });
+
+    describe("Scenario: a caller holds a question typed only as the UaiDecisionQuestion union", () => {
+        let result: { data?: UaiDecisionResult; error?: unknown };
+
+        beforeEach(async () => {
+            ask.mockResolvedValue({
+                data: { kind: "binary", answer: true, probability: 0.97, confidence: 0.97 },
+            });
+            const controller = new UaiDecisionController(createHost());
+            const question = asUnionTypedQuestion({ kind: "binary", instructions: "Is this spam?" });
+            result = await controller.ask(question);
+        });
+
+        it("resolves with a result", () => {
+            expect(result.data).toMatchObject({ kind: "binary", answer: true });
+        });
+    });
+
+    describe("Scenario: options are passed alongside a question", () => {
+        beforeEach(async () => {
+            ask.mockReset();
+            ask.mockResolvedValue({ data: { kind: "binary", answer: true, probability: 0.9, confidence: 0.9 } });
+            const controller = new UaiDecisionController(createHost());
+            const controllerSignal = new AbortController().signal;
+            await controller.ask(
+                { kind: "binary", instructions: "Is this spam?" },
+                { profileIdOrAlias: "spam-check", signal: controllerSignal },
+            );
+        });
+
+        it("forwards the profile id or alias to the repository", () => {
+            expect(ask.mock.calls[0][0].profileIdOrAlias).toBe("spam-check");
+        });
+
+        it("forwards the abort signal to the repository", () => {
+            expect(ask.mock.calls[0][0].signal).toBeInstanceOf(AbortSignal);
         });
     });
 
     describe("Sad path", () => {
         describe("Scenario: the server returns 404 because Decision is disabled", () => {
-            let result: Awaited<ReturnType<UaiDecisionController["ask"]>>;
+            let result: { data?: UaiBinaryDecisionResult; error?: unknown };
 
             beforeEach(async () => {
                 ask.mockResolvedValue({ error: { status: 404 } });
@@ -87,8 +135,7 @@ describe("Feature: UaiDecisionController", () => {
                 result = await controller.ask({ kind: "binary", instructions: "Is this spam?" });
             });
 
-            // Pending T14
-            it.skip("resolves with an error and no data instead of throwing", () => {
+            it("resolves with an error and no data instead of throwing", () => {
                 expect(result).toEqual({ error: { status: 404 } });
             });
         });

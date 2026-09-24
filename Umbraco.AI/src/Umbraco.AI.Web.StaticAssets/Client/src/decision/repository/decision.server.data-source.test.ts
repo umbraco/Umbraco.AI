@@ -36,13 +36,11 @@ describe("Feature: decision server data source", () => {
             });
         });
 
-        // Pending T14
-        it.skip("sends the question kind as the API's $type", () => {
+        it("sends the question kind as the API's $type", () => {
             expect(sdkAsk.mock.calls[0][0].body.question.$type).toBe("choice");
         });
 
-        // Pending T14
-        it.skip("forwards the profile id or alias", () => {
+        it("forwards the profile id or alias", () => {
             expect(sdkAsk.mock.calls[0][0].body.profileIdOrAlias).toBe("spam-check");
         });
     });
@@ -57,9 +55,23 @@ describe("Feature: decision server data source", () => {
             result = await dataSource.ask({ question: { kind: "binary", instructions: "Is this spam?" } });
         });
 
-        // Pending T14
-        it.skip("maps the API's $type back to kind", () => {
+        it("maps the API's $type back to kind", () => {
             expect(result.data?.kind).toBe("binary");
+        });
+    });
+
+    describe("Scenario: the server returns a response with an unrecognized $type", () => {
+        let result: Awaited<ReturnType<UaiDecisionServerDataSource["ask"]>>;
+
+        beforeEach(async () => {
+            sdkAsk.mockReset();
+            sdkAsk.mockResolvedValue({ data: { $type: "ranking", confidence: 0.5 } });
+            const dataSource = new UaiDecisionServerDataSource(createHost());
+            result = await dataSource.ask({ question: { kind: "binary", instructions: "Is this spam?" } });
+        });
+
+        it("returns an explicit error instead of silently dropping the data", () => {
+            expect(result).toEqual({ error: expect.any(Error) });
         });
     });
 });

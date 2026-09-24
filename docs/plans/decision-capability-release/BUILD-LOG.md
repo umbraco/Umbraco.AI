@@ -189,3 +189,12 @@
   rather than by a restart, because the T12 hosted service would overwrite it). TypeSafe is
   absent from the provider list. No console errors from product code. One 404 came from a
   leftover spike-era "Jev Spike" connection in the gitignored demo DB, not from the product.
+
+- **T18** — `9e7c1c50` — `AISettingsArtifact.DefaultDecisionProfileUdi` plus export (Match
+  dependency) and import blocks in `UmbracoAISettingsServiceConnector`, a line-for-line copy of
+  the ImageGeneration fix (5a3fa194). The profile connector needed no change. Deploy tests 26/26
+  (was 19). The Deploy test project is in the root slnx. PASS on first review.
+  **Release-time item:** raise the root `Directory.Packages.props` `Umbraco.AI.Core` floor from
+  `[18.3.4` to the Core version that ships Decision (next minor, 18.4.0). Precedent only raises
+  it in release prep. The ranged pack recompile is the safety net: a solo Deploy pack against
+  18.3.4 fails to compile.

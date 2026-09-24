@@ -139,7 +139,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Deploy
 
-- [ ] **T18** — story: DR-8 (AC1-AC5). Add `DefaultDecisionProfileUdi` to
+- [x] **T18** — story: DR-8 (AC1-AC5). Add `DefaultDecisionProfileUdi` to
   `AISettingsArtifact`, and export (+ dependency) and import blocks in
   `UmbracoAISettingsServiceConnector`, mirroring ImageGeneration's fix (#227). Add a
   Decision profile round-trip test for `UmbracoAIProfileServiceConnector`. Raise

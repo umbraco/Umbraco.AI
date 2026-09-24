@@ -86,7 +86,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   to `ProfileSettingsModels.cs` and both directions in `ProfileMapDefinition`.
   depends-on: T4. parallel-group: B
 
-- [ ] **T11** — story: DR-4 (AC1-AC11). Add `Constants.ManagementApi.Feature.Decision`,
+- [x] **T11** — story: DR-4 (AC1-AC11). Add `Constants.ManagementApi.Feature.Decision`,
   `DecisionControllerBase`, `AskDecisionController` (`POST decision/ask`), and the
   polymorphic request/response models, per `SPEC.md`. Flag check first (404), then
   validation (400), then profile resolution. Match Chat's completion-endpoint auth policy

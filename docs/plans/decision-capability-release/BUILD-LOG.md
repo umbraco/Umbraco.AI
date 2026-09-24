@@ -101,3 +101,18 @@
   `ProfileMapDefinition` arms. Create and update share `MapSettingsFromRequest`. The OpenAPI
   schema picks up the derived type generically. Reviewer reran 1243/1243 unit + 32/32
   integration. PASS on first review.
+
+- **T11** — `f68c2ac3` — `POST decision/ask` (`AskDecisionController`, polymorphic
+  request/response models, `Constants.Feature.Decision`). Auth is `BackOfficeAccess` via the
+  shared base, same as Chat. `DecisionCapabilityGateFilter` (a resource filter) 404s before model
+  binding, so flag-off + bad body still gives 404. Took 2 review rounds:
+  1. FAIL on 4 points: (a) missing `$type` might 500; (b) the controller's validation had
+     drifted from Core (null option entry → NRE → 500); (c) the `"not found"` substring mapped a
+     missing default profile to 404 instead of 400; (d) the gate filter had no test.
+     Fixes: (a) no source change needed. The reviewer confirmed in the CMS source that
+     `NamedSystemTextJsonInputFormatter` catches `NotSupportedException`. It's now pinned by a
+     TestHost test through the real named-options wiring, which added the test-only
+     `Microsoft.AspNetCore.TestHost` package. (b) One shared internal `DecisionQuestionValidator` in
+     Core, used by both the client and the controller. (c) Substring mapping removed; all service
+     `InvalidOperationException`s → 400. (d) Filter tests added.
+  2. PASS. Reviewer reran 1296/1296 unit + 32/32 integration.

@@ -16,14 +16,14 @@ namespace Umbraco.AI.Tests.Unit.Decision;
 /// real, reusable <see cref="JevSpikeDecisionClient"/> (<c>Umbraco.AI.Tests.Common</c>); only the
 /// outermost transport (<see cref="HttpMessageHandler"/>) is faked, so this is the closest
 /// automatable proxy for "a real HTTP round trip" — the genuinely live call against Jev with real
-/// credentials (T11's acceptance criterion) stays a manual step, same as this repo's other
-/// real-provider-key checks.
+/// credentials (T11's acceptance criterion) is a separate, manual verification step, same as this
+/// repo's other real-provider-key checks.
 /// </summary>
 /// <remarks>
-/// The endpoint path and JSON field names in <see cref="JevSpikeDecisionClient"/> are placeholders
-/// pending T11 confirming Jev's actual wire contract from its real API docs — this spec proves the
-/// plumbing (HttpClient → JSON → typed <see cref="Umbraco.AI.Core.Decision.AIDecisionResponse"/>),
-/// not a verified wire shape.
+/// The endpoint path and JSON field names below mirror Jev's real <c>/v1/systemone</c> wire contract,
+/// confirmed against <see href="https://docs.typesafe.ai/api"/> and a live call during T11 — this
+/// spec proves the plumbing (HttpClient → JSON → typed <see cref="Umbraco.AI.Core.Decision.AIDecisionResponse"/>)
+/// against a wire shape that has actually been exercised for real, not a placeholder guess.
 /// </remarks>
 public class JevSpikeProviderTests
 {
@@ -35,7 +35,7 @@ public class JevSpikeProviderTests
         {
             var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new JevAnswerDto("noul", true, null, null, 0.92)),
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("noul", 0.92, null, null, null))),
             });
             _sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
         }
@@ -51,7 +51,51 @@ public class JevSpikeProviderTests
         }
 
         [Fact]
-        public async Task CarriesTheConfidenceThroughUnchanged()
+        public async Task MapsTheProbabilityToATrueAnswerAboveTheHalfwayThreshold()
+        {
+            var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this text spam?" };
+
+            var response = await _sut.AskAsync(question);
+
+            response.BinaryAnswer.ShouldBe(true);
+        }
+
+        [Fact]
+        public async Task ReportsConfidenceAsTheWinningProbability()
+        {
+            var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this text spam?" };
+
+            var response = await _sut.AskAsync(question);
+
+            response.Confidence.ShouldBe(0.92);
+        }
+    }
+
+    public class GivenABinaryQuestionAnsweredBelowTheHalfwayThreshold
+    {
+        private readonly JevSpikeDecisionClient _sut;
+
+        public GivenABinaryQuestionAnsweredBelowTheHalfwayThreshold()
+        {
+            var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("noul", 0.08, null, null, null))),
+            });
+            _sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
+        }
+
+        [Fact]
+        public async Task MapsTheProbabilityToAFalseAnswer()
+        {
+            var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this text spam?" };
+
+            var response = await _sut.AskAsync(question);
+
+            response.BinaryAnswer.ShouldBe(false);
+        }
+
+        [Fact]
+        public async Task ReportsConfidenceAsTheComplementOfTheProbability()
         {
             var question = new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this text spam?" };
 
@@ -69,7 +113,7 @@ public class JevSpikeProviderTests
         {
             var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new JevAnswerDto("choice", null, "positive", null, 0.81)),
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("choice", null, "positive", null, 0.81))),
             });
             _sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
         }
@@ -98,7 +142,7 @@ public class JevSpikeProviderTests
         {
             var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new JevAnswerDto("score", null, null, 7.5, 0.63)),
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("score", null, null, 7.5, 0.63))),
             });
             _sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
         }
@@ -138,15 +182,15 @@ public class JevSpikeProviderTests
         }
     }
 
-    public class GivenANoulAnswerWithNoBooleanValue
+    public class GivenANoulAnswerWithNoProbabilityValue
     {
         private readonly JevSpikeDecisionClient _sut;
 
-        public GivenANoulAnswerWithNoBooleanValue()
+        public GivenANoulAnswerWithNoProbabilityValue()
         {
             var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new JevAnswerDto("noul", null, null, null, 0.5)),
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("noul", null, null, null, null))),
             });
             _sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
         }
@@ -168,7 +212,7 @@ public class JevSpikeProviderTests
         {
             var handler = new FakeHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = JsonContent.Create(new JevAnswerDto("mystery", null, null, null, 0.5)),
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("mystery", null, null, null, 0.5))),
             });
             _sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
         }
@@ -193,7 +237,7 @@ public class JevSpikeProviderTests
                 capturedRequest = request;
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(new JevAnswerDto("noul", true, null, null, 0.92)),
+                    Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("noul", 0.92, null, null, null))),
                 };
             });
             var sut = new JevSpikeDecisionClient(
@@ -210,6 +254,35 @@ public class JevSpikeProviderTests
             capturedRequest.Headers.Authorization!.Parameter.ShouldBe("test-api-key");
         }
     }
+
+    public class GivenABinaryQuestion
+    {
+        [Fact]
+        public async Task SendsJevsNoulTypeDiscriminatorNotTheEnumMemberName()
+        {
+            string? sentBody = null;
+            var handler = new FakeHttpMessageHandler(request =>
+            {
+                // Read the body here, before AskAsync's `using` disposes the request/content.
+                sentBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("noul", 0.92, null, null, null))),
+                };
+            });
+            var sut = new JevSpikeDecisionClient(new HttpClient(handler) { BaseAddress = new Uri("https://api.typesafe.ai") }, "test-api-key");
+
+            await sut.AskAsync(new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this text spam?" });
+
+            sentBody.ShouldNotBeNull();
+            sentBody.ShouldContain("\"type\":\"noul\"");
+            sentBody.ShouldNotContain("\"type\":\"binary\"");
+        }
+    }
+
+    /// <summary>Matches Jev's real batch response shape — one named answer, keyed <c>"q"</c>.</summary>
+    private static JevSystemOneResponse AnswerResponse(JevAnswerDto answer)
+        => new("jev-1.13.0", new Dictionary<string, JevAnswerDto> { ["q"] = answer });
 
     /// <summary>DC-4 (AC2) — the experimental flag, not the client itself, gates reachability; see DC-1's AC4-AC6 specs for that behavior.</summary>
     [Fact]
@@ -232,7 +305,38 @@ public class JevSpikeProviderTests
             () => capability.CreateClientAsync(settings, null, default));
     }
 
-    private static JevSpikeProvider BuildProvider()
+    /// <summary>
+    /// Guards against the exact bug T11 fixed everywhere else in this file: a connection with a
+    /// blank <see cref="JevSpikeProviderSettings.AnswerPath"/> (e.g. one saved before the real
+    /// endpoint was known) must fall back to the real Jev endpoint
+    /// (<see cref="JevSpikeProviderSettings.DefaultAnswerPath"/>), not the old, wrong placeholder.
+    /// </summary>
+    [Fact]
+    public async Task CreateClient_WithBlankAnswerPath_FallsBackToTheRealJevEndpoint()
+    {
+        HttpRequestMessage? capturedRequest = null;
+        var handler = new FakeHttpMessageHandler(request =>
+        {
+            capturedRequest = request;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(AnswerResponse(new JevAnswerDto("noul", 0.92, null, null, null))),
+            };
+        });
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>())).Returns(new HttpClient(handler));
+        var provider = BuildProvider(httpClientFactoryMock.Object);
+        var capability = (IAIDecisionCapability)provider.GetCapability<JevSpikeDecisionCapability>();
+        var settings = new JevSpikeProviderSettings { ApiKey = "test-api-key", AnswerPath = "   " };
+
+        var client = await capability.CreateClientAsync(settings, null, default);
+        await client.AskAsync(new AIDecisionQuestion { Kind = AIDecisionKind.Binary, Prompt = "is this text spam?" });
+
+        capturedRequest.ShouldNotBeNull();
+        capturedRequest!.RequestUri!.AbsolutePath.ShouldBe(JevSpikeProviderSettings.DefaultAnswerPath);
+    }
+
+    private static JevSpikeProvider BuildProvider(IHttpClientFactory? httpClientFactory = null)
     {
         var infrastructureMock = new Mock<IAIProviderInfrastructure>();
         var capabilityFactoryMock = new Mock<IAICapabilityFactory>();
@@ -243,7 +347,7 @@ public class JevSpikeProviderTests
             .Setup(x => x.Create<JevSpikeDecisionCapability>(It.IsAny<IAIProvider>()))
             .Returns<IAIProvider>(p => new JevSpikeDecisionCapability((JevSpikeProvider)p));
 
-        return new JevSpikeProvider(infrastructureMock.Object, Mock.Of<IHttpClientFactory>());
+        return new JevSpikeProvider(infrastructureMock.Object, httpClientFactory ?? Mock.Of<IHttpClientFactory>());
     }
 
     private sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler

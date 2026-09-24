@@ -40,7 +40,9 @@ public sealed class JevSpikeDecisionCapability(JevSpikeProvider provider)
         }
 
         var baseUrl = string.IsNullOrWhiteSpace(settings.BaseUrl) ? "https://api.typesafe.ai" : settings.BaseUrl;
-        var answerPath = string.IsNullOrWhiteSpace(settings.AnswerPath) ? "/v1/answer" : settings.AnswerPath;
+        var answerPath = string.IsNullOrWhiteSpace(settings.AnswerPath)
+            ? JevSpikeProviderSettings.DefaultAnswerPath
+            : settings.AnswerPath;
 
         var httpClient = Provider.CreateHttpClient();
         httpClient.BaseAddress = new Uri(baseUrl);

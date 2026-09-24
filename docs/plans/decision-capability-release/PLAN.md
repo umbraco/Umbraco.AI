@@ -70,7 +70,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Management API
 
-- [ ] **T8** — story: DR-6 (AC1, AC2, AC5, AC6). Add `GET capabilities/enabled`, excluding
+- [x] **T8** — story: DR-6 (AC1, AC2, AC5, AC6). Add `GET capabilities/enabled`, excluding
   `Moderation`/`Media` and gated capabilities that are off. Make `AllProviderController`
   drop providers with zero enabled capabilities.
   depends-on: T1. parallel-group: A

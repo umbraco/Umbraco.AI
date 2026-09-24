@@ -80,3 +80,14 @@
   3. (Builder-flagged) The lower-clamp bound was only really tested by a -0.6 case, so that
      case was added.
   4. PASS. 58/58 TypeSafe tests. Each guard has red/green proof.
+
+- **T8** — `b7db71d3` — New `Capability` feature folder with `GET capabilities/enabled` (implemented
+  capabilities ∩ enabled). `AllProviderController` drops providers with zero enabled
+  capabilities. `ByIdProviderController` deliberately unchanged. Took 2 review rounds:
+  1. FAIL: the public 2-arg `AllProviderController` constructor was removed. Restored as
+     `[Obsolete]`, chaining via `StaticServiceProvider`, with `[ActivatorUtilitiesConstructor]`
+     on the new one (the c0834532 pattern). Written up as a gotcha memory. Also added a guard test,
+     `ImplementedCapabilitiesSurfaceTests`, which goes red if a new `IAI*Capability` interface
+     isn't in the implemented set.
+  2. PASS. Reviewer reran 1237/1237 unit + 32/32 integration. T12 must prove
+     `GET providers` activates live (two constructors).

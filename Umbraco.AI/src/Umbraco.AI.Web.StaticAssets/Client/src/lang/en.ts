@@ -98,6 +98,8 @@ export default {
         getContentTreePathDescription: "Retrieve the ancestor chain and position of a content item in the tree",
         getContentTypeSchemaLabel: "Get Content Type Schema",
         getContentTypeSchemaDescription: "Retrieve the schema of a content type including its property definitions",
+        getPropertyValueSchemaLabel: "Get Property Value Schema",
+        getPropertyValueSchemaDescription: "Retrieve the JSON schema for the value a property data type accepts",
         getUmbracoContentLabel: "Get Umbraco Content",
         getUmbracoContentDescription: "Retrieve a published content item by its key including all property values",
         getUmbracoContentChildrenLabel: "Get Umbraco Content Children",

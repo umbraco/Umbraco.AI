@@ -102,6 +102,13 @@ public class UmbracoAISettingsServiceConnector(
             dependencies.Add(new UmbracoAIArtifactDependency(imageGenerationProfileUdi, ArtifactDependencyMode.Match));
         }
 
+        GuidUdi? decisionProfileUdi = null;
+        if (entity.DefaultDecisionProfileId.HasValue)
+        {
+            decisionProfileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, entity.DefaultDecisionProfileId.Value);
+            dependencies.Add(new UmbracoAIArtifactDependency(decisionProfileUdi, ArtifactDependencyMode.Match));
+        }
+
         GuidUdi? classifierChatProfileUdi = null;
         if (entity.ClassifierChatProfileId.HasValue)
         {
@@ -115,6 +122,7 @@ public class UmbracoAISettingsServiceConnector(
             DefaultEmbeddingProfileUdi = embeddingProfileUdi,
             DefaultSpeechToTextProfileUdi = speechToTextProfileUdi,
             DefaultImageGenerationProfileUdi = imageGenerationProfileUdi,
+            DefaultDecisionProfileUdi = decisionProfileUdi,
             ClassifierChatProfileUdi = classifierChatProfileUdi
         };
 
@@ -191,6 +199,18 @@ public class UmbracoAISettingsServiceConnector(
         else
         {
             settings.DefaultImageGenerationProfileId = null;
+        }
+
+        // Resolve optional decision profile dependency
+        if (state.Artifact.DefaultDecisionProfileUdi != null)
+        {
+            state.Artifact.DefaultDecisionProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
+            var decisionProfile = await profileService.GetProfileAsync(state.Artifact.DefaultDecisionProfileUdi.Guid, ct);
+            settings.DefaultDecisionProfileId = decisionProfile?.Id;
+        }
+        else
+        {
+            settings.DefaultDecisionProfileId = null;
         }
 
         // Resolve optional classifier chat profile dependency

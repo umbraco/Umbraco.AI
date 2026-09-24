@@ -39,7 +39,7 @@ public class DecisionDeployTests
 
     #region Scenario: a default Decision profile is set and exported
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Export_WithDecisionDefault_SetsDefaultDecisionProfileUdi()
     {
         var profileId = Guid.NewGuid();
@@ -50,7 +50,7 @@ public class DecisionDeployTests
         artifact!.DefaultDecisionProfileUdi!.Guid.ShouldBe(profileId);
     }
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Export_WithDecisionDefault_UsesProfileEntityType()
     {
         var artifact = await _settingsConnector.GetArtifactAsync(
@@ -59,7 +59,7 @@ public class DecisionDeployTests
         artifact!.DefaultDecisionProfileUdi!.EntityType.ShouldBe(UmbracoAIConstants.UdiEntityType.Profile);
     }
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Export_WithDecisionDefault_AddsProfileDependency()
     {
         var profileId = Guid.NewGuid();
@@ -76,7 +76,7 @@ public class DecisionDeployTests
 
     #region Scenario: an artifact with a default Decision profile is imported
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Import_WithDefaultDecisionProfileUdi_SetsDefaultDecisionProfileId()
     {
         var profileId = Guid.NewGuid();
@@ -111,7 +111,7 @@ public class DecisionDeployTests
 
     #region Scenario: a Decision profile artifact is imported
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Import_DecisionProfile_RoundTripsNonNullDecisionSettings()
     {
         var connectionId = Guid.NewGuid();
@@ -144,7 +144,7 @@ public class DecisionDeployTests
 
     #region Sad path: no default Decision profile
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Export_WithoutDecisionDefault_LeavesUdiNull()
     {
         var artifact = await _settingsConnector.GetArtifactAsync(_settingsUdi, new AISettings());
@@ -152,7 +152,7 @@ public class DecisionDeployTests
         artifact!.DefaultDecisionProfileUdi.ShouldBeNull();
     }
 
-    [Fact(Skip = "Pending T18")]
+    [Fact]
     public async Task Export_WithoutAnyDefaults_AddsNoProfileDependency()
     {
         var artifact = await _settingsConnector.GetArtifactAsync(_settingsUdi, new AISettings());

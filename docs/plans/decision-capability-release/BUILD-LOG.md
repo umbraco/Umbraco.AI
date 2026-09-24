@@ -152,3 +152,16 @@
   2. PASS. Follow-up: the union spec was being narrowed to the binary overload, so it now uses a
      union-typed helper. Red/green proved `build:core` fails TS2769 without the overload (tsconfig
      type-checks test files). Vitest 34/34.
+
+- **T15** — `b19952b8` — Internal `UaiEnabledCapabilitiesRepository` (module-scoped shared promise,
+  cleared on error so it can retry), `defaultDecisionProfileId` through settings
+  types/repository/context, and a Default Decision Profile picker. The ImageGeneration and
+  Decision pickers render only once they're known to be enabled, so there's no flash. The full
+  `#model` is always PUT, so hidden values survive. All six pickers are now localized (text
+  unchanged). Took 2 review rounds:
+  1. FAIL: the shared-promise/retry cache was untested (the editor spec mocked the whole
+     repository). Added 3 repository specs. Isolation uses a cache-busting dynamic import, since
+     `vi.resetModules()` re-ran `customElements.define`.
+  2. PASS. Vitest 45/45, run twice. The reviewer confirmed that removing `??=` or the reset
+     fails a spec. Suggestion kept for later: a `resetEnabledCapabilitiesCacheForTests()` seam
+     would be more conventional than the `?t=` import trick.

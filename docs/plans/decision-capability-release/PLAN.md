@@ -114,7 +114,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   into root `src/exports.ts`. Map `kind` ↔ `$type`. Don't leak generated types.
   depends-on: T13. parallel-group: C
 
-- [ ] **T15** — story: DR-3 (AC2, AC3), DR-6 (AC3, AC4). Add the enabled-capabilities
+- [x] **T15** — story: DR-3 (AC2, AC3), DR-6 (AC3, AC4). Add the enabled-capabilities
   repository (fetched once, shared), the "Default Decision Profile" picker, and render the
   ImageGeneration and Decision pickers only when enabled. Hidden values are preserved on
   save. `PUT settings` is full-replace (every field, nulls included; confirmed in T9), so the

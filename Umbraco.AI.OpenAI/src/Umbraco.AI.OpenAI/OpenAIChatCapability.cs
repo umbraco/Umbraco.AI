@@ -136,7 +136,9 @@ public class OpenAIChatCapability(
         // Innermost, and it chains any existing RawRepresentationFactory, so the reasoning effort the
         // capability-settings decorator sets further out still reaches the request.
         var runtimeContextAccessor = StaticServiceProvider.Instance.GetRequiredService<IAIRuntimeContextAccessor>();
-        return new ClientManagedHistoryChatClient(inner, runtimeContextAccessor);
+        var managed = new ClientManagedHistoryChatClient(inner, runtimeContextAccessor);
+
+        return new OpenAIIncompleteResponseChatClient(managed);
     }
 
     /// <inheritdoc />

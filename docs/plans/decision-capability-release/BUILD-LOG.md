@@ -26,3 +26,13 @@
      `"Umbraco.AI"` source, so parallel chat/embedding tests could make it flake. Fixed by
      filtering on `gen_ai.decision`.
   3. PASS. Reviewer reran 1195/1195 unit + 32/32 integration twice.
+
+- **T3** — `613dc364` — `AISettings.DefaultDecisionProfileId`, `AIOptions.DefaultDecisionProfileAlias`,
+  and the Decision arm in all three `AIProfileService` switches. Persisted reflectively, no
+  migration. The `Umbraco.Code.MapAll` analyzer forced a temporary `-DefaultDecisionProfileId`
+  exclusion in `SettingsMapDefinition.cs` (`TODO(T9)`). T9's plan line now says to remove it.
+  Reviewer reran 1198/1198 unit + 32/32 integration, and `Umbraco.AI.Deploy.slnx` builds.
+  PASS on first review.
+  Process note: the builder used `git stash` for a baseline warning check and left an applied
+  entry (`T3-baseline-check-*`) on the shared stash stack. The user was asked to drop it. Later
+  builders are told not to stash.

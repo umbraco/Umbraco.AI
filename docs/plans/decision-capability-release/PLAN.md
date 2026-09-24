@@ -36,7 +36,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   new types. `IAIDecisionClient` stays non-generic.
   depends-on: T1. parallel-group: A
 
-- [ ] **T3** — story: DR-1 (AC6, AC7, AC12), DR-3. Add `AISettings.DefaultDecisionProfileId`,
+- [x] **T3** — story: DR-1 (AC6, AC7, AC12), DR-3. Add `AISettings.DefaultDecisionProfileId`,
   `AIOptions.DefaultDecisionProfileAlias`, and the Decision arm in all three capability
   switches in `AIProfileService` (lines ~85/105/124), mirroring ImageGeneration.
   depends-on: T1. parallel-group: A
@@ -77,7 +77,9 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 - [ ] **T9** — story: DR-3 (AC1). Add `defaultDecisionProfileId` to
   `SettingsResponseModel`, `UpdateSettingsRequestModel`, `SettingsMapDefinition`. No
-  capability check, matching the other default slots.
+  capability check, matching the other default slots. Remove the `-DefaultDecisionProfileId`
+  `Umbraco.Code.MapAll` exclusions and the `TODO(T9)` comment T3 left in
+  `SettingsMapDefinition.cs`.
   depends-on: T3. parallel-group: B
 
 - [ ] **T10** — story: DR-7 (AC4). Add `DecisionProfileSettingsModel` (`$type: "decision"`)

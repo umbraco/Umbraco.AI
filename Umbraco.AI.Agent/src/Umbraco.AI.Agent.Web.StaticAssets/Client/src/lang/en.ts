@@ -22,6 +22,10 @@ export default {
         allowedToolIds: "Allowed Tools",
         noDefaultPermissions: "No default permissions configured",
     },
+    uaiAgentSurface: {
+        automationsLabel: "Automations",
+        automationsDescription: "Make this agent available to Umbraco Automate workflows.",
+    },
     uaiToolScope: {
         // Content scopes
         contentReadLabel: "Content (Read)",

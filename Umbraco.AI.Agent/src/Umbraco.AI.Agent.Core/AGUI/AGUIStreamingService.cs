@@ -121,11 +121,12 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
             yield return emitter.EmitError(userMessage, code);
         }
-        else if (streamState.LastFinishReason == ChatFinishReason.Length)
+        else if (streamState.LastFinishReason == ChatFinishReason.Length && !streamState.ProducedOutput)
         {
-            // The model stopped because it hit the output token limit. For a thinking model this can
-            // happen before any text or tool call is produced, so finishing normally would leave the
-            // user with an apparently idle chat and no idea why (#414).
+            // The model hit the output token limit before producing any text or tool call — typically a
+            // thinking model that spent the whole budget reasoning. Finishing normally would leave the
+            // user with an apparently idle chat and no idea why (#414). A run that did produce output
+            // still finishes normally, so a deliberately low limit keeps returning its clipped answer.
             _logger.LogWarning(
                 "Agent run {RunId} was cut off at the output token limit.",
                 request.RunId);
@@ -218,6 +219,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                     ? System.Text.Json.JsonSerializer.Serialize(pendingCall.Arguments)
                                     : "{}";
                                 var pendingEvent = emitter.EmitToolCall(pendingCall.CallId, pendingCall.Name, pendingCall.Arguments, isFrontendTool: false);
+                                streamState.ProducedOutput = true;
                                 if (pendingEvent != null)
                                 {
                                     yield return pendingEvent;
@@ -240,6 +242,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                 frontendToolNames.Contains(functionCall.Name),
                                 request.RunId);
                             var toolCallEvent = ProcessFunctionCall(emitter, functionCall, frontendToolNames);
+                            streamState.ProducedOutput = true;
                             if (toolCallEvent != null)
                             {
                                 yield return toolCallEvent;
@@ -268,6 +271,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                                 errorContent.ErrorCode ?? "(none)",
                                 errorContent.Message ?? "(empty)",
                                 errorContent.Details ?? "(none)");
+                            streamState.ProducedOutput = true;
                             yield return emitter.EmitTextChunk(FormatProviderErrorForChat(errorContent));
                             break;
 
@@ -290,13 +294,14 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             // Process text content
             if (!string.IsNullOrEmpty(update.Text))
             {
+                streamState.ProducedOutput = true;
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
     }
 
     private const string OutputLimitReachedMessage =
-        "The response was cut off because it reached the maximum output tokens. "
+        "The model reached its maximum output tokens before it could respond. "
         + "Increase Max tokens on the agent's profile and try again.";
 
     /// <summary>
@@ -309,6 +314,11 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         /// so only the last says why the run as a whole stopped.
         /// </summary>
         public ChatFinishReason? LastFinishReason { get; set; }
+
+        /// <summary>
+        /// Whether the run surfaced anything to the user — text, a tool call or an inline provider error.
+        /// </summary>
+        public bool ProducedOutput { get; set; }
     }
 
     /// <summary>

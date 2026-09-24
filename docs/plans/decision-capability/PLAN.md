@@ -127,7 +127,7 @@ provider.
   `AIDecisionResponse` — not a mocked `HttpClient`.
   depends-on: T10, T9.
 
-- [ ] **T12** — story: DC-4 (AC2). With the same spike provider now
+- [x] **T12** — story: DC-4 (AC2). With the same spike provider now
   registered from T11, flip `Umbraco:AI:Experimental:Decision` back to its
   default (`false`) and re-run DC-1's AC4–AC6 checks against it specifically
   — confirming the *real* provider, not just a test double, goes fully inert

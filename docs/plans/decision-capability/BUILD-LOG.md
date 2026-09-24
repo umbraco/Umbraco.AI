@@ -6,7 +6,7 @@
   build and confirmed every existing `switch` over `AICapability` has a safe default branch,
   so the new value can't break anything already shipped. PASS on first review pass.
 
-- **T2** — (pending SHA) — `Decision/` core types added (Kind, Question, Options, Response +
+- **T2** — `6af897a7` — `Decision/` core types added (Kind, Question, Options, Response +
   factories, IAIDecisionClient, Diagnostics). First review pass found 2 Important issues:
   a custom `AIDecisionUsage` type would have forced an unplanned converter in T7 and lost
   usage fields the tracking pipeline already reads, and the response factories couldn't set
@@ -134,3 +134,23 @@
   API — caught mid-flight and handed to a builder to redo through the normal cycle. PASS on
   confirmation — genuine live result `Kind=Binary BinaryAnswer=True Confidence=0.99`,
   1183/1183 unit + 32/32 integration.
+
+- **T12** — `7997360b` — Proved the real `JevSpikeProvider` (not just T9's generic test-double)
+  goes fully inert when `Umbraco:AI:Experimental:Decision` is off — hidden from capability
+  listing, empty from connections-by-capability, profile creation rejected. FAILed once: the
+  first pass of tests only covered the disabled side, so they'd have passed vacuously even if
+  the provider never exposed `AICapability.Decision` at all. Fixed: added 2 positive-control
+  tests (flag on → Decision IS listed / connection IS returned), consolidated the
+  now-3x-duplicated provider-construction helper into one shared `JevSpikeProviderFactory`.
+  PASS on confirmation — 1188/1188 unit + 32/32 integration, the final green run for the whole
+  feature.
+
+## Plan complete
+
+All 12 tasks (T1-T12) are done, reviewed, and committed on `v18/feature/decision-capability`.
+See `DECISION-LOG.md` for the full record of what was decided and corrected along the way —
+most notably T5/T6's three-round detour to make `AIDecisionOptions` follow M.E.AI's own
+mutable-options convention (per user redirect) rather than an idiomatic-but-inconsistent C#
+record, and T11's discovery that Jev's real wire format differed from every guess T10 made
+(wrong endpoint, wrong shape, and a type discriminator — `"noul"`, not `"binary"` — that
+doesn't exist anywhere in `AIDecisionKind`'s own naming).

@@ -1,15 +1,11 @@
 // DR-9 — Branch automations on a decision
-//
-// ASSUMPTION (T20 builder confirms/adjusts): action constructors take
-// (ActionInfrastructure, IAIDecisionService, IAIExperimentalFeatures, ILogger<T>), mirroring
-// TranscribeAudioAction; IAIDecisionService exposes
-// AskAsync<TResponse>(Action<AIDecisionBuilder>, AIDecisionQuestion<TResponse>, CancellationToken).
-// The Options/Levels setting types depend on T20's field-editor choice.
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.AI.Core.Decision;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.Settings;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Automate.Core.Settings;
@@ -32,7 +28,7 @@ public class DecisionActionsTests
 
     #region Scenario: "Ask yes/no" and the provider answers probability 0.9
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_Succeeds()
     {
         SetupBinary(0.9);
@@ -42,7 +38,7 @@ public class DecisionActionsTests
         result.Status.ShouldBe(ActionResultStatus.Success);
     }
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_OutputsAnswerTrue()
     {
         SetupBinary(0.9);
@@ -52,7 +48,7 @@ public class DecisionActionsTests
         result.OutputData.ShouldBeOfType<AskYesNoDecisionOutput>().Answer.ShouldBeTrue();
     }
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_OutputsProbability()
     {
         SetupBinary(0.9);
@@ -62,7 +58,7 @@ public class DecisionActionsTests
         result.OutputData.ShouldBeOfType<AskYesNoDecisionOutput>().Probability.ShouldBe(0.9);
     }
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_OutputsConfidence()
     {
         SetupBinary(0.9);
@@ -76,7 +72,7 @@ public class DecisionActionsTests
 
     #region Scenario: "Ask pick-one" with options a, b and the provider picks b
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskChoice_OutputsChosenKey()
     {
         _decisionServiceMock
@@ -85,7 +81,7 @@ public class DecisionActionsTests
         var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
 
         var result = await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
-            new AskChoiceDecisionSettings { Instructions = "Pick", Options = [new("a"), new("b")] }), CancellationToken.None);
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = "a\nb" }), CancellationToken.None);
 
         result.OutputData.ShouldBeOfType<AskChoiceDecisionOutput>().Choice.ShouldBe("b");
     }
@@ -94,7 +90,7 @@ public class DecisionActionsTests
 
     #region Scenario: "Ask score" with levels low, high and the provider returns 1.0
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskScore_OutputsLevel()
     {
         _decisionServiceMock
@@ -112,33 +108,38 @@ public class DecisionActionsTests
 
     #region Scenario: ProfileId is empty
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_WithoutProfileId_DoesNotSetProfileOnBuilder()
     {
         Action<AIDecisionBuilder>? captured = null;
         _decisionServiceMock
             .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIBinaryDecisionQuestion>(), It.IsAny<CancellationToken>()))
-            .Callback<Action<AIDecisionBuilder>, AIBinaryDecisionQuestion, CancellationToken>((b, _, _) => captured = b)
+            // Callback's generic parameters must match AskAsync<TResponse>'s actual parameter
+            // types (AIDecisionQuestion<AIBinaryDecisionResponse>), not the narrower argument
+            // type used in the Setup's It.IsAny<> above.
+            .Callback<Action<AIDecisionBuilder>, AIDecisionQuestion<AIBinaryDecisionResponse>, CancellationToken>((b, _, _) => captured = b)
             .ReturnsAsync(new AIBinaryDecisionResponse { Probability = 0.9 });
 
         await CreateYesNo().ExecuteAsync(YesNoContext(), CancellationToken.None);
 
         var builder = new AIDecisionBuilder();
         captured!(builder);
-        builder.ProfileId.ShouldBeNull(); // null = default Decision profile; property name per AIDecisionBuilder
+        // ProfileId is internal to Umbraco.AI.Core (not visible to this assembly), so read the
+        // backing field via reflection, mirroring TranscribeAudioActionTests' GetPrivateField.
+        GetPrivateField<Guid?>(builder, "_profileId").ShouldBeNull(); // null = default Decision profile
     }
 
     #endregion
 
     #region Scenario: Instructions come from a bound value
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_SendsResolvedInstructions()
     {
-        AIBinaryDecisionQuestion? sent = null;
+        AIDecisionQuestion<AIBinaryDecisionResponse>? sent = null;
         _decisionServiceMock
             .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIBinaryDecisionQuestion>(), It.IsAny<CancellationToken>()))
-            .Callback<Action<AIDecisionBuilder>, AIBinaryDecisionQuestion, CancellationToken>((_, q, _) => sent = q)
+            .Callback<Action<AIDecisionBuilder>, AIDecisionQuestion<AIBinaryDecisionResponse>, CancellationToken>((_, q, _) => sent = q)
             .ReturnsAsync(new AIBinaryDecisionResponse { Probability = 0.9 });
 
         await CreateYesNo().ExecuteAsync(YesNoContext(instructions: "value from earlier step"), CancellationToken.None);
@@ -150,7 +151,7 @@ public class DecisionActionsTests
 
     #region Sad path: flag turned off after startup
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_WhenFlagOff_FailsWithValidation()
     {
         _experimentalMock.Setup(x => x.IsCapabilityEnabled(It.IsAny<Umbraco.AI.Core.Models.AICapability>())).Returns(false);
@@ -160,7 +161,7 @@ public class DecisionActionsTests
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
     }
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_WhenFlagOff_DoesNotCallProvider()
     {
         _experimentalMock.Setup(x => x.IsCapabilityEnabled(It.IsAny<Umbraco.AI.Core.Models.AICapability>())).Returns(false);
@@ -174,24 +175,108 @@ public class DecisionActionsTests
 
     #endregion
 
-    #region Sad path: "Ask pick-one" with 1 option
+    #region Sad path: "Ask pick-one" with 1 option (rejected by Core's Decision validator)
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskChoice_WithOneOption_FailsWithValidation()
     {
+        // Core's ValidatingDecisionClient (via the shared DecisionQuestionValidator) is the single
+        // source of the 2..255 option-count rule, and throws ArgumentException before any provider
+        // call — the action just maps that to Validation, same as it does for any other
+        // structurally invalid question Core rejects.
+        _decisionServiceMock
+            .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Options must contain between 2 and 255 entries.", "question"));
         var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
 
         var result = await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
-            new AskChoiceDecisionSettings { Instructions = "Pick", Options = [new("a")] }), CancellationToken.None);
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = "a" }), CancellationToken.None);
 
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
     }
 
     #endregion
 
+    #region Scenario: ParseOptions splits the Options textarea into AIDecisionOption entries
+
+    [Fact]
+    public async Task AskChoice_ParsesKeyAndDescription_WhenLineHasColon()
+    {
+        var sent = await CaptureChoiceQuestionAsync("a: Apple");
+
+        sent!.Options[0].ShouldBe(new AIDecisionOption("a", "Apple"));
+    }
+
+    [Fact]
+    public async Task AskChoice_SplitsOnFirstColonOnly_WhenDescriptionContainsColon()
+    {
+        var sent = await CaptureChoiceQuestionAsync("a: ratio 1:2");
+
+        sent!.Options[0].ShouldBe(new AIDecisionOption("a", "ratio 1:2"));
+    }
+
+    [Fact]
+    public async Task AskChoice_IgnoresBlankLines()
+    {
+        var sent = await CaptureChoiceQuestionAsync("a\n\nb");
+
+        sent!.Options.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task AskChoice_IgnoresCarriageReturns_WhenLinesAreCrLf()
+    {
+        var sent = await CaptureChoiceQuestionAsync("a\r\nb");
+
+        sent!.Options.ShouldBe([new AIDecisionOption("a"), new AIDecisionOption("b")]);
+    }
+
+    [Fact]
+    public async Task AskChoice_TrimsSurroundingWhitespace()
+    {
+        var sent = await CaptureChoiceQuestionAsync("  a : Apple  ");
+
+        sent!.Options[0].ShouldBe(new AIDecisionOption("a", "Apple"));
+    }
+
+    [Fact]
+    public async Task AskChoice_PassesThroughDuplicateKeys_Unchanged()
+    {
+        var sent = await CaptureChoiceQuestionAsync("a\na");
+
+        sent!.Options.ShouldBe([new AIDecisionOption("a"), new AIDecisionOption("a")]);
+    }
+
+    [Fact]
+    public async Task AskChoice_PassesThroughEmptyKey_ForCoreToReject()
+    {
+        // ParseOptions itself doesn't reject an empty key — that's left to Core's Decision
+        // validator downstream, once the question reaches IAIDecisionService.
+        var sent = await CaptureChoiceQuestionAsync(": desc");
+
+        sent!.Options[0].ShouldBe(new AIDecisionOption("", "desc"));
+    }
+
+    private async Task<AIChoiceDecisionQuestion?> CaptureChoiceQuestionAsync(string options)
+    {
+        AIChoiceDecisionQuestion? sent = null;
+        _decisionServiceMock
+            .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<CancellationToken>()))
+            .Callback<Action<AIDecisionBuilder>, AIDecisionQuestion<AIChoiceDecisionResponse>, CancellationToken>((_, q, _) => sent = (AIChoiceDecisionQuestion)q)
+            .ReturnsAsync(new AIChoiceDecisionResponse { Choice = "a", ChoiceConfidence = 0.5 });
+        var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
+
+        await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = options }), CancellationToken.None);
+
+        return sent;
+    }
+
+    #endregion
+
     #region Sad path: provider throws
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_WhenProviderThrows_FailsWithUnknown()
     {
         SetupBinaryThrows("Jev is down");
@@ -201,14 +286,14 @@ public class DecisionActionsTests
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Unknown);
     }
 
-    [Fact(Skip = "Pending T20")]
+    [Fact]
     public async Task AskYesNo_WhenProviderThrows_SurfacesProviderMessage()
     {
         SetupBinaryThrows("Jev is down");
 
         var result = await CreateYesNo().ExecuteAsync(YesNoContext(), CancellationToken.None);
 
-        result.ErrorMessage.ShouldContain("Jev is down"); // property name per ActionResult
+        result.Exception!.Message.ShouldContain("Jev is down"); // ActionResult exposes Exception, not ErrorMessage
     }
 
     #endregion
@@ -221,7 +306,9 @@ public class DecisionActionsTests
     private void SetupBinaryThrows(string message)
         => _decisionServiceMock
             .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIBinaryDecisionQuestion>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException(message));
+            // AIProviderException (not InvalidOperationException, which the action maps to
+            // Validation for "no default profile") is what a real provider failure surfaces as.
+            .ThrowsAsync(new AIProviderException(new AIProviderErrorInfo(AIProviderErrorCategory.Unknown, message, null, message)));
 
     private AskYesNoDecisionAction CreateYesNo()
         => new(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskYesNoDecisionAction>>());
@@ -238,4 +325,12 @@ public class DecisionActionsTests
             ActionAlias = alias,
             Settings = settings,
         };
+
+    private static T? GetPrivateField<T>(object instance, string fieldName)
+    {
+        var field = instance.GetType()
+            .GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+        field.ShouldNotBeNull($"Expected private field '{fieldName}' on {instance.GetType().Name}.");
+        return (T?)field.GetValue(instance);
+    }
 }

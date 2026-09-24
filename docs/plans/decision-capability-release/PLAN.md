@@ -104,7 +104,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Frontend
 
-- [ ] **T13** — story: DR-5, DR-6, DR-7 (prerequisite). Regenerate the OpenAPI client
+- [x] **T13** — story: DR-5, DR-6, DR-7 (prerequisite). Regenerate the OpenAPI client
   (`npm run generate-client` against the running demo site) once, after every backend API
   change has landed. Commit the generated `src/api/` changes only.
   depends-on: T12.

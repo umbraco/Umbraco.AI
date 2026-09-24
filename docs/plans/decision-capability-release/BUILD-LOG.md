@@ -133,3 +133,10 @@
   Scratch: `demos/v18/Umbraco.AI.DemoSite/TEMP_DecisionReleaseVerification.cs` (gitignored), log
   prefix `[T12]`. Tip for later wire tasks: `IBackOfficeUserClientCredentialsManager.SaveAsync`
   prefixes the client id with `umbraco-back-office-`, so request the token with the prefixed id.
+
+- **T13** — `e5c88b4a` — Regenerated the core OpenAPI client from the running demo site
+  (`generate-client:core`). Additions only: `DecisionService.ask`,
+  `CapabilitiesService.getEnabledCapabilities`, the `$type` unions for Decision
+  question/response, the `decision` arm on `ProfileSettingsModel`, and `defaultDecisionProfileId`.
+  No unrelated drift, and the generator version is unchanged. `npm run build:core` passes
+  (api-extractor included). PASS on first review.

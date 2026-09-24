@@ -1,4 +1,6 @@
 // DR-6 — Hide disabled experimental capabilities (AC5, AC6); DR-2 AC1/AC16 at the API layer
+#pragma warning disable UMBRACOAI_IMAGEGEN // Exercises the experimental ImageGeneration capability
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -51,10 +53,10 @@ public class AllProviderControllerExperimentalTests
         private readonly IReadOnlyList<ProviderItemResponseModel> _providers =
             GetProviders(new AIExperimentalOptions { Decision = true }, DecisionOnlyProvider());
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ListsTheDecisionOnlyProvider() => _providers.Count.ShouldBe(1);
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ListsOnlyDecisionAsItsCapability() => _providers[0].Capabilities.ShouldBe(["Decision"]);
     }
 
@@ -63,10 +65,10 @@ public class AllProviderControllerExperimentalTests
         private readonly IReadOnlyList<ProviderItemResponseModel> _providers =
             GetProviders(new AIExperimentalOptions(), OpenAILikeProvider());
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void StillListsTheProvider() => _providers.Count.ShouldBe(1);
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ListsOnlyItsEnabledCapabilities()
             => _providers[0].Capabilities.ShouldBe(["Chat", "Embedding"], ignoreOrder: true);
     }
@@ -77,7 +79,7 @@ public class AllProviderControllerExperimentalTests
 
     public class GivenTheDecisionFlagOff
     {
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void OmitsTheDecisionOnlyProvider()
             => GetProviders(new AIExperimentalOptions(), DecisionOnlyProvider(), OpenAILikeProvider())
                 .ShouldNotContain(p => p.Id == "typesafe");

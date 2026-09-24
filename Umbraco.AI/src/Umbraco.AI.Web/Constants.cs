@@ -74,6 +74,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Capability features.
+            /// </summary>
+            public static class Capability
+            {
+                /// <summary>
+                /// The route segment for Capability features.
+                /// </summary>
+                public const string RouteSegment = "capabilities";
+
+                /// <summary>
+                /// The Swagger group name for Capability features.
+                /// </summary>
+                public const string GroupName = "Capabilities";
+            }
+
+            /// <summary>
             /// Defines constants for Provider features.
             /// </summary>
             public static class Provider

@@ -26,22 +26,22 @@ public class EnabledCapabilitiesControllerTests
     {
         private readonly IReadOnlyList<string> _enabled = GetEnabled(new AIExperimentalOptions());
 
-        [Theory(Skip = "Pending T8")]
+        [Theory]
         [InlineData("Chat")]
         [InlineData("Embedding")]
         [InlineData("SpeechToText")]
         public void IncludesStableCapabilities(string capability) => _enabled.ShouldContain(capability);
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ExcludesImageGeneration() => _enabled.ShouldNotContain("ImageGeneration");
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ExcludesDecision() => _enabled.ShouldNotContain("Decision");
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ExcludesReservedModeration() => _enabled.ShouldNotContain("Moderation");
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void ExcludesReservedMedia() => _enabled.ShouldNotContain("Media");
     }
 
@@ -49,16 +49,16 @@ public class EnabledCapabilitiesControllerTests
     {
         private readonly IReadOnlyList<string> _enabled = GetEnabled(new AIExperimentalOptions { Decision = true });
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void IncludesDecision() => _enabled.ShouldContain("Decision");
 
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void StillExcludesImageGeneration() => _enabled.ShouldNotContain("ImageGeneration");
     }
 
     public class GivenTheImageGenerationFlagOn
     {
-        [Fact(Skip = "Pending T8")]
+        [Fact]
         public void IncludesImageGeneration()
             => GetEnabled(new AIExperimentalOptions { ImageGeneration = true }).ShouldContain("ImageGeneration");
     }

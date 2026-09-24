@@ -101,13 +101,43 @@ export default {
         getPropertyValueSchemaLabel: "Get Property Value Schema",
         getPropertyValueSchemaDescription: "Retrieve the JSON schema for the value a property data type accepts",
         getUmbracoContentLabel: "Get Umbraco Content",
-        getUmbracoContentDescription: "Retrieve a published content item by its key including all property values",
+        getUmbracoContentDescription: "Retrieve a content item by its key, published or draft, including all property values",
         getUmbracoContentChildrenLabel: "Get Umbraco Content Children",
         getUmbracoContentChildrenDescription: "List child content items under a parent with optional filtering and paging",
+
+        // Content write tools (content-write scope)
+        createUmbracoContentLabel: "Create Umbraco Content",
+        createUmbracoContentDescription: "Create a new content item as a draft",
+        updateUmbracoContentLabel: "Update Umbraco Content",
+        updateUmbracoContentDescription: "Update a content item's name and simple property values as a draft",
+        setUmbracoContentValueLabel: "Set Umbraco Content Value",
+        setUmbracoContentValueDescription: "Set a content property value, including properties nested inside blocks",
+        clearUmbracoContentValueLabel: "Clear Umbraco Content Value",
+        clearUmbracoContentValueDescription: "Clear a content property value back to its empty state",
+        addUmbracoContentItemLabel: "Add Umbraco Content Item",
+        addUmbracoContentItemDescription: "Add an item to a block list, block grid or other collection property",
+        removeUmbracoContentItemLabel: "Remove Umbraco Content Item",
+        removeUmbracoContentItemDescription: "Remove an item from a block list, block grid or other collection property",
+        moveUmbracoContentItemLabel: "Move Umbraco Content Item",
+        moveUmbracoContentItemDescription: "Reorder an item in a block list, block grid or other collection property",
+        publishUmbracoContentLabel: "Publish Umbraco Content",
+        publishUmbracoContentDescription: "Publish a content item, making it live",
+        unpublishUmbracoContentLabel: "Unpublish Umbraco Content",
+        unpublishUmbracoContentDescription: "Unpublish a content item, taking it offline",
+        deleteUmbracoContentLabel: "Delete Umbraco Content",
+        deleteUmbracoContentDescription: "Move a content item to the recycle bin",
 
         // Umbraco media tools (media-read scope)
         getUmbracoMediaLabel: "Get Umbraco Media",
         getUmbracoMediaDescription: "Retrieve a media item from Umbraco by ID",
+
+        // Media write tools (media-write scope)
+        createUmbracoMediaLabel: "Create Umbraco Media",
+        createUmbracoMediaDescription: "Create a new media item, such as a folder",
+        updateUmbracoMediaLabel: "Update Umbraco Media",
+        updateUmbracoMediaDescription: "Update a media item's name and simple property values",
+        deleteUmbracoMediaLabel: "Delete Umbraco Media",
+        deleteUmbracoMediaDescription: "Move a media item to the recycle bin",
 
         // Search tools (search scope)
         searchUmbracoLabel: "Search Umbraco",

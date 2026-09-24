@@ -212,3 +212,13 @@
   directory-wide export hit this, as did unrelated jobs (`AIUsageHourlyAggregationJob`, Automate
   outbox cleanup). That's an environment limit, not a Decision defect, and was worked around by
   calling `GetArtifactAsync`/`ProcessAsync` directly.
+
+- **T20** — `60ddc7d8` — Three actions (`umbracoAI.askYesNoDecision`, `askChoiceDecision`,
+  `askScoreDecision`, group "AI"). Compose-time `Exclude<T>()` when the flag is off (read from
+  `builder.Config`, same key Core binds) plus a run-time guard (→ Validation). Error mapping
+  mirrors `TranscribeAudioAction`. Took 2 review rounds:
+  1. FAIL: the actions duplicated Core's 2..255 / 2..10 count checks (the same drift risk T11
+     fixed), and `ParseOptions` was untested. The checks were removed, so Core's
+     `ValidatingDecisionClient` (outermost) is the only enforcer and its `ArgumentException`
+     reaches the action unchanged. 7 `ParseOptions` tests added through the real `ExecuteAsync`.
+  2. PASS. Automate tests 60/60 (was 38).

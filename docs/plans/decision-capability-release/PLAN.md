@@ -153,7 +153,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Consumers
 
-- [ ] **T20** — story: DR-9 (AC1-AC9). In `Umbraco.AI.Automate`: add `AskYesNoDecisionAction`,
+- [x] **T20** — story: DR-9 (AC1-AC9). In `Umbraco.AI.Automate`: add `AskYesNoDecisionAction`,
   `AskChoiceDecisionAction`, `AskScoreDecisionAction` with settings/output classes per
   `SPEC.md`, modeled on `TranscribeAudioAction`. Compose-time exclusion when the flag is off
   (confirm `ActionCollectionBuilder` supports `Exclude<T>()`, else document the fallback in

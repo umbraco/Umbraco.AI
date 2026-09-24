@@ -88,3 +88,12 @@
 - **T2: choice option keys are unique by ordinal (case-sensitive) comparison.** `"a"` and
   `"A"` are distinct options. Keys are machine identifiers the caller supplies (e.g. agent
   ids) and come back verbatim as the answer, so they're matched exactly rather than folded.
+- **T20: Automate "pick-one" options are a text area, one `key` or `key: description` per
+  line**, split at the first colon, so keys can't contain `:`. No Automate or CMS field editor
+  pairs a key with a description. Levels use the CMS `MultipleTextString` list editor, since
+  they're labels only. Blank and duplicate keys aren't handled in the action; they reach Core's
+  validator and fail as Validation.
+- **Release-time item: version floors for consumers.** `Umbraco.AI.Automate` reaches Core only
+  through its `Umbraco.AI.Agent` reference. Raising the root `Umbraco.AI.Core` floor alone won't
+  protect Automate. The release must also raise Automate's `Umbraco.AI.Agent` floor to the Agent
+  version that ships alongside Decision (and Agent's own Core floor, per T22).

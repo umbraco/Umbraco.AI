@@ -49,7 +49,7 @@ public class AITrackingDecisionClientTests
         var runtimeContext = new AIRuntimeContext([]);
         runtimeContext.SetValue(Constants.ContextKeys.ProfileId, Guid.NewGuid());
         runtimeContext.SetValue(Constants.ContextKeys.ProfileAlias, "test-decision-profile");
-        runtimeContext.SetValue(Constants.ContextKeys.ProviderId, "typesafe-jev-spike");
+        runtimeContext.SetValue(Constants.ContextKeys.ProviderId, "fake-decision-provider");
         runtimeContext.SetValue(Constants.ContextKeys.ModelId, "jev-test");
         _contextAccessorMock.Setup(x => x.Context).Returns(runtimeContext);
 

@@ -6,12 +6,12 @@
         "Umbraco.AI.Agent.Copilot",
         "Umbraco.AI.Agent.Copilot.Workspace",
         "Umbraco.AI.Automate",
-        "Umbraco.AI.OpenAI"
+        "Umbraco.AI.OpenAI",
+        "Umbraco.AI.Anthropic"
     ],
     "exclude": [
         "Umbraco.AI.Agent.Deploy",
         "Umbraco.AI.Amazon",
-        "Umbraco.AI.Anthropic",
         "Umbraco.AI.DeepSeek",
         "Umbraco.AI.Deploy",
         "Umbraco.AI.FireworksAI",

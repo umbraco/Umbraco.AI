@@ -1,9 +1,14 @@
 // DR-10 — Copilot auto mode routes with Decision
 //
-// ASSUMPTION (T22 builder confirms/adjusts): AIAgentService gains IAIDecisionService and
-// IAIExperimentalFeatures constructor dependencies. CreateService() is the single seam to
-// update when the real constructor shape lands. Agents with no scope restrictions are
-// available through the real AIAgentScopeValidator with no surface registered.
+// AIAgentService takes decisionService and experimentalFeatures as required constructor
+// parameters (placed before the optional backOfficeSecurityAccessor/loggerFactory ones). The
+// class is internal, so this isn't a public-API break. The Decision gate now checks
+// IAIProfileService.HasDefaultProfileAsync rather than catching an exception from
+// GetDefaultProfileAsync, and the whole Decision attempt (gate + ask) falls back to the chat
+// classifier on any non-cancellation exception, so a site that doesn't use Decision at all
+// (e.g. a database error resolving the default profile) never breaks agent routing. Agents
+// with no scope restrictions are available through the real AIAgentScopeValidator with no
+// surface registered.
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -61,20 +66,13 @@ public class DecisionAgentSelectionTests
         // Decision path defaults: flag on, default Decision profile exists.
         _experimentalMock.Setup(x => x.IsCapabilityEnabled(AICapability.Decision)).Returns(true);
         _profileServiceMock
-            .Setup(p => p.GetDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AIProfile
-            {
-                Alias = "decision",
-                Name = "Decision",
-                Capability = AICapability.Decision,
-                Model = new AIModelRef("typesafe", "jev-latest"),
-                ConnectionId = Guid.NewGuid()
-            });
+            .Setup(p => p.HasDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
     }
 
     #region Scenario: 3 agents, flag on, Decision picks agent 2
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task ReturnsTheAgentDecisionPicked()
     {
         GivenAgents(3);
@@ -85,7 +83,7 @@ public class DecisionAgentSelectionTests
         selected!.Id.ShouldBe(_agents[1].Id);
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task MakesNoChatCall()
     {
         GivenAgents(3);
@@ -102,7 +100,7 @@ public class DecisionAgentSelectionTests
 
     #region Scenario: the Decision question describes the agents
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task OptionKeysAreAgentIds()
     {
         GivenAgents(3);
@@ -113,7 +111,7 @@ public class DecisionAgentSelectionTests
         _sentQuestion!.Options.Select(o => o.Key).ShouldBe(_agents.Select(a => a.Id.ToString()));
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task OptionDescriptionContainsAgentName()
     {
         GivenAgents(3);
@@ -121,10 +119,10 @@ public class DecisionAgentSelectionTests
 
         await CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId });
 
-        _sentQuestion!.Options[1].Description.ShouldContain(_agents[1].Name);
+        _sentQuestion!.Options[1].Description!.ShouldContain(_agents[1].Name);
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task OptionDescriptionContainsAgentDescription()
     {
         GivenAgents(3);
@@ -132,10 +130,10 @@ public class DecisionAgentSelectionTests
 
         await CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId });
 
-        _sentQuestion!.Options[1].Description.ShouldContain(_agents[1].Description!);
+        _sentQuestion!.Options[1].Description!.ShouldContain(_agents[1].Description!);
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task ContextIsTheUserMessage()
     {
         GivenAgents(3);
@@ -150,7 +148,7 @@ public class DecisionAgentSelectionTests
 
     #region Scenario: a single available agent
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task SingleAgent_IsReturned()
     {
         GivenAgents(1);
@@ -160,7 +158,7 @@ public class DecisionAgentSelectionTests
         selected!.Id.ShouldBe(_agents[0].Id);
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task SingleAgent_MakesNoDecisionCall()
     {
         GivenAgents(1);
@@ -174,7 +172,7 @@ public class DecisionAgentSelectionTests
 
     #region Sad path: falls back to the chat classifier
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task FlagOff_UsesChatPath()
     {
         GivenAgents(3);
@@ -185,7 +183,7 @@ public class DecisionAgentSelectionTests
         VerifyChatCalledOnce();
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task FlagOff_MakesNoDecisionCall()
     {
         GivenAgents(3);
@@ -196,20 +194,33 @@ public class DecisionAgentSelectionTests
         VerifyNoDecisionCall();
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task NoDefaultDecisionProfile_UsesChatPath()
     {
         GivenAgents(3);
         _profileServiceMock
-            .Setup(p => p.GetDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Default Decision profile is not configured."));
+            .Setup(p => p.HasDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         await CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId });
 
         VerifyChatCalledOnce();
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
+    public async Task DefaultProfileGateThrowsNonInvalidOperation_UsesChatPath()
+    {
+        GivenAgents(3);
+        _profileServiceMock
+            .Setup(p => p.HasDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("Database timed out."));
+
+        await CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId });
+
+        VerifyChatCalledOnce();
+    }
+
+    [Fact]
     public async Task DecisionThrows_UsesChatPath()
     {
         GivenAgents(3);
@@ -220,7 +231,7 @@ public class DecisionAgentSelectionTests
         VerifyChatCalledOnce();
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task DecisionThrows_LogsWarning()
     {
         GivenAgents(3);
@@ -233,7 +244,7 @@ public class DecisionAgentSelectionTests
             Times.Once);
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task UnknownKey_UsesChatPath()
     {
         GivenAgents(3);
@@ -244,7 +255,7 @@ public class DecisionAgentSelectionTests
         VerifyChatCalledOnce();
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task TooManyAgents_MakesNoDecisionCall()
     {
         GivenAgents(256);
@@ -254,7 +265,7 @@ public class DecisionAgentSelectionTests
         VerifyNoDecisionCall();
     }
 
-    [Fact(Skip = "Pending T22")]
+    [Fact]
     public async Task TooManyAgents_UsesChatPath()
     {
         GivenAgents(256);
@@ -286,7 +297,7 @@ public class DecisionAgentSelectionTests
     private void DecisionPicks(string key)
         => _decisionServiceMock
             .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<CancellationToken>()))
-            .Callback<Action<AIDecisionBuilder>, AIChoiceDecisionQuestion, CancellationToken>((_, q, _) => _sentQuestion = q)
+            .Callback<Action<AIDecisionBuilder>, AIDecisionQuestion<AIChoiceDecisionResponse>, CancellationToken>((_, q, _) => _sentQuestion = (AIChoiceDecisionQuestion)q)
             .ReturnsAsync(new AIChoiceDecisionResponse { Choice = key, ChoiceConfidence = 0.9 });
 
     private void DecisionThrows()

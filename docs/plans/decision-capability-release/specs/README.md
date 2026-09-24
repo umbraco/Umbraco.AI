@@ -24,7 +24,6 @@ the spec to the real signature but keep the behavior it asserts and its one-asse
 | T9 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Api/Management/Settings/DefaultDecisionProfileSettingsTests.cs` |
 | T10 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Api/Management/Profile/DecisionProfileSettingsMappingTests.cs` |
 | T11 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Api/Management/Decision/AskDecisionControllerTests.cs` |
-| T22 | `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Unit/Agents/DecisionAgentSelectionTests.cs` |
 
 ## Covered elsewhere, not by a staged spec
 

@@ -236,3 +236,16 @@
   provider call was made. The user chose to keep compose-time hiding and log this upstream (see
   DECISION-LOG). A second upstream finding: `StepRun.BranchOutcome` and the iteration fields are
   never persisted (`StepRunEntity` and `StepRunFactory` don't map them).
+
+- **T22** — `8e2ebbfa` — `AIAgentService.SelectAgentForPromptAsync` tries Decision first via
+  `TrySelectAgentViaDecisionAsync`. The gates run in order: 2..255 agents, the flag, then
+  `HasDefaultProfileAsync(Decision)`. It asks one `AIChoiceDecisionQuestion` keyed by agent id,
+  and an unknown key or any non-cancellation failure falls back to the unchanged chat
+  classifier, with no user content in logs. `IAIDecisionService` and `IAIExperimentalFeatures` are
+  required ctor params (the class is internal and DI-registered). Took 2 review rounds (both
+  PASS; round 1's suggestions were applied): the gate moved from catching
+  `InvalidOperationException` to `HasDefaultProfileAsync`; the whole attempt is wrapped so a DB
+  error can't break auto mode for non-Decision sites; the deps became required instead of
+  optional-null. Agent 236 unit + 3 integration. Follow-up (non-blocking): no spec proves
+  `OperationCanceledException` propagates from the Decision attempt.
+  All staged specs are now moved; `specs/README.md` says so.

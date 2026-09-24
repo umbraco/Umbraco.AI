@@ -166,7 +166,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   confirm the branch taken. Restart with the flag off and confirm the actions are absent.
   depends-on: T20, T12.
 
-- [ ] **T22** — story: DR-10 (AC1-AC8). In `Umbraco.AI.Agent`'s `SelectAgentForPromptAsync`:
+- [x] **T22** — story: DR-10 (AC1-AC8). In `Umbraco.AI.Agent`'s `SelectAgentForPromptAsync`:
   try Decision first per `ARCHITECTURE.md` decision 7, falling back to the unchanged chat
   path. Per-file pragma. Raise the `Umbraco.AI.Core` floor.
   depends-on: T5, T3. parallel-group: D

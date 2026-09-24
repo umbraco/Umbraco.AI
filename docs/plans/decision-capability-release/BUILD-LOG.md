@@ -249,3 +249,12 @@
   optional-null. Agent 236 unit + 3 integration. Follow-up (non-blocking): no spec proves
   `OperationCanceledException` propagates from the Decision attempt.
   All staged specs are now moved; `specs/README.md` says so.
+
+- **T23** (wire) — no code change — Real authenticated `POST agents/auto/stream-agui` (surface
+  `copilot`) with 2 force-refreshed agents (SEO helper, Translator), for the message "Please
+  translate this paragraph into French". The SSE stream was read only up to `agent_selected`, so
+  the chosen agent's own run never started and any chat usage is routing only. Flag ON: selected
+  Translator; Decision requests +1, Chat +0 (no classifier call). Flag OFF: still Translator via
+  the chat classifier; Decision +0, Chat +1. PASS. Builder-verified only; the orchestrator did
+  not re-run it (a run takes 10-15 min here because of SQLite contention from Automate's
+  background jobs).

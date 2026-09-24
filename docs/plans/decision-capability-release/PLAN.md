@@ -171,7 +171,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   path. Per-file pragma. Raise the `Umbraco.AI.Core` floor.
   depends-on: T5, T3. parallel-group: D
 
-- [ ] **T23** — **wire: Copilot auto mode on the demo site.** story: DR-10 (AC9). With 2+
+- [x] **T23** — **wire: Copilot auto mode on the demo site.** story: DR-10 (AC9). With 2+
   agents and the real TypeSafe default profile, send a Copilot message in auto mode and
   confirm `agent_selected` arrives, with a Decision usage record and no classifier chat call.
   Repeat with the flag off and confirm the chat path is used.

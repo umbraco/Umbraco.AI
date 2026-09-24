@@ -361,6 +361,27 @@ public class AGUIStreamingServiceTests
     }
 
     [Fact]
+    public async Task StreamAgentAsync_TruncatedAfterProducingText_StillEmitsError()
+    {
+        // Arrange — a clipped answer looks just as wrong as an empty one without a reason, so the text
+        // is kept and the run still ends with the error
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, "A clipped answ") { FinishReason = ChatFinishReason.Length },
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+
+        // Act
+        var events = await CollectEvents(agent, CreateRequest());
+
+        // Assert
+        events.OfType<TextMessageChunkEvent>().ShouldContain(e => e.Delta == "A clipped answ");
+        events.OfType<RunErrorEvent>().ShouldHaveSingleItem();
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task StreamAgentAsync_LengthFinishFollowedByNormalFinish_EmitsRunFinished()
     {
         // Arrange — only the last model call decides how the run ended

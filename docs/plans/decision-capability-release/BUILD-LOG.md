@@ -258,3 +258,11 @@
   the chat classifier; Decision +0, Chat +1. PASS. Builder-verified only; the orchestrator did
   not re-run it (a run takes 10-15 min here because of SQLite contention from Automate's
   background jobs).
+
+- **Pre-PR follow-ups** — `9700e66c` adds cancellation-propagation specs for auto mode and fixes
+  a wrong doc comment on the Decision settings element. `97545f96` makes TypeSafe "Test connection"
+  validate the key: `GetModelsAsync` sends one `noul` probe (raw client, so it isn't tracked
+  as usage; retry still applies), and success is cached for 1h under a SHA-256-of-key + endpoint
+  key. Reviewed PASS. TypeSafe tests 61/61. Non-blocking suggestions: surface the failure reason
+  (Core's `TestConnectionAsync` returns only `false`), add tests for different-key cache
+  isolation and for `GetModelsAsync` throwing on a missing key.

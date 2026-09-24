@@ -58,3 +58,12 @@
   Note: closing direct subclassing of the non-generic `AIDecisionQuestion` base (via an
   internal abstract member) was accepted. Only `AIDecisionQuestion<TResponse>` is the
   extension point.
+
+- **T6** — `d0229d01` — `Umbraco.AI.TypeSafe` scaffolded via the `add-provider` skill: provider
+  `typesafe`, settings (sensitive required `ApiKey`, `Endpoint`), Decision-only capability
+  (`jev-latest`), stub client with the injectable-delay internal constructor. Registered in the
+  root slnx (src + tests), install scripts (sh/ps1), `azure-pipelines.yml` `level1Products`,
+  version `18.0.0`, changelog scope `typesafe`. Added to the root README/CLAUDE.md provider
+  lists. Reviewer compared it with FireworksAI point by point: 5/5 TypeSafe tests, root slnx
+  builds, `publicReleaseRefSpec` matches siblings. PASS on first review. Carry-forward: the
+  stub `NotImplementedException` (`TypeSafeDecisionClient.cs:58`) must be gone after T7.

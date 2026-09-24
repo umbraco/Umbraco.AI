@@ -52,7 +52,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Provider
 
-- [ ] **T6** — story: DR-2 (AC1, AC16). Scaffold `Umbraco.AI.TypeSafe` with the
+- [x] **T6** — story: DR-2 (AC1, AC16). Scaffold `Umbraco.AI.TypeSafe` with the
   `add-provider` skill (every registration point it lists), plus
   `tests/Umbraco.AI.TypeSafe.Tests.Unit` added to the root `.slnx`. Provider `typesafe` /
   "TypeSafe AI", settings `ApiKey` (sensitive, required) and `Endpoint`, a

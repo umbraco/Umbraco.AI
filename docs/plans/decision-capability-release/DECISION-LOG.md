@@ -104,4 +104,4 @@
   issue tracker instead of dropping the exclusion. It's an upstream compiler bug that also hits
   uninstalled packages.
 - The silent-skip bug is logged as umbraco/Umbraco.Automate#343 (reviewed by the user before
-  posting). The `BranchOutcome` persistence bug isn't logged yet; user not yet asked.
+  posting). The `BranchOutcome` persistence bug isn't logged; the user hasn't decided yet.

@@ -222,3 +222,17 @@
      `ValidatingDecisionClient` (outermost) is the only enforcer and its `ArgumentException`
      reaches the action unchanged. 7 `ParseOptions` tests added through the real `ExecuteAsync`.
   2. PASS. Automate tests 60/60 (was 38).
+
+- **T21** (wire) — no code change — Real automations built with `IAutomationService`, published,
+  and triggered over real HTTP (`automations/{id}/trigger`), then polled via
+  `IAutomationRunService`, against real Jev. Flag ON: all 3 aliases are in `ActionCollection` and
+  `GET catalogue/actions`. Yes/no → `Answer=true` → the If (`${steps.askYesNo.answer} Equals true`)
+  took the TRUE branch (confirmed by the step-run DB row). Pick-one gave oceania/1.0; score gave
+  2/positive/1.0, both through the default profile. Flag OFF: the actions are absent from the
+  collection and the catalogue.
+  **Finding (Umbraco.Automate, not fixed here):** a previously published automation containing a
+  now-excluded action doesn't fail. `WorkflowCompiler.CompileStep` logs a warning and drops the
+  step. The If then read `""` and took the FALSE branch, the run finished `Completed`, and no
+  provider call was made. The user chose to keep compose-time hiding and log this upstream (see
+  DECISION-LOG). A second upstream finding: `StepRun.BranchOutcome` and the iteration fields are
+  never persisted (`StepRunEntity` and `StepRunFactory` don't map them).

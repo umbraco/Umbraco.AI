@@ -161,7 +161,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   exists). Raise the `Umbraco.AI.Core` floor.
   depends-on: T5, T3. parallel-group: D
 
-- [ ] **T21** — **wire: Automate actions on the demo site.** story: DR-9 (AC6, AC10). Build
+- [x] **T21** — **wire: Automate actions on the demo site.** story: DR-9 (AC6, AC10). Build
   a real automation, "Ask yes/no" → If, run it against the real TypeSafe profile, and
   confirm the branch taken. Restart with the flag off and confirm the actions are absent.
   depends-on: T20, T12.

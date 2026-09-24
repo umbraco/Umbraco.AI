@@ -97,3 +97,9 @@
   through its `Umbraco.AI.Agent` reference. Raising the root `Umbraco.AI.Core` floor alone won't
   protect Automate. The release must also raise Automate's `Umbraco.AI.Agent` floor to the Agent
   version that ships alongside Decision (and Agent's own Core floor, per T22).
+- **T21: keep hiding the Automate Decision actions when the flag is off**, even though the live
+  check showed Umbraco.Automate silently skips a missing step in an already-published automation.
+  A disabled action can then make an If take the wrong branch while the run reports `Completed`.
+  User decision: keep compose-time exclusion and log the silent-skip bug on the Umbraco.Automate
+  issue tracker instead of dropping the exclusion. It's an upstream compiler bug that also hits
+  uninstalled packages.

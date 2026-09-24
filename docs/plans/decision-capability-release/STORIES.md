@@ -195,9 +195,6 @@ so that code calling Decision without a profile just works.
   When I save
   Then `defaultDecisionProfileId` is stored
 
-- ~~AC4 — wrong capability rejected~~ **Dropped 24-09-2026.** No existing default slot
-  validates capability, and Decision matches them. See DECISION-LOG.
-
 ---
 
 ## DR-4 — Ask decisions over the Management API

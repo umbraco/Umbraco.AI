@@ -170,8 +170,8 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 			data: {
 				fetchItems: () => this._fetchAvailableScopes(),
 				selectionMode: "multiple",
-				title: this.localize.term("uaiAgent_addScope") || "Add Tool Scopes",
-				noResultsMessage: this.localize.term("uaiAgent_noToolScopesAvailable") || "No tool scopes available",
+				title: this.localize.termOrDefault("uaiAgent_addScope", "Add Tool Scopes"),
+				noResultsMessage: this.localize.termOrDefault("uaiAgent_noToolScopesAvailable", "No tool scopes available"),
 				tagTemplate: (item) => {
 					const toolCount = this._toolCounts[item.value] ?? 0;
 					const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
@@ -218,9 +218,9 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 			)
 			.map((scope: UaiToolScope) => {
 				const camelCaseId = toCamelCase(scope.id);
-				const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
+				const localizedName = this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Label`, scope.id);
 				const localizedDescription =
-					this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+					this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Description`, "");
 
 				return {
 					value: scope.id,
@@ -275,8 +275,8 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	private _renderScopeItem(scope: UaiToolScopePermission) {
 		const scopeData = this._scopeDataMap.get(scope.scopeId);
 		const camelCaseId = toCamelCase(scope.scopeId);
-		const name = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.scopeId;
-		const description = this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+		const name = this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Label`, scope.scopeId);
+		const description = this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Description`, "");
 		const icon = scopeData?.icon || "icon-wand";
 		const toolCount = this._toolCounts[scope.scopeId] ?? 0;
 		const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);

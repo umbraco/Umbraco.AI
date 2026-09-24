@@ -83,7 +83,7 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
         {
             foreach (var model in page.Items)
             {
-                models.Add(new AnthropicModelCapability(model.ID, ReadEffortSupport(model)));
+                models.Add(new AnthropicModelCapability(model.ID, ReadEffortSupport(model), ReadMaxTokens(model)));
             }
 
             if (!page.HasNext())
@@ -135,6 +135,23 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
         catch (Exception)
         {
             // Older API versions and non-first-party gateways may omit the capabilities object entirely.
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Reads the highest <c>max_tokens</c> value the API reported for a model, treating an absent or
+    /// non-positive value as "not reported".
+    /// </summary>
+    private static long? ReadMaxTokens(ModelInfo model)
+    {
+        try
+        {
+            return model.MaxTokens > 0 ? model.MaxTokens : null;
+        }
+        catch (Exception)
+        {
+            // Non-first-party gateways may omit the field.
             return null;
         }
     }

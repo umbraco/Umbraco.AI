@@ -122,7 +122,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   nulls it. Settings types, repository and workspace context get `defaultDecisionProfileId`.
   depends-on: T13. parallel-group: C
 
-- [ ] **T16** — story: DR-7 (AC1, AC2). Add `uaiCapabilities_decision` to `lang/en.ts`,
+- [x] **T16** — story: DR-7 (AC1, AC2). Add `uaiCapabilities_decision` to `lang/en.ts`,
   `UaiDecisionProfileSettings` + `isDecisionSettings`, both type-mapper directions, the
   `case "decision"` in `profile-details-workspace-view.element.ts`, and
   `uai-decision-profile-settings` showing a "no settings" message.

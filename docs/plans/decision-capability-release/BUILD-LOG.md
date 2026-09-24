@@ -165,3 +165,14 @@
   2. PASS. Vitest 45/45, run twice. The reviewer confirmed that removing `??=` or the reset
      fails a spec. Suggestion kept for later: a `resetEnabledCapabilitiesCacheForTests()` seam
      would be more conventional than the `?t=` import trick.
+
+- **T16** — `a56a09ed` — Added the `uaiCapabilities.decision` label, `UaiDecisionProfileSettings` +
+  `isDecisionSettings`, both type-mapper directions, `case "decision"` in the workspace view,
+  and a new `uai-decision-profile-settings` element with a localized "no settings" message
+  (`uaiProfile_noSettingsAvailable`, generic and reusable). The reviewer confirmed a new Decision
+  profile's first save works: it sends null settings, which the backend maps to empty. Vitest
+  47/47. PASS on first review.
+  Follow-ups for the final pre-PR cleanup (not blocking): (1) the new element's doc comment
+  claims it dispatches `uai-profile-settings-change`, but it never does; reword it. (2) There's a
+  pre-existing gap: `createDefaultSettings`/`getCapabilityIcon` only cover chat and embedding
+  (ImageGeneration and SpeechToText are missing too). Both fall back safely.

@@ -26,6 +26,11 @@ export type AiVariantIdModel = {
     isInvariant: boolean;
 };
 
+export type AskDecisionRequestModel = {
+    profileIdOrAlias?: null | string;
+    question: DecisionQuestionModel;
+};
+
 export type AuditLogDetailResponseModel = {
     endTime?: null | string;
     entityType?: null | string;
@@ -88,6 +93,23 @@ export type BinaryChatContentPartModel = {
     filename?: null | string;
 };
 
+export type BinaryDecisionQuestionModel = {
+    $type: 'binary';
+    trueCriteria?: null | string;
+    falseCriteria?: null | string;
+    instructions: string;
+    context?: null | string;
+};
+
+export type BinaryDecisionResponseModel = {
+    $type: 'binary';
+    answer: boolean;
+    probability: number;
+    confidence: number;
+    modelId?: null | string;
+    usage?: null | UsageModel;
+};
+
 export type ChatContentPartModel = ({
     $type?: 'text';
 } & TextChatContentPartModel) | ({
@@ -116,6 +138,24 @@ export type ChatRequestModel = {
 export type ChatResponseModel = {
     message: ChatMessageModel;
     finishReason?: null | string;
+    usage?: null | UsageModel;
+};
+
+export type ChoiceDecisionQuestionModel = {
+    $type: 'choice';
+    options: Array<DecisionOptionModel>;
+    instructions: string;
+    context?: null | string;
+};
+
+export type ChoiceDecisionResponseModel = {
+    $type: 'choice';
+    choice: string;
+    confidence: number;
+    probabilities: {
+        [key: string]: number;
+    };
+    modelId?: null | string;
     usage?: null | UsageModel;
 };
 
@@ -240,6 +280,31 @@ export type CreateTestRequestModel = {
     runCount: number;
     tags: Array<string>;
 };
+
+export type DecisionOptionModel = {
+    key: string;
+    description?: null | string;
+};
+
+export type DecisionProfileSettingsModel = {
+    $type: 'decision';
+};
+
+export type DecisionQuestionModel = ({
+    $type?: 'binary';
+} & BinaryDecisionQuestionModel) | ({
+    $type?: 'choice';
+} & ChoiceDecisionQuestionModel) | ({
+    $type?: 'score';
+} & ScoreDecisionQuestionModel);
+
+export type DecisionResponseModel = ({
+    $type?: 'binary';
+} & BinaryDecisionResponseModel) | ({
+    $type?: 'choice';
+} & ChoiceDecisionResponseModel) | ({
+    $type?: 'score';
+} & ScoreDecisionResponseModel);
 
 export type EditableModelFieldModel = {
     key: string;
@@ -507,7 +572,9 @@ export type ProfileSettingsModel = ({
     $type?: 'speechToText';
 } & SpeechToTextProfileSettingsModel) | ({
     $type?: 'imageGeneration';
-} & ImageGenerationProfileSettingsModel);
+} & ImageGenerationProfileSettingsModel) | ({
+    $type?: 'decision';
+} & DecisionProfileSettingsModel);
 
 export type PropertyValueOperationRequestModel = {
     path: Array<unknown>;
@@ -560,12 +627,32 @@ export type RunTestsByTagsRequestModel = {
     guardrailIdsOverride?: null | Array<string>;
 };
 
+export type ScoreDecisionQuestionModel = {
+    $type: 'score';
+    levels: Array<string>;
+    instructions: string;
+    context?: null | string;
+};
+
+export type ScoreDecisionResponseModel = {
+    $type: 'score';
+    score: number;
+    level: string;
+    confidence: number;
+    probabilities: {
+        [key: string]: number;
+    };
+    modelId?: null | string;
+    usage?: null | UsageModel;
+};
+
 export type SettingsResponseModel = {
     defaultChatProfileId?: null | string;
     defaultEmbeddingProfileId?: null | string;
     classifierChatProfileId?: null | string;
     defaultSpeechToTextProfileId?: null | string;
     defaultImageGenerationProfileId?: null | string;
+    defaultDecisionProfileId?: null | string;
 };
 
 export type SpeechToTextProfileSettingsModel = {
@@ -860,6 +947,7 @@ export type UpdateSettingsRequestModel = {
     classifierChatProfileId?: null | string;
     defaultSpeechToTextProfileId?: null | string;
     defaultImageGenerationProfileId?: null | string;
+    defaultDecisionProfileId?: null | string;
 };
 
 export type UpdateTestRequestModel = {
@@ -1222,6 +1310,29 @@ export type CleanupAuditLogsResponses = {
 };
 
 export type CleanupAuditLogsResponse = CleanupAuditLogsResponses[keyof CleanupAuditLogsResponses];
+
+export type GetEnabledCapabilitiesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/capabilities/enabled';
+};
+
+export type GetEnabledCapabilitiesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetEnabledCapabilitiesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetEnabledCapabilitiesResponse = GetEnabledCapabilitiesResponses[keyof GetEnabledCapabilitiesResponses];
 
 export type CompleteChatData = {
     body: ChatRequestModel;
@@ -1792,6 +1903,39 @@ export type UpdateContextResponses = {
      */
     200: unknown;
 };
+
+export type AskData = {
+    body: AskDecisionRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/decision/ask';
+};
+
+export type AskErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type AskError = AskErrors[keyof AskErrors];
+
+export type AskResponses = {
+    /**
+     * OK
+     */
+    200: DecisionResponseModel;
+};
+
+export type AskResponse = AskResponses[keyof AskResponses];
 
 export type GenerateEmbeddingsData = {
     body: GenerateEmbeddingRequestModel;

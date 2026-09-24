@@ -109,7 +109,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   change has landed. Commit the generated `src/api/` changes only.
   depends-on: T12.
 
-- [ ] **T14** — story: DR-5 (AC1-AC7). Add `src/decision/`: `UaiDecisionController`
+- [x] **T14** — story: DR-5 (AC1-AC7). Add `src/decision/`: `UaiDecisionController`
   (`@public`, typed overloads), repository, server data source, `types.ts`, exports wired
   into root `src/exports.ts`. Map `kind` ↔ `$type`. Don't leak generated types.
   depends-on: T13. parallel-group: C

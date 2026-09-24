@@ -140,3 +140,15 @@
   question/response, the `decision` arm on `ProfileSettingsModel`, and `defaultDecisionProfileId`.
   No unrelated drift, and the generator version is unchanged. `npm run build:core` passes
   (api-extractor included). PASS on first review.
+
+- **T14** — `317ecf26` — `src/decision/`: public question/result types, `UaiDecisionController.ask`
+  with typed overloads, a repository, and a data source mapping `kind`↔`$type`. Exported via
+  root `exports.ts` and present in the api-extractor rollup, with no generated `*Model` leak.
+  Took 2 review rounds:
+  1. FAIL: no overload accepted the `UaiDecisionQuestion` union (TS2769 for runtime-built
+     questions), and an unknown response `$type` resolved as `{ data: undefined }`. Fixed with a
+     4th union overload and an exhaustive `never` default returning an error. Added specs that
+     profileIdOrAlias and signal are forwarded.
+  2. PASS. Follow-up: the union spec was being narrowed to the binary overload, so it now uses a
+     union-typed helper. Red/green proved `build:core` fails TS2769 without the overload (tsconfig
+     type-checks test files). Vitest 34/34.

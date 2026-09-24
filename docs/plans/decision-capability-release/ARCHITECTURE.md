@@ -116,9 +116,10 @@ public sealed class AIScoreDecisionResponse : AIDecisionResponse
 
 ## Key decisions
 
-1. **Rebase the spike branch, don't rebuild.** A dry-run merge onto `origin/v18/dev` is
-   conflict-free and the Core plumbing is reviewed and tested. Work continues on
-   `v18/feature/decision-capability` after a rebase. The spike's plan folder moves to
+1. **Continue the spike branch, don't rebuild.** The Core plumbing is reviewed and tested,
+   and `origin/v18/dev` merges in conflict-free. Work continues on
+   `v18/feature/decision-capability`, brought up to date by merging `v18/dev` in (not a
+   rebase, which would need a force-push). The spike's plan folder moves to
    `docs/archive/decision-capability/`.
    *Rejected:* a fresh branch cherry-picking Core commits. Same result, more churn.
 
@@ -142,15 +143,17 @@ public sealed class AIScoreDecisionResponse : AIDecisionResponse
      wants it.
    - `Context ?? Instructions` is sent as `state`. `Instructions` is sent as `instructions`.
    - `usage.input_tokens`/`output_tokens` map to `UsageDetails`, so analytics work.
-   - `options.ModelId` (falling back to the profile model) is sent as `model`. Models list is
-     static (`jev-latest`); Jev documents no models endpoint.
+   - `options.ModelId` (falling back to the profile model) is sent as `model`. The models list
+     is `jev-latest` only, since Jev documents no models endpoint. Listing models sends one tiny
+     authenticated `noul` probe, cached for an hour per connection settings, so "Test
+     connection" (which calls `GetModelsAsync`) fails for a bad key.
    - 401 → auth failure, 422 → validation failure, 429/529 → retried up to 2 times with
      exponential backoff (honoring `Retry-After`), then a rate-limit/overloaded failure. All
-     surface as exceptions `AIErrorClassifyingDecisionClient` already classifies. TODO: build
-     confirms which exception types the classifier maps.
+     surface as `HttpRequestException` with `StatusCode`, which the base provider classifier
+     maps (401 Authentication, 422 InvalidRequest, 429 RateLimited, 529 Transient).
 
-4. **Default Decision profile only, no Decision classifier setting.** Copilot auto mode uses
-   `GetDefaultProfileAsync(AICapability.Decision)`.
+4. **Default Decision profile only, no Decision classifier setting.** Copilot auto mode checks
+   `HasDefaultProfileAsync(AICapability.Decision)` and asks via the default profile.
    *Rejected:* a separate "Classifier Decision Profile" setting. Jev has one model, so a second
    profile slot adds UI and Deploy fields for no real choice.
 
@@ -173,10 +176,10 @@ public sealed class AIScoreDecisionResponse : AIDecisionResponse
    - **Gating:** Umbraco.Automate has no runtime "is this action available" hook. Actions
      are excluded from `builder.AutomateActions()` at compose time when
      `Umbraco:AI:Experimental:Decision` is false, and each `ExecuteAsync` also returns
-     `Failed` if the flag is off at run time (flag flipped without a restart). TODO: build
-     confirms `Exclude<T>()` exists on Automate's `ActionCollectionBuilder`. If not, the
-     runtime guard alone plus the Decision-filtered profile picker (which is empty when the
-     flag is off) is the fallback.
+     `Failed` if the flag is off at run time (flag flipped without a restart).
+     `ActionCollectionBuilder` is a `LazyCollectionBuilderBase`, so `Exclude<T>()` works from
+     any composer. Known upstream limitation: Umbraco.Automate silently skips a now-missing
+     step in an already-published automation (umbraco/Umbraco.Automate#343).
 
 7. **Auto mode tries Decision, falls back to today's path.** In
    `SelectAgentForPromptAsync`, only when there are 2..255 available agents:
@@ -226,10 +229,10 @@ public sealed class AIScoreDecisionResponse : AIDecisionResponse
 
 ## Security
 
-- **Auth:** new endpoints inherit `UmbracoAICoreManagementControllerBase`'s policy, the same
-  as `GenerateImageController`. TODO: build confirms which policy Chat's completion endpoint
-  uses and matches it, since the TS client is meant to be callable from backoffice code
-  outside the AI section.
+- **Auth:** new endpoints inherit `UmbracoAICoreManagementControllerBase`'s
+  `BackOfficeAccess` policy, the same as Chat's completion endpoint and
+  `GenerateImageController`, so the TS client is callable from backoffice code outside the AI
+  section.
 - **Input limits at the API boundary:** the request model enforces the same structural
   limits as `ValidatingDecisionClient` (option/level counts, non-blank keys) before any
   provider call, returning 400. Oversized content is left to Jev's 422, surfaced as 400.

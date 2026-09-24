@@ -121,8 +121,8 @@ Guarantees:
   (score probabilities re-keyed from level index to label). Maps `usage` → `UsageDetails`.
 - 429/529 retried at most twice with backoff, honoring `Retry-After`. 401/422 are not
   retried.
-- Test connection succeeds with a valid key and fails with a clear message on 401.
-  TODO: build confirms how "test connection" works for a provider with no chat capability.
+- Test connection succeeds with a valid key and fails with a bad key. It calls
+  `GetModelsAsync`, which sends one cached `noul` probe (see ARCHITECTURE decision 3).
 
 ## Deploy
 
@@ -150,8 +150,9 @@ empty = default Decision profile), `Instructions` (required, bindable), `Context
   is disabled. No provider call.
 - Invalid settings → `Validation` failure. Provider errors → `Unknown` failure with the
   provider's message.
-- TODO: build confirms which Automate field editor fits `Options`/`Levels` (list editor vs.
-  one-per-line text).
+- Editors: `Options` is a text area, one `key` or `key: description` per line (split at the
+  first colon, so keys can't contain `:`). `Levels` uses the CMS `MultipleTextString` list
+  editor.
 
 ## Copilot auto mode (`Umbraco.AI.Agent`)
 

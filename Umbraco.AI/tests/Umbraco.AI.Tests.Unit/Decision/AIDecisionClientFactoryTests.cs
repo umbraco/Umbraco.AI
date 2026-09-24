@@ -1,5 +1,10 @@
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability surface
 
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Umbraco.AI.Core.Analytics;
+using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.EditableModels;
@@ -132,6 +137,68 @@ public class AIDecisionClientFactoryTests
         await Should.ThrowAsync<AIProviderException>(act);
     }
 
+    /// <summary>
+    /// A provider that answers the wrong response shape must be rejected as the caller sees it — this
+    /// pins the observable contract from <see cref="AIErrorClassifyingDecisionClient"/>'s remarks: the
+    /// caller still gets an <see cref="AIProviderException"/>, not the provider's mismatched response nor
+    /// an <see cref="InvalidCastException"/> leaking an implementation detail.
+    /// </summary>
+    [Fact]
+    public async Task AskAsync_WithMismatchedResponseType_ThrowsAIProviderException()
+    {
+        // Arrange — a binary question answered with a choice response.
+        var mismatchedClient = new FakeDecisionClient(_ => new AIChoiceDecisionResponse { Choice = "a", ChoiceConfidence = 0.8 });
+        var (factory, profile) = ArrangeFactory(mismatchedClient);
+        var client = await factory.CreateClientAsync(profile);
+
+        // Act
+        var act = () => client.AskAsync(ValidQuestion());
+
+        // Assert
+        await Should.ThrowAsync<AIProviderException>(act);
+    }
+
+    /// <summary>
+    /// The mismatch check lives in <see cref="AIErrorClassifyingDecisionClient"/>, which
+    /// <see cref="AIDecisionClientFactory"/> wraps *inside* the tracking middleware (see the wrapping
+    /// order this test class documents at the top). That's what makes the tracker/audit see the
+    /// mismatch as a failed operation rather than a successful one whose result the caller is then told
+    /// is wrong.
+    /// </summary>
+    [Fact]
+    public async Task AskAsync_WithMismatchedResponseType_RecordsAuditFailure()
+    {
+        // Arrange
+        var mismatchedClient = new FakeDecisionClient(_ => new AIChoiceDecisionResponse { Choice = "a", ChoiceConfidence = 0.8 });
+        var (client, auditLogServiceMock) = await ArrangeFactoryWithTrackingAsync(mismatchedClient);
+
+        // Act
+        await Should.ThrowAsync<AIProviderException>(() => client.AskAsync(ValidQuestion()));
+
+        // Assert
+        auditLogServiceMock.Verify(
+            x => x.QueueRecordAuditLogFailureAsync(
+                It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<Exception>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AskAsync_WithMismatchedResponseType_NeverRecordsAuditSuccess()
+    {
+        // Arrange
+        var mismatchedClient = new FakeDecisionClient(_ => new AIChoiceDecisionResponse { Choice = "a", ChoiceConfidence = 0.8 });
+        var (client, auditLogServiceMock) = await ArrangeFactoryWithTrackingAsync(mismatchedClient);
+
+        // Act
+        await Should.ThrowAsync<AIProviderException>(() => client.AskAsync(ValidQuestion()));
+
+        // Assert
+        auditLogServiceMock.Verify(
+            x => x.QueueCompleteAuditLogAsync(
+                It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     private static AIDecisionQuestion InvalidQuestion() => new AIChoiceDecisionQuestion
     {
         Instructions = "pick one",
@@ -191,6 +258,57 @@ public class AIDecisionClientFactoryTests
             _modelResolverMock.Object);
 
         return (factory, profile);
+    }
+
+    /// <summary>
+    /// Builds the real factory with a real <see cref="AIOperationTracker"/> (only its audit-log
+    /// collaborator is mocked, so calls to it can be observed) wired into the middleware pipeline —
+    /// mirrors <c>AITrackingDecisionClientTests.CreateTracker</c> — and returns the client it produces.
+    /// </summary>
+    private async Task<(IAIDecisionClient Client, Mock<IAIAuditLogService> AuditLogServiceMock)> ArrangeFactoryWithTrackingAsync(
+        IAIDecisionClient innerClient)
+    {
+        var auditLogServiceMock = new Mock<IAIAuditLogService>();
+        auditLogServiceMock
+            .Setup(x => x.QueueStartAuditLogAsync(It.IsAny<AIAuditLog>(), It.IsAny<CancellationToken>()))
+            .Returns(ValueTask.CompletedTask);
+        auditLogServiceMock
+            .Setup(x => x.QueueCompleteAuditLogAsync(It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()))
+            .Returns(ValueTask.CompletedTask);
+        auditLogServiceMock
+            .Setup(x => x.QueueRecordAuditLogFailureAsync(It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<Exception>(), It.IsAny<CancellationToken>()))
+            .Returns(ValueTask.CompletedTask);
+
+        var auditLogFactoryMock = new Mock<IAIAuditLogFactory>();
+        auditLogFactoryMock
+            .Setup(x => x.Create(It.IsAny<AIAuditContext>(), It.IsAny<IReadOnlyDictionary<string, string>?>(), It.IsAny<Guid?>()))
+            .Returns(new AIAuditLog { Id = Guid.NewGuid() });
+
+        var auditLogOptionsMock = new Mock<IOptionsMonitor<AIAuditLogOptions>>();
+        auditLogOptionsMock.Setup(x => x.CurrentValue).Returns(new AIAuditLogOptions { Enabled = true });
+
+        var analyticsOptionsMock = new Mock<IOptionsMonitor<AIAnalyticsOptions>>();
+        analyticsOptionsMock.Setup(x => x.CurrentValue).Returns(new AIAnalyticsOptions { Enabled = false });
+
+        var tracker = new AIOperationTracker(
+            _contextAccessorMock.Object,
+            auditLogServiceMock.Object,
+            auditLogFactoryMock.Object,
+            auditLogOptionsMock.Object,
+            Mock.Of<IAIUsageRecordingService>(),
+            Mock.Of<IAIUsageRecordFactory>(),
+            analyticsOptionsMock.Object,
+            NullLogger<AIOperationTracker>.Instance);
+
+        var middleware = new AIDecisionMiddlewareCollection(() => new IAIDecisionMiddleware[]
+        {
+            new AITrackingDecisionMiddleware(tracker, _contextAccessorMock.Object),
+        });
+
+        var (factory, profile) = ArrangeFactory(innerClient, middleware);
+        var client = await factory.CreateClientAsync(profile);
+
+        return (client, auditLogServiceMock);
     }
 
     /// <summary>The minimal real <see cref="IAIDecisionCapability"/> a provider package would define,

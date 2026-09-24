@@ -22,7 +22,7 @@ public class AskTypedDecisionTests
 
         private readonly AIBinaryDecisionQuestion _question = new() { Instructions = "Is this spam?" };
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ReturnsABinaryResponseWithAnswerTrue()
         {
             AIBinaryDecisionResponse response =
@@ -39,7 +39,7 @@ public class AskTypedDecisionTests
 
         private readonly AIBinaryDecisionQuestion _question = new() { Instructions = "Is this spam?" };
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task AnswersFalse()
         {
             var response = await _harness.Service.AskAsync(DecisionPipelineHarness.ProfileAlias, _question);
@@ -47,7 +47,7 @@ public class AskTypedDecisionTests
             response.Answer.ShouldBeFalse();
         }
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ReportsConfidenceInTheAnswerGiven()
         {
             var response = await _harness.Service.AskAsync(DecisionPipelineHarness.ProfileAlias, _question);
@@ -67,7 +67,7 @@ public class AskTypedDecisionTests
             Options = [new AIDecisionOption("a"), new AIDecisionOption("b")],
         };
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ReturnsTheChosenKey()
         {
             AIChoiceDecisionResponse response =
@@ -76,7 +76,7 @@ public class AskTypedDecisionTests
             response.Choice.ShouldBe("b");
         }
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ReturnsTheChoiceConfidence()
         {
             var response = await _harness.Service.AskAsync(DecisionPipelineHarness.ProfileAlias, _question);
@@ -96,7 +96,7 @@ public class AskTypedDecisionTests
             Levels = ["poor", "ok", "good"],
         };
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ReturnsTheScore()
         {
             AIScoreDecisionResponse response =
@@ -105,7 +105,7 @@ public class AskTypedDecisionTests
             response.Score.ShouldBe(1.8);
         }
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ReturnsTheLevelLabel()
         {
             var response = await _harness.Service.AskAsync(DecisionPipelineHarness.ProfileAlias, _question);
@@ -119,7 +119,7 @@ public class AskTypedDecisionTests
         private readonly DecisionPipelineHarness _harness = new(new FakeDecisionClient(
             _ => new AIBinaryDecisionResponse { Probability = 0.9 }));
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ResolvesTheProfileByThatAlias()
         {
             await _harness.Service.AskAsync(
@@ -137,7 +137,7 @@ public class AskTypedDecisionTests
         private readonly DecisionPipelineHarness _harness = new(new FakeDecisionClient(
             _ => new AIBinaryDecisionResponse { Probability = 0.9 }));
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task UsesTheDefaultDecisionProfile()
         {
             await _harness.Service.AskAsync(new AIBinaryDecisionQuestion { Instructions = "Is this spam?" });
@@ -155,7 +155,7 @@ public class AskTypedDecisionTests
         private readonly DecisionPipelineHarness _harness = new(new FakeDecisionClient(
             _ => new AIChoiceDecisionResponse { Choice = "a", ChoiceConfidence = 0.9 }));
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ThrowsAIProviderException()
         {
             var act = () => _harness.Service.AskAsync(
@@ -175,7 +175,7 @@ public class AskTypedDecisionTests
 
         public GivenAnInvalidQuestion() => _harness = new DecisionPipelineHarness(_client);
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task ThrowsArgumentExceptionNotAProviderException()
         {
             var act = () => _harness.Service.AskAsync(
@@ -185,7 +185,7 @@ public class AskTypedDecisionTests
             await Should.ThrowAsync<ArgumentException>(act);
         }
 
-        [Fact(Skip = "Pending T5")]
+        [Fact]
         public async Task NeverReachesTheProvider()
         {
             await Should.ThrowAsync<ArgumentException>(() => _harness.Service.AskAsync(

@@ -22,6 +22,14 @@ namespace Umbraco.AI.Core.Decision;
 /// outermost, so a caller error (an invalid <see cref="AIDecisionQuestion"/>) never reaches here to be
 /// misreported as a provider failure.
 /// </remarks>
+/// <remarks>
+/// Also rejects a provider answering the wrong response shape (see <see cref="AIDecisionQuestion.ExpectedResponseType"/>)
+/// as a classified <see cref="AIProviderException"/> — a provider bug, not a caller error. This has to
+/// happen here rather than up in <see cref="AIDecisionService"/>: <see cref="AIDecisionClientFactory"/>
+/// wraps this class *inside* the tracking middleware, so throwing from here (instead of after the whole
+/// pipeline returns) means <see cref="Observability.IAIOperationTracker"/> sees the failure and records it
+/// as such, rather than recording success and only then having the caller told otherwise.
+/// </remarks>
 internal sealed class AIErrorClassifyingDecisionClient : IAIDecisionClient
 {
     private readonly IAIDecisionClient _innerClient;
@@ -39,9 +47,10 @@ internal sealed class AIErrorClassifyingDecisionClient : IAIDecisionClient
         AIDecisionOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        AIDecisionResponse response;
         try
         {
-            return await _innerClient.AskAsync(question, options, cancellationToken);
+            response = await _innerClient.AskAsync(question, options, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -55,6 +64,13 @@ internal sealed class AIErrorClassifyingDecisionClient : IAIDecisionClient
         {
             throw Classify(ex);
         }
+
+        if (!question.IsExpectedResponse(response))
+        {
+            throw AIDecisionExceptionFactory.CreateResponseTypeMismatchException(question.ExpectedResponseType, response);
+        }
+
+        return response;
     }
 
     /// <inheritdoc />

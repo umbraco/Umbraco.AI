@@ -34,20 +34,31 @@ internal sealed class AIDecisionService : IAIDecisionService
         _contributors = contributors;
     }
 
-    public Task<AIDecisionResponse> AskAsync(
-        Guid profileId,
-        AIDecisionQuestion question,
+    public Task<TResponse> AskAsync<TResponse>(
+        AIDecisionQuestion<TResponse> question,
         AIDecisionOptions? options = null,
         CancellationToken cancellationToken = default)
+        where TResponse : AIDecisionResponse
+        => AskAsync(
+            b => ConfigureFromProfileOverload(b, profileId: null, profileAlias: null, options),
+            question, cancellationToken);
+
+    public Task<TResponse> AskAsync<TResponse>(
+        Guid profileId,
+        AIDecisionQuestion<TResponse> question,
+        AIDecisionOptions? options = null,
+        CancellationToken cancellationToken = default)
+        where TResponse : AIDecisionResponse
         => AskAsync(
             b => ConfigureFromProfileOverload(b, profileId, profileAlias: null, options),
             question, cancellationToken);
 
-    public Task<AIDecisionResponse> AskAsync(
+    public Task<TResponse> AskAsync<TResponse>(
         string profileAlias,
-        AIDecisionQuestion question,
+        AIDecisionQuestion<TResponse> question,
         AIDecisionOptions? options = null,
         CancellationToken cancellationToken = default)
+        where TResponse : AIDecisionResponse
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(profileAlias);
 
@@ -74,10 +85,11 @@ internal sealed class AIDecisionService : IAIDecisionService
         }
     }
 
-    public async Task<AIDecisionResponse> AskAsync(
+    public async Task<TResponse> AskAsync<TResponse>(
         Action<AIDecisionBuilder> configure,
-        AIDecisionQuestion question,
+        AIDecisionQuestion<TResponse> question,
         CancellationToken cancellationToken = default)
+        where TResponse : AIDecisionResponse
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(question);
@@ -121,17 +133,30 @@ internal sealed class AIDecisionService : IAIDecisionService
         }
     }
 
-    private async Task<AIDecisionResponse> ExecuteDecisionAsync(
+    private async Task<TResponse> ExecuteDecisionAsync<TResponse>(
         AIDecisionBuilder builder,
-        AIDecisionQuestion question,
+        AIDecisionQuestion<TResponse> question,
         CancellationToken cancellationToken)
+        where TResponse : AIDecisionResponse
     {
         var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
         var innerClient = await _clientFactory.CreateClientAsync(profile, cancellationToken);
 
         // Wrap in ScopedInlineDecisionClient for per-call scope management and inline decision metadata.
         var client = new ScopedInlineDecisionClient(innerClient, builder, _contextAccessor, _scopeProvider, _contributors);
-        return await client.AskAsync(question, builder.Options, cancellationToken);
+        var response = await client.AskAsync(question, builder.Options, cancellationToken);
+
+        // IAIDecisionClient stays non-generic (see its remarks), so nothing before this point knows
+        // TResponse. The real check for a provider answering the wrong question shape already happened
+        // inside AIErrorClassifyingDecisionClient (see its remarks) — which sits inside the tracking
+        // middleware, so a mismatch is recorded as a tracked/audited failure, not a false success. This
+        // cast is only a defence-in-depth guard; it should never trip in practice.
+        if (response is not TResponse typedResponse)
+        {
+            throw AIDecisionExceptionFactory.CreateResponseTypeMismatchException(typeof(TResponse), response);
+        }
+
+        return typedResponse;
     }
 
     private static AIDecisionBuilder BuildDecision(Action<AIDecisionBuilder> configure)

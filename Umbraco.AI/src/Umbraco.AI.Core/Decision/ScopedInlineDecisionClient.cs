@@ -18,7 +18,7 @@ namespace Umbraco.AI.Core.Decision;
 /// <para>
 /// Unlike <c>ScopedInlineSpeechToTextClient</c>/<c>ScopedInlineChatClient</c> — which only ever sit on
 /// their capability's "create a client" path, where pass-through doesn't apply — <c>AIDecisionService</c>
-/// (T8) also puts this wrapper on its execute path (<see cref="AIDecisionService.AskAsync(Action{AIDecisionBuilder}, AIDecisionQuestion, System.Threading.CancellationToken)"/>).
+/// (T8) also puts this wrapper on its execute path (<c>AIDecisionService.AskAsync&lt;TResponse&gt;(Action{AIDecisionBuilder}, AIDecisionQuestion{TResponse}, CancellationToken)</c>).
 /// So the feature-metadata decision here follows the execute-path rule Chat's/SpeechToText's own execute
 /// paths use (<c>!builder.IsPassThrough</c>), not the create-client-path rule those two
 /// <c>Scoped*Inline*</c> wrappers use (<c>!scopeExisted</c>) — those two rules disagree in two cases: a

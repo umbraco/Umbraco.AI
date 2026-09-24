@@ -1,7 +1,9 @@
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability surface
 
-// Shared arrange for DR-1 specs: extracted from AIDecisionServiceRealPipelineTests.ArrangeService
-// (T5 should make that file use this harness too, rather than keep a second copy).
+// Shared arrange for DR-1 specs: extracted from AIDecisionServiceRealPipelineTests.ArrangeService.
+// T5 switched that file to use this harness too, rather than keep a second copy — see the
+// EventAggregatorMock/Context/ContextAccessorMock/ScopeProviderMock properties below, added for its
+// notification/scope-management assertions that AskTypedDecisionTests doesn't need.
 
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Decision;
@@ -101,15 +103,19 @@ internal sealed class DecisionPipelineHarness
             .Setup(x => x.GetDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Profile);
 
-        var eventAggregatorMock = new Mock<IEventAggregator>();
-        eventAggregatorMock
+        EventAggregatorMock = new Mock<IEventAggregator>();
+        EventAggregatorMock
             .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+
+        Context = context;
+        ContextAccessorMock = contextAccessorMock;
+        ScopeProviderMock = scopeProviderMock;
 
         Service = new AIDecisionService(
             ProfileServiceMock.Object,
             factory,
-            eventAggregatorMock.Object,
+            EventAggregatorMock.Object,
             contextAccessorMock.Object,
             scopeProviderMock.Object,
             contributors);
@@ -120,6 +126,19 @@ internal sealed class DecisionPipelineHarness
     public AIProfile Profile { get; }
 
     public Mock<IAIProfileService> ProfileServiceMock { get; }
+
+    /// <summary>The event aggregator mock the service publishes executing/executed notifications to.</summary>
+    public Mock<IEventAggregator> EventAggregatorMock { get; }
+
+    /// <summary>
+    /// The runtime context a scope created via <see cref="ScopeProviderMock"/> hands back — where feature
+    /// metadata (<c>FeatureType</c>/<c>FeatureAlias</c>) ends up stamped once a scope has been created.
+    /// </summary>
+    public AIRuntimeContext Context { get; }
+
+    public Mock<IAIRuntimeContextAccessor> ContextAccessorMock { get; }
+
+    public Mock<IAIRuntimeContextScopeProvider> ScopeProviderMock { get; }
 
     private sealed class SingleSettingsDecisionCapability(IAIProvider provider, IAIDecisionClient inner)
         : AIDecisionCapabilityBase<FakeProviderSettings>(provider)

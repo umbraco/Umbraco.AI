@@ -12,7 +12,7 @@ using Umbraco.Cms.Core.Notifications;
 namespace Umbraco.AI.Tests.Unit.Services;
 
 /// <summary>
-/// DC-3 (AC3) — real entry point. <see cref="IAIDecisionService.AskAsync(string, AIDecisionQuestion, AIDecisionOptions?, CancellationToken)"/>
+/// DC-3 (AC3) — real entry point. <see cref="IAIDecisionService.AskAsync{TResponse}(string, AIDecisionQuestion{TResponse}, AIDecisionOptions?, CancellationToken)"/>
 /// resolved exactly as a caller would use it (alias in, typed response out), not the capability/client
 /// directly.
 /// </summary>
@@ -87,6 +87,33 @@ public class AIDecisionServiceTests
 
         // Act
         var response = await service.AskAsync("spam-check", question);
+
+        // Assert
+        response.ShouldBeOfType<AIBinaryDecisionResponse>().Answer.ShouldBe(true);
+    }
+
+    [Fact]
+    public async Task AskAsync_WithProfileId_ResolvesProfileAndReturnsResponse()
+    {
+        // Arrange
+        var profile = new AIProfileBuilder()
+            .WithAlias("spam-check")
+            .WithCapability(AICapability.Decision)
+            .Build();
+        var fakeClient = new FakeDecisionClient(_ => new AIBinaryDecisionResponse { Probability = 0.95 });
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profile.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeClient);
+
+        var service = CreateService();
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
+
+        // Act
+        var response = await service.AskAsync(profile.Id, question);
 
         // Assert
         response.ShouldBeOfType<AIBinaryDecisionResponse>().Answer.ShouldBe(true);

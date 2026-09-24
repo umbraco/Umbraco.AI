@@ -7,7 +7,6 @@ import { UmbObjectState, UmbBooleanState } from "@umbraco-cms/backoffice/observa
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 
 // Stub at the real boundary: the shared enabled-capabilities repository (T15).
-// ASSUMPTION: module path/name decided in T15; update the mock target to match.
 const getEnabledCapabilities = vi.fn();
 vi.mock("../../../capability/repository/enabled-capabilities.repository.js", () => ({
     UaiEnabledCapabilitiesRepository: class {
@@ -24,6 +23,8 @@ import type { UaiSettingsEditorElement } from "./settings-editor.element.js";
 function provideSettingsContext(host: UmbControllerHost, model: Partial<UaiSettingsModel>) {
     const handleCommand = vi.fn();
     class FakeSettingsWorkspaceContext extends UmbControllerBase {
+        // Required so UAI_SETTINGS_WORKSPACE_CONTEXT's type guard accepts this fake as a match.
+        IS_SETTINGS_WORKSPACE_CONTEXT = true;
         model = new UmbObjectState<Partial<UaiSettingsModel>>(model).asObservable();
         loading = new UmbBooleanState(false).asObservable();
         handleCommand = handleCommand;
@@ -65,13 +66,11 @@ describe("Feature: settings editor default profile pickers", () => {
             ({ el } = await renderEditor(["Chat", "Embedding", "SpeechToText", "Decision"]));
         });
 
-        // Pending T15
-        it.skip("renders a default Decision profile picker", () => {
+        it("renders a default Decision profile picker", () => {
             expect(picker(el, "defaultDecisionProfileId")).not.toBeNull();
         });
 
-        // Pending T15
-        it.skip("filters the Decision picker to Decision profiles", () => {
+        it("filters the Decision picker to Decision profiles", () => {
             expect(picker(el, "defaultDecisionProfileId")?.getAttribute("capability")).toBe("Decision");
         });
     });
@@ -87,8 +86,7 @@ describe("Feature: settings editor default profile pickers", () => {
             decisionPicker.dispatchEvent(new UmbChangeEvent());
         });
 
-        // Pending T15
-        it.skip("updates defaultDecisionProfileId on the workspace model", () => {
+        it("updates defaultDecisionProfileId on the workspace model", () => {
             const receiver: Partial<UaiSettingsModel> = {};
             handleCommand.mock.calls[0][0].execute(receiver);
             expect(receiver.defaultDecisionProfileId).toBe("11111111-1111-1111-1111-111111111111");
@@ -102,18 +100,15 @@ describe("Feature: settings editor default profile pickers", () => {
             ({ el } = await renderEditor(["Chat", "Embedding", "SpeechToText"]));
         });
 
-        // Pending T15
-        it.skip("does not render the Decision picker", () => {
+        it("does not render the Decision picker", () => {
             expect(picker(el, "defaultDecisionProfileId")).toBeNull();
         });
 
-        // Pending T15
-        it.skip("does not render the Image Generation picker", () => {
+        it("does not render the Image Generation picker", () => {
             expect(picker(el, "defaultImageGenerationProfileId")).toBeNull();
         });
 
-        // Pending T15
-        it.skip("still renders the non-experimental pickers", () => {
+        it("still renders the non-experimental pickers", () => {
             expect(el.shadowRoot!.querySelectorAll("uai-profile-picker").length).toBe(4);
         });
     });

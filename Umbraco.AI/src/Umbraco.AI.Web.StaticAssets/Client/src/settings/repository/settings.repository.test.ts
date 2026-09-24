@@ -31,15 +31,13 @@ describe("Feature: saving settings", () => {
             await new UaiSettingsRepository().save(stored);
         });
 
-        // Pending T15
-        it.skip("keeps the stored image generation default", () => {
+        it("keeps the stored image generation default", () => {
             expect(updateSettings.mock.calls[0][0].body.defaultImageGenerationProfileId).toBe(
                 "22222222-2222-2222-2222-222222222222",
             );
         });
 
-        // Pending T15
-        it.skip("sends the default Decision profile", () => {
+        it("sends the default Decision profile", () => {
             expect(updateSettings.mock.calls[0][0].body.defaultDecisionProfileId).toBe(
                 "33333333-3333-3333-3333-333333333333",
             );

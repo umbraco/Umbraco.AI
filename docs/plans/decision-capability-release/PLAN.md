@@ -75,7 +75,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   drop providers with zero enabled capabilities.
   depends-on: T1. parallel-group: A
 
-- [ ] **T9** — story: DR-3 (AC1). Add `defaultDecisionProfileId` to
+- [x] **T9** — story: DR-3 (AC1). Add `defaultDecisionProfileId` to
   `SettingsResponseModel`, `UpdateSettingsRequestModel`, `SettingsMapDefinition`. No
   capability check, matching the other default slots. Remove the `-DefaultDecisionProfileId`
   `Umbraco.Code.MapAll` exclusions and the `TODO(T9)` comment T3 left in
@@ -117,7 +117,9 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 - [ ] **T15** — story: DR-3 (AC2, AC3), DR-6 (AC3, AC4). Add the enabled-capabilities
   repository (fetched once, shared), the "Default Decision Profile" picker, and render the
   ImageGeneration and Decision pickers only when enabled. Hidden values are preserved on
-  save. Settings types, repository and workspace context get `defaultDecisionProfileId`.
+  save. `PUT settings` is full-replace (every field, nulls included; confirmed in T9), so the
+  save payload must always carry every default id, even for a hidden picker. Leaving one out
+  nulls it. Settings types, repository and workspace context get `defaultDecisionProfileId`.
   depends-on: T13. parallel-group: C
 
 - [ ] **T16** — story: DR-7 (AC1, AC2). Add `uaiCapabilities_decision` to `lang/en.ts`,

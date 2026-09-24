@@ -91,3 +91,8 @@
      isn't in the implemented set.
   2. PASS. Reviewer reran 1237/1237 unit + 32/32 integration. T12 must prove
      `GET providers` activates live (two constructors).
+
+- **T9** — `f7998705` — `defaultDecisionProfileId` on the settings response/request models and
+  `SettingsMapDefinition`. T3's temporary MapAll exclusions and `TODO(T9)` are removed. The
+  reviewer confirmed `PUT settings` is full-replace, so T15 must always send the field (added to
+  T15's plan line). Reviewer reran 1239/1239 unit + 32/32 integration. PASS on first review.

@@ -11,7 +11,7 @@ public class AIProfileSettingsSerializerDecisionTests
     {
         private readonly string? _json = AIProfileSettingsSerializer.Serialize(new AIDecisionProfileSettings());
 
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void DeserializesToDecisionProfileSettings()
         {
             var settings = AIProfileSettingsSerializer.Deserialize(AICapability.Decision, _json);
@@ -22,7 +22,7 @@ public class AIProfileSettingsSerializerDecisionTests
 
     public class GivenAnEmptyJsonObjectForADecisionProfile
     {
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void DeserializesToDecisionProfileSettings()
         {
             var settings = AIProfileSettingsSerializer.Deserialize(AICapability.Decision, "{}");

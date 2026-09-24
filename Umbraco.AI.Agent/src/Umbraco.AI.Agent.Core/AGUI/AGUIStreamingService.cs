@@ -81,12 +81,13 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         Exception? streamError = null;
+        var streamState = new StreamState();
 
         // Emit RunStarted (outside try block)
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, staleApprovalRequests, persistenceSync, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, session, pendingApprovalCalls, staleApprovalRequests, persistenceSync, streamState, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -150,6 +151,17 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
 
             yield return emitter.EmitError(userMessage, code);
         }
+        else if (streamState.LastFinishReason == ChatFinishReason.Length)
+        {
+            // The model stopped because it hit the output token limit. For a thinking model this can
+            // happen before any text or tool call is produced, so finishing normally would leave the
+            // user with an apparently idle chat and no idea why (#414).
+            _logger.LogWarning(
+                "Agent run {RunId} was cut off at the output token limit.",
+                request.RunId);
+
+            yield return emitter.EmitError(OutputLimitReachedMessage, AIProviderErrorCategory.InvalidRequest.ToString());
+        }
         else
         {
             // Tell the client what's actually durably persisted before RUN_FINISHED, so a stale local
@@ -189,6 +201,7 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         IReadOnlyDictionary<string, ToolApprovalRequestContent>? pendingApprovalCalls,
         IReadOnlyList<ToolApprovalRequestContent>? staleApprovalRequests,
         AIConversationPersistenceSync? persistenceSync,
+        StreamState streamState,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Process file content: store base64, resolve id references
@@ -289,6 +302,11 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         // (Copilot Workspace) drives the attached ChatHistoryProvider against its conversation.
         await foreach (var update in agent.RunStreamingAsync(chatMessages, session: session, cancellationToken: cancellationToken))
         {
+            if (update.FinishReason is { } finishReason)
+            {
+                streamState.LastFinishReason = finishReason;
+            }
+
             // Process content items (tool calls and results first, then text)
             if (update.Contents != null)
             {
@@ -392,6 +410,22 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
                 yield return emitter.EmitTextChunk(update.Text);
             }
         }
+    }
+
+    private const string OutputLimitReachedMessage =
+        "The response was cut off because it reached the maximum output tokens. "
+        + "Increase Max tokens on the agent's profile and try again.";
+
+    /// <summary>
+    /// State the core stream reports back to <see cref="StreamAgentAsync"/>, which an iterator cannot return.
+    /// </summary>
+    private sealed class StreamState
+    {
+        /// <summary>
+        /// The last finish reason the model reported. A run that calls tools reports one per model call,
+        /// so only the last says why the run as a whole stopped.
+        /// </summary>
+        public ChatFinishReason? LastFinishReason { get; set; }
     }
 
     /// <summary>

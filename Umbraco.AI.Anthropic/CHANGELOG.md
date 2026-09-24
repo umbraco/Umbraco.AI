@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@17.1.0...Umbraco.AI.Anthropic@17.1.1) (2026-09-24)
+
+### fix
+
+* **agent,anthropic:** Stop the volatile runtime context from poisoning the cached prompt prefix ([a3d37fc](https://github.com/umbraco/Umbraco.AI/commit/a3d37fc877e36d34c2d99dd1d0cd4941acac866b))
+* **anthropic:** Raise default max tokens so thinking models are not cut off ([19c227f](https://github.com/umbraco/Umbraco.AI/commit/19c227f8428993fa150ec8d7f3cefc6d7cd7087c)), closes [#414](https://github.com/umbraco/Umbraco.AI/issues/414)
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@17.0.2...Umbraco.AI.Anthropic@17.1.0) (2026-08-11)
 
 ### feat

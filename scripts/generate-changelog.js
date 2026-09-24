@@ -71,6 +71,39 @@ function getProductConfig(product, rootDir) {
     return config;
 }
 
+// Compare two SemVer strings (build metadata ignored). Returns <0, 0 or >0.
+// A prerelease sorts below its release, and numeric prerelease identifiers compare
+// numerically (so -rc.10 > -rc.9).
+function compareVersions(a, b) {
+    const parse = (v) => {
+        const [core, pre] = v.split("+")[0].split(/-(.*)/s);
+        return { core: core.split(".").map(Number), pre: pre ? pre.split(".") : [] };
+    };
+    const x = parse(a);
+    const y = parse(b);
+    for (let i = 0; i < 3; i++) {
+        const diff = (x.core[i] || 0) - (y.core[i] || 0);
+        if (diff !== 0) return diff;
+    }
+    if (!x.pre.length || !y.pre.length) return y.pre.length - x.pre.length;
+    for (let i = 0; i < Math.max(x.pre.length, y.pre.length); i++) {
+        const p = x.pre[i];
+        const q = y.pre[i];
+        if (p === undefined) return -1;
+        if (q === undefined) return 1;
+        const pn = /^\d+$/.test(p);
+        const qn = /^\d+$/.test(q);
+        if (pn && qn) {
+            if (Number(p) !== Number(q)) return Number(p) - Number(q);
+        } else if (pn !== qn) {
+            return pn ? -1 : 1;
+        } else if (p !== q) {
+            return p < q ? -1 : 1;
+        }
+    }
+    return 0;
+}
+
 // Get previous version tag for a product
 function getPreviousVersion(product, currentVersion, tagPrefix) {
     try {
@@ -88,25 +121,19 @@ function getPreviousVersion(product, currentVersion, tagPrefix) {
 
         // If currentVersion is provided, find the tag before it
         if (currentVersion) {
-            const currentTag = `${tagPrefix}${currentVersion}`;
-            const currentIndex = tags.indexOf(currentTag);
-
-            if (currentIndex > 0) {
-                return tags[currentIndex - 1];
-            } else if (currentIndex === 0) {
-                return null; // This is the first version
-            }
-
-            // currentTag not yet created (release-prep). Constrain the lookup to the
-            // same major line — otherwise a higher parallel major (e.g. v18 tags while
-            // preparing a v17 release) sorts to tags[0] and the changelog diffs across
-            // lines, pulling the entire previous major's history back in.
+            // Use the highest tag on the same major line that is *lower* than the version
+            // being released, whether or not that version is tagged yet. Constraining the
+            // major stops a higher parallel major (e.g. v18 tags while preparing a v17
+            // release) from winning; requiring "lower" stops a newer prerelease on the same
+            // major (e.g. 18.4.0-rc.4 while patching 18.3.5 off main) from winning. Either
+            // would diff against the wrong base and pull unrelated history in.
             const major = currentVersion.split(".")[0];
-            const sameMajor = tags.filter(
-                (t) => t !== currentTag && t.slice(tagPrefix.length).split(".")[0] === major,
-            );
-            if (sameMajor.length > 0) {
-                return sameMajor[0]; // highest tag on this major line (sorted desc)
+            const lower = tags
+                .map((t) => t.slice(tagPrefix.length))
+                .filter((v) => v.split(".")[0] === major && compareVersions(v, currentVersion) < 0)
+                .sort((a, b) => compareVersions(b, a));
+            if (lower.length > 0) {
+                return `${tagPrefix}${lower[0]}`;
             }
             return null; // first release on this major line
         }
@@ -474,6 +501,8 @@ if (require.main === module) {
     const args = process.argv.slice(2);
     const product = args.find((arg) => arg.startsWith("--product="))?.split("=")[1];
     const version = args.find((arg) => arg.startsWith("--version="))?.split("=")[1];
+    const from = args.find((arg) => arg.startsWith("--from="))?.split("=")[1];
+    const to = args.find((arg) => arg.startsWith("--to="))?.split("=")[1];
     const unreleased = args.includes("--unreleased");
     const listProducts = args.includes("--list");
 
@@ -495,6 +524,9 @@ if (require.main === module) {
         console.log("\nUsage:");
         console.log("  node scripts/generate-changelog.js --product=Umbraco.AI --version=17.1.0");
         console.log("  node scripts/generate-changelog.js --product=Umbraco.AI --unreleased");
+        console.log(
+            "  node scripts/generate-changelog.js --product=Umbraco.AI --version=17.1.0 --from=Umbraco.AI@17.0.2",
+        );
         console.log("  node scripts/generate-changelog.js --list  # List available products");
         console.log("\nAvailable products:");
         try {
@@ -506,7 +538,7 @@ if (require.main === module) {
         process.exit(1);
     }
 
-    generateChangelog(product, version, { unreleased, rootDir })
+    generateChangelog(product, version, { unreleased, from, to, rootDir })
         .then(() => {
             console.log("✅ Done!");
             process.exit(0);

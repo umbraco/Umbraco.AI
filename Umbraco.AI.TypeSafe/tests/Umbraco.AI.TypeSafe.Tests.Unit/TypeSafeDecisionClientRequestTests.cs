@@ -38,31 +38,31 @@ public class TypeSafeDecisionClientRequestTests
         public GivenABinaryQuestionWithNoCriteria()
             => _sent = SendAsync(new AIBinaryDecisionQuestion { Instructions = "Is this spam?" }, BinaryAnswer).GetAwaiter().GetResult();
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void PostsToTheSystemOneEndpoint()
         {
             _sent.Handler.Requests.Single().RequestUri.ShouldBe(new Uri("https://api.typesafe.ai/v1/systemone"));
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void UsesPost()
         {
             _sent.Handler.Requests.Single().Method.ShouldBe(HttpMethod.Post);
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheApiKeyAsABearerToken()
         {
             _sent.Handler.Requests.Single().Headers.Authorization!.ToString().ShouldBe("Bearer test-api-key");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheNoulType()
         {
             _sent.Question.GetProperty("type").GetString().ShouldBe("noul");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void OmitsTheCriteriaPropertyEntirely()
         {
             // Jev rejects "criteria": null for noul; the property must be absent, not null.
@@ -85,13 +85,13 @@ public class TypeSafeDecisionClientRequestTests
             _criteria = SendAsync(question, BinaryAnswer).GetAwaiter().GetResult().Question.GetProperty("criteria");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheTrueCriteria()
         {
             _criteria.GetProperty("true").GetString().ShouldBe("Promotional or scam");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheFalseCriteria()
         {
             _criteria.GetProperty("false").GetString().ShouldBe("A genuine comment");
@@ -112,19 +112,19 @@ public class TypeSafeDecisionClientRequestTests
             _question = SendAsync(question, ChoiceAnswer).GetAwaiter().GetResult().Question;
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheChoiceType()
         {
             _question.GetProperty("type").GetString().ShouldBe("choice");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsEachOptionKeyWithItsDescription()
         {
             _question.GetProperty("criteria").GetProperty("a").GetString().ShouldBe("A");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void FallsBackToTheKeyWhenAnOptionHasNoDescription()
         {
             _question.GetProperty("criteria").GetProperty("b").GetString().ShouldBe("b");
@@ -141,13 +141,13 @@ public class TypeSafeDecisionClientRequestTests
             _question = SendAsync(question, ScoreAnswer).GetAwaiter().GetResult().Question;
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheScoreType()
         {
             _question.GetProperty("type").GetString().ShouldBe("score");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheLevelsInOrderAsCriteria()
         {
             _question.GetProperty("criteria").EnumerateArray().Select(e => e.GetString()).ShouldBe(["poor", "ok", "good"]);
@@ -164,13 +164,13 @@ public class TypeSafeDecisionClientRequestTests
             _sent = SendAsync(question, BinaryAnswer).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheContextAsState()
         {
             _sent.Body.GetProperty("state").GetString().ShouldBe("Buy cheap watches");
         }
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheInstructionsAsInstructions()
         {
             _sent.Question.GetProperty("instructions").GetString().ShouldBe("Is this spam?");
@@ -184,7 +184,7 @@ public class TypeSafeDecisionClientRequestTests
         public GivenAQuestionWithNoContext()
             => _body = SendAsync(new AIBinaryDecisionQuestion { Instructions = "Is the sky blue?" }, BinaryAnswer).GetAwaiter().GetResult().Body;
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsTheInstructionsAsState()
         {
             _body.GetProperty("state").GetString().ShouldBe("Is the sky blue?");
@@ -201,7 +201,7 @@ public class TypeSafeDecisionClientRequestTests
                 BinaryAnswer,
                 new AIDecisionOptions { ModelId = "jev-latest" }).GetAwaiter().GetResult().Body;
 
-        [Fact(Skip = "Pending T7")]
+        [Fact]
         public void SendsItAsTheModel()
         {
             _body.GetProperty("model").GetString().ShouldBe("jev-latest");

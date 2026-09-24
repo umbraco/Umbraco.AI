@@ -47,14 +47,26 @@ public class TypeSafeProviderTests
 
     public class GivenSettingsWithNoApiKey
     {
-        private readonly IAIDecisionCapability _capability =
-            (IAIDecisionCapability)TypeSafeTestHost.CreateProvider().GetCapability<TypeSafeDecisionCapability>();
+        private readonly ScriptedHttpMessageHandler _handler = new(ScriptedHttpMessageHandler.Status(System.Net.HttpStatusCode.OK));
+        private readonly IAIDecisionCapability _capability;
+
+        public GivenSettingsWithNoApiKey()
+            => _capability = (IAIDecisionCapability)TypeSafeTestHost.CreateProvider(_handler).GetCapability<TypeSafeDecisionCapability>();
 
         [Fact]
         public async Task CreatingAClientFailsBeforeAnyNetworkCall()
         {
             await Should.ThrowAsync<InvalidOperationException>(
                 () => _capability.CreateClientAsync(new TypeSafeProviderSettings { ApiKey = null }, null, default));
+        }
+
+        [Fact]
+        public async Task NeverReachesTheHandler()
+        {
+            await Record.ExceptionAsync(
+                () => _capability.CreateClientAsync(new TypeSafeProviderSettings { ApiKey = null }, null, default));
+
+            _handler.Requests.ShouldBeEmpty();
         }
     }
 }

@@ -74,8 +74,10 @@ public class TypeSafeProviderSettings
 
 `POST {Endpoint}/v1/systemone` with `Authorization: Bearer <ApiKey>`, one question keyed `"q"`. See
 `docs/plans/decision-capability-release/SPEC.md` "Provider: Umbraco.AI.TypeSafe" for the full request
-and response mapping (binary/choice/score, retry policy). The wire mapping itself lands in a later task;
-`TypeSafeDecisionClient.AskAsync` currently throws `NotImplementedException`.
+and response mapping (binary/choice/score, retry policy). 429/529 are retried up to twice with
+exponential backoff (honoring a capped `Retry-After`); 401/422 are not retried and surface as
+`HttpRequestException` with `StatusCode` set, which `AIErrorClassifyingDecisionClient` classifies via
+the provider's default `ClassifyError` (`ProviderErrorMapping.FromException`/`FromHttpStatus`).
 
 ## Key Namespaces
 

@@ -20,7 +20,6 @@ the spec to the real signature but keep the behavior it asserts and its one-asse
 | T4 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Profiles/AIProfileSettingsSerializerDecisionTests.cs` |
 | T5 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Decision/DecisionPipelineHarness.cs`, `.../Decision/AskTypedDecisionTests.cs` |
 | T6 | `Umbraco.AI.TypeSafe/tests/Umbraco.AI.TypeSafe.Tests.Unit/TypeSafeProviderTests.cs`, `.../Fakes/*` |
-| T7 | `Umbraco.AI.TypeSafe/tests/Umbraco.AI.TypeSafe.Tests.Unit/TypeSafeDecisionClient{Request,Response,Retry}Tests.cs` |
 | T8 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Api/Management/Capability/EnabledCapabilitiesControllerTests.cs`, `.../Provider/AllProviderControllerExperimentalTests.cs` |
 | T9 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Api/Management/Settings/DefaultDecisionProfileSettingsTests.cs` |
 | T10 | `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Api/Management/Profile/DecisionProfileSettingsMappingTests.cs` |

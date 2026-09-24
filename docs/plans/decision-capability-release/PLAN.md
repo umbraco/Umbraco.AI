@@ -45,7 +45,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   `AIImageGenerationProfileSettings` and its case in `AIProfileSettingsSerializer`.
   depends-on: T1. parallel-group: A
 
-- [ ] **T5** — story: DR-1 (AC5, AC13). Make `IAIDecisionService.AskAsync` generic on the
+- [x] **T5** — story: DR-1 (AC5, AC13). Make `IAIDecisionService.AskAsync` generic on the
   question's response type (`Guid`, `string` alias, builder, and no-profile/default
   overloads). Throw `AIProviderException` when the client returns the wrong response type.
   depends-on: T2, T3.

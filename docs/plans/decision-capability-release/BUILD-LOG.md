@@ -43,3 +43,18 @@
   it. Reviewer confirmed `{}` round-trips non-null through the serializer, `AIProfileFactory`
   and the Deploy profile connector. Reran 1200/1200 unit + 32/32 integration. PASS on first
   review.
+
+- **T5** — `7795b345` — `IAIDecisionService.AskAsync<TResponse>` with none/Guid/alias/builder
+  overloads. Staged `DecisionPipelineHarness` + `AskTypedDecisionTests` moved in;
+  `AIDecisionServiceRealPipelineTests` refactored onto the harness. Took 3 review rounds:
+  1. FAIL: the response-type mismatch check ran in the service, *outside* tracking, so audit
+     recorded success while the caller got `AIProviderException`. Fixed: an internal
+     `ExpectedResponseType` on the question hierarchy. `AIErrorClassifyingDecisionClient`
+     (inside tracking) now throws, and the service only narrows. New factory-level specs prove
+     the tracker records a failure. Written up as a gotcha memory.
+  2. FAIL: 3 new CS1735 doc warnings and a stale remarks paragraph in `IAIDecisionService.cs`.
+     Fixed, and the mismatch exception deduped into `AIDecisionExceptionFactory`.
+  3. PASS. Reviewer reran 1216/1216 unit + 32/32 integration, with zero CS1735.
+  Note: closing direct subclassing of the non-generic `AIDecisionQuestion` base (via an
+  internal abstract member) was accepted. Only `AIDecisionQuestion<TResponse>` is the
+  extension point.

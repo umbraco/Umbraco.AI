@@ -8,8 +8,7 @@ import en from "./en.js";
  */
 describe("Feature: capability labels", () => {
     describe("Scenario: the Decision capability is offered when creating a profile", () => {
-        // Pending T16
-        it.skip('labels it "Decision"', () => {
+        it('labels it "Decision"', () => {
             expect((en.uaiCapabilities as Record<string, string>).decision).toBe("Decision");
         });
     });

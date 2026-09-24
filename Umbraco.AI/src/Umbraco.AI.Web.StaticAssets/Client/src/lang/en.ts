@@ -34,6 +34,7 @@ export default {
         moderation: "Moderation",
         speechtotext: "Speech to Text",
         imagegeneration: "Image Generation",
+        decision: "Decision",
     },
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",
@@ -49,6 +50,7 @@ export default {
         noProfilesAvailable: "No AI profiles available. Create one in the AI section.",
         deleteConfirm: "Are you sure you want to delete this profile?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
+        noSettingsAvailable: "This capability has no additional settings to configure.",
     },
     uaiSettings: {
         defaultChatProfileLabel: "Default Chat Profile",

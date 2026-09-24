@@ -4,7 +4,13 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiProfileSettings, UaiImageGenerationProfileSettings } from "../../../types.js";
-import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "../../../types.js";
+import {
+    isChatSettings,
+    isEmbeddingSettings,
+    isSpeechToTextSettings,
+    isImageGenerationSettings,
+    isDecisionSettings,
+} from "../../../types.js";
 import { UaiPartialUpdateCommand, isCapabilitySettingSupported, getSupportedImageSizes } from "../../../../core/index.js";
 // Imported for the custom-element registrations as well as the rules: these live in this view's own chunk
 // rather than the global barrel, so they load with the view that uses them.
@@ -305,6 +311,14 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         .metadata=${metadata}
                         @uai-profile-settings-change=${this.#onProfileSettingsChange}
                     ></uai-image-generation-profile-settings>
+                `;
+            case "decision":
+                return html`
+                    <uai-decision-profile-settings
+                        .settings=${isDecisionSettings(settings) ? settings : null}
+                        .metadata=${metadata}
+                        @uai-profile-settings-change=${this.#onProfileSettingsChange}
+                    ></uai-decision-profile-settings>
                 `;
             default:
                 return nothing;

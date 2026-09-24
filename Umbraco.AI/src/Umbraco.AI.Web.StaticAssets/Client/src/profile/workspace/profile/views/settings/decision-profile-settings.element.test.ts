@@ -17,8 +17,7 @@ describe("Feature: Decision profile settings view", () => {
             await el.updateComplete;
         });
 
-        // Pending T16
-        it.skip("renders a message instead of a blank area", () => {
+        it("renders a message instead of a blank area", () => {
             expect(el.shadowRoot!.textContent?.trim().length).toBeGreaterThan(0);
         });
     });

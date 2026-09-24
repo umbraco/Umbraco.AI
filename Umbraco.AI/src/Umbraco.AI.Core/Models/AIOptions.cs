@@ -31,6 +31,11 @@ public class AIOptions
     public string? DefaultImageGenerationProfileAlias { get; set; }
 
     /// <summary>
+    /// The default decision profile alias to use when none is specified.
+    /// </summary>
+    public string? DefaultDecisionProfileAlias { get; set; }
+
+    /// <summary>
     /// Gets or sets the <see cref="Microsoft.Extensions.Configuration.IConfiguration"/> key
     /// prefixes that editable model settings may dereference via the <c>$Key:Path</c> syntax.
     /// </summary>

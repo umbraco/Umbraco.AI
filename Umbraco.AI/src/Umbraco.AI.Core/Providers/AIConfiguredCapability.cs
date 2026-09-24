@@ -1,8 +1,10 @@
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Models;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Wraps the experimental image-generation capability
+#pragma warning disable UMBRACOAI_DECISION // Wraps the experimental decision capability
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -67,6 +69,31 @@ internal sealed class AIConfiguredSpeechToTextCapability(IAISpeechToTextCapabili
 
     /// <inheritdoc />
     public Task<ISpeechToTextClient> CreateClientAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => inner.CreateClientAsync(settings, capabilitySettings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
+        => inner.GetModelsAsync(settings, cancellationToken);
+}
+
+/// <summary>
+/// Decorator that wraps a decision capability with resolved settings.
+/// </summary>
+internal sealed class AIConfiguredDecisionCapability(IAIDecisionCapability inner, object settings)
+    : IAIConfiguredDecisionCapability
+{
+    /// <inheritdoc />
+    public AICapability Kind => inner.Kind;
+
+    /// <inheritdoc />
+    public Task<IAIDecisionClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default)
+        => inner.CreateClientAsync(settings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IAIDecisionClient> CreateClientAsync(
         object? capabilitySettings,
         string? modelId,
         CancellationToken cancellationToken)

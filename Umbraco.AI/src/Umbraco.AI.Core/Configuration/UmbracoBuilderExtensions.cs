@@ -10,6 +10,7 @@ using Umbraco.AI.Core.Guardrails.Middleware;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Contexts.KnowledgeSets;
 using Umbraco.AI.Core.Contexts.Middleware;
 using Umbraco.AI.Core.Contexts.Resolvers;
@@ -49,6 +50,7 @@ using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
 #pragma warning disable UMBRACOAI_IMAGEGEN // Registers the experimental image-generation services and middleware
+#pragma warning disable UMBRACOAI_DECISION // Registers the experimental decision services and middleware
 
 namespace Umbraco.AI.Extensions;
 
@@ -135,6 +137,10 @@ public static partial class UmbracoBuilderExtensions
         builder.AIImageGenerationMiddleware()
             .Append<AIOpenTelemetryImageGenerationMiddleware>()       // OpenTelemetry tracing (innermost - zero cost when unconfigured)
             .Append<AITrackingImageGenerationMiddleware>();           // Usage analytics + audit logging (via IAIOperationTracker)
+
+        builder.AIDecisionMiddleware()
+            .Append<AIOpenTelemetryDecisionMiddleware>()              // OpenTelemetry tracing (innermost - zero cost when unconfigured)
+            .Append<AITrackingDecisionMiddleware>();                  // Usage analytics + audit logging (via IAIOperationTracker)
 
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
@@ -223,6 +229,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
         services.AddSingleton<IAISpeechToTextClientFactory, AISpeechToTextClientFactory>();
         services.AddSingleton<IAIImageGeneratorFactory, AIImageGeneratorFactory>();
+        services.AddSingleton<IAIDecisionClientFactory, AIDecisionClientFactory>();
 
         // Capability-agnostic usage + audit recorder (chat / embedding / speech-to-text / image),
         // shared by every tracking middleware and the image escape-hatch helper.
@@ -233,6 +240,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIEmbeddingService, AIEmbeddingService>();
         services.AddSingleton<IAISpeechToTextService, AISpeechToTextService>();
         services.AddSingleton<IAIImageGenerationService, AIImageGenerationService>();
+        services.AddSingleton<IAIDecisionService, AIDecisionService>();
         // TODO: services.AddSingleton<IAIToolService, AIToolService>();
 
         // Context resource type infrastructure - auto-discover via [AIContextResourceType] attribute

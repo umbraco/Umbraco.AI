@@ -37,6 +37,7 @@ internal static class AIProfileSettingsSerializer
             AICapability.Embedding => JsonSerializer.Deserialize<AIEmbeddingProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
             AICapability.SpeechToText => JsonSerializer.Deserialize<AISpeechToTextProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
             AICapability.ImageGeneration => JsonSerializer.Deserialize<AIImageGenerationProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
+            AICapability.Decision => JsonSerializer.Deserialize<AIDecisionProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
             _ => null
         };
     }

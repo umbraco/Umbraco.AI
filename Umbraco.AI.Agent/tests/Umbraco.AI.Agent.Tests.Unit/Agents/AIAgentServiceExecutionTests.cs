@@ -88,6 +88,8 @@ public class AIAgentServiceExecutionTests
             null!, // AIAgentScopeValidator
             null!, // AIAgentSurfaceCollection
             eventAggregator,
+            null!, // IAIDecisionService
+            null!, // IAIExperimentalFeatures
             null); // IBackOfficeSecurityAccessor
 
     private static AIAgent CreateAgent(Guid id)

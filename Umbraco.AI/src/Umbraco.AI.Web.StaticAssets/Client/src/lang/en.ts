@@ -34,6 +34,7 @@ export default {
         moderation: "Moderation",
         speechtotext: "Speech to Text",
         imagegeneration: "Image Generation",
+        decision: "Decision",
     },
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",
@@ -49,6 +50,27 @@ export default {
         noProfilesAvailable: "No AI profiles available. Create one in the AI section.",
         deleteConfirm: "Are you sure you want to delete this profile?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
+        noSettingsAvailable: "This capability has no additional settings to configure.",
+    },
+    uaiSettings: {
+        defaultChatProfileLabel: "Default Chat Profile",
+        defaultChatProfileDescription:
+            "The default profile to use for chat completions when no profile is specified in API calls.",
+        classifierChatProfileLabel: "Classifier Chat Profile",
+        classifierChatProfileDescription:
+            "An optional profile for internal classification tasks such as agent routing. Uses a cheaper model to reduce costs. Falls back to the default chat profile if not set.",
+        defaultEmbeddingProfileLabel: "Default Embedding Profile",
+        defaultEmbeddingProfileDescription:
+            "The default profile to use for generating embeddings when no profile is specified in API calls.",
+        defaultSpeechToTextProfileLabel: "Default Speech to Text Profile",
+        defaultSpeechToTextProfileDescription:
+            "The default profile to use for speech-to-text transcription when no profile is specified in API calls.",
+        defaultImageGenerationProfileLabel: "Default Image Generation Profile",
+        defaultImageGenerationProfileDescription:
+            "The default profile to use for image generation when no profile is specified in API calls.",
+        defaultDecisionProfileLabel: "Default Decision Profile",
+        defaultDecisionProfileDescription:
+            "The default profile to use for decision requests when no profile is specified in API calls.",
     },
     uaiContext: {
         selectContext: "Select AI Context",

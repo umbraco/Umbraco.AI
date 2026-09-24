@@ -5,16 +5,23 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UAI_SETTINGS_WORKSPACE_CONTEXT } from "./settings-workspace.context-token.js";
 import type { UaiSettingsModel } from "../../types.js";
 import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
+import { UaiEnabledCapabilitiesRepository } from "../../../capability/repository/enabled-capabilities.repository.js";
 
 @customElement("uai-settings-editor")
 export class UaiSettingsEditorElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_SETTINGS_WORKSPACE_CONTEXT.TYPE;
+    #enabledCapabilitiesRepository = new UaiEnabledCapabilitiesRepository(this);
 
     @state()
     private _loading = true;
 
     @state()
     private _model?: UaiSettingsModel;
+
+    // undefined while the enabled-capability list hasn't resolved yet, so the
+    // experimental pickers stay hidden rather than flashing before disappearing.
+    @state()
+    private _enabledCapabilities?: string[];
 
     constructor() {
         super();
@@ -31,6 +38,13 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                 this._loading = loading;
             });
         });
+
+        this.#loadEnabledCapabilities();
+    }
+
+    async #loadEnabledCapabilities(): Promise<void> {
+        const { data } = await this.#enabledCapabilitiesRepository.getEnabledCapabilities();
+        this._enabledCapabilities = data ?? [];
     }
 
     #onPropertyChange(e: UmbChangeEvent): void {
@@ -42,6 +56,10 @@ export class UaiSettingsEditorElement extends UmbLitElement {
         this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiSettingsModel>({ [name]: value }, name));
     }
 
+    #isCapabilityEnabled(capability: string): boolean {
+        return this._enabledCapabilities?.includes(capability) ?? false;
+    }
+
     override render() {
         if (this._loading) {
             return html`<uui-loader></uui-loader>`;
@@ -50,8 +68,8 @@ export class UaiSettingsEditorElement extends UmbLitElement {
         return html`
             <uui-box headline="Defaults">
                 <umb-property-layout
-                    label="Default Chat Profile"
-                    description="The default profile to use for chat completions when no profile is specified in API calls."
+                    label=${this.localize.term("uaiSettings_defaultChatProfileLabel")}
+                    description=${this.localize.term("uaiSettings_defaultChatProfileDescription")}
                 >
                     <div slot="editor">
                         <uai-profile-picker
@@ -64,8 +82,8 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                     </div>
                 </umb-property-layout>
                 <umb-property-layout
-                    label="Classifier Chat Profile"
-                    description="An optional profile for internal classification tasks such as agent routing. Uses a cheaper model to reduce costs. Falls back to the default chat profile if not set."
+                    label=${this.localize.term("uaiSettings_classifierChatProfileLabel")}
+                    description=${this.localize.term("uaiSettings_classifierChatProfileDescription")}
                 >
                     <div slot="editor">
                         <uai-profile-picker
@@ -78,8 +96,8 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                     </div>
                 </umb-property-layout>
                 <umb-property-layout
-                    label="Default Embedding Profile"
-                    description="The default profile to use for generating embeddings when no profile is specified in API calls."
+                    label=${this.localize.term("uaiSettings_defaultEmbeddingProfileLabel")}
+                    description=${this.localize.term("uaiSettings_defaultEmbeddingProfileDescription")}
                 >
                     <div slot="editor">
                         <uai-profile-picker
@@ -92,8 +110,8 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                     </div>
                 </umb-property-layout>
                 <umb-property-layout
-                    label="Default Speech to Text Profile"
-                    description="The default profile to use for speech-to-text transcription when no profile is specified in API calls."
+                    label=${this.localize.term("uaiSettings_defaultSpeechToTextProfileLabel")}
+                    description=${this.localize.term("uaiSettings_defaultSpeechToTextProfileDescription")}
                 >
                     <div slot="editor">
                         <uai-profile-picker
@@ -105,20 +123,42 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>
-                <umb-property-layout
-                    label="Default Image Generation Profile"
-                    description="The default profile to use for image generation when no profile is specified in API calls."
-                >
-                    <div slot="editor">
-                        <uai-profile-picker
-                            name="defaultImageGenerationProfileId"
-                            capability="ImageGeneration"
-                            .value=${this._model?.defaultImageGenerationProfileId ?? undefined}
-                            @change=${this.#onPropertyChange}
-                        >
-                        </uai-profile-picker>
-                    </div>
-                </umb-property-layout>
+                ${this.#isCapabilityEnabled("ImageGeneration")
+                    ? html`
+                          <umb-property-layout
+                              label=${this.localize.term("uaiSettings_defaultImageGenerationProfileLabel")}
+                              description=${this.localize.term("uaiSettings_defaultImageGenerationProfileDescription")}
+                          >
+                              <div slot="editor">
+                                  <uai-profile-picker
+                                      name="defaultImageGenerationProfileId"
+                                      capability="ImageGeneration"
+                                      .value=${this._model?.defaultImageGenerationProfileId ?? undefined}
+                                      @change=${this.#onPropertyChange}
+                                  >
+                                  </uai-profile-picker>
+                              </div>
+                          </umb-property-layout>
+                      `
+                    : ""}
+                ${this.#isCapabilityEnabled("Decision")
+                    ? html`
+                          <umb-property-layout
+                              label=${this.localize.term("uaiSettings_defaultDecisionProfileLabel")}
+                              description=${this.localize.term("uaiSettings_defaultDecisionProfileDescription")}
+                          >
+                              <div slot="editor">
+                                  <uai-profile-picker
+                                      name="defaultDecisionProfileId"
+                                      capability="Decision"
+                                      .value=${this._model?.defaultDecisionProfileId ?? undefined}
+                                      @change=${this.#onPropertyChange}
+                                  >
+                                  </uai-profile-picker>
+                              </div>
+                          </umb-property-layout>
+                      `
+                    : ""}
             </uui-box>
         `;
     }

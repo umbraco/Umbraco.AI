@@ -1,3 +1,5 @@
+#pragma warning disable UMBRACOAI_DECISION // Consumes the experimental Decision capability for agent routing
+
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -5,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
@@ -15,9 +18,11 @@ using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
@@ -54,6 +59,9 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly AIAgentSurfaceCollection _surfaceCollection;
     private readonly IEventAggregator _eventAggregator;
     private readonly ILoggerFactory? _loggerFactory;
+    private readonly IAIDecisionService _decisionService;
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
+    private readonly ILogger _logger;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -70,6 +78,8 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
         IEventAggregator eventAggregator,
+        IAIDecisionService decisionService,
+        IAIExperimentalFeatures experimentalFeatures,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null,
         ILoggerFactory? loggerFactory = null)
     {
@@ -87,8 +97,11 @@ internal sealed class AIAgentService : IAIAgentService
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
         _eventAggregator = eventAggregator;
+        _decisionService = decisionService;
+        _experimentalFeatures = experimentalFeatures;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _loggerFactory = loggerFactory;
+        _logger = (ILogger?)loggerFactory?.CreateLogger<AIAgentService>() ?? NullLogger.Instance;
     }
 
     /// <inheritdoc />
@@ -269,7 +282,16 @@ internal sealed class AIAgentService : IAIAgentService
             return availableAgents[0];
         }
 
-        // 6. Multiple agents - use LLM to classify
+        // 6. Try Decision-based routing first (cheaper, no chat call). Falls back to the chat
+        // classifier below on anything but a clean Decision-picked agent — see
+        // TrySelectAgentViaDecisionAsync for the full fallback matrix.
+        var decisionSelectedAgent = await TrySelectAgentViaDecisionAsync(availableAgents, userPrompt, cancellationToken);
+        if (decisionSelectedAgent is not null)
+        {
+            return decisionSelectedAgent;
+        }
+
+        // 7. Multiple agents - use LLM to classify
         var classificationPrompt = BuildClassificationPrompt(availableAgents, userPrompt);
 
         // Get the classifier profile (falls back to default chat profile)
@@ -305,6 +327,93 @@ internal sealed class AIAgentService : IAIAgentService
 
         // Fallback to first agent if parsing fails
         return availableAgents[0];
+    }
+
+    /// <summary>
+    /// Attempts to pick the best agent for <paramref name="userPrompt"/> via the Decision capability,
+    /// asking a single <see cref="AIChoiceDecisionQuestion"/> whose options are the available agents.
+    /// Returns <c>null</c> whenever the caller should fall back to the existing chat-classifier path
+    /// instead — the flag is off, no default Decision profile is configured, the agent count is outside
+    /// the 2-255 range Decision supports, any part of the attempt (the profile-configured check or the
+    /// provider call itself) threw, or it answered with a key that isn't one of the available agents.
+    /// <see cref="OperationCanceledException"/> is never swallowed here; it propagates to the caller.
+    /// A site that doesn't use Decision at all must never have auto mode break because of it, so any
+    /// other exception — including one from the default-profile lookup, e.g. a database error — is
+    /// caught and logged as a warning (without user content) rather than escaping to the caller.
+    /// </summary>
+    private async Task<AIAgent?> TrySelectAgentViaDecisionAsync(
+        IReadOnlyList<AIAgent> availableAgents,
+        string userPrompt,
+        CancellationToken cancellationToken)
+    {
+        // AIChoiceDecisionQuestion.Options only supports 2-255 entries (ValidatingDecisionClient).
+        if (availableAgents.Count is < 2 or > 255)
+        {
+            return null;
+        }
+
+        if (!_experimentalFeatures.IsCapabilityEnabled(AICapability.Decision))
+        {
+            _logger.LogDebug("Decision-based agent routing skipped: the Decision capability is not enabled.");
+            return null;
+        }
+
+        try
+        {
+            if (!await _profileService.HasDefaultProfileAsync(AICapability.Decision, cancellationToken))
+            {
+                _logger.LogDebug("Decision-based agent routing skipped: no default Decision profile is configured.");
+                return null;
+            }
+
+            var question = new AIChoiceDecisionQuestion
+            {
+                Instructions = "Select the id of the agent best suited to handle the user's message.",
+                Context = userPrompt,
+                Options = availableAgents
+                    .Select(a => new AIDecisionOption(a.Id.ToString("D"), BuildAgentOptionDescription(a)))
+                    .ToList(),
+            };
+
+            var response = await _decisionService.AskAsync(
+                b => b.WithAlias("agent-routing"),
+                question,
+                cancellationToken);
+
+            if (Guid.TryParse(response.Choice, out var selectedAgentId))
+            {
+                var selectedAgent = availableAgents.FirstOrDefault(a => a.Id == selectedAgentId);
+                if (selectedAgent is not null)
+                {
+                    return selectedAgent;
+                }
+            }
+
+            _logger.LogDebug("Decision-based agent routing returned an agent id that isn't available; falling back to the chat classifier.");
+            return null;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Decision-based agent routing failed; falling back to the chat classifier.");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Builds the option description Decision sees for one agent: its name plus description, matching
+    /// how <see cref="BuildClassificationPrompt"/> phrases the same information for the chat classifier.
+    /// </summary>
+    private static string BuildAgentOptionDescription(AIAgent agent)
+    {
+        var description = string.IsNullOrWhiteSpace(agent.Description)
+            ? "No description"
+            : agent.Description;
+
+        return $"{agent.Name}: {description}";
     }
 
     /// <summary>

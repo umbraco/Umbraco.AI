@@ -42,6 +42,8 @@ public class AIAgentServiceTests
             null!, // AIAgentScopeValidator
             null!, // AIAgentSurfaceCollection
             null!, // IEventAggregator
+            null!, // IAIDecisionService
+            null!, // IAIExperimentalFeatures
             null  // IBackOfficeSecurityAccessor
         );
     }

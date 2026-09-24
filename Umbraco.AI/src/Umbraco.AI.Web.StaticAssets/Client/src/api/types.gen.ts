@@ -32,6 +32,11 @@ export type AiVariantIdModel = {
     readonly isInvariant: boolean;
 };
 
+export type AskDecisionRequestModel = {
+    profileIdOrAlias?: string | null;
+    question: BinaryDecisionQuestionModel | ChoiceDecisionQuestionModel | ScoreDecisionQuestionModel;
+};
+
 export type AuditLogDetailResponseModel = {
     id: string;
     startTime: string;
@@ -94,6 +99,19 @@ export type BinaryChatContentPartModel = ChatContentPartModel & {
     filename?: string | null;
 };
 
+export type BinaryDecisionQuestionModel = DecisionQuestionModel & {
+    $type: 'binary';
+    trueCriteria?: string | null;
+    falseCriteria?: string | null;
+};
+
+export type BinaryDecisionResponseModel = DecisionResponseModel & {
+    $type: 'binary';
+    answer: boolean;
+    probability: number;
+    confidence: number;
+};
+
 export type ChatContentPartModel = {
     [key: string]: never;
 };
@@ -124,6 +142,20 @@ export type ChatResponseModel = {
     message: ChatMessageModel;
     finishReason?: string | null;
     usage?: UsageModel | null;
+};
+
+export type ChoiceDecisionQuestionModel = DecisionQuestionModel & {
+    $type: 'choice';
+    options: Array<DecisionOptionModel>;
+};
+
+export type ChoiceDecisionResponseModel = DecisionResponseModel & {
+    $type: 'choice';
+    choice: string;
+    confidence: number;
+    probabilities: {
+        [key: string]: number;
+    };
 };
 
 export type CompareRunsRequestModel = {
@@ -228,7 +260,7 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
 };
@@ -246,6 +278,25 @@ export type CreateTestRequestModel = {
     variations?: Array<TestVariationModel> | null;
     runCount: number;
     tags: Array<string>;
+};
+
+export type DecisionOptionModel = {
+    key: string;
+    description?: string | null;
+};
+
+export type DecisionProfileSettingsModel = ProfileSettingsModel & {
+    $type: 'decision';
+};
+
+export type DecisionQuestionModel = {
+    instructions: string;
+    context?: string | null;
+};
+
+export type DecisionResponseModel = {
+    modelId?: string | null;
+    usage?: UsageModel | null;
 };
 
 export type EditableModelFieldModel = {
@@ -497,7 +548,7 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
@@ -560,12 +611,28 @@ export type RunTestsByTagsRequestModel = {
     guardrailIdsOverride?: Array<string> | null;
 };
 
+export type ScoreDecisionQuestionModel = DecisionQuestionModel & {
+    $type: 'score';
+    levels: Array<string>;
+};
+
+export type ScoreDecisionResponseModel = DecisionResponseModel & {
+    $type: 'score';
+    score: number;
+    level: string;
+    confidence: number;
+    probabilities: {
+        [key: string]: number;
+    };
+};
+
 export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
     defaultImageGenerationProfileId?: string | null;
+    defaultDecisionProfileId?: string | null;
 };
 
 export type SpeechToTextProfileSettingsModel = ProfileSettingsModel & {
@@ -847,7 +914,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
 };
@@ -858,6 +925,7 @@ export type UpdateSettingsRequestModel = {
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
     defaultImageGenerationProfileId?: string | null;
+    defaultDecisionProfileId?: string | null;
 };
 
 export type UpdateTestRequestModel = {
@@ -1262,6 +1330,29 @@ export type CleanupAuditLogsResponses = {
 };
 
 export type CleanupAuditLogsResponse = CleanupAuditLogsResponses[keyof CleanupAuditLogsResponses];
+
+export type GetEnabledCapabilitiesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/capabilities/enabled';
+};
+
+export type GetEnabledCapabilitiesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetEnabledCapabilitiesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetEnabledCapabilitiesResponse = GetEnabledCapabilitiesResponses[keyof GetEnabledCapabilitiesResponses];
 
 export type CompleteChatData = {
     body?: ChatRequestModel;
@@ -1832,6 +1923,39 @@ export type UpdateContextResponses = {
      */
     200: unknown;
 };
+
+export type AskData = {
+    body?: AskDecisionRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/decision/ask';
+};
+
+export type AskErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type AskError = AskErrors[keyof AskErrors];
+
+export type AskResponses = {
+    /**
+     * OK
+     */
+    200: BinaryDecisionResponseModel | ChoiceDecisionResponseModel | ScoreDecisionResponseModel;
+};
+
+export type AskResponse = AskResponses[keyof AskResponses];
 
 export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;

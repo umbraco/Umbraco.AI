@@ -1,5 +1,7 @@
 # Plan
 
+> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan in `docs/plans/decision-capability-release/`, which builds on this spike's Core code.
+
 Task checklist for `umb-build-loop`. All work lands on `v18/dev` only (or a
 worktree branched from it) — no backport, per the brief. Every task is
 Umbraco.AI.Core-only C# except T10/T11, which add one disposable spike

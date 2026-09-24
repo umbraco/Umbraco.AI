@@ -1,5 +1,7 @@
 # Brief
 
+> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan in `docs/plans/decision-capability-release/`, which builds on this spike's Core code.
+
 ## Problem
 
 TypeSafe AI shipped a model called Jev on 15-09-2026: a "System 1" model that skips

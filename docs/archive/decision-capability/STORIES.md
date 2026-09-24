@@ -1,5 +1,7 @@
 # Stories
 
+> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan in `docs/plans/decision-capability-release/`, which builds on this spike's Core code.
+
 ## Definition of Ready / Definition of Done
 
 This is a throwaway architecture spike (`docs/plans/decision-capability/BRIEF.md`), so these

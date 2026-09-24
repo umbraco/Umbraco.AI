@@ -1,5 +1,7 @@
 # Decision Log
 
+> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan in `docs/plans/decision-capability-release/`, which builds on this spike's Core code.
+
 ## 2026-09-23 — Scoped as a spike, not a feature
 
 Decided during `umb-explore`:

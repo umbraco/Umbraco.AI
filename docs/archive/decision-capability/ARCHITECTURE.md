@@ -1,5 +1,7 @@
 # Architecture
 
+> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan in `docs/plans/decision-capability-release/`, which builds on this spike's Core code.
+
 ## Extension points
 
 None of Umbraco CMS's usual extension points (property editor, dashboard,

@@ -17,7 +17,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   branch.
   depends-on: none.
 
-- [ ] **T1** — story: DR-11 (AC1-AC3). Delete `Umbraco.AI.Tests.Common/Decision/Spike/` and
+- [x] **T1** — story: DR-11 (AC1-AC3). Delete `Umbraco.AI.Tests.Common/Decision/Spike/` and
   `Decision/JevSpikeProviderTests.cs`. Switch the former-T12 real-provider gating tests in
   `AIProfileServiceTests`/`AIConnectionServiceTests` to `FakeDecisionCapability`, keeping
   both the disabled and enabled (positive-control) cases.

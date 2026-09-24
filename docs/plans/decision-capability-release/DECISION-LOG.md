@@ -105,3 +105,9 @@
   uninstalled packages.
 - The silent-skip bug is logged as umbraco/Umbraco.Automate#343 (reviewed by the user before
   posting). The `BranchOutcome` persistence bug is logged as umbraco/Umbraco.Automate#344.
+- **TypeSafe "Test connection" does a real, cached key check.** Core's `TestConnectionAsync`
+  only calls the first capability's `GetModelsAsync`, and TypeSafe's model list was static, so
+  a wrong API key passed the test. Other providers list models live (auth-checked). Jev has no
+  models endpoint, so listing models sends one tiny `noul` probe (a few hundred tokens), cached
+  per connection settings for an hour like other providers cache model lists. Any failure makes
+  the test fail. User choice over documenting the gap.

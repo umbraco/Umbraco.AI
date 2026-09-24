@@ -128,7 +128,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   `uai-decision-profile-settings` showing a "no settings" message.
   depends-on: T13. parallel-group: C
 
-- [ ] **T17** — **wire: frontend into the running backoffice.** story: DR-3 (AC2, AC3),
+- [x] **T17** — **wire: frontend into the running backoffice.** story: DR-3 (AC2, AC3),
   DR-5, DR-6 (AC3), DR-7 (AC1, AC2). In a browser on the demo site: create a TypeSafe
   connection and Decision profile through the UI, open the profile, and set the default in
   Settings. Call `UaiDecisionController.ask` for each kind from backoffice code or the

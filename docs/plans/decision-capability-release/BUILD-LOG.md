@@ -176,3 +176,16 @@
   claims it dispatches `uai-profile-settings-change`, but it never does; reword it. (2) There's a
   pre-existing gap: `createDefaultSettings`/`getCapabilityIcon` only cover chat and embedding
   (ImageGeneration and SpeechToText are missing too). Both fall back safely.
+
+- **T17** (wire) — no code change — Live backoffice check in a real browser (Playwright) on the
+  demo site. The orchestrator checked the screenshots. Flag ON: a TypeSafe connection created
+  through the UI with a `$`-config API key reference; the create-profile dialog offers Decision;
+  a new Decision profile saves and reopens showing the "no settings" view; the Default Decision
+  Profile picker lists only Decision profiles and the value persists after reload.
+  `UaiDecisionController` loaded via the `@umbraco-ai/core` import map and was called from page
+  context for binary (true/0.98), choice (oceania/1.0) and score (2 → positive/1.0), each with
+  the right `kind`. Flag OFF: the Decision and ImageGeneration pickers are hidden and the other
+  four render. After a save, the DB still holds `DefaultDecisionProfileId` (checked in the DB
+  rather than by a restart, because the T12 hosted service would overwrite it). TypeSafe is
+  absent from the provider list. No console errors from product code. One 404 came from a
+  leftover spike-era "Jev Spike" connection in the gitignored demo DB, not from the product.

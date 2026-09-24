@@ -122,9 +122,9 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                     if (!scope) return undefined;
 
                     const camelCaseId = toCamelCase(scope.id);
-                    const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
+                    const localizedName = this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Label`, scope.id);
                     const localizedDescription =
-                        this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+                        this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Description`, "");
                     const toolCount = this._toolCounts[scope.id] ?? 0;
 
                     return {
@@ -150,8 +150,8 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
             data: {
                 fetchItems: () => this.#fetchAvailableScopes(),
                 selectionMode: "multiple",
-                title: this.localize.term("uaiToolScope_selectScope") || "Select Tool Scopes",
-                noResultsMessage: this.localize.term("uaiAgent_noToolScopesAvailable") || "No tool scopes available",
+                title: this.localize.termOrDefault("uaiToolScope_selectScope", "Select Tool Scopes"),
+                noResultsMessage: this.localize.termOrDefault("uaiAgent_noToolScopesAvailable", "No tool scopes available"),
                 tagTemplate: (item) => {
                     const toolCount = this._toolCounts[item.value] ?? 0;
                     const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
@@ -185,9 +185,9 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
             )
             .map((scope: UaiToolScope) => {
                 const camelCaseId = toCamelCase(scope.id);
-                const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
+                const localizedName = this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Label`, scope.id);
                 const localizedDescription =
-                    this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+                    this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Description`, "");
 
                 return {
                     value: scope.id,
@@ -274,7 +274,7 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term("uaiAgent_addScope") || "Add Scope"}
+                label=${this.localize.termOrDefault("uaiAgent_addScope", "Add Scope")}
             >
                 <uui-icon name="icon-add"></uui-icon>
                 ${this.localize.term("general_add")}

@@ -111,3 +111,14 @@
   models endpoint, so listing models sends one tiny `noul` probe (a few hundred tokens), cached
   per connection settings for an hour like other providers cache model lists. Any failure makes
   the test fail. User choice over documenting the gap.
+- **Unknown profile alias silently falls back to the default profile, for every capability.**
+  The docs agent found it and the orchestrator confirmed it: `ResolveProfileAsync` in
+  `AIChatService`, `AISpeechToTextService` and `AIDecisionService` turns an unknown alias into
+  null and then uses the default profile. User decision: leave Decision matching the other
+  capabilities in this feature, and fix it for all capabilities as a separate bug fix on both
+  lines (an unknown alias should throw "profile not found").
+- **Docs ship as one draft PR** in Umbraco.Docs (branch `ai/decision-docs`, 3 themed commits,
+  about 60 files across 17/ and 18/), asking for an exception to the 10-article cap on
+  AI-assisted PRs. Held until release, like ImageGeneration's. Expect conflicts with the
+  ImageGeneration docs PR #8222 on shared pages (`ai-options.md` "Experimental Features" and
+  others).

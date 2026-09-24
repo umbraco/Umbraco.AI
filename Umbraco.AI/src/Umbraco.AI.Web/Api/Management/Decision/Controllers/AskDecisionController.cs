@@ -159,7 +159,17 @@ public class AskDecisionController : DecisionControllerBase
             _ => throw new InvalidOperationException($"Unsupported decision response type '{response.GetType().Name}'.")
         };
 
-        return Ok(mapped);
+        // Ok(mapped) would lose the `$type` discriminator: OkObjectResult's constructor takes
+        // `object? value`, so the compile-time type DecisionResponseModel is erased and MVC's output
+        // formatter falls back to the *runtime* type (e.g. BinaryDecisionResponseModel) — a type with
+        // no [JsonDerivedType] attributes of its own, so System.Text.Json never emits "$type". Setting
+        // DeclaredType explicitly (the same field ActionResult<T>.Convert() sets from typeof(TValue))
+        // tells the formatter to serialize against the base contract instead, which is where
+        // [JsonPolymorphic]/[JsonDerivedType] are declared. See SPEC.md's guarantees for POST decision/ask.
+        return new OkObjectResult(mapped)
+        {
+            DeclaredType = typeof(DecisionResponseModel)
+        };
     }
 
     private static ProblemDetails InvalidQuestion(string detail) => new()

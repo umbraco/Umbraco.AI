@@ -1,9 +1,9 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { DecisionService } from "../../api/sdk.gen.js";
-// The generated `DecisionQuestionModel`/`DecisionResponseModel` aliases are a discriminated union
-// on this API's schema, but the request/response field types are typed directly against the
-// individual `$type` members rather than those aliases, so this uses the members directly.
+// On v17, the generated `DecisionQuestionModel`/`DecisionResponseModel` aliases are plain base
+// types with no `$type` discriminator, so they can't be narrowed by kind. This uses the concrete
+// Binary/Choice/Score member types (and `AskResponse`) directly instead.
 import type {
     AskResponse,
     BinaryDecisionQuestionModel,

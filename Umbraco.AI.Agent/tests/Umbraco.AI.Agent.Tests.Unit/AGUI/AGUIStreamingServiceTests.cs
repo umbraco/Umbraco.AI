@@ -361,6 +361,26 @@ public class AGUIStreamingServiceTests
     }
 
     [Fact]
+    public async Task StreamAgentAsync_TruncatedAfterProducingText_FinishesNormally()
+    {
+        // Arrange — a deliberately low Max tokens clips the answer; the user still sees the text, so the
+        // run keeps finishing normally rather than turning a working setup into an error
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, "A clipped answ") { FinishReason = ChatFinishReason.Length },
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+
+        // Act
+        var events = await CollectEvents(agent, CreateRequest());
+
+        // Assert
+        events.OfType<RunErrorEvent>().ShouldBeEmpty();
+        events.Last().ShouldBeOfType<RunFinishedEvent>();
+    }
+
+    [Fact]
     public async Task StreamAgentAsync_LengthFinishFollowedByNormalFinish_EmitsRunFinished()
     {
         // Arrange — only the last model call decides how the run ended

@@ -15,3 +15,14 @@
   `AIExperimentalFeatures`. PASS on first review. Carry-forward: "Jev" still named in Core
   doc comments (`DeclaredSettingsDecisionClient.cs`, `DeclaredSettingsEnforcementTests.cs:216`)
   and a `"jev-test"` model id. Core should be vendor-neutral, so folded into T2.
+
+- **T2** — `b5009ab3` — Per-kind question/response types replace the flat shape;
+  `AIDecisionKind` and the `For*` factories deleted; `ValidatingDecisionClient` rules per
+  type; "Jev" removed from Core. Took 3 review rounds:
+  1. FAIL: null `Options`/`Levels` coverage was lost in the moved spec. Also fixed: a null
+     entry in `Options` threw NRE; boundary and p=0.5 tests; split a two-assertion test;
+     tracking/OTel branches for choice/score/unknown subtypes now tested.
+  2. FAIL: the new OTel test's `ActivityListener` caught any span on the shared
+     `"Umbraco.AI"` source, so parallel chat/embedding tests could make it flake. Fixed by
+     filtering on `gen_ai.decision`.
+  3. PASS. Reviewer reran 1195/1195 unit + 32/32 integration twice.

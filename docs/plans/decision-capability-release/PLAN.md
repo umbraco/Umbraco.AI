@@ -27,7 +27,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Core
 
-- [ ] **T2** — story: DR-1 (AC1-AC4, AC8-AC11, AC14). Replace the flat question/response with
+- [x] **T2** — story: DR-1 (AC1-AC4, AC8-AC11, AC14). Replace the flat question/response with
   per-kind types per `ARCHITECTURE.md` "Core types": `AIDecisionQuestion`,
   `AIDecisionQuestion<TResponse>`, `AIBinary/Choice/ScoreDecisionQuestion`,
   `AIDecisionOption`, `AIDecisionResponse` + the three response types. Delete

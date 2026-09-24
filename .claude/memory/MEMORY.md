@@ -10,3 +10,4 @@ One line per file in this folder, newest relevant first. See `README.md` for the
 - [OTel test shared ActivitySource](otel-test-shared-activity-source.md) — filter ActivityListener captures by span name; all capability middleware share the "Umbraco.AI" source
 - [Provider contract checks inside tracking](provider-contract-checks-inside-tracking.md) — reject bad provider responses inside tracking (error classifier), caller input outside it
 - [Controller ctor change keeps obsolete](controller-ctor-change-keep-obsolete.md) — new controller dependency: keep old ctor [Obsolete], mark new one [ActivatorUtilitiesConstructor]
+- [Polymorphic response DeclaredType](polymorphic-response-declared-type.md) — Ok(derived) drops "$type" on root polymorphic responses; set DeclaredType to the base

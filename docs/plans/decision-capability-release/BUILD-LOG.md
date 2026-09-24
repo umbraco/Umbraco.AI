@@ -116,3 +116,20 @@
      Core, used by both the client and the controller. (c) Substring mapping removed; all service
      `InvalidOperationException`s → 400. (d) Filter tests added.
   2. PASS. Reviewer reran 1296/1296 unit + 32/32 integration.
+
+- **T12** (wire) — `1571d533` (fix found by the wire check) — Live on the demo site against the
+  real Jev API (`jev-1.13.0`), with the builder's run re-run by the orchestrator. The key came from
+  user-secrets via a `$Umbraco:AI:Secrets:TypeSafeApiKey` reference and was never logged.
+  Flag ON: connection, profile and default force-saved. Via `IAIDecisionService`: binary
+  (true/0.99), choice (oceania/1.0), score (2 → positive/1.0), plus binary by alias, all with
+  token usage. Real authenticated HTTP (API user + `client_credentials` token):
+  `POST decision/ask` ×3 → 200; `GET settings` has `defaultDecisionProfileId`;
+  `capabilities/enabled` includes Decision; `providers` includes typesafe; missing `$type` and
+  1-option choice → 400. Flag OFF: ask → 404; typesafe and Decision gone. Both boots had no DI
+  errors, so `AllProviderController`'s two-constructor activation works live.
+  **Bug found:** responses had no `$type` because `Ok(derived)` erased the declared base type.
+  Fixed via `DeclaredType`, with a TestServer regression test through the real output formatter
+  (red/green). Reviewed PASS, re-verified live. Written up as a gotcha memory.
+  Scratch: `demos/v18/Umbraco.AI.DemoSite/TEMP_DecisionReleaseVerification.cs` (gitignored), log
+  prefix `[T12]`. Tip for later wire tasks: `IBackOfficeUserClientCredentialsManager.SaveAsync`
+  prefixes the client id with `umbraco-back-office-`, so request the token with the prefixed id.

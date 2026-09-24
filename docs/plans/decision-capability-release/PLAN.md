@@ -93,7 +93,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   (confirm which first).
   depends-on: T5.
 
-- [ ] **T12** — **wire: TypeSafe + Decision API into the demo site.** story: DR-2 (AC17),
+- [x] **T12** — **wire: TypeSafe + Decision API into the demo site.** story: DR-2 (AC17),
   DR-4 (AC12), DR-3 (AC1). On the demo site with the flag on and a real TypeSafe key: create
   a connection and a Decision profile, set it as default via `PUT settings`, then ask all
   three kinds via `IAIDecisionService` and via a real authenticated `POST decision/ask`.

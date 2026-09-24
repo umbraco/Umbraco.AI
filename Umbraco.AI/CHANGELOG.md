@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.3.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.4...Umbraco.AI@17.3.5) (2026-09-24)
+
+### fix
+
+* **core,agent,copilot:** Add missing tool and surface translations ([c8e4de1](https://github.com/umbraco/Umbraco.AI/commit/c8e4de1b9abf4a1277f488f263798155349a5446)), closes [#413](https://github.com/umbraco/Umbraco.AI/issues/413)
+* **core:** Disable the block entity adapter in the Copilot context selector ([95042ec](https://github.com/umbraco/Umbraco.AI/commit/95042ec6537d66d1aa669688e57c80f9040b8817)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343)
+* **core:** Fall back to tool/scope names when no localization key exists ([a441563](https://github.com/umbraco/Umbraco.AI/commit/a441563a815a142a9ed6d8ac9ba5cc201171be7c)), closes [#413](https://github.com/umbraco/Umbraco.AI/issues/413)
+* **core:** Make streaming post-generate guardrails actually block/redact ([0aee07a](https://github.com/umbraco/Umbraco.AI/commit/0aee07abb76cc0c057e3cbc4cdcc2d5bb714a7eb))
+* **core:** Reject removing a block-grid block nested in an area ([71037d7](https://github.com/umbraco/Umbraco.AI/commit/71037d750d7f938c8262f17f5700240563ef747a)), closes [#397](https://github.com/umbraco/Umbraco.AI/issues/397)
+* **core:** RichTextPropertyValueHandler used the wrong blocks layout key ([52f7284](https://github.com/umbraco/Umbraco.AI/commit/52f72842fd1a44d1bb886f3ab60abaacbed8c4bc))
+* **core:** Stop untyped tools leaking a boolean-schema 'args' property ([6c89836](https://github.com/umbraco/Umbraco.AI/commit/6c8983600eb29a37172ba8ccfcf5eed232103697))
+
 ## [17.3.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.3.3...Umbraco.AI@17.3.4) (2026-09-10)
 
 ### fix

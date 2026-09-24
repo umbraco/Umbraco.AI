@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.2.0...Umbraco.AI.OpenAI@17.2.1) (2026-09-24)
+
+### fix
+
+* **openai:** Report a length finish when a streamed response is cut off ([b605090](https://github.com/umbraco/Umbraco.AI/commit/b605090218beecabfed7815b68bb57b74e713811)), closes [#414](https://github.com/umbraco/Umbraco.AI/issues/414)
+
 ## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@17.1.2...Umbraco.AI.OpenAI@17.2.0) (2026-08-11)
 
 ### ⚠ BREAKING CHANGE

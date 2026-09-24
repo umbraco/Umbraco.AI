@@ -1,14 +1,18 @@
 // DR-7 — Manage Decision profiles in the backoffice (AC4)
-#pragma warning disable UMBRACOAI_DECISION
 
 using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using Shouldly;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Web.Api.Management.Common.Mapping;
+using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Api.Management.Profile.Mapping;
 using Umbraco.AI.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Scoping;
+using Xunit;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
@@ -16,8 +20,11 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 // same path a GET profile response takes.
 public class DecisionProfileSettingsMappingTests
 {
+    private static readonly JsonSerializerOptions Options =
+        new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
     private static UmbracoMapper CreateMapper() => new(
-        new MapDefinitionCollection(() => new IMapDefinition[] { new ProfileMapDefinition() }),
+        new MapDefinitionCollection(() => new IMapDefinition[] { new ProfileMapDefinition(), new CommonMapDefinition() }),
         Mock.Of<ICoreScopeProvider>(),
         NullLogger<UmbracoMapper>.Instance);
 
@@ -40,17 +47,17 @@ public class DecisionProfileSettingsMappingTests
             _response = CreateMapper().Map<ProfileResponseModel>(profile)!;
         }
 
-        [Fact(Skip = "Pending T10")]
+        [Fact]
         public void MapsToADecisionSettingsModel() => _response.Settings.ShouldBeOfType<DecisionProfileSettingsModel>();
 
-        [Fact(Skip = "Pending T10")]
+        [Fact]
         public void SerializesWithTheDecisionDiscriminator()
-            => JsonSerializer.Serialize(_response.Settings).ShouldContain("\"$type\":\"decision\"");
+            => JsonSerializer.Serialize(_response.Settings, Options).ShouldContain("\"$type\":\"decision\"");
     }
 
     public class GivenACreateRequestForADecisionProfileWithNoSettings
     {
-        [Fact(Skip = "Pending T10")]
+        [Fact]
         public void MapsToNonNullDecisionSettings()
         {
             var profile = CreateMapper().Map<AIProfile>(new CreateProfileRequestModel
@@ -58,10 +65,24 @@ public class DecisionProfileSettingsMappingTests
                 Alias = "spam-check",
                 Name = "Spam check",
                 Capability = "Decision",
+                Model = new ModelRefModel { ProviderId = "typesafe", ModelId = "jev-latest" },
                 ConnectionId = Guid.NewGuid(),
             })!;
 
             profile.Settings.ShouldBeOfType<AIDecisionProfileSettings>();
+        }
+    }
+
+    public class GivenADollarTypeDecisionSettingsPayload
+    {
+        [Fact]
+        public void DeserializesToADecisionProfileSettingsModel()
+        {
+            const string json = """{"$type":"decision"}""";
+
+            var settings = JsonSerializer.Deserialize<ProfileSettingsModel>(json, Options);
+
+            settings.ShouldBeOfType<DecisionProfileSettingsModel>();
         }
     }
 

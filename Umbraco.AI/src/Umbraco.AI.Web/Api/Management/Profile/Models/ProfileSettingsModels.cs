@@ -10,6 +10,7 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Models;
 [JsonDerivedType(typeof(EmbeddingProfileSettingsModel), "embedding")]
 [JsonDerivedType(typeof(SpeechToTextProfileSettingsModel), "speechToText")]
 [JsonDerivedType(typeof(ImageGenerationProfileSettingsModel), "imageGeneration")]
+[JsonDerivedType(typeof(DecisionProfileSettingsModel), "decision")]
 public abstract class ProfileSettingsModel { }
 
 /// <summary>
@@ -86,3 +87,11 @@ public class ImageGenerationProfileSettingsModel : ProfileSettingsModel
     /// </summary>
     public string? MediaType { get; init; }
 }
+
+/// <summary>
+/// Settings model for Decision capability profiles.
+/// </summary>
+/// <remarks>
+/// Empty today — mirrors the empty <see cref="Umbraco.AI.Core.Profiles.AIDecisionProfileSettings"/>.
+/// </remarks>
+public class DecisionProfileSettingsModel : ProfileSettingsModel { }

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.1.0...Umbraco.AI.Anthropic@18.1.1) (2026-09-24)
+
+### fix
+
+* **anthropic:** Raise default max tokens so thinking models are not cut off ([3d500cc](https://github.com/umbraco/Umbraco.AI/commit/3d500cc89274c809804dbd5b2a78576182d23417)), closes [#414](https://github.com/umbraco/Umbraco.AI/issues/414)
+
 ## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.0.2...Umbraco.AI.Anthropic@18.1.0) (2026-08-11)
 
 ### feat

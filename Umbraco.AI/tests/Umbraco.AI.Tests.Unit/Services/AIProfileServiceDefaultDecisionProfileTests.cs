@@ -57,7 +57,7 @@ public class AIProfileServiceDefaultDecisionProfileTests
                 new AIOptions());
         }
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public async Task ResolvesThatProfile()
         {
             var profile = await _service.GetDefaultProfileAsync(AICapability.Decision);
@@ -86,7 +86,7 @@ public class AIProfileServiceDefaultDecisionProfileTests
                 new AIOptions { DefaultDecisionProfileAlias = "default-decision" });
         }
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public async Task ResolvesTheProfileWithThatAlias()
         {
             var profile = await _service.GetDefaultProfileAsync(AICapability.Decision);
@@ -104,7 +104,7 @@ public class AIProfileServiceDefaultDecisionProfileTests
             new AISettings(),
             new AIOptions());
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public async Task ThrowsSayingNoDefaultDecisionProfileIsSet()
         {
             var exception = await Should.ThrowAsync<InvalidOperationException>(

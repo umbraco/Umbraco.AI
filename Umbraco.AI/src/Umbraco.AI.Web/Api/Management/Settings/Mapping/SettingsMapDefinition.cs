@@ -19,7 +19,8 @@ public class SettingsMapDefinition : IMapDefinition
         mapper.Define<UpdateSettingsRequestModel, AISettings>((_, _) => new AISettings(), MapFromUpdateRequest);
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DefaultDecisionProfileId
+    // TODO(T9): map DefaultDecisionProfileId once it's added to SettingsResponseModel.
     private static void MapToResponse(AISettings source, SettingsResponseModel target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;
@@ -29,7 +30,8 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
     }
 
-    // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
+    // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId -DefaultDecisionProfileId
+    // TODO(T9): map DefaultDecisionProfileId once it's added to UpdateSettingsRequestModel.
     private static void MapFromUpdateRequest(UpdateSettingsRequestModel source, AISettings target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;

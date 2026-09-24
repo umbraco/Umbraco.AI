@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.6...Umbraco.AI.Agent@18.1.7) (2026-09-24)
+
+### fix
+
+* **agent:** Clear stale "Calling <tool>..." status once its result arrives ([e8b5a83](https://github.com/umbraco/Umbraco.AI/commit/e8b5a831835565ba0412af6cce5fed5286ae1c20)), closes [#376](https://github.com/umbraco/Umbraco.AI/issues/376)
+* **agent:** Fall back to surface id when no localization key exists ([fb912e3](https://github.com/umbraco/Umbraco.AI/commit/fb912e34c65c00981701c13f0b31aea398b84a8c)), closes [#413](https://github.com/umbraco/Umbraco.AI/issues/413)
+* **agent:** Never leave a dangling tool_use behind an aborted or cancelled tool call ([96ff118](https://github.com/umbraco/Umbraco.AI/commit/96ff1185249ccf0a172481b6be320d67f08abd16)), closes [#381](https://github.com/umbraco/Umbraco.AI/issues/381)
+* **agent:** Preserve GuardrailIds, Scope and AgentType on version rollback ([5bc0cdb](https://github.com/umbraco/Umbraco.AI/commit/5bc0cdb57435695b4113ec164d560507a27f86ae))
+* **agent:** Report a clear error when a run hits the output token limit ([b660511](https://github.com/umbraco/Umbraco.AI/commit/b660511b863d00cd5a339afc127cf2e6cb4b281f)), closes [#414](https://github.com/umbraco/Umbraco.AI/issues/414)
+* **core,agent,copilot:** Add missing tool and surface translations ([c242b61](https://github.com/umbraco/Umbraco.AI/commit/c242b6122f43d61c41297ef6896a3efa971884de)), closes [#413](https://github.com/umbraco/Umbraco.AI/issues/413)
+
 ## [18.1.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.1.4...Umbraco.AI.Agent@18.1.6) (2026-09-10)
 
 ### fix

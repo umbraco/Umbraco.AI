@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.4...Umbraco.AI.Agent.UI@18.0.5) (2026-09-24)
+
+### fix
+
+* **agent-ui:** Clear stale "Calling <tool>..." status once its result arrives ([e8b5a83](https://github.com/umbraco/Umbraco.AI/commit/e8b5a831835565ba0412af6cce5fed5286ae1c20))
+* **agent-ui:** Never leave a dangling tool_use behind an aborted or cancelled tool call ([96ff118](https://github.com/umbraco/Umbraco.AI/commit/96ff1185249ccf0a172481b6be320d67f08abd16))
+
 ## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.0.2...Umbraco.AI.Agent.UI@18.0.4) (2026-09-10)
 
 ### fix

@@ -42,11 +42,14 @@ public class AnthropicChatCapability(
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
 
     /// <summary>
-    /// The max-tokens value the SDK's Microsoft.Extensions.AI adapter sends when the caller sets none.
-    /// Mirrored here because a raw representation must supply the value itself.
+    /// The max-tokens value sent when the profile sets none, capped at the model's reported limit.
     /// </summary>
-    private const int AdapterDefaultMaxTokens = 1024;
-    
+    /// <remarks>
+    /// The SDK's Microsoft.Extensions.AI adapter would otherwise send 1024, which a thinking model can use
+    /// up entirely inside its reasoning block — leaving a response with no text and no tool call.
+    /// </remarks>
+    internal const int DefaultMaxTokens = 8192;
+
     private new AnthropicProvider Provider => (AnthropicProvider)base.Provider;
 
     /// <summary>
@@ -167,8 +170,20 @@ public class AnthropicChatCapability(
         // instructions, context resources -- see AIAgentSystemMessageChatClient) earns its own cache entry
         // independent of how long the conversation tail has grown.
         return new AnthropicSystemBlockCacheMarkingChatClient(
-            Provider.CreateSdkClient(settings).Beta.AsIChatClient(modelId));
+                Provider.CreateSdkClient(settings).Beta.AsIChatClient(modelId))
+            .AsBuilder()
+            .ConfigureOptions(options => options.MaxOutputTokens ??= ResolveDefaultMaxTokens(options.ModelId ?? modelId))
+            .Build();
     }
+
+    /// <summary>
+    /// The max-tokens value for a request that sets none: <see cref="DefaultMaxTokens"/>, lowered to the
+    /// model's reported limit when that is smaller, so the API never rejects the default.
+    /// </summary>
+    private int ResolveDefaultMaxTokens(string? modelId)
+        => Provider.TryGetModelCapability(modelId)?.MaxTokens is { } modelLimit && modelLimit < DefaultMaxTokens
+            ? (int)modelLimit
+            : DefaultMaxTokens;
 
     /// <inheritdoc />
     /// <remarks>
@@ -225,7 +240,7 @@ public class AnthropicChatCapability(
         }
 
         var previousFactory = options.RawRepresentationFactory;
-        var maxTokens = options.MaxOutputTokens ?? AdapterDefaultMaxTokens;
+        var maxTokens = options.MaxOutputTokens ?? ResolveDefaultMaxTokens(model);
 
         options.RawRepresentationFactory = client =>
         {

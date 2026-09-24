@@ -347,6 +347,72 @@ public class AGUIStreamingServiceTests
     #region Error Handling Tests
 
     [Fact]
+    public async Task StreamAgentAsync_TruncatedAtOutputTokenLimit_EmitsErrorInsteadOfFinished()
+    {
+        // Arrange — a thinking model that spent the whole budget on reasoning: no text, no tool call,
+        // just a Length finish (#414). Finishing normally would leave the chat silently idle.
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, new List<AIContent> { new TextReasoningContent(string.Empty) })
+            {
+                FinishReason = ChatFinishReason.Length,
+            },
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+
+        // Act
+        var events = await CollectEvents(agent, CreateRequest());
+
+        // Assert
+        var errorEvent = events.OfType<RunErrorEvent>().ShouldHaveSingleItem();
+        errorEvent.Message.ShouldContain("Max tokens");
+        errorEvent.Code.ShouldBe("InvalidRequest");
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_TruncatedAfterProducingText_StillEmitsError()
+    {
+        // Arrange — a clipped answer looks just as wrong as an empty one without a reason, so the text
+        // is kept and the run still ends with the error
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, "A clipped answ") { FinishReason = ChatFinishReason.Length },
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+
+        // Act
+        var events = await CollectEvents(agent, CreateRequest());
+
+        // Assert
+        events.OfType<TextMessageChunkEvent>().ShouldContain(e => e.Delta == "A clipped answ");
+        events.OfType<RunErrorEvent>().ShouldHaveSingleItem();
+        events.OfType<RunFinishedEvent>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task StreamAgentAsync_LengthFinishFollowedByNormalFinish_EmitsRunFinished()
+    {
+        // Arrange — only the last model call decides how the run ended
+        var updates = new[]
+        {
+            new ChatResponseUpdate(ChatRole.Assistant, "partial") { FinishReason = ChatFinishReason.Length },
+            new ChatResponseUpdate(ChatRole.Assistant, "done") { FinishReason = ChatFinishReason.Stop },
+        };
+
+        var agent = CreateMockAgent(updates.ToAsyncEnumerable());
+
+        // Act
+        var events = await CollectEvents(agent, CreateRequest());
+
+        // Assert
+        events.OfType<RunErrorEvent>().ShouldBeEmpty();
+        events.Last().ShouldBeOfType<RunFinishedEvent>();
+    }
+
+    [Fact]
     public async Task StreamAgentAsync_OnError_EmitsClassifiedErrorAndFinished()
     {
         // Arrange — unrecognised exception type falls through to the Unknown category.

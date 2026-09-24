@@ -266,3 +266,17 @@
   key. Reviewed PASS. TypeSafe tests 61/61. Non-blocking suggestions: surface the failure reason
   (Core's `TestConnectionAsync` returns only `false`), add tests for different-key cache
   isolation and for `GetModelsAsync` throwing on a missing key.
+
+- **T24** — v17 `6c338c24` + `e1c2...` (comment fix) on `v17/feature/decision-capability`,
+  draft PR #428 (cross-linked with #419). The net feature diff (`origin/v18/dev...HEAD`,
+  excluding branch-specific `docs/`) was applied with `git apply -3` onto `origin/v17/dev`.
+  There were 3 conflicts: the `AllProviderController` usings (merged) and 2 generated client files
+  (regenerated on a v17 demo site). v17 adaptations: obsolete notices say v19; TypeSafe
+  17.0.0 with 17.x docs and regenerated lock files; the data source retyped because CMS 17's
+  generator emits the Decision models as base types without `$type` unions; the test host uses
+  `UmbControllerHostElementMixin` (no `UmbElementControllerHost` on 17). Reviewer: all 182 files
+  match v18 except the 16 intended adaptations. v17 suites: Core 1302 + 32, TypeSafe 61, Deploy 26,
+  Automate 60, Agent 237 + 3, vitest 47. PASS.
+- **T25** (wire) — v17 demo site against real Jev, re-run by the orchestrator: all three kinds
+  in-process and over HTTP (200 with `$type`); Test connection is true with the real key and false
+  with a bad one; flag off gives 404 and hides the provider and capability. PASS.

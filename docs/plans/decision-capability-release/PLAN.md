@@ -179,13 +179,13 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## v17 and docs
 
-- [ ] **T24** — story: DR-12 (AC1, AC2, AC4). Port everything to v17 using the `backport`
+- [x] **T24** — story: DR-12 (AC1, AC2, AC4). Port everything to v17 using the `backport`
   skill: new `v17/feature/decision-capability` branch from `v17/dev`, TypeSafe
   `version.json` = `17.0.0`, all touched products build and test green, draft PR into
   `v17/dev` cross-linked with the v18 PR.
   depends-on: T17, T19, T21, T23.
 
-- [ ] **T25** — **wire: v17 demo site.** story: DR-12 (AC3). Real binary question through
+- [x] **T25** — **wire: v17 demo site.** story: DR-12 (AC3). Real binary question through
   `POST decision/ask` on the v17 demo site.
   depends-on: T24.
 

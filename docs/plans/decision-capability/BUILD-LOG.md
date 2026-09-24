@@ -123,3 +123,14 @@
   on confirmation — 10/10 on the spike's own tests, 1178/1178 unit + 32/32 integration full
   suite. T11/T12 remain — both explicitly manual/flag-toggle verification against real Jev
   credentials, not more production code.
+
+- **T11** — `9920a88d` — Real live round trip verified against Jev's actual API using a real
+  key (user-supplied via demo-site secrets). T10's guessed wire format was wrong in several
+  ways (endpoint path, batch request/response shape, and — the actual root cause of the
+  remaining 400s — the type discriminator string `"binary"` doesn't exist in Jev's API, only
+  `"noul"`). See DECISION-LOG.md's 2026-09-24 entry for full detail. Took 2 review rounds
+  (round 2 caught a stale fallback path missed in round 1's fix) plus a process correction:
+  the orchestrator briefly hand-edited these files directly while iterating against the live
+  API — caught mid-flight and handed to a builder to redo through the normal cycle. PASS on
+  confirmation — genuine live result `Kind=Binary BinaryAnswer=True Confidence=0.99`,
+  1183/1183 unit + 32/32 integration.

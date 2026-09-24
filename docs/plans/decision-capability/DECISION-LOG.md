@@ -186,3 +186,50 @@ Found/decided during T8's second review:
   a pass-through call with no parent scope stamped it -- the opposite of
   `AsPassThrough()`'s own doc comment. Fixed by reading `_builder.IsPassThrough`
   directly (the class already holds the builder), no new parameter needed.
+
+## 2026-09-24 — T11: Jev's real wire format confirmed, T10's guesses corrected
+
+T10's spike provider guessed the endpoint, request/response shape, and type
+discriminator strings, since nobody had verified them against a live key.
+T11 supplied a real TypeSafe AI (Jev) API key (via the demo site's local
+user-secrets) and did a genuine live verification, which found the guesses
+wrong in several ways — confirmed against
+[docs.typesafe.ai/api](https://docs.typesafe.ai/api) and a working `curl`
+call:
+
+- **Endpoint**: `POST https://api.typesafe.ai/v1/systemone`, not `/v1/answer`.
+- **Shape is a batch API**, not one-question-per-call: request is
+  `{"state", "model", "questions": {key: {type, instructions, criteria?}}}`,
+  response is `{"model", "answers": {key: {...}}, "usage"}`. The spike
+  always sends exactly one question (keyed `"q"`) to keep
+  `IAIDecisionClient.AskAsync`'s one-in-one-out contract.
+- **Type discriminator is `"noul"`, not `"binary"`** — this was the actual
+  root cause of every remaining 400 once the endpoint/shape were fixed.
+  `AIDecisionKind.Binary.ToString().ToLowerInvariant()` produces `"binary"`,
+  which Jev's API doesn't recognize at all. Fixed with an explicit
+  `ToJevType(AIDecisionKind)` switch instead of a raw `ToString()`.
+- **`noul` answers are a 0.0-1.0 probability of "yes", not a boolean**, and
+  carry no separate `confidence` field (unlike `choice`/`score`, which each
+  have their own). Mapped as: `BinaryAnswer = noul >= 0.5`,
+  `Confidence = binaryAnswer ? noul : 1 - noul`.
+- **`criteria` must be omitted entirely for a `noul` question**, not sent as
+  an explicit `"criteria": null` — Jev's validator rejects the latter.
+- A second review round caught a stale `/v1/answer` fallback still
+  hardcoded in `JevSpikeDecisionCapability.CreateClient` (missed by the
+  first fix pass, since the three call sites for the answer path were each
+  independent literals). Consolidated into one shared
+  `JevSpikeProviderSettings.DefaultAnswerPath` constant referenced by all
+  three, specifically so they can't drift apart silently again.
+- Genuinely live round trip succeeded: `Kind=Binary BinaryAnswer=True
+  Confidence=0.99` for "Is Paris the capital of France?" — satisfies DC-4
+  AC1.
+- Known, accepted gap carried forward: `Score` questions still send no
+  `criteria` even though Jev's docs require one (an array of level labels)
+  for that type — out of scope, since the plan only requires Binary "at
+  minimum."
+- Process note: the orchestrator briefly hand-edited these files directly
+  while iterating against the live API, which broke this session's own
+  builder/reviewer discipline. Caught and corrected — a builder took over,
+  owned the actual fix end-to-end, and it went through the normal
+  build→review→fix→re-review cycle before landing (commits `9920a88d` and
+  its predecessor).

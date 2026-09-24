@@ -117,7 +117,7 @@ provider.
   `Score` only if time allows, per `SPEC.md`.
   depends-on: T8, T4.
 
-- [ ] **T11** — story: DC-4 (AC1) — **wire task**. Register the spike
+- [x] **T11** — story: DC-4 (AC1) — **wire task**. Register the spike
   provider (Composer, demo site or a dedicated test host — whichever this
   repo's provider-testing convention already uses) with
   `Umbraco:AI:Experimental:Decision` set to `true` and a real Jev API key,

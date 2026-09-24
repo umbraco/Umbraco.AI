@@ -267,7 +267,7 @@
   (Core's `TestConnectionAsync` returns only `false`), add tests for different-key cache
   isolation and for `GetModelsAsync` throwing on a missing key.
 
-- **T24** — v17 `6c338c24` + `e1c2...` (comment fix) on `v17/feature/decision-capability`,
+- **T24** — v17 `6c338c24` + `b538531a` (comment fix) on `v17/feature/decision-capability`,
   draft PR #428 (cross-linked with #419). The net feature diff (`origin/v18/dev...HEAD`,
   excluding branch-specific `docs/`) was applied with `git apply -3` onto `origin/v17/dev`.
   There were 3 conflicts: the `AllProviderController` usings (merged) and 2 generated client files

@@ -277,6 +277,42 @@ public class DecisionAgentSelectionTests
 
     #endregion
 
+    #region Sad path: cancellation is never treated as a fallback trigger
+
+    [Fact]
+    public async Task DefaultProfileGateThrowsCancellation_Propagates()
+    {
+        GivenAgents(3);
+        DefaultProfileGateThrowsCancellation();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId }));
+    }
+
+    [Fact]
+    public async Task DefaultProfileGateThrowsCancellation_MakesNoChatCall()
+    {
+        GivenAgents(3);
+        DefaultProfileGateThrowsCancellation();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId }));
+
+        VerifyChatNeverCalled();
+    }
+
+    [Fact]
+    public async Task DecisionAskThrowsCancellation_Propagates()
+    {
+        GivenAgents(3);
+        DecisionThrowsCancellation();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => CreateService().SelectAgentForPromptAsync(UserMessage, SurfaceId, new AgentAvailabilityContext { Surface = SurfaceId }));
+    }
+
+    #endregion
+
     private void GivenAgents(int count)
     {
         _agents.Clear();
@@ -305,6 +341,16 @@ public class DecisionAgentSelectionTests
             .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Jev is down"));
 
+    private void DefaultProfileGateThrowsCancellation()
+        => _profileServiceMock
+            .Setup(p => p.HasDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
+    private void DecisionThrowsCancellation()
+        => _decisionServiceMock
+            .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException());
+
     private void VerifyNoDecisionCall()
         => _decisionServiceMock.Verify(
             s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<CancellationToken>()),
@@ -314,6 +360,11 @@ public class DecisionAgentSelectionTests
         => _chatClientMock.Verify(
             c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()),
             Times.Once);
+
+    private void VerifyChatNeverCalled()
+        => _chatClientMock.Verify(
+            c => c.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
 
     private AIAgentService CreateService()
     {

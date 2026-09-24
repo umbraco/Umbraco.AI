@@ -7,9 +7,9 @@ import type { UaiDecisionProfileSettings } from "../../../../types.js";
  * Decision profile settings.
  *
  * Decision has no configurable settings today, so this renders a "no settings" message rather than a
- * blank area. It still accepts `settings`/`metadata` and dispatches the same
- * `uai-profile-settings-change` contract as its siblings, so the workspace view can render every
- * capability's settings element uniformly without special-casing this one.
+ * blank area. It still accepts `settings`/`metadata` properties, matching the shape of its sibling
+ * settings elements, so the workspace view can render every capability's settings element uniformly
+ * without special-casing this one.
  */
 @customElement("uai-decision-profile-settings")
 export class UaiDecisionProfileSettingsElement extends UmbLitElement {

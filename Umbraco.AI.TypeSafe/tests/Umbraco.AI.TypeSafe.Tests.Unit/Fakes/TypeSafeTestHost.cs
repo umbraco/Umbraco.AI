@@ -1,5 +1,6 @@
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability
 
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.EditableModels;
@@ -17,14 +18,14 @@ internal static class TypeSafeTestHost
 
     public const string Endpoint = "https://api.typesafe.ai";
 
-    public static TypeSafeProvider CreateProvider(HttpMessageHandler? handler = null)
+    public static TypeSafeProvider CreateProvider(HttpMessageHandler? handler = null, IMemoryCache? cache = null)
     {
         var httpClientFactory = new Mock<IHttpClientFactory>();
         httpClientFactory
             .Setup(x => x.CreateClient(It.IsAny<string>()))
             .Returns(() => new HttpClient(handler ?? new ScriptedHttpMessageHandler(ScriptedHttpMessageHandler.Status(System.Net.HttpStatusCode.OK))));
 
-        return new TypeSafeProvider(new ActivatorProviderInfrastructure(), httpClientFactory.Object);
+        return new TypeSafeProvider(new ActivatorProviderInfrastructure(), httpClientFactory.Object, cache ?? new MemoryCache(new MemoryCacheOptions()));
     }
 
     public static async Task<IAIDecisionClient> CreateClientAsync(HttpMessageHandler handler, string? modelId = "jev-latest")

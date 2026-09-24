@@ -24,11 +24,17 @@ public class TypeSafeProviderTests
         {
             _provider.GetCapabilities().Select(c => c.Kind).ShouldBe([AICapability.Decision]);
         }
+    }
+
+    public class GivenAValidApiKey
+    {
+        private const string ProbeAnswer = """{"model":"jev-latest","answers":{"q":{"noul":1.0}},"usage":{"input_tokens":1,"output_tokens":1}}""";
 
         [Fact]
         public async Task ListsJevLatestAsItsOnlyModel()
         {
-            var capability = (IAIDecisionCapability)_provider.GetCapability<TypeSafeDecisionCapability>();
+            var handler = new ScriptedHttpMessageHandler(ScriptedHttpMessageHandler.Json(ProbeAnswer));
+            var capability = (IAIDecisionCapability)TypeSafeTestHost.CreateProvider(handler).GetCapability<TypeSafeDecisionCapability>();
 
             var models = await capability.GetModelsAsync(new TypeSafeProviderSettings { ApiKey = TypeSafeTestHost.ApiKey });
 

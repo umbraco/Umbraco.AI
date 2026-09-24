@@ -29,10 +29,23 @@ public class TypeSafeDecisionCapability(TypeSafeProvider provider)
     private new TypeSafeProvider Provider => (TypeSafeProvider)base.Provider;
 
     /// <inheritdoc />
-    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+    /// <remarks>
+    /// Jev documents no models endpoint to probe, so this validates <paramref name="settings"/> by
+    /// sending one tiny authenticated question through a real <see cref="TypeSafeDecisionClient"/>
+    /// instead (see <see cref="TypeSafeProvider.EnsureConnectionValidAsync"/>) and only returns the
+    /// static <see cref="Models"/> list once that succeeds. Any failure (401, 422, network, etc.)
+    /// propagates so callers such as <c>AIConnectionService.TestConnectionAsync</c> — which treats any
+    /// exception from <c>GetModelsAsync</c> as a failed "Test connection" — see it as one.
+    /// </remarks>
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         TypeSafeProviderSettings settings,
         CancellationToken cancellationToken = default)
-        => Task.FromResult(Models);
+    {
+        using var client = await CreateClientAsync(settings, DefaultModel, cancellationToken);
+        await Provider.EnsureConnectionValidAsync(settings, client, cancellationToken);
+
+        return Models;
+    }
 
     /// <inheritdoc />
     /// <remarks>

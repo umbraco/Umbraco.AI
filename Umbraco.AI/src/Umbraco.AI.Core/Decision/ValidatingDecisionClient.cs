@@ -16,11 +16,6 @@ namespace Umbraco.AI.Core.Decision;
 [Experimental(AIDecisionDiagnostics.DiagnosticId)]
 internal sealed class ValidatingDecisionClient : IAIDecisionClient
 {
-    private const int MinChoiceOptions = 2;
-    private const int MaxChoiceOptions = 255;
-    private const int MinScoreLevels = 2;
-    private const int MaxScoreLevels = 10;
-
     private readonly IAIDecisionClient _innerClient;
 
     public ValidatingDecisionClient(IAIDecisionClient innerClient)
@@ -50,63 +45,10 @@ internal sealed class ValidatingDecisionClient : IAIDecisionClient
     {
         ArgumentNullException.ThrowIfNull(question);
 
-        if (string.IsNullOrWhiteSpace(question.Instructions))
+        var error = DecisionQuestionValidator.Validate(question);
+        if (error is not null)
         {
-            throw new ArgumentException("Instructions must not be empty or whitespace.", nameof(question));
-        }
-
-        switch (question)
-        {
-            case AIChoiceDecisionQuestion choiceQuestion:
-                ValidateChoice(choiceQuestion);
-                break;
-            case AIScoreDecisionQuestion scoreQuestion:
-                ValidateScore(scoreQuestion);
-                break;
-        }
-    }
-
-    private static void ValidateChoice(AIChoiceDecisionQuestion question)
-    {
-        if (question.Options is null || question.Options.Count is < MinChoiceOptions or > MaxChoiceOptions)
-        {
-            throw new ArgumentException(
-                $"Options must contain between {MinChoiceOptions} and {MaxChoiceOptions} entries.",
-                nameof(question));
-        }
-
-        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var option in question.Options)
-        {
-            if (option is null)
-            {
-                throw new ArgumentException("Options must not contain null entries.", nameof(question));
-            }
-
-            if (string.IsNullOrWhiteSpace(option.Key))
-            {
-                throw new ArgumentException("Option keys must not be empty or whitespace.", nameof(question));
-            }
-
-            if (!seenKeys.Add(option.Key))
-            {
-                throw new ArgumentException($"Duplicate option key '{option.Key}'.", nameof(question));
-            }
-        }
-    }
-
-    private static void ValidateScore(AIScoreDecisionQuestion question)
-    {
-        if (question.Levels is null || question.Levels.Count is < MinScoreLevels or > MaxScoreLevels)
-        {
-            throw new ArgumentException(
-                $"Levels must contain between {MinScoreLevels} and {MaxScoreLevels} entries.",
-                nameof(question));
-        }
-
-        if (question.Levels.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new ArgumentException("Levels must not contain empty or whitespace entries.", nameof(question));
+            throw new ArgumentException(error, nameof(question));
         }
     }
 }

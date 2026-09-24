@@ -54,6 +54,19 @@ public class AskDecisionControllerTests
         Question = new ScoreDecisionQuestionModel { Instructions = "How good?", Levels = levels.ToList() },
     };
 
+    // These two go around the params-array helpers above to represent shapes a well-typed caller
+    // couldn't produce but a raw JSON payload still can — see AskDecisionRequestModel's remarks on
+    // `required` only enforcing property presence, not a non-null value.
+    private static AskDecisionRequestModel ChoiceWithOptions(IReadOnlyList<DecisionOptionModel>? options) => new()
+    {
+        Question = new ChoiceDecisionQuestionModel { Instructions = "Which topic?", Options = options! },
+    };
+
+    private static AskDecisionRequestModel ScoreWithLevels(IReadOnlyList<string>? levels) => new()
+    {
+        Question = new ScoreDecisionQuestionModel { Instructions = "How good?", Levels = levels! },
+    };
+
     #region Happy path
 
     public class GivenABinaryQuestion
@@ -74,26 +87,26 @@ public class AskDecisionControllerTests
                 .Ask(Binary()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ReturnsOk() => _result.ShouldBeOfType<OkObjectResult>();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ReturnsABinaryResponseModel()
             => ((OkObjectResult)_result).Value.ShouldBeOfType<BinaryDecisionResponseModel>();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheAnswer()
             => ((BinaryDecisionResponseModel)((OkObjectResult)_result).Value!).Answer.ShouldBeTrue();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheProbability()
             => ((BinaryDecisionResponseModel)((OkObjectResult)_result).Value!).Probability.ShouldBe(0.97);
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheConfidence()
             => ((BinaryDecisionResponseModel)((OkObjectResult)_result).Value!).Confidence.ShouldBe(0.97);
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void SerializesWithTheBinaryDiscriminator()
             => JsonSerializer.Serialize<DecisionResponseModel>((DecisionResponseModel)((OkObjectResult)_result).Value!)
                 .ShouldContain("\"$type\":\"binary\"");
@@ -122,19 +135,19 @@ public class AskDecisionControllerTests
                 .Ask(Choice("seo", "other")).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ReturnsAChoiceResponseModel()
             => ((OkObjectResult)_result).Value.ShouldBeOfType<ChoiceDecisionResponseModel>();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheChoice()
             => ((ChoiceDecisionResponseModel)((OkObjectResult)_result).Value!).Choice.ShouldBe("seo");
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheConfidence()
             => ((ChoiceDecisionResponseModel)((OkObjectResult)_result).Value!).Confidence.ShouldBe(0.91);
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheProbabilities()
             => ((ChoiceDecisionResponseModel)((OkObjectResult)_result).Value!).Probabilities.Count.ShouldBe(2);
     }
@@ -163,23 +176,23 @@ public class AskDecisionControllerTests
                 .Ask(Score("poor", "ok", "good")).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ReturnsAScoreResponseModel()
             => ((OkObjectResult)_result).Value.ShouldBeOfType<ScoreDecisionResponseModel>();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheScore()
             => ((ScoreDecisionResponseModel)((OkObjectResult)_result).Value!).Score.ShouldBe(1.8);
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheLevel()
             => ((ScoreDecisionResponseModel)((OkObjectResult)_result).Value!).Level.ShouldBe("good");
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheConfidence()
             => ((ScoreDecisionResponseModel)((OkObjectResult)_result).Value!).Confidence.ShouldBe(0.8);
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void MapsTheProbabilitiesByLabel()
             => ((ScoreDecisionResponseModel)((OkObjectResult)_result).Value!).Probabilities["good"].ShouldBe(0.8);
     }
@@ -207,7 +220,7 @@ public class AskDecisionControllerTests
                 .Ask(Binary(profile: "spam-check")).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ResolvesTheAlias()
             => _profileService.Verify(
                 x => x.GetProfileByAliasAsync("spam-check", It.IsAny<CancellationToken>()),
@@ -230,10 +243,10 @@ public class AskDecisionControllerTests
                 .Ask(Binary(instructions: "  ")).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ReturnsAnEmptyNotFound() => _result.ShouldBeOfType<NotFoundResult>();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void DoesNotCallTheService()
             => _service.Invocations.ShouldBeEmpty();
     }
@@ -250,15 +263,18 @@ public class AskDecisionControllerTests
             { "one score level", Score("only") },
             { "eleven score levels", Score(Enumerable.Range(0, 11).Select(i => $"l{i}").ToArray()) },
             { "blank score level", Score("low", " ") },
+            { "null options", ChoiceWithOptions(null) },
+            { "a null option entry", ChoiceWithOptions([new DecisionOptionModel { Key = "a" }, null!]) },
+            { "null levels", ScoreWithLevels(null) },
         };
 
-        [Theory(Skip = "Pending T11")]
+        [Theory]
         [MemberData(nameof(InvalidRequests))]
         public async Task ReturnsBadRequest(string _, AskDecisionRequestModel request)
             => (await CreateController(new Mock<IAIDecisionService>(), new Mock<IAIProfileService>(), enabled: true)
                 .Ask(request)).ShouldBeOfType<BadRequestObjectResult>();
 
-        [Theory(Skip = "Pending T11")]
+        [Theory]
         [MemberData(nameof(InvalidRequests))]
         public async Task DoesNotCallTheService(string _, AskDecisionRequestModel request)
         {
@@ -268,18 +284,38 @@ public class AskDecisionControllerTests
         }
     }
 
+    // These two pin the exact exception System.Text.Json raises for each malformed discriminator shape.
+    // Both are format errors an input formatter must translate to a ModelState error (400), never let
+    // escape uncaught (500) — see SPEC.md's guarantees for POST decision/ask. Umbraco CMS's own
+    // NamedSystemTextJsonInputFormatter (wired up for this API via UmbracoAIUmbracoBuilderExtensions.
+    // AddJsonOptions + the [JsonOptionsName] on UmbracoAICoreManagementControllerBase) already handles
+    // both — it catches JsonException (the .NET default input formatter's own behaviour) and, unlike
+    // the stock formatter, also catches NotSupportedException, which is what a *missing* discriminator
+    // raises. Do not "fix" this with a JsonConverter on DecisionQuestionModel: combining a custom
+    // converter with [JsonPolymorphic]/[JsonDerivedType] on the same type throws
+    // "The converter for derived type ... does not support metadata writes or reads" the moment it's
+    // exercised, regardless of what the converter's Read/Write actually do.
     public class GivenAnUnknownQuestionType
     {
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void FailsToDeserialize() // ASP.NET turns this into a 400 before the action runs
             => Should.Throw<JsonException>(() => JsonSerializer.Deserialize<AskDecisionRequestModel>(
                 """{ "question": { "$type": "bogus", "instructions": "x" } }""",
                 new JsonSerializerOptions(JsonSerializerDefaults.Web)));
     }
 
+    public class GivenAMissingQuestionType
+    {
+        [Fact]
+        public void FailsToDeserialize() // NamedSystemTextJsonInputFormatter turns this into a 400, not a 500
+            => Should.Throw<NotSupportedException>(() => JsonSerializer.Deserialize<AskDecisionRequestModel>(
+                """{ "question": { "instructions": "x" } }""",
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    }
+
     public class GivenAProfileThatDoesNotExist
     {
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public async Task ReturnsNotFoundProblemDetails()
         {
             var profileService = new Mock<IAIProfileService>();
@@ -296,7 +332,7 @@ public class AskDecisionControllerTests
 
     public class GivenANonDecisionProfile
     {
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public async Task ReturnsBadRequest()
         {
             var profileService = new Mock<IAIProfileService>();
@@ -313,7 +349,8 @@ public class AskDecisionControllerTests
                     It.IsAny<Action<AIDecisionBuilder>>(),
                     It.IsAny<AIDecisionQuestion<AIBinaryDecisionResponse>>(),
                     It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InvalidOperationException("Profile 'chat' is not a Decision profile."));
+                // Real AIDecisionService.EnsureProfileSupportsDecision message (uses profile.Name, not alias).
+                .ThrowsAsync(new InvalidOperationException("The profile 'Chat' does not support decision capability."));
 
             var result = await CreateController(service, profileService, enabled: true).Ask(Binary(profile: "chat"));
 
@@ -333,16 +370,17 @@ public class AskDecisionControllerTests
                     It.IsAny<Action<AIDecisionBuilder>>(),
                     It.IsAny<AIDecisionQuestion<AIBinaryDecisionResponse>>(),
                     It.IsAny<CancellationToken>()))
+                // Real AIProfileService.GetDefaultProfileAsync message for an unconfigured Decision default.
                 .ThrowsAsync(new InvalidOperationException("Default Decision profile is not configured."));
 
             _result = CreateController(service, new Mock<IAIProfileService>(), enabled: true)
                 .Ask(Binary()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void ReturnsBadRequest() => _result.ShouldBeOfType<BadRequestObjectResult>();
 
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public void NamesTheMissingDefault()
             => ((ProblemDetails)((BadRequestObjectResult)_result).Value!).Detail!
                 .ShouldContain("Default Decision profile", Case.Insensitive);
@@ -350,7 +388,7 @@ public class AskDecisionControllerTests
 
     public class GivenTheProviderRejectsTheQuestion
     {
-        [Fact(Skip = "Pending T11")]
+        [Fact]
         public async Task ReturnsBadRequest()
         {
             var service = new Mock<IAIDecisionService>();

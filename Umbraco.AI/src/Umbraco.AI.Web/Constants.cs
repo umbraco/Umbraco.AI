@@ -138,6 +138,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Decision features.
+            /// </summary>
+            public static class Decision
+            {
+                /// <summary>
+                /// The route segment for Decision features.
+                /// </summary>
+                public const string RouteSegment = "decision";
+
+                /// <summary>
+                /// The Swagger group name for Decision features.
+                /// </summary>
+                public const string GroupName = "Decision";
+            }
+
+            /// <summary>
             /// Defines constants for Embedding features.
             /// </summary>
             public static class Embedding

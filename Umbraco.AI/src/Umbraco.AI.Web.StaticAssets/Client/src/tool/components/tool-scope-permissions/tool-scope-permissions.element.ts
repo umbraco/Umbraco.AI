@@ -95,8 +95,8 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                     id: scope.id,
                     icon: scope.icon,
                     domain: scope.domain || "General",
-                    name: this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id,
-                    description: this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "",
+                    name: this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Label`, scope.id),
+                    description: this.localize.termOrDefault(`uaiToolScope_${camelCaseId}Description`, ""),
                 };
             });
 
@@ -276,7 +276,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
     #renderGroup(group: UaiToolScopeGroup) {
         const camelCaseDomain = toCamelCase(group.domain);
-        const localizedDomain = this.localize.term(`uaiToolScopeDomain_${camelCaseDomain}`) || group.domain;
+        const localizedDomain = this.localize.termOrDefault(`uaiToolScopeDomain_${camelCaseDomain}`, group.domain);
 
         return html`
             <div class="group">

@@ -135,9 +135,9 @@ export class UaiToolPickerElement extends UmbFormControlMixin<string[] | undefin
                     if (!tool) return undefined;
 
                     const camelCaseId = toCamelCase(tool.id);
-                    const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
+                    const localizedName = this.localize.termOrDefault(`uaiTool_${camelCaseId}Label`, tool.name);
                     const localizedDescription =
-                        this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
+                        this.localize.termOrDefault(`uaiTool_${camelCaseId}Description`, tool.description);
 
                     return {
                         id: tool.id,
@@ -198,9 +198,9 @@ export class UaiToolPickerElement extends UmbFormControlMixin<string[] | undefin
             .filter((tool) => !this._selection.some((id) => id.toLowerCase() === tool.id.toLowerCase()))
             .map((tool) => {
                 const camelCaseId = toCamelCase(tool.id);
-                const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
+                const localizedName = this.localize.termOrDefault(`uaiTool_${camelCaseId}Label`, tool.name);
                 const localizedDescription =
-                    this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
+                    this.localize.termOrDefault(`uaiTool_${camelCaseId}Description`, tool.description);
 
                 return {
                     value: tool.id,

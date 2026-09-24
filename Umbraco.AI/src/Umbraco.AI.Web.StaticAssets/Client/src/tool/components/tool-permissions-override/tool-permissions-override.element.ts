@@ -143,8 +143,8 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 			data: {
 				fetchItems: () => this._fetchAvailableTools(),
 				selectionMode: "multiple",
-				title: this.localize.term("uaiAgent_addTool") || "Add Tools",
-				noResultsMessage: this.localize.term("uaiAgent_noToolsAvailable") || "No tools available",
+				title: this.localize.termOrDefault("uaiAgent_addTool", "Add Tools"),
+				noResultsMessage: this.localize.termOrDefault("uaiAgent_noToolsAvailable", "No tools available"),
 			},
 		});
 
@@ -183,9 +183,9 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 			)
 			.map((tool: UaiToolItem) => {
 				const camelCaseId = toCamelCase(tool.id);
-				const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name || tool.id;
+				const localizedName = this.localize.termOrDefault(`uaiTool_${camelCaseId}Label`, tool.name || tool.id);
 				const localizedDescription =
-					this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description || "";
+					this.localize.termOrDefault(`uaiTool_${camelCaseId}Description`, tool.description || "");
 
 				return {
 					value: tool.id,
@@ -240,8 +240,8 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	private _renderToolItem(tool: UaiToolPermission) {
 		const toolData = this._toolDataMap.get(tool.toolId);
 		const camelCaseId = toCamelCase(tool.toolId);
-		const name = this.localize.term(`uaiTool_${camelCaseId}Label`) || toolData?.name || tool.toolId;
-		const description = this.localize.term(`uaiTool_${camelCaseId}Description`) || toolData?.description || "";
+		const name = this.localize.termOrDefault(`uaiTool_${camelCaseId}Label`, toolData?.name || tool.toolId);
+		const description = this.localize.termOrDefault(`uaiTool_${camelCaseId}Description`, toolData?.description || "");
 
 		return html`
 			<uui-ref-node name=${name} detail=${description}>

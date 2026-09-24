@@ -61,7 +61,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   `NotImplementedException` until T7.
   depends-on: T2. parallel-group: B
 
-- [ ] **T7** — story: DR-2 (AC2-AC15). Implement `TypeSafeDecisionClient`: the wire mapping
+- [x] **T7** — story: DR-2 (AC2-AC15). Implement `TypeSafeDecisionClient`: the wire mapping
   in `SPEC.md` "Provider", response mapping (probabilities re-keyed by label, usage),
   bounded 429/529 retry honoring `Retry-After`, and 401/422 mapped to exception types that
   `AIErrorClassifyingDecisionClient` classifies (confirm which first). Tests fake only the

@@ -67,3 +67,16 @@
   lists. Reviewer compared it with FireworksAI point by point: 5/5 TypeSafe tests, root slnx
   builds, `publicReleaseRefSpec` matches siblings. PASS on first review. Carry-forward: the
   stub `NotImplementedException` (`TypeSafeDecisionClient.cs:58`) must be gone after T7.
+
+- **T7** — `2e76bc9b` — Real `TypeSafeDecisionClient`: the wire mapping was confirmed against
+  docs.typesafe.ai/api with no differences from SPEC. Usage is mapped. Non-2xx surfaces as
+  `HttpRequestException{StatusCode}` (the base classifier maps 401→Authentication,
+  422→InvalidRequest, 429→RateLimited, 529→Transient). 429/529 retried twice, `Retry-After`
+  honored and capped at 30s, with an injectable delay and clock. Took 4 review rounds:
+  1. FAIL: the retry cap, HTTP-date and default-backoff rules had no tests. Also fixed: response
+     not disposed if the error-body read threw; score labels now come from `question.Levels`
+     (authoritative) instead of the response `legend`; an unknown choice key now throws.
+  2. FAIL: the score clamp and dropped out-of-range probability keys had no tests.
+  3. (Builder-flagged) The lower-clamp bound was only really tested by a -0.6 case, so that
+     case was added.
+  4. PASS. 58/58 TypeSafe tests. Each guard has red/green proof.

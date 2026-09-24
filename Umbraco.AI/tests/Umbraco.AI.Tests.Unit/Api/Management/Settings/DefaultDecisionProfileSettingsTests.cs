@@ -41,10 +41,10 @@ public class DefaultDecisionProfileSettingsTests
                 .GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending T9")]
+        [Fact]
         public void SavesTheDefaultDecisionProfileId() => _saved!.DefaultDecisionProfileId.ShouldBe(_profileId);
 
-        [Fact(Skip = "Pending T9")]
+        [Fact]
         public void ReturnsItInTheResponse()
             => ((SettingsResponseModel)((OkObjectResult)_result).Value!).DefaultDecisionProfileId.ShouldBe(_profileId);
     }

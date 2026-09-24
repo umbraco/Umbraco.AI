@@ -454,3 +454,12 @@ Before saying a task is done, actually run the relevant build/test command and l
 - Avoid god objects
 - Provider packages are named after the *company* (e.g. `Umbraco.AI.ZAI`, `Umbraco.AI.Alibaba`), never after the specific model they happen to ship first (e.g. not `Umbraco.AI.Qwen`) — see the `add-provider` skill
 - Worktrees pile up because cleanup is easy to forget — `ExitWorktree` alone does not delete anything. See CLAUDE.local.md's "Finishing a worktree" section, and actually run `/worktree-cleanup` or `/worktree-merge` before considering a worktree task done
+
+## Issue tracker
+
+- Type: GitHub Issues
+- Location: `umbraco/Umbraco.AI` (same repo as the source code)
+- Access: `gh` CLI (e.g. `gh issue view <n> --repo umbraco/Umbraco.AI`)
+- Triage log: `docs/triage/TRIAGE-LOG.md`
+
+Bugs and user-reported issues go here. The Azure DevOps AI Team backlog (see Project Management above) is for internal planning, not issue triage.

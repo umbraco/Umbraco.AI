@@ -8,7 +8,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Setup
 
-- [ ] **T0** — story: DR-11 (AC4). Bring the spike branch up to date by **merging**
+- [x] **T0** — story: DR-11 (AC4). Bring the spike branch up to date by **merging**
   `origin/v18/dev` into `v18/feature/decision-capability` (not rebasing; see DECISION-LOG).
   Move the spike's `docs/plans/decision-capability/` to `docs/archive/decision-capability/`
   with a `> **Status:**` line on each file. Add this plan folder

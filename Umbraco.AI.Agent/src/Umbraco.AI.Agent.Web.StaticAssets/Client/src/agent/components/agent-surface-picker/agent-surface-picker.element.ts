@@ -101,8 +101,8 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
                     return {
                         id: surface.id,
                         icon: surface.icon,
-                        name: this.localize.term(`uaiAgentSurface_${surface.id}Label`) || surface.id,
-                        description: this.localize.term(`uaiAgentSurface_${surface.id}Description`) || "",
+                        name: this.localize.termOrDefault(`uaiAgentSurface_${surface.id}Label`, surface.id),
+                        description: this.localize.termOrDefault(`uaiAgentSurface_${surface.id}Description`, ""),
                         supportedScopeDimensions: surface.supportedScopeDimensions || [],
                     };
                 })
@@ -145,8 +145,8 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
             .filter((surface) => !this._selection.includes(surface.id))
             .map((surface) => ({
                 value: surface.id,
-                label: this.localize.term(`uaiAgentSurface_${surface.id}Label`) || surface.id,
-                description: this.localize.term(`uaiAgentSurface_${surface.id}Description`) || "",
+                label: this.localize.termOrDefault(`uaiAgentSurface_${surface.id}Label`, surface.id),
+                description: this.localize.termOrDefault(`uaiAgentSurface_${surface.id}Description`, ""),
                 supportedScopeDimensions: surface.supportedScopeDimensions || [],
                 icon: surface.icon,
             }));

@@ -82,7 +82,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   `SettingsMapDefinition.cs`.
   depends-on: T3. parallel-group: B
 
-- [ ] **T10** — story: DR-7 (AC4). Add `DecisionProfileSettingsModel` (`$type: "decision"`)
+- [x] **T10** — story: DR-7 (AC4). Add `DecisionProfileSettingsModel` (`$type: "decision"`)
   to `ProfileSettingsModels.cs` and both directions in `ProfileMapDefinition`.
   depends-on: T4. parallel-group: B
 

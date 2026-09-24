@@ -96,3 +96,8 @@
   `SettingsMapDefinition`. T3's temporary MapAll exclusions and `TODO(T9)` are removed. The
   reviewer confirmed `PUT settings` is full-replace, so T15 must always send the field (added to
   T15's plan line). Reviewer reran 1239/1239 unit + 32/32 integration. PASS on first review.
+
+- **T10** — `c0141f1e` — `DecisionProfileSettingsModel` (`$type: "decision"`) and both
+  `ProfileMapDefinition` arms. Create and update share `MapSettingsFromRequest`. The OpenAPI
+  schema picks up the derived type generically. Reviewer reran 1243/1243 unit + 32/32
+  integration. PASS on first review.

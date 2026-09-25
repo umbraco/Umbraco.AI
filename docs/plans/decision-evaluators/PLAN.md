@@ -91,14 +91,14 @@ Build/test gate for every code task:
 
 ## v17
 
-- [ ] **T6** — story: DE-6 (AC1, AC2). Port to v17 with the `backport` skill: new worktree
+- [x] **T6** — story: DE-6 (AC1, AC2). Port to v17 with the `backport` skill: new worktree
   (absolute path, from the main repo root) on `v17/feature/decision-evaluators` branched from
   `origin/v17/feature/decision-capability`. Obsolete messages say `v19`. Adapt to any CMS 17
   API differences.
   Acceptance: `dotnet build` + `dotnet test Umbraco.AI/Umbraco.AI.slnx` green on v17.
   depends-on: T5a.
 
-- [ ] **T7** — story: DE-6 (AC3). **wire: judges into the v17 demo site.** Repeat T5a on
+- [x] **T7** — story: DE-6 (AC3). **wire: judges into the v17 demo site.** Repeat T5a on
   `demos/v17/`.
   Acceptance: recorded in BUILD-LOG.md.
   depends-on: T6.

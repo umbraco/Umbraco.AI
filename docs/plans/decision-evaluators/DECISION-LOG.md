@@ -45,3 +45,12 @@
   behavior.
 - Pending specs staged in `specs/` in this folder, same approach as
   `decision-capability-release`.
+
+## 25-09-2026 — Found during `umb-build-loop`
+
+- **T1: `[AIRequiresCapability]` is `Inherited = true`** (siblings like `[AIGuardrailEvaluator]` are
+  not), so a subclass can't silently drop its base type's requirement. Locked in by a spec.
+- **T1: added a `this Type` overload** of `AreRequiredCapabilitiesEnabled` beside the planned
+  `this object` one, so callers without an instance can check a type. Reviewer suggestion.
+- **T1: the attribute only hides from listings; it never blocks execution.** Its docs say so, and
+  that implementations must check the flag themselves to fail safe.

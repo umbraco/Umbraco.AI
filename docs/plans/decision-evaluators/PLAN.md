@@ -16,7 +16,7 @@ Build/test gate for every code task:
 
 ## Setup
 
-- [ ] **T0** — story: none. Commit this plan folder to `v18/feature/decision-evaluators` and
+- [x] **T0** — story: none. Commit this plan folder to `v18/feature/decision-evaluators` and
   push it with `-u origin v18/feature/decision-evaluators` (the branch currently tracks the
   Decision feature branch; it must get its own remote branch).
   Acceptance: `git ls-remote origin v18/feature/decision-evaluators` shows the commit.
@@ -24,7 +24,7 @@ Build/test gate for every code task:
 
 ## Core
 
-- [ ] **T1** — story: DE-3 (AC1-AC5). Add `AIRequiresCapabilityAttribute`
+- [x] **T1** — story: DE-3 (AC1-AC5). Add `AIRequiresCapabilityAttribute`
   (`Umbraco.AI.Core/Models/`, `AttributeTargets.Class`, `AllowMultiple = true`) and
   `AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(this object, IAIExperimentalFeatures)`
   (`Umbraco.AI.Core/Extensions/`, namespace `Umbraco.AI.Extensions`). Not experimental.

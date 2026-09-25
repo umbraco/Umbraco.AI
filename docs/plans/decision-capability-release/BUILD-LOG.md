@@ -293,7 +293,7 @@
      via `moveItemInModel` (red/green proven).
   3. PASS. Vitest 59, Automate 65. v17 port pending (with T28).
 
-- **T27** (v17) — `379b9d2b` + `fix` (drops the v18-only `keywords` manifest field; CMS 17's
+- **T27** (v17) — `379b9d2b` + `9a209639` (drops the v18-only `keywords` manifest field; CMS 17's
   `MetaPropertyEditorUi` lacks it). The builder had edited that file after the cherry-pick
   without restaging it. The orchestrator's diff check caught it before push. v17 vitest 59,
   Automate 65, `build:core` OK.

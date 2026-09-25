@@ -150,9 +150,10 @@ empty = default Decision profile), `Instructions` (required, bindable), `Context
   is disabled. No provider call.
 - Invalid settings → `Validation` failure. Provider errors → `Unknown` failure with the
   provider's message.
-- Editors: `Options` is a text area, one `key` or `key: description` per line (split at the
-  first colon, so keys can't contain `:`). `Levels` uses the CMS `MultipleTextString` list
-  editor.
+- Editors: `Options` uses the `Uai.PropertyEditorUi.KeyValueList` editor (rows of key +
+  value, add/remove/reorder, min 2 / max 255), stored as `[{ key, value }]`; the value is the
+  optional description. `Levels` uses the CMS `MultipleTextString` list editor. Instructions,
+  Context and the yes/no criteria support bindings; options, levels and profile don't.
 
 ## Copilot auto mode (`Umbraco.AI.Agent`)
 

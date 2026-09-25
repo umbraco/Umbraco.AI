@@ -280,3 +280,15 @@
 - **T25** (wire) — v17 demo site against real Jev, re-run by the orchestrator: all three kinds
   in-process and over HTTP (200 with `$type`); Test connection is true with the real key and false
   with a bad one; flag off gives 404 and hides the provider and capability. PASS.
+
+- **T27** (v18) — `9c8ea424` — Reusable `Uai.PropertyEditorUi.KeyValueList` (rows of key + value,
+  add/remove/reorder via `UmbSorterController`, min/max validators, localized, internal-only,
+  loaded through the global bundle so Automate's settings form resolves it). "Ask pick-one"
+  `Options` is now `List<AskChoiceDecisionOption { Key, Value }>` with that editor and
+  `EditorConfig` (min 2, max 255). `MapOptions` is null-safe and passes bad input through to
+  Core's validator. Also made yes/no criteria bindable (`ffadc9b5`). Took 3 review rounds:
+  1. FAIL: edit-then-drag lost edits (the sorter's model wasn't synced after typing); missing
+     specs. Fixed with a single `#setRows` point that syncs the sorter.
+  2. FAIL: the reorder spec only checked internal state. Replaced it with a behavior-level test
+     via `moveItemInModel` (red/green proven).
+  3. PASS. Vitest 59, Automate 65. v17 port pending (with T28).

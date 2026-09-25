@@ -195,7 +195,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
 
 ## Follow-ups from decision review (25-09-2026)
 
-- [ ] **T27** — story: DR-9 (options UX). Add a reusable key/value list property editor UI to
+- [x] **T27** — story: DR-9 (options UX). Add a reusable key/value list property editor UI to
   `@umbraco-ai/core` (`Uai.PropertyEditorUi.KeyValueList`): repeatable rows, each with a key
   and a value text input, plus add, remove and reorder, like the CMS `MultipleTextString`. The value
   is `Array<{ key: string; value: string }>`, and labels can be set in config. Switch

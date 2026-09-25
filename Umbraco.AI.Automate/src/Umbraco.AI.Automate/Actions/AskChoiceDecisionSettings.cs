@@ -28,17 +28,19 @@ public sealed class AskChoiceDecisionSettings
     public string? Context { get; set; }
 
     /// <summary>
-    /// Gets or sets the options to choose from, one per line. No existing Automate field editor
-    /// pairs a key with an optional description, so each line is either just <c>key</c> or
-    /// <c>key: description</c> — parsed deterministically by <see cref="AskChoiceDecisionAction"/>,
-    /// splitting on the first <c>:</c> only, so a key must not itself contain <c>:</c>.
-    /// Requires 2 to 255 non-blank lines with unique keys (enforced by Core's Decision validator).
+    /// Gets or sets the options to choose from. Each entry has a <see cref="AskChoiceDecisionOption.Key"/>
+    /// (the machine value returned when the AI picks it) and an optional
+    /// <see cref="AskChoiceDecisionOption.Value"/> description shown to the AI to help it choose.
+    /// Requires 2 to 255 entries with unique keys (enforced by Core's Decision validator). Not
+    /// bindable — Automate only resolves bindings on <c>string</c>/<c>IList&lt;string&gt;</c>
+    /// settings, and this is a complex list.
     /// </summary>
     [Field(Label = "Options",
-        Description = "One option per line, as 'key' or 'key: description' (key must not contain ':'). Requires 2 to 255 lines with unique keys.",
+        Description = "2 to 255 options, each with a unique key. The value is an optional description shown to the AI.",
         SortOrder = 2,
-        EditorUiAlias = "Umb.PropertyEditorUi.TextArea")]
-    public string Options { get; set; } = string.Empty;
+        EditorUiAlias = "Uai.PropertyEditorUi.KeyValueList",
+        EditorConfig = """[{ "alias": "min", "value": 2 }, { "alias": "max", "value": 255 }, { "alias": "keyLabel", "value": "Key" }, { "alias": "valueLabel", "value": "Description" }]""")]
+    public List<AskChoiceDecisionOption> Options { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the ID of the Decision profile to use. When empty, the default Decision

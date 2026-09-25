@@ -81,7 +81,7 @@ public class DecisionActionsTests
         var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
 
         var result = await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
-            new AskChoiceDecisionSettings { Instructions = "Pick", Options = "a\nb" }), CancellationToken.None);
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = [new AskChoiceDecisionOption { Key = "a" }, new AskChoiceDecisionOption { Key = "b" }] }), CancellationToken.None);
 
         result.OutputData.ShouldBeOfType<AskChoiceDecisionOutput>().Choice.ShouldBe("b");
     }
@@ -219,59 +219,71 @@ public class DecisionActionsTests
         var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
 
         var result = await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
-            new AskChoiceDecisionSettings { Instructions = "Pick", Options = "a" }), CancellationToken.None);
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = [new AskChoiceDecisionOption { Key = "a" }] }), CancellationToken.None);
 
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
     }
 
     #endregion
 
-    #region Scenario: ParseOptions splits the Options textarea into AIDecisionOption entries
+    #region Scenario: MapOptions maps the Options key/value list into AIDecisionOption entries
 
     [Fact]
-    public async Task AskChoice_ParsesKeyAndDescription_WhenLineHasColon()
+    public async Task AskChoice_MapsKeyAndValue_ToKeyAndDescription()
     {
-        var sent = await CaptureChoiceQuestionAsync("a: Apple");
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = "a", Value = "Apple" });
 
         sent!.Options[0].ShouldBe(new AIDecisionOption("a", "Apple"));
     }
 
     [Fact]
-    public async Task AskChoice_SplitsOnFirstColonOnly_WhenDescriptionContainsColon()
+    public async Task AskChoice_MapsBlankValue_ToNullDescription()
     {
-        var sent = await CaptureChoiceQuestionAsync("a: ratio 1:2");
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = "a", Value = "  " });
 
-        sent!.Options[0].ShouldBe(new AIDecisionOption("a", "ratio 1:2"));
+        sent!.Options[0].ShouldBe(new AIDecisionOption("a", null));
     }
 
     [Fact]
-    public async Task AskChoice_IgnoresBlankLines()
+    public async Task AskChoice_MapsNullValue_ToNullDescription()
     {
-        var sent = await CaptureChoiceQuestionAsync("a\n\nb");
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = "a", Value = null });
 
-        sent!.Options.Count.ShouldBe(2);
+        sent!.Options[0].ShouldBe(new AIDecisionOption("a", null));
     }
 
     [Fact]
-    public async Task AskChoice_IgnoresCarriageReturns_WhenLinesAreCrLf()
+    public async Task AskChoice_TrimsSurroundingWhitespace_FromKey()
     {
-        var sent = await CaptureChoiceQuestionAsync("a\r\nb");
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = "  a  ", Value = "Apple" });
 
-        sent!.Options.ShouldBe([new AIDecisionOption("a"), new AIDecisionOption("b")]);
+        sent!.Options[0].Key.ShouldBe("a");
     }
 
     [Fact]
-    public async Task AskChoice_TrimsSurroundingWhitespace()
+    public async Task AskChoice_TrimsSurroundingWhitespace_FromValue()
     {
-        var sent = await CaptureChoiceQuestionAsync("  a : Apple  ");
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = "a", Value = "  Apple  " });
 
-        sent!.Options[0].ShouldBe(new AIDecisionOption("a", "Apple"));
+        sent!.Options[0].Description.ShouldBe("Apple");
+    }
+
+    [Fact]
+    public async Task AskChoice_PreservesOrder()
+    {
+        var sent = await CaptureChoiceQuestionAsync(
+            new AskChoiceDecisionOption { Key = "b" },
+            new AskChoiceDecisionOption { Key = "a" });
+
+        sent!.Options.ShouldBe([new AIDecisionOption("b"), new AIDecisionOption("a")]);
     }
 
     [Fact]
     public async Task AskChoice_PassesThroughDuplicateKeys_Unchanged()
     {
-        var sent = await CaptureChoiceQuestionAsync("a\na");
+        var sent = await CaptureChoiceQuestionAsync(
+            new AskChoiceDecisionOption { Key = "a" },
+            new AskChoiceDecisionOption { Key = "a" });
 
         sent!.Options.ShouldBe([new AIDecisionOption("a"), new AIDecisionOption("a")]);
     }
@@ -279,14 +291,35 @@ public class DecisionActionsTests
     [Fact]
     public async Task AskChoice_PassesThroughEmptyKey_ForCoreToReject()
     {
-        // ParseOptions itself doesn't reject an empty key — that's left to Core's Decision
+        // MapOptions itself doesn't reject an empty key -- that's left to Core's Decision
         // validator downstream, once the question reaches IAIDecisionService.
-        var sent = await CaptureChoiceQuestionAsync(": desc");
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = "", Value = "desc" });
 
         sent!.Options[0].ShouldBe(new AIDecisionOption("", "desc"));
     }
 
-    private async Task<AIChoiceDecisionQuestion?> CaptureChoiceQuestionAsync(string options)
+    [Fact]
+    public async Task AskChoice_MapsNullOptionEntry_ToEmptyKey()
+    {
+        // A null entry in Options (e.g. hand-edited settings JSON) must not throw a
+        // NullReferenceException -- it maps to an empty key so Core's Decision validator rejects
+        // it downstream as Validation, same as any other blank key.
+        var sent = await CaptureChoiceQuestionAsync(null!, new AskChoiceDecisionOption { Key = "b" });
+
+        sent!.Options[0].ShouldBe(new AIDecisionOption("", null));
+    }
+
+    [Fact]
+    public async Task AskChoice_MapsNullKey_ToEmptyKey()
+    {
+        // A "key": null entry deserializes AskChoiceDecisionOption.Key to null despite its
+        // string.Empty default, so this must not throw either.
+        var sent = await CaptureChoiceQuestionAsync(new AskChoiceDecisionOption { Key = null!, Value = "desc" });
+
+        sent!.Options[0].ShouldBe(new AIDecisionOption("", "desc"));
+    }
+
+    private async Task<AIChoiceDecisionQuestion?> CaptureChoiceQuestionAsync(params AskChoiceDecisionOption[] options)
     {
         AIChoiceDecisionQuestion? sent = null;
         _decisionServiceMock
@@ -296,7 +329,7 @@ public class DecisionActionsTests
         var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
 
         await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
-            new AskChoiceDecisionSettings { Instructions = "Pick", Options = options }), CancellationToken.None);
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = [.. options] }), CancellationToken.None);
 
         return sent;
     }

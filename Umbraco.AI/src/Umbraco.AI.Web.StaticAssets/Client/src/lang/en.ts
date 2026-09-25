@@ -279,4 +279,12 @@ export default {
         actionRedact: "Redact",
         evaluatorConfig: "Configuration",
     },
+    uaiKeyValueList: {
+        keyLabel: "Key",
+        valueLabel: "Value",
+        addRow: "Add row",
+        removeRow: "Remove row",
+        minMessage: (min: number) => `At least ${min} row(s) are required`,
+        maxMessage: (max: number) => `No more than ${max} row(s) are allowed`,
+    },
 } as UmbLocalizationDictionary;

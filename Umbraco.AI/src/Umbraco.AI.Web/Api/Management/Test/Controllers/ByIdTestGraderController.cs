@@ -31,7 +31,7 @@ public class ByIdTestGraderController : TestControllerBase
     /// Initializes a new instance of the <see cref="ByIdTestGraderController"/> class.
     /// </summary>
     [Obsolete("Use the constructor that accepts an IAIExperimentalFeatures so that a grader whose "
-        + "required capabilities are disabled 404s like an unknown id. Will be removed in v20.")]
+        + "required capabilities are disabled 404s like an unknown id. Will be removed in v19.")]
     public ByIdTestGraderController(AITestGraderCollection testGraders, IUmbracoMapper umbracoMapper)
         : this(
             testGraders,

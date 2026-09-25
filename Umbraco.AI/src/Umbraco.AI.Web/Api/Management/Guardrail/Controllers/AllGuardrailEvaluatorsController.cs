@@ -31,7 +31,7 @@ public class AllGuardrailEvaluatorsController : GuardrailControllerBase
     /// Initializes a new instance of the <see cref="AllGuardrailEvaluatorsController"/> class.
     /// </summary>
     [Obsolete("Use the constructor that accepts an IAIExperimentalFeatures so that evaluators whose "
-        + "required capabilities are disabled can be omitted. Will be removed in v20.")]
+        + "required capabilities are disabled can be omitted. Will be removed in v19.")]
     public AllGuardrailEvaluatorsController(AIGuardrailEvaluatorCollection evaluators, IUmbracoMapper umbracoMapper)
         : this(
             evaluators,

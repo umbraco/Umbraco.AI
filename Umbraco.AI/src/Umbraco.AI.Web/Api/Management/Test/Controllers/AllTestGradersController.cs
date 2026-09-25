@@ -29,7 +29,7 @@ public class AllTestGradersController : TestControllerBase
     /// Initializes a new instance of the <see cref="AllTestGradersController"/> class.
     /// </summary>
     [Obsolete("Use the constructor that accepts an IAIExperimentalFeatures so that graders whose "
-        + "required capabilities are disabled can be omitted. Will be removed in v20.")]
+        + "required capabilities are disabled can be omitted. Will be removed in v19.")]
     public AllTestGradersController(AITestGraderCollection testGraders)
         : this(testGraders, StaticServiceProvider.Instance.GetRequiredService<IAIExperimentalFeatures>())
     {

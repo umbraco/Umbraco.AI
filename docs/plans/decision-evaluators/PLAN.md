@@ -51,7 +51,7 @@ Build/test gate for every code task:
 - [x] **T4** — story: DE-4 (AC1-AC10). Filter `AllGuardrailEvaluatorsController`,
   `AllTestGradersController`, and `ByIdTestGraderController` with
   `AreRequiredCapabilitiesEnabled`. Each gets an `IAIExperimentalFeatures` constructor
-  parameter; old constructor kept `[Obsolete("Will be removed in v20")]`, proxying via
+  parameter; old constructor kept `[Obsolete("Will be removed in v20")]` (v19 on v17), proxying via
   `StaticServiceProvider`; new one `[ActivatorUtilitiesConstructor]`. Collections stay
   unfiltered. Specs use a fake evaluator/grader marked with the attribute, so this doesn't
   wait on T2/T3:

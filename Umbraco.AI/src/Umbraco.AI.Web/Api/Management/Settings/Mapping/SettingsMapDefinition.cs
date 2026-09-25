@@ -27,6 +27,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.ClassifierChatProfileId = source.ClassifierChatProfileId;
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
+        target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
     }
 
     // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
@@ -37,5 +38,6 @@ public class SettingsMapDefinition : IMapDefinition
         target.ClassifierChatProfileId = source.ClassifierChatProfileId;
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
+        target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
     }
 }

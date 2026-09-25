@@ -39,4 +39,22 @@ public class AIExperimentalFeaturesTests
 
         sut.IsCapabilityEnabled(AICapability.ImageGeneration).ShouldBeTrue();
     }
+
+    // DC-1 AC2
+    [Fact]
+    public void IsCapabilityEnabled_Decision_DisabledByDefault()
+    {
+        var sut = CreateSut(new AIExperimentalOptions());
+
+        sut.IsCapabilityEnabled(AICapability.Decision).ShouldBeFalse();
+    }
+
+    // DC-1 AC3
+    [Fact]
+    public void IsCapabilityEnabled_Decision_EnabledWhenFlagSet()
+    {
+        var sut = CreateSut(new AIExperimentalOptions { Decision = true });
+
+        sut.IsCapabilityEnabled(AICapability.Decision).ShouldBeTrue();
+    }
 }

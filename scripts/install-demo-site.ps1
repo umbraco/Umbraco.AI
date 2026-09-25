@@ -257,6 +257,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.OpenRouter" -SolutionFolder "Prov
 Write-Host "Adding Umbraco.AI.TogetherAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "Providers/TogetherAI"
 
+Write-Host "Adding Umbraco.AI.TypeSafe projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.TypeSafe" -SolutionFolder "Providers/TypeSafe"
+
 Write-Host "Adding Umbraco.AI.ZAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.ZAI" -SolutionFolder "Providers/ZAI"
 
@@ -369,6 +372,11 @@ if (Test-Path "Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.Togeth
 # Z.AI provider
 if (Test-Path "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj"
+}
+
+# TypeSafe provider
+if (Test-Path "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

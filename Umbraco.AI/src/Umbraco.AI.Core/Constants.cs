@@ -82,6 +82,11 @@ public static class Constants
         /// Feature type for inline image-generation executions via <see cref="ImageGeneration.IAIImageGenerationService.GenerateImagesAsync"/>.
         /// </summary>
         public const string InlineImageGeneration = "inline-image-generation";
+
+        /// <summary>
+        /// Feature type for inline decision executions via <see cref="Decision.IAIDecisionClientFactory"/>-built clients.
+        /// </summary>
+        public const string InlineDecision = "inline-decision";
     }
 
     /// <summary>

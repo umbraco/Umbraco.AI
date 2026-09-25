@@ -111,6 +111,10 @@
   <Folder Name="/Providers/TogetherAI/">
     <Project Path="Umbraco.AI.TogetherAI/src/Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.csproj" />
   </Folder>
+  <Folder Name="/Providers/TypeSafe/">
+    <Project Path="Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj" />
+    <Project Path="Umbraco.AI.TypeSafe/tests/Umbraco.AI.TypeSafe.Tests.Unit/Umbraco.AI.TypeSafe.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Providers/ZAI/">
     <Project Path="Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj" />
   </Folder>

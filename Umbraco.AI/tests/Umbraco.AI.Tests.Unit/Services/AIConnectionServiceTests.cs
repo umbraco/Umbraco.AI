@@ -1,3 +1,6 @@
+#pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability
+
+using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
@@ -40,6 +43,27 @@ public class AIConnectionServiceTests
             _versionServiceMock.Object,
             _eventAggregatorMock.Object,
             _experimentalFeaturesMock.Object);
+    }
+
+    // DC-1: builds against a real AIExperimentalFeatures (not the mock) so gating tests actually
+    // exercise the Umbraco:AI:Experimental:Decision config -> behavior wiring.
+    private AIConnectionService CreateService(IAIExperimentalFeatures experimentalFeatures, params IAIProvider[] providers)
+    {
+        var collection = new AIProviderCollection(() => providers);
+        return new AIConnectionService(
+            _repositoryMock.Object,
+            collection,
+            _settingsResolverMock.Object,
+            _versionServiceMock.Object,
+            _eventAggregatorMock.Object,
+            experimentalFeatures);
+    }
+
+    private static AIExperimentalFeatures CreateRealExperimentalFeatures(bool decisionEnabled)
+    {
+        var monitor = new Mock<IOptionsMonitor<AIExperimentalOptions>>();
+        monitor.Setup(x => x.CurrentValue).Returns(new AIExperimentalOptions { Decision = decisionEnabled });
+        return new AIExperimentalFeatures(monitor.Object);
     }
 
     #region GetConnectionAsync
@@ -780,6 +804,78 @@ public class AIConnectionServiceTests
         // Assert - CreateClientAsync() has no settings parameter, settings are baked in
         var client = await chatCapability!.CreateClientAsync();
         client.ShouldBe(fakeChatClient);
+    }
+
+    #endregion
+
+    #region Decision capability gating (experimental) — DC-1
+
+    [Fact]
+    public async Task GetAvailableCapabilitiesAsync_DecisionDisabled_HidesDecisionCapability()
+    {
+        // Arrange
+        var connection = new AIConnectionBuilder().WithProviderId("decision-provider").Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var provider = new FakeAIProvider("decision-provider").WithCapability(new FakeDecisionCapability());
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: false), provider);
+
+        // Act
+        var capabilities = await service.GetAvailableCapabilitiesAsync();
+
+        // Assert
+        capabilities.ShouldNotContain(AICapability.Decision);
+    }
+
+    [Fact]
+    public async Task GetConnectionsByCapabilityAsync_DecisionDisabled_ReturnsEmpty()
+    {
+        // Arrange
+        var connection = new AIConnectionBuilder().WithProviderId("decision-provider").Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var provider = new FakeAIProvider("decision-provider").WithCapability(new FakeDecisionCapability());
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: false), provider);
+
+        // Act
+        var connections = await service.GetConnectionsByCapabilityAsync(AICapability.Decision);
+
+        // Assert
+        connections.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAvailableCapabilitiesAsync_DecisionEnabled_IncludesDecisionCapability()
+    {
+        // Arrange
+        var connection = new AIConnectionBuilder().WithProviderId("decision-provider").Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var provider = new FakeAIProvider("decision-provider").WithCapability(new FakeDecisionCapability());
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: true), provider);
+
+        // Act
+        var capabilities = await service.GetAvailableCapabilitiesAsync();
+
+        // Assert
+        capabilities.ShouldContain(AICapability.Decision);
+    }
+
+    [Fact]
+    public async Task GetConnectionsByCapabilityAsync_DecisionEnabled_ReturnsConnection()
+    {
+        // Arrange
+        var connection = new AIConnectionBuilder().WithProviderId("decision-provider").Build();
+        _repositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync([connection]);
+
+        var provider = new FakeAIProvider("decision-provider").WithCapability(new FakeDecisionCapability());
+        var service = CreateService(CreateRealExperimentalFeatures(decisionEnabled: true), provider);
+
+        // Act
+        var connections = await service.GetConnectionsByCapabilityAsync(AICapability.Decision);
+
+        // Assert
+        connections.ShouldContain(c => c.Id == connection.Id);
     }
 
     #endregion

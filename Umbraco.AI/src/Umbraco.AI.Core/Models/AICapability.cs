@@ -37,7 +37,12 @@ public enum AICapability
     /// Experimental — gated behind the <c>Umbraco:AI:Experimental:ImageGeneration</c> feature flag
     /// (default off). Distinct from the reserved <see cref="Media"/> slot.
     /// </remarks>
-    ImageGeneration = 5
+    ImageGeneration = 5,
+
+    /// <summary>
+    /// Decision capability
+    /// </summary>
+    Decision = 8
 
     // Future: TextToSpeech = 6, SpeechToSpeech = 7
 }

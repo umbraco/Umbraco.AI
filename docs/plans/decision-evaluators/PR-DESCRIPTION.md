@@ -6,7 +6,7 @@ Guardrails and AI tests can now judge content with a typed, calibrated Decision 
 
 ## Special things to note
 
-- **Needs a decision:** `AreRequiredCapabilitiesEnabled` is a `this object` extension (`Umbraco.AI/src/Umbraco.AI.Core/Extensions/AIRequiresCapabilityExtensions.cs`), so it shows up on every object for anyone importing `Umbraco.AI.Extensions`. It's the first `this object` extension in Core, and it's stable (non-experimental) public API, so it's hard to change later. A `this Type` overload exists too. Keep both, or drop the `object` one before this ships?
+- `AreRequiredCapabilitiesEnabled` is a `this Type` extension only. An earlier `this object` overload was dropped before shipping so the extension doesn't attach to every object.
 - The judges pin the yes/no meaning internally: fixed, non-configurable `TrueCriteria`/`FalseCriteria` ("meets every criterion and is safe" vs "breaks at least one criterion"), so an admin writing criteria like "Flag anything that..." can't flip what "yes" means. The three user-facing settings are unchanged. Found in review, not in the original design.
 - `[AIRequiresCapability]` is `Inherited = true` (siblings like `[AIGuardrailEvaluator]` aren't), so a subclass can't drop its base type's requirement. Locked in by a spec.
 - Only the caller's own cancellation is rethrown. Any other `OperationCanceledException`, such as a provider timeout, fails safe like other errors. The LLM judges swallow all cancellation.
@@ -26,7 +26,7 @@ Four new Core types and one generic marker; three existing listing endpoints lea
  Umbraco.AI/src/
  ├── Umbraco.AI.Core/
 +│   ├── Models/AIRequiresCapabilityAttribute.cs        # "hide me from listings while capability X is off"
-+│   ├── Extensions/AIRequiresCapabilityExtensions.cs   # AreRequiredCapabilitiesEnabled(object|Type, flags)
++│   ├── Extensions/AIRequiresCapabilityExtensions.cs   # AreRequiredCapabilitiesEnabled(this Type, flags)
  │   ├── Guardrails/Evaluators/
 +│   │   └── DecisionGuardrailEvaluator.cs              # "decision-judge" — Decision Safety Judge (+ config)
  │   └── Tests/Graders/
@@ -72,11 +72,11 @@ Hiding while the flag is off happens per request at the listing endpoints, not i
 ```diff
  GET guardrail-evaluators
 -  _evaluators → map
-+  _evaluators.Where(e => e.AreRequiredCapabilitiesEnabled(_experimentalFeatures)) → map
++  _evaluators.Where(e => e.GetType().AreRequiredCapabilitiesEnabled(_experimentalFeatures)) → map
 
  GET test-graders/{id}
 -  grader is null → 404
-+  grader is null || !grader.AreRequiredCapabilitiesEnabled(_experimentalFeatures) → 404
++  grader is null || !grader.GetType().AreRequiredCapabilitiesEnabled(_experimentalFeatures) → 404
 
  AIGuardrailChatClient (unchanged)
    _evaluators.GetById(rule.EvaluatorId)   # still finds decision-judge → evaluator fails it safe

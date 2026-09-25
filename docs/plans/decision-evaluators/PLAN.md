@@ -26,7 +26,7 @@ Build/test gate for every code task:
 
 - [x] **T1** — story: DE-3 (AC1-AC5). Add `AIRequiresCapabilityAttribute`
   (`Umbraco.AI.Core/Models/`, `AttributeTargets.Class`, `AllowMultiple = true`) and
-  `AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(this object, IAIExperimentalFeatures)`
+  `AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(this object, IAIExperimentalFeatures)` (later narrowed to `this Type`, see DECISION-LOG)
   (`Umbraco.AI.Core/Extensions/`, namespace `Umbraco.AI.Extensions`). Not experimental.
   Specs: `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Extensions/AIRequiresCapabilityExtensionsTests.cs`.
   Acceptance: build + Core tests green, DE-3 specs pass.

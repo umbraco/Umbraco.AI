@@ -1,18 +1,10 @@
 // Story DE-2 — Grade AI test output with a Decision Judge (AC1-AC21)
 //
-// STAGED SPEC (task T3). Every scenario drives the real DecisionJudgeGrader through its public
-// GradeAsync, with real schema-builder/model-resolver infrastructure (so config JSON goes through
-// ResolveConfig exactly as in production) and a mocked IAIDecisionService/IAIExperimentalFeatures.
-//
-// Assumed production surface (ARCHITECTURE "Extension points" / "Runtime behavior"):
-//   - ctor DecisionJudgeGrader(IAIDecisionService, IAIExperimentalFeatures, IAITestGraderInfrastructure).
-//     If the builder orders the parameters differently, fix Harness's constructor call only.
-//   - DecisionJudgeGraderConfig { Guid? ProfileId; string EvaluationCriteria; double PassThreshold }.
-//   - The Decision call goes through
-//     IAIDecisionService.AskAsync<AIBinaryDecisionResponse>(Action<AIDecisionBuilder>, question, ct).
-//     The profile used is read by invoking the captured Action on a real AIDecisionBuilder and
-//     reading its internal ProfileId (Umbraco.AI.Core grants InternalsVisibleTo this project).
-//   - The flag is checked with IAIExperimentalFeatures.IsCapabilityEnabled(AICapability.Decision).
+// Every scenario drives the real DecisionJudgeGrader through its public GradeAsync, with real
+// schema-builder/model-resolver infrastructure (so config JSON goes through ResolveConfig exactly
+// as in production) and a mocked IAIDecisionService/IAIExperimentalFeatures. The profile used by a
+// call is read by invoking the captured Action on a real AIDecisionBuilder and reading its
+// internal ProfileId (Umbraco.AI.Core grants InternalsVisibleTo this project).
 #pragma warning disable UMBRACOAI_DECISION
 
 using System.Reflection;
@@ -115,32 +107,40 @@ public class DecisionJudgeGraderTests
 
         public GivenTheFlagOnAndAGoodAnswer() => _result = _harness.Grade(ConfigWith(threshold: 0.7));
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void AsksExactlyOneBinaryQuestion()
             => _harness.DecisionService.Verify(
                 s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIBinaryDecisionQuestion>(), It.IsAny<CancellationToken>()),
                 Times.Once);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void PutsTheOutputInContext() => _harness.SentQuestion!.Context.ShouldBe(Output);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void PutsTheCriteriaInInstructions() => _harness.SentQuestion!.Instructions.ShouldContain(Criteria);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void Passes() => _result.Passed.ShouldBeTrue();
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void HasNoFailureMessage() => _result.FailureMessage.ShouldBeNull();
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ReportsTheOutputAsTheActualValue() => _result.ActualValue.ShouldBe(Output);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ReportsTheCriteriaAsTheExpectedValue() => _result.ExpectedValue.ShouldBe(Criteria);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ReportsTheGraderConfigId() => _result.GraderId.ShouldBe(GraderConfigId);
+
+        [Fact]
+        public void PinsTheTrueCriteriaSoItDoesNotDependOnAdminWording()
+            => _harness.SentQuestion!.ShouldBeOfType<AIBinaryDecisionQuestion>().TrueCriteria.ShouldNotBeNullOrWhiteSpace();
+
+        [Fact]
+        public void PinsTheFalseCriteriaSoItDoesNotDependOnAdminWording()
+            => _harness.SentQuestion!.ShouldBeOfType<AIBinaryDecisionQuestion>().FalseCriteria.ShouldNotBeNullOrWhiteSpace();
     }
 
     public class GivenANullOutput
@@ -149,7 +149,7 @@ public class DecisionJudgeGraderTests
 
         public GivenANullOutput() => _harness.Grade(ConfigWith(), output: null);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void SendsAnEmptyContext() => _harness.SentQuestion!.Context.ShouldBe(string.Empty);
     }
 
@@ -160,7 +160,7 @@ public class DecisionJudgeGraderTests
 
         public GivenAConfiguredProfileId() => _harness.Grade(ConfigWith(profileId: ProfileId));
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void AsksAgainstThatProfile() => _harness.ConfiguredBuilder().ProfileId.ShouldBe(ProfileId);
     }
 
@@ -170,7 +170,7 @@ public class DecisionJudgeGraderTests
 
         public GivenNoConfiguredProfileId() => _harness.Grade(ConfigWith(profileId: null));
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void NamesNoProfileSoTheDefaultDecisionProfileApplies()
             => _harness.ConfiguredBuilder().ProfileId.ShouldBeNull();
     }
@@ -180,57 +180,57 @@ public class DecisionJudgeGraderTests
         private readonly AITestGraderResult _result =
             new Harness().Answers(0.4, modelId: "jev-1").Grade(ConfigWith(threshold: 0.7));
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void Fails() => _result.Passed.ShouldBeFalse();
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ScoresTheProbability() => _result.Score.ShouldBe(0.4);
 
-        [Fact(Skip = "Pending T3")]
-        public void FailureMessageNamesTheScore() => _result.FailureMessage.ShouldContain("0.40");
+        [Fact]
+        public void FailureMessageNamesTheScore() => _result.FailureMessage!.ShouldContain("0.40");
 
-        [Fact(Skip = "Pending T3")]
-        public void FailureMessageNamesTheThreshold() => _result.FailureMessage.ShouldContain("0.70");
+        [Fact]
+        public void FailureMessageNamesTheThreshold() => _result.FailureMessage!.ShouldContain("0.70");
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void MetadataCarriesTheProbability()
             => _result.Metadata!.Value.GetProperty("probability").GetDouble().ShouldBe(0.4);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void MetadataCarriesTheAnswer()
             => _result.Metadata!.Value.GetProperty("answer").GetBoolean().ShouldBeFalse();
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void MetadataCarriesTheConfidence()
             => _result.Metadata!.Value.GetProperty("confidence").GetDouble().ShouldBe(0.6, tolerance: 1e-9);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void MetadataCarriesTheThreshold()
             => _result.Metadata!.Value.GetProperty("threshold").GetDouble().ShouldBe(0.7);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void MetadataCarriesTheModelId()
             => _result.Metadata!.Value.GetProperty("modelId").GetString().ShouldBe("jev-1");
     }
 
     public class GivenAnAnswerExactlyAtTheThreshold
     {
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void Passes()
             => new Harness().Answers(0.7).Grade(ConfigWith(threshold: 0.7)).Passed.ShouldBeTrue();
     }
 
     public class GivenNoConfig
     {
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void DefaultsTheThresholdTo70Percent()
             => new DecisionJudgeGraderConfig().PassThreshold.ShouldBe(0.7);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void DefaultsTheCriteriaToTheLLMJudgeDefault()
             => new DecisionJudgeGraderConfig().EvaluationCriteria.ShouldBe(new LLMJudgeGraderConfig().EvaluationCriteria);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void AsksWithTheDefaultCriteria()
         {
             var harness = new Harness().Answers(0.9);
@@ -245,22 +245,22 @@ public class DecisionJudgeGraderTests
         private readonly IReadOnlyList<AIEditableModelField> _fields =
             new Harness().Grader.GetConfigSchema()!.Fields;
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void HasProfileCriteriaAndThresholdInThatOrder()
             => _fields.OrderBy(f => f.SortOrder).Select(f => f.PropertyName)
                 .ShouldBe(["ProfileId", "EvaluationCriteria", "PassThreshold"]);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void LabelsTheFields()
             => _fields.OrderBy(f => f.SortOrder).Select(f => f.Label)
                 .ShouldBe(["Profile", "Evaluation Criteria", "Pass Threshold"]);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void UsesProfilePickerTextAreaAndSliderEditors()
             => _fields.OrderBy(f => f.SortOrder).Select(f => f.EditorUiAlias)
                 .ShouldBe(["Uai.PropertyEditorUi.ProfilePicker", "Umb.PropertyEditorUi.TextArea", "Umb.PropertyEditorUi.Slider"]);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void LimitsTheProfilePickerToDecisionProfiles()
             => ((JsonElement)_fields.Single(f => f.PropertyName == "ProfileId").EditorConfig!)
                 .EnumerateArray()
@@ -271,11 +271,11 @@ public class DecisionJudgeGraderTests
 
     public class GivenTheGraderCollection
     {
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void IsDiscoveredUnderTheDecisionJudgeId()
             => typeof(DecisionJudgeGrader).GetCustomAttribute<AITestGraderAttribute>()!.Id.ShouldBe("decision-judge");
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ContainsItAsModelBased()
             => new AITestGraderCollection(() => [new Harness().Grader])
                 .GetByType(AIGraderType.ModelBased)
@@ -293,20 +293,20 @@ public class DecisionJudgeGraderTests
 
         public GivenTheFlagOff() => _result = _harness.Grade(ConfigWith());
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void Fails() => _result.Passed.ShouldBeFalse();
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ScoresZero() => _result.Score.ShouldBe(0);
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void MakesNoDecisionCall() => _harness.DecisionService.Invocations.ShouldBeEmpty();
 
-        [Fact(Skip = "Pending T3")]
-        public void FailureMessageSaysDecisionIsTurnedOff() => _result.FailureMessage.ShouldContain("Decision is turned off");
+        [Fact]
+        public void FailureMessageSaysDecisionIsTurnedOff() => _result.FailureMessage!.ShouldContain("Decision is turned off");
 
-        [Fact(Skip = "Pending T3")]
-        public void FailureMessageNamesTheFlag() => _result.FailureMessage.ShouldContain(DecisionFlag);
+        [Fact]
+        public void FailureMessageNamesTheFlag() => _result.FailureMessage!.ShouldContain(DecisionFlag);
     }
 
     public class GivenTheDecisionCallThrows
@@ -314,19 +314,19 @@ public class DecisionJudgeGraderTests
         private readonly AITestGraderResult _result =
             new Harness().Throws(new InvalidOperationException("No default Decision profile")).Grade(ConfigWith());
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void Fails() => _result.Passed.ShouldBeFalse();
 
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public void ScoresZero() => _result.Score.ShouldBe(0);
 
-        [Fact(Skip = "Pending T3")]
-        public void FailureMessageCarriesTheErrorMessage() => _result.FailureMessage.ShouldContain("No default Decision profile");
+        [Fact]
+        public void FailureMessageCarriesTheErrorMessage() => _result.FailureMessage!.ShouldContain("No default Decision profile");
     }
 
     public class GivenTheCallerCancels
     {
-        [Fact(Skip = "Pending T3")]
+        [Fact]
         public async Task PropagatesTheCancellation()
         {
             using var cts = new CancellationTokenSource();

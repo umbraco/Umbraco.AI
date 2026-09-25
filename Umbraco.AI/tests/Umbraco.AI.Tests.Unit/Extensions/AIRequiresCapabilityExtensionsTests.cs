@@ -1,10 +1,5 @@
 // Story DE-3 — Mark an evaluator or grader as needing a capability (AC1-AC5)
 //
-// STAGED SPEC (task T1). Assumed production surface (ARCHITECTURE "Hiding when the flag is off"):
-//   - Umbraco.AI.Core.Models.AIRequiresCapabilityAttribute(AICapability capability),
-//     AttributeTargets.Class, AllowMultiple = true.
-//   - Umbraco.AI.Extensions.AIRequiresCapabilityExtensions
-//       .AreRequiredCapabilitiesEnabled(this object, IAIExperimentalFeatures).
 // Uses a real AIExperimentalFeatures (not a mocked IAIExperimentalFeatures) so the specs prove the
 // real flags drive the answer, same as EnabledCapabilitiesControllerTests.
 using Microsoft.Extensions.Options;
@@ -30,33 +25,42 @@ public class AIRequiresCapabilityExtensionsTests
     private sealed class Unmarked;
 
     [AIRequiresCapability(AICapability.Decision)]
-    private sealed class NeedsDecision;
+    private class NeedsDecision;
 
     [AIRequiresCapability(AICapability.Decision)]
     [AIRequiresCapability(AICapability.ImageGeneration)]
     private sealed class NeedsDecisionAndImageGeneration;
 
+    private sealed class SubclassOfNeedsDecisionWithNoAttributeOfItsOwn : NeedsDecision;
+
     #region Happy path
 
     public class GivenATypeWithNoMarker
     {
-        [Fact(Skip = "Pending T1")]
+        [Fact]
         public void IsAvailableEvenWithEveryExperimentalFlagOff()
             => new Unmarked().AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: false)).ShouldBeTrue();
     }
 
     public class GivenATypeNeedingDecisionAndDecisionEnabled
     {
-        [Fact(Skip = "Pending T1")]
+        [Fact]
         public void IsAvailable()
             => new NeedsDecision().AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeTrue();
     }
 
     public class GivenATypeNeedingTwoCapabilitiesAndBothEnabled
     {
-        [Fact(Skip = "Pending T1")]
+        [Fact]
         public void IsAvailable()
             => new NeedsDecisionAndImageGeneration().AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: true)).ShouldBeTrue();
+    }
+
+    public class GivenTheTypeOverloadAndAnEnabledRequirement
+    {
+        [Fact]
+        public void IsAvailable()
+            => typeof(NeedsDecision).AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeTrue();
     }
 
     #endregion
@@ -65,16 +69,23 @@ public class AIRequiresCapabilityExtensionsTests
 
     public class GivenATypeNeedingDecisionAndDecisionDisabled
     {
-        [Fact(Skip = "Pending T1")]
+        [Fact]
         public void IsHidden()
             => new NeedsDecision().AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: true)).ShouldBeFalse();
     }
 
     public class GivenATypeNeedingTwoCapabilitiesAndOnlyOneEnabled
     {
-        [Fact(Skip = "Pending T1")]
+        [Fact]
         public void IsHidden()
             => new NeedsDecisionAndImageGeneration().AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeFalse();
+    }
+
+    public class GivenASubclassOfAMarkedTypeWithNoAttributeOfItsOwnAndTheRequirementDisabled
+    {
+        [Fact]
+        public void IsHidden()
+            => new SubclassOfNeedsDecisionWithNoAttributeOfItsOwn().AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: true)).ShouldBeFalse();
     }
 
     #endregion

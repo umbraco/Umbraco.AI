@@ -27,3 +27,4 @@
   - Backoffice (Playwright): the saved rule shows as "Decision Safety Judge"; its form shows Profile / Evaluation
     Criteria / threshold; the profile picker lists only the Decision profile.
   - Runtime flag flip without restart covered by unit specs (DE-4 AC5), not re-proven live.
+- **T5** Umbraco.Docs `ai/decision-docs` local commit `b03314f6ab` (not pushed): both judges documented in 6 existing pages x 2 versions (managing-guardrails, concepts/guardrails, extending/guardrails incl. `[AIRequiresCapability]` developer note, management-api evaluators, testing-and-evaluation/graders, using-the-api/decision README). No new files. Vale clean apart from existing `guid` wording.

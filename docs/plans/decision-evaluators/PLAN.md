@@ -81,7 +81,7 @@ Build/test gate for every code task:
   Any code fix found here goes back through a builder (see gotchas).
   depends-on: T2, T3, T4.
 
-- [ ] **T5** — story: DE-5 (AC5). Docs pages for both judges in
+- [x] **T5** — story: DE-5 (AC5). Docs pages for both judges in
   `/Users/matt/Documents/Work/Umbraco/Umbraco.Docs-worktrees/ai-decision-docs`
   (branch `ai/decision-docs`), v17 and v18, next to the existing LLM judge / guardrail
   evaluator / grader pages. Mark experimental. Committed locally on that branch, not pushed.

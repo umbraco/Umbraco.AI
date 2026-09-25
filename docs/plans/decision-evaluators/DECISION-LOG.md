@@ -54,3 +54,10 @@
   `this object` one, so callers without an instance can check a type. Reviewer suggestion.
 - **T1: the attribute only hides from listings; it never blocks execution.** Its docs say so, and
   that implementations must check the flag themselves to fail safe.
+- **T2: the judges pin `TrueCriteria`/`FalseCriteria` internally** (private constants, not settings), so
+  "yes = safe/meets criteria" doesn't flip when an admin writes criteria like "Flag anything that...".
+  The three user-facing settings are unchanged. Applies to the grader too (T3).
+- **T2: Instructions say "the content provided as context"**, not "the following content", so they
+  don't assume where a provider places `Context`.
+- **T2: only the caller's own cancellation is rethrown.** Any other `OperationCanceledException` (e.g. a
+  provider timeout) fails safe like other errors.

@@ -29,18 +29,22 @@ public sealed class AskYesNoDecisionSettings
 
     /// <summary>
     /// Gets or sets what "yes" means, when it needs spelling out beyond <see cref="Instructions"/>.
+    /// Supports binding syntax so the value can be produced by an upstream action.
     /// </summary>
     [Field(Label = "True criteria",
-        Description = "Optional elaboration of what counts as \"yes\", beyond the instructions.",
-        SortOrder = 2)]
+        Description = "Optional elaboration of what counts as \"yes\", beyond the instructions. Supports binding syntax.",
+        SortOrder = 2,
+        SupportsBindings = true)]
     public string? TrueCriteria { get; set; }
 
     /// <summary>
     /// Gets or sets what "no" means, when it needs spelling out beyond <see cref="Instructions"/>.
+    /// Supports binding syntax so the value can be produced by an upstream action.
     /// </summary>
     [Field(Label = "False criteria",
-        Description = "Optional elaboration of what counts as \"no\", beyond the instructions.",
-        SortOrder = 3)]
+        Description = "Optional elaboration of what counts as \"no\", beyond the instructions. Supports binding syntax.",
+        SortOrder = 3,
+        SupportsBindings = true)]
     public string? FalseCriteria { get; set; }
 
     /// <summary>

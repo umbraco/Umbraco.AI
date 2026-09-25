@@ -149,6 +149,35 @@ public class DecisionActionsTests
 
     #endregion
 
+    #region Scenario: True/false criteria can be bound to an upstream action's output
+
+    [Fact]
+    public void TrueCriteria_SupportsBindings()
+    {
+        var field = GetField<AskYesNoDecisionSettings>(nameof(AskYesNoDecisionSettings.TrueCriteria));
+
+        field.SupportsBindings.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FalseCriteria_SupportsBindings()
+    {
+        var field = GetField<AskYesNoDecisionSettings>(nameof(AskYesNoDecisionSettings.FalseCriteria));
+
+        field.SupportsBindings.ShouldBeTrue();
+    }
+
+    private static FieldAttribute GetField<TSettings>(string propertyName)
+    {
+        var property = typeof(TSettings).GetProperty(propertyName);
+        property.ShouldNotBeNull($"Expected property '{propertyName}' on {typeof(TSettings).Name}.");
+        var attribute = property.GetCustomAttribute<FieldAttribute>();
+        attribute.ShouldNotBeNull($"Expected [Field] attribute on {typeof(TSettings).Name}.{propertyName}.");
+        return attribute;
+    }
+
+    #endregion
+
     #region Sad path: flag turned off after startup
 
     [Fact]

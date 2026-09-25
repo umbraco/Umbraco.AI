@@ -69,3 +69,5 @@
 - **T4: obsolete-constructor specs swap `StaticServiceProvider.Instance`** inside one shared
   non-parallel xUnit collection (`StaticServiceProviderTestCollection`), restored in `Dispose`. The
   `controller-ctor-change-keep-obsolete` memory note now points at this pattern.
+- **T5a: turning the Decision flag off with a saved Block rule blocks every chat reply** on that guardrail. This
+  is the chosen fail-safe working as designed; the docs should say so plainly.

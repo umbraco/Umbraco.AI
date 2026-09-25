@@ -67,7 +67,7 @@ public class AllTestGradersController : TestControllerBase
     public ActionResult<IEnumerable<TestGraderInfoModel>> GetAllTestGraders()
     {
         var graders = _testGraders
-            .Where(grader => grader.AreRequiredCapabilitiesEnabled(_experimentalFeatures))
+            .Where(grader => grader.GetType().AreRequiredCapabilitiesEnabled(_experimentalFeatures))
             .Select(grader => new TestGraderInfoModel
             {
                 Id = grader.Id,

@@ -42,7 +42,7 @@
 
 - **SH-1** Both configs show three fields in this order: Profile (profile picker, Decision
   profiles only), Evaluation Criteria (text area), threshold (slider 0-1, step 0.1).
-- **SH-2** `[AIRequiresCapability]` on a type makes
+- **SH-2** `[AIRequiresCapability]` on a type makes the `Type` overload of
   `AreRequiredCapabilitiesEnabled` return false while any listed capability is disabled,
   and true when all are enabled or none are listed.
 

@@ -47,8 +47,8 @@ tracking/audit like the LLM siblings' chat calls.
 
 A new generic marker, `[AIRequiresCapability(AICapability.Decision)]`, goes on both classes
 (`AllowMultiple = true`, class targets, not experimental: it names no Decision type).
-`AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(this object, IAIExperimentalFeatures)`
-reads the attributes from the instance's type and returns true when every required capability
+`AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(this Type, IAIExperimentalFeatures)`
+reads the attributes from the type and returns true when every required capability
 is enabled (true when there are none).
 
 Three listing controllers filter with it at request time:

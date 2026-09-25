@@ -83,7 +83,7 @@ public class ByIdTestGraderController : TestControllerBase
         IAITestGrader? grader = _testGraders.FirstOrDefault(g =>
             g.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
 
-        if (grader is null || !grader.AreRequiredCapabilitiesEnabled(_experimentalFeatures))
+        if (grader is null || !grader.GetType().AreRequiredCapabilitiesEnabled(_experimentalFeatures))
         {
             return Task.FromResult(TestNotFound());
         }

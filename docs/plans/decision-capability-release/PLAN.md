@@ -204,7 +204,7 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   bindable (Umbraco.Automate can't bind complex list items yet, see the upstream issue). Both
   lines.
   depends-on: T20.
-- [ ] **T28** — **wire: key/value options in the real Automate UI.** In a browser on the demo
+- [x] **T28** — **wire: key/value options in the real Automate UI.** In a browser on the demo
   site, add an "Ask pick-one" step, enter options through the new editor, save, reopen (values
   persist), and run the automation against real Jev. The choice output is one of the entered
   keys. Both lines.

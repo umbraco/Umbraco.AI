@@ -292,3 +292,15 @@
   2. FAIL: the reorder spec only checked internal state. Replaced it with a behavior-level test
      via `moveItemInModel` (red/green proven).
   3. PASS. Vitest 59, Automate 65. v17 port pending (with T28).
+
+- **T27** (v17) — `379b9d2b` + `fix` (drops the v18-only `keywords` manifest field; CMS 17's
+  `MetaPropertyEditorUi` lacks it). The builder had edited that file after the cherry-pick
+  without restaging it. The orchestrator's diff check caught it before push. v17 vitest 59,
+  Automate 65, `build:core` OK.
+- **T28** (wire) — no code change — Real browser, Automate designer, v18 and v17: the Options
+  field renders the key/value editor (Key/Description); text typed before a real mouse drag
+  survives the reorder; remove and re-add works; options persist in order after save and reload;
+  "Run now" gives `{"choice":"oceania","confidence":1}` on both lines. No console errors from the
+  editor. The orchestrator checked the v18 reopened screenshot; the v17 run output is from the
+  report (its screenshot shows the design view). Note: the gitignored T21 verification file still
+  saves options as the old string, so its startup run now fails. That's scratch, not product.

@@ -122,3 +122,17 @@
   AI-assisted PRs. Held until release, like ImageGeneration's. Expect conflicts with the
   ImageGeneration docs PR #8222 on shared pages (`ai-options.md` "Experimental Features" and
   others).
+
+## 25-09-2026 — Decision review (`umb-decision-review`)
+
+- **Auto mode skips the Classifier Chat Profile when a default Decision profile exists.**
+  Accepted by the user.
+- **Test-only dependencies are fine.** `Microsoft.AspNetCore.TestHost` stays.
+- **Providers can have test projects.** The `add-provider` skill is updated on both lines.
+- **Automate bindings:** the yes/no `TrueCriteria`/`FalseCriteria` are made bindable now, on both
+  lines. Umbraco.Automate only resolves bindings in `string` and `IList<string>` settings, and
+  only shows the binding picker on TextBox/TextArea editors. So a key/value options editor with
+  bindable pairs, or options taken whole from a previous step, needs Automate changes first. That
+  goes in an upstream issue (expected behavior only); the key/value editor is a follow-up waiting
+  on it. Score levels aren't made bindable yet, because the list editor has no picker.
+- Everything else in the review was accepted as documented.

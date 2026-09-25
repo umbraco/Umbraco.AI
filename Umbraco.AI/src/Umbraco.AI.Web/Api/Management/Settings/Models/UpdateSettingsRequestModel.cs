@@ -29,4 +29,9 @@ public class UpdateSettingsRequestModel
     /// The ID of the default profile to use for image-generation operations.
     /// </summary>
     public Guid? DefaultImageGenerationProfileId { get; set; }
+
+    /// <summary>
+    /// The ID of the default profile to use for decision operations.
+    /// </summary>
+    public Guid? DefaultDecisionProfileId { get; set; }
 }

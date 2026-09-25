@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -18,6 +19,8 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Events;
+
+#pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability's DI wiring
 
 namespace Umbraco.AI.Tests.Integration;
 
@@ -90,6 +93,32 @@ public class ServiceResolutionTests : IDisposable
         var service = _serviceProvider.GetService<IAISpeechToTextService>();
 
         service.ShouldNotBeNull();
+    }
+
+    /// <summary>
+    /// DC-3 (AC3)'s DI-wiring smoke check — <see cref="IAIDecisionService"/> and its full dependency
+    /// chain (<see cref="IAIDecisionClientFactory"/>, the decision middleware collection, runtime
+    /// context infrastructure) resolve exactly as the real <c>AddUmbracoAICore</c> composer root wires
+    /// them (mirrored below in <see cref="RegisterAIServices"/>), with no missing registration.
+    /// Resolution succeeds regardless of <c>Umbraco:AI:Experimental:Decision</c> — like every other
+    /// experimental capability, the flag gates capability *visibility*
+    /// (<see cref="Umbraco.AI.Core.Settings.IAIExperimentalFeatures"/>, exercised by
+    /// <c>AIExperimentalFeaturesTests</c>), not DI registration itself.
+    /// </summary>
+    [Fact]
+    public void IAIDecisionService_CanBeResolved()
+    {
+        var service = _serviceProvider.GetService<IAIDecisionService>();
+
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IAIDecisionClientFactory_CanBeResolved()
+    {
+        var factory = _serviceProvider.GetService<IAIDecisionClientFactory>();
+
+        factory.ShouldNotBeNull();
     }
 
     [Fact]
@@ -256,6 +285,8 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<Umbraco.AI.Core.ImageGeneration.AIImageGenerationMiddlewareCollection>(
             _ => new Umbraco.AI.Core.ImageGeneration.AIImageGenerationMiddlewareCollection(() => Enumerable.Empty<Umbraco.AI.Core.ImageGeneration.IAIImageGenerationMiddleware>()));
 #pragma warning restore UMBRACOAI_IMAGEGEN
+        services.AddSingleton<AIDecisionMiddlewareCollection>(
+            _ => new AIDecisionMiddlewareCollection(() => Enumerable.Empty<IAIDecisionMiddleware>()));
 
         // Runtime context infrastructure
         services.AddHttpContextAccessor();
@@ -307,6 +338,7 @@ public class ServiceResolutionTests : IDisposable
 #pragma warning disable UMBRACOAI_IMAGEGEN
         services.AddSingleton<Umbraco.AI.Core.ImageGeneration.IAIImageGeneratorFactory, Umbraco.AI.Core.ImageGeneration.AIImageGeneratorFactory>();
 #pragma warning restore UMBRACOAI_IMAGEGEN
+        services.AddSingleton<IAIDecisionClientFactory, AIDecisionClientFactory>();
 
         // Tool system (empty collection / no scopes for the integration DI smoke test)
         services.AddSingleton(new AIToolScopeCollection(() => []));
@@ -319,6 +351,7 @@ public class ServiceResolutionTests : IDisposable
 #pragma warning disable UMBRACOAI_IMAGEGEN
         services.AddSingleton<Umbraco.AI.Core.ImageGeneration.IAIImageGenerationService, Umbraco.AI.Core.ImageGeneration.AIImageGenerationService>();
 #pragma warning restore UMBRACOAI_IMAGEGEN
+        services.AddSingleton<IAIDecisionService, AIDecisionService>();
 
         // Required for options
         services.AddLogging();

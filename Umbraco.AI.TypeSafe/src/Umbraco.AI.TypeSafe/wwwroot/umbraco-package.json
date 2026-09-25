@@ -1,0 +1,15 @@
+{
+  "name": "Umbraco AI TypeSafe Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.TypeSafe.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": { "culture": "en" },
+      "js": "/App_Plugins/UmbracoAITypeSafe/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

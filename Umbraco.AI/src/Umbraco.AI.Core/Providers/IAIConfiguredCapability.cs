@@ -1,10 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Defining the experimental image-generation capability surface
+#pragma warning disable UMBRACOAI_DECISION // Defining the experimental decision capability surface
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -112,6 +114,39 @@ public interface IAIConfiguredSpeechToTextCapability : IAIConfiguredCapability
     /// <see cref="CreateClientAsync(string?, CancellationToken)"/> so existing callers/implementations keep working.
     /// </remarks>
     Task<ISpeechToTextClient> CreateClientAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => CreateClientAsync(modelId, cancellationToken);
+}
+
+/// <summary>
+/// Decision capability with resolved settings.
+/// </summary>
+[Experimental(AIDecisionDiagnostics.DiagnosticId)]
+public interface IAIConfiguredDecisionCapability : IAIConfiguredCapability
+{
+    /// <summary>
+    /// Creates a decision client with the baked-in settings.
+    /// </summary>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured decision client.</returns>
+    Task<IAIDecisionClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a decision client with the baked-in connection settings and resolved,
+    /// provider-declared capability settings.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none.</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured decision client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(string?, CancellationToken)"/> so existing callers/implementations keep working.
+    /// </remarks>
+    Task<IAIDecisionClient> CreateClientAsync(
         object? capabilitySettings,
         string? modelId,
         CancellationToken cancellationToken)

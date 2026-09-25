@@ -1,4 +1,5 @@
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.ImageGeneration;
@@ -11,6 +12,7 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
 
 #pragma warning disable UMBRACOAI_IMAGEGEN // Exposes the experimental image-generation middleware collection builder
+#pragma warning disable UMBRACOAI_DECISION // Exposes the experimental decision middleware collection builder
 
 namespace Umbraco.AI.Extensions;
 
@@ -85,6 +87,23 @@ public static partial class UmbracoBuilderExtensions
     [System.Diagnostics.CodeAnalysis.Experimental(AIImageGenerationDiagnostics.DiagnosticId)]
     public static AIImageGenerationMiddlewareCollectionBuilder AIImageGenerationMiddleware(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIImageGenerationMiddlewareCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI decision middleware collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI decision middleware collection builder.</returns>
+    /// <remarks>
+    /// Use this to add, remove, or reorder decision middleware. Example:
+    /// <code>
+    /// builder.AIDecisionMiddleware()
+    ///     .Append&lt;LoggingDecisionMiddleware&gt;()
+    ///     .Append&lt;CachingMiddleware&gt;();
+    /// </code>
+    /// </remarks>
+    [System.Diagnostics.CodeAnalysis.Experimental(AIDecisionDiagnostics.DiagnosticId)]
+    public static AIDecisionMiddlewareCollectionBuilder AIDecisionMiddleware(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIDecisionMiddlewareCollectionBuilder>();
 
     /// <summary>
     /// Gets the AI tools collection builder.

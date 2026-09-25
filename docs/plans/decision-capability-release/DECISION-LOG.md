@@ -136,3 +136,7 @@
   goes in an upstream issue (expected behavior only); the key/value editor is a follow-up waiting
   on it. Score levels aren't made bindable yet, because the list editor has no picker.
 - Everything else in the review was accepted as documented.
+- **Key/value options editor included now, without bindings** (user, 25-09-2026). It's a
+  reusable `Uai.PropertyEditorUi.KeyValueList` in `@umbraco-ai/core`, since Umbraco.AI.Automate
+  has no frontend. It replaces the one-`key: description`-per-line text area for "Ask pick-one"
+  options. Binding options stays a follow-up that waits on the upstream Automate issue.

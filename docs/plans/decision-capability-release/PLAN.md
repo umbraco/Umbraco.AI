@@ -193,6 +193,23 @@ Read `umb-build-loop-gotchas` and `add-ai-capability` before starting.
   both `17/` and `18/` on branch `ai/decision-docs`, pushed as a draft PR.
   depends-on: T17, T21, T23.
 
+## Follow-ups from decision review (25-09-2026)
+
+- [ ] **T27** — story: DR-9 (options UX). Add a reusable key/value list property editor UI to
+  `@umbraco-ai/core` (`Uai.PropertyEditorUi.KeyValueList`): repeatable rows, each with a key
+  and a value text input, plus add, remove and reorder, like the CMS `MultipleTextString`. The value
+  is `Array<{ key: string; value: string }>`, and labels can be set in config. Switch
+  `AskChoiceDecisionSettings.Options` to a list of key/value items using that editor, map it to
+  `AIDecisionOption(Key, Description = Value)`, and delete the text-area `ParseOptions`. Not
+  bindable (Umbraco.Automate can't bind complex list items yet, see the upstream issue). Both
+  lines.
+  depends-on: T20.
+- [ ] **T28** — **wire: key/value options in the real Automate UI.** In a browser on the demo
+  site, add an "Ask pick-one" step, enter options through the new editor, save, reopen (values
+  persist), and run the automation against real Jev. The choice output is one of the entered
+  keys. Both lines.
+  depends-on: T27.
+
 ## Parallel groups
 
 - **A** (after T1): T2, T3, T4, T8. Different files (Decision/, Settings+AIProfileService,

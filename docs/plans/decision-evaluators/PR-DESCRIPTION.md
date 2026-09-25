@@ -1,4 +1,4 @@
-Stacked on #419 | [Plan folder](https://github.com/umbraco/Umbraco.AI/tree/v18/feature/decision-evaluators/docs/plans/decision-evaluators) | v17 port: #V17_PR | Follow-up: #429
+Stacked on #419 | [Plan folder](https://github.com/umbraco/Umbraco.AI/tree/v18/feature/decision-evaluators/docs/plans/decision-evaluators) | v17 port: #431 | Follow-up: #429
 
 ## Why the change
 

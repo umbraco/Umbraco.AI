@@ -73,3 +73,6 @@
   is the chosen fail-safe working as designed; the docs should say so plainly.
 - **Negate issue logged as umbraco/Umbraco.AI#429** (user decision, 25-09-2026): fixed separately for every
   grader, not in this feature. The grader docs warn about it meanwhile.
+- **`this object` overload of `AreRequiredCapabilitiesEnabled` removed before shipping** (user decision, 25-09-2026,
+  raised in PR review): it attached to every object for anyone importing `Umbraco.AI.Extensions`, and as stable
+  public API it would be hard to remove later. Only the `this Type` overload remains; callers pass `GetType()`.

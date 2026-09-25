@@ -9,7 +9,6 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Key/Value List",
         icon: "icon-list",
         group: "Umbraco AI",
-        keywords: ["ai", "umbraco ai", "key value", "list", "options", "pairs"],
         settings: {
             properties: [
                 {

@@ -63,7 +63,7 @@ Build/test gate for every code task:
 
 ## Wire
 
-- [ ] **T5a** — story: DE-5 (AC1-AC4), DE-4 (AC1, AC2, AC5-AC7). **wire: judges into the
+- [x] **T5a** — story: DE-5 (AC1-AC4), DE-4 (AC1, AC2, AC5-AC7). **wire: judges into the
   running demo site.** On `demos/v18/` (port from `git config --worktree --get wdp.port`;
   stop any other demo site first) with a TypeSafe connection using
   `$Umbraco:AI:Secrets:TypeSafeApiKey` (never printed) and a Decision profile:

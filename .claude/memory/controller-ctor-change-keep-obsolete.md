@@ -17,6 +17,8 @@ endpoint") was that exact outage, and c0834532 (`StreamAgentAGUIController`) is 
 shape. A reviewer caught a builder silently dropping the old constructor on
 `AllProviderController` in the decision-capability-release build (T8).
 
-**How to apply:** any diff that changes a public controller's constructor. Unit tests can't
-exercise the obsolete constructor (`StaticServiceProvider` isn't set in unit hosts; see
-`AIUmbracoMediaResolverTests`), so a live request through the demo site is the real proof.
+**How to apply:** any diff that changes a public controller's constructor. `StaticServiceProvider`
+isn't set in unit hosts, but a unit test can swap `StaticServiceProvider.Instance` to exercise the
+obsolete constructor if it joins the shared non-parallel `StaticServiceProviderTestCollection`
+(`Umbraco.AI.Tests.Unit/Api/Management/`) and restores the instance in `Dispose`. That proves the
+fallback; only a live request through the demo site proves MVC picks the new constructor.

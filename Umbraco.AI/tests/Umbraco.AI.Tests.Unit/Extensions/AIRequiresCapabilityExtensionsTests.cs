@@ -39,28 +39,21 @@ public class AIRequiresCapabilityExtensionsTests
     {
         [Fact]
         public void IsAvailableEvenWithEveryExperimentalFlagOff()
-            => new Unmarked().AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: false)).ShouldBeTrue();
+            => typeof(Unmarked).AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: false)).ShouldBeTrue();
     }
 
     public class GivenATypeNeedingDecisionAndDecisionEnabled
     {
         [Fact]
         public void IsAvailable()
-            => new NeedsDecision().AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeTrue();
+            => typeof(NeedsDecision).AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeTrue();
     }
 
     public class GivenATypeNeedingTwoCapabilitiesAndBothEnabled
     {
         [Fact]
         public void IsAvailable()
-            => new NeedsDecisionAndImageGeneration().AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: true)).ShouldBeTrue();
-    }
-
-    public class GivenTheTypeOverloadAndAnEnabledRequirement
-    {
-        [Fact]
-        public void IsAvailable()
-            => typeof(NeedsDecision).AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeTrue();
+            => typeof(NeedsDecisionAndImageGeneration).AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: true)).ShouldBeTrue();
     }
 
     #endregion
@@ -71,21 +64,21 @@ public class AIRequiresCapabilityExtensionsTests
     {
         [Fact]
         public void IsHidden()
-            => new NeedsDecision().AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: true)).ShouldBeFalse();
+            => typeof(NeedsDecision).AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: true)).ShouldBeFalse();
     }
 
     public class GivenATypeNeedingTwoCapabilitiesAndOnlyOneEnabled
     {
         [Fact]
         public void IsHidden()
-            => new NeedsDecisionAndImageGeneration().AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeFalse();
+            => typeof(NeedsDecisionAndImageGeneration).AreRequiredCapabilitiesEnabled(Flags(decision: true, imageGeneration: false)).ShouldBeFalse();
     }
 
     public class GivenASubclassOfAMarkedTypeWithNoAttributeOfItsOwnAndTheRequirementDisabled
     {
         [Fact]
         public void IsHidden()
-            => new SubclassOfNeedsDecisionWithNoAttributeOfItsOwn().AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: true)).ShouldBeFalse();
+            => typeof(SubclassOfNeedsDecisionWithNoAttributeOfItsOwn).AreRequiredCapabilitiesEnabled(Flags(decision: false, imageGeneration: true)).ShouldBeFalse();
     }
 
     #endregion

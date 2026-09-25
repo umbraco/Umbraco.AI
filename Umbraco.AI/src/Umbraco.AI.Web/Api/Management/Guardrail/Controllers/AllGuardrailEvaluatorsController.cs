@@ -75,7 +75,7 @@ public class AllGuardrailEvaluatorsController : GuardrailControllerBase
     [ProducesResponseType(typeof(IEnumerable<GuardrailEvaluatorInfoModel>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<GuardrailEvaluatorInfoModel>> GetAllGuardrailEvaluators()
     {
-        var visibleEvaluators = _evaluators.Where(e => e.AreRequiredCapabilitiesEnabled(_experimentalFeatures));
+        var visibleEvaluators = _evaluators.Where(e => e.GetType().AreRequiredCapabilitiesEnabled(_experimentalFeatures));
         var evaluators = _umbracoMapper.MapEnumerable<IAIGuardrailEvaluator, GuardrailEvaluatorInfoModel>(visibleEvaluators);
         return Ok(evaluators);
     }

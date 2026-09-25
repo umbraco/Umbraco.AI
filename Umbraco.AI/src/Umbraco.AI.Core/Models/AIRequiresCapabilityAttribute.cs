@@ -6,8 +6,8 @@ namespace Umbraco.AI.Core.Models;
 /// <remarks>
 /// <para>
 /// Apply once per required capability (<c>AllowMultiple = true</c>). Checked via
-/// <see cref="Extensions.AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(object, Core.Settings.IAIExperimentalFeatures)"/>,
-/// which reads every attribute on the instance's type and requires all of them to be enabled.
+/// <see cref="Extensions.AIRequiresCapabilityExtensions.AreRequiredCapabilitiesEnabled(Type, Core.Settings.IAIExperimentalFeatures)"/>,
+/// which reads every attribute on the type and requires all of them to be enabled.
 /// </para>
 /// <para>
 /// This attribute only controls whether the item is offered in the Management API's evaluator/grader

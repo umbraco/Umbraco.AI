@@ -9,24 +9,6 @@ namespace Umbraco.AI.Extensions;
 public static class AIRequiresCapabilityExtensions
 {
     /// <summary>
-    /// Determines whether every capability the instance's type declares via
-    /// <see cref="AIRequiresCapabilityAttribute"/> is currently enabled.
-    /// </summary>
-    /// <param name="instance">The instance to inspect (e.g. a guardrail evaluator or test grader).</param>
-    /// <param name="experimentalFeatures">Resolves whether a given capability is enabled.</param>
-    /// <returns>
-    /// <c>true</c> when the type has no <see cref="AIRequiresCapabilityAttribute"/>, or when every
-    /// capability it lists is enabled; otherwise <c>false</c>.
-    /// </returns>
-    public static bool AreRequiredCapabilitiesEnabled(this object instance, IAIExperimentalFeatures experimentalFeatures)
-    {
-        ArgumentNullException.ThrowIfNull(instance);
-        ArgumentNullException.ThrowIfNull(experimentalFeatures);
-
-        return instance.GetType().AreRequiredCapabilitiesEnabled(experimentalFeatures);
-    }
-
-    /// <summary>
     /// Determines whether every capability a type declares via <see cref="AIRequiresCapabilityAttribute"/>
     /// is currently enabled.
     /// </summary>

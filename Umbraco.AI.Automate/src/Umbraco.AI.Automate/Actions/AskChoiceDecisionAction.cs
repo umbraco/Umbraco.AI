@@ -58,7 +58,7 @@ public sealed class AskChoiceDecisionAction : ActionBase<AskChoiceDecisionSettin
 
         try
         {
-            var options = ParseOptions(settings.Options);
+            var options = MapOptions(settings.Options);
 
             var question = new AIChoiceDecisionQuestion
             {
@@ -111,40 +111,31 @@ public sealed class AskChoiceDecisionAction : ActionBase<AskChoiceDecisionSettin
     }
 
     /// <summary>
-    /// Splits <see cref="AskChoiceDecisionSettings.Options"/>'s one-per-line <c>key</c>/
-    /// <c>key: description</c> text into <see cref="AIDecisionOption"/> entries. This only splits
-    /// the text — entry count, blank-key, and duplicate-key checks all happen downstream, in
-    /// Core's Decision validator, when the resulting question reaches
-    /// <see cref="IAIDecisionService"/>.
+    /// Maps <see cref="AskChoiceDecisionSettings.Options"/>'s key/value rows into
+    /// <see cref="AIDecisionOption"/> entries, in order, trimming each key and value. A blank
+    /// value maps to no description. This only maps the shape — entry count, blank-key, and
+    /// duplicate-key checks all happen downstream, in Core's Decision validator, when the
+    /// resulting question reaches <see cref="IAIDecisionService"/>. Null-safe on purpose: a saved
+    /// settings blob can contain a null list entry or a null <c>Key</c>/<c>Value</c> (e.g. hand-edited
+    /// JSON, or a row cleared through the property editor), so this maps those to an empty key
+    /// rather than throwing — an empty/blank key is then rejected downstream as a validation
+    /// error instead of surfacing as an unhandled exception.
     /// </summary>
-    private static IReadOnlyList<AIDecisionOption> ParseOptions(string? raw)
+    private static IReadOnlyList<AIDecisionOption> MapOptions(IReadOnlyList<AskChoiceDecisionOption>? options)
     {
-        if (string.IsNullOrWhiteSpace(raw))
+        if (options is null || options.Count == 0)
         {
             return [];
         }
 
-        var options = new List<AIDecisionOption>();
-        foreach (var rawLine in raw.Split('\n'))
+        var mapped = new List<AIDecisionOption>(options.Count);
+        foreach (var option in options)
         {
-            var line = rawLine.Trim();
-            if (line.Length == 0)
-            {
-                continue;
-            }
-
-            var separatorIndex = line.IndexOf(':');
-            if (separatorIndex < 0)
-            {
-                options.Add(new AIDecisionOption(line));
-                continue;
-            }
-
-            var key = line[..separatorIndex].Trim();
-            var description = line[(separatorIndex + 1)..].Trim();
-            options.Add(new AIDecisionOption(key, description.Length == 0 ? null : description));
+            var key = option?.Key?.Trim() ?? string.Empty;
+            var value = option?.Value?.Trim();
+            mapped.Add(new AIDecisionOption(key, string.IsNullOrEmpty(value) ? null : value));
         }
 
-        return options;
+        return mapped;
     }
 }

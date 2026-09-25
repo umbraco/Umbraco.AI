@@ -237,7 +237,9 @@ If demo not yet installed:
 
 Log in (admin@example.com / password1234) → AI section → Connections → New connection. Your provider should appear in the dropdown. Plug in a real API key, create a profile, try the provider from any AI feature.
 
-**Providers don't have test projects by convention.** Manual smoke test via the demo site is the validation. If the provider doesn't show up in the dropdown, check that:
+**A provider can have a unit test project, and should when it hand-writes its wire mapping.** SDK-backed providers usually rely on the demo-site smoke test below. A provider that builds its own HTTP/JSON (like `Umbraco.AI.TypeSafe`) should add `tests/Umbraco.AI.<ProviderName>.Tests.Unit`, modeled on the TypeSafe or OpenAI test csproj, faking only the `HttpMessageHandler`. Add it to both the product `.slnx` and the **root `Umbraco.AI.slnx`**, since CI only runs test projects listed there.
+
+Either way, smoke test via the demo site. If the provider doesn't show up in the dropdown, check that:
 - `[AIProvider]` attribute is present and the class is public
 - `packages.lock.json` was regenerated (delete + rebuild if in doubt)
 - The demo site's csproj (gitignored, created per-dev by the installer) includes a ProjectReference to your provider — if you ran the install-demo-site script, this should happen automatically
@@ -270,7 +272,7 @@ Per the root `CLAUDE.md` "Keep Active Versions in Sync" policy: before treating 
 
 - **`demos/v{major}/Umbraco.AI.DemoSite/*.csproj` is gitignored** — the installer generates it per-developer. Adding a ProjectReference to your local copy isn't enough; you MUST update the install scripts, or other developers won't have your provider registered.
 - **`wwwroot/` at the repo root is gitignored** — opt back in per-provider with a local `.gitignore` containing `!wwwroot/` inside the provider's source directory.
-- **Providers have no test projects** — every provider's csproj declares `InternalsVisibleTo "Umbraco.AI.<ProviderName>.Tests.Unit"`, but the test projects don't actually exist. Keep the attribute for consistency; don't create a test project just for your provider — it'd be the only one and set an inconsistent precedent.
+- **Test projects are optional** — every provider's csproj declares `InternalsVisibleTo "Umbraco.AI.<ProviderName>.Tests.Unit"`. Add the test project when the provider has logic of its own worth testing (see step 6), and register it in the root `Umbraco.AI.slnx`.
 - **CLAUDE.md in existing providers is slightly stale** — Anthropic's shows `[AIField("api-key", "API Key", AIFieldType.Password)]` but the actual source uses `[AIField(IsSensitive = true)]`. Always read the actual `.cs` file when matching conventions, not the docs.
 - **Modeld filtering relies on conventions** — if the vendor adds a new model family next year, your regex won't cover it. Prefer broader patterns (e.g., `^mistral-` catches all current and future `mistral-*` families) over hard-coded model lists.
 - **Vendor SDK may not bake modelId into its IChatClient** — use the `ChatClientBuilder.ConfigureOptions(o => o.ModelId ??= …)` pattern in that case. Same for embeddings with `EmbeddingGeneratorBuilder`.

@@ -48,7 +48,7 @@ Build/test gate for every code task:
 
 ## Management API
 
-- [ ] **T4** — story: DE-4 (AC1-AC10). Filter `AllGuardrailEvaluatorsController`,
+- [x] **T4** — story: DE-4 (AC1-AC10). Filter `AllGuardrailEvaluatorsController`,
   `AllTestGradersController`, and `ByIdTestGraderController` with
   `AreRequiredCapabilitiesEnabled`. Each gets an `IAIExperimentalFeatures` constructor
   parameter; old constructor kept `[Obsolete("Will be removed in v20")]`, proxying via

@@ -66,3 +66,6 @@
   `LLMJudgeGrader` has the same problem on errors. Pre-existing runner behavior; raised with the user.
 - **T3: cancellation stops at the test runner.** The grader rethrows the caller's cancellation, but
   `AITestRunner` catches all exceptions per grader and records a failed result. Pre-existing.
+- **T4: obsolete-constructor specs swap `StaticServiceProvider.Instance`** inside one shared
+  non-parallel xUnit collection (`StaticServiceProviderTestCollection`), restored in `Dispose`. The
+  `controller-ctor-change-keep-obsolete` memory note now points at this pattern.

@@ -40,7 +40,7 @@ Build/test gate for every code task:
   Acceptance: build + Core tests green, DE-1 specs pass.
   depends-on: T1. parallel-group: B
 
-- [ ] **T3** — story: DE-2 (AC1-AC21). Add `DecisionJudgeGrader` + `DecisionJudgeGraderConfig`,
+- [x] **T3** — story: DE-2 (AC1-AC21). Add `DecisionJudgeGrader` + `DecisionJudgeGraderConfig`,
   same shape as T2. Specs:
   `Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Tests/Graders/DecisionJudgeGraderTests.cs`.
   Acceptance: build + Core tests green, DE-2 specs pass.

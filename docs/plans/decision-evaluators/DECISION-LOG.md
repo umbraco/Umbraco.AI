@@ -61,3 +61,8 @@
   don't assume where a provider places `Context`.
 - **T2: only the caller's own cancellation is rethrown.** Any other `OperationCanceledException` (e.g. a
   provider timeout) fails safe like other errors.
+- **T3: known, not fixed here: a negated grader turns a fail-safe into a pass.** `AITestRunner` flips
+  `Passed` when a grader has `Negate = true`, so "Decision is turned off" or an error becomes a pass.
+  `LLMJudgeGrader` has the same problem on errors. Pre-existing runner behavior; raised with the user.
+- **T3: cancellation stops at the test runner.** The grader rethrows the caller's cancellation, but
+  `AITestRunner` catches all exceptions per grader and records a failed result. Pre-existing.

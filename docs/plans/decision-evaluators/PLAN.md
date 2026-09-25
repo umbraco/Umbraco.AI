@@ -32,7 +32,7 @@ Build/test gate for every code task:
   Acceptance: build + Core tests green, DE-3 specs pass.
   depends-on: T0.
 
-- [ ] **T2** — story: DE-1 (AC1-AC24). Add `DecisionGuardrailEvaluator` +
+- [x] **T2** — story: DE-1 (AC1-AC24). Add `DecisionGuardrailEvaluator` +
   `DecisionGuardrailEvaluatorConfig` per ARCHITECTURE "Extension points" and "Runtime
   behavior", marked `[AIRequiresCapability(AICapability.Decision)]`, per-file
   `#pragma warning disable UMBRACOAI_DECISION`. Specs:

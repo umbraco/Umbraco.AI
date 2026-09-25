@@ -1,15 +1,10 @@
 // Story DE-4 — Only offer Decision judges when Decision is on (AC2, AC3, AC4, AC5, AC7, AC8, AC9)
 //
-// STAGED SPEC (task T4). Drives the real AllTestGradersController and ByIdTestGraderController
-// actions (the by-id one through a real UmbracoMapper + real TestMapDefinition). Uses fake graders,
-// one marked [AIRequiresCapability(AICapability.Decision)] under the id "decision-judge", so this
-// doesn't depend on T3's real grader.
+// Drives the real AllTestGradersController and ByIdTestGraderController actions (the by-id one
+// through a real UmbracoMapper + real TestMapDefinition). Uses fake graders, one marked
+// [AIRequiresCapability(AICapability.Decision)] under the id "decision-judge", so this doesn't
+// depend on the real Decision grader.
 //
-// Assumed production surface (ARCHITECTURE key decision 9; IAIExperimentalFeatures appended last):
-//   - new ctor AllTestGradersController(AITestGraderCollection, IAIExperimentalFeatures);
-//   - new ctor ByIdTestGraderController(AITestGraderCollection, IUmbracoMapper, IAIExperimentalFeatures);
-//   - both [ActivatorUtilitiesConstructor]; the old ctors kept [Obsolete], resolving
-//     IAIExperimentalFeatures via StaticServiceProvider.Instance.GetRequiredService<T>().
 // AC9 sets StaticServiceProvider.Instance (public setter) to a mock provider for the duration of
 // the scenario and restores it after; its collection runs with parallelization disabled.
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +13,7 @@ using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Tests;
+using Umbraco.AI.Tests.Unit.Api.Management;
 using Umbraco.AI.Web.Api.Management.Test.Controllers;
 using Umbraco.AI.Web.Api.Management.Test.Mapping;
 using Umbraco.AI.Web.Api.Management.Test.Models;
@@ -25,9 +21,6 @@ using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management.Test;
-
-[CollectionDefinition(nameof(TestGradersStaticServiceProviderCollection), DisableParallelization = true)]
-public class TestGradersStaticServiceProviderCollection;
 
 public class TestGraderControllersTests
 {
@@ -93,27 +86,27 @@ public class TestGraderControllersTests
 
     public class GivenTheFlagOn
     {
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void ListsTheDecisionJudge() => ListIds(decisionOn: true).ShouldContain(DecisionJudgeId);
 
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void GetByIdReturns200() => GetById(decisionOn: true).ShouldBeOfType<OkObjectResult>();
 
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void GetByIdReturnsTheGrader()
             => ((TestGraderResponseModel)((OkObjectResult)GetById(decisionOn: true)).Value!).Id.ShouldBe(DecisionJudgeId);
     }
 
     public class GivenTheFlagOffAndOtherGraders
     {
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void StillListsEveryOtherGrader()
             => new[] { "exact-match", "contains" }.ShouldBeSubsetOf(ListIds(decisionOn: false));
     }
 
     public class GivenTheFlagFlippedOnAtRuntime
     {
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void ListsTheDecisionJudgeOnTheNextRequest()
         {
             var decisionOn = false;
@@ -125,7 +118,7 @@ public class TestGraderControllersTests
             ListIds(controller).ShouldContain(DecisionJudgeId);
         }
 
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void GetByIdFindsTheDecisionJudgeOnTheNextRequest()
         {
             var decisionOn = false;
@@ -144,14 +137,14 @@ public class TestGraderControllersTests
 
     public class GivenTheFlagOff
     {
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void OmitsTheDecisionJudge() => ListIds(decisionOn: false).ShouldNotContain(DecisionJudgeId);
 
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void GetByIdReturns404() => GetById(decisionOn: false).ShouldBeOfType<NotFoundObjectResult>();
     }
 
-    [Collection(nameof(TestGradersStaticServiceProviderCollection))]
+    [Collection(nameof(StaticServiceProviderTestCollection))]
     public class GivenControllersBuiltThroughTheirObsoleteConstructors : IDisposable
     {
         private readonly IServiceProvider? _previous = StaticServiceProvider.Instance;
@@ -166,11 +159,11 @@ public class TestGraderControllersTests
         public void Dispose() => StaticServiceProvider.Instance = _previous!;
 
 #pragma warning disable CS0618 // Exercises the obsolete constructors on purpose
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void TheListFiltersTheSameWay()
             => ListIds(new AllTestGradersController(Graders())).ShouldNotContain(DecisionJudgeId);
 
-        [Fact(Skip = "Pending T4")]
+        [Fact]
         public void GetByIdFiltersTheSameWay()
             => new ByIdTestGraderController(Graders(), Mapper())
                 .GetTestGraderById(DecisionJudgeId).GetAwaiter().GetResult()

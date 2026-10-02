@@ -1,12 +1,12 @@
 ---
 name: demo-site-management
-description: Manages the Umbraco.AI demo site for development. Handles starting with the DemoSite profile, per-worktree port lookup via git config, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
+description: Manages the Umbraco.AI demo site for development. Handles starting with the DemoSite profile, per-worktree port lookup via `git wdp-port`, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
 argument-hint: [start|stop|generate-client|status|restart|open]
 ---
 
 # Demo Site Management
 
-Manage the Umbraco.AI demo site. Each worktree gets its own stable dev port, assigned once by [Umbraco.Community.WorktreeDevPort](https://github.com/mattbrailsford/Umbraco.Community.WorktreeDevPort) and stored in that worktree's own git config — no named pipe, socket, or discovery endpoint to query.
+Manage the Umbraco.AI demo site. Each worktree gets its own stable dev port, assigned once by [Umbraco.Community.WorktreeDevPort](https://github.com/mattbrailsford/Umbraco.Community.WorktreeDevPort) and stored in a `wdp-port` file in that worktree's own git dir — no named pipe, socket, or discovery endpoint to query.
 
 ## Command: $ARGUMENTS
 
@@ -67,7 +67,7 @@ Execute the requested demo site operation.
 5. Report results:
     - Success: "Demo site stopped (task ID: {id})"
     - Failure: "Could not find running demo site"
-    - Note: the assigned port is remembered in git config and reused on the next start — nothing to clean up
+    - Note: the assigned port is remembered in the worktree's `wdp-port` file and reused on the next start — nothing to clean up
 
 ### For "generate-client"
 
@@ -100,7 +100,7 @@ Use multi-method detection to determine site status:
 3. **Report comprehensive status**:
     - Running: yes/no
     - Task ID: if background task found
-    - Port: from git config (if set)
+    - Port: from `git wdp-port` (if set)
     - Git context: branch name, worktree name, or "not in git repo"
     - Suggestion: How to start if not running, or how to connect if running
 
@@ -124,17 +124,21 @@ Execute stop operation, wait 3 seconds, then execute start operation.
 
 ## Get the Worktree's Dev Port
 
-The demo site's port is assigned once (by `Umbraco.Community.WorktreeDevPort` on first run) and stored in this worktree's own git config — a plain read, no server round-trip needed to discover it:
+The demo site's port is assigned once (by `Umbraco.Community.WorktreeDevPort` on first run) and stored in a `wdp-port` file in this worktree's own git dir (`.git/wdp-port` in the main checkout, `.git/worktrees/<name>/wdp-port` in a linked worktree). The package also adds a `git wdp-port` alias, so reading it is a plain command, no server round-trip needed:
 
 ```bash
-git config --worktree --get wdp.port
+git wdp-port
 ```
 
-Empty/no output means the site has never been started in this worktree yet. A value means that's the port to use — probe `https://127.0.0.1:<port>` to confirm the site is actually up right now (the config value persists across restarts, so its presence alone doesn't mean the process is currently running).
+Empty/no output means the site has never been started in this worktree yet. A value means that's the port to use — probe `https://127.0.0.1:<port>` to confirm the site is actually up right now (the file persists across restarts, so its presence alone doesn't mean the process is currently running).
+
+If the alias isn't there yet (no site has started on 0.4.0+ in this clone), read the file directly: `cat "$(git rev-parse --git-dir)/wdp-port"`.
+
+`git worktree add` never copies the `wdp-port` file, so a new worktree can't inherit another worktree's port. (Before 0.4.0 the port lived in `git config --worktree wdp.port`, which git 2.36+ copies into new worktrees. That old value is now ignored.)
 
 The main checkout (not a linked worktree) gets `44355` when it's free; other worktrees get the next free port from the pool (`44300` upward), so `44355` stays reserved for the main checkout.
 
-This works identically whether you're in the main checkout or a linked worktree — git scopes `--worktree` config to whichever one you're currently in.
+This works identically whether you're in the main checkout or a linked worktree — the alias reads the `wdp-port` file of whichever one you're currently in.
 
 ## Common Issues
 
@@ -150,7 +154,7 @@ This works identically whether you're in the main checkout or a linked worktree 
 
 ### Multiple worktrees
 
-- Each worktree gets its own port automatically, with no collisions (a free port is verified before being assigned)
+- Each worktree gets its own port automatically, with no collisions (a new port must be free and not already saved by another worktree)
 - Removing a worktree (`git worktree remove`) removes its saved port with it — nothing to clean up by hand
 
 ## Success Criteria

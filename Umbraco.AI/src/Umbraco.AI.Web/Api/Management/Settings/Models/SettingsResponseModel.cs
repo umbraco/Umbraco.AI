@@ -33,6 +33,11 @@ public class SettingsResponseModel
     public Guid? DefaultImageGenerationProfileId { get; set; }
 
     /// <summary>
+    /// The ID of the default profile to use for decision operations.
+    /// </summary>
+    public Guid? DefaultDecisionProfileId { get; set; }
+
+    /// <summary>
     /// How the AI-generated disclosure notice is shown (Always, Dismissible, Off).
     /// </summary>
     [Required]

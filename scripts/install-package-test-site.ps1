@@ -192,6 +192,7 @@ Install-Package "Umbraco.AI.Moonshot"
 Install-Package "Umbraco.AI.OpenRouter"
 Install-Package "Umbraco.AI.TogetherAI"
 Install-Package "Umbraco.AI.ZAI"
+Install-Package "Umbraco.AI.TypeSafe"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Install-Package "Umbraco.AI.Prompt"

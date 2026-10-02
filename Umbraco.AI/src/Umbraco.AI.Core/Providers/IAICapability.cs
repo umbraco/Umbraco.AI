@@ -3,12 +3,14 @@ using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.DependencyInjection;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Defining the experimental image-generation capability surface
+#pragma warning disable UMBRACOAI_DECISION // Defining the experimental decision capability surface
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -226,6 +228,40 @@ public interface IAIImageGeneratorCapability : IAICapability
         string? modelId,
         CancellationToken cancellationToken)
         => CreateGeneratorAsync(settings, modelId, cancellationToken);
+}
+
+/// <summary>
+/// Defines an AI capability for answering a typed <see cref="AIDecisionQuestion"/> — yes/no, a choice
+/// from a fixed set, or a numeric score.
+/// </summary>
+[Experimental(AIDecisionDiagnostics.DiagnosticId)]
+public interface IAIDecisionCapability : IAICapability
+{
+    /// <summary>
+    /// Creates a decision client with the provided settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings (e.g., API key).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured decision client.</returns>
+    Task<IAIDecisionClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a decision client with the provided connection settings and resolved, provider-declared
+    /// capability settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured decision client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(object?, string?, CancellationToken)"/> so existing capabilities keep working.
+    /// The two-parameter <c>AIDecisionCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
+    /// </remarks>
+    Task<IAIDecisionClient> CreateClientAsync(object? settings, object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(settings, modelId, cancellationToken);
 }
 
 /// <summary>
@@ -986,6 +1022,167 @@ public abstract class AIImageGeneratorCapabilityBase<TSettings, TCapabilitySetti
         // profile declares none (or a different capability's settings), return the generator untouched.
         return capabilitySettings is TCapabilitySettings typed
             ? new CapabilitySettingsImageGenerator<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
+            : inner;
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI decision capability.
+/// </summary>
+[Experimental(AIDecisionDiagnostics.DiagnosticId)]
+public abstract class AIDecisionCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAIDecisionCapability
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.Decision;
+
+    /// <summary>
+    /// Creates a decision client with the specified model.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured decision client.</returns>
+    protected virtual IAIDecisionClient CreateClient(string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by decision capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a decision client with the specified model, asynchronously.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured decision client.</returns>
+    protected virtual Task<IAIDecisionClient> CreateClientAsync(string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(modelId));
+    }
+
+    async Task<IAIDecisionClient> IAIDecisionCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        var inner = await CreateClientAsync(modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsDecisionClient(inner);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI decision capability with specific settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
+[Experimental(AIDecisionDiagnostics.DiagnosticId)]
+public abstract class AIDecisionCapabilityBase<TSettings>(IAIProvider provider) : AICapabilityBase<TSettings>(provider), IAICapability<TSettings>, IAIDecisionCapability
+    where TSettings : class
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.Decision;
+
+    /// <summary>
+    /// Creates a decision client with the provided settings and model.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured decision client.</returns>
+    protected virtual IAIDecisionClient CreateClient(TSettings settings, string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by decision capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a decision client with the provided settings and model, asynchronously.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured decision client.</returns>
+    protected virtual Task<IAIDecisionClient> CreateClientAsync(TSettings settings, string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(settings, modelId));
+    }
+
+    /// <inheritdoc />
+    Task<IAIDecisionClient> IAIDecisionCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        return CreateDeclarationEnforcingClientAsync((TSettings)settings, modelId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds the provider's client and wraps it so this capability's per-model declaration is enforced on
+    /// every request.
+    /// </summary>
+    internal async Task<IAIDecisionClient> CreateDeclarationEnforcingClientAsync(
+        TSettings settings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        var inner = await CreateClientAsync(settings, modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsDecisionClient(inner);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI decision capability with both provider-specific connection settings and
+/// provider-declared capability settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <remarks>
+/// Derive from this (instead of <see cref="AIDecisionCapabilityBase{TSettings}"/>) to let a provider
+/// surface extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>)
+/// and applies the resolved settings to every request's <see cref="AIDecisionOptions"/> via
+/// <see cref="ApplyCapabilitySettings"/>; the provider implements only that typed translation.
+/// </remarks>
+[Experimental(AIDecisionDiagnostics.DiagnosticId)]
+public abstract class AIDecisionCapabilityBase<TSettings, TCapabilitySettings>(IAIProvider provider)
+    : AIDecisionCapabilityBase<TSettings>(provider), IAIDecisionCapability
+    where TSettings : class
+    where TCapabilitySettings : class, new()
+{
+    /// <inheritdoc />
+    public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
+
+    /// <summary>
+    /// Applies the resolved capability settings onto a request's <see cref="AIDecisionOptions"/>.
+    /// Called for every request. Implementations should no-op when a value is not set.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
+    /// <param name="modelId">
+    /// The model the request will run against — the caller's <see cref="AIDecisionOptions.ModelId"/> when
+    /// set, otherwise the model the client was created for. <c>null</c> only when neither is known.
+    /// </param>
+    /// <param name="options">The options for the current request (safe to mutate; it is a per-request copy).</param>
+    /// <remarks>
+    /// Gate on <paramref name="modelId"/> with the same predicate used by
+    /// <see cref="IAICapability.GetSettingsSupport"/>: hiding a setting in the editor does not stop a
+    /// profile saved before a model change, or a direct <see cref="IAIDecisionClient"/> consumer, from
+    /// reaching here with a value the model rejects.
+    /// </remarks>
+    protected abstract void ApplyCapabilitySettings(
+        TCapabilitySettings capabilitySettings,
+        string? modelId,
+        AIDecisionOptions options);
+
+    /// <inheritdoc />
+    async Task<IAIDecisionClient> IAIDecisionCapability.CreateClientAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateClient));
+
+        // Build the underlying client from connection settings only (unchanged provider path), already
+        // wrapped so the per-model declaration is enforced.
+        var inner = await CreateDeclarationEnforcingClientAsync((TSettings)settings, modelId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Wrap so the provider-declared capability settings are applied to every request. When the
+        // profile declares none (or a different capability's settings), return the client untouched.
+        return capabilitySettings is TCapabilitySettings typed
+            ? new CapabilitySettingsDecisionClient<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
             : inner;
     }
 }

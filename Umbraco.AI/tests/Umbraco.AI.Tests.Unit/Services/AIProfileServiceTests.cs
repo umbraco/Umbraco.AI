@@ -1,3 +1,5 @@
+#pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability
+
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -40,6 +42,17 @@ public class AIProfileServiceTests
             .ReturnsAsync(new AISettings());
 
         _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object, _experimentalFeaturesMock.Object);
+    }
+
+    // DC-1: builds against a real AIExperimentalFeatures (not the mock) so gating tests actually
+    // exercise the Umbraco:AI:Experimental:Decision config -> behavior wiring.
+    private AIProfileService CreateServiceWithRealExperimentalFeatures(bool decisionEnabled)
+    {
+        var monitor = new Mock<IOptionsMonitor<AIExperimentalOptions>>();
+        monitor.Setup(x => x.CurrentValue).Returns(new AIExperimentalOptions { Decision = decisionEnabled });
+        var experimentalFeatures = new AIExperimentalFeatures(monitor.Object);
+
+        return new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object, experimentalFeatures);
     }
 
     #region GetProfileAsync
@@ -372,6 +385,46 @@ public class AIProfileServiceTests
         result.ShouldNotBeNull();
         result.Alias.ShouldBe("new-profile");
         _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // DC-1 AC6
+    [Fact]
+    public async Task SaveProfileAsync_DecisionCapabilityDisabled_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var service = CreateServiceWithRealExperimentalFeatures(decisionEnabled: false);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("decision-profile")
+            .WithCapability(AICapability.Decision)
+            .Build();
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<InvalidOperationException>(() => service.SaveProfileAsync(profile));
+        ex.Message.ShouldContain("Umbraco:AI:Experimental");
+    }
+
+    // DC-1 AC7
+    [Fact]
+    public async Task SaveProfileAsync_DecisionCapabilityEnabled_Succeeds()
+    {
+        // Arrange
+        var service = CreateServiceWithRealExperimentalFeatures(decisionEnabled: true);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("decision-profile")
+            .WithCapability(AICapability.Decision)
+            .Build();
+
+        _repositoryMock
+            .Setup(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await service.SaveProfileAsync(profile);
+
+        // Assert
+        result.Capability.ShouldBe(AICapability.Decision);
     }
 
     #endregion

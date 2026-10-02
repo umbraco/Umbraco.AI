@@ -1,11 +1,13 @@
 using System.Drawing;
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Tests.Common.Fakes;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Exercises the experimental image-generation capability
+#pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability
 
 namespace Umbraco.AI.Tests.Unit.Providers;
 
@@ -210,6 +212,26 @@ public class DeclaredSettingsEnforcementTests
         recorder.ReceivedOptions.ShouldHaveSingleItem()!.MediaType.ShouldBe("image/png");
     }
 
+    // DC-3 AC1. Unlike Chat/Embedding/SpeechToText/ImageGeneration, AIDecisionOptions currently
+    // declares no strippable per-request settings (no shipped provider declares any sampling-style
+    // knobs yet) — so there is nothing yet to prove gets removed. This proves the wrapper still
+    // exists and participates in the same pattern; a "declared unsupported X is removed" test can be
+    // added once/if AIDecisionOptions grows a settable field a provider can decline.
+    [Fact]
+    public async Task Decision_ModelWithNoDeclaration_OptionsAreUntouched()
+    {
+        var recorder = new FakeDecisionClient();
+        var capability = new DeclaringDecisionCapability(recorder);
+
+        var client = await ((IAIDecisionCapability)capability)
+            .CreateClientAsync(Settings, "any-model", CancellationToken.None);
+        var options = new AIDecisionOptions { ModelId = "any-model" };
+        await client.AskAsync(new AIBinaryDecisionQuestion { Instructions = "is this spam?" }, options);
+
+        // The very same instance, not a filtered copy: nothing needed changing.
+        recorder.ReceivedRequests.ShouldHaveSingleItem().Options.ShouldBeSameAs(options);
+    }
+
     private static Task<IChatClient> CreateClientAsync(IAIChatCapability capability, string modelId)
         => capability.CreateClientAsync(Settings, modelId, CancellationToken.None);
 
@@ -289,5 +311,16 @@ public class DeclaredSettingsEnforcementTests
             => Task.FromResult<IReadOnlyList<AIModelDescriptor>>([]);
 
         protected override IImageGenerator CreateGenerator(FakeProviderSettings settings, string? modelId) => inner;
+    }
+
+    private sealed class DeclaringDecisionCapability(IAIDecisionClient inner)
+        : AIDecisionCapabilityBase<FakeProviderSettings>(new FakeAIProvider())
+    {
+        protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+            FakeProviderSettings settings,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<AIModelDescriptor>>([]);
+
+        protected override IAIDecisionClient CreateClient(FakeProviderSettings settings, string? modelId) => inner;
     }
 }

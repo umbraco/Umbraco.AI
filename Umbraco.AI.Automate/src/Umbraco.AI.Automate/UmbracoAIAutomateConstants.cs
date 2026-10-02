@@ -19,6 +19,23 @@ public static class UmbracoAIAutomateConstants
         /// Action alias for transcribing audio using an AI speech-to-text profile.
         /// </summary>
         public const string TranscribeAudio = "umbracoAI.transcribeAudio";
+
+        /// <summary>
+        /// Action alias for asking a yes/no question against an AI decision profile.
+        /// </summary>
+        public const string AskYesNoDecision = "umbracoAI.askYesNoDecision";
+
+        /// <summary>
+        /// Action alias for asking the AI to pick one of a fixed set of options against an
+        /// AI decision profile.
+        /// </summary>
+        public const string AskChoiceDecision = "umbracoAI.askChoiceDecision";
+
+        /// <summary>
+        /// Action alias for asking the AI to score against labelled levels using an AI
+        /// decision profile.
+        /// </summary>
+        public const string AskScoreDecision = "umbracoAI.askScoreDecision";
     }
 
     /// <summary>

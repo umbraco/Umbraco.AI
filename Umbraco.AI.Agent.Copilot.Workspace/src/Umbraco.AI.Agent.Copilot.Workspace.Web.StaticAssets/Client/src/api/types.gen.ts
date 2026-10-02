@@ -191,6 +191,15 @@ export type CreateData = {
     url: '/umbraco/ai/management/api/v1/conversations';
 };
 
+export type CreateErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+};
+
+export type CreateError = CreateErrors[keyof CreateErrors];
+
 export type CreateResponses = {
     /**
      * Created
@@ -265,6 +274,10 @@ export type UpdateData = {
 
 export type UpdateErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -321,6 +334,10 @@ export type TruncateAfterLastUserMessageData = {
 };
 
 export type TruncateAfterLastUserMessageErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
     /**
      * Not Found
      */

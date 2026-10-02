@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { Create2Data, Create2Responses, CreateData, CreateResponses, Delete2Data, Delete2Errors, Delete2Responses, DeleteData, DeleteErrors, DeleteResponses, GetAll2Data, GetAll2Responses, GetAllData, GetAllResponses, GetById2Data, GetById2Errors, GetById2Responses, GetByIdData, GetByIdErrors, GetByIdResponses, GetMessagesData, GetMessagesErrors, GetMessagesResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, TruncateAfterLastUserMessageData, TruncateAfterLastUserMessageErrors, TruncateAfterLastUserMessageResponses, Update2Data, Update2Errors, Update2Responses, UpdateData, UpdateErrors, UpdateResponses } from './types.gen';
+import type { Create2Data, Create2Responses, CreateData, CreateErrors, CreateResponses, Delete2Data, Delete2Errors, Delete2Responses, DeleteData, DeleteErrors, DeleteResponses, GetAll2Data, GetAll2Responses, GetAllData, GetAllResponses, GetById2Data, GetById2Errors, GetById2Responses, GetByIdData, GetByIdErrors, GetByIdResponses, GetMessagesData, GetMessagesErrors, GetMessagesResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, TruncateAfterLastUserMessageData, TruncateAfterLastUserMessageErrors, TruncateAfterLastUserMessageResponses, Update2Data, Update2Errors, Update2Responses, UpdateData, UpdateErrors, UpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -24,7 +24,7 @@ export class ConversationsService {
     }
     
     public static create<ThrowOnError extends boolean = false>(options?: Options<CreateData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreateResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).post<CreateResponses, CreateErrors, ThrowOnError>({
             url: '/umbraco/ai/management/api/v1/conversations',
             ...options,
             headers: {

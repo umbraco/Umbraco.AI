@@ -4,7 +4,11 @@
 
     The baseline is the first stable release of this branch's major (X.0.0), so `dotnet pack` fails on any
     public API break since then that isn't recorded in the project's CompatibilitySuppressions.xml. The
-    major comes from the product's version.json, so it moves with the next major cutover on its own.
+    major comes from the product's version.json.
+
+    The SDK downloads the baseline package during restore, so validation only turns on once the product's
+    version is past X.0.0. Until then there is nothing on NuGet to compare against: a new product, or every
+    product right after a major cutover. Once X.0.0 ships, the post-release bump to X.0.1 turns it on.
 
     To record a deliberate break, pack with -p:ApiCompatGenerateSuppressionFile=true and commit the
     updated CompatibilitySuppressions.xml next to the project, with the reason in the PR.
@@ -12,14 +16,19 @@
   <PropertyGroup>
     <_UmbracoAIVersionJsonPath>$([MSBuild]::GetPathOfFileAbove('version.json', '$(MSBuildProjectDirectory)'))</_UmbracoAIVersionJsonPath>
     <_UmbracoAIVersionJson Condition="Exists('$(_UmbracoAIVersionJsonPath)')">$([System.IO.File]::ReadAllText('$(_UmbracoAIVersionJsonPath)'))</_UmbracoAIVersionJson>
-    <_UmbracoAIVersionField>$([System.Text.RegularExpressions.Regex]::Match('$(_UmbracoAIVersionJson)', '"version"\s*:\s*"\d+').Value)</_UmbracoAIVersionField>
-    <_UmbracoAIMajorVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_UmbracoAIVersionField)', '\d+$').Value)</_UmbracoAIMajorVersion>
+    <_UmbracoAIVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_UmbracoAIVersionJson)', '"version"\s*:\s*"(\d+\.\d+\.\d+)').Groups[1].Value)</_UmbracoAIVersion>
+    <_UmbracoAIMajorVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_UmbracoAIVersion)', '^\d+').Value)</_UmbracoAIMajorVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(_UmbracoAIMajorVersion)' != ''">
+  <PropertyGroup Condition="'$(_UmbracoAIVersion)' != '' and '$(_UmbracoAIVersion)' != '$(_UmbracoAIMajorVersion).0.0'">
     <EnablePackageValidation>true</EnablePackageValidation>
     <PackageValidationBaselineVersion>$(_UmbracoAIMajorVersion).0.0</PackageValidationBaselineVersion>
     <EnableStrictModeForCompatibleFrameworksInPackage>true</EnableStrictModeForCompatibleFrameworksInPackage>
     <EnableStrictModeForCompatibleTfms>true</EnableStrictModeForCompatibleTfms>
   </PropertyGroup>
+
+  <!-- Say so when the version can't be read, rather than quietly packing without validation -->
+  <Target Name="_UmbracoAIWarnPackageValidationOff" BeforeTargets="Pack" Condition="'$(IsPackable)' != 'false' and '$(_UmbracoAIVersion)' == ''">
+    <Warning Text="Package validation is off for $(MSBuildProjectName): no version could be read from '$(_UmbracoAIVersionJsonPath)'." />
+  </Target>
 </Project>

@@ -51,12 +51,14 @@ public class AIUsageBlockedStatusTests
         Umbraco.AI.Persistence.Analytics.Usage.AIUsageRecordFactory.BuildUsageRecordDomain(entity).Status.ShouldBe(status);
     }
 
-    [Fact]
-    public void Persistence_ReadsAnUnrecognisedStatusAsFailed()
+    [Theory]
+    [InlineData("Something")]
+    [InlineData("7")]
+    public void Persistence_ReadsAnUnrecognisedStatusAsFailed(string stored)
     {
         var entity = Umbraco.AI.Persistence.Analytics.Usage.AIUsageRecordFactory.BuildUsageRecordEntity(
             Record(DateTime.UtcNow, AIUsageRecordStatus.Succeeded));
-        entity.Status = "Something";
+        entity.Status = stored;
 
         Umbraco.AI.Persistence.Analytics.Usage.AIUsageRecordFactory.BuildUsageRecordDomain(entity).Status
             .ShouldBe(AIUsageRecordStatus.Failed);

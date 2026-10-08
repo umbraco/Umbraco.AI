@@ -82,7 +82,7 @@ Tracked on [#528](https://github.com/umbraco/Umbraco.AI/issues/528).
   - Applies to the whole repo, not just this refactor; touches every product's props, so one PR
     per line.
 
-- [ ] **T7. Review the whole refactor as the build loop would have** (last, after T6).
+- [x] **T7. Review the whole refactor as the build loop would have** (last, after T6).
   T0 to T4 were built by hand, not through the playbook's `umb-build-loop`, so no task went
   through its builder/reviewer gate and there is no `BUILD-LOG.md`. Close that gap after the fact:
   - For each merged task (T0 #532, #530's #534, T1 #537, T2 #539, T3 #541, T4 #543, and T5/T6 when

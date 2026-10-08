@@ -75,6 +75,10 @@
 - 08-10-2026 (T6): Package validation is on for every product through a shared
   `PackageValidation.props`, baselined on `X.0.0` with X read from the product's `version.json`.
   Every product has an `X.0.0` on NuGet, so no per-product baseline was needed.
+- 08-10-2026 (T7): Package validation only turns on once a product's version is past `X.0.0`. The
+  SDK downloads the baseline at restore, so the T6 version broke restore for a new product and for
+  every product after a major cutover, until `X.0.0` shipped. The post-release bump to `X.0.1` turns
+  it on.
 - 08-10-2026 (T6): Every break since 18.0.0 was accepted as baseline suppressions rather than
   restored, as none are meant for outside callers:
   - The chat, embedding and speech-to-text tracking middleware became internal (this refactor).

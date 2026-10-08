@@ -36,7 +36,10 @@ internal static class AIUsageRecordFactory
             TotalTokens = entity.TotalTokens,
             DurationMs = entity.DurationMs,
             // Stored by name. Anything unrecognised is treated as a failure rather than failing the read.
-            Status = Enum.TryParse<AIUsageRecordStatus>(entity.Status, out var status) ? status : AIUsageRecordStatus.Failed,
+            // TryParse also accepts numbers, so a stored "7" needs the IsDefined check too.
+            Status = Enum.TryParse<AIUsageRecordStatus>(entity.Status, out var status) && Enum.IsDefined(status)
+                ? status
+                : AIUsageRecordStatus.Failed,
             ErrorMessage = entity.ErrorMessage,
             CreatedAt = entity.CreatedAt
         };

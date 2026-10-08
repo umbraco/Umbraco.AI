@@ -34,11 +34,6 @@
   <!-- Package validation, baselined on this major's X.0.0 release -->
   <Import Project="$(MSBuildThisFileDirectory)../PackageValidation.props" />
 
-  <!-- Off until 18.0.0 is on NuGet: there is no baseline to compare against before the first release -->
-  <PropertyGroup>
-    <EnablePackageValidation>false</EnablePackageValidation>
-  </PropertyGroup>
-
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)\..\assets\logo-128.png" Pack="true" PackagePath="" Visible="false" />
     <Content Include="$(MSBuildThisFileDirectory)\..\LICENSE.md" Pack="true" PackagePath="" Visible="false" />

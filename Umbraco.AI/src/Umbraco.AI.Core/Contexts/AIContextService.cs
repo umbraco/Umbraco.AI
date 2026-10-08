@@ -61,13 +61,13 @@ internal sealed class AIContextService : IAIContextService
         // Generate new ID if needed
         if (context.Id == Guid.Empty)
         {
-            context.Id = Guid.NewGuid();
+            context.SetId(Guid.NewGuid());
         }
 
         // Generate IDs for new resources
         foreach (var resource in context.Resources.Where(r => r.Id == Guid.Empty))
         {
-            resource.Id = Guid.NewGuid();
+            resource.SetId(Guid.NewGuid());
         }
 
         // Check for alias uniqueness

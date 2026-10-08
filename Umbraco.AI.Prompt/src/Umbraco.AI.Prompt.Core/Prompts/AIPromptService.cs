@@ -106,7 +106,7 @@ internal sealed class AIPromptService : IAIPromptService
         // Generate new ID if needed
         if (prompt.Id == Guid.Empty)
         {
-            prompt.Id = Guid.NewGuid();
+            prompt.SetId(Guid.NewGuid());
         }
 
         // Check for alias uniqueness

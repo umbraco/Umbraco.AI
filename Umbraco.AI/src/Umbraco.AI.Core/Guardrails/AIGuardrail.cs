@@ -14,10 +14,20 @@ namespace Umbraco.AI.Core.Guardrails;
 /// </remarks>
 public sealed class AIGuardrail : IAIVersionableEntity
 {
+    private Guid _id;
+
     /// <summary>
     /// The unique identifier of the guardrail.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the guardrail is first saved. Set it when creating a
+    /// guardrail that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// The alias of the guardrail (e.g., "content-safety").
@@ -61,4 +71,9 @@ public sealed class AIGuardrail : IAIVersionableEntity
     /// Rules are ordered by <see cref="AIGuardrailRule.SortOrder"/>.
     /// </summary>
     public IList<AIGuardrailRule> Rules { get; set; } = [];
+
+    /// <summary>
+    /// Assigns the ID of a new guardrail. Used by the service when saving a guardrail with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

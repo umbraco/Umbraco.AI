@@ -15,7 +15,6 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 internal sealed class AIUsageDailyRollupJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIUsageAggregationService _aggregationService;
-    private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
@@ -28,7 +27,6 @@ internal sealed class AIUsageDailyRollupJob : UmbracoAIRecurringHostedServiceBas
 
     public AIUsageDailyRollupJob(
         IAIUsageAggregationService aggregationService,
-        IAIUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
@@ -37,7 +35,6 @@ internal sealed class AIUsageDailyRollupJob : UmbracoAIRecurringHostedServiceBas
         : base(logger, CheckInterval, StartupDelay)
     {
         _aggregationService = aggregationService;
-        _statisticsRepository = statisticsRepository;
         _options = options;
         _runtimeState = runtimeState;
         _serverRoleAccessor = serverRoleAccessor;
@@ -82,122 +79,9 @@ internal sealed class AIUsageDailyRollupJob : UmbracoAIRecurringHostedServiceBas
             return;
         }
 
-        await ProcessMissingDaysAsync(CancellationToken.None);
-    }
+        // Only process completed days (yesterday and earlier)
+        var yesterday = DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-1), DateTimeKind.Utc);
 
-    /// <summary>
-    /// Processes all days that need rollup, from last aggregated to yesterday.
-    /// </summary>
-    private async Task ProcessMissingDaysAsync(CancellationToken ct)
-    {
-        var now = DateTime.UtcNow;
-        var yesterday = GetDayStart(now.AddDays(-1)); // Only process completed days (yesterday and earlier)
-
-        // Get last aggregated daily period
-        var lastAggregatedPeriod = await _statisticsRepository.GetLastAggregatedDailyPeriodAsync(ct);
-
-        DateTime startFromDay;
-
-        var firstHourlyPeriod = await _statisticsRepository.GetFirstAggregatedHourlyPeriodAsync(ct);
-
-        if (lastAggregatedPeriod == null)
-        {
-            // No previous daily aggregation - check if we have any hourly stats
-            if (firstHourlyPeriod == null)
-            {
-                _logger.LogDebug("No hourly statistics found, nothing to roll up into daily");
-                return;
-            }
-
-            // Start from the day of the first hourly stat
-            startFromDay = GetDayStart(firstHourlyPeriod.Value);
-            _logger.LogInformation(
-                "First daily rollup: starting from {StartDay} (first hourly stat: {FirstHourly})",
-                startFromDay,
-                firstHourlyPeriod);
-        }
-        else
-        {
-            // Earlier versions started the first rollup from the latest hourly statistic, skipping the days
-            // before it. Those days have no daily statistics, so rolling them up can't overwrite anything.
-            var firstDailyPeriod = await _statisticsRepository.GetFirstAggregatedDailyPeriodAsync(ct);
-            if (firstHourlyPeriod != null && firstDailyPeriod != null)
-            {
-                await RollUpDaysAsync(GetDayStart(firstHourlyPeriod.Value), firstDailyPeriod.Value.AddDays(-1), ct);
-            }
-
-            // Start from next day after last aggregated
-            startFromDay = lastAggregatedPeriod.Value.AddDays(1);
-            _logger.LogDebug(
-                "Last aggregated day: {LastDay}, processing from {StartDay}",
-                lastAggregatedPeriod,
-                startFromDay);
-        }
-
-        // Only process if start day is not in the future
-        if (startFromDay > yesterday)
-        {
-            _logger.LogDebug("No completed days to process");
-            return;
-        }
-
-        // Process all missing days sequentially
-        await RollUpDaysAsync(startFromDay, yesterday, ct);
-    }
-
-    /// <summary>
-    /// Rolls up each day from <paramref name="firstDay"/> to <paramref name="lastDay"/> inclusive, stopping
-    /// at the first failure so the next run retries from there.
-    /// </summary>
-    private async Task RollUpDaysAsync(DateTime firstDay, DateTime lastDay, CancellationToken ct)
-    {
-        var currentDay = firstDay;
-        var processedCount = 0;
-
-        while (currentDay <= lastDay && !ct.IsCancellationRequested)
-        {
-            try
-            {
-                _logger.LogInformation("Rolling up daily statistics for: {Day}", currentDay);
-                await _aggregationService.AggregateDailyAsync(currentDay, ct);
-                processedCount++;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Failed to roll up day {Day}, will retry on next run",
-                    currentDay);
-
-                // Stop processing and retry from this day on next run
-                break;
-            }
-
-            currentDay = currentDay.AddDays(1);
-        }
-
-        if (processedCount > 0)
-        {
-            _logger.LogInformation(
-                "Processed {Count} days from {Start} to {End}",
-                processedCount,
-                firstDay,
-                firstDay.AddDays(processedCount - 1));
-        }
-    }
-
-    /// <summary>
-    /// Gets the start of the day (midnight UTC) for a given timestamp.
-    /// </summary>
-    private static DateTime GetDayStart(DateTime timestamp)
-    {
-        return new DateTime(
-            timestamp.Year,
-            timestamp.Month,
-            timestamp.Day,
-            0,
-            0,
-            0,
-            DateTimeKind.Utc);
+        await _aggregationService.RollUpPendingDaysAsync(yesterday, CancellationToken.None);
     }
 }

@@ -169,16 +169,11 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
         IEnumerable<string> values,
         CancellationToken cancellationToken)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);

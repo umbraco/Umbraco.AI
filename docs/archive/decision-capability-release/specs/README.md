@@ -1,5 +1,7 @@
 # Pending specs
 
+> **Status:** Archived 09-10-2026. Shipped: merged to `v18/dev` (#419) and `v17/dev` (#428) on 09-10-2026, together with the follow-on `decision-evaluators` plan (#430, #431). Only T26 (the public Umbraco.Docs PR, branch `ai/decision-docs`) was still open at archive time.
+
 This folder stages each task's pending spec files at their final repo-relative paths until the
 task that makes them pass moves them into its real test project (see DECISION-LOG, "Pending specs
 are staged in `specs/`"). They reference types that don't exist until their task lands, so placed

@@ -1,5 +1,7 @@
 # Stories
 
+> **Status:** Archived 09-10-2026. Shipped: merged to `v18/dev` (#419) and `v17/dev` (#428) on 09-10-2026, together with the follow-on `decision-evaluators` plan (#430, #431). Only T26 (the public Umbraco.Docs PR, branch `ai/decision-docs`) was still open at archive time.
+
 Derived from `SPEC.md`. Story ids `DR-n` ("decision release") are referenced by specs and
 `PLAN.md`. Don't renumber.
 

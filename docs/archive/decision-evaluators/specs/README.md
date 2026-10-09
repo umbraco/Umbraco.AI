@@ -1,5 +1,7 @@
 # Pending specs
 
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 This folder staged each task's pending spec files at their final repo-relative paths until the
 task that made them pass moved them into their real test project (see DECISION-LOG, "Pending specs
 are staged in `specs/`").

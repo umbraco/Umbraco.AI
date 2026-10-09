@@ -1,5 +1,7 @@
 # Architecture
 
+> **Status:** Archived 09-10-2026. Shipped: merged to `v18/dev` (#419) and `v17/dev` (#428) on 09-10-2026, together with the follow-on `decision-evaluators` plan (#430, #431). Only T26 (the public Umbraco.Docs PR, branch `ai/decision-docs`) was still open at archive time.
+
 Design for `BRIEF.md`. Builds on the spike's Core plumbing (branch
 `v18/feature/decision-capability`, see the archived `decision-capability/` plan folder for
 how it was built and why). Everything below was checked against the real code on

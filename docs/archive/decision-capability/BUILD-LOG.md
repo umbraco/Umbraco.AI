@@ -1,6 +1,6 @@
 # Build Log
 
-> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan in `docs/plans/decision-capability-release/`, which builds on this spike's Core code.
+> **Status:** Archived 24-09-2026. Completed spike (all 12 tasks done, never merged). Superseded by the full feature plan `decision-capability-release/` (since shipped and archived alongside this folder), which builds on this spike's Core code.
 
 - **T1** — `8e83dfc` — `AICapability.Decision = 8` added, `Moderation = 3` and the
   `TextToSpeech`/`SpeechToSpeech` placeholder comment left untouched. Verified: builder ran

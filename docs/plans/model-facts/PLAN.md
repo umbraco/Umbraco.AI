@@ -62,7 +62,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   client.
   depends-on: T4, T5, T6.
 
-- [ ] **T8**: story MF-6 (data). Add `FE/connection/repository/model-facts/` (repository + server
+- [x] **T8**: story MF-6 (data). Add `FE/connection/repository/model-facts/` (repository + server
   data source, mirroring `repository/models/`), the `UaiModelFactModel` / `UaiModelFactsModel`
   types and mapper, and the `uaiModelFacts` area in `en.ts` (`contextWindow`,
   `contextWindowShort`, `price`, `priceShort`, `priceDetail`, `learnMore`). Internal only; no

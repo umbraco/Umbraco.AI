@@ -30,3 +30,6 @@
   Endpoint in `/umbraco/openapi/ai-management.json`. Follow-up in the same task: `capability`
   marked `[Required]` so OpenAPI/client match the SPEC. 1556/1556, build:core green.
   Env: worktree inherited wdp.port 44355 (taken by another site); set to 44399.
+- **09-10-2026 T8** `f34787a2`: Internal model-facts repository + data source, types, mapper, en.ts
+  `uaiModelFacts` area. build:core + test:core green (reviewer rerun). Passed first review; nothing
+  reaches the public rollup. Smoke: covered by T10's live UI check.

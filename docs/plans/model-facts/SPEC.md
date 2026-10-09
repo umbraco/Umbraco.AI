@@ -70,7 +70,7 @@ Guarantees:
 | Metadata present | Fact |
 |------------------|------|
 | `model.contextWindow` | key `core.contextWindow`, label `#uaiModelFacts_contextWindow`, value formatted with thousands separators, `sortValue` = tokens |
-| `pricing.*` (all three keys) | key `core.price`, label `#uaiModelFacts_price`, value `"$3.00 / $15.00"` (currency symbol for USD, else ISO code prefix), `sortValue` = input price per 1M, `detail` = `#uaiModelFacts_priceDetail` ("Per 1M tokens, input / output. From the provider; may be out of date.") |
+| `pricing.*` (all three keys) | key `core.price`, label `#uaiModelFacts_price`, value `"$3.00 / $15.00"` (currency symbol for USD, else ISO code prefix), `sortValue` = input price per 1M, `detail` = `#uaiModelFacts_priceDetail` ("Per 1M tokens, input / output. List price from the provider; may be out of date.") |
 | Partial or malformed values | No fact for that key (never throws) |
 
 ### OpenRouter provider

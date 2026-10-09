@@ -74,6 +74,7 @@ public sealed class AIOpenTelemetryImageGenerationMiddleware : IAIImageGeneratio
         private static void EnrichActivity(Activity activity, ImageGenerationRequest request, ImageGenerationOptions? options)
         {
             activity.SetTag("gen_ai.operation.name", "image_generation");
+            AITraceTags.Apply(activity);
 
             if (options?.ModelId is not null)
             {

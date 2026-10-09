@@ -32,6 +32,7 @@ internal static class AIAgentEntityFactory
             GuardrailIds = DeserializeGuardrailIds(entity.GuardrailIds),
             SurfaceIds = DeserializeSurfaceIds(entity.SurfaceIds),
             Scope = DeserializeScope(entity.Scope),
+            StarterPrompts = DeserializeStarterPrompts(entity.StarterPrompts),
             IsActive = entity.IsActive,
             DateCreated = entity.DateCreated,
             DateModified = entity.DateModified,
@@ -58,6 +59,7 @@ internal static class AIAgentEntityFactory
             GuardrailIds = SerializeGuardrailIds(aiAgent.GuardrailIds),
             SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds),
             Scope = SerializeScope(aiAgent.Scope),
+            StarterPrompts = SerializeStarterPrompts(aiAgent.StarterPrompts),
             IsActive = aiAgent.IsActive,
             DateCreated = aiAgent.DateCreated,
             DateModified = aiAgent.DateModified,
@@ -81,6 +83,7 @@ internal static class AIAgentEntityFactory
         entity.GuardrailIds = SerializeGuardrailIds(aiAgent.GuardrailIds);
         entity.SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds);
         entity.Scope = SerializeScope(aiAgent.Scope);
+        entity.StarterPrompts = SerializeStarterPrompts(aiAgent.StarterPrompts);
         entity.IsActive = aiAgent.IsActive;
         entity.DateModified = aiAgent.DateModified;
         entity.ModifiedByUserId = aiAgent.ModifiedByUserId;
@@ -166,6 +169,33 @@ internal static class AIAgentEntityFactory
         catch
         {
             return null;
+        }
+    }
+
+    private static string? SerializeStarterPrompts(IReadOnlyList<AIStarterPrompt> starterPrompts)
+    {
+        if (starterPrompts.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(starterPrompts, JsonOptions);
+    }
+
+    private static IReadOnlyList<AIStarterPrompt> DeserializeStarterPrompts(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<AIStarterPrompt>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
         }
     }
 }

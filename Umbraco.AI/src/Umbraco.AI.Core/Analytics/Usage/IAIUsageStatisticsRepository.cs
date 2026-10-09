@@ -60,6 +60,20 @@ internal interface IAIUsageStatisticsRepository
     Task<DateTime?> GetLastAggregatedHourlyPeriodAsync(CancellationToken ct = default);
 
     /// <summary>
+    /// Gets the oldest period that has been aggregated (hourly).
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The oldest aggregated period, or null if no stats exist.</returns>
+    Task<DateTime?> GetFirstAggregatedHourlyPeriodAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the oldest period that has been aggregated (daily).
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The oldest aggregated period, or null if no stats exist.</returns>
+    Task<DateTime?> GetFirstAggregatedDailyPeriodAsync(CancellationToken ct = default);
+
+    /// <summary>
     /// Gets the most recent period that has been aggregated (daily).
     /// </summary>
     /// <param name="ct">Cancellation token.</param>

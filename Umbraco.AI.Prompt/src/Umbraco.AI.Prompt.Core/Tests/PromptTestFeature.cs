@@ -190,6 +190,11 @@ public class PromptTestFeature : AITestFeatureBase<PromptTestFeatureConfig>
     {
         public string? Content { get; init; }
 
+        /// <summary>
+        /// Deprecated in favour of <c>AITestOutcome.Usage</c> (the prompt's own entry in its
+        /// <c>Breakdown</c>). Kept so custom graders reading the transcript JSON keep working.
+        /// Will be removed in v20.
+        /// </summary>
         public FinalOutputUsage? Usage { get; init; }
 
         public IReadOnlyList<AIPromptExecutionResult.AIPromptResultOption>? ResultOptions { get; init; }

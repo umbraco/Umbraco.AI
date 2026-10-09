@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability surface
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -102,7 +103,7 @@ public class AIDecisionClientFactoryTests
         var trackerMock = new Mock<IAIOperationTracker>();
         var middleware = new AIDecisionMiddlewareCollection(() => new IAIDecisionMiddleware[]
         {
-            new AITrackingDecisionMiddleware(trackerMock.Object, _contextAccessorMock.Object),
+            new AITrackingDecisionMiddleware(trackerMock.Object),
         });
         var (factory, profile) = ArrangeFactory(throwingClient, middleware);
         var client = await factory.CreateClientAsync(profile);
@@ -311,17 +312,12 @@ public class AIDecisionClientFactoryTests
 
         var tracker = new AIOperationTracker(
             _contextAccessorMock.Object,
-            auditLogServiceMock.Object,
-            auditLogFactoryMock.Object,
-            auditLogOptionsMock.Object,
-            Mock.Of<IAIUsageRecordingService>(),
-            Mock.Of<IAIUsageRecordFactory>(),
-            analyticsOptionsMock.Object,
+            TestOperationRecorders.Default(auditLogServiceMock.Object, auditLogFactoryMock.Object, auditLogOptionsMock.Object, Mock.Of<IAIUsageRecordingService>(), Mock.Of<IAIUsageRecordFactory>(), analyticsOptionsMock.Object),
             NullLogger<AIOperationTracker>.Instance);
 
         var middleware = new AIDecisionMiddlewareCollection(() => new IAIDecisionMiddleware[]
         {
-            new AITrackingDecisionMiddleware(tracker, _contextAccessorMock.Object),
+            new AITrackingDecisionMiddleware(tracker),
         });
 
         var (factory, profile) = ArrangeFactory(innerClient, middleware);

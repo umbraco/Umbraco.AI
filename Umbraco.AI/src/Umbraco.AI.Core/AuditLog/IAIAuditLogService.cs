@@ -13,6 +13,7 @@ public interface IAIAuditLogService
     /// <param name="auditLog">The audit-log record to start.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The newly created audit-log record.</returns>
+    [Obsolete("Unused by Umbraco.AI; use QueueStartAuditLogAsync instead. Will be removed in v20.")]
     Task<AIAuditLog> StartAuditLogAsync(
         AIAuditLog auditLog,
         CancellationToken ct = default);
@@ -24,6 +25,7 @@ public interface IAIAuditLogService
     /// <param name="prompt">The prompt data for deferred snapshot capture.</param>
     /// <param name="response">The response object from the AI operation.</param>
     /// <param name="ct">Cancellation token.</param>
+    [Obsolete("Unused by Umbraco.AI; use QueueCompleteAuditLogAsync instead. Will be removed in v20.")]
     Task CompleteAuditLogAsync(
         AIAuditLog audit,
         AIAuditPrompt? prompt,
@@ -37,6 +39,7 @@ public interface IAIAuditLogService
     /// <param name="prompt">The prompt data for deferred snapshot capture.</param>
     /// <param name="exception">The exception that caused the failure.</param>
     /// <param name="ct">Cancellation token.</param>
+    [Obsolete("Unused by Umbraco.AI; use QueueRecordAuditLogFailureAsync instead. Will be removed in v20.")]
     Task RecordAuditLogFailureAsync(
         AIAuditLog audit,
         AIAuditPrompt? prompt,

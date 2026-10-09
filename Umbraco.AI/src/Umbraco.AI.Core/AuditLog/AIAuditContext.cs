@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.RuntimeContext;
 
@@ -74,6 +75,11 @@ public sealed class AIAuditContext
     /// <summary>
     /// Gets extensible metadata for feature-specific context (e.g., AgentRunId, ThreadId, ConversationId).
     /// </summary>
+    /// <remarks>
+    /// Never populated or read: the audit entry's metadata comes from the declared log keys, passed to
+    /// <see cref="IAIAuditLogFactory"/> separately.
+    /// </remarks>
+    [Obsolete("Never populated; audit metadata comes from the declared log keys. Will be removed in v20.")]
     public Dictionary<string, string>? Metadata { get; } = new();
 
     /// <summary>
@@ -106,4 +112,24 @@ public sealed class AIAuditContext
             Prompt = prompt
         };
     }
+
+    /// <summary>
+    /// Builds audit-log context from a call's identity as the operation tracker captured it, so the audit
+    /// log and the other recorders read the runtime context once, at the start of the call.
+    /// </summary>
+    internal static AIAuditContext FromUsageContext(AIUsageContext identity, object? prompt) => new()
+    {
+        Capability = identity.Capability,
+        ProfileId = identity.ProfileId,
+        ProfileAlias = identity.ProfileAlias,
+        ProviderId = identity.ProviderId,
+        ModelId = identity.ModelId,
+        EntityId = identity.EntityId,
+        EntityType = identity.EntityType,
+        FeatureType = identity.FeatureType,
+        FeatureId = identity.FeatureId,
+        ProfileVersion = identity.ProfileVersion,
+        FeatureVersion = identity.FeatureVersion,
+        Prompt = prompt,
+    };
 }

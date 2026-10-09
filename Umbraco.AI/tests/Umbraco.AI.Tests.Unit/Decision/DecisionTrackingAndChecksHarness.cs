@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability surface
 
 // Shared arrange for DR-14 (AC2) and DR-15 specs: the real AIDecisionClientFactory with a real
@@ -102,7 +103,7 @@ internal sealed class DecisionTrackingAndChecksHarness
                 OutputTokens = 0,
                 TotalTokens = 0,
                 DurationMs = 0,
-                Status = "Succeeded",
+                Status = AIUsageRecordStatus.Succeeded,
                 CreatedAt = DateTime.UtcNow,
             });
 
@@ -113,17 +114,12 @@ internal sealed class DecisionTrackingAndChecksHarness
 
         var tracker = new AIOperationTracker(
             contextAccessorMock.Object,
-            auditLogServiceMock.Object,
-            auditLogFactoryMock.Object,
-            auditLogOptionsMock.Object,
-            usageRecordingServiceMock.Object,
-            usageRecordFactoryMock.Object,
-            analyticsOptionsMock.Object,
+            TestOperationRecorders.Default(auditLogServiceMock.Object, auditLogFactoryMock.Object, auditLogOptionsMock.Object, usageRecordingServiceMock.Object, usageRecordFactoryMock.Object, analyticsOptionsMock.Object),
             NullLogger<AIOperationTracker>.Instance);
 
         var middleware = new AIDecisionMiddlewareCollection(() => new IAIDecisionMiddleware[]
         {
-            new AITrackingDecisionMiddleware(tracker, contextAccessorMock.Object),
+            new AITrackingDecisionMiddleware(tracker),
         });
 
         var connectionId = Guid.NewGuid();

@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability
 
 using Microsoft.Extensions.AI;
@@ -76,7 +77,7 @@ public class AITrackingDecisionClientTests
         {
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new AIBinaryDecisionAnswer { TrueProbability = 0.9 } },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIBinaryDecisionQuestion { Id = "q", Instructions = "is this spam?" }));
@@ -100,7 +101,7 @@ public class AITrackingDecisionClientTests
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new AIBinaryDecisionAnswer { TrueProbability = 0.9 } },
             Usage = usage,
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIBinaryDecisionQuestion { Id = "q", Instructions = "is this spam?" }));
@@ -121,7 +122,7 @@ public class AITrackingDecisionClientTests
         {
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new AIBinaryDecisionAnswer { TrueProbability = 0.9 } },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIBinaryDecisionQuestion { Id = "q", Instructions = "is this spam?" }));
@@ -139,7 +140,7 @@ public class AITrackingDecisionClientTests
         {
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new AIBinaryDecisionAnswer { TrueProbability = 0.9 } },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIBinaryDecisionQuestion { Id = "q", Instructions = "is this spam?" }));
@@ -162,7 +163,7 @@ public class AITrackingDecisionClientTests
                 ["b"] = new AIBinaryDecisionAnswer { TrueProbability = 0.1 },
             },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(new AIDecisionRequest
@@ -189,7 +190,7 @@ public class AITrackingDecisionClientTests
         {
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new AIBinaryDecisionAnswer { TrueProbability = 0.9 } },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIBinaryDecisionQuestion { Id = "q", Instructions = "is this spam?" }));
@@ -215,7 +216,7 @@ public class AITrackingDecisionClientTests
                 ["q"] = new AIChoiceDecisionAnswer { Choice = "a", Probabilities = new Dictionary<string, double> { ["a"] = 1 } },
             },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIChoiceDecisionQuestion
@@ -242,7 +243,7 @@ public class AITrackingDecisionClientTests
                 ["q"] = new AIChoiceDecisionAnswer { Choice = "a", Probabilities = new Dictionary<string, double> { ["a"] = 1 } },
             },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIChoiceDecisionQuestion
@@ -269,7 +270,7 @@ public class AITrackingDecisionClientTests
                 ["q"] = new AIScoreDecisionAnswer { Score = 1, Probabilities = new Dictionary<int, double> { [0] = 0.2, [1] = 0.8 } },
             },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIScoreDecisionQuestion
@@ -296,7 +297,7 @@ public class AITrackingDecisionClientTests
                 ["q"] = new AIScoreDecisionAnswer { Score = 1, Probabilities = new Dictionary<int, double> { [0] = 0.2, [1] = 0.8 } },
             },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new AIScoreDecisionQuestion
@@ -320,7 +321,7 @@ public class AITrackingDecisionClientTests
         {
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new UnknownDecisionAnswer() },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new UnknownDecisionQuestion { Id = "q", Instructions = "Something new" }));
@@ -339,7 +340,7 @@ public class AITrackingDecisionClientTests
         {
             Answers = new Dictionary<string, AIDecisionAnswer> { ["q"] = new UnknownDecisionAnswer() },
         });
-        var client = new AITrackingDecisionClient(fakeClient, CreateTracker(), _contextAccessorMock.Object);
+        var client = new AITrackingDecisionClient(fakeClient, CreateTracker());
 
         // Act
         await client.GetResponseAsync(OneQuestion(new UnknownDecisionQuestion { Id = "q", Instructions = "Something new" }));
@@ -351,12 +352,7 @@ public class AITrackingDecisionClientTests
 
     private AIOperationTracker CreateTracker() => new(
         _contextAccessorMock.Object,
-        _auditLogServiceMock.Object,
-        _auditLogFactoryMock.Object,
-        _auditLogOptionsMock.Object,
-        _usageRecordingServiceMock.Object,
-        _usageRecordFactoryMock.Object,
-        _analyticsOptionsMock.Object,
+        TestOperationRecorders.Default(_auditLogServiceMock.Object, _auditLogFactoryMock.Object, _auditLogOptionsMock.Object, _usageRecordingServiceMock.Object, _usageRecordFactoryMock.Object, _analyticsOptionsMock.Object),
         NullLogger<AIOperationTracker>.Instance);
 
     /// <summary>
@@ -381,7 +377,7 @@ public class AITrackingDecisionClientTests
         return captured;
     }
 
-    /// <summary>Reads a public property off an anonymous <c>BuildPromptData</c>/<c>BuildAuditData</c> object.</summary>
+    /// <summary>Reads a public property off an anonymous <c>BuildPromptData</c>/<c>BuildResponseData</c> object.</summary>
     private static object? GetProperty(object? data, string propertyName) => data?.GetType().GetProperty(propertyName)?.GetValue(data);
 
     private sealed class CapturedAudit

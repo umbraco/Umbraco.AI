@@ -76,9 +76,9 @@ internal class AITestRunEntity
     public string? OutcomeFinishReason { get; set; }
 
     /// <summary>
-    /// Token usage as JSON.
+    /// AI usage (<c>AITestUsage</c>) as JSON.
     /// </summary>
-    public string? OutcomeTokenUsageJson { get; set; }
+    public string? OutcomeUsageJson { get; set; }
 
     /// <summary>
     /// Grader results serialized as JSON array.

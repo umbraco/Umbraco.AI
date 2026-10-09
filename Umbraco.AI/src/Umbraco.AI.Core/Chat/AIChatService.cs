@@ -147,7 +147,10 @@ internal sealed class AIChatService : IAIChatService
         try
         {
             var response = await ExecuteInlineChatAsync(builder, messages, cancellationToken);
-            isSuccess = true;
+
+            // A response that ends on a provider error returns normally but is a failed call, as the
+            // usage and audit records already treat it.
+            isSuccess = response.GetTerminalProviderError() is null;
             return response;
         }
         finally
@@ -193,15 +196,19 @@ internal sealed class AIChatService : IAIChatService
 
         var stopwatch = Stopwatch.StartNew();
         bool isSuccess = false;
+        var updates = new List<ChatResponseUpdate>();
 
         try
         {
             await foreach (var update in StreamInlineChatCoreAsync(builder, messages, cancellationToken))
             {
+                updates.Add(update);
                 yield return update;
             }
 
-            isSuccess = true;
+            // A stream that ends on a provider error completes normally but is a failed call, as the
+            // usage and audit records already treat it.
+            isSuccess = updates.ToChatResponse().GetTerminalProviderError() is null;
         }
         finally
         {
@@ -217,16 +224,11 @@ internal sealed class AIChatService : IAIChatService
         IEnumerable<ChatMessage> messages,
         CancellationToken cancellationToken)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
@@ -250,16 +252,11 @@ internal sealed class AIChatService : IAIChatService
         IEnumerable<ChatMessage> messages,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
@@ -270,7 +267,7 @@ internal sealed class AIChatService : IAIChatService
             ApplyOutputSchema(mergedOptions, builder.OutputSchema);
             ApplyBuilderTools(mergedOptions, builder);
 
-            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
+            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

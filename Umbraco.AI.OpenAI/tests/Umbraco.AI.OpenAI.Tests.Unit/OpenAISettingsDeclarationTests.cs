@@ -1,4 +1,7 @@
+using System.Reflection;
+using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.OpenAI.Tests.Unit.Fakes;
 
@@ -14,9 +17,26 @@ namespace Umbraco.AI.OpenAI.Tests.Unit;
 /// </summary>
 public class OpenAISettingsDeclarationTests
 {
+    [Fact]
+    public void ReasoningEffortSchema_OffersExtendedLevelsAndDescribesFallback()
+    {
+        var field = typeof(OpenAIChatCapabilitySettings)
+            .GetProperty(nameof(OpenAIChatCapabilitySettings.ReasoningEffort))!
+            .GetCustomAttribute<AIFieldAttribute>()!;
+        using var config = JsonDocument.Parse(field.EditorConfig!);
+        var items = config.RootElement.EnumerateArray()
+            .Single(item => item.GetProperty("alias").GetString() == "items")
+            .GetProperty("value").EnumerateArray().Select(item => item.GetString()).ToArray();
+
+        items.ShouldBe(["none", "minimal", "low", "medium", "high", "xhigh", "max"]);
+        field.Description!.ShouldContain("Extended levels fall back to high");
+    }
+
     [Theory]
     [InlineData("o3-mini")]
     [InlineData("gpt-5.6")]
+    [InlineData("gpt-6-luna")]
+    [InlineData("gpt-6-luna-2026-09-01")]
     public void GetSettingsSupport_ReasoningModel_DeclaresTheSamplingGroupUnsupportedOnly(string modelId)
     {
         var metadata = CreateCapability().GetSettingsSupport(modelId).ToMetadata();

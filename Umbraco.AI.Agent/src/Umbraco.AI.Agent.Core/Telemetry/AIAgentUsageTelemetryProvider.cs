@@ -109,7 +109,9 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
                     .GetAwaiter()
                     .GetResult();
 
-                result.Add(new UsageInformation(AIAgentUsageTelemetryConstants.AgentExecutions30d, summary.TotalRequests));
+                // One top-level request per run: nested calls (a guardrail judge, a search embedding) share
+                // the run's feature type but are not runs of their own.
+                result.Add(new UsageInformation(AIAgentUsageTelemetryConstants.AgentExecutions30d, summary.TopLevelRequestCount));
             }
         }
         catch

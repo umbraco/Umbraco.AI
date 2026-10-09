@@ -12,8 +12,9 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 /// <remarks>
 /// <para>
 /// This middleware has zero overhead when no OpenTelemetry listener is configured.
-/// It is registered as the innermost middleware so that <c>Activity.Current</c> is
-/// available to all outer middleware for enrichment.
+/// It is registered as the innermost middleware, so its span covers just the provider call. The tracked
+/// call's <c>umbraco.ai.*</c> tags are put on that span here, since the tracking middleware runs before
+/// the span exists (#562).
 /// </para>
 /// <para>
 /// Users opt in to collecting telemetry by adding the source name to their
@@ -43,6 +44,33 @@ public sealed class AIOpenTelemetryChatMiddleware : IAIChatMiddleware
     {
         return client.AsBuilder()
             .UseOpenTelemetry(_loggerFactory, sourceName: AITelemetry.SourceName)
+            .Use(inner => new SpanTaggingChatClient(inner))
             .Build();
+    }
+
+    /// <summary>
+    /// Runs inside the gen_ai span the OpenTelemetry client starts, and tags it. A plain pass-through, so a
+    /// stream the caller stops reading early is still disposed straight through to the provider.
+    /// </summary>
+    private sealed class SpanTaggingChatClient(IChatClient innerClient) : DelegatingChatClient(innerClient)
+    {
+        public override Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            AITraceTags.Apply(System.Diagnostics.Activity.Current);
+            return base.GetResponseAsync(messages, options, cancellationToken);
+        }
+
+        public override IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            // Called from inside the OpenTelemetry client's stream, once its span has started.
+            AITraceTags.Apply(System.Diagnostics.Activity.Current);
+            return base.GetStreamingResponseAsync(messages, options, cancellationToken);
+        }
     }
 }

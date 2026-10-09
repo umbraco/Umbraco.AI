@@ -39,6 +39,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             SurfaceIds = entity.SurfaceIds.Count > 0 ? string.Join(',', entity.SurfaceIds) : null,
             entity.Scope,
             Config = AIAgentConfigSerializer.Serialize(entity.Config),
+            StarterPrompts = entity.StarterPrompts,
             entity.IsActive,
             entity.Version,
             entity.DateCreated,
@@ -105,6 +106,14 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 ? scopeElement.Deserialize<AIAgentScope>(CoreConstants.DefaultJsonSerializerOptions)
                 : null;
 
+            IReadOnlyList<AIStarterPrompt> starterPrompts = Array.Empty<AIStarterPrompt>();
+            if (root.TryGetProperty("starterPrompts", out var starterPromptsEl) &&
+                starterPromptsEl.ValueKind == JsonValueKind.Array)
+            {
+                starterPrompts = starterPromptsEl
+                    .Deserialize<List<AIStarterPrompt>>(CoreConstants.DefaultJsonSerializerOptions) ?? [];
+            }
+
             return new AIAgent
             {
                 Id = root.GetProperty("id").GetGuid(),
@@ -118,6 +127,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 SurfaceIds = surfaceIds,
                 Scope = scope,
                 Config = AIAgentConfigSerializer.Deserialize(agentType, configJson),
+                StarterPrompts = starterPrompts,
                 IsActive = root.GetProperty("isActive").GetBoolean(),
                 Version = root.GetProperty("version").GetInt32(),
                 DateCreated = root.GetProperty("dateCreated").GetDateTime(),
@@ -195,6 +205,17 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
         if (fromConfig != toConfig)
         {
             changes.Add(new AIValueChange("Config", "(modified)", "(modified)"));
+        }
+
+        // Compare starter prompts (order matters — reordering is itself an authored change)
+        var fromStarterPrompts = string.Join('|', from.StarterPrompts.Select(p => p.Prompt));
+        var toStarterPrompts = string.Join('|', to.StarterPrompts.Select(p => p.Prompt));
+        if (fromStarterPrompts != toStarterPrompts)
+        {
+            changes.Add(new AIValueChange(
+                "StarterPrompts",
+                from.StarterPrompts.Count > 0 ? $"{from.StarterPrompts.Count} starter(s)" : "(none)",
+                to.StarterPrompts.Count > 0 ? $"{to.StarterPrompts.Count} starter(s)" : "(none)"));
         }
 
         if (from.IsActive != to.IsActive)

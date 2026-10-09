@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Core.RuntimeContext;
 
@@ -19,40 +19,7 @@ internal static class AIRuntimeContextStreamExtensions
     /// a caller whose own iterator created the scope. With no scope at all, the stream is returned as is.
     /// </remarks>
     public static IAsyncEnumerable<T> WithRuntimeContext<T>(this IAsyncEnumerable<T> source, IAIRuntimeContextScope? scope)
-        => (scope ?? AIRuntimeContextScopeProvider.CurrentScope) is { } entered ? Enumerate(source, entered) : source;
-
-    private static async IAsyncEnumerable<T> Enumerate<T>(
-        IAsyncEnumerable<T> source,
-        IAIRuntimeContextScope scope,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        IAsyncEnumerator<T> enumerator;
-        using (AIRuntimeContextScopeProvider.Enter(scope))
-        {
-            enumerator = source.GetAsyncEnumerator(cancellationToken);
-        }
-
-        try
-        {
-            while (true)
-            {
-                using (AIRuntimeContextScopeProvider.Enter(scope))
-                {
-                    if (!await enumerator.MoveNextAsync())
-                    {
-                        yield break;
-                    }
-                }
-
-                yield return enumerator.Current;
-            }
-        }
-        finally
-        {
-            using (AIRuntimeContextScopeProvider.Enter(scope))
-            {
-                await enumerator.DisposeAsync();
-            }
-        }
-    }
+        => (scope ?? AIRuntimeContextScopeProvider.CurrentScope) is { } entered
+            ? source.EnterEachStep(() => AIRuntimeContextScopeProvider.Enter(entered))
+            : source;
 }

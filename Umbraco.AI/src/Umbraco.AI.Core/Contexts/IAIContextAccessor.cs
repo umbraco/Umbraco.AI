@@ -4,8 +4,9 @@ namespace Umbraco.AI.Core.Contexts;
 /// Provides access to the current AI context during tool execution.
 /// </summary>
 /// <remarks>
-/// This is set by the context injection middleware before tool execution
-/// and cleared afterward. Uses AsyncLocal for thread-safety.
+/// This is set by the context injection middleware for each AI call and cleared afterward. It is held
+/// per async flow, so each call's tools see that call's context, even when calls run at the same time
+/// or one runs inside another.
 /// </remarks>
 public interface IAIContextAccessor
 {

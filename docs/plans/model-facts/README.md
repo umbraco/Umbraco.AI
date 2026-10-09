@@ -7,7 +7,7 @@ Read these in order:
 3. [x] **SPEC.md** — `GET connections/{id}/model-facts`, OpenRouter context window + price, and a `<uai-model-facts>` list under the profile Model field.
 4. [x] **STORIES.md** — 6 stories for slice 1 (contract, Metadata keys, built-in facts, OpenRouter, endpoint, UI) plus a slice 2 placeholder.
 5. [x] **PLAN.md** — 11 tasks; first parallel group is the Metadata keys (T1) and the public contract (T2).
-6. [ ] **BUILD-LOG.md** — <pending>
+6. [x] **BUILD-LOG.md** — 11 tasks done (10 code commits plus the pending-specs commit); 5 tasks needed a fix round after review. All suites green, live-checked in the backoffice.
 
 See `DECISION-LOG.md` for why things changed along the way.
 

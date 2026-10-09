@@ -37,3 +37,19 @@
   running (62/62 test:core, reviewer rerun). One fix round: a failed request raised a backoffice
   error toast (`tryExecute` now `disableNotifications`) and the error wasn't logged. Detail popover
   uses `uui-button` + `popovertarget` like the create-collection actions. Smoke: T10.
+- **09-10-2026 T10** `eae3713e`: `<uai-model-facts>` wired under the profile Model field; aria label
+  localized (`uaiModelFacts_about`, "About {0}"). build:core + 62/62 test:core (reviewer rerun).
+  Live (Playwright, demo site): OpenAI profile → nothing rendered; switch to OpenRouter → model
+  and facts cleared; `anthropic/claude-sonnet-4` → "Context window (tokens) 200,000" and
+  "Price per 1M tokens (in / out) $3.00 / $15.00"; info button opens the localized price note;
+  a `:free` model → context window only; no new console errors. Profile not saved.
+- **09-10-2026 T11**: PR #518 (idea doc) still open, so `docs/ideas/model-facts.md` isn't on this
+  branch to mark as promoted; do it when #518 merges (or fold the idea into this PR).
+  Follow-ups, not in this slice:
+  - Public docs PR (umbraco-docs-pr) for `IAIModelFactProvider`: register with
+    `[ComposeAfter(typeof(UmbracoAIComposer))]` so the built-in provider stays first; providers are
+    singletons (no scoped services); new `AIModelFact` members are optional `init` only.
+  - Release: raise OpenRouter's `Umbraco.AI.Core` floor above `[18.5.2, …)` and co-release.
+  - Price/CO2e wording review before public docs.
+  - Slice 2: sortable model picker (MF-7); prices under $0.005/1M show as $0.00.
+  - Optional cleanup: sibling `GET …/models` still swallows listing errors with a bare `catch`.

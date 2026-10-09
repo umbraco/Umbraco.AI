@@ -75,14 +75,14 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   module with a vitest spec, like `declared-settings.test.ts`. Lit text bindings only.
   depends-on: T8.
 
-- [ ] **T10**: wire: `<uai-model-facts>` into the profile Settings view. Render it in the Model
+- [x] **T10**: wire: `<uai-model-facts>` into the profile Settings view. Render it in the Model
   field's `slot="editor"` in `profile-details-workspace-view.element.ts`, bound to connection,
   capability and model. Verify on the demo site (Playwright): select an OpenRouter model → facts
   appear; switch model → they change; switch connection → they clear; a non-OpenRouter
   connection with no facts → nothing renders. `npm run build:core` green.
   depends-on: T9.
 
-- [ ] **T11**: docs housekeeping. If PR #518 has merged, set `docs/ideas/model-facts.md` status
+- [x] **T11**: docs housekeeping. If PR #518 has merged, set `docs/ideas/model-facts.md` status
   to "Promoted to `docs/plans/model-facts/`". Note in `BUILD-LOG.md` the follow-ups: public docs
   PR for the extension point (umbraco-docs-pr), OpenRouter's raised Core floor at release, and
   slice 2.

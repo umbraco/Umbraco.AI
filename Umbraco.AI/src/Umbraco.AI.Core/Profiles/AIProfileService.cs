@@ -88,6 +88,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
             AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
             AICapability.ImageGeneration => _options.DefaultImageGenerationProfileAlias,
+            AICapability.Decision => _options.DefaultDecisionProfileAlias,
             _ => null
         };
 
@@ -108,6 +109,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.Embedding => settings.DefaultEmbeddingProfileId,
             AICapability.SpeechToText => settings.DefaultSpeechToTextProfileId,
             AICapability.ImageGeneration => settings.DefaultImageGenerationProfileId,
+            AICapability.Decision => settings.DefaultDecisionProfileId,
             _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
         };
 
@@ -127,6 +129,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
             AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
             AICapability.ImageGeneration => _options.DefaultImageGenerationProfileAlias,
+            AICapability.Decision => _options.DefaultDecisionProfileAlias,
             _ => null
         };
 

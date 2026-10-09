@@ -54,7 +54,10 @@ public class GenerateImageController : ImageGenerationControllerBase
         [FromBody] GenerateImageRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        // Experimental gate: when the feature is off the capability does not exist as far as the API is concerned.
+        // Belt-and-suspenders alongside the shared AICapabilityGateFilter (applied via
+        // ImageGenerationControllerBase's [AICapabilityGate(AICapability.ImageGeneration)]): that
+        // filter protects real HTTP traffic, but a caller invoking this action directly (as unit
+        // tests do) bypasses the MVC filter pipeline entirely, so the flag is also checked here.
         if (!_experimentalFeatures.IsCapabilityEnabled(AICapability.ImageGeneration))
         {
             return NotFound();

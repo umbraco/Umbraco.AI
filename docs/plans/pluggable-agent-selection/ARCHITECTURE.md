@@ -31,12 +31,18 @@ in Core, an ordered chain where each entry adds to (or skips) the result. Using 
 collection-builder mechanism means ordering, `Exclude<T>`, and DI lifetimes all work the way
 Umbraco developers already expect.
 
-**Default registration:** `LLMAgentSelector` only. `StickyAgentSelector` ships but is **not**
-registered, so out-of-the-box behaviour is unchanged. Turning it on is one line:
+**Default registration (at the time this feature shipped):** `LLMAgentSelector` only.
+`StickyAgentSelector` ships but is **not** registered, so out-of-the-box behaviour is unchanged.
+Turning it on was one line:
 
 ```csharp
 builder.AIAgentSelectors().InsertBefore<LLMAgentSelector, StickyAgentSelector>();
 ```
+
+> **Superseded:** `docs/plans/decision-capability-release` added `DecisionAgentSelector`,
+> registered by default *before* `LLMAgentSelector` (decision 7). `InsertBefore<LLMAgentSelector, …>`
+> now lands a selector after Decision, which would override it — so the guidance for registering
+> `StickyAgentSelector` first in the chain became `builder.AIAgentSelectors().Insert<StickyAgentSelector>()`.
 
 ### Types
 

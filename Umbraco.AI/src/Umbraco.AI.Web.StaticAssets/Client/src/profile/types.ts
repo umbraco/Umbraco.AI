@@ -53,6 +53,14 @@ export interface UaiImageGenerationProfileSettings extends UaiProfileSettings {
 }
 
 /**
+ * Decision-specific profile settings. Empty today — Decision has no configurable settings, but the
+ * type exists so the capability can be handled uniformly alongside the others.
+ */
+export interface UaiDecisionProfileSettings extends UaiProfileSettings {
+    $type: "decision";
+}
+
+/**
  * Detail model for workspace editing.
  */
 export interface UaiProfileDetailModel extends UmbEntityModel {
@@ -114,4 +122,11 @@ export function isSpeechToTextSettings(settings: UaiProfileSettings | null): set
  */
 export function isImageGenerationSettings(settings: UaiProfileSettings | null): settings is UaiImageGenerationProfileSettings {
     return settings?.$type === "imageGeneration";
+}
+
+/**
+ * Type guard for decision settings.
+ */
+export function isDecisionSettings(settings: UaiProfileSettings | null): settings is UaiDecisionProfileSettings {
+    return settings?.$type === "decision";
 }

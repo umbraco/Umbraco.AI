@@ -54,6 +54,9 @@ parameters:
           - name: Umbraco.AI.ZAI
             changeVar: ZaiChanged
             hasNpm: false
+          - name: Umbraco.AI.TypeSafe
+            changeVar: TypesafeChanged
+            hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search
             changeVar: SearchChanged

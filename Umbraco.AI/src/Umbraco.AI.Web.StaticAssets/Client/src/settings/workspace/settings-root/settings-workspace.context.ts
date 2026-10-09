@@ -32,6 +32,7 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
         defaultEmbeddingProfileId: null,
         defaultSpeechToTextProfileId: null,
         defaultImageGenerationProfileId: null,
+        defaultDecisionProfileId: null,
         classifierChatProfileId: null,
         disclosureNoticeMode: "Always",
     });

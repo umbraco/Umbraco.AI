@@ -18,8 +18,8 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// What it writes also stays out of the running call's context.
 /// </para>
 /// <para>
-/// Contexts share one stack per request, so AI calls run in parallel from the same call (e.g. concurrent
-/// tool calls) can see each other's context. Tool calls run one at a time by default.
+/// The current context is held per async flow, so AI calls run in parallel from the same call (e.g.
+/// concurrent tool calls) each get their own context and never see each other's.
 /// </para>
 /// </remarks>
 internal static class AIRuntimeContextCallScope

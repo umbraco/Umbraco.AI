@@ -140,6 +140,64 @@ public class AIRuntimeContextFlowTests
     }
 
     [Fact]
+    public async Task ScopedProfileChatClient_StreamedFromACallersIterator_EveryUpdateSeesTheCallersScope()
+    {
+        // A caller (e.g. a package's own orchestrator) creates the scope inside its own iterator and streams a
+        // profile client in it. The client runs in the caller's context, so it must keep that context current
+        // for every update even though the caller's iterator steps run in its consumer's flow.
+        var probe = new ChatProbe(_scopeProvider, "Caller.Setting", updates: 3);
+        var client = new ScopedProfileChatClient(probe, Profile("writer"), _scopeProvider, _scopeProvider, _contributors);
+
+        async IAsyncEnumerable<ChatResponseUpdate> CallerAsync()
+        {
+            using var scope = _scopeProvider.CreateScope();
+            scope.Context.SetValue("Caller.Setting", "set by caller");
+            await foreach (var update in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "hi")]))
+            {
+                yield return update;
+            }
+        }
+
+        await foreach (var _ in CallerAsync())
+        {
+            _scopeProvider.Context.ShouldBeNull();
+        }
+
+        probe.Seen.ShouldBe(["set by caller", "set by caller", "set by caller"]);
+        probe.SeenAtDisposal.ShouldBe("set by caller");
+    }
+
+    [Fact]
+    public async Task SpeechToTextService_StreamTranscription_EveryUpdateSeesTheInlineFeature()
+    {
+        var probe = new SpeechProbe(_scopeProvider, Constants.ContextKeys.FeatureAlias, updates: 3);
+        var profile = Profile("default-speech", AICapability.SpeechToText);
+        var profileService = new Mock<IAIProfileService>();
+        profileService
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.SpeechToText, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        var clientFactory = new Mock<IAISpeechToTextClientFactory>();
+        clientFactory.Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>())).ReturnsAsync(probe);
+        var events = new Mock<IEventAggregator>();
+        events.Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        var service = new AISpeechToTextService(
+            clientFactory.Object,
+            profileService.Object,
+            new Mock<IAIGuardrailService>().Object,
+            events.Object,
+            _scopeProvider,
+            _scopeProvider,
+            _contributors);
+
+        await foreach (var _ in service.StreamTranscriptionAsync(stt => stt.WithAlias("dictation"), new MemoryStream([1, 2, 3])))
+        {
+        }
+
+        probe.Seen.ShouldBe(["dictation", "dictation", "dictation"]);
+        _scopeProvider.Context.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task ChatService_CallsStartedTogether_EachRunInTheirOwnContext()
     {
         // #524: e.g. a developer generating several summaries at once in one request.

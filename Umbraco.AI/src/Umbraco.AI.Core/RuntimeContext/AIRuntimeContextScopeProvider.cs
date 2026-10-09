@@ -13,16 +13,21 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// The current context is held in an <see cref="AsyncLocal{T}"/>, so work running in parallel (e.g. two AI
 /// calls started together) each see their own context, never one the other made current. The flip side is
 /// that a context made current inside an async method, including an async iterator between its yields, is
-/// not current for its caller. Code that creates a scope inside an async iterator re-enters it around each
-/// step of the stream it runs (see <see cref="AIRuntimeContextStreamExtensions"/>).
+/// not current for its caller. Streaming entry points re-enter the scope around each step of the stream they
+/// run (see <see cref="AIRuntimeContextStreamExtensions"/>).
 /// </para>
 /// </remarks>
 internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProvider, IAIRuntimeContextAccessor
 {
-    private static readonly AsyncLocal<Scope?> CurrentScope = new();
+    private static readonly AsyncLocal<Scope?> CurrentNode = new();
+
+    /// <summary>
+    /// The scope current in this async flow, if any.
+    /// </summary>
+    internal static IAIRuntimeContextScope? CurrentScope => Scope.Live(CurrentNode.Value);
 
     /// <inheritdoc />
-    public AIRuntimeContext? Context => Scope.Live(CurrentScope.Value)?.Context;
+    public AIRuntimeContext? Context => Scope.Live(CurrentNode.Value)?.Context;
 
     /// <inheritdoc />
     public IAIRuntimeContextScope CreateScope()
@@ -31,8 +36,8 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     /// <inheritdoc />
     public IAIRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items)
     {
-        var scope = new Scope(new AIRuntimeContext(items), Scope.Live(CurrentScope.Value));
-        CurrentScope.Value = scope;
+        var scope = new Scope(new AIRuntimeContext(items), Scope.Live(CurrentNode.Value));
+        CurrentNode.Value = scope;
         return scope;
     }
 
@@ -47,14 +52,14 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
             return null;
         }
 
-        var previous = CurrentScope.Value;
-        CurrentScope.Value = entered;
+        var previous = CurrentNode.Value;
+        CurrentNode.Value = entered;
         return new Restore(previous);
     }
 
     private sealed class Restore(Scope? previous) : IDisposable
     {
-        public void Dispose() => CurrentScope.Value = previous;
+        public void Dispose() => CurrentNode.Value = previous;
     }
 
     /// <summary>
@@ -70,25 +75,15 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
         {
             Context = context;
             _parent = parent;
+            ParentContext = parent?.Context;
+            Depth = (parent?.Depth ?? 0) + 1;
         }
 
         public AIRuntimeContext Context { get; }
 
-        public AIRuntimeContext? ParentContext => Live(_parent)?.Context;
+        public AIRuntimeContext? ParentContext { get; }
 
-        public int Depth
-        {
-            get
-            {
-                var depth = 0;
-                for (var scope = Live(this); scope is not null; scope = Live(scope._parent))
-                {
-                    depth++;
-                }
-
-                return depth;
-            }
-        }
+        public int Depth { get; }
 
         public bool IsDisposed => _disposed;
 
@@ -119,9 +114,9 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
             _disposed = true;
 
             // Only changes the current scope for the flow disposing it; any other flow skips it as disposed.
-            if (ReferenceEquals(CurrentScope.Value, this))
+            if (ReferenceEquals(CurrentNode.Value, this))
             {
-                CurrentScope.Value = Live(_parent);
+                CurrentNode.Value = Live(_parent);
             }
         }
     }

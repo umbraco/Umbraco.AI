@@ -8,16 +8,18 @@ namespace Umbraco.AI.Core.RuntimeContext;
 internal static class AIRuntimeContextStreamExtensions
 {
     /// <summary>
-    /// Makes <paramref name="scope"/> current around each step of <paramref name="source"/>.
+    /// Makes <paramref name="scope"/>, or with no scope the scope current now, current around each step of
+    /// <paramref name="source"/>.
     /// </summary>
     /// <remarks>
     /// The current context is held per async flow, and an async iterator's steps run in its caller's flow, so a
-    /// scope an iterator creates is no longer current once it has yielded. An iterator that creates a scope runs
-    /// the stream it wraps through this, so every step of that stream (and its disposal) sees the scope. With a
-    /// <c>null</c> scope (the call runs in its caller's context) the stream is returned as is.
+    /// scope made current inside an iterator is no longer current once it has yielded. Streaming entry points run
+    /// the stream they wrap through this: with the scope they created, or, when they run in their caller's
+    /// context (<paramref name="scope"/> is <c>null</c>), with the scope current when this is called. That covers
+    /// a caller whose own iterator created the scope. With no scope at all, the stream is returned as is.
     /// </remarks>
     public static IAsyncEnumerable<T> WithRuntimeContext<T>(this IAsyncEnumerable<T> source, IAIRuntimeContextScope? scope)
-        => scope is null ? source : Enumerate(source, scope);
+        => (scope ?? AIRuntimeContextScopeProvider.CurrentScope) is { } entered ? Enumerate(source, entered) : source;
 
     private static async IAsyncEnumerable<T> Enumerate<T>(
         IAsyncEnumerable<T> source,

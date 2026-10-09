@@ -2,12 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Web.Api.Management.Settings.Models;
 using Umbraco.AI.Web.Authorization;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Web.Api.Management.Settings.Controllers;
@@ -26,6 +28,22 @@ public class UpdateSettingsController : SettingsControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateSettingsController"/> class.
     /// </summary>
+    [Obsolete("Use the constructor that accepts an IAIProfileService so that default-profile slots are validated against their required capability. Will be removed in v19.")]
+    public UpdateSettingsController(IAISettingsService settingsService, IUmbracoMapper umbracoMapper)
+        : this(settingsService, StaticServiceProvider.Instance.GetRequiredService<IAIProfileService>(), umbracoMapper)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateSettingsController"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Marked as the activation constructor: MVC builds controllers through
+    /// <c>ActivatorUtilities</c>, which requires exactly one applicable constructor and throws when
+    /// it can satisfy more than one. Keeping the obsolete overload around for binary compatibility
+    /// means this attribute is what stops activation becoming ambiguous.
+    /// </remarks>
+    [ActivatorUtilitiesConstructor]
     public UpdateSettingsController(
         IAISettingsService settingsService,
         IAIProfileService profileService,

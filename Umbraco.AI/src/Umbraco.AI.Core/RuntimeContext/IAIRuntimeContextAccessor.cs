@@ -5,7 +5,8 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// </summary>
 /// <remarks>
 /// Inject this interface in tools, services, and middleware that need to read from
-/// or write to the runtime context. The context is only available within an active scope.
+/// or write to the runtime context. The context is only available within an active scope, in the
+/// async flow that created it (see <see cref="IAIRuntimeContextScopeProvider"/>).
 /// </remarks>
 public interface IAIRuntimeContextAccessor
 {

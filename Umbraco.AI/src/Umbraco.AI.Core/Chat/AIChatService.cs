@@ -267,7 +267,7 @@ internal sealed class AIChatService : IAIChatService
             ApplyOutputSchema(mergedOptions, builder.OutputSchema);
             ApplyBuilderTools(mergedOptions, builder);
 
-            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken))
+            await foreach (var update in chatClient.GetStreamingResponseAsync(messages.ToList(), mergedOptions, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

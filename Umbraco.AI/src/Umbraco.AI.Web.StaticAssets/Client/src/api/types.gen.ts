@@ -12,6 +12,8 @@ export type AiDocumentMetadataModel = {
     name?: null | string;
 };
 
+export type AiModelFactToneModel = 'Neutral' | 'Positive' | 'Warning';
+
 export type AiPropertyOperationModel = 'AddItem' | 'RemoveItem' | 'MoveItem' | 'SetValue' | 'ClearValue';
 
 export type AiPropertyValueOperationErrorModel = {
@@ -428,6 +430,26 @@ export type ModelDescriptorResponseModel = {
     metadata?: null | {
         [key: string]: string;
     };
+};
+
+export type ModelFactResponseModel = {
+    key: string;
+    label: string;
+    shortLabel?: null | string;
+    value: string;
+    sortValue?: null | number;
+    detail?: null | string;
+    tone: AiModelFactToneModel;
+    url?: null | string;
+};
+
+export type ModelFactsItemResponseModel = {
+    model: ModelRefModel;
+    facts: Array<ModelFactResponseModel>;
+};
+
+export type ModelFactsResponseModel = {
+    items: Array<ModelFactsItemResponseModel>;
 };
 
 export type ModelRefModel = {
@@ -1514,6 +1536,44 @@ export type GetCapabilitiesResponses = {
 };
 
 export type GetCapabilitiesResponse = GetCapabilitiesResponses[keyof GetCapabilitiesResponses];
+
+export type GetModelFactsData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+    };
+    query: {
+        capability: string;
+        modelId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/model-facts';
+};
+
+export type GetModelFactsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetModelFactsError = GetModelFactsErrors[keyof GetModelFactsErrors];
+
+export type GetModelFactsResponses = {
+    /**
+     * OK
+     */
+    200: ModelFactsResponseModel;
+};
+
+export type GetModelFactsResponse = GetModelFactsResponses[keyof GetModelFactsResponses];
 
 export type GetModelsData = {
     body?: never;

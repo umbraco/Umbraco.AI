@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -61,7 +62,7 @@ public class ModelFactsConnectionController : ConnectionControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetModelFacts(
         IdOrAlias connectionIdOrAlias,
-        [FromQuery] string? capability,
+        [FromQuery, Required] string? capability,
         [FromQuery] string? modelId,
         CancellationToken cancellationToken = default)
     {

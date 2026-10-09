@@ -99,10 +99,11 @@ public class AIRuntimeContextScopeProviderTests
         // Act: dispose the outer scope first.
         Should.NotThrow(() => scope1.Dispose());
 
-        // Assert: the inner scope stays current, then nothing is, as the outer scope is already disposed.
+        // Assert: the inner scope stays current (its depth and parent are fixed when it is created), then nothing
+        // is, as the outer scope is already disposed.
         _provider.Context.ShouldBeSameAs(scope2.Context);
-        scope2.ParentContext.ShouldBeNull();
-        scope2.Depth.ShouldBe(1);
+        scope2.ParentContext.ShouldBeSameAs(scope1.Context);
+        scope2.Depth.ShouldBe(2);
 
         scope2.Dispose();
         _provider.Context.ShouldBeNull();

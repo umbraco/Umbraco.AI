@@ -17,9 +17,9 @@ namespace Umbraco.AI.Google.Errors;
 /// to the shared mapping (for genuine transport failures such as DNS or TLS).
 /// </para>
 /// <para>
-/// <see cref="ClientError"/> (4xx) and <see cref="ServerError"/> (5xx) are matched directly rather than
-/// through their <c>ApiException</c> base, because Google.GenAI only introduced that base class after
-/// the lowest version this package supports.
+/// <see cref="ClientError"/> (4xx) and <see cref="ServerError"/> (5xx) are matched directly. They were
+/// written before Google.GenAI added their <c>ApiException</c> base class; the current floor (1.22.0)
+/// has it, so matching on that base instead is now an option.
 /// </para>
 /// </remarks>
 internal static partial class GoogleErrorMapping

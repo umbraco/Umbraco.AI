@@ -93,8 +93,9 @@ No hardcoded model list — the provider adapts automatically as Google adds or 
 `GoogleErrorMapping` reads the status carried by `ClientError`/`ServerError`. Those derive from
 `HttpRequestException` but keep the status in their own property, which the shared mapping can't see.
 It also tells a daily quota from a per-minute one, and reads the `API_KEY_INVALID` reason, because
-Google reports a bad key as HTTP 400. Match `ClientError`/`ServerError` directly: the `ApiException`
-base class only exists in newer Google.GenAI versions than the lowest one supported.
+Google reports a bad key as HTTP 400. It matches `ClientError`/`ServerError` directly. Their shared
+`ApiException` base class is missing from older Google.GenAI versions but exists from the current
+floor (1.22.0), so matching on the base is now an option.
 
 ## Key Namespaces
 

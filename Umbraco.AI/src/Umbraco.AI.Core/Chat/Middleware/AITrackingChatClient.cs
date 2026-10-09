@@ -62,21 +62,19 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
         var updates = new List<ChatResponseUpdate>();
         Exception? captured = null;
 
-        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior).
+        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior). The scope is
+        // entered around each step: recording scopes are AsyncLocal and don't survive this iterator's yields.
         await using var enumerator = base.GetStreamingResponseAsync(messages, options, cancellationToken)
+            .EnterEachStep(scope.EnterScope)
             .GetAsyncEnumerator(cancellationToken);
         while (true)
         {
             ChatResponseUpdate current;
             try
             {
-                // Entered per step: recording scopes are AsyncLocal and don't survive this iterator's yields.
-                using (scope.EnterScope())
+                if (!await enumerator.MoveNextAsync())
                 {
-                    if (!await enumerator.MoveNextAsync())
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 current = enumerator.Current;

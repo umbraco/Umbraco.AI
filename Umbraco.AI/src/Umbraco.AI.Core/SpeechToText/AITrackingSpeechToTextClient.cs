@@ -4,6 +4,7 @@ using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
 
@@ -59,21 +60,19 @@ internal sealed class AITrackingSpeechToTextClient : AIBoundSpeechToTextClientBa
         var textParts = new List<string>();
         Exception? captured = null;
 
-        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior).
+        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior). The scope is
+        // entered around each step: recording scopes are AsyncLocal and don't survive this iterator's yields.
         await using var enumerator = base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken)
+            .EnterEachStep(scope.EnterScope)
             .GetAsyncEnumerator(cancellationToken);
         while (true)
         {
             SpeechToTextResponseUpdate current;
             try
             {
-                // Entered per step: recording scopes are AsyncLocal and don't survive this iterator's yields.
-                using (scope.EnterScope())
+                if (!await enumerator.MoveNextAsync())
                 {
-                    if (!await enumerator.MoveNextAsync())
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 current = enumerator.Current;

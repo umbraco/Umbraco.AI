@@ -139,5 +139,38 @@ public class AIDecisionServiceTests
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(
             () => service.AskAsync("missing", question));
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AskAsync_WithNoProfile_UsesDefaultProfile()
+    {
+        // Arrange
+        var profile = new AIProfileBuilder()
+            .WithAlias("default-decision")
+            .WithCapability(AICapability.Decision)
+            .Build();
+        var fakeClient = new FakeDecisionClient(request => new AIDecisionResponse
+        {
+            Answers = new Dictionary<string, AIDecisionAnswer> { [request.Questions[0].Id!] = new AIBinaryDecisionAnswer { TrueProbability = 0.95 } },
+        });
+
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Decision, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeClient);
+
+        var service = CreateService();
+        var question = new AIBinaryDecisionQuestion { Instructions = "is this spam?" };
+
+        // Act
+        var response = await service.AskAsync(question);
+
+        // Assert
+        response.Answer.IsTrue().ShouldBeTrue();
     }
 }

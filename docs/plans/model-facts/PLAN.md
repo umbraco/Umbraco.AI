@@ -34,7 +34,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   `AddUmbracoAICore`.
   depends-on: T2. parallel-group: B
 
-- [ ] **T4**: story MF-3, MF-1 (AC2). Add internal `AIMetadataModelFactProvider` (reads T1's
+- [x] **T4**: story MF-3, MF-1 (AC2). Add internal `AIMetadataModelFactProvider` (reads T1's
   readers, `CacheDuration = TimeSpan.Zero`, never throws) and register it first via
   `builder.AIModelFactProviders().Append<AIMetadataModelFactProvider>()` in `AddUmbracoAICore`.
   depends-on: T1, T2. parallel-group: B

@@ -57,3 +57,7 @@
   is abandoned at the timeout (its task keeps running; acceptable for a misbehaving provider).
   Urls are stored normalised (`AbsoluteUri`). Fact providers resolve as singletons, so they can't
   inject scoped services directly; note this in the public docs (T11).
+- **09-10-2026** (T4) A provider that writes a zero price gets a "$0.00" fact (honest claim of
+  free); only OpenRouter's writer drops zero. Prices under half a cent per 1M show as $0.00 (F2);
+  revisit in slice 2. Public docs must tell packages to `[ComposeAfter(typeof(UmbracoAIComposer))]`
+  so the built-in provider stays first.

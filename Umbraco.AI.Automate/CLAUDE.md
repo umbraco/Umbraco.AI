@@ -38,6 +38,11 @@ Single-project structure (consistent with Deploy connector pattern):
 **Actions** - Workflow steps that execute AI operations:
 - `RunAgentAction` - Executes an AI agent with a message and returns the response
 
+**Failure categories** - The AI actions report a failed step with the `StepRunErrorCategory` that matches the
+provider's `AIProviderException` (`StepErrorCategoryMapping`), not `Unknown`. Automate skips the retry budget
+for terminal categories (authentication, configuration, validation, cancellation) and retries the rest, so a
+rejected API key or an unknown model is not retried, while a rate limit or an unavailable model is.
+
 **Composer**:
 - `UmbracoAIAutomateComposer` - Minimal composer; actions are auto-discovered
 

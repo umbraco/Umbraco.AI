@@ -42,3 +42,7 @@
   types they use don't exist yet, and a non-compiling spec would break every build. The task that
   makes a file pass removes its guard in the same commit. Specs were written in the worktree, not
   on trunk, so they travel with the feature branch.
+- **09-10-2026** (T1) Readers are strict: context window must be a positive int; pricing needs all
+  three keys, invariant decimal without thousands separators, >= 0. Zero price is valid in the
+  reader; turning "0" into "no fact" is the writer's (OpenRouter's) job. ReadInt now pins
+  invariant culture (also used by image.maxEdge; no behaviour change).

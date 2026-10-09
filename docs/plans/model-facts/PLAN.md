@@ -9,7 +9,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
 `Web` = `Umbraco.AI/src/Umbraco.AI.Web`, `FE` = `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src`,
 `OR` = `Umbraco.AI.OpenRouter`.
 
-- [ ] **T1**: story MF-2. Add the standard Metadata keys `model.contextWindow`,
+- [x] **T1**: story MF-2. Add the standard Metadata keys `model.contextWindow`,
   `pricing.inputPerMillionTokens`, `pricing.outputPerMillionTokens`, `pricing.currency` to
   `Core/Models/AIModelMetadataKeys.cs`; public record `AIModelPricing`; readers
   `GetContextWindow()` / `GetPricing()` in `Core/Extensions/AIModelDescriptorExtensions.cs`; a writer

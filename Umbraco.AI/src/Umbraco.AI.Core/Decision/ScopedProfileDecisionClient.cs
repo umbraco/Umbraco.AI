@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 
 #pragma warning disable UMBRACOAI_DECISION // IAIDecisionClient is experimental
 
@@ -14,14 +15,6 @@ namespace Umbraco.AI.Core.Decision;
 /// with profile metadata (ProfileId, ProfileAlias, ProviderId, ModelId) whenever a decision is asked.
 /// Mirrors <c>ScopedProfileSpeechToTextClient</c>.
 /// </para>
-/// <para>
-/// <strong>Scope Management:</strong>
-/// </para>
-/// <list type="bullet">
-///   <item>If an active scope exists, uses it to set metadata</item>
-///   <item>If no scope exists, creates a temporary scope for the execution</item>
-///   <item>Automatically disposes any scope it creates after execution completes</item>
-/// </list>
 /// </remarks>
 internal sealed class ScopedProfileDecisionClient : IAIDecisionClient
 {
@@ -51,16 +44,11 @@ internal sealed class ScopedProfileDecisionClient : IAIDecisionClient
         AIDecisionOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context != null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, []);
 
             PopulateProfileMetadata();
             return await _innerClient.GetResponseAsync(request, options, cancellationToken);
@@ -93,10 +81,6 @@ internal sealed class ScopedProfileDecisionClient : IAIDecisionClient
             return;
         }
 
-        context.SetValue(Constants.ContextKeys.ProfileId, _profile.Id);
-        context.SetValue(Constants.ContextKeys.ProfileAlias, _profile.Alias);
-        context.SetValue(Constants.ContextKeys.ProfileVersion, _profile.Version);
-        context.SetValue(Constants.ContextKeys.ProviderId, _profile.Model.ProviderId);
-        context.SetValue(Constants.ContextKeys.ModelId, _profile.Model.ModelId);
+        context.SetProfileMetadata(_profile);
     }
 }

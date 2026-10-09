@@ -43,3 +43,33 @@ export interface UaiModelDescriptorModel {
     name: string;
     metadata?: Record<string, string>;
 }
+
+/**
+ * Display tone of a model fact.
+ * Maps from API's AiModelFactToneModel.
+ */
+export type UaiModelFactTone = "Neutral" | "Positive" | "Warning";
+
+/**
+ * A single fact about a model (e.g. context window, price) for UI consumption.
+ * Maps from API's ModelFactResponseModel.
+ */
+export interface UaiModelFactModel {
+    key: string;
+    label: string;
+    shortLabel?: string;
+    value: string;
+    sortValue?: number;
+    detail?: string;
+    tone: UaiModelFactTone;
+    url?: string;
+}
+
+/**
+ * The facts known for one model, for UI consumption.
+ * Maps from API's ModelFactsItemResponseModel.
+ */
+export interface UaiModelFactsModel {
+    model: UaiModelRefModel;
+    facts: UaiModelFactModel[];
+}

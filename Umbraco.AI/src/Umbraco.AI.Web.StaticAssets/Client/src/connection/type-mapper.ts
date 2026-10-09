@@ -2,9 +2,17 @@ import type {
     ConnectionResponseModel,
     ConnectionItemResponseModel,
     ModelDescriptorResponseModel,
+    ModelFactResponseModel,
+    ModelFactsItemResponseModel,
 } from "../api/types.gen.js";
 import { UAI_CONNECTION_ENTITY_TYPE } from "./constants.js";
-import type { UaiConnectionDetailModel, UaiConnectionItemModel, UaiModelDescriptorModel } from "./types.js";
+import type {
+    UaiConnectionDetailModel,
+    UaiConnectionItemModel,
+    UaiModelDescriptorModel,
+    UaiModelFactModel,
+    UaiModelFactsModel,
+} from "./types.js";
 
 export const UaiConnectionTypeMapper = {
     toDetailModel(response: ConnectionResponseModel): UaiConnectionDetailModel {
@@ -62,6 +70,29 @@ export const UaiConnectionTypeMapper = {
             },
             name: response.name,
             metadata: response.metadata ?? undefined,
+        };
+    },
+
+    toModelFactModel(response: ModelFactResponseModel): UaiModelFactModel {
+        return {
+            key: response.key,
+            label: response.label,
+            shortLabel: response.shortLabel ?? undefined,
+            value: response.value,
+            sortValue: response.sortValue ?? undefined,
+            detail: response.detail ?? undefined,
+            tone: response.tone,
+            url: response.url ?? undefined,
+        };
+    },
+
+    toModelFactsModel(response: ModelFactsItemResponseModel): UaiModelFactsModel {
+        return {
+            model: {
+                providerId: response.model.providerId,
+                modelId: response.model.modelId,
+            },
+            facts: response.facts.map(UaiConnectionTypeMapper.toModelFactModel),
         };
     },
 };

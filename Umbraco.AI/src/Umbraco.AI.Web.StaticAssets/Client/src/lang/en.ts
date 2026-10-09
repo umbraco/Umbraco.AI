@@ -48,6 +48,14 @@ export default {
         testConnectionSuccess: "Connection test successful",
         testConnectionFailed: "Connection test failed",
     },
+    uaiModelFacts: {
+        contextWindow: "Context window (tokens)",
+        contextWindowShort: "Context",
+        price: "Price per 1M tokens (in / out)",
+        priceShort: "Price",
+        priceDetail: "Per 1M tokens, input / output. List price from the provider; may be out of date.",
+        learnMore: "Learn more",
+    },
     uaiProfile: {
         selectProfile: "Select AI profile",
         addProfile: "Add profile",

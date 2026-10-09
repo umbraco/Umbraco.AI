@@ -39,7 +39,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   `builder.AIModelFactProviders().Append<AIMetadataModelFactProvider>()` in `AddUmbracoAICore`.
   depends-on: T1, T2. parallel-group: B
 
-- [ ] **T5**: story MF-4. First, `curl https://openrouter.ai/api/v1/models` (public, no key) and
+- [x] **T5**: story MF-4. First, `curl https://openrouter.ai/api/v1/models` (public, no key) and
   confirm the `context_length` and `pricing.prompt` / `pricing.completion` shapes; record what
   was found in `BUILD-LOG.md`. Then extend `OR/src/.../OpenRouterModelsResponse.cs` and write
   the T1 keys in `OpenRouterChatCapability.GetModelsAsync` alongside the existing settings-support

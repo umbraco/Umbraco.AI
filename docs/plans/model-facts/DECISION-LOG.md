@@ -61,3 +61,10 @@
   free); only OpenRouter's writer drops zero. Prices under half a cent per 1M show as $0.00 (F2);
   revisit in slice 2. Public docs must tell packages to `[ComposeAfter(typeof(UmbracoAIComposer))]`
   so the built-in provider stays first.
+- **09-10-2026** (T5) OpenRouter drops a price only when both input and output are zero (or
+  either is invalid/negative/over 1,000,000 per token). A mixed free-input/paid-output model gets
+  a price with $0.00 input (none exist today). Fields are read leniently so bad upstream data
+  means "no fact", never a broken model list. The OpenRouter metadata merge lets existing
+  (settings-support) entries win, like core's `WithMetadata`.
+- **09-10-2026** (T5) OpenRouter now needs a Core newer than the current floor `[18.5.2, …)`.
+  Raise the range at release (T11 note).

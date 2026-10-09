@@ -95,7 +95,7 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
 
             PopulateProfileMetadata();
 
-            await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
+            await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

@@ -82,7 +82,7 @@ internal sealed class ScopedProfileSpeechToTextClient : AIBoundSpeechToTextClien
 
             PopulateProfileMetadata();
 
-            await foreach (var update in base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken))
+            await foreach (var update in base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

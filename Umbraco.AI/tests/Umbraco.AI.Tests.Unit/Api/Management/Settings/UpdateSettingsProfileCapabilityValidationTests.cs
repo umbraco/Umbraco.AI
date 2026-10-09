@@ -4,9 +4,11 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Unit.Api.Management;
 using Umbraco.AI.Web.Api.Management.Settings.Controllers;
 using Umbraco.AI.Web.Api.Management.Settings.Mapping;
 using Umbraco.AI.Web.Api.Management.Settings.Models;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Scoping;
 
@@ -172,5 +174,42 @@ public class UpdateSettingsProfileCapabilityValidationTests
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
         var problemDetails = badRequestResult.Value.ShouldBeOfType<ProblemDetails>();
         problemDetails.Detail.ShouldContain("DefaultChatProfileId");
+    }
+
+    [Collection(nameof(StaticServiceProviderTestCollection))]
+    public class GivenAControllerBuiltThroughItsObsoleteConstructor : IDisposable
+    {
+        private readonly IServiceProvider? _previous = StaticServiceProvider.Instance;
+
+        public void Dispose() => StaticServiceProvider.Instance = _previous!;
+
+        [Fact]
+        public async Task StillValidatesViaTheServiceLocatorResolvedProfileService()
+        {
+            var settingsService = new Mock<IAISettingsService>();
+            settingsService
+                .Setup(x => x.SaveSettingsAsync(It.IsAny<AISettings>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((AISettings s, CancellationToken _) => s);
+
+            var profileId = Guid.NewGuid();
+            var profileService = new Mock<IAIProfileService>();
+            profileService
+                .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new AIProfileBuilder().WithId(profileId).WithCapability(AICapability.Embedding).Build());
+
+            var services = new Mock<IServiceProvider>();
+            services.Setup(x => x.GetService(typeof(IAIProfileService))).Returns(profileService.Object);
+            StaticServiceProvider.Instance = services.Object;
+
+#pragma warning disable CS0618 // Exercises the obsolete constructor on purpose
+            var controller = new UpdateSettingsController(settingsService.Object, CreateMapper());
+#pragma warning restore CS0618
+
+            // A wrong-capability profile (Embedding) in the Chat slot still gets rejected, proving
+            // the service-locator-resolved IAIProfileService is wired up and actually consulted.
+            var result = await controller.UpdateSettings(new UpdateSettingsRequestModel { DefaultChatProfileId = profileId });
+
+            result.ShouldBeOfType<BadRequestObjectResult>();
+        }
     }
 }

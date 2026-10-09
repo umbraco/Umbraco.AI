@@ -65,6 +65,7 @@ public static class UmbracoBuilderExtensions
             .Add<UsageDetailsMapDefinition>()
             .Add<CommonMapDefinition>()
             .Add<ConnectionMapDefinition>()
+            .Add<ModelFactsMapDefinition>()
             .Add<ProfileMapDefinition>()
             .Add<ContextMapDefinition>()
             .Add<ContextResourceTypeMapDefinition>()

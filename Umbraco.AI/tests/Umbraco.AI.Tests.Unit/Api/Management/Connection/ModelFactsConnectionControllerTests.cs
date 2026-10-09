@@ -1,10 +1,9 @@
-#if MODEL_FACTS_PENDING // Pending: T6 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-5: The backoffice can fetch a connection's model facts (AC1-AC12).
 // Real entry point: the ModelFactsConnectionController.GetModelFacts action, with a real UmbracoMapper
 // (CommonMapDefinition + ConnectionMapDefinition + the new ModelFactsMapDefinition). The connection
 // service and IAIModelFactService are mocked; the fact service mock honours its contract by returning
 // facts only for the models it is asked about.
-// Assumed: ctor (IAIConnectionService, IAIModelFactService, IUmbracoMapper, ILogger<ModelFactsConnectionController>);
+// Assumed: ctor (IAIConnectionService, IAIModelFactService, IAIExperimentalFeatures, IUmbracoMapper, ILogger<ModelFactsConnectionController>);
 // action GetModelFacts(IdOrAlias, string? capability, string? modelId, CancellationToken);
 // ModelFactsResponseModel.Items -> ModelFactsItemResponseModel { Model (ModelRefModel), Facts }
 // -> ModelFactResponseModel { Key, Label, ShortLabel, Value, SortValue, Detail, Tone, Url }.
@@ -17,6 +16,7 @@ using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.ModelFacts;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.AI.Web.Api.Common.Models;
@@ -44,6 +44,7 @@ public class ModelFactsConnectionControllerTests
         protected readonly Guid ConnectionId = Guid.NewGuid();
         protected readonly Mock<IAIConnectionService> ConnectionService = new();
         protected readonly Mock<IAIModelFactService> FactService = new();
+        protected readonly Mock<IAIExperimentalFeatures> ExperimentalFeatures = new();
         protected readonly Mock<ILogger<ModelFactsConnectionController>> Logger = new();
         protected readonly Mock<IAIConfiguredCapability> ChatCapability = new();
         protected readonly Dictionary<string, IReadOnlyList<AIModelFact>> KnownFacts = new();
@@ -86,6 +87,7 @@ public class ModelFactsConnectionControllerTests
                         .Where(kv => models.Any(m => m.Model.ModelId == kv.Key))
                         .ToDictionary(kv => kv.Key, kv => kv.Value));
 
+            ExperimentalFeatures.Setup(x => x.IsCapabilityEnabled(It.IsAny<AICapability>())).Returns(true);
             Logger.Setup(l => l.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
         }
 
@@ -93,6 +95,7 @@ public class ModelFactsConnectionControllerTests
             => new(
                 ConnectionService.Object,
                 FactService.Object,
+                ExperimentalFeatures.Object,
                 new UmbracoMapper(
                     new MapDefinitionCollection(() => new IMapDefinition[]
                     {
@@ -222,6 +225,10 @@ public class ModelFactsConnectionControllerTests
         [Fact] // MF-5 AC7
         public async Task RequestingAnUnparseableCapability_Returns400()
             => (await GetByIdAsync("Banana")).ShouldBeOfType<BadRequestObjectResult>();
+
+        [Fact]
+        public async Task RequestingANumericCapability_Returns400()
+            => (await GetByIdAsync("1")).ShouldBeOfType<BadRequestObjectResult>();
     }
 
     public class GivenTheConnectionHasNoEmbeddingCapability : ConnectionScenario
@@ -280,6 +287,83 @@ public class ModelFactsConnectionControllerTests
         }
     }
 
+    public class GivenNoConnectionMatchesAndNoCapabilityIsGiven : ConnectionScenario
+    {
+        [Fact]
+        public async Task Requesting_Returns400()
+            => (await GetAsync(new IdOrAlias("nope"), capability: null)).ShouldBeOfType<BadRequestObjectResult>();
+    }
+
+    public class GivenTheCapabilityIsDisabled : ConnectionScenario
+    {
+        public GivenTheCapabilityIsDisabled()
+        {
+            KnownFacts["m1"] = [MakeFact("f1")];
+            ExperimentalFeatures.Setup(x => x.IsCapabilityEnabled(AICapability.Chat)).Returns(false);
+        }
+
+        [Fact]
+        public async Task Requesting_Returns200()
+            => (await GetByIdAsync("Chat")).ShouldBeOfType<OkObjectResult>();
+
+        [Fact]
+        public async Task Requesting_ReturnsNoItems()
+            => ItemsOf(await GetByIdAsync("Chat")).ShouldBeEmpty();
+    }
+
+    public class GivenModelListingTimesOutWithoutTheCallerCancelling : ConnectionScenario
+    {
+        public GivenModelListingTimesOutWithoutTheCallerCancelling()
+        {
+            KnownFacts["m1"] = [MakeFact("f1")];
+            ChatCapability
+                .Setup(x => x.GetModelsAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new TaskCanceledException("HttpClient timeout"));
+        }
+
+        [Fact]
+        public async Task Requesting_Returns200()
+            => (await GetByIdAsync("Chat")).ShouldBeOfType<OkObjectResult>();
+
+        [Fact]
+        public async Task Requesting_ReturnsNoItems()
+            => ItemsOf(await GetByIdAsync("Chat")).ShouldBeEmpty();
+
+        [Fact]
+        public async Task Requesting_LogsAWarning()
+        {
+            await GetByIdAsync("Chat");
+
+            Logger.Verify(
+                l => l.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.AtLeastOnce);
+        }
+    }
+
+    public class GivenTheProviderListsAModelTwice : ConnectionScenario
+    {
+        public GivenTheProviderListsAModelTwice()
+        {
+            KnownFacts["m1"] = [MakeFact("f1")];
+            ChatCapability
+                .Setup(x => x.GetModelsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<AIModelDescriptor>
+                {
+                    new(new AIModelRef(ProviderId, "m1"), "Model 1"),
+                    new(new AIModelRef(ProviderId, "m1"), "Model 1 again"),
+                });
+        }
+
+        [Fact]
+        public async Task Requesting_ReturnsOneItem()
+            => ItemsOf(await GetByIdAsync("Chat")).Count.ShouldBe(1);
+    }
+
     public class GivenTheControllerType
     {
         [Fact] // MF-5 AC12
@@ -290,4 +374,3 @@ public class ModelFactsConnectionControllerTests
                 .ShouldContain(AIAuthorizationPolicies.SectionAccessAI);
     }
 }
-#endif

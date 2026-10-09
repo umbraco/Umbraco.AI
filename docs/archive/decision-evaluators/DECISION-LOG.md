@@ -1,5 +1,7 @@
 # Decision Log
 
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 ## 25-09-2026 — Scoped during `umb-explore`
 
 - Stacked on `v18/feature/decision-capability` (not `v18/dev`), since Decision isn't merged.

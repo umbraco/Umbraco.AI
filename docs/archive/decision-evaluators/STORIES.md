@@ -1,5 +1,7 @@
 # Stories
 
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 Derived from `SPEC.md`. Story ids `DE-n` ("decision evaluators") are referenced by specs and
 `PLAN.md`. Don't renumber.
 

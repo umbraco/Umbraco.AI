@@ -1,5 +1,7 @@
 # Architecture
 
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 ## Extension points
 
 Both new types plug into existing Core extension points, discovered by attribute through

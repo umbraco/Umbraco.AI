@@ -1,3 +1,5 @@
+using Umbraco.AI.Core.Utilities;
+
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
@@ -7,8 +9,8 @@ namespace Umbraco.AI.Core.Contexts;
 /// <para>
 /// <see cref="SetContext"/> makes a resolved context current for the code that set it and everything it awaits
 /// or starts (e.g. the tools run by the function-invoking client inside the call). Disposing the handle makes
-/// the context that was current before current again, for the code that disposes it. Work that outlives the
-/// call keeps the context it started with.
+/// the context that was current before current again, for the code that disposes it (see
+/// <see cref="AIAmbientStack{T}"/>).
 /// </para>
 /// <para>
 /// So each AI call's tools see that call's resources: AI calls running at the same time in one request, or a
@@ -19,60 +21,17 @@ namespace Umbraco.AI.Core.Contexts;
 /// </remarks>
 internal sealed class AIContextAccessor : IAIContextAccessor
 {
-    private static readonly AsyncLocal<Entry?> CurrentEntry = new();
+    private static readonly AIAmbientStack<AIResolvedContext> Contexts = new();
 
     /// <inheritdoc />
-    public AIResolvedContext? Context => CurrentEntry.Value?.Context;
+    public AIResolvedContext? Context => Contexts.Current;
 
     /// <inheritdoc />
-    public IDisposable SetContext(AIResolvedContext context)
-    {
-        var entry = new Entry(context, CurrentEntry.Value);
-        CurrentEntry.Value = entry;
-        return entry;
-    }
+    public IDisposable SetContext(AIResolvedContext context) => Contexts.Push(context);
 
     /// <summary>
     /// Makes the context set by <paramref name="handle"/> current until the returned handle is disposed, for code
     /// that runs where the setter's own flow doesn't reach (the steps of a stream enumerated by a caller).
     /// </summary>
-    internal static IDisposable? Enter(IDisposable? handle)
-    {
-        if (handle is not Entry entry)
-        {
-            return null;
-        }
-
-        var previous = CurrentEntry.Value;
-        CurrentEntry.Value = entry;
-        return new Restore(previous);
-    }
-
-    private sealed class Restore(Entry? previous) : IDisposable
-    {
-        public void Dispose() => CurrentEntry.Value = previous;
-    }
-
-    private sealed class Entry(AIResolvedContext context, Entry? previous) : IDisposable
-    {
-        private bool _disposed;
-
-        public AIResolvedContext Context { get; } = context;
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-
-            // Restores the context current when this one was set, for the flow disposing it only.
-            if (ReferenceEquals(CurrentEntry.Value, this))
-            {
-                CurrentEntry.Value = previous;
-            }
-        }
-    }
+    internal static IDisposable? Enter(IDisposable? handle) => Contexts.Enter(handle);
 }

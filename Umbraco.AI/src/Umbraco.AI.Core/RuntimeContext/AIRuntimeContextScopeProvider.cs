@@ -1,3 +1,5 @@
+using Umbraco.AI.Core.Utilities;
+
 namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
@@ -10,28 +12,23 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// that was current when it was created current again, for the code that disposes it.
 /// </para>
 /// <para>
-/// The current context is held in an <see cref="AsyncLocal{T}"/>, so work running in parallel (e.g. two AI
-/// calls started together) each see their own context, never one the other made current. Work keeps the
-/// context it started with for its whole life, even after the scope's owner disposes it (e.g. a background
-/// task that outlives the call that started it), so it always sees the same context, whatever the timing.
-/// </para>
-/// <para>
-/// A context made current inside an async method, including an async iterator between its yields, is not
-/// current for its caller. Streaming entry points re-enter the scope around each step of the stream they run
-/// (see <see cref="AIRuntimeContextStreamExtensions"/>).
+/// Work running in parallel (e.g. two AI calls started together) each sees its own context, never one the
+/// other made current, and work keeps the context it started with for its whole life (see
+/// <see cref="AIAmbientStack{T}"/>). Streaming entry points re-enter the scope around each step of the stream
+/// they run (see <see cref="AIRuntimeContextStreamExtensions"/>).
 /// </para>
 /// </remarks>
 internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProvider, IAIRuntimeContextAccessor
 {
-    private static readonly AsyncLocal<Scope?> CurrentNode = new();
+    private static readonly AIAmbientStack<Scope> Scopes = new();
 
     /// <summary>
     /// The scope current in this async flow, if any.
     /// </summary>
-    internal static IAIRuntimeContextScope? CurrentScope => CurrentNode.Value;
+    internal static IAIRuntimeContextScope? CurrentScope => Scopes.Current;
 
     /// <inheritdoc />
-    public AIRuntimeContext? Context => CurrentNode.Value?.Context;
+    public AIRuntimeContext? Context => Scopes.Current?.Context;
 
     /// <inheritdoc />
     public IAIRuntimeContextScope CreateScope()
@@ -40,8 +37,8 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     /// <inheritdoc />
     public IAIRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items)
     {
-        var scope = new Scope(new AIRuntimeContext(items), CurrentNode.Value);
-        CurrentNode.Value = scope;
+        var scope = new Scope(new AIRuntimeContext(items), Scopes.Current);
+        scope.Entry = Scopes.Push(scope);
         return scope;
     }
 
@@ -50,61 +47,22 @@ internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProv
     /// the scope's own flow doesn't reach (the steps of a stream enumerated by a caller).
     /// </summary>
     internal static IDisposable? Enter(IAIRuntimeContextScope? scope)
-    {
-        if (scope is not Scope entered)
-        {
-            return null;
-        }
-
-        var previous = CurrentNode.Value;
-        CurrentNode.Value = entered;
-        return new Restore(previous);
-    }
-
-    private sealed class Restore(Scope? previous) : IDisposable
-    {
-        public void Dispose() => CurrentNode.Value = previous;
-    }
+        => scope is Scope entered ? Scopes.Enter(entered.Entry) : null;
 
     /// <summary>
-    /// A context made current by <see cref="CreateScope(IEnumerable{AIRequestContextItem})"/>, linked to the
-    /// scope that was current when it was created.
+    /// A context made current by <see cref="CreateScope(IEnumerable{AIRequestContextItem})"/>, with its depth and
+    /// parent fixed when it is created.
     /// </summary>
-    private sealed class Scope : IAIRuntimeContextScope
+    private sealed class Scope(AIRuntimeContext context, Scope? parent) : IAIRuntimeContextScope
     {
-        private readonly Scope? _parent;
-        private bool _disposed;
+        public AIRuntimeContext Context { get; } = context;
 
-        public Scope(AIRuntimeContext context, Scope? parent)
-        {
-            Context = context;
-            _parent = parent;
-            ParentContext = parent?.Context;
-            Depth = (parent?.Depth ?? 0) + 1;
-        }
+        public AIRuntimeContext? ParentContext { get; } = parent?.Context;
 
-        public AIRuntimeContext Context { get; }
+        public int Depth { get; } = (parent?.Depth ?? 0) + 1;
 
-        public AIRuntimeContext? ParentContext { get; }
+        public AIAmbientStack<Scope>.Entry Entry { get; set; } = null!;
 
-        public int Depth { get; }
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-
-            // Restores the scope that was current when this one was created, for the flow disposing it only.
-            // Work in other flows that has this scope keeps it. Disposing scopes out of order (the outer one
-            // first) is a usage error; like Activity.Current, nothing is repaired.
-            if (ReferenceEquals(CurrentNode.Value, this))
-            {
-                CurrentNode.Value = _parent;
-            }
-        }
+        public void Dispose() => Entry.Dispose();
     }
 }

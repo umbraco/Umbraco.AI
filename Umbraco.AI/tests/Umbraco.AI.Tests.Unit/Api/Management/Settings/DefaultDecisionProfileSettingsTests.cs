@@ -1,7 +1,10 @@
 // DR-3 — Set a default Decision profile (AC1)
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Web.Api.Management.Settings.Controllers;
 using Umbraco.AI.Web.Api.Management.Settings.Mapping;
 using Umbraco.AI.Web.Api.Management.Settings.Models;
@@ -26,6 +29,7 @@ public class DefaultDecisionProfileSettingsTests
     {
         private readonly Guid _profileId = Guid.NewGuid();
         private readonly Mock<IAISettingsService> _settingsService = new();
+        private readonly Mock<IAIProfileService> _profileService = new();
         private readonly IActionResult _result;
         private AISettings? _saved;
 
@@ -36,7 +40,11 @@ public class DefaultDecisionProfileSettingsTests
                 .Callback<AISettings, CancellationToken>((s, _) => _saved = s)
                 .ReturnsAsync((AISettings s, CancellationToken _) => s);
 
-            _result = new UpdateSettingsController(_settingsService.Object, CreateMapper())
+            _profileService
+                .Setup(x => x.GetProfileAsync(_profileId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new AIProfileBuilder().WithId(_profileId).WithCapability(AICapability.Decision).Build());
+
+            _result = new UpdateSettingsController(_settingsService.Object, _profileService.Object, CreateMapper())
                 .UpdateSettings(new UpdateSettingsRequestModel { DefaultDecisionProfileId = _profileId })
                 .GetAwaiter().GetResult();
         }

@@ -1,38 +1,78 @@
-using Microsoft.AspNetCore.Http;
-
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
-/// Default implementation of <see cref="IAIContextAccessor"/> using HttpContext.Items.
+/// Default implementation of <see cref="IAIContextAccessor"/>, with the current context held per async flow.
 /// </summary>
 /// <remarks>
-/// Uses HttpContext.Items instead of AsyncLocal because AsyncLocal doesn't survive
-/// the async boundaries created by MEAI's FunctionInvokingChatClient during tool execution.
-/// HttpContext.Items is preserved across all async calls within an HTTP request.
+/// <para>
+/// <see cref="SetContext"/> makes a resolved context current for the code that set it and everything it awaits
+/// or starts (e.g. the tools run by the function-invoking client inside the call). Disposing the handle makes
+/// the context that was current before current again, for the code that disposes it. Work that outlives the
+/// call keeps the context it started with.
+/// </para>
+/// <para>
+/// So each AI call's tools see that call's resources: AI calls running at the same time in one request, or a
+/// nested call made by a tool, never see or clear another call's context, and it works with no HTTP request
+/// (e.g. background jobs). The context injection middleware re-enters the context around each step of a
+/// stream, since a context made current inside an async iterator is no longer current once it yields.
+/// </para>
 /// </remarks>
-internal sealed class AIContextAccessor(IHttpContextAccessor httpContextAccessor) : IAIContextAccessor
+internal sealed class AIContextAccessor : IAIContextAccessor
 {
-    private const string ContextKey = "Umbraco.AI.ResolvedContext";
+    private static readonly AsyncLocal<Entry?> CurrentEntry = new();
 
     /// <inheritdoc />
-    public AIResolvedContext? Context =>
-        httpContextAccessor.HttpContext?.Items[ContextKey] as AIResolvedContext;
+    public AIResolvedContext? Context => CurrentEntry.Value?.Context;
 
     /// <inheritdoc />
     public IDisposable SetContext(AIResolvedContext context)
     {
-        if (httpContextAccessor.HttpContext != null)
-        {
-            httpContextAccessor.HttpContext.Items[ContextKey] = context;
-        }
-        return new ContextScope(httpContextAccessor);
+        var entry = new Entry(context, CurrentEntry.Value);
+        CurrentEntry.Value = entry;
+        return entry;
     }
 
-    private sealed class ContextScope(IHttpContextAccessor httpContextAccessor) : IDisposable
+    /// <summary>
+    /// Makes the context set by <paramref name="handle"/> current until the returned handle is disposed, for code
+    /// that runs where the setter's own flow doesn't reach (the steps of a stream enumerated by a caller).
+    /// </summary>
+    internal static IDisposable? Enter(IDisposable? handle)
     {
+        if (handle is not Entry entry)
+        {
+            return null;
+        }
+
+        var previous = CurrentEntry.Value;
+        CurrentEntry.Value = entry;
+        return new Restore(previous);
+    }
+
+    private sealed class Restore(Entry? previous) : IDisposable
+    {
+        public void Dispose() => CurrentEntry.Value = previous;
+    }
+
+    private sealed class Entry(AIResolvedContext context, Entry? previous) : IDisposable
+    {
+        private bool _disposed;
+
+        public AIResolvedContext Context { get; } = context;
+
         public void Dispose()
         {
-            httpContextAccessor.HttpContext?.Items.Remove(ContextKey);
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            // Restores the context current when this one was set, for the flow disposing it only.
+            if (ReferenceEquals(CurrentEntry.Value, this))
+            {
+                CurrentEntry.Value = previous;
+            }
         }
     }
 }

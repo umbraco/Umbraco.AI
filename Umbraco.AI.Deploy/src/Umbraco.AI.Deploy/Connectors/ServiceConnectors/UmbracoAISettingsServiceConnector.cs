@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Deploy.Artifacts;
@@ -154,77 +155,17 @@ public class UmbracoAISettingsServiceConnector(
     {
         var settings = await settingsService.GetSettingsAsync(ct);
 
-        // Resolve optional chat profile dependency
-        if (state.Artifact.DefaultChatProfileUdi != null)
-        {
-            state.Artifact.DefaultChatProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var chatProfile = await profileService.GetProfileAsync(state.Artifact.DefaultChatProfileUdi.Guid, ct);
-            settings.DefaultChatProfileId = chatProfile?.Id;
-        }
-        else
-        {
-            settings.DefaultChatProfileId = null;
-        }
-
-        // Resolve optional embedding profile dependency
-        if (state.Artifact.DefaultEmbeddingProfileUdi != null)
-        {
-            state.Artifact.DefaultEmbeddingProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var embeddingProfile = await profileService.GetProfileAsync(state.Artifact.DefaultEmbeddingProfileUdi.Guid, ct);
-            settings.DefaultEmbeddingProfileId = embeddingProfile?.Id;
-        }
-        else
-        {
-            settings.DefaultEmbeddingProfileId = null;
-        }
-
-        // Resolve optional speech-to-text profile dependency
-        if (state.Artifact.DefaultSpeechToTextProfileUdi != null)
-        {
-            state.Artifact.DefaultSpeechToTextProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var speechToTextProfile = await profileService.GetProfileAsync(state.Artifact.DefaultSpeechToTextProfileUdi.Guid, ct);
-            settings.DefaultSpeechToTextProfileId = speechToTextProfile?.Id;
-        }
-        else
-        {
-            settings.DefaultSpeechToTextProfileId = null;
-        }
-
-        // Resolve optional image-generation profile dependency
-        if (state.Artifact.DefaultImageGenerationProfileUdi != null)
-        {
-            state.Artifact.DefaultImageGenerationProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var imageGenerationProfile = await profileService.GetProfileAsync(state.Artifact.DefaultImageGenerationProfileUdi.Guid, ct);
-            settings.DefaultImageGenerationProfileId = imageGenerationProfile?.Id;
-        }
-        else
-        {
-            settings.DefaultImageGenerationProfileId = null;
-        }
-
-        // Resolve optional decision profile dependency
-        if (state.Artifact.DefaultDecisionProfileUdi != null)
-        {
-            state.Artifact.DefaultDecisionProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var decisionProfile = await profileService.GetProfileAsync(state.Artifact.DefaultDecisionProfileUdi.Guid, ct);
-            settings.DefaultDecisionProfileId = decisionProfile?.Id;
-        }
-        else
-        {
-            settings.DefaultDecisionProfileId = null;
-        }
-
-        // Resolve optional classifier chat profile dependency
-        if (state.Artifact.ClassifierChatProfileUdi != null)
-        {
-            state.Artifact.ClassifierChatProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var classifierProfile = await profileService.GetProfileAsync(state.Artifact.ClassifierChatProfileUdi.Guid, ct);
-            settings.ClassifierChatProfileId = classifierProfile?.Id;
-        }
-        else
-        {
-            settings.ClassifierChatProfileId = null;
-        }
+        // Resolve each optional default-profile dependency. A profile that no longer exists, or whose
+        // capability no longer matches the slot (e.g. an artifact edited by hand, or the profile's
+        // capability changed on the source environment after export), is dropped rather than failing
+        // the whole import - profiles deploy in an earlier pass (2) than settings (3), so this is the
+        // same "best effort" treatment as a dependency that never resolved.
+        settings.DefaultChatProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultChatProfileUdi, AICapability.Chat, ct);
+        settings.DefaultEmbeddingProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultEmbeddingProfileUdi, AICapability.Embedding, ct);
+        settings.DefaultSpeechToTextProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultSpeechToTextProfileUdi, AICapability.SpeechToText, ct);
+        settings.DefaultImageGenerationProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultImageGenerationProfileUdi, AICapability.ImageGeneration, ct);
+        settings.DefaultDecisionProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultDecisionProfileUdi, AICapability.Decision, ct);
+        settings.ClassifierChatProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.ClassifierChatProfileUdi, AICapability.Chat, ct);
 
         // Artifacts written before this setting existed carry no value, so keep the target's own.
         if (Enum.TryParse<AIDisclosureNoticeMode>(state.Artifact.DisclosureNoticeMode, true, out var disclosureNoticeMode)
@@ -234,5 +175,21 @@ public class UmbracoAISettingsServiceConnector(
         }
 
         await settingsService.SaveSettingsAsync(settings, ct);
+    }
+
+    /// <summary>
+    /// Resolves a default-profile slot's dependency UDI to a profile ID, or null if the UDI is unset,
+    /// the profile no longer exists, or the profile's capability doesn't match what the slot requires.
+    /// </summary>
+    private async Task<Guid?> ResolveDefaultProfileIdAsync(GuidUdi? profileUdi, AICapability requiredCapability, CancellationToken ct)
+    {
+        if (profileUdi is null)
+        {
+            return null;
+        }
+
+        profileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
+        var profile = await profileService.GetProfileAsync(profileUdi.Guid, ct);
+        return profile is not null && profile.Capability == requiredCapability ? profile.Id : null;
     }
 }

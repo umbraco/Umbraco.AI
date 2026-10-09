@@ -68,3 +68,8 @@
   (settings-support) entries win, like core's `WithMetadata`.
 - **09-10-2026** (T5) OpenRouter now needs a Core newer than the current floor `[18.5.2, …)`.
   Raise the range at release (T11 note).
+- **09-10-2026** (T6) Capability is validated before the connection lookup (no capability +
+  unknown connection = 400). Numeric capability values ("1") are rejected as 400, stricter than the
+  sibling `/models` endpoint; the backoffice always sends names. A disabled experimental
+  capability returns 200 with no items, matching `CapabilitiesConnectionController`. Listed models
+  are deduped by id (ordinal). `Tone` serialises as a string via the API's enum converter.

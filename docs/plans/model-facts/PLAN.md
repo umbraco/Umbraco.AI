@@ -47,7 +47,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   listed in both slnx files (added with the specs).
   depends-on: T1. parallel-group: B
 
-- [ ] **T6**: story MF-5 (AC1–AC12). Add `ModelFactsConnectionController`
+- [x] **T6**: story MF-5 (AC1–AC12). Add `ModelFactsConnectionController`
   (`[HttpGet("{connectionIdOrAlias}/model-facts")]`) beside `ModelsConnectionController`, plus
   `ModelFactsResponseModel` / `ModelFactsItemResponseModel` / `ModelFactResponseModel` and their
   `IMapDefinition`. Lists the connection's models for the capability (logging, not swallowing,

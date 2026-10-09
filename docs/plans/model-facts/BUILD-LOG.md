@@ -19,3 +19,6 @@
   Live check (`GET /api/v1/models`, 469 models): `context_length` always an int 4,095–2,000,000;
   `pricing.prompt`/`completion` always plain decimal strings; 19 models "0"/"0" (free); 7 routers
   "-1"/"-1"; no mixed zero/non-zero; no unparseable values. Smoke: live in T7.
+- **09-10-2026 T6** `b1219ccd`: ModelFactsConnectionController + response models + map definition.
+  1556/1556 (reviewer rerun). One fix round: a provider timeout (TaskCanceledException) escaped as
+  500; the mapping-only record was public. Smoke: live request in T7.

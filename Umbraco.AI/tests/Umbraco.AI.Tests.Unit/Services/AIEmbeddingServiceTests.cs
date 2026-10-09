@@ -334,6 +334,67 @@ public class AIEmbeddingServiceTests
 
     #endregion
 
+    #region GenerateEmbeddingsAsync - By profile alias
+
+    [Fact]
+    public async Task GenerateEmbeddingsAsync_WithKnownProfileAlias_UsesResolvedProfile()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var values = new[] { "Hello", "World" };
+
+        var profile = new AIProfileBuilder()
+            .WithId(profileId)
+            .WithAlias("my-embedding-profile")
+            .WithCapability(AICapability.Embedding)
+            .WithModel("openai", "text-embedding-3-small")
+            .Build();
+
+        var fakeGenerator = new FakeEmbeddingGenerator();
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("my-embedding-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _generatorFactoryMock
+            .Setup(x => x.CreateGeneratorAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeGenerator);
+
+        // Act
+        var embeddings = await _service.GenerateEmbeddingsAsync(
+            b => b.WithAlias("alias-test").WithProfile("my-embedding-profile"),
+            values);
+
+        // Assert
+        embeddings.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GenerateEmbeddingsAsync_WithUnknownProfileAlias_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var values = new[] { "Hello", "World" };
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("missing-alias", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        // Act
+        var act = () => _service.GenerateEmbeddingsAsync(
+            b => b.WithAlias("alias-test").WithProfile("missing-alias"),
+            values);
+
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(act);
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    #endregion
+
     #region GenerateEmbeddingsAsync - Options merging
 
     [Fact]

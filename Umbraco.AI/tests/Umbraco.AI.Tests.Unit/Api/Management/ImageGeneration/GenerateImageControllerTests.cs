@@ -82,4 +82,27 @@ public class GenerateImageControllerTests
 
         result.ShouldBeOfType<BadRequestObjectResult>();
     }
+
+    [Fact]
+    public async Task Generate_WithUnknownProfileAlias_Returns404AndNeverGeneratesImages()
+    {
+        var controller = CreateController(enabled: true);
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("non-existent-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var result = await controller.Generate(new GenerateImageRequestModel
+        {
+            Prompt = "a cat",
+            ProfileIdOrAlias = "non-existent-profile",
+        });
+
+        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
+        var problemDetails = notFoundResult.Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Title.ShouldBe("Profile not found");
+        _serviceMock.Verify(
+            x => x.GenerateImagesAsync(It.IsAny<Action<AIImageGenerationBuilder>>(), It.IsAny<string>(), It.IsAny<IEnumerable<AIContent>?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

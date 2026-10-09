@@ -75,9 +75,16 @@ public class GenerateImageController : ImageGenerationControllerBase
 
         try
         {
-            var profileId = model.ProfileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(model.ProfileIdOrAlias, null), cancellationToken)
-                : null;
+            // Resolve profile ID from IdOrAlias
+            Guid? profileId = null;
+            if (model.ProfileIdOrAlias != null)
+            {
+                profileId = await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(model.ProfileIdOrAlias, null), cancellationToken);
+                if (!profileId.HasValue)
+                {
+                    return ProfileNotFound();
+                }
+            }
 
             var originalImages = MapOriginalImages(model.OriginalImages);
 

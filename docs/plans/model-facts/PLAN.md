@@ -55,7 +55,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   controller unit tests in `Umbraco.AI.Tests.Unit/Api/Management/`.
   depends-on: T3. parallel-group: C
 
-- [ ] **T7**: wire: model facts into the Management API. On the demo site, with a real
+- [x] **T7**: wire: model facts into the Management API. On the demo site, with a real
   OpenRouter connection: `GET /umbraco/ai/management/api/v1/connections/{alias}/model-facts?capability=Chat&modelId=<a real model>`
   returns `core.contextWindow` and `core.price` facts; the endpoint appears in the Swagger doc;
   run `npm run generate-client` so the core client has `getModelFacts`. Commit the regenerated

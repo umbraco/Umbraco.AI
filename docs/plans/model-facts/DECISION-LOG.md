@@ -73,3 +73,6 @@
   sibling `/models` endpoint; the backoffice always sends names. A disabled experimental
   capability returns 200 with no items, matching `CapabilitiesConnectionController`. Listed models
   are deduped by id (ordinal). `Tone` serialises as a string via the API's enum converter.
+- **09-10-2026** (T7) `capability` is `[FromQuery, Required]`: a missing value now gets the
+  framework's `ValidationProblemDetails` 400 (a ProblemDetails with `errors`); an invalid value
+  gets the controller's own ProblemDetails 400. Both satisfy the SPEC.

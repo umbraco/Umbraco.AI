@@ -22,3 +22,11 @@
 - **09-10-2026 T6** `b1219ccd`: ModelFactsConnectionController + response models + map definition.
   1556/1556 (reviewer rerun). One fix round: a provider timeout (TaskCanceledException) escaped as
   500; the mapping-only record was public. Smoke: live request in T7.
+- **09-10-2026 T7** `301620e4`: Wire + live check, regenerated core client (`ConnectionsService.getModelFacts`).
+  Live on the worktree demo site (OpenRouter connection `openrouter-facts`, dummy key; listing
+  is public): `?capability=Chat&modelId=anthropic/claude-sonnet-4` → `core.contextWindow` "200,000"
+  + `core.price` "$3.00 / $15.00"; full list 469 items (443 priced); `:free` model → context
+  window only; missing capability → 400, `Bogus` → 400, unknown connection → 404, no auth → 401.
+  Endpoint in `/umbraco/openapi/ai-management.json`. Follow-up in the same task: `capability`
+  marked `[Required]` so OpenAPI/client match the SPEC. 1556/1556, build:core green.
+  Env: worktree inherited wdp.port 44355 (taken by another site); set to 44399.

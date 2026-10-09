@@ -139,8 +139,10 @@ internal sealed class ScopedAIAgent : DelegatingAIAgent
         // Stage system message parts for injection at the chat-client boundary
         StageSystemMessageParts(scope.Context);
 
-        // Execute inner agent (streaming)
-        await foreach (var update in InnerAgent.RunStreamingAsync(messages, session, options, cancellationToken))
+        // Execute inner agent (streaming). The scope is re-entered around each step: the current context is held
+        // per async flow, and this iterator's steps run in its caller's flow.
+        await foreach (var update in InnerAgent.RunStreamingAsync(messages, session, options, cancellationToken)
+                           .WithRuntimeContext(scope))
         {
             yield return update;
         }

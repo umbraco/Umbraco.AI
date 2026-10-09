@@ -93,7 +93,7 @@ internal sealed class ScopedInlineSpeechToTextClient : AIBoundSpeechToTextClient
 
             _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !hadContext);
 
-            await foreach (var update in base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken))
+            await foreach (var update in base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

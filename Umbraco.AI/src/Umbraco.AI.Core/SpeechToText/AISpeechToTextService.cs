@@ -244,7 +244,7 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
             var client = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, builder.SpeechToTextOptions);
 
-            await foreach (var update in client.GetStreamingTextAsync(audioStream, mergedOptions, cancellationToken))
+            await foreach (var update in client.GetStreamingTextAsync(audioStream, mergedOptions, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

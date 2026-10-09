@@ -54,16 +54,11 @@ internal sealed class ScopedProfileEmbeddingGenerator : DelegatingEmbeddingGener
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context != null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, []);
 
             PopulateProfileMetadata();
             return await base.GenerateAsync(values, options, cancellationToken);

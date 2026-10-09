@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.Observability;
 
@@ -32,11 +33,13 @@ internal sealed class AIOperationScope
         AIOperationTracker tracker,
         IReadOnlyList<IAIOperationRecording> recordings,
         AIOperationScope? parent,
+        AIRuntimeContext? runtimeContext,
         TimeProvider timeProvider)
     {
         _tracker = tracker;
         _recordings = recordings;
         _parent = parent;
+        RuntimeContext = runtimeContext;
         _timeProvider = timeProvider;
         _startTimestamp = timeProvider.GetTimestamp();
         parent?.NestedCallStarted();
@@ -46,6 +49,12 @@ internal sealed class AIOperationScope
     /// The scope entered around the work currently running, if any. A call begun now is nested in it.
     /// </summary>
     internal static AIOperationScope? Current => CurrentScope.Value;
+
+    /// <summary>
+    /// The runtime context that was current when the call began. An AI call made inside this one while that
+    /// context is still current gets its own copy (see <see cref="AIRuntimeContextCallScope"/>).
+    /// </summary>
+    internal AIRuntimeContext? RuntimeContext { get; }
 
     /// <summary>
     /// Whether the call has completed or failed. Work it started that is still running (e.g. on another

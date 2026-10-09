@@ -49,18 +49,16 @@ internal sealed class ScopedInlineImageGenerator : AIBoundImageGeneratorBase
         ImageGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(_builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            // Only a call made with no context records its own feature; inside another call's context it
+            // runs as part of that call's feature, as before.
+            var hadContext = _contextAccessor.Context is not null;
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, _builder.ContextItems ?? []);
 
-            _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !scopeExisted);
+            _builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !hadContext);
             return await base.GenerateAsync(request, options, cancellationToken);
         }
         finally

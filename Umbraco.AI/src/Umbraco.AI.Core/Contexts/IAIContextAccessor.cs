@@ -20,5 +20,10 @@ public interface IAIContextAccessor
     /// </summary>
     /// <param name="context">The resolved context to set.</param>
     /// <returns>A disposable that clears the context when disposed.</returns>
+    /// <remarks>
+    /// The built-in context injection keeps the default implementation's context current for every step of a
+    /// streamed call. A replacement implementation (or a wrapper returning its own handle) is not re-entered
+    /// between steps, so it must make its context visible to code running on later steps itself.
+    /// </remarks>
     IDisposable SetContext(AIResolvedContext context);
 }

@@ -32,6 +32,8 @@ export class UaiConnectionModelFactsServerDataSource {
                 path: { connectionIdOrAlias: args.connectionId },
                 query: { capability: args.capability, modelId: args.modelId },
             }),
+            // A missing facts panel is a quiet degradation; the caller decides how to report it.
+            { disableNotifications: true },
         );
 
         if (error || !data) {

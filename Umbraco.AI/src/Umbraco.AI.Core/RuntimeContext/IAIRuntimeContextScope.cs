@@ -5,7 +5,8 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Disposing the scope removes the context from the ambient state.
+/// Disposing the scope removes the context from the ambient state. The context is current in the
+/// async flow that created the scope (see <see cref="IAIRuntimeContextScopeProvider"/>).
 /// </para>
 /// <para>
 /// Scopes can be nested. Each nested scope has its own isolated context,

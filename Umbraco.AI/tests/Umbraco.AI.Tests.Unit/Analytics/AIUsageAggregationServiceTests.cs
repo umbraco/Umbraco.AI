@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Core.Models;
 
 namespace Umbraco.AI.Tests.Unit.Analytics;
 
@@ -148,6 +149,42 @@ public class AIUsageAggregationServiceTests
         // Assert
         VerifyDayRolledUp(Yesterday, Times.Once());
     }
+
+    [Fact]
+    public async Task AggregateHourly_RenamedProfile_SavesOneRowWithTheLatestAlias()
+    {
+        // Arrange: #565. The profile was renamed during the hour; the dashboard shows the latest alias.
+        var hour = CurrentHour.AddHours(-1);
+        _records.Setup(x => x.GetRecordsByPeriodAsync(hour, hour.AddHours(1), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Record(hour.AddMinutes(5), "old-name"), Record(hour.AddMinutes(50), "new-name")]);
+        List<AIUsageStatistics>? saved = null;
+        _statistics.Setup(x => x.SaveHourlyBatchAsync(It.IsAny<IEnumerable<AIUsageStatistics>>(), It.IsAny<CancellationToken>()))
+            .Callback((IEnumerable<AIUsageStatistics> stats, CancellationToken _) => saved = stats.ToList());
+
+        // Act
+        await CreateService().AggregateHourlyAsync(hour);
+
+        // Assert
+        saved.ShouldNotBeNull();
+        saved.Select(s => (s.ProfileAlias, s.RequestCount)).ShouldBe([("new-name", 2)]);
+    }
+
+    private static AIUsageRecord Record(DateTime timestamp, string profileAlias) => new()
+    {
+        Id = Guid.NewGuid(),
+        Timestamp = timestamp,
+        Capability = AICapability.Chat,
+        ProfileId = Guid.Empty,
+        ProfileAlias = profileAlias,
+        ProviderId = "openai",
+        ModelId = "gpt",
+        InputTokens = 1,
+        OutputTokens = 1,
+        TotalTokens = 2,
+        DurationMs = 10,
+        Status = AIUsageRecordStatus.Succeeded,
+        CreatedAt = timestamp,
+    };
 
     private void ArrangeRollupDueForYesterday()
     {

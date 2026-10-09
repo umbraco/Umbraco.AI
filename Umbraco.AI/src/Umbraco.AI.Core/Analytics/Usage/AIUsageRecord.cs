@@ -115,6 +115,12 @@ public sealed class AIUsageRecord
     public string? ErrorMessage { get; init; }
 
     /// <summary>
+    /// Gets whether the operation was made while another tracked AI operation was running (a guardrail
+    /// judge, a search embedding), rather than being a request of its own.
+    /// </summary>
+    public bool IsNested { get; init; }
+
+    /// <summary>
     /// Gets the timestamp when this record was created (UTC).
     /// </summary>
     public required DateTime CreatedAt { get; init; }

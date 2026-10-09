@@ -98,6 +98,36 @@ public class AIUsageAnalyticsServiceTests
         summary.TotalRequests.ShouldBe(2);
     }
 
+    [Fact]
+    public async Task GetBreakdownByProfileAsync_RenamedWithinALiveHour_GroupsLikeTheAggregationDoes()
+    {
+        // Arrange: #565. The profile was renamed within the current hour, which is still raw records.
+        AddRecord(CurrentHour, profileAlias: "old-name");
+        AddRecord(CurrentHour, profileAlias: "new-name");
+
+        // Act
+        var breakdown = (await CreateService().GetBreakdownByProfileAsync(
+            CurrentHour.AddHours(-1), DateTime.UtcNow, AIUsagePeriod.Hourly)).ToList();
+
+        // Assert: one row, as the hourly aggregation will produce, named after the latest alias.
+        breakdown.Select(b => (b.DimensionName, b.RequestCount)).ShouldBe([("new-name", 2)]);
+    }
+
+    [Fact]
+    public async Task GetBreakdownByProfileAsync_RenamedAcrossHours_ShowsOneRowWithTheLatestAlias()
+    {
+        // Arrange
+        AddHourly(CurrentHour.AddHours(-3), requests: 5, profileAlias: "old-name");
+        AddHourly(CurrentHour.AddHours(-2), requests: 5, profileAlias: "new-name");
+
+        // Act
+        var breakdown = (await CreateService().GetBreakdownByProfileAsync(
+            CurrentHour.AddHours(-10), DateTime.UtcNow, AIUsagePeriod.Hourly)).ToList();
+
+        // Assert
+        breakdown.Select(b => (b.DimensionName, b.RequestCount)).ShouldBe([("new-name", 10)]);
+    }
+
     private AIUsageAnalyticsService CreateService()
     {
         var statistics = new Mock<IAIUsageStatisticsRepository>();
@@ -130,15 +160,16 @@ public class AIUsageAnalyticsServiceTests
 
     private void AddDaily(DateTime day, int requests) => _daily.Add(Statistics(day, requests));
 
-    private void AddHourly(DateTime hour, int requests) => _hourly.Add(Statistics(hour, requests));
+    private void AddHourly(DateTime hour, int requests, string profileAlias = "profile")
+        => _hourly.Add(Statistics(hour, requests, profileAlias));
 
-    private void AddRecord(DateTime timestamp) => _records.Add(new AIUsageRecord
+    private void AddRecord(DateTime timestamp, string profileAlias = "profile") => _records.Add(new AIUsageRecord
     {
         Id = Guid.NewGuid(),
         Timestamp = timestamp,
         Capability = AICapability.Chat,
         ProfileId = Guid.Empty,
-        ProfileAlias = "profile",
+        ProfileAlias = profileAlias,
         ProviderId = "openai",
         ModelId = "gpt",
         InputTokens = 1,
@@ -149,14 +180,14 @@ public class AIUsageAnalyticsServiceTests
         CreatedAt = timestamp,
     });
 
-    private static AIUsageStatistics Statistics(DateTime period, int requests) => new()
+    private static AIUsageStatistics Statistics(DateTime period, int requests, string profileAlias = "profile") => new()
     {
         Id = Guid.NewGuid(),
         Period = period,
         ProviderId = "openai",
         ModelId = "gpt",
         ProfileId = Guid.Empty,
-        ProfileAlias = "profile",
+        ProfileAlias = profileAlias,
         Capability = AICapability.Chat,
         RequestCount = requests,
         SuccessCount = requests,

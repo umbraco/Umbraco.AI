@@ -68,6 +68,12 @@ public sealed class AIUsageStatistics
     public required int RequestCount { get; init; }
 
     /// <summary>
+    /// Gets how many of <see cref="RequestCount"/> were made while another tracked AI operation was running
+    /// (a guardrail judge, a search embedding). The rest are requests of their own, such as one per agent run.
+    /// </summary>
+    public int NestedRequestCount { get; init; }
+
+    /// <summary>
     /// Gets the number of successful requests.
     /// </summary>
     public required int SuccessCount { get; init; }

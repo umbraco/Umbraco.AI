@@ -16,7 +16,12 @@ namespace Umbraco.AI.Core.Observability;
 /// Values the caller asked to have logged with the call (<see cref="Constants.ContextKeys.LogKeys"/>),
 /// read at the same time as <paramref name="Identity"/>. Null when none were declared.
 /// </param>
+/// <param name="IsNested">
+/// Whether the call was made while another tracked call was running (a guardrail judge, a search
+/// embedding), rather than being a call of its own.
+/// </param>
 internal sealed record AIOperationStart(
     AIOperationDescriptor Descriptor,
     AIUsageContext? Identity,
-    IReadOnlyDictionary<string, string>? LogValues);
+    IReadOnlyDictionary<string, string>? LogValues,
+    bool IsNested = false);

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Core.Contexts.Middleware;
 
@@ -47,16 +48,12 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
         CancellationToken cancellationToken = default)
     {
         var messagesList = chatMessages.ToList();
-        var (modifiedMessages, contextScope) = await PrepareContextAsync(messagesList, cancellationToken);
+        var (modifiedMessages, resolvedContext) = await PrepareContextAsync(messagesList, cancellationToken);
 
-        try
-        {
-            return await InnerClient.GetResponseAsync(modifiedMessages, options, cancellationToken);
-        }
-        finally
-        {
-            contextScope?.Dispose();
-        }
+        // Set here, not in PrepareContextAsync: the context is held per async flow, so one set inside an awaited
+        // method would not be current once it returns.
+        using var contextScope = _contextAccessor.SetContext(resolvedContext);
+        return await InnerClient.GetResponseAsync(modifiedMessages, options, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -66,38 +63,33 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var messagesList = chatMessages.ToList();
-        var (modifiedMessages, contextScope) = await PrepareContextAsync(messagesList, cancellationToken);
+        var (modifiedMessages, resolvedContext) = await PrepareContextAsync(messagesList, cancellationToken);
 
-        try
+        // Re-entered around each step: the context is held per async flow, and this iterator's steps run in its
+        // caller's flow, so tools run on later steps (after a tool call) still see this call's context.
+        using var contextScope = _contextAccessor.SetContext(resolvedContext);
+        await foreach (var update in InnerClient.GetStreamingResponseAsync(modifiedMessages, options, cancellationToken)
+                           .EnterEachStep(() => AIContextAccessor.Enter(contextScope)))
         {
-            await foreach (var update in InnerClient.GetStreamingResponseAsync(modifiedMessages, options, cancellationToken))
-            {
-                yield return update;
-            }
-        }
-        finally
-        {
-            contextScope?.Dispose();
+            yield return update;
         }
     }
 
     #endregion
 
-    private async Task<(IList<ChatMessage> ModifiedMessages, IDisposable? ContextScope)> PrepareContextAsync(
+    private async Task<(IList<ChatMessage> ModifiedMessages, AIResolvedContext ResolvedContext)> PrepareContextAsync(
         IList<ChatMessage> messages,
         CancellationToken cancellationToken)
     {
         // Resolve context from all registered resolvers (resolvers read from RuntimeContext)
         var resolvedContext = await _contextResolutionService.ResolveContextAsync(cancellationToken);
 
-        // If no context resources, nothing to inject
+        // If no context resources, nothing to inject. The (empty) context is still made current for this call's
+        // tools, so a call nested in another never lists the other call's resources.
         if (resolvedContext.AllResources.Count == 0)
         {
-            return (messages, null);
+            return (messages, resolvedContext);
         }
-
-        // Set the resolved context in the accessor for OnDemand tools
-        var contextScope = _contextAccessor.SetContext(resolvedContext);
 
         // Format and inject context into system prompt:
         // - "Always" resources are injected with full content
@@ -108,7 +100,7 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
             messages = InjectContextIntoMessages(messages, contextContent);
         }
 
-        return (messages, contextScope);
+        return (messages, resolvedContext);
     }
 
     private static IList<ChatMessage> InjectContextIntoMessages(

@@ -57,6 +57,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         return new AIUsageSummary
         {
             TotalRequests = totalRequests,
+            NestedRequestCount = statsList.Sum(s => s.NestedRequestCount),
             InputTokens = statsList.Sum(s => s.InputTokens),
             CachedInputTokens = AIUsageTokenAggregation.SumOrNull(statsList, s => s.CachedInputTokens),
             OutputTokens = statsList.Sum(s => s.OutputTokens),
@@ -221,7 +222,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
 
             var hourlyStats = await GetHourlyStatisticsAsync(
                 Latest(from, hourlyFrom), Earliest(to, rawFrom), filter, ct);
-            allStats.AddRange(RollUp(hourlyStats, periodStart));
+            allStats.AddRange(AIUsageStatisticsGrouping.GroupStatistics(hourlyStats, periodStart));
         }
 
         try
@@ -260,51 +261,6 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         CancellationToken ct)
         => from < to ? await _statisticsRepository.GetDailyByPeriodAsync(from, to, filter, ct) : [];
 
-    /// <summary>
-    /// Re-buckets statistics into coarser periods, e.g. hourly rows into days.
-    /// </summary>
-    private static IEnumerable<AIUsageStatistics> RollUp(
-        IEnumerable<AIUsageStatistics> statistics,
-        Func<DateTime, DateTime> periodStart)
-        => statistics
-            .GroupBy(s => new
-            {
-                Period = periodStart(s.Period),
-                s.ProviderId,
-                s.ModelId,
-                s.ProfileId,
-                s.ProfileAlias,
-                s.Capability,
-                s.UserId,
-                s.UserName,
-                s.EntityType,
-                s.FeatureType
-            })
-            .Select(g => new AIUsageStatistics
-            {
-                Id = Guid.NewGuid(),
-                Period = g.Key.Period,
-                ProviderId = g.Key.ProviderId,
-                ModelId = g.Key.ModelId,
-                ProfileId = g.Key.ProfileId,
-                ProfileAlias = g.Key.ProfileAlias,
-                Capability = g.Key.Capability,
-                UserId = g.Key.UserId,
-                UserName = g.Key.UserName,
-                EntityType = g.Key.EntityType,
-                FeatureType = g.Key.FeatureType,
-                RequestCount = g.Sum(s => s.RequestCount),
-                SuccessCount = g.Sum(s => s.SuccessCount),
-                FailureCount = g.Sum(s => s.FailureCount),
-                InputTokens = g.Sum(s => s.InputTokens),
-                CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, s => s.CachedInputTokens),
-                OutputTokens = g.Sum(s => s.OutputTokens),
-                TotalTokens = g.Sum(s => s.TotalTokens),
-                TotalDurationMs = g.Sum(s => s.TotalDurationMs),
-                CreatedAt = DateTime.UtcNow
-            })
-            .ToList();
-
     private static DateTime Earliest(DateTime a, DateTime b) => a < b ? a : b;
 
     private static DateTime Latest(DateTime a, DateTime b) => a > b ? a : b;
@@ -338,45 +294,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         if (recordList.Count == 0)
             return null;
 
-        // Aggregate in-memory, grouped by dimensions
-        var aggregated = recordList
-            .GroupBy(r => new
-            {
-                Period = periodStart(r.Timestamp),
-                r.ProviderId,
-                r.ModelId,
-                r.ProfileId,
-                r.ProfileAlias,
-                r.Capability,
-                r.UserId,
-                r.UserName,
-                r.EntityType,
-                r.FeatureType
-            })
-            .Select(g => new AIUsageStatistics
-            {
-                Id = Guid.NewGuid(),
-                Period = g.Key.Period,
-                ProviderId = g.Key.ProviderId,
-                ModelId = g.Key.ModelId,
-                ProfileId = g.Key.ProfileId,
-                ProfileAlias = g.Key.ProfileAlias,
-                Capability = g.Key.Capability,
-                UserId = g.Key.UserId,
-                UserName = g.Key.UserName,
-                EntityType = g.Key.EntityType,
-                FeatureType = g.Key.FeatureType,
-                RequestCount = g.Count(),
-                SuccessCount = g.Count(r => r.Status == AIUsageRecordStatus.Succeeded),
-                FailureCount = g.Count(r => r.Status is AIUsageRecordStatus.Failed or AIUsageRecordStatus.Blocked),
-                InputTokens = g.Sum(r => (long)r.InputTokens),
-                CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, r => r.CachedInputTokens),
-                OutputTokens = g.Sum(r => (long)r.OutputTokens),
-                TotalTokens = g.Sum(r => (long)r.TotalTokens),
-                TotalDurationMs = g.Sum(r => r.DurationMs),
-                CreatedAt = DateTime.UtcNow
-            })
-            .ToList();
+        var aggregated = AIUsageStatisticsGrouping.GroupRecords(recordList, periodStart);
 
         _logger.LogDebug(
             "Aggregated {RecordCount} live records into {StatsCount} statistics groups",
@@ -435,16 +353,14 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
 
         var totalRequests = statsList.Sum(s => s.RequestCount);
 
+        // Group by the dimension only: names can change over the range, so each row takes the latest one.
         var breakdown = statsList
-            .GroupBy(s => new
-            {
-                Dimension = dimensionSelector(s),
-                Name = nameSelector?.Invoke(s)
-            })
+            .OrderBy(s => s.Period)
+            .GroupBy(dimensionSelector)
             .Select(g => new AIUsageBreakdownItem
             {
-                Dimension = string.IsNullOrEmpty(g.Key.Dimension) ? unknownLabel : g.Key.Dimension,
-                DimensionName = g.Key.Name,
+                Dimension = string.IsNullOrEmpty(g.Key) ? unknownLabel : g.Key,
+                DimensionName = nameSelector is null ? null : AIUsageStatisticsGrouping.Latest(g, nameSelector),
                 RequestCount = g.Sum(s => s.RequestCount),
                 TotalTokens = g.Sum(s => s.TotalTokens),
                 CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, s => s.CachedInputTokens),

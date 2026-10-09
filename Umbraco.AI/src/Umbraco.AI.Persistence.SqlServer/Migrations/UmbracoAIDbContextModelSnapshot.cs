@@ -62,6 +62,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<long>("InputTokens")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("IsNested")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -144,6 +147,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("NestedRequestCount")
+                        .HasColumnType("int");
 
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");
@@ -231,6 +237,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("NestedRequestCount")
+                        .HasColumnType("int");
 
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");

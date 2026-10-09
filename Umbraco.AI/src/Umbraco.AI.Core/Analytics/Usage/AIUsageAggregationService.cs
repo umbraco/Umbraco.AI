@@ -62,48 +62,7 @@ internal sealed class AIUsageAggregationService : IAIUsageAggregationService
                 recordList.Count,
                 hourStart);
 
-            // Group and aggregate by dimensions
-            var statistics = recordList
-                .GroupBy(r => new
-                {
-                    r.ProviderId,
-                    r.ModelId,
-                    r.ProfileId,
-                    r.Capability,
-                    r.UserId,
-                    r.EntityType,
-                    r.FeatureType
-                })
-                .Select(g =>
-                {
-                    // Find first record with non-null/non-empty ProfileAlias and UserName
-                    var recordWithNames = g.FirstOrDefault(r => !string.IsNullOrEmpty(r.ProfileAlias)) ?? g.First();
-
-                    return new AIUsageStatistics
-                    {
-                        Id = Guid.NewGuid(),
-                        Period = hourStart,
-                        ProviderId = g.Key.ProviderId,
-                        ModelId = g.Key.ModelId,
-                        ProfileId = g.Key.ProfileId,
-                        ProfileAlias = recordWithNames.ProfileAlias,
-                        Capability = g.Key.Capability,
-                        UserId = g.Key.UserId,
-                        UserName = recordWithNames.UserName,
-                        EntityType = g.Key.EntityType,
-                        FeatureType = g.Key.FeatureType,
-                        RequestCount = g.Count(),
-                        SuccessCount = g.Count(r => r.Status == AIUsageRecordStatus.Succeeded),
-                        FailureCount = g.Count(r => r.Status is AIUsageRecordStatus.Failed or AIUsageRecordStatus.Blocked),
-                        InputTokens = g.Sum(r => r.InputTokens),
-                        CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, r => r.CachedInputTokens),
-                        OutputTokens = g.Sum(r => r.OutputTokens),
-                        TotalTokens = g.Sum(r => r.TotalTokens),
-                        TotalDurationMs = g.Sum(r => r.DurationMs),
-                        CreatedAt = DateTime.UtcNow
-                    };
-                })
-                .ToList();
+            var statistics = AIUsageStatisticsGrouping.GroupRecords(recordList, _ => hourStart);
 
             _logger.LogDebug(
                 "Aggregated {RecordCount} records into {StatisticsCount} statistics groups",
@@ -175,48 +134,7 @@ internal sealed class AIUsageAggregationService : IAIUsageAggregationService
                 hourlyStatsList.Count,
                 day);
 
-            // Group and aggregate by dimensions
-            var dailyStatistics = hourlyStatsList
-                .GroupBy(s => new
-                {
-                    s.ProviderId,
-                    s.ModelId,
-                    s.ProfileId,
-                    s.Capability,
-                    s.UserId,
-                    s.EntityType,
-                    s.FeatureType
-                })
-                .Select(g =>
-                {
-                    // Find first record with non-null/non-empty ProfileAlias and UserName
-                    var statsWithNames = g.FirstOrDefault(s => !string.IsNullOrEmpty(s.ProfileAlias)) ?? g.First();
-
-                    return new AIUsageStatistics
-                    {
-                        Id = Guid.NewGuid(),
-                        Period = day,
-                        ProviderId = g.Key.ProviderId,
-                        ModelId = g.Key.ModelId,
-                        ProfileId = g.Key.ProfileId,
-                        ProfileAlias = statsWithNames.ProfileAlias,
-                        Capability = g.Key.Capability,
-                        UserId = g.Key.UserId,
-                        UserName = statsWithNames.UserName,
-                        EntityType = g.Key.EntityType,
-                        FeatureType = g.Key.FeatureType,
-                        RequestCount = g.Sum(s => s.RequestCount),
-                        SuccessCount = g.Sum(s => s.SuccessCount),
-                        FailureCount = g.Sum(s => s.FailureCount),
-                        InputTokens = g.Sum(s => s.InputTokens),
-                        CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, s => s.CachedInputTokens),
-                        OutputTokens = g.Sum(s => s.OutputTokens),
-                        TotalTokens = g.Sum(s => s.TotalTokens),
-                        TotalDurationMs = g.Sum(s => s.TotalDurationMs),
-                        CreatedAt = DateTime.UtcNow
-                    };
-                })
-                .ToList();
+            var dailyStatistics = AIUsageStatisticsGrouping.GroupStatistics(hourlyStatsList, _ => day);
 
             _logger.LogDebug(
                 "Aggregated {HourlyStatsCount} hourly statistics into {DailyStatsCount} daily statistics groups",

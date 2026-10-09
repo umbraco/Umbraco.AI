@@ -41,6 +41,7 @@ internal static class AIUsageRecordFactory
                 ? status
                 : AIUsageRecordStatus.Failed,
             ErrorMessage = entity.ErrorMessage,
+            IsNested = entity.IsNested,
             CreatedAt = entity.CreatedAt
         };
     }
@@ -74,6 +75,7 @@ internal static class AIUsageRecordFactory
             DurationMs = record.DurationMs,
             Status = record.Status.ToString(),
             ErrorMessage = record.ErrorMessage,
+            IsNested = record.IsNested,
             CreatedAt = record.CreatedAt
         };
     }
@@ -99,6 +101,7 @@ internal static class AIUsageRecordFactory
             EntityType = entity.EntityType,
             FeatureType = entity.FeatureType,
             RequestCount = entity.RequestCount,
+            NestedRequestCount = entity.NestedRequestCount,
             SuccessCount = entity.SuccessCount,
             FailureCount = entity.FailureCount,
             InputTokens = entity.InputTokens,
@@ -131,6 +134,7 @@ internal static class AIUsageRecordFactory
             EntityType = entity.EntityType,
             FeatureType = entity.FeatureType,
             RequestCount = entity.RequestCount,
+            NestedRequestCount = entity.NestedRequestCount,
             SuccessCount = entity.SuccessCount,
             FailureCount = entity.FailureCount,
             InputTokens = entity.InputTokens,
@@ -163,6 +167,7 @@ internal static class AIUsageRecordFactory
             EntityType = statistics.EntityType,
             FeatureType = statistics.FeatureType,
             RequestCount = statistics.RequestCount,
+            NestedRequestCount = statistics.NestedRequestCount,
             SuccessCount = statistics.SuccessCount,
             FailureCount = statistics.FailureCount,
             InputTokens = statistics.InputTokens,
@@ -195,6 +200,7 @@ internal static class AIUsageRecordFactory
             EntityType = statistics.EntityType,
             FeatureType = statistics.FeatureType,
             RequestCount = statistics.RequestCount,
+            NestedRequestCount = statistics.NestedRequestCount,
             SuccessCount = statistics.SuccessCount,
             FailureCount = statistics.FailureCount,
             InputTokens = statistics.InputTokens,

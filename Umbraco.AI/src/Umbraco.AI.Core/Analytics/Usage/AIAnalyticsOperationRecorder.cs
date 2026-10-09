@@ -60,6 +60,7 @@ internal sealed class AIAnalyticsOperationRecorder : IAIOperationRecorder
                 Succeeded = outcome.Succeeded,
                 Blocked = outcome.Status == AIOperationStatus.Blocked,
                 ErrorMessage = outcome.Exception?.Message,
+                IsNested = start.IsNested,
             };
 
             // Not the call's own token: a cancelled call is still a call to record, and the audit log

@@ -55,6 +55,7 @@ export default {
         priceShort: "Price",
         priceDetail: "Per 1M tokens, input / output. List price from the provider; may be out of date.",
         learnMore: "Learn more",
+        about: "About {0}",
     },
     uaiProfile: {
         selectProfile: "Select AI profile",

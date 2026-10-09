@@ -105,7 +105,7 @@ export class UaiModelFactsElement extends UmbLitElement {
                               compact
                               look="placeholder"
                               popovertarget=${popoverId}
-                              label=${`About ${label}`}>
+                              label=${this.localize.term("uaiModelFacts_about", label)}>
                               <uui-icon name="icon-info"></uui-icon>
                           </uui-button>
                           <uui-popover-container id=${popoverId} placement="bottom-start">
@@ -115,7 +115,7 @@ export class UaiModelFactsElement extends UmbLitElement {
                           </uui-popover-container>
                       `
                     : nothing}
-                ${fact.url && isSafeFactUrl(fact.url)
+                ${isSafeFactUrl(fact.url)
                     ? html`<a href=${fact.url} target="_blank" rel="noopener noreferrer"
                           >${this.localize.term("uaiModelFacts_learnMore")}</a
                       >`

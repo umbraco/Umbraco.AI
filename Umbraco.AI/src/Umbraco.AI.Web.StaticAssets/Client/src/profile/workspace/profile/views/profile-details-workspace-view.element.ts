@@ -476,6 +476,11 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                             ${umbBindToValidation(this, "$.model", this._model.model)}
                             class="${this._loadingModels ? "hidden" : ""}"
                         ></uui-select>
+                        <uai-model-facts
+                            .connectionId=${this._model.connectionId ?? undefined}
+                            .capability=${this._model.capability}
+                            .modelId=${this._model.model?.modelId}
+                        ></uai-model-facts>
                     </div>
                 </umb-property-layout>
             </uui-box>
@@ -513,6 +518,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
             uui-select {
                 width: 100%;
+            }
+
+            uai-model-facts {
+                margin-top: var(--uui-size-space-3);
             }
 
             uui-input,

@@ -7,6 +7,7 @@ using Umbraco.AI.Agent.Core;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.AI.Core.Media;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Automate.Core.Security;
 using Umbraco.Automate.Core.Settings;
@@ -352,6 +353,54 @@ public class RunAgentActionTests
         // Assert
         result.Status.ShouldBe(ActionResultStatus.Failed);
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Cancelled);
+    }
+
+    [Theory]
+    [InlineData(AIProviderErrorCategory.RateLimited, StepRunErrorCategory.RateLimiting)]
+    [InlineData(AIProviderErrorCategory.Transient, StepRunErrorCategory.ServiceUnavailable)]
+    [InlineData(AIProviderErrorCategory.Authentication, StepRunErrorCategory.Authentication)]
+    [InlineData(AIProviderErrorCategory.NotFound, StepRunErrorCategory.ConfigurationError)]
+    public async Task ExecuteAsync_WhenTheProviderFails_ReportsTheMatchingErrorCategory(
+        AIProviderErrorCategory providerCategory,
+        StepRunErrorCategory expected)
+    {
+        // Arrange
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+        };
+
+        _agentServiceMock
+            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+
+        var providerError = new AIProviderException(
+            new AIProviderErrorInfo(providerCategory, "user-safe message", ProviderCode: null, "raw message"),
+            new Exception("sdk failure"));
+
+        _agentServiceMock
+            .Setup(s => s.RunAgentAsync(
+                agent.Id,
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<AIAgentExecutionOptions?>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(providerError);
+
+        var action = CreateAction();
+        var context = CreateContext(new RunAgentSettings
+        {
+            AgentId = TestAgentId,
+            Message = "Hello",
+        });
+
+        // Act
+        var result = await action.ExecuteAsync(context, CancellationToken.None);
+
+        // Assert
+        result.Status.ShouldBe(ActionResultStatus.Failed);
+        result.ErrorCategory.ShouldBe(expected);
+        result.Exception.ShouldBe(providerError);
     }
 
     [Fact]

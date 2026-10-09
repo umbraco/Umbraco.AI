@@ -130,21 +130,19 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
 
         var builder = BuildGeneration(configure);
 
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            // Only a call made with no context records its own feature; inside another call's context it
+            // runs as part of that call's feature, as before.
+            var hadContext = _contextAccessor.Context is not null;
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
 
             var context = _contextAccessor.Context!;
-            builder.PopulateContext(context, setFeatureMetadata: !scopeExisted);
+            builder.PopulateContext(context, setFeatureMetadata: !hadContext);
 
             var profile = await ResolveProfileAsync(builder.ProfileId, builder.ProfileAlias, cancellationToken);
 
@@ -229,16 +227,11 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         IEnumerable<AIContent>? originalImages,
         CancellationToken cancellationToken)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);

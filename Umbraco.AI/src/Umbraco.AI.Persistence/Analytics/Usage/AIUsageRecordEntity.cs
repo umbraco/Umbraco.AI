@@ -109,6 +109,11 @@ internal class AIUsageRecordEntity
     public string? ErrorMessage { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the operation was made while another tracked AI operation was running.
+    /// </summary>
+    public bool IsNested { get; set; }
+
+    /// <summary>
     /// Gets or sets the timestamp when this record was created (UTC).
     /// </summary>
     public DateTime CreatedAt { get; set; }

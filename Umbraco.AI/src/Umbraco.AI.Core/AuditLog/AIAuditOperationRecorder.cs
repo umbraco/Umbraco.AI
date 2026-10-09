@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Observability;
-using Umbraco.AI.Core.Telemetry;
 
 namespace Umbraco.AI.Core.AuditLog;
 
@@ -40,10 +39,9 @@ internal sealed class AIAuditOperationRecorder : IAIOperationRecorder
         // entered later, around the work (see Recording.EnterScope), so it can't be picked up here.
         var auditLog = _auditLogFactory.Create(auditContext, start.LogValues, parentId: AIAuditScope.Current?.AuditLogId);
 
-        // Link the entry and the trace both ways.
-        var activity = Activity.Current;
-        auditLog.TraceId = activity?.TraceId.ToString();
-        activity?.SetTag(AITelemetry.Tags.AuditId, auditLog.Id.ToString());
+        // Link the entry to its trace. The trace side (the audit ID tag on the call's span) is added by
+        // AITraceOperationRecorder from this entry's scope.
+        auditLog.TraceId = Activity.Current?.TraceId.ToString();
 
         await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
 

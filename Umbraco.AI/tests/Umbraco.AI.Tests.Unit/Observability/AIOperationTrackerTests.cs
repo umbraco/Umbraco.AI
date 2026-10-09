@@ -469,41 +469,60 @@ public class AIOperationTrackerTests
         startQueuedWhenOperationRan.ShouldBeTrue();
     }
 
+    // #562: the tags go on the call's own gen_ai span, not on the caller's span around it.
     [Fact]
-    public async Task TrackAsync_WithAudit_TagsTheCurrentActivityFromTheAuditEntry_AndSetsItsTraceId()
+    public async Task TrackAsync_WithAudit_TagsTheCallsSpanFromTheAuditEntry_AndSetsItsTraceId()
     {
         // Arrange
         var tracker = CreateTracker();
-        using var activity = new System.Diagnostics.Activity("ai-call").Start();
+        using var callerSpan = new System.Diagnostics.Activity("caller").Start();
 
         // Act
-        await tracker.TrackAsync(
-            CreateDescriptor(),
-            _ => Task.FromResult(new AITrackedOperationResult<string> { Result = "success" }),
-            CancellationToken.None);
+        var span = await TrackModelCallAsync(tracker);
 
         // Assert
-        activity.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.AuditId).ShouldBe(_auditLog.Id.ToString());
-        _auditLog.TraceId.ShouldBe(activity.TraceId.ToString());
+        span.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.AuditId).ShouldBe(_auditLog.Id.ToString());
+        callerSpan.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.AuditId).ShouldBeNull();
+        _auditLog.TraceId.ShouldBe(callerSpan.TraceId.ToString());
     }
 
     [Fact]
-    public async Task TrackAsync_WithAuditDisabled_TagsTheCurrentActivityFromTheRuntimeContext()
+    public async Task TrackAsync_WithAuditDisabled_TagsTheCallsSpanFromTheRuntimeContext()
     {
         // Arrange
         _auditLogOptionsMock.Setup(x => x.CurrentValue).Returns(new AIAuditLogOptions { Enabled = false });
         var tracker = CreateTracker();
-        using var activity = new System.Diagnostics.Activity("ai-call").Start();
+        using var callerSpan = new System.Diagnostics.Activity("caller").Start();
 
         // Act
-        await tracker.TrackAsync(
-            CreateDescriptor(),
-            _ => Task.FromResult(new AITrackedOperationResult<string> { Result = "success" }),
-            CancellationToken.None);
+        var span = await TrackModelCallAsync(tracker);
 
         // Assert
-        activity.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.ProfileAlias).ShouldBe("test-profile");
-        activity.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.AuditId).ShouldBeNull();
+        span.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.ProfileAlias).ShouldBe("test-profile");
+        span.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.AuditId).ShouldBeNull();
+        callerSpan.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.ProfileAlias).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task TrackAsync_NestedCall_TagsItsOwnSpanWithItsOwnProfile()
+    {
+        // Arrange
+        _auditLogOptionsMock.Setup(x => x.CurrentValue).Returns(new AIAuditLogOptions { Enabled = false });
+        var tracker = CreateTracker();
+        System.Diagnostics.Activity? nestedSpan = null;
+
+        // Act: a nested call (e.g. a guardrail judge) runs for another profile, outside the parent's own span.
+        var parentSpan = await TrackModelCallAsync(tracker, async () =>
+        {
+            _runtimeContext.SetValue(Constants.ContextKeys.ProfileAlias, "judge-profile");
+            nestedSpan = await TrackModelCallAsync(tracker);
+            _runtimeContext.SetValue(Constants.ContextKeys.ProfileAlias, "test-profile");
+        });
+
+        // Assert
+        parentSpan.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.ProfileAlias).ShouldBe("test-profile");
+        nestedSpan.ShouldNotBeNull();
+        nestedSpan.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.ProfileAlias).ShouldBe("judge-profile");
     }
 
     // Decision 1 in docs/plans/tracking-recorders: a recorder that fails must not fail the AI call. Before
@@ -630,7 +649,7 @@ public class AIOperationTrackerTests
 
     // The user tag used to come from the audit entry, so it was missing when auditing was off.
     [Fact]
-    public async Task TrackAsync_WithAuditDisabled_StillTagsTheCurrentActivityWithTheUser()
+    public async Task TrackAsync_WithAuditDisabled_StillTagsTheCallsSpanWithTheUser()
     {
         // Arrange
         _auditLogOptionsMock.Setup(x => x.CurrentValue).Returns(new AIAuditLogOptions { Enabled = false });
@@ -639,16 +658,57 @@ public class AIOperationTrackerTests
         var security = Mock.Of<Umbraco.Cms.Core.Security.IBackOfficeSecurity>(s => s.CurrentUser == user);
         var securityAccessor = Mock.Of<Umbraco.Cms.Core.Security.IBackOfficeSecurityAccessor>(a => a.BackOfficeSecurity == security);
         var tracker = CreateTracker(securityAccessor);
-        using var activity = new System.Diagnostics.Activity("ai-call").Start();
 
         // Act
-        await tracker.TrackAsync(
-            CreateDescriptor(),
-            _ => Task.FromResult(new AITrackedOperationResult<string> { Result = "success" }),
-            CancellationToken.None);
+        var span = await TrackModelCallAsync(tracker);
 
         // Assert
-        activity.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.UserId).ShouldBe(userKey.ToString());
+        span.GetTagItem(Umbraco.AI.Core.Telemetry.AITelemetry.Tags.UserId).ShouldBe(userKey.ToString());
+    }
+
+    /// <summary>
+    /// Tracks a call whose work is a chat call through the OpenTelemetry middleware, as the real pipeline
+    /// does, and returns the gen_ai span that call ran in. <paramref name="beforeModelCall"/> runs inside the
+    /// tracked call but outside its span, where the guardrail middleware makes its nested calls.
+    /// </summary>
+    private static async Task<System.Diagnostics.Activity> TrackModelCallAsync(
+        AIOperationTracker tracker,
+        Func<Task>? beforeModelCall = null)
+    {
+        System.Diagnostics.Activity? span = null;
+        var inner = new Mock<IChatClient>();
+        inner
+            .Setup(x => x.GetResponseAsync(It.IsAny<IEnumerable<ChatMessage>>(), It.IsAny<ChatOptions?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => span = System.Diagnostics.Activity.Current)
+            .ReturnsAsync(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
+        var client = new Umbraco.AI.Core.Chat.Middleware.AIOpenTelemetryChatMiddleware(
+            Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance).Apply(inner.Object);
+
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = source => source.Name == Umbraco.AI.Core.Telemetry.AITelemetry.SourceName,
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded,
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+
+        await tracker.TrackAsync(
+            CreateDescriptor(),
+            async ct =>
+            {
+                if (beforeModelCall is not null)
+                {
+                    await beforeModelCall();
+                }
+
+                var response = await client.GetResponseAsync("hi", cancellationToken: ct);
+                return new AITrackedOperationResult<string> { Result = response.Text };
+            },
+            CancellationToken.None);
+
+        span.ShouldNotBeNull();
+        span.Source.Name.ShouldBe(Umbraco.AI.Core.Telemetry.AITelemetry.SourceName);
+        return span;
     }
 
     private AIOperationTracker CreateTracker(Umbraco.Cms.Core.Security.IBackOfficeSecurityAccessor? securityAccessor = null) => new(

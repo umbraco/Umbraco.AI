@@ -1,6 +1,8 @@
 using Google.GenAI;
 using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
+using Umbraco.AI.Google.Errors;
 
 namespace Umbraco.AI.Google;
 
@@ -26,6 +28,15 @@ public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
         _cache = cache;
         WithCapability<GoogleChatCapability>();
     }
+
+    /// <summary>
+    /// Classifies Google.GenAI API errors (rate limits, an unavailable model, an invalid key) by their
+    /// HTTP status, falling back to the shared transport mapping for anything else.
+    /// </summary>
+    /// <param name="exception">The exception thrown by the Google SDK.</param>
+    /// <returns>The classified, user-safe error information.</returns>
+    public override AIProviderErrorInfo ClassifyError(Exception exception)
+        => GoogleErrorMapping.TryClassify(exception) ?? base.ClassifyError(exception);
 
     /// <summary>
     /// Gets all available models from the Google AI API with caching.

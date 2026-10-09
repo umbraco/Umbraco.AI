@@ -102,6 +102,7 @@ internal sealed class AIUsageRecordFactory : IAIUsageRecordFactory
                 : result.Blocked ? AIUsageRecordStatus.Blocked
                 : AIUsageRecordStatus.Failed,
             ErrorMessage = result.ErrorMessage,
+            IsNested = result.IsNested,
             CreatedAt = timestamp
         };
 

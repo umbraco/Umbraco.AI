@@ -10,15 +10,26 @@ internal sealed class AIOperationTracker : IAIOperationTracker
     private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IReadOnlyList<IAIOperationRecorder> _recorders;
     private readonly ILogger<AIOperationTracker> _logger;
+    private readonly TimeProvider _timeProvider;
 
     public AIOperationTracker(
         IAIRuntimeContextAccessor contextAccessor,
         IEnumerable<IAIOperationRecorder> recorders,
         ILogger<AIOperationTracker> logger)
+        : this(contextAccessor, recorders, logger, TimeProvider.System)
+    {
+    }
+
+    internal AIOperationTracker(
+        IAIRuntimeContextAccessor contextAccessor,
+        IEnumerable<IAIOperationRecorder> recorders,
+        ILogger<AIOperationTracker> logger,
+        TimeProvider timeProvider)
     {
         _contextAccessor = contextAccessor;
         _recorders = recorders.ToList();
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task<AITrackedOperationResult<TResult>> TrackAsync<TResult>(
@@ -57,17 +68,20 @@ internal sealed class AIOperationTracker : IAIOperationTracker
     {
         var runtimeContext = _contextAccessor.Context;
 
-        // Captured now, while the context still belongs to this call: nested AI calls (guardrail judge,
-        // semantic search embeddings) overwrite these keys before this call completes, so recorders
-        // never re-read the live context.
+        // Captured once, as the call starts, so recorders never re-read the live context, which can still
+        // change before the call completes. Nested AI calls get their own context (AIRuntimeContextCallScope).
         var identity = runtimeContext is not null
             ? AIUsageContext.ExtractFromRuntimeContext(descriptor.Capability, runtimeContext)
             : null;
 
-        var recordings = await BeginRecordingsAsync(
-            new AIOperationStart(descriptor, identity, runtimeContext.GetLogValues()), cancellationToken);
+        // The scope entered around the work currently running, if this call is made inside another one that
+        // hasn't ended yet.
+        var parent = AIOperationScope.Current is { HasEnded: false } current ? current : null;
 
-        return new AIOperationScope(this, recordings);
+        var start = new AIOperationStart(descriptor, identity, runtimeContext.GetLogValues(), IsNested: parent is not null);
+        var recordings = await BeginRecordingsAsync(start, cancellationToken);
+
+        return new AIOperationScope(this, recordings, parent, runtimeContext, _timeProvider);
     }
 
     private async Task<IReadOnlyList<IAIOperationRecording>> BeginRecordingsAsync(

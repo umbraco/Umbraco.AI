@@ -822,6 +822,7 @@ export type TestRunComparisonResponseModel = {
     isImprovement: boolean;
     durationChangeMs: number;
     graderComparisons: Array<TestGraderComparisonResponseModel>;
+    usageComparison?: null | TestUsageComparisonResponseModel;
 };
 
 export type TestRunErrorResponseModel = {
@@ -866,6 +867,34 @@ export type TestTranscriptResponseModel = {
     reasoning?: null | JsonElement;
     timing?: null | JsonElement;
     finalOutput?: null | JsonElement;
+};
+
+export type TestUsageComparisonResponseModel = {
+    inputTokensChange: number;
+    outputTokensChange: number;
+    totalTokensChange: number;
+    callCountChange: number;
+    failedCallCountChange: number;
+    callDurationChangeMs: number;
+    hasUnreportedCalls: boolean;
+    breakdownChanged: boolean;
+    entries: Array<TestUsageEntryComparisonResponseModel>;
+};
+
+export type TestUsageEntryComparisonResponseModel = {
+    capability: string;
+    providerId?: null | string;
+    modelId?: null | string;
+    profileId?: null | string;
+    profileAlias?: null | string;
+    featureType?: null | string;
+    featureId?: null | string;
+    featureAlias?: null | string;
+    baselineEntry?: null | TestUsageEntryResponseModel;
+    comparisonEntry?: null | TestUsageEntryResponseModel;
+    totalTokensChange: number;
+    callDurationChangeMs: number;
+    failedCallCountChange: number;
 };
 
 export type TestUsageEntryResponseModel = {

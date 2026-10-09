@@ -73,26 +73,27 @@ internal sealed class AIChatOptionsOverrideChatClient : DelegatingChatClient
             return options;
         }
 
-        // If no existing options, use overrides directly
+        // Copy so neither the caller's options nor the shared override are changed between calls.
         if (options is null)
         {
-            return overrideOptions;
+            return overrideOptions.Clone();
         }
 
-        // Merge: override values take precedence over existing options
-        return new ChatOptions
-        {
-            ModelId = overrideOptions.ModelId ?? options.ModelId,
-            Temperature = overrideOptions.Temperature ?? options.Temperature,
-            MaxOutputTokens = overrideOptions.MaxOutputTokens ?? options.MaxOutputTokens,
-            TopP = overrideOptions.TopP ?? options.TopP,
-            FrequencyPenalty = overrideOptions.FrequencyPenalty ?? options.FrequencyPenalty,
-            PresencePenalty = overrideOptions.PresencePenalty ?? options.PresencePenalty,
-            StopSequences = overrideOptions.StopSequences ?? options.StopSequences,
-            ResponseFormat = overrideOptions.ResponseFormat ?? options.ResponseFormat,
-            Tools = overrideOptions.Tools ?? options.Tools,
-            ToolMode = overrideOptions.ToolMode ?? options.ToolMode,
-            AdditionalProperties = overrideOptions.AdditionalProperties ?? options.AdditionalProperties
-        };
+        // Start from a copy of the caller's options so everything the override doesn't set is kept,
+        // notably ConversationId: the function-invoking client uses it to link a tool result to the
+        // previous response, and dropping it makes the provider reject the follow-up call.
+        var merged = options.Clone();
+        merged.ModelId = overrideOptions.ModelId ?? options.ModelId;
+        merged.Temperature = overrideOptions.Temperature ?? options.Temperature;
+        merged.MaxOutputTokens = overrideOptions.MaxOutputTokens ?? options.MaxOutputTokens;
+        merged.TopP = overrideOptions.TopP ?? options.TopP;
+        merged.FrequencyPenalty = overrideOptions.FrequencyPenalty ?? options.FrequencyPenalty;
+        merged.PresencePenalty = overrideOptions.PresencePenalty ?? options.PresencePenalty;
+        merged.StopSequences = overrideOptions.StopSequences ?? options.StopSequences;
+        merged.ResponseFormat = overrideOptions.ResponseFormat ?? options.ResponseFormat;
+        merged.Tools = overrideOptions.Tools ?? options.Tools;
+        merged.ToolMode = overrideOptions.ToolMode ?? options.ToolMode;
+        merged.AdditionalProperties = overrideOptions.AdditionalProperties ?? options.AdditionalProperties;
+        return merged;
     }
 }

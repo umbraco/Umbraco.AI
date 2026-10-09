@@ -1,7 +1,8 @@
 # Plan
 
 Task checklist for `umb-build-loop`. Slice 1 only, `v18/dev` only (no v17 backport, per the
-brief). Work happens in a worktree branched from `origin/v18/dev`; push trunk before
+brief). Pending specs (C# behind `#if MODEL_FACTS_PENDING`, TS as `it.skip`) are
+already committed; each task removes its file's guard in the commit that makes it pass. Work happens in a worktree branched from `origin/v18/dev`; push trunk before
 `EnterWorktree` (see `umb-build-loop-gotchas`).
 
 Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
@@ -42,9 +43,8 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   confirm the `context_length` and `pricing.prompt` / `pricing.completion` shapes; record what
   was found in `BUILD-LOG.md`. Then extend `OR/src/.../OpenRouterModelsResponse.cs` and write
   the T1 keys in `OpenRouterChatCapability.GetModelsAsync` alongside the existing settings-support
-  metadata. Create `OR/tests/Umbraco.AI.OpenRouter.Tests.Unit` (mirroring
-  `Umbraco.AI.Anthropic.Tests.Unit`), add it to `OR/Umbraco.AI.OpenRouter.slnx` **and** the root
-  `Umbraco.AI.slnx` (CI only runs what's listed there).
+  metadata. The test project `OR/tests/Umbraco.AI.OpenRouter.Tests.Unit` already exists and is
+  listed in both slnx files (added with the specs).
   depends-on: T1. parallel-group: B
 
 - [ ] **T6**: story MF-5 (AC1–AC12). Add `ModelFactsConnectionController`

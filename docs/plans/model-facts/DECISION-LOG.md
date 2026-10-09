@@ -38,3 +38,7 @@
   so the repository is written against the real generated types.
 - **09-10-2026** (umb-plan) OpenRouter gains its first test project; it must be added to the root
   `Umbraco.AI.slnx` or CI silently won't run it.
+- **09-10-2026** (umb-plan) Pending C# specs are wrapped in `#if MODEL_FACTS_PENDING` because the
+  types they use don't exist yet, and a non-compiling spec would break every build. The task that
+  makes a file pass removes its guard in the same commit. Specs were written in the worktree, not
+  on trunk, so they travel with the feature branch.

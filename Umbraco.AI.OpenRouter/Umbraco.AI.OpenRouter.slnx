@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="src/Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.OpenRouter.Tests.Unit/Umbraco.AI.OpenRouter.Tests.Unit.csproj" />
+  </Folder>
 </Solution>

@@ -5,6 +5,7 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.AI.Core.Media;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.SpeechToText;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Automate.Core.Security;
@@ -223,6 +224,34 @@ public class TranscribeAudioActionTests
         // Assert
         result.Status.ShouldBe(ActionResultStatus.Failed);
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Cancelled);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenTheProviderRateLimits_ReportsARateLimitingError()
+    {
+        // Arrange
+        _mediaResolverMock
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 0, 1 }, MediaType = "audio/mpeg" });
+
+        _speechToTextServiceMock
+            .Setup(s => s.TranscribeAsync(
+                It.IsAny<Action<AISpeechToTextBuilder>>(),
+                It.IsAny<Stream>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIProviderException(
+                new AIProviderErrorInfo(AIProviderErrorCategory.RateLimited, "user-safe message", ProviderCode: null, "raw message"),
+                new Exception("sdk failure")));
+
+        var action = CreateAction();
+        var context = CreateContext(new TranscribeAudioSettings { AudioPath = "voice-note.mp3" });
+
+        // Act
+        var result = await action.ExecuteAsync(context, CancellationToken.None);
+
+        // Assert
+        result.Status.ShouldBe(ActionResultStatus.Failed);
+        result.ErrorCategory.ShouldBe(StepRunErrorCategory.RateLimiting);
     }
 
     private TranscribeAudioAction CreateAction()

@@ -46,3 +46,9 @@
   three keys, invariant decimal without thousands separators, >= 0. Zero price is valid in the
   reader; turning "0" into "no fact" is the writer's (OpenRouter's) job. ReadInt now pins
   invariant culture (also used by image.maxEdge; no behaviour change).
+- **09-10-2026** (T2) Keep `IAIModelFactProvider` as an interface (matches `IAIFileProcessingHandler`;
+  later members ship as default interface methods). New members on `AIModelFact`/`AIModelFactContext`
+  must be optional `init` properties, never `required`. Options bound at `Umbraco:AI:ModelFacts`
+  in `AddUmbracoAICore` beside sibling options.
+- **09-10-2026** (T2) T3 must call `builder.AIModelFactProviders()` in core so the collection is
+  registered even before T4 appends the built-in provider (otherwise the service fails to resolve).

@@ -17,7 +17,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   Specs: `MF2_*` in `Umbraco.AI.Tests.Unit`.
   depends-on: none. parallel-group: A
 
-- [ ] **T2**: story MF-1 (AC1). Add the public contract in `Core/ModelFacts/`:
+- [x] **T2**: story MF-1 (AC1). Add the public contract in `Core/ModelFacts/`:
   `IAIModelFactProvider`, `AIModelFact`, `AIModelFactContext`, `AIModelFactTone`,
   `AIModelFactProviderCollection` + `AIModelFactProviderCollectionBuilder` (ordered), the
   `AIModelFactProviders()` builder extension in a new

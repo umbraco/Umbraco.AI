@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.TypeSafe.Tests.Unit/Umbraco.AI.TypeSafe.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

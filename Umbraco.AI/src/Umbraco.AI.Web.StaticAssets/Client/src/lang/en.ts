@@ -9,12 +9,13 @@ export default {
         select: "Select",
         close: "Close",
         remove: "Remove",
+        edit: "Edit",
         inherited: "Inherited",
         allowed: "Allowed",
         denied: "Denied",
         allow: "Allow",
         deny: "Deny",
-        toolCount: (count: number) => count === 1 ? "1 tool" : `${count} tools`,
+        toolCount: (count: number) => (count === 1 ? "1 tool" : `${count} tools`),
         noResults: "No results found",
     },
     uaiLabels: {
@@ -39,6 +40,7 @@ export default {
         moderation: "Moderation",
         speechtotext: "Speech to Text",
         imagegeneration: "Image Generation",
+        decision: "Decision",
     },
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",
@@ -54,6 +56,27 @@ export default {
         noProfilesAvailable: "No AI profiles available. Create one in the AI section.",
         deleteConfirm: "Are you sure you want to delete this profile?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
+        noSettingsAvailable: "This capability has no additional settings to configure.",
+    },
+    uaiSettings: {
+        defaultChatProfileLabel: "Default Chat Profile",
+        defaultChatProfileDescription:
+            "The default profile to use for chat completions when no profile is specified in API calls.",
+        classifierChatProfileLabel: "Classifier Chat Profile",
+        classifierChatProfileDescription:
+            "An optional profile for internal classification tasks such as agent routing. Uses a cheaper model to reduce costs. Falls back to the default chat profile if not set.",
+        defaultEmbeddingProfileLabel: "Default Embedding Profile",
+        defaultEmbeddingProfileDescription:
+            "The default profile to use for generating embeddings when no profile is specified in API calls.",
+        defaultSpeechToTextProfileLabel: "Default Speech to Text Profile",
+        defaultSpeechToTextProfileDescription:
+            "The default profile to use for speech-to-text transcription when no profile is specified in API calls.",
+        defaultImageGenerationProfileLabel: "Default Image Generation Profile",
+        defaultImageGenerationProfileDescription:
+            "The default profile to use for image generation when no profile is specified in API calls.",
+        defaultDecisionProfileLabel: "Default Decision Profile",
+        defaultDecisionProfileDescription:
+            "The default profile to use for decision requests when no profile is specified in API calls.",
     },
     uaiContext: {
         selectContext: "Select AI Context",
@@ -106,9 +129,11 @@ export default {
         getPropertyValueSchemaLabel: "Get Property Value Schema",
         getPropertyValueSchemaDescription: "Retrieve the JSON schema for the value a property data type accepts",
         getUmbracoContentLabel: "Get Umbraco Content",
-        getUmbracoContentDescription: "Retrieve a content item by its key, published or draft, including all property values",
+        getUmbracoContentDescription:
+            "Retrieve a content item by its key, published or draft, including all property values",
         getUmbracoContentChildrenLabel: "Get Umbraco Content Children",
-        getUmbracoContentChildrenDescription: "List child content items under a parent with optional filtering and paging",
+        getUmbracoContentChildrenDescription:
+            "List child content items under a parent with optional filtering and paging",
 
         // Content write tools (content-write scope)
         createUmbracoContentLabel: "Create Umbraco Content",
@@ -122,7 +147,8 @@ export default {
         addUmbracoContentItemLabel: "Add Umbraco Content Item",
         addUmbracoContentItemDescription: "Add an item to a block list, block grid or other collection property",
         removeUmbracoContentItemLabel: "Remove Umbraco Content Item",
-        removeUmbracoContentItemDescription: "Remove an item from a block list, block grid or other collection property",
+        removeUmbracoContentItemDescription:
+            "Remove an item from a block list, block grid or other collection property",
         moveUmbracoContentItemLabel: "Move Umbraco Content Item",
         moveUmbracoContentItemDescription: "Reorder an item in a block list, block grid or other collection property",
         publishUmbracoContentLabel: "Publish Umbraco Content",
@@ -301,5 +327,50 @@ export default {
         actionWarn: "Warn",
         actionRedact: "Redact",
         evaluatorConfig: "Configuration",
+    },
+    uaiKeyValueList: {
+        keyLabel: "Key",
+        valueLabel: "Value",
+        addRow: "Add row",
+        removeRow: "Remove row",
+        minMessage: (min: number) => `At least ${min} row(s) are required`,
+        maxMessage: (max: number) => `No more than ${max} row(s) are allowed`,
+    },
+    uaiDecisionQuestionList: {
+        addQuestion: "Add question",
+        pickKind: "Select a kind",
+        kindBinary: "Yes/no",
+        kindChoice: "Pick-one",
+        kindScore: "Score",
+        maxMessage: (max: number) => `No more than ${max} question(s) are allowed`,
+    },
+    uaiDecisionQuestionConfigModal: {
+        headlineAdd: "Add question",
+        headlineEdit: "Edit question",
+        aliasLabel: "Alias",
+        aliasDescription:
+            "A short, unique name for this question's output. Letters, digits and underscores, starting with a letter.",
+        instructionsLabel: "Instructions",
+        instructionsDescription: "What to decide.",
+        trueCriteriaLabel: "True criteria",
+        trueCriteriaDescription: 'Optional elaboration of what counts as "yes", beyond the instructions.',
+        falseCriteriaLabel: "False criteria",
+        falseCriteriaDescription: 'Optional elaboration of what counts as "no", beyond the instructions.',
+        thresholdLabel: "Threshold",
+        thresholdDescription: 'The minimum probability, from 0.0 to 1.0, counted as "yes".',
+        optionsLabel: "Options",
+        optionsDescription: "2 to 255 options, each a unique key the model picks and the value shown for it.",
+        levelsLabel: "Levels",
+        cancel: "Cancel",
+        save: "Save",
+        aliasRequired: "Alias is required.",
+        aliasInvalidFormat: "Alias must start with a letter and contain only letters, digits and underscores.",
+        aliasDuplicate: "Alias is already used by another question.",
+        instructionsRequired: "Instructions are required.",
+        thresholdRange: "Threshold must be between 0.0 and 1.0.",
+        optionsRange: "Requires between 2 and 255 options.",
+        optionsInvalid: "Every option needs a unique, non-blank key.",
+        levelsRange: "Requires between 2 and 10 levels.",
+        levelsInvalid: "Every level needs a non-blank label.",
     },
 } as UmbLocalizationDictionary;

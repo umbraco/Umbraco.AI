@@ -102,8 +102,9 @@ export class UaiModelFactsElement extends UmbLitElement {
                 ${detail
                     ? html`
                           <uui-button
+                              class="detail-trigger"
                               compact
-                              look="placeholder"
+                              look="default"
                               popovertarget=${popoverId}
                               label=${this.localize.term("uaiModelFacts_about", label)}>
                               <uui-icon name="icon-info"></uui-icon>
@@ -149,6 +150,19 @@ export class UaiModelFactsElement extends UmbLitElement {
 
             .value {
                 font-weight: bold;
+            }
+
+            /* Borderless, text-sized info button so rows with a detail trigger match plain rows. */
+            .detail-trigger {
+                --uui-button-height: 0;
+                --uui-button-border-width: 0;
+                --uui-button-padding-left-factor: 0;
+                --uui-button-padding-right-factor: 0;
+                --uui-button-border-radius: var(--uui-border-radius-2);
+                --uui-button-contrast: var(--uui-color-text-alt);
+                --uui-button-contrast-hover: var(--uui-color-interactive-emphasis);
+                font-size: inherit;
+                align-self: center;
             }
 
             .detail {

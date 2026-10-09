@@ -15,8 +15,6 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServiceBase
 {
     private readonly IAIUsageAggregationService _aggregationService;
-    private readonly IAIUsageRecordRepository _recordRepository;
-    private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
@@ -29,8 +27,6 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
 
     public AIUsageHourlyAggregationJob(
         IAIUsageAggregationService aggregationService,
-        IAIUsageRecordRepository recordRepository,
-        IAIUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
@@ -39,8 +35,6 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
         : base(logger, CheckInterval, StartupDelay)
     {
         _aggregationService = aggregationService;
-        _recordRepository = recordRepository;
-        _statisticsRepository = statisticsRepository;
         _options = options;
         _runtimeState = runtimeState;
         _serverRoleAccessor = serverRoleAccessor;
@@ -85,102 +79,10 @@ internal sealed class AIUsageHourlyAggregationJob : UmbracoAIRecurringHostedServ
             return;
         }
 
-        await ProcessMissingHoursAsync(CancellationToken.None);
-    }
-
-    /// <summary>
-    /// Processes all hours that need aggregation, from last aggregated to current completed hour.
-    /// </summary>
-    private async Task ProcessMissingHoursAsync(CancellationToken ct)
-    {
+        // Only process completed hours
         var now = DateTime.UtcNow;
-        var currentCompletedHour = GetHourStart(now.AddHours(-1)); // Only process completed hours
+        var lastCompletedHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0, DateTimeKind.Utc).AddHours(-1);
 
-        // Get last aggregated period
-        var lastAggregatedPeriod = await _statisticsRepository.GetLastAggregatedHourlyPeriodAsync(ct);
-
-        DateTime startFromHour;
-
-        if (lastAggregatedPeriod == null)
-        {
-            // No previous aggregation - check if we have any raw records
-            var firstRecordTimestamp = await _recordRepository.GetLastRecordTimestampAsync(ct);
-
-            if (firstRecordTimestamp == null)
-            {
-                _logger.LogDebug("No usage records found, nothing to aggregate");
-                return;
-            }
-
-            // Start from the hour of the first record
-            startFromHour = GetHourStart(firstRecordTimestamp.Value);
-            _logger.LogInformation(
-                "First hourly aggregation: starting from {StartHour} (first record timestamp: {FirstRecord})",
-                startFromHour,
-                firstRecordTimestamp);
-        }
-        else
-        {
-            // Start from next hour after last aggregated
-            startFromHour = lastAggregatedPeriod.Value.AddHours(1);
-            _logger.LogDebug(
-                "Last aggregated hour: {LastHour}, processing from {StartHour}",
-                lastAggregatedPeriod,
-                startFromHour);
-        }
-
-        // Process all missing hours sequentially
-        var currentHour = startFromHour;
-        var processedCount = 0;
-
-        while (currentHour <= currentCompletedHour && !ct.IsCancellationRequested)
-        {
-            try
-            {
-                _logger.LogDebug("Aggregating hour: {Hour}", currentHour);
-                await _aggregationService.AggregateHourlyAsync(currentHour, ct);
-                processedCount++;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Failed to aggregate hour {Hour}, will retry on next run",
-                    currentHour);
-
-                // Stop processing and retry from this hour on next run
-                break;
-            }
-
-            currentHour = currentHour.AddHours(1);
-        }
-
-        if (processedCount > 0)
-        {
-            _logger.LogInformation(
-                "Processed {Count} hours from {Start} to {End}",
-                processedCount,
-                startFromHour,
-                startFromHour.AddHours(processedCount - 1));
-        }
-        else if (startFromHour <= currentCompletedHour)
-        {
-            _logger.LogDebug("No new completed hours to process");
-        }
-    }
-
-    /// <summary>
-    /// Gets the start of the hour for a given timestamp.
-    /// </summary>
-    private static DateTime GetHourStart(DateTime timestamp)
-    {
-        return new DateTime(
-            timestamp.Year,
-            timestamp.Month,
-            timestamp.Day,
-            timestamp.Hour,
-            0,
-            0,
-            DateTimeKind.Utc);
+        await _aggregationService.AggregatePendingHoursAsync(lastCompletedHour, CancellationToken.None);
     }
 }

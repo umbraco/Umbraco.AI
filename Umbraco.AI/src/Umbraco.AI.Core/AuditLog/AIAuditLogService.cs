@@ -32,6 +32,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     }
 
     /// <inheritdoc />
+    [Obsolete("Unused by Umbraco.AI; use QueueStartAuditLogAsync instead. Will be removed in v19.")]
     public async Task<AIAuditLog> StartAuditLogAsync(AIAuditLog auditLog,
         CancellationToken ct = default)
     {
@@ -39,14 +40,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
         // This method just handles parent ID resolution and persists to the database.
 
         // Set parent ID from explicit parameter or auto-detect from ambient scope
-        if (!auditLog.ParentAuditLogId.HasValue)
-        {
-            var resolvedParentId = AIAuditScope.Current?.AuditLogId;
-            if (resolvedParentId.HasValue)
-            {
-                auditLog.ParentAuditLogId = resolvedParentId;
-            }
-        }
+        ResolveParentFromAmbientScope(auditLog);
 
         // Ensure status is set to Running
         if (auditLog.Status != AIAuditLogStatus.Running)
@@ -64,6 +58,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     }
 
     /// <inheritdoc />
+    [Obsolete("Unused by Umbraco.AI; use QueueCompleteAuditLogAsync instead. Will be removed in v19.")]
     public async Task CompleteAuditLogAsync(
         AIAuditLog audit,
         AIAuditPrompt? prompt,
@@ -95,6 +90,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     }
 
     /// <inheritdoc />
+    [Obsolete("Unused by Umbraco.AI; use QueueRecordAuditLogFailureAsync instead. Will be removed in v19.")]
     public async Task RecordAuditLogFailureAsync(
         AIAuditLog audit,
         AIAuditPrompt? prompt,
@@ -131,14 +127,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     {
         // IMPORTANT: Resolve parent ID from ambient scope NOW, before queuing,
         // because AuditScope.Current won't be available in the background worker context
-        if (!auditLog.ParentAuditLogId.HasValue)
-        {
-            var resolvedParentId = AIAuditScope.Current?.AuditLogId;
-            if (resolvedParentId.HasValue)
-            {
-                auditLog.ParentAuditLogId = resolvedParentId.Value;
-            }
-        }
+        ResolveParentFromAmbientScope(auditLog);
 
         // Ensure status is set to Running
         if (auditLog.Status != AIAuditLogStatus.Running)
@@ -426,6 +415,24 @@ internal sealed class AIAuditLogService : IAIAuditLogService
             string text => text,
             _ => data.ToString()
         };
+    }
+
+    /// <summary>
+    /// Fills a missing parent from the ambient <see cref="AIAuditScope"/>. A scope that belongs to this
+    /// entry itself is ignored, so a top-level entry never becomes its own parent.
+    /// </summary>
+    private static void ResolveParentFromAmbientScope(AIAuditLog auditLog)
+    {
+        if (auditLog.ParentAuditLogId.HasValue)
+        {
+            return;
+        }
+
+        var resolvedParentId = AIAuditScope.Current?.AuditLogId;
+        if (resolvedParentId.HasValue && resolvedParentId.Value != auditLog.Id)
+        {
+            auditLog.ParentAuditLogId = resolvedParentId.Value;
+        }
     }
 
     /// <summary>

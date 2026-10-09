@@ -12,15 +12,11 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 internal sealed class AITrackingEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     private readonly IAIOperationTracker _tracker;
-    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    public AITrackingEmbeddingMiddleware(IAIOperationTracker tracker, IAIRuntimeContextAccessor contextAccessor)
-    {
-        _tracker = tracker;
-        _contextAccessor = contextAccessor;
-    }
+    public AITrackingEmbeddingMiddleware(IAIOperationTracker tracker)
+        => _tracker = tracker;
 
     /// <inheritdoc />
     public IEmbeddingGenerator<string, Embedding<float>> Apply(IEmbeddingGenerator<string, Embedding<float>> generator)
-        => new AITrackingEmbeddingGenerator(generator, _tracker, _contextAccessor);
+        => new AITrackingEmbeddingGenerator(generator, _tracker);
 }

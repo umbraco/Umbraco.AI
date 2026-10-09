@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetFileData, GetFileErrors, GetFileResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponse, StreamAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentSurfacesData, GetAgentSurfacesErrors, GetAgentSurfacesResponses, GetAgentWorkflowsData, GetAgentWorkflowsErrors, GetAgentWorkflowsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetFileData, GetFileErrors, GetFileResponses, GetSuggestStartersAvailabilityData, GetSuggestStartersAvailabilityErrors, GetSuggestStartersAvailabilityResponses, RunAgentData, RunAgentErrors, RunAgentResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, StreamAgentData, StreamAgentErrors, StreamAgentResponse, StreamAgentResponses, SuggestStartersData, SuggestStartersErrors, SuggestStartersResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -100,6 +100,22 @@ export class AgentsService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+    
+    public static suggestStarters<ThrowOnError extends boolean = false>(options: Options<SuggestStartersData, ThrowOnError>) {
+        return (options.client ?? client).post<SuggestStartersResponses, SuggestStartersErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/suggest-starters',
+            ...options
+        });
+    }
+    
+    public static getSuggestStartersAvailability<ThrowOnError extends boolean = false>(options: Options<GetSuggestStartersAvailabilityData, ThrowOnError>) {
+        return (options.client ?? client).get<GetSuggestStartersAvailabilityResponses, GetSuggestStartersAvailabilityErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/suggest-starters/availability',
+            ...options
         });
     }
     

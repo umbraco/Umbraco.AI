@@ -87,7 +87,7 @@ public class OpenAIChatCapability(
     /// <inheritdoc />
     /// <remarks>
     /// <para>
-    /// Reasoning effort applies to the o-series and GPT-5 only, so it is declared per model rather than
+    /// Reasoning effort applies to the o-series, GPT-5 and GPT-6 Luna, so it is declared per model rather than
     /// per provider — otherwise the profile editor would offer it on a gpt-4o profile. The stable set
     /// here is the list of reasoning families, so the predicate is written as an allow-list and inverted
     /// into the declaration.
@@ -159,21 +159,34 @@ public class OpenAIChatCapability(
             return;
         }
 
-        if (!OpenAIModelUtilities.SupportsReasoningEffort(modelId ?? DefaultChatModel))
+        var resolvedModelId = modelId ?? DefaultChatModel;
+        if (!OpenAIModelUtilities.SupportsReasoningEffort(resolvedModelId))
         {
             return;
         }
 
+        var isGpt6Luna = OpenAIModelUtilities.IsGpt6Luna(resolvedModelId);
+        var supportsExtendedEffort = OpenAIModelUtilities.SupportsExtendedReasoningEffort(resolvedModelId);
         ResponseReasoningEffortLevel? effort = capabilitySettings.ReasoningEffort.Trim().ToLowerInvariant() switch
         {
             "none" => ResponseReasoningEffortLevel.None,
+            // Preserve a legacy profile's low-effort intent when switching to Luna. OpenAI recommends
+            // low when migrating from minimal; omitting it would silently select the medium default.
+            "minimal" when isGpt6Luna => ResponseReasoningEffortLevel.Low,
             "minimal" => ResponseReasoningEffortLevel.Minimal,
             "low" => ResponseReasoningEffortLevel.Low,
             "medium" => ResponseReasoningEffortLevel.Medium,
             "high" => ResponseReasoningEffortLevel.High,
-            // Unrecognised values (including xhigh/max, which the pinned SDK cannot express) are skipped
-            // rather than sent, so a stored value can never fail the request.
-            _ => null
+            // The SDK's extensible string enum can serialize newer levels without a dependency bump.
+            "xhigh" when supportsExtendedEffort => new ResponseReasoningEffortLevel("xhigh"),
+            "max" when supportsExtendedEffort => new ResponseReasoningEffortLevel("max"),
+            // The dropdown is shared: preserve a high-effort selection on other reasoning models
+            // rather than dropping it and silently returning to the model's default effort.
+            "xhigh" or "max" => ResponseReasoningEffortLevel.High,
+            // Unrecognised values are skipped rather than sent.
+            // Cast explicitly: otherwise the extensible enum's implicit string conversion can
+            // turn the null arm into a constructor call with a null string and throw.
+            _ => (ResponseReasoningEffortLevel?)null
         };
 
         if (effort is null)

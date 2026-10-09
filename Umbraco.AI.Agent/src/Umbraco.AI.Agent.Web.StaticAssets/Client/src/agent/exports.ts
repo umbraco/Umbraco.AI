@@ -18,6 +18,7 @@ export type {
     UaiStandardAgentConfig,
     UaiOrchestratedAgentConfig,
     UaiWorkflowItem,
+    UaiStarterPrompt,
 } from "./types.js";
 export {
     isStandardConfig,

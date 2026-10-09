@@ -57,6 +57,11 @@ public class CreateAgentRequestModel
     public AIAgentScopeModel? Scope { get; init; }
 
     /// <summary>
+    /// Optional starter prompts shown as clickable chips in an empty chat for this agent.
+    /// </summary>
+    public IEnumerable<AIStarterPromptModel>? StarterPrompts { get; init; }
+
+    /// <summary>
     /// Type-specific configuration for this agent.
     /// </summary>
     public AgentConfigModel? Config { get; init; }

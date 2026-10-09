@@ -57,6 +57,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         return new AIUsageSummary
         {
             TotalRequests = totalRequests,
+            NestedRequestCount = statsList.Sum(s => s.NestedRequestCount),
             InputTokens = statsList.Sum(s => s.InputTokens),
             CachedInputTokens = AIUsageTokenAggregation.SumOrNull(statsList, s => s.CachedInputTokens),
             OutputTokens = statsList.Sum(s => s.OutputTokens),
@@ -184,7 +185,10 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
     }
 
     /// <summary>
-    /// Gets statistics with hybrid querying: aggregated stats + live current hour data.
+    /// Gets statistics from every layer that holds part of the range, split where the aggregation jobs
+    /// have actually got to rather than at the clock: daily rows up to the last rolled-up day, hourly rows
+    /// up to the last aggregated hour, then raw records. Each layer starts where the previous one ends, so
+    /// nothing is missed while a job is behind and nothing is counted twice.
     /// </summary>
     private async Task<IEnumerable<AIUsageStatistics>> GetStatisticsAsync(
         DateTime from,
@@ -193,81 +197,88 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         AIUsageFilter? filter,
         CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
-        var currentPeriodStart = granularity == AIUsagePeriod.Hourly
-            ? GetHourStart(now)
-            : GetDayStart(now);
+        var periodStart = granularity == AIUsagePeriod.Hourly
+            ? (Func<DateTime, DateTime>)GetHourStart
+            : GetDayStart;
 
-        // Query aggregated statistics (everything before current period)
-        var aggregatedStats = await GetAggregatedStatisticsAsync(
-            from,
-            to < currentPeriodStart ? to : currentPeriodStart,
-            granularity,
-            filter,
-            ct);
+        // Raw records are deleted once their hour is aggregated, so they hold everything after the last
+        // aggregated hour. With no hourly statistics yet, everything is still raw.
+        var lastHourlyPeriod = await _statisticsRepository.GetLastAggregatedHourlyPeriodAsync(ct);
+        var rawFrom = lastHourlyPeriod?.AddHours(1) ?? from;
 
-        var allStats = aggregatedStats.ToList();
+        var allStats = new List<AIUsageStatistics>();
 
-        // If query range includes current period, add live data from raw records
-        if (to > currentPeriodStart)
+        if (granularity == AIUsagePeriod.Hourly)
         {
-            try
-            {
-                var liveStats = await GetLiveStatisticsAsync(
-                    from > currentPeriodStart ? from : currentPeriodStart,
-                    to < now ? to : now,
-                    currentPeriodStart,
-                    filter,
-                    ct);
+            allStats.AddRange(await GetHourlyStatisticsAsync(from, Earliest(to, rawFrom), filter, ct));
+        }
+        else
+        {
+            // Daily rows only exist for days the rollup job has completed; later days are still hourly.
+            var lastDailyPeriod = await _statisticsRepository.GetLastAggregatedDailyPeriodAsync(ct);
+            var hourlyFrom = lastDailyPeriod?.AddDays(1) ?? from;
 
-                if (liveStats != null)
-                {
-                    allStats.AddRange(liveStats);
-                }
-            }
-            catch (Exception ex)
+            allStats.AddRange(await GetDailyStatisticsAsync(from, Earliest(to, hourlyFrom), filter, ct));
+
+            var hourlyStats = await GetHourlyStatisticsAsync(
+                Latest(from, hourlyFrom), Earliest(to, rawFrom), filter, ct);
+            allStats.AddRange(AIUsageStatisticsGrouping.GroupStatistics(hourlyStats, periodStart));
+        }
+
+        try
+        {
+            var liveStats = await GetLiveStatisticsAsync(
+                Latest(from, rawFrom),
+                Earliest(to, DateTime.UtcNow),
+                periodStart,
+                filter,
+                ct);
+
+            if (liveStats != null)
             {
-                _logger.LogWarning(ex, "Failed to get live statistics, using aggregated data only");
+                allStats.AddRange(liveStats);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get live statistics, using aggregated data only");
         }
 
         return allStats;
     }
 
-    /// <summary>
-    /// Gets aggregated statistics from hourly or daily tables.
-    /// </summary>
-    private async Task<IEnumerable<AIUsageStatistics>> GetAggregatedStatisticsAsync(
+    private async Task<IEnumerable<AIUsageStatistics>> GetHourlyStatisticsAsync(
         DateTime from,
         DateTime to,
-        AIUsagePeriod granularity,
         AIUsageFilter? filter,
         CancellationToken ct)
-    {
-        if (from >= to)
-            return [];
+        => from < to ? await _statisticsRepository.GetHourlyByPeriodAsync(from, to, filter, ct) : [];
 
-        if (granularity == AIUsagePeriod.Hourly)
-        {
-            return await _statisticsRepository.GetHourlyByPeriodAsync(from, to, filter, ct);
-        }
-        else
-        {
-            return await _statisticsRepository.GetDailyByPeriodAsync(from, to, filter, ct);
-        }
-    }
+    private async Task<IEnumerable<AIUsageStatistics>> GetDailyStatisticsAsync(
+        DateTime from,
+        DateTime to,
+        AIUsageFilter? filter,
+        CancellationToken ct)
+        => from < to ? await _statisticsRepository.GetDailyByPeriodAsync(from, to, filter, ct) : [];
+
+    private static DateTime Earliest(DateTime a, DateTime b) => a < b ? a : b;
+
+    private static DateTime Latest(DateTime a, DateTime b) => a > b ? a : b;
 
     /// <summary>
-    /// Gets live statistics from raw usage records for the current hour/day.
-    /// Aggregates in-memory to match statistics format.
+    /// Gets live statistics from raw usage records that have not been aggregated yet, bucketed into the
+    /// requested granularity. Aggregates in-memory to match statistics format.
     /// </summary>
     private async Task<IEnumerable<AIUsageStatistics>?> GetLiveStatisticsAsync(
         DateTime from,
         DateTime to,
-        DateTime currentPeriodStart,
+        Func<DateTime, DateTime> periodStart,
         AIUsageFilter? filter,
         CancellationToken ct)
     {
+        if (from >= to)
+            return null;
+
         var records = await _recordRepository.GetRecordsByPeriodAsync(from, to, ct);
         var recordList = records.ToList();
 
@@ -283,44 +294,7 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         if (recordList.Count == 0)
             return null;
 
-        // Aggregate in-memory, grouped by dimensions
-        var aggregated = recordList
-            .GroupBy(r => new
-            {
-                r.ProviderId,
-                r.ModelId,
-                r.ProfileId,
-                r.ProfileAlias,
-                r.Capability,
-                r.UserId,
-                r.UserName,
-                r.EntityType,
-                r.FeatureType
-            })
-            .Select(g => new AIUsageStatistics
-            {
-                Id = Guid.NewGuid(),
-                Period = currentPeriodStart,
-                ProviderId = g.Key.ProviderId,
-                ModelId = g.Key.ModelId,
-                ProfileId = g.Key.ProfileId,
-                ProfileAlias = g.Key.ProfileAlias,
-                Capability = g.Key.Capability,
-                UserId = g.Key.UserId,
-                UserName = g.Key.UserName,
-                EntityType = g.Key.EntityType,
-                FeatureType = g.Key.FeatureType,
-                RequestCount = g.Count(),
-                SuccessCount = g.Count(r => r.Status == "Succeeded"),
-                FailureCount = g.Count(r => r.Status == "Failed"),
-                InputTokens = g.Sum(r => (long)r.InputTokens),
-                CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, r => r.CachedInputTokens),
-                OutputTokens = g.Sum(r => (long)r.OutputTokens),
-                TotalTokens = g.Sum(r => (long)r.TotalTokens),
-                TotalDurationMs = g.Sum(r => r.DurationMs),
-                CreatedAt = DateTime.UtcNow
-            })
-            .ToList();
+        var aggregated = AIUsageStatisticsGrouping.GroupRecords(recordList, periodStart);
 
         _logger.LogDebug(
             "Aggregated {RecordCount} live records into {StatsCount} statistics groups",
@@ -379,16 +353,14 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
 
         var totalRequests = statsList.Sum(s => s.RequestCount);
 
+        // Group by the dimension only: names can change over the range, so each row takes the latest one.
         var breakdown = statsList
-            .GroupBy(s => new
-            {
-                Dimension = dimensionSelector(s),
-                Name = nameSelector?.Invoke(s)
-            })
+            .OrderBy(s => s.Period)
+            .GroupBy(dimensionSelector)
             .Select(g => new AIUsageBreakdownItem
             {
-                Dimension = string.IsNullOrEmpty(g.Key.Dimension) ? unknownLabel : g.Key.Dimension,
-                DimensionName = g.Key.Name,
+                Dimension = string.IsNullOrEmpty(g.Key) ? unknownLabel : g.Key,
+                DimensionName = nameSelector is null ? null : AIUsageStatisticsGrouping.Latest(g, nameSelector),
                 RequestCount = g.Sum(s => s.RequestCount),
                 TotalTokens = g.Sum(s => s.TotalTokens),
                 CachedInputTokens = AIUsageTokenAggregation.SumOrNull(g, s => s.CachedInputTokens),

@@ -5,13 +5,15 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiModelEditorChangeEventDetail } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem } from "../../../types.js";
+import type { UaiAgentDetailModel, UaiStandardAgentConfig, UaiOrchestratedAgentConfig, UaiWorkflowItem, UaiStarterPrompt } from "../../../types.js";
 import { isStandardConfig, isOrchestratedConfig } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
+import { UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS } from "../../../property-actions/constants.js";
 import type { UaiWorkflowPickerElement } from "../../../components/workflow-picker/workflow-picker.element.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
 import "@umbraco-cms/backoffice/code-editor";
+import "@umbraco-cms/backoffice/property-action";
 
 /**
  * Workspace view for Agent settings.
@@ -61,6 +63,14 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const profileId = picker.value ?? null;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId }, "profileId"),
+        );
+    }
+
+    #onStarterPromptsChange(event: CustomEvent<UaiStarterPrompt[]>) {
+        event.stopPropagation();
+        const starterPrompts = event.detail;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ starterPrompts }, "starterPrompts"),
         );
     }
 
@@ -217,6 +227,30 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         `;
     }
 
+    // A bare property rather than a box of its own: it belongs with the behaviour it seeds, and
+    // "Suggest starters" drafts from the Instructions directly above it.
+    #renderStarterPromptsProperty() {
+        const model = this._model;
+        if (!model) return nothing;
+
+        return html`
+            <umb-property-layout
+                label=${this.localize.term("uaiAgent_starterPrompts")}
+                description=${this.localize.term("uaiAgent_starterPromptsDescription")}
+            >
+                <umb-property-action-menu
+                    slot="action-menu"
+                    .propertyEditorUiAlias=${UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS}
+                ></umb-property-action-menu>
+                <uai-agent-starter-prompts-editor
+                    slot="editor"
+                    .prompts=${model.starterPrompts}
+                    @change=${this.#onStarterPromptsChange}
+                ></uai-agent-starter-prompts-editor>
+            </umb-property-layout>
+        `;
+    }
+
     #renderStandardSection() {
         const config = this.#standardConfig;
         if (!config) return nothing;
@@ -244,6 +278,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         ${umbBindToValidation(this, "$.config.instructions", config.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
+
+                ${this.#renderStarterPromptsProperty()}
             </uui-box>
 
             <uui-box headline="Output">
@@ -302,6 +338,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         @workflow-loaded=${this.#onWorkflowLoaded}
                     ></uai-workflow-picker>
                 </umb-property-layout>
+
+                ${this.#renderStarterPromptsProperty()}
             </uui-box>
 
             ${this.#renderWorkflowSettings()}

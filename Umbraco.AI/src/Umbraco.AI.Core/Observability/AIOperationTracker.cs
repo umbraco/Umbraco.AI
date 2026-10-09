@@ -1,11 +1,5 @@
-using System.Diagnostics;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
-using Umbraco.AI.Core.AuditLog;
-using Umbraco.AI.Core.AuditLog.Middleware;
 using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.Observability;
@@ -14,33 +8,28 @@ namespace Umbraco.AI.Core.Observability;
 internal sealed class AIOperationTracker : IAIOperationTracker
 {
     private readonly IAIRuntimeContextAccessor _contextAccessor;
-    private readonly IAIUsageRecordingService _usageRecordingService;
-    private readonly IAIUsageRecordFactory _usageRecordFactory;
-    private readonly IOptionsMonitor<AIAnalyticsOptions> _analyticsOptions;
-    private readonly IAIAuditLogFactory _auditLogFactory;
-    private readonly IOptionsMonitor<AIAuditLogOptions> _auditLogOptions;
+    private readonly IReadOnlyList<IAIOperationRecorder> _recorders;
     private readonly ILogger<AIOperationTracker> _logger;
-
-    internal IAIAuditLogService AuditLogService { get; }
+    private readonly TimeProvider _timeProvider;
 
     public AIOperationTracker(
         IAIRuntimeContextAccessor contextAccessor,
-        IAIAuditLogService auditLogService,
-        IAIAuditLogFactory auditLogFactory,
-        IOptionsMonitor<AIAuditLogOptions> auditLogOptions,
-        IAIUsageRecordingService usageRecordingService,
-        IAIUsageRecordFactory usageRecordFactory,
-        IOptionsMonitor<AIAnalyticsOptions> analyticsOptions,
+        IEnumerable<IAIOperationRecorder> recorders,
         ILogger<AIOperationTracker> logger)
+        : this(contextAccessor, recorders, logger, TimeProvider.System)
+    {
+    }
+
+    internal AIOperationTracker(
+        IAIRuntimeContextAccessor contextAccessor,
+        IEnumerable<IAIOperationRecorder> recorders,
+        ILogger<AIOperationTracker> logger,
+        TimeProvider timeProvider)
     {
         _contextAccessor = contextAccessor;
-        AuditLogService = auditLogService;
-        _auditLogFactory = auditLogFactory;
-        _auditLogOptions = auditLogOptions;
-        _usageRecordingService = usageRecordingService;
-        _usageRecordFactory = usageRecordFactory;
-        _analyticsOptions = analyticsOptions;
+        _recorders = recorders.ToList();
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task<AITrackedOperationResult<TResult>> TrackAsync<TResult>(
@@ -49,81 +38,91 @@ internal sealed class AIOperationTracker : IAIOperationTracker
         CancellationToken cancellationToken)
     {
         var scope = await BeginAsync(descriptor, cancellationToken);
+        AITrackedOperationResult<TResult> result;
         try
         {
-            var result = await operation(cancellationToken);
-            await scope.CompleteAsync(result.Usage, result.AuditResponse);
-            return result;
+            using (scope.EnterScope())
+            {
+                result = await operation(cancellationToken);
+            }
         }
         catch (Exception ex)
         {
             await scope.FailAsync(ex);
             throw;
         }
-        finally
+
+        if (result.Failure is { } failure)
         {
-            scope.Dispose();
+            await scope.FailAsync(failure, result.Usage);
         }
+        else
+        {
+            await scope.CompleteAsync(result.Usage, result.ResponseData);
+        }
+
+        return result;
     }
 
     public async Task<AIOperationScope> BeginAsync(AIOperationDescriptor descriptor, CancellationToken cancellationToken)
     {
-        AIAuditScope? auditScope = null;
-        AIAuditLog? auditLog = null;
-        AIAuditPrompt? auditPrompt = null;
+        var runtimeContext = _contextAccessor.Context;
 
-        if (_auditLogOptions.CurrentValue.Enabled && _contextAccessor.Context is not null)
-        {
-            var auditContext = AIAuditContext.ExtractFromRuntimeContext(
-                descriptor.Capability, _contextAccessor.Context, descriptor.PromptData);
+        // Captured once, as the call starts, so recorders never re-read the live context, which can still
+        // change before the call completes. Nested AI calls get their own context (AIRuntimeContextCallScope).
+        var identity = runtimeContext is not null
+            ? AIUsageContext.ExtractFromRuntimeContext(descriptor.Capability, runtimeContext)
+            : null;
 
-            auditLog = _auditLogFactory.Create(auditContext, descriptor.Metadata, parentId: AIAuditScope.Current?.AuditLogId);
-            auditScope = AIAuditScope.Begin(auditLog.Id);
-            auditLog.TraceId = Activity.Current?.TraceId.ToString();
+        // The scope entered around the work currently running, if this call is made inside another one that
+        // hasn't ended yet.
+        var parent = AIOperationScope.Current is { HasEnded: false } current ? current : null;
 
-            await AuditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
+        var start = new AIOperationStart(descriptor, identity, runtimeContext.GetLogValues(), IsNested: parent is not null);
+        var recordings = await BeginRecordingsAsync(start, cancellationToken);
 
-            auditPrompt = new AIAuditPrompt { Data = descriptor.PromptData, Capability = descriptor.Capability };
-        }
-
-        // Enrich ambient Activity regardless of audit toggle (falls back to runtime context).
-        AIActivityEnricher.EnrichCurrentActivity(auditLog, _contextAccessor);
-
-        return new AIOperationScope(this, descriptor, auditScope, auditLog, auditPrompt, cancellationToken);
+        return new AIOperationScope(this, recordings, parent, runtimeContext, _timeProvider);
     }
 
-    internal async Task RecordUsageAsync(
-        AIOperationDescriptor descriptor, UsageDetails? usage, long durationMs,
-        bool succeeded, string? errorMessage, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<IAIOperationRecording>> BeginRecordingsAsync(
+        AIOperationStart start,
+        CancellationToken cancellationToken)
     {
-        try
+        var recordings = new List<IAIOperationRecording>(_recorders.Count);
+        foreach (var recorder in _recorders)
         {
-            if (!_analyticsOptions.CurrentValue.Enabled || _contextAccessor.Context is null)
+            try
             {
-                return;
+                if (await recorder.BeginAsync(start, cancellationToken) is { } recording)
+                {
+                    recordings.Add(recording);
+                }
             }
-
-            if (usage is null && !descriptor.RecordUsageWhenEmpty)
+            catch (Exception ex)
             {
-                return; // chat/embedding: no token counts => nothing to record
+                _logger.LogError(ex, "{Recorder} failed to start recording {Capability}",
+                    recorder.GetType().FullName, start.Descriptor.Capability);
             }
-
-            var usageContext = AIUsageContext.ExtractFromRuntimeContext(descriptor.Capability, _contextAccessor.Context);
-            var recordContext = AIUsageRecordContext.FromUsageContext(usageContext);
-            var result = new AIUsageRecordResult
-            {
-                Usage = usage,
-                DurationMs = durationMs,
-                Succeeded = succeeded,
-                ErrorMessage = errorMessage,
-            };
-
-            var record = _usageRecordFactory.Create(recordContext, result);
-            await _usageRecordingService.QueueRecordUsageAsync(record, cancellationToken);
         }
-        catch (Exception ex)
+
+        return recordings;
+    }
+
+    /// <summary>
+    /// Hands a finished call's outcome to each recording, in recorder order. Never throws into the AI call.
+    /// </summary>
+    internal async Task EndRecordingsAsync(IReadOnlyList<IAIOperationRecording> recordings, AIOperationOutcome outcome)
+    {
+        foreach (var recording in recordings)
         {
-            _logger.LogError(ex, "Failed to record AI usage for {Capability}", descriptor.Capability);
+            try
+            {
+                await recording.EndAsync(outcome);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Recording} failed to record the end of an AI call", recording.GetType().FullName);
+            }
         }
     }
 }

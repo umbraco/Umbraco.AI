@@ -25,9 +25,20 @@ public sealed class AITestOutcome
     public string? FinishReason { get; set; }
 
     /// <summary>
-    /// Token usage statistics for the execution.
+    /// AI usage for the execution: tokens, call counts (total, unreported, failed), summed AI call duration
+    /// (not wall-clock; overlapping calls are summed) and a per capability/provider/model/profile/feature
+    /// <see cref="AITestUsage.Breakdown"/>. Covers tracked AI calls made by the test feature, grader calls
+    /// excluded. Null when the run made no tracked call.
     /// </summary>
+    public AITestUsage? Usage { get; set; }
+
+    /// <summary>
+    /// Always null; the runner never sets it. Use <see cref="Usage"/> instead.
+    /// </summary>
+    [Obsolete("Always null. Use Usage instead. Will be removed in v19")]
+#pragma warning disable CS0618 // Declares the obsolete AITestTokenUsage type for compatibility
     public AITestTokenUsage? TokenUsage { get; set; }
+#pragma warning restore CS0618
 }
 
 /// <summary>

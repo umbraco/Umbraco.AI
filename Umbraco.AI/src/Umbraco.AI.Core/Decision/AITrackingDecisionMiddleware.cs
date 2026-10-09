@@ -1,5 +1,4 @@
 using Umbraco.AI.Core.Observability;
-using Umbraco.AI.Core.RuntimeContext;
 
 #pragma warning disable UMBRACOAI_DECISION // IAIDecisionClient is experimental
 
@@ -12,14 +11,10 @@ namespace Umbraco.AI.Core.Decision;
 internal sealed class AITrackingDecisionMiddleware : IAIDecisionMiddleware
 {
     private readonly IAIOperationTracker _tracker;
-    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    public AITrackingDecisionMiddleware(IAIOperationTracker tracker, IAIRuntimeContextAccessor contextAccessor)
-    {
-        _tracker = tracker;
-        _contextAccessor = contextAccessor;
-    }
+    public AITrackingDecisionMiddleware(IAIOperationTracker tracker)
+        => _tracker = tracker;
 
     /// <inheritdoc />
-    public IAIDecisionClient Apply(IAIDecisionClient client) => new AITrackingDecisionClient(client, _tracker, _contextAccessor);
+    public IAIDecisionClient Apply(IAIDecisionClient client) => new AITrackingDecisionClient(client, _tracker);
 }

@@ -3,7 +3,7 @@ using Umbraco.AI.Extensions;
 namespace Umbraco.AI.OpenAI.Tests.Unit;
 
 /// <summary>
-/// The reasoning effort applies to the o-series and the GPT-5 line only. This predicate is the single
+/// The reasoning effort applies to the o-series, GPT-5 and GPT-6 Luna. This predicate is the single
 /// source for both the per-model declaration surfaced to the profile editor and the decision to send an
 /// effort at all, so it is worth pinning down.
 /// </summary>
@@ -13,6 +13,40 @@ namespace Umbraco.AI.OpenAI.Tests.Unit;
 public class OpenAIReasoningEffortSupportTests
 {
     [Theory]
+    [InlineData("gpt-5.6")]
+    [InlineData("gpt-5.6-sol")]
+    [InlineData("gpt-5.6-terra")]
+    [InlineData("gpt-5.6-luna")]
+    [InlineData("gpt-5.6-sol-2026-09-01")]
+    [InlineData("GPT-5.6")]
+    [InlineData("gpt-6-luna")]
+    [InlineData("gpt-6-luna-2026-09-01")]
+    public void SupportsExtendedReasoningEffort_KnownModel_ReturnsTrue(string modelId)
+    {
+        OpenAIModelUtilities.SupportsExtendedReasoningEffort(modelId).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("gpt-5.5")]
+    [InlineData("gpt-5.60")]
+    [InlineData("gpt-5.6x")]
+    [InlineData("gpt-5.6-chat")]
+    [InlineData("gpt-5.6-chat-latest")]
+    [InlineData("o3-mini")]
+    [InlineData("gpt-4o")]
+    [InlineData("gpt-6-sol")]
+    [InlineData("gpt-6-luna-preview")]
+    [InlineData(null)]
+    [InlineData("")]
+    public void SupportsExtendedReasoningEffort_OtherModel_ReturnsFalse(string? modelId)
+    {
+        OpenAIModelUtilities.SupportsExtendedReasoningEffort(modelId).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("gpt-6-luna")]
+    [InlineData("gpt-6-luna-2026-09-01")]
+    [InlineData("GPT-6-LUNA")]
     [InlineData("gpt-5.6")]
     [InlineData("gpt-5.6-sol")]
     [InlineData("gpt-5.6-terra")]
@@ -37,6 +71,12 @@ public class OpenAIReasoningEffortSupportTests
     [InlineData("chatgpt-4o-latest")]
     [InlineData(null)]
     [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("gpt-6-sol")]
+    [InlineData("gpt-6-astra")]
+    [InlineData("gpt-6-luna-chat-latest")]
+    [InlineData("gpt-6-lunar")]
+    [InlineData("gpt-6-luna-preview")]
     public void SupportsReasoningEffort_NonReasoningModel_ReturnsFalse(string? modelId)
     {
         OpenAIModelUtilities.SupportsReasoningEffort(modelId).ShouldBeFalse();

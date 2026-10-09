@@ -1,7 +1,5 @@
-using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
-using Umbraco.AI.Core.RuntimeContext;
 
 #pragma warning disable UMBRACOAI_DECISION // IAIDecisionClient is experimental
 
@@ -17,13 +15,11 @@ internal sealed class AITrackingDecisionClient : IAIDecisionClient
 {
     private readonly IAIDecisionClient _innerClient;
     private readonly IAIOperationTracker _tracker;
-    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    public AITrackingDecisionClient(IAIDecisionClient innerClient, IAIOperationTracker tracker, IAIRuntimeContextAccessor contextAccessor)
+    public AITrackingDecisionClient(IAIDecisionClient innerClient, IAIOperationTracker tracker)
     {
         _innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
         _tracker = tracker ?? throw new ArgumentNullException(nameof(tracker));
-        _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     }
 
     /// <inheritdoc />
@@ -43,7 +39,7 @@ internal sealed class AITrackingDecisionClient : IAIDecisionClient
                 {
                     Result = response,
                     Usage = response.Usage,
-                    AuditResponse = new AIAuditResponse { Data = BuildAuditData(response), Usage = response.Usage },
+                    ResponseData = BuildResponseData(response),
                 };
             },
             cancellationToken);
@@ -67,12 +63,10 @@ internal sealed class AITrackingDecisionClient : IAIDecisionClient
     /// <inheritdoc />
     public void Dispose() => _innerClient.Dispose();
 
-    private AIOperationDescriptor BuildDescriptor(AIDecisionRequest request) => new()
+    private static AIOperationDescriptor BuildDescriptor(AIDecisionRequest request) => new()
     {
         Capability = AICapability.Decision,
         PromptData = BuildPromptData(request),
-        Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
-        RecordUsageWhenEmpty = true,
     };
 
     /// <summary>
@@ -96,7 +90,7 @@ internal sealed class AITrackingDecisionClient : IAIDecisionClient
     /// <summary>
     /// Builds a descriptive response data object for audit logging: one answer per question id.
     /// </summary>
-    private static object BuildAuditData(AIDecisionResponse response) => new
+    private static object BuildResponseData(AIDecisionResponse response) => new
     {
         response.ModelId,
         Answers = response.Answers.ToDictionary(kv => kv.Key, kv => BuildAnswerSnapshot(kv.Value)),

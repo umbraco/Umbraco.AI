@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Utilities;
 
 namespace Umbraco.AI.Core.Tests;
@@ -261,14 +262,24 @@ internal sealed class AITestRunner : IAITestRunner
 
         try
         {
-            // Pass the nullable slot to the feature so null ("no override") stays null all the way to the resolver.
-            var transcript = await testFeature.ExecuteAsync(
-                test,
-                runNumber,
-                testRun.ProfileId,
-                contextIds,
-                guardrailIdsOverride,
-                cancellationToken);
+            // Collect usage from every tracked AI call the feature makes. The scope is begun here (not in a
+            // helper) so its AsyncLocal flows through the awaits below, and is disposed before grading so
+            // calls made by graders are not counted against the run.
+            AITestTranscript transcript;
+            AIUsageCollectorSnapshot usage;
+            using (var usageScope = AIUsageCollectionScope.Begin())
+            {
+                // Pass the nullable slot to the feature so null ("no override") stays null all the way to the resolver.
+                transcript = await testFeature.ExecuteAsync(
+                    test,
+                    runNumber,
+                    testRun.ProfileId,
+                    contextIds,
+                    guardrailIdsOverride,
+                    cancellationToken);
+
+                usage = usageScope.Collector.GetSnapshot();
+            }
 
             // Link transcript to run and persist it
             transcript.RunId = testRun.Id;
@@ -281,7 +292,7 @@ internal sealed class AITestRunner : IAITestRunner
                 OutputType = AITestOutputType.Text,
                 OutputValue = testFeature.ExtractOutputValue(transcript),
                 FinishReason = "completed",
-                TokenUsage = null
+                Usage = MapUsage(usage)
             };
 
             // Store outcome
@@ -311,6 +322,48 @@ internal sealed class AITestRunner : IAITestRunner
         }
 
         return testRun;
+    }
+
+    /// <summary>
+    /// Maps the collected usage snapshot to the outcome's usage; null when no tracked call was made.
+    /// </summary>
+    private static AITestUsage? MapUsage(AIUsageCollectorSnapshot snapshot)
+    {
+        if (snapshot.CallCount == 0)
+        {
+            return null;
+        }
+
+        return new AITestUsage
+        {
+            InputTokens = snapshot.InputTokens,
+            OutputTokens = snapshot.OutputTokens,
+            TotalTokens = snapshot.TotalTokens,
+            CallCount = snapshot.CallCount,
+            UnreportedCallCount = snapshot.UnreportedCallCount,
+            DurationMs = snapshot.DurationMs,
+            FailedCallCount = snapshot.FailedCallCount,
+            Breakdown = snapshot.Breakdown
+                .Select(e => new AITestUsageEntry
+                {
+                    Capability = e.Capability,
+                    ProviderId = e.ProviderId,
+                    ModelId = e.ModelId,
+                    ProfileId = e.ProfileId,
+                    ProfileAlias = e.ProfileAlias,
+                    FeatureType = e.FeatureType,
+                    FeatureId = e.FeatureId,
+                    FeatureAlias = e.FeatureAlias,
+                    InputTokens = e.InputTokens,
+                    OutputTokens = e.OutputTokens,
+                    TotalTokens = e.TotalTokens,
+                    CallCount = e.CallCount,
+                    UnreportedCallCount = e.UnreportedCallCount,
+                    DurationMs = e.DurationMs,
+                    FailedCallCount = e.FailedCallCount
+                })
+                .ToList()
+        };
     }
 
     /// <summary>

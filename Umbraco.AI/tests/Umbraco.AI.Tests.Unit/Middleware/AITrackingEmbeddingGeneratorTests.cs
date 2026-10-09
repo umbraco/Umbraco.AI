@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -142,9 +143,9 @@ public class AITrackingEmbeddingGeneratorTests
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
 
-        // RecordUsageWhenEmpty=true means even a failed operation with no usage records duration/status.
+        // Usage is always recorded, so even a failed operation with no usage records duration/status.
         var record = await AwaitOrTimeout(usageSignal.Task);
-        record.Status.ShouldBe("Failed");
+        record.Status.ShouldBe(AIUsageRecordStatus.Failed);
         record.ErrorMessage.ShouldBe("AI error");
         record.InputTokens.ShouldBe(0);
         record.OutputTokens.ShouldBe(0);
@@ -154,7 +155,7 @@ public class AITrackingEmbeddingGeneratorTests
     [Fact]
     public async Task GenerateAsync_NullUsage_StillRecordsUsageRow()
     {
-        // Arrange — Embedding now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
+        // Arrange — Embedding always records usage, so a null Usage still queues a
         // record (with null token usage) capturing duration/status rather than being dropped.
         var fakeGenerator = new FakeEmbeddingGenerator();
         var generator = CreateGenerator(fakeGenerator);
@@ -165,7 +166,7 @@ public class AITrackingEmbeddingGeneratorTests
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        record.Status.ShouldBe("Succeeded");
+        record.Status.ShouldBe(AIUsageRecordStatus.Succeeded);
         record.InputTokens.ShouldBe(0);
         record.OutputTokens.ShouldBe(0);
         record.TotalTokens.ShouldBe(0);
@@ -234,16 +235,11 @@ public class AITrackingEmbeddingGeneratorTests
     #endregion
 
     private AITrackingEmbeddingGenerator CreateGenerator(IEmbeddingGenerator<string, Embedding<float>> innerGenerator) =>
-        new(innerGenerator, CreateTracker(), _contextAccessorMock.Object);
+        new(innerGenerator, CreateTracker());
 
     private AIOperationTracker CreateTracker() => new(
         _contextAccessorMock.Object,
-        _auditLogServiceMock.Object,
-        _auditLogFactoryMock.Object,
-        _auditLogOptionsMock.Object,
-        _usageRecordingServiceMock.Object,
-        _usageRecordFactoryMock.Object,
-        _analyticsOptionsMock.Object,
+        TestOperationRecorders.Default(_auditLogServiceMock.Object, _auditLogFactoryMock.Object, _auditLogOptionsMock.Object, _usageRecordingServiceMock.Object, _usageRecordFactoryMock.Object, _analyticsOptionsMock.Object),
         NullLogger<AIOperationTracker>.Instance);
 
     private static AIUsageRecord BuildUsageRecord(AIUsageRecordContext ctx, AIUsageRecordResult result) => new()
@@ -263,7 +259,7 @@ public class AITrackingEmbeddingGeneratorTests
         OutputTokens = result.Usage?.OutputTokenCount ?? 0,
         TotalTokens = result.Usage?.TotalTokenCount ?? 0,
         DurationMs = result.DurationMs,
-        Status = result.Succeeded ? "Succeeded" : "Failed",
+        Status = result.Succeeded ? AIUsageRecordStatus.Succeeded : AIUsageRecordStatus.Failed,
         ErrorMessage = result.ErrorMessage,
         CreatedAt = DateTime.UtcNow,
     };

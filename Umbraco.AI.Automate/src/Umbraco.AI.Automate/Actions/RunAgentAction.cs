@@ -235,7 +235,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             _logger.LogError(ex,
                 "Automation {AutomationId} / Run {RunId}: AI agent {AgentId} execution failed",
                 context.AutomationId, context.RunId, settings.AgentId);
-            return ActionResult.Failed(ex, StepRunErrorCategory.Unknown);
+            return ActionResult.Failed(ex, StepErrorCategoryMapping.FromException(ex));
         }
     }
 

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.AI;
-using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
 
@@ -37,8 +36,6 @@ internal sealed class AITrackingImageGenerationClient : AIBoundImageGeneratorBas
         {
             Capability = AICapability.ImageGeneration,
             PromptData = BuildPromptData(request, options),
-            Metadata = null,
-            RecordUsageWhenEmpty = true,
         };
 
         var tracked = await _tracker.TrackAsync(
@@ -51,7 +48,7 @@ internal sealed class AITrackingImageGenerationClient : AIBoundImageGeneratorBas
                 {
                     Result = response,
                     Usage = response.Usage,
-                    AuditResponse = new AIAuditResponse { Data = $"{imageCount} image(s)", Usage = response.Usage },
+                    ResponseData = $"{imageCount} image(s)",
                 };
             },
             cancellationToken);

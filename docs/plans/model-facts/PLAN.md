@@ -26,7 +26,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   `required`/`init` properties, not positional records (ARCHITECTURE decision 4).
   depends-on: none. parallel-group: A
 
-- [ ] **T3**: story MF-1 (AC3–AC14). Add `IAIModelFactService` + internal `AIModelFactService`:
+- [x] **T3**: story MF-1 (AC3–AC14). Add `IAIModelFactService` + internal `AIModelFactService`:
   per-model runtime caching keyed by provider type + connection + capability + model (empty
   results cached too), only uncached models passed to each provider, providers run concurrently
   under the timeout, failures logged at Warning and skipped, unrequested model ids dropped,

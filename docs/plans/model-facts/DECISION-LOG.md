@@ -52,3 +52,8 @@
   in `AddUmbracoAICore` beside sibling options.
 - **09-10-2026** (T2) T3 must call `builder.AIModelFactProviders()` in core so the collection is
   registered even before T4 appends the built-in provider (otherwise the service fails to resolve).
+- **09-10-2026** (T3) Provider failures and timeouts are not cached (retried next request); empty
+  results are. Duplicate requested ids collapse to the first. A provider that ignores the token
+  is abandoned at the timeout (its task keeps running; acceptable for a misbehaving provider).
+  Urls are stored normalised (`AbsoluteUri`). Fact providers resolve as singletons, so they can't
+  inject scoped services directly; note this in the public docs (T11).

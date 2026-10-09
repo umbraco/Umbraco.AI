@@ -101,6 +101,7 @@
   </Folder>
   <Folder Name="/Providers/Google/">
     <Project Path="Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj" />
+    <Project Path="Umbraco.AI.Google/tests/Umbraco.AI.Google.Tests.Unit/Umbraco.AI.Google.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Providers/HuggingFace/">
     <Project Path="Umbraco.AI.HuggingFace/src/Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.csproj" />

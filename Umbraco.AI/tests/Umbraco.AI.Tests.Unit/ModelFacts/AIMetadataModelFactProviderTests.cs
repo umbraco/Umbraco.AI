@@ -1,4 +1,3 @@
-#if MODEL_FACTS_PENDING // Pending: T4 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-3: Core turns standard Metadata into facts (AC1-AC9).
 // AIMetadataModelFactProvider is assumed to have a parameterless constructor.
 using Umbraco.AI.Core.Models;
@@ -110,7 +109,7 @@ public class AIMetadataModelFactProviderTests
 
         [Fact] // MF-3 AC8
         public void TheResultHasNoEntryForTheModel()
-            => _facts.ShouldNotContainKey(ModelId);
+            => _facts.Keys.ShouldNotContain(ModelId);
     }
 
     public class GivenAMalformedContextWindowAndPartialPricing
@@ -128,7 +127,6 @@ public class AIMetadataModelFactProviderTests
 
         [Fact] // MF-3 AC9
         public void TheResultHasNoEntryForTheModel()
-            => GetFacts(_descriptor).ShouldNotContainKey(ModelId);
+            => GetFacts(_descriptor).Keys.ShouldNotContain(ModelId);
     }
 }
-#endif

@@ -212,8 +212,8 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIProfileService, AIProfileService>();
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingNotificationHandler>();
 
-        // Model facts (providers are appended to the collection; none are registered by default here)
-        builder.AIModelFactProviders();
+        // Model facts (the built-in metadata provider goes first; other packages append theirs after it)
+        builder.AIModelFactProviders().Append<AIMetadataModelFactProvider>();
         services.AddSingleton<IAIModelFactService, AIModelFactService>();
 
         // Settings

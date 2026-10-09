@@ -1,5 +1,5 @@
 // MF-1: Package developers can supply facts about models.
-// Real entry point: core's own registration (AddUmbracoAICore) on a real UmbracoBuilder, resolved after Build().
+// Real entry point: core's own registration (AddUmbracoAICore) on a real UmbracoBuilder, registered after Build().
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,7 +14,7 @@ public class AIModelFactServiceRegistrationTests
 {
     // ---------------------------------------------------------------- Happy path
 
-    public class GivenADefaultCoreSetup : IDisposable
+    public class GivenADefaultCoreSetup
     {
         private readonly ServiceCollection _services = new();
 
@@ -29,8 +29,6 @@ public class AIModelFactServiceRegistrationTests
             builder.AddUmbracoAICore();
             builder.Build();
         }
-
-        public void Dispose() { }
 
         [Fact]
         public void TheServiceIsRegistered()

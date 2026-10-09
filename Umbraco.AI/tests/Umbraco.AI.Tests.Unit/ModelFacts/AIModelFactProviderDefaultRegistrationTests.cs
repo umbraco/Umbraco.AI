@@ -1,4 +1,3 @@
-#if MODEL_FACTS_PENDING // Pending: T4 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-1: Package developers can supply facts about models (AC2).
 // Real entry point: core's own registration (AddUmbracoAICore, which AddUmbracoAI calls) on a real
 // UmbracoBuilder, registered with UmbracoBuilder.Build() and resolved from the built service provider.
@@ -46,4 +45,3 @@ public class AIModelFactProviderDefaultRegistrationTests
 
     // No sad path: AC2 is a single registration criterion.
 }
-#endif

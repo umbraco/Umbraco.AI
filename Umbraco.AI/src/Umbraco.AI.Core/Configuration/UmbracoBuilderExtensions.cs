@@ -212,6 +212,10 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIProfileService, AIProfileService>();
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingNotificationHandler>();
 
+        // Model facts (providers are appended to the collection; none are registered by default here)
+        builder.AIModelFactProviders();
+        services.AddSingleton<IAIModelFactService, AIModelFactService>();
+
         // Settings
         services.AddSingleton<IAISettingsRepository, InMemoryAISettingsRepository>();
         services.AddSingleton<IAISettingsService, AISettingsService>();

@@ -13,7 +13,8 @@ public sealed class AIModelFact
     /// Gets the key that identifies this fact, for example <c>openrouter.contextWindow</c>.
     /// </summary>
     /// <remarks>
-    /// Must be unique per fact. Prefix it with the owning package to avoid clashes.
+    /// Must be unique among one model's facts across all providers (it is later used as a column id).
+    /// Prefix it with the owning package to avoid clashes.
     /// </remarks>
     public required string Key { get; init; }
 
@@ -51,7 +52,7 @@ public sealed class AIModelFact
 
     /// <summary>
     /// Gets an optional "learn more" link. Must be an absolute <c>http</c> or <c>https</c> URL;
-    /// any other scheme is not rendered.
+    /// relative or non-http(s) URLs are dropped by core.
     /// </summary>
     public string? Url { get; init; }
 }

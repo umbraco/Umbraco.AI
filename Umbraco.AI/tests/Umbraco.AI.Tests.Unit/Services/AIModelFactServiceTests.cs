@@ -1,4 +1,3 @@
-#if MODEL_FACTS_PENDING // Pending: T3 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-1: Package developers can supply facts about models (AC3-AC14).
 // AIModelFactService is assumed to take (AIModelFactProviderCollection, IAppPolicyCache,
 // IOptions<AIModelFactOptions>, ILogger<AIModelFactService>). The cache is a real ObjectCacheAppCache.
@@ -82,7 +81,7 @@ public class AIModelFactServiceTests
 
         [Fact] // MF-1 AC5
         public async Task TheModelWithNoFactsIsOmitted()
-            => (await GetAsync(_service, "m1", "m2")).ShouldNotContainKey("m2");
+            => (await GetAsync(_service, "m1", "m2")).Keys.ShouldNotContain("m2");
     }
 
     public class GivenACachingProviderAlreadyFetchedOneModel
@@ -250,7 +249,7 @@ public class AIModelFactServiceTests
 
         [Fact] // MF-1 AC12
         public async Task TheSlowProvidersFactsAreNotReturned()
-            => (await GetAsync(_service, "m1")).ShouldNotContainKey("m1");
+            => (await GetAsync(_service, "m1")).Keys.ShouldNotContain("m1");
     }
 
     public class GivenAProviderReturnsFactsForAModelThatWasNotRequested
@@ -262,7 +261,52 @@ public class AIModelFactServiceTests
 
         [Fact] // MF-1 AC13
         public async Task TheUnrequestedModelIsIgnored()
-            => (await GetAsync(_service, "m1")).ShouldNotContainKey("m9");
+            => (await GetAsync(_service, "m1")).Keys.ShouldNotContain("m9");
+    }
+
+    public class GivenAProviderThatIgnoresTheCancellationToken
+    {
+        private readonly AIModelFactService _service = CreateService(
+            [new TokenIgnoringProvider { Facts = { ["m1"] = [MakeFact("ignoring1")] } }],
+            providerTimeout: TimeSpan.FromMilliseconds(50));
+
+        [Fact] // MF-1 AC12
+        public async Task TheCallCompletesWellUnderTheProvidersDelay()
+        {
+            var stopwatch = Stopwatch.StartNew();
+            await GetAsync(_service, "m1");
+            stopwatch.Stop();
+
+            stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(2));
+        }
+
+        [Fact] // MF-1 AC12
+        public async Task TheProvidersFactsAreNotReturned()
+            => (await GetAsync(_service, "m1")).Keys.ShouldNotContain("m1");
+    }
+
+    public class GivenAProviderReturnsAListContainingANullFact
+    {
+        private readonly AIModelFactService _service = CreateService(
+        [
+            new NullFactProvider(),
+        ]);
+
+        [Fact] // MF-1 AC10
+        public async Task OnlyTheValidFactIsReturned()
+            => (await GetAsync(_service, "m1"))["m1"].Select(f => f.Key).ShouldBe(new[] { "valid" });
+    }
+
+    public class GivenAProviderReturnsAnUnnormalisedUrl
+    {
+        private readonly AIModelFactService _service = CreateService(
+        [
+            new ProviderA { Facts = { ["m1"] = [MakeFact("a1", url: "HTTP://Example.com/a b")] } },
+        ]);
+
+        [Fact] // MF-1 AC14
+        public async Task TheNormalisedUrlIsStored()
+            => (await GetAsync(_service, "m1"))["m1"][0].Url.ShouldBe("http://example.com/a%20b");
     }
 
     public class GivenAFactWithAnUnsafeUrl
@@ -338,5 +382,35 @@ public class AIModelFactServiceTests
             return await base.GetModelFactsAsync(context, models, cancellationToken);
         }
     }
+
+    /// <summary>Takes 5 s and never observes the cancellation token.</summary>
+    public sealed class TokenIgnoringProvider : RecordingFactProvider
+    {
+        public override async Task<IReadOnlyDictionary<string, IReadOnlyList<AIModelFact>>> GetModelFactsAsync(
+            AIModelFactContext context,
+            IReadOnlyList<AIModelDescriptor> models,
+            CancellationToken cancellationToken)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            return await base.GetModelFactsAsync(context, models, CancellationToken.None);
+        }
+    }
+
+    /// <summary>Returns a list with a null entry followed by one valid fact.</summary>
+    public sealed class NullFactProvider : RecordingFactProvider
+    {
+        public override Task<IReadOnlyDictionary<string, IReadOnlyList<AIModelFact>>> GetModelFactsAsync(
+            AIModelFactContext context,
+            IReadOnlyList<AIModelDescriptor> models,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyDictionary<string, IReadOnlyList<AIModelFact>> result =
+                new Dictionary<string, IReadOnlyList<AIModelFact>>
+                {
+                    ["m1"] = new AIModelFact[] { null!, MakeFact("valid") },
+                };
+
+            return Task.FromResult(result);
+        }
+    }
 }
-#endif

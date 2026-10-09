@@ -33,3 +33,7 @@
 - **09-10-2026 T8** `f34787a2`: Internal model-facts repository + data source, types, mapper, en.ts
   `uaiModelFacts` area. build:core + test:core green (reviewer rerun). Passed first review; nothing
   reaches the public rollup. Smoke: covered by T10's live UI check.
+- **09-10-2026 T9** `3fddaa34`: `<uai-model-facts>` element + display logic; 38 pending FE specs now
+  running (62/62 test:core, reviewer rerun). One fix round: a failed request raised a backoffice
+  error toast (`tryExecute` now `disableNotifications`) and the error wasn't logged. Detail popover
+  uses `uui-button` + `popovertarget` like the create-collection actions. Smoke: T10.

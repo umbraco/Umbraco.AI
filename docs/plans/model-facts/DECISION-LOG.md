@@ -76,3 +76,6 @@
 - **09-10-2026** (T7) `capability` is `[FromQuery, Required]`: a missing value now gets the
   framework's `ValidationProblemDetails` 400 (a ProblemDetails with `errors`); an invalid value
   gets the controller's own ProblemDetails 400. Both satisfy the SPEC.
+- **09-10-2026** (T9) Fact detail opens in a `uui-popover-container` from a compact `uui-button`
+  (repo/CMS idiom), not a native `title` tooltip, so it's reachable by keyboard. A failed facts
+  request is silent in the UI (no toast) and logs `console.warn`.

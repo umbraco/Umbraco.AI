@@ -69,7 +69,7 @@ Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
   `exports.ts` change.
   depends-on: T7. parallel-group: D
 
-- [ ] **T9**: story MF-6 (AC3–AC11). Add the internal `<uai-model-facts>` element in
+- [x] **T9**: story MF-6 (AC3–AC11). Add the internal `<uai-model-facts>` element in
   `FE/profile/components/model-facts/`, exported via `profile/components/index.ts` (internal
   barrel). Pure display logic (ordering check, 6-fact cap, safe-url check) in a separate
   module with a vitest spec, like `declared-settings.test.ts`. Lit text bindings only.

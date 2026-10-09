@@ -1,4 +1,3 @@
-#if MODEL_FACTS_PENDING // Pending: T2 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-1: Package developers can supply facts about models (AC1).
 // Real entry point: providers appended through builder.AIModelFactProviders() on a real UmbracoBuilder,
 // registered with UmbracoBuilder.Build() and resolved from the built service provider, as a Composer would.
@@ -72,4 +71,3 @@ public class AIModelFactProviderCollectionTests
                 new Dictionary<string, IReadOnlyList<AIModelFact>>());
     }
 }
-#endif

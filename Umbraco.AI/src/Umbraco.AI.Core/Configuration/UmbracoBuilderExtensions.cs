@@ -24,6 +24,7 @@ using Umbraco.AI.Core.EntityAdapter.Adapters;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Chat.Middleware;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.ModelFacts;
 using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.PropertyValueOperations;
@@ -81,6 +82,9 @@ public static partial class UmbracoBuilderExtensions
 
         // Bind AIUsageTelemetryOptions from "Umbraco:AI:Telemetry" section
         services.Configure<AIUsageTelemetryOptions>(config.GetSection("Umbraco:AI:Telemetry"));
+
+        // Bind AIModelFactOptions from "Umbraco:AI:ModelFacts" section
+        services.Configure<AIModelFactOptions>(config.GetSection("Umbraco:AI:ModelFacts"));
 
         // Bind AIExperimentalOptions from "Umbraco:AI:Experimental" section
         services.Configure<AIExperimentalOptions>(config.GetSection("Umbraco:AI:Experimental"));

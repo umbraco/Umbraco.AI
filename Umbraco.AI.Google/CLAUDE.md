@@ -20,11 +20,12 @@ Umbraco.AI.Google is a provider plugin for Umbraco.AI that enables integration w
 
 ### Project Structure
 
-This provider uses a simplified structure (single project):
+This provider uses a simplified structure (one source project and a unit test project):
 
-| Project             | Purpose                                             |
-| ------------------- | --------------------------------------------------- |
-| `Umbraco.AI.Google` | Provider implementation, capabilities, and settings |
+| Project                          | Purpose                                             |
+| -------------------------------- | --------------------------------------------------- |
+| `Umbraco.AI.Google`              | Provider implementation, capabilities, and settings |
+| `Umbraco.AI.Google.Tests.Unit`   | Unit tests (xUnit + Shouldly)                       |
 
 ### Provider Implementation
 
@@ -51,6 +52,10 @@ public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
 - Dynamically discovers available Gemini chat models via API using include/exclude regex patterns
 - Resolves default model dynamically (prefers latest stable flash model)
 - Uses async `CreateClientAsync` override for model resolution
+
+### Error Classification
+
+`GoogleProvider.ClassifyError` maps Google.GenAI `ClientError`/`ServerError` to `AIProviderErrorCategory` (as `AnthropicProvider` does), falling back to the shared transport mapping for anything else. The SDK keeps the HTTP status in its own `StatusCode`, so the shared mapping alone would report every Google API failure as a network error. Test it through `GoogleProvider.ClassifyError`; the tests use messages captured from real Google responses.
 
 ### Settings System
 
@@ -80,6 +85,16 @@ No hardcoded model list — the provider adapts automatically as Google adds or 
 - Extended context windows (up to 1M tokens for Pro models)
 - Multimodal capabilities (for supported models)
 - System prompt support
+
+## Error Classification
+
+`GoogleProvider` overrides `ClassifyError` so Google.GenAI failures reach Umbraco.AI as typed
+`AIProviderException`s (rate limited, unavailable, invalid key) instead of a generic network error.
+`GoogleErrorMapping` reads the status carried by `ClientError`/`ServerError`. Those derive from
+`HttpRequestException` but keep the status in their own property, which the shared mapping can't see.
+It also tells a daily quota from a per-minute one, and reads the `API_KEY_INVALID` reason, because
+Google reports a bad key as HTTP 400. Match `ClientError`/`ServerError` directly: the `ApiException`
+base class only exists in newer Google.GenAI versions than the lowest one supported.
 
 ## Key Namespaces
 

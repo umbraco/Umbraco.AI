@@ -68,9 +68,8 @@ internal sealed class AIOperationTracker : IAIOperationTracker
     {
         var runtimeContext = _contextAccessor.Context;
 
-        // Captured now, while the context still belongs to this call: nested AI calls (guardrail judge,
-        // semantic search embeddings) overwrite these keys before this call completes, so recorders
-        // never re-read the live context.
+        // Captured once, as the call starts, so recorders never re-read the live context, which can still
+        // change before the call completes. Nested AI calls get their own context (AIRuntimeContextCallScope).
         var identity = runtimeContext is not null
             ? AIUsageContext.ExtractFromRuntimeContext(descriptor.Capability, runtimeContext)
             : null;
@@ -82,7 +81,7 @@ internal sealed class AIOperationTracker : IAIOperationTracker
         var start = new AIOperationStart(descriptor, identity, runtimeContext.GetLogValues(), IsNested: parent is not null);
         var recordings = await BeginRecordingsAsync(start, cancellationToken);
 
-        return new AIOperationScope(this, recordings, parent, _timeProvider);
+        return new AIOperationScope(this, recordings, parent, runtimeContext, _timeProvider);
     }
 
     private async Task<IReadOnlyList<IAIOperationRecording>> BeginRecordingsAsync(

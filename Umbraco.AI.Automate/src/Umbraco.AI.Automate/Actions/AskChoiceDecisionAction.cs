@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Umbraco.AI.Automate.Helpers;
 using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Settings;
@@ -106,7 +107,7 @@ public sealed class AskChoiceDecisionAction : ActionBase<AskChoiceDecisionSettin
             _logger.LogError(ex,
                 "Automation {AutomationId} / Run {RunId}: Ask pick-one decision failed",
                 context.AutomationId, context.RunId);
-            return ActionResult.Failed(ex, StepRunErrorCategory.Unknown);
+            return ActionResult.Failed(ex, StepErrorCategoryMapping.FromException(ex));
         }
     }
 

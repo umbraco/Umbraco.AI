@@ -24,6 +24,7 @@ using Moq;
 using Shouldly;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.AI.Core.Decision;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.Settings;
 using Umbraco.Automate.Core.Actions;
 using Umbraco.Automate.Core.Settings;
@@ -243,6 +244,25 @@ public class AskDecisionsActionTests
         });
 
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
+    }
+
+    #endregion
+
+    #region Sad path: provider rejects the API key
+
+    [Fact]
+    public async Task AskDecisions_WhenProviderRejectsTheApiKey_ReportsANonRetryableAuthenticationError()
+    {
+        // StepErrorCategoryMapping (from #557) is what makes this non-retryable instead of Unknown --
+        // resending the same request to the same rejected key can never succeed.
+        _decisionServiceMock
+            .Setup(s => s.GetDecisionResponseAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIDecisionRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIProviderException(
+                new AIProviderErrorInfo(AIProviderErrorCategory.Authentication, "invalid api key", ProviderCode: null, "invalid api key")));
+
+        var result = await RunAsync(new AskDecisionsSettings { Context = "text", Questions = ThreeQuestions() });
+
+        result.ErrorCategory.ShouldBe(StepRunErrorCategory.Authentication);
     }
 
     #endregion

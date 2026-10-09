@@ -93,6 +93,7 @@ public sealed class AIOpenTelemetryDecisionMiddleware : IAIDecisionMiddleware
         private static void EnrichActivity(Activity activity, AIDecisionRequest request, AIDecisionOptions? options)
         {
             activity.SetTag("gen_ai.operation.name", "decision");
+            AITraceTags.Apply(activity);
             activity.SetTag("gen_ai.decision.question_count", request.Questions.Count);
 
             // Distinct kinds, in question order, comma-joined (e.g. "binary,score") — not one tag per

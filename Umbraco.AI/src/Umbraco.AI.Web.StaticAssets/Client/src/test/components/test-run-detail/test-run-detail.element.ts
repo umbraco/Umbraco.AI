@@ -2,7 +2,11 @@ import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
-import type { TestRunResponseModel, TestGraderResultResponseModel } from "../../../api/types.gen.js";
+import type {
+    TestRunResponseModel,
+    TestGraderResultResponseModel,
+    TestUsageEntryResponseModel,
+} from "../../../api/types.gen.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
 
@@ -122,13 +126,117 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                 ${outcome.finishReason
                     ? html`<uai-labeled-field label="Finish Reason">${outcome.finishReason}</uai-labeled-field>`
                     : null}
-                ${outcome.usage
+            </div>
+        `;
+    }
+
+    private _formatCount = (n: number) => n.toLocaleString();
+
+    private _formatDuration(ms: number): string {
+        if (ms < 1000) return `${ms}ms`;
+        if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+        return `${(ms / 60000).toFixed(1)}m`;
+    }
+
+    /**
+     * Token figures are a lower bound when some calls reported no usage, so mark them with "≥".
+     * When no call reported usage at all there is no figure to show, so show "—" rather than zero.
+     */
+    private _formatTokens(n: number, unreportedCallCount: number, callCount: number): string {
+        if (unreportedCallCount === 0) return this._formatCount(n);
+        if (unreportedCallCount >= callCount) return "—";
+        return `≥ ${this._formatCount(n)}`;
+    }
+
+    private _renderUsageMetric(label: string, value: string, title?: string, valueClass = "") {
+        return html`
+            <div class="usage-metric">
+                <div class="score-label" title=${title ?? nothing}>${label}</div>
+                <div class="usage-metric-value ${valueClass}">${value}</div>
+            </div>
+        `;
+    }
+
+    private _renderUsageEntry(entry: TestUsageEntryResponseModel) {
+        const tokens = (n: number) => this._formatTokens(n, entry.unreportedCallCount, entry.callCount);
+        return html`
+            <uui-table-row>
+                <uui-table-cell>
+                    <div>${[entry.providerId, entry.modelId].filter(Boolean).join(" / ") || "—"}</div>
+                    <div class="usage-secondary">
+                        ${[entry.capability, entry.profileAlias ?? entry.profileId].filter(Boolean).join(" · ")}
+                    </div>
+                </uui-table-cell>
+                <uui-table-cell>${entry.featureAlias ?? entry.featureType ?? "—"}</uui-table-cell>
+                <uui-table-cell class="numeric">${tokens(entry.inputTokens)}</uui-table-cell>
+                <uui-table-cell class="numeric">${tokens(entry.outputTokens)}</uui-table-cell>
+                <uui-table-cell class="numeric">${tokens(entry.totalTokens)}</uui-table-cell>
+                <uui-table-cell class="numeric">
+                    ${this._formatCount(entry.callCount)}
+                    ${entry.failedCallCount > 0
+                        ? html`<span class="failed-count">(${this._formatCount(entry.failedCallCount)} failed)</span>`
+                        : nothing}
+                </uui-table-cell>
+                <uui-table-cell class="numeric">${this._formatDuration(entry.durationMs)}</uui-table-cell>
+            </uui-table-row>
+        `;
+    }
+
+    private _renderUsage() {
+        const usage = this._run?.outcome?.usage;
+        if (!usage || usage.callCount === 0) {
+            return html`<div class="section-empty">No AI usage recorded for this run</div>`;
+        }
+
+        const hasUnreported = usage.unreportedCallCount > 0;
+        const tokens = (n: number) => this._formatTokens(n, usage.unreportedCallCount, usage.callCount);
+
+        return html`
+            <div class="usage-container">
+                <div class="usage-grid">
+                    ${this._renderUsageMetric("Input Tokens", tokens(usage.inputTokens))}
+                    ${this._renderUsageMetric("Output Tokens", tokens(usage.outputTokens))}
+                    ${this._renderUsageMetric("Total Tokens", tokens(usage.totalTokens))}
+                    ${this._renderUsageMetric("AI Calls", this._formatCount(usage.callCount))}
+                    ${this._renderUsageMetric(
+                        "Failed Calls",
+                        this._formatCount(usage.failedCallCount),
+                        undefined,
+                        usage.failedCallCount > 0 ? "failure" : "",
+                    )}
+                    ${this._renderUsageMetric(
+                        "AI Call Time (summed)",
+                        this._formatDuration(usage.durationMs),
+                        "Time of each AI call added together. Calls can overlap, so this can be longer than the run duration.",
+                    )}
+                </div>
+                ${hasUnreported
                     ? html`
-                        <uai-labeled-field label="Token Usage">
-                            <pre class="code-block">${JSON.stringify(outcome.usage, null, 2)}</pre>
-                        </uai-labeled-field>
-                    `
-                    : null}
+                          <div class="usage-note">
+                              ${this._formatCount(usage.unreportedCallCount)} of ${this._formatCount(usage.callCount)}
+                              calls reported no token counts, so token figures marked "≥" are a lower bound
+                              and "—" means none were reported.
+                          </div>
+                      `
+                    : nothing}
+                ${usage.breakdown.length
+                    ? html`
+                          <div class="usage-table">
+                              <uui-table>
+                                  <uui-table-head>
+                                      <uui-table-head-cell>Model / Profile</uui-table-head-cell>
+                                      <uui-table-head-cell>Feature</uui-table-head-cell>
+                                      <uui-table-head-cell class="numeric">Input</uui-table-head-cell>
+                                      <uui-table-head-cell class="numeric">Output</uui-table-head-cell>
+                                      <uui-table-head-cell class="numeric">Total</uui-table-head-cell>
+                                      <uui-table-head-cell class="numeric">Calls</uui-table-head-cell>
+                                      <uui-table-head-cell class="numeric">Time</uui-table-head-cell>
+                                  </uui-table-head>
+                                  ${usage.breakdown.map((e) => this._renderUsageEntry(e))}
+                              </uui-table>
+                          </div>
+                      `
+                    : nothing}
             </div>
         `;
     }
@@ -149,7 +257,7 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                     <uai-info-card label="Test ID">${this._run.testId}</uai-info-card>
                     <uai-info-card label="Run Number">${this._run.runNumber}</uai-info-card>
                     <uai-info-card label="Status">${this._renderStatus(this._run.status)}</uai-info-card>
-                    <uai-info-card label="Duration">${this._run.durationMs}ms</uai-info-card>
+                    <uai-info-card label="Run Duration">${this._run.durationMs}ms</uai-info-card>
                     <uai-info-card label="Executed At">${new Date(this._run.executedAt).toLocaleString()}</uai-info-card>
                     ${this._run.profileId
                         ? html`<uai-info-card label="Profile ID">${this._run.profileId}</uai-info-card>`
@@ -163,6 +271,10 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
                 <uui-box headline="Outcome">
                     ${this._renderOutcome()}
+                </uui-box>
+
+                <uui-box headline="AI Usage">
+                    ${this._renderUsage()}
                 </uui-box>
 
                 <uui-box headline="Grader Results">
@@ -266,6 +378,73 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
         .score-bar-fill.failure {
             background: var(--uui-color-danger);
+        }
+
+        .usage-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .usage-metric {
+            text-align: center;
+        }
+
+        .usage-metric-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .usage-metric-value.failure,
+        .failed-count {
+            color: var(--uui-color-danger);
+        }
+
+        .failed-count {
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .usage-secondary {
+            font-size: 12px;
+            color: var(--uui-color-text-alt);
+        }
+
+        .usage-note {
+            font-size: 12px;
+            color: var(--uui-color-text-alt);
+        }
+
+        .usage-table {
+            overflow-x: auto;
+        }
+
+        /* Size to the columns so a narrow modal scrolls the table instead of clipping its last columns. */
+        .usage-table uui-table {
+            box-sizing: border-box;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        uui-table-head-cell,
+        uui-table-cell {
+            height: auto;
+            white-space: nowrap;
+        }
+
+        uui-table-row:nth-child(even) {
+            background-color: var(--uui-color-surface-emphasis);
+        }
+
+        .numeric {
+            text-align: right;
+            white-space: nowrap;
         }
 
         ${codeBlockStyles}

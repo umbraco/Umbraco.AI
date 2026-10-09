@@ -167,7 +167,8 @@ public sealed class AITestRunComparison
     public bool IsImprovement { get; set; }
 
     /// <summary>
-    /// Change in duration (positive = slower, negative = faster).
+    /// Change in overall run duration, including grading (positive = slower, negative = faster).
+    /// For the change in AI call time alone, see <see cref="AITestUsageComparison.CallDurationChangeMs"/>.
     /// </summary>
     public long DurationChangeMs { get; set; }
 
@@ -175,6 +176,12 @@ public sealed class AITestRunComparison
     /// Grader-level comparison results.
     /// </summary>
     public IReadOnlyList<AITestGraderComparison> GraderComparisons { get; set; } = [];
+
+    /// <summary>
+    /// How the AI usage (tokens, AI call time, failed calls) changed between the runs. Null when either run
+    /// has no usage, for example a run saved before usage was recorded, or one that made no tracked AI call.
+    /// </summary>
+    public AITestUsageComparison? UsageComparison { get; set; }
 }
 
 /// <summary>

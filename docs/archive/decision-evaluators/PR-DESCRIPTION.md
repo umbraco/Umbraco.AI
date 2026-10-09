@@ -1,3 +1,5 @@
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 Backport of #430 to v17 | Stacked on #428 | [Plan folder](https://github.com/umbraco/Umbraco.AI/tree/v17/feature/decision-evaluators/docs/plans/decision-evaluators) | Follow-up: #429
 
 ## Why the change

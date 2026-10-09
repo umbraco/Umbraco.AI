@@ -73,7 +73,7 @@ public class TypeSafeProviderSettings
 ### Wire shape (`TypeSafeDecisionClient`)
 
 `POST {Endpoint}/v1/systemone` with `Authorization: Bearer <ApiKey>`, one question keyed `"q"`. See
-`docs/plans/decision-capability-release/SPEC.md` "Provider: Umbraco.AI.TypeSafe" for the full request
+`docs/archive/decision-capability-release/SPEC.md` (v18 line) "Provider: Umbraco.AI.TypeSafe" for the full request
 and response mapping (binary/choice/score, retry policy). 429/529 are retried up to twice with
 exponential backoff (honoring a capped `Retry-After`); 401/422 are not retried and surface as
 `HttpRequestException` with `StatusCode` set, which `AIErrorClassifyingDecisionClient` classifies via

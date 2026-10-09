@@ -1,3 +1,5 @@
+> **Status:** Archived 09-10-2026. Shipped: merged to `v18/dev` (#419) and `v17/dev` (#428) on 09-10-2026, together with the follow-on `decision-evaluators` plan (#430, #431). Only T26 (the public Umbraco.Docs PR, branch `ai/decision-docs`) was still open at archive time.
+
 [Plan folder](https://github.com/umbraco/Umbraco.AI/tree/v18/feature/decision-capability/docs/plans/decision-capability-release) | v17 port: #428 | Stacked on this: #430 | Upstream: umbraco/Umbraco.Automate#343, umbraco/Umbraco.Automate#344 | M.E.AI direction: dotnet/extensions#7764, #7795
 
 ## Why the change

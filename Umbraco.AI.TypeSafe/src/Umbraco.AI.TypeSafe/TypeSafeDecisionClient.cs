@@ -21,7 +21,7 @@ namespace Umbraco.AI.TypeSafe;
 /// <remarks>
 /// Wire shape confirmed against a live key and <c>docs.typesafe.ai/api</c> — see
 /// <c>docs/archive/decision-capability/DECISION-LOG.md</c> ("T11") and
-/// <c>docs/plans/decision-capability-release/SPEC.md</c> ("Provider: Umbraco.AI.TypeSafe"). Jev documents
+/// <c>docs/archive/decision-capability-release/SPEC.md</c> ("Provider: Umbraco.AI.TypeSafe"). Jev documents
 /// no maximum number of questions per request (only per-question limits — 255 choice options, 10 score
 /// levels — already enforced by Core's <c>DecisionQuestionValidator</c>), so this client enforces none.
 /// </remarks>

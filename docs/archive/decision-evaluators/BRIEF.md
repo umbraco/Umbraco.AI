@@ -1,5 +1,7 @@
 # Brief
 
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 ## Problem
 
 Umbraco AI has two places where a model judges content, and both use a chat model today:

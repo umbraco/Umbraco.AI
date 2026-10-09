@@ -39,7 +39,7 @@ Turning it on was one line:
 builder.AIAgentSelectors().InsertBefore<LLMAgentSelector, StickyAgentSelector>();
 ```
 
-> **Superseded:** `docs/plans/decision-capability-release` added `DecisionAgentSelector`,
+> **Superseded:** `decision-capability-release` (now `docs/archive/decision-capability-release/`) added `DecisionAgentSelector`,
 > registered by default *before* `LLMAgentSelector` (decision 7). `InsertBefore<LLMAgentSelector, …>`
 > now lands a selector after Decision, which would override it — so the guidance for registering
 > `StickyAgentSelector` first in the chain became `builder.AIAgentSelectors().Insert<StickyAgentSelector>()`.

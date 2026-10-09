@@ -1,5 +1,7 @@
 # Plan
 
+> **Status:** Archived 09-10-2026. Shipped: merged to `v18/dev` (#419) and `v17/dev` (#428) on 09-10-2026, together with the follow-on `decision-evaluators` plan (#430, #431). Only T26 (the public Umbraco.Docs PR, branch `ai/decision-docs`) was still open at archive time.
+
 Task checklist for `umb-build-loop`. v18 work happens on `v18/feature/decision-capability`
 (existing worktree `.claude/worktrees/v18-decision-capability`). v17 is ported after v18 is
 fully done and wired (T24). Docs go to Umbraco.Docs (T26).

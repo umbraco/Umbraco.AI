@@ -1,5 +1,7 @@
 # Plan
 
+> **Status:** Archived 09-10-2026. Shipped: merged with the Decision capability into `v18/dev` (#430 via #419) and `v17/dev` (#431 via #428) on 09-10-2026.
+
 Task checklist for `umb-build-loop`. v18 work happens on `v18/feature/decision-evaluators`
 (worktree `.claude/worktrees/v18-decision-evaluators`), stacked on
 `v18/feature/decision-capability` (draft PR #419). v17 is ported after v18 is fully done and

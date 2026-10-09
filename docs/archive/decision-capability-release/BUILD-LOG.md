@@ -1,5 +1,7 @@
 # Build Log
 
+> **Status:** Archived 09-10-2026. Shipped: merged to `v18/dev` (#419) and `v17/dev` (#428) on 09-10-2026, together with the follow-on `decision-evaluators` plan (#430, #431). Only T26 (the public Umbraco.Docs PR, branch `ai/decision-docs`) was still open at archive time.
+
 - **T0** — `b88ff340` (merge) + `bd3a0e2a` — Merged `origin/v18/dev` into
   `v18/feature/decision-capability` (clean, 14 files, no conflicts). Spike plan folder moved to
   `docs/archive/decision-capability/` with a Status line on each file; this plan folder added.

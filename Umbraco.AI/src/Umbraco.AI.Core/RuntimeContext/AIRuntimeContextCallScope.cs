@@ -11,11 +11,12 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// (e.g. the prompt or agent service) runs in that context.
 /// </para>
 /// <para>
-/// A call made inside another AI call while that call's own context is still current (a guardrail judge, a
-/// tool that calls an AI service) gets its own context instead. It is built from the same request and keeps
-/// who the running call belongs to (feature, entity, log values), so a pass-through call is still recorded
-/// under it, but none of its settings (options override, guardrail and context overrides, system prompt).
-/// What it writes also stays out of the running call's context.
+/// A call made from within another AI call's work while that call's own context is current gets its own context
+/// instead: a guardrail judge or a tool that calls an AI service, and also background work started by that
+/// call that makes an AI call after it has finished. It is built from the same request and keeps who the
+/// other call belongs to (feature, entity, log values), so a pass-through call is still recorded under it,
+/// but none of its settings (options override, guardrail and context overrides, system prompt). What it
+/// writes also stays out of the other call's context.
 /// </para>
 /// <para>
 /// The current context is held per async flow, so AI calls run in parallel from the same call (e.g.
@@ -36,7 +37,7 @@ internal static class AIRuntimeContextCallScope
         IEnumerable<AIRequestContextItem>? contextItems)
     {
         var current = contextAccessor.Context;
-        if (current is not null && !BelongsToRunningCall(current))
+        if (current is not null && !BelongsToATrackedCall(current))
         {
             return null;
         }
@@ -100,7 +101,10 @@ internal static class AIRuntimeContextCallScope
         Constants.ContextKeys.IsGuardrailEvaluation,
     ];
 
-    private static bool BelongsToRunningCall(AIRuntimeContext context)
-        => AIOperationScope.Current is { HasEnded: false } running
-           && ReferenceEquals(running.RuntimeContext, context);
+    /// <summary>
+    /// Whether <paramref name="context"/> is the context of the tracked call whose work is running here, which
+    /// is still the case after that call has finished in work it started that outlives it.
+    /// </summary>
+    private static bool BelongsToATrackedCall(AIRuntimeContext context)
+        => AIOperationScope.Current is { } call && ReferenceEquals(call.RuntimeContext, context);
 }

@@ -186,19 +186,94 @@ public class AIRuntimeContextCallScopeTests
     }
 
     [Fact]
-    public async Task Begin_AfterTheRunningCallEnded_UsesTheCallersContext()
+    public async Task Begin_InWorkThatOutlivesItsCall_GetsItsOwnContextWithTheCallsIdentity()
     {
+        // Work a call started that is still running after the call finished is still that call's work.
         using var outerScope = _scopeProvider.CreateScope([]);
-        var running = await _tracker.BeginAsync(Descriptor(), CancellationToken.None);
+        outerScope.Context.SetValue(Constants.ContextKeys.FeatureType, "prompt");
+        outerScope.Context.SetValue(Constants.ContextKeys.ChatOptionsOverride, new ChatOptions());
+        var call = await _tracker.BeginAsync(Descriptor(), CancellationToken.None);
 
-        using (running.EnterScope())
+        using (call.EnterScope())
         {
-            await running.CompleteAsync(usage: null, responseData: null);
+            await call.CompleteAsync(usage: null, responseData: null);
 
             using var scope = Begin([]);
 
-            scope.ShouldBeNull();
+            scope.ShouldNotBeNull();
+            scope.Context.ShouldNotBeSameAs(outerScope.Context);
+            scope.Context.GetValue<string>(Constants.ContextKeys.FeatureType).ShouldBe("prompt");
+            scope.Context.GetValue<ChatOptions>(Constants.ContextKeys.ChatOptionsOverride).ShouldBeNull();
         }
+    }
+
+    [Fact]
+    public async Task Begin_AfterACallReturned_InTheCallersOwnCode_UsesTheCallersContext()
+    {
+        // e.g. the prompt service retrying: its first call is over and no longer current, so the retry runs in
+        // the context the prompt service set up.
+        using var outerScope = _scopeProvider.CreateScope([]);
+        var call = await _tracker.BeginAsync(Descriptor(), CancellationToken.None);
+        using (call.EnterScope())
+        {
+        }
+
+        await call.CompleteAsync(usage: null, responseData: null);
+
+        using var scope = Begin([]);
+
+        scope.ShouldBeNull();
+        _scopeProvider.Context.ShouldBeSameAs(outerScope.Context);
+    }
+
+    [Fact]
+    public async Task BackgroundWork_ThatMakesAnAICallAfterItsCallFinished_RunsInItsOwnContext()
+    {
+        // A tool starts background work that makes an AI call once the agent call that started it has finished
+        // and its caller has disposed the agent's scope.
+        var agentScope = _scopeProvider.CreateScope([]);
+        agentScope.Context.SetValue(Constants.ContextKeys.FeatureType, "agent");
+        agentScope.Context.SetValue(Constants.ContextKeys.ChatOptionsOverride, new ChatOptions
+        {
+            Tools = [AIFunctionFactory.Create(() => "x", "agent_tool")],
+        });
+        var agentCall = await _tracker.BeginAsync(Descriptor(), CancellationToken.None);
+        var agentFinished = new TaskCompletionSource();
+        AIRuntimeContext? seenByLateCall = null;
+        ChatOptions? optionsSentByLateCall = null;
+        var inner = new FakeChatClient((_, options, _) =>
+        {
+            seenByLateCall = _scopeProvider.Context;
+            optionsSentByLateCall = options;
+            return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")));
+        });
+        var lateCall = new ScopedInlineChatClient(
+            new AIChatOptionsOverrideChatClient(inner, _scopeProvider),
+            Builder("late-call"),
+            _scopeProvider,
+            _scopeProvider,
+            _contributors);
+
+        Task background;
+        using (agentCall.EnterScope())
+        {
+            background = Task.Run(async () =>
+            {
+                await agentFinished.Task;
+                await lateCall.GetResponseAsync([new ChatMessage(ChatRole.User, "hi")]);
+            });
+        }
+
+        await agentCall.CompleteAsync(usage: null, responseData: null);
+        agentScope.Dispose();
+        agentFinished.SetResult();
+        await background;
+
+        seenByLateCall.ShouldNotBeNull().ShouldNotBeSameAs(agentScope.Context);
+        seenByLateCall.GetValue<string>(Constants.ContextKeys.FeatureType).ShouldBe("agent");
+        seenByLateCall.GetValue<string>(CallKey).ShouldBe("late-call");
+        optionsSentByLateCall?.Tools.ShouldBeNull();
+        agentScope.Context.GetValue<string>(CallKey).ShouldBeNull();
     }
 
     [Fact]

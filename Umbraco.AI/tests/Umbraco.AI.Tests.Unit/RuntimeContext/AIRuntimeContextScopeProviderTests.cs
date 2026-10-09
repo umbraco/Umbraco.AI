@@ -90,23 +90,20 @@ public class AIRuntimeContextScopeProviderTests
     }
 
     [Fact]
-    public void Dispose_OutOfOrder_SkipsTheDisposedScope()
+    public void Dispose_OutOfOrder_RestoresTheScopeEachWasCreatedIn()
     {
-        // Arrange
+        // Disposing the outer scope first is a usage error; like Activity.Current, nothing is repaired: each
+        // dispose restores the scope current when that scope was created.
         var scope1 = _provider.CreateScope();
         var scope2 = _provider.CreateScope();
 
-        // Act: dispose the outer scope first.
         Should.NotThrow(() => scope1.Dispose());
-
-        // Assert: the inner scope stays current (its depth and parent are fixed when it is created), then nothing
-        // is, as the outer scope is already disposed.
         _provider.Context.ShouldBeSameAs(scope2.Context);
         scope2.ParentContext.ShouldBeSameAs(scope1.Context);
         scope2.Depth.ShouldBe(2);
 
         scope2.Dispose();
-        _provider.Context.ShouldBeNull();
+        _provider.Context.ShouldBeSameAs(scope1.Context);
     }
 
     [Fact]
@@ -236,22 +233,69 @@ public class AIRuntimeContextScopeProviderTests
     }
 
     [Fact]
-    public async Task WorkStartedInAScope_AfterTheScopeIsDisposed_SeesTheNearestLiveScope()
+    public async Task WorkThatOutlivesItsScope_KeepsSeeingTheSameContext()
     {
-        // e.g. a background task started inside a call that outlives it.
+        // e.g. a background task started inside a call that finishes first: the task is still that call's work,
+        // and sees the same context before and after, whatever the timing.
         using var outerScope = _provider.CreateScope();
-        var innerScope = _provider.CreateScope();
-        var release = new TaskCompletionSource();
+        var callScope = _provider.CreateScope();
+        var callFinished = new TaskCompletionSource();
         var background = Task.Run(async () =>
         {
-            await release.Task;
+            var before = _provider.Context;
+            await callFinished.Task;
+            await Task.Yield();
+            return (before, after: _provider.Context);
+        });
+
+        callScope.Dispose();
+        callFinished.SetResult();
+        var (before, after) = await background;
+
+        before.ShouldBeSameAs(callScope.Context);
+        after.ShouldBeSameAs(callScope.Context);
+        _provider.Context.ShouldBeSameAs(outerScope.Context);
+    }
+
+    [Fact]
+    public async Task DisposingAScope_OnlyChangesTheCurrentContextOfTheFlowThatDisposesIt()
+    {
+        var scope = _provider.CreateScope();
+        var inScope = new TaskCompletionSource();
+        var disposed = new TaskCompletionSource();
+        var other = Task.Run(async () =>
+        {
+            inScope.SetResult();
+            await disposed.Task;
             return _provider.Context;
         });
 
-        innerScope.Dispose();
-        release.SetResult();
+        await inScope.Task;
+        scope.Dispose();
+        _provider.Context.ShouldBeNull();
+        disposed.SetResult();
 
-        (await background).ShouldBeSameAs(outerScope.Context);
+        (await other).ShouldBeSameAs(scope.Context);
+    }
+
+    [Fact]
+    public async Task ScopeCreatedInWorkThatOutlivesItsParent_IsParentedToTheScopeTheWorkStartedIn()
+    {
+        var callScope = _provider.CreateScope();
+        var callFinished = new TaskCompletionSource();
+        var background = Task.Run(async () =>
+        {
+            await callFinished.Task;
+            using var inner = _provider.CreateScope();
+            return (inner.ParentContext, inner.Depth);
+        });
+
+        callScope.Dispose();
+        callFinished.SetResult();
+        var (parent, depth) = await background;
+
+        parent.ShouldBeSameAs(callScope.Context);
+        depth.ShouldBe(2);
     }
 
     [Fact]
@@ -329,16 +373,19 @@ public class AIRuntimeContextScopeProviderTests
     }
 
     [Fact]
-    public void Enter_ADisposedScope_DoesNothing()
+    public void Enter_ADisposedScope_StillMakesItCurrent_AndRestoresAfter()
     {
+        // Work keeps the scope it runs in, e.g. a stream still being read after its caller's scope was disposed.
         using var outerScope = _provider.CreateScope();
         var disposed = _provider.CreateScope();
         disposed.Dispose();
 
         using (AIRuntimeContextScopeProvider.Enter(disposed))
         {
-            _provider.Context.ShouldBeSameAs(outerScope.Context);
+            _provider.Context.ShouldBeSameAs(disposed.Context);
         }
+
+        _provider.Context.ShouldBeSameAs(outerScope.Context);
     }
 
     [Fact]

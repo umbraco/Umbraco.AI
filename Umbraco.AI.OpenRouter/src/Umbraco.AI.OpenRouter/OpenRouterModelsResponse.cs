@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Umbraco.AI.OpenRouter;
@@ -40,4 +41,43 @@ internal sealed class OpenRouterModelInfo
     /// </summary>
     [JsonPropertyName("supported_parameters")]
     public List<string>? SupportedParameters { get; set; }
+
+    /// <summary>
+    /// The model's context window in tokens, kept as the raw JSON value. Absent or non-positive when
+    /// OpenRouter does not report one; the chat capability then declares no context window.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not an <c>int?</c>: a typed read throws on a fractional or oversized value, and
+    /// one odd entry would then fail the whole model list, including settings support for every
+    /// other model. The chat capability reads it leniently instead.
+    /// </remarks>
+    [JsonPropertyName("context_length")]
+    public JsonElement? ContextLength { get; set; }
+
+    /// <summary>
+    /// The model's per-token pricing in USD, or <c>null</c> when the entry carries none.
+    /// </summary>
+    [JsonPropertyName("pricing")]
+    public OpenRouterModelPricing? Pricing { get; set; }
+}
+
+/// <summary>
+/// Per-token USD pricing for an OpenRouter model. Values are decimal strings (e.g.
+/// <c>0.000003</c>); free models report <c>"0"</c> and routers with no fixed price report
+/// <c>"-1"</c>. They are kept as raw JSON values, not strings, so a price that arrives as a JSON
+/// number cannot fail the whole model list; the consumer validates them.
+/// </summary>
+internal sealed class OpenRouterModelPricing
+{
+    /// <summary>
+    /// Price of one input (prompt) token in USD.
+    /// </summary>
+    [JsonPropertyName("prompt")]
+    public JsonElement? Prompt { get; set; }
+
+    /// <summary>
+    /// Price of one output (completion) token in USD.
+    /// </summary>
+    [JsonPropertyName("completion")]
+    public JsonElement? Completion { get; set; }
 }

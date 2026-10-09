@@ -1,4 +1,3 @@
-#if MODEL_FACTS_PENDING // Pending: T5 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-4 — OpenRouter reports context window and price
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Extensions;
@@ -148,6 +147,48 @@ public class OpenRouterModelFactsTests
         }
         """;
 
+    private const string FractionalContextLengthListing = """
+        {
+          "data": [
+            {
+              "id": "acme/odd-model",
+              "name": "Acme: Odd Model",
+              "context_length": 131072.5,
+              "pricing": { "prompt": "0.000001", "completion": "0.000002" },
+              "supported_parameters": ["max_tokens", "temperature"]
+            }
+          ]
+        }
+        """;
+
+    private const string OversizedContextLengthListing = """
+        {
+          "data": [
+            {
+              "id": "acme/odd-model",
+              "name": "Acme: Odd Model",
+              "context_length": 3000000000,
+              "pricing": { "prompt": "0.000001", "completion": "0.000002" },
+              "supported_parameters": ["max_tokens", "temperature"]
+            }
+          ]
+        }
+        """;
+
+    private const string NumericPricingListing = """
+        {
+          "data": [
+            {
+              "id": "acme/odd-model",
+              "name": "Acme: Odd Model",
+              "context_length": 32768,
+              "pricing": { "prompt": 0.000003, "completion": 0.000015 },
+              "supported_parameters": ["max_tokens", "temperature"]
+            }
+          ]
+        }
+        """;
+
     // ---------------------------------------------------------------------------------------------
     // Happy path
     // ---------------------------------------------------------------------------------------------
@@ -248,5 +289,61 @@ public class OpenRouterModelFactsTests
         public void AC6_ReportsNoPrice()
             => _model.GetPricing().ShouldBeNull();
     }
+
+    public class GivenAListingEntryWithAFractionalContextLength : IAsyncLifetime
+    {
+        private AIModelDescriptor? _model;
+
+        public async Task InitializeAsync()
+            => _model = await OpenRouterModelListing.ListSingleModelAsync(
+                FractionalContextLengthListing, "acme/odd-model");
+
+        public Task DisposeAsync() => Task.CompletedTask;
+
+        [Fact]
+        public void StillListsTheModel()
+            => _model.ShouldNotBeNull();
+
+        [Fact]
+        public void ReportsNoContextWindow()
+            => _model!.GetContextWindow().ShouldBeNull();
+    }
+
+    public class GivenAListingEntryWithAnOversizedContextLength : IAsyncLifetime
+    {
+        private AIModelDescriptor? _model;
+
+        public async Task InitializeAsync()
+            => _model = await OpenRouterModelListing.ListSingleModelAsync(
+                OversizedContextLengthListing, "acme/odd-model");
+
+        public Task DisposeAsync() => Task.CompletedTask;
+
+        [Fact]
+        public void StillListsTheModel()
+            => _model.ShouldNotBeNull();
+
+        [Fact]
+        public void ReportsNoContextWindow()
+            => _model!.GetContextWindow().ShouldBeNull();
+    }
+
+    public class GivenAListingEntryWithNumericPricing : IAsyncLifetime
+    {
+        private AIModelDescriptor? _model;
+
+        public async Task InitializeAsync()
+            => _model = await OpenRouterModelListing.ListSingleModelAsync(
+                NumericPricingListing, "acme/odd-model");
+
+        public Task DisposeAsync() => Task.CompletedTask;
+
+        [Fact]
+        public void StillListsTheModel()
+            => _model.ShouldNotBeNull();
+
+        [Fact]
+        public void ReadsThePricingLeniently()
+            => _model!.GetPricing().ShouldBe(new AIModelPricing(3.00m, 15.00m, "USD"));
+    }
 }
-#endif

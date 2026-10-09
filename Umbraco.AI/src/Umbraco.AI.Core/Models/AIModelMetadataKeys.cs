@@ -49,4 +49,27 @@ public static class AIModelMetadataKeys
     /// Whether the model supports a mask when editing (<c>true</c> or <c>false</c>).
     /// </summary>
     public const string ImageSupportsMask = "image.supportsMask";
+
+    /// <summary>
+    /// The model's context window, in tokens, as an integer in invariant culture.
+    /// Absent when the provider does not know it.
+    /// </summary>
+    public const string ModelContextWindow = "model.contextWindow";
+
+    /// <summary>
+    /// The price of one million input tokens, as a decimal in invariant culture, in the currency named
+    /// by <see cref="PricingCurrency"/>. Only meaningful alongside the other pricing keys.
+    /// </summary>
+    public const string PricingInputPerMillionTokens = "pricing.inputPerMillionTokens";
+
+    /// <summary>
+    /// The price of one million output tokens, as a decimal in invariant culture, in the currency named
+    /// by <see cref="PricingCurrency"/>. Only meaningful alongside the other pricing keys.
+    /// </summary>
+    public const string PricingOutputPerMillionTokens = "pricing.outputPerMillionTokens";
+
+    /// <summary>
+    /// The ISO 4217 currency code the pricing keys are expressed in (e.g. <c>USD</c>).
+    /// </summary>
+    public const string PricingCurrency = "pricing.currency";
 }

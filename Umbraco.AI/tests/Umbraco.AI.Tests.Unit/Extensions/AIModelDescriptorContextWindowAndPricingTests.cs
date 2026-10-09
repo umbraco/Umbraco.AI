@@ -1,4 +1,3 @@
-#if MODEL_FACTS_PENDING // Pending: T1 — remove this guard (and the matching #endif) in the commit that makes these specs pass.
 // MF-2: Providers can declare a model's context window and price (AC1-AC6).
 // Writer helper assumed as AIModelMetadata.ForContextWindow(int) / AIModelMetadata.ForPricing(AIModelPricing),
 // each returning IReadOnlyDictionary<string, string>, mirroring AIModelSettingsSupport.ToMetadata().
@@ -53,6 +52,35 @@ public class AIModelDescriptorContextWindowAndPricingTests
             => _metadata[AIModelMetadataKeys.PricingInputPerMillionTokens].ShouldBe("3.5");
     }
 
+    public class GivenTheCurrentCultureIsDanishWhenReadingPricing : IDisposable
+    {
+        private readonly CultureInfo _originalCulture = CultureInfo.CurrentCulture;
+        private readonly CultureInfo _originalUICulture = CultureInfo.CurrentUICulture;
+        private readonly AIModelPricing? _pricing;
+
+        public GivenTheCurrentCultureIsDanishWhenReadingPricing()
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("da-DK");
+            CultureInfo.CurrentUICulture = new CultureInfo("da-DK");
+            _pricing = Descriptor(new Dictionary<string, string>
+            {
+                [AIModelMetadataKeys.PricingInputPerMillionTokens] = "3.5",
+                [AIModelMetadataKeys.PricingOutputPerMillionTokens] = "15",
+                [AIModelMetadataKeys.PricingCurrency] = "USD",
+            }).GetPricing();
+        }
+
+        public void Dispose()
+        {
+            CultureInfo.CurrentCulture = _originalCulture;
+            CultureInfo.CurrentUICulture = _originalUICulture;
+        }
+
+        [Fact]
+        public void PricingIsReadInInvariantCulture()
+            => _pricing!.InputPerMillionTokens.ShouldBe(3.5m);
+    }
+
     // ---------------------------------------------------------------- Sad path
 
     public class GivenNoContextWindowKey
@@ -88,5 +116,18 @@ public class AIModelDescriptorContextWindowAndPricingTests
         public void GetPricing_ReturnsNull()
             => _descriptor.GetPricing().ShouldBeNull();
     }
+
+    public class GivenPricingWithACommaDecimalSeparator
+    {
+        private readonly AIModelDescriptor _descriptor = Descriptor(new Dictionary<string, string>
+        {
+            [AIModelMetadataKeys.PricingInputPerMillionTokens] = "3,5",
+            [AIModelMetadataKeys.PricingOutputPerMillionTokens] = "15",
+            [AIModelMetadataKeys.PricingCurrency] = "USD",
+        });
+
+        [Fact]
+        public void GetPricing_ReturnsNull()
+            => _descriptor.GetPricing().ShouldBeNull();
+    }
 }
-#endif

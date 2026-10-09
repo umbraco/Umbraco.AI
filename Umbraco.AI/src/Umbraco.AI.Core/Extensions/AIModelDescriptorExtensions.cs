@@ -1,3 +1,4 @@
+using System.Globalization;
 using Umbraco.AI.Core.Models;
 
 namespace Umbraco.AI.Extensions;
@@ -83,12 +84,55 @@ public static class AIModelDescriptorExtensions
     public static bool? SupportsImageMask(this AIModelDescriptor model)
         => ReadBool(model, AIModelMetadataKeys.ImageSupportsMask);
 
+    /// <summary>
+    /// The model's context window, in tokens, or <c>null</c> when not declared or not a positive integer.
+    /// </summary>
+    /// <param name="model">The model descriptor.</param>
+    public static int? GetContextWindow(this AIModelDescriptor model)
+        => ReadInt(model, AIModelMetadataKeys.ModelContextWindow) is > 0 and var window ? window : null;
+
+    /// <summary>
+    /// The model's price per million tokens, or <c>null</c> when not declared.
+    /// </summary>
+    /// <param name="model">The model descriptor.</param>
+    /// <remarks>
+    /// All-or-nothing: input price, output price and currency must all be present and valid (prices
+    /// non-negative). A half-declared price would show a figure with no way to tell what it is missing.
+    /// </remarks>
+    public static AIModelPricing? GetPricing(this AIModelDescriptor model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        var input = ReadDecimal(model, AIModelMetadataKeys.PricingInputPerMillionTokens);
+        var output = ReadDecimal(model, AIModelMetadataKeys.PricingOutputPerMillionTokens);
+
+        if (input is null || output is null
+            || !model.Metadata.TryGetValue(AIModelMetadataKeys.PricingCurrency, out var currency)
+            || string.IsNullOrWhiteSpace(currency))
+        {
+            return null;
+        }
+
+        return new AIModelPricing(input.Value, output.Value, currency.Trim());
+    }
+
+    // No AllowThousands: a hand-written "3,5" must be rejected, not read as 35.
+    private const NumberStyles DecimalStyles =
+        NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowDecimalPoint;
+
+    private static decimal? ReadDecimal(AIModelDescriptor model, string metadataKey)
+        => model.Metadata.TryGetValue(metadataKey, out var raw)
+            && decimal.TryParse(raw, DecimalStyles, CultureInfo.InvariantCulture, out var value)
+            && value >= 0
+                ? value
+                : null;
+
     private static int? ReadInt(AIModelDescriptor model, string metadataKey)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         return model.Metadata.TryGetValue(metadataKey, out var raw)
-            && int.TryParse(raw.Trim(), out var value)
+            && int.TryParse(raw.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
                 ? value
                 : null;
     }

@@ -85,6 +85,17 @@ if ($Force -and (Test-Path "Umbraco.AI.local.slnx")) {
     Remove-Item -Force "Umbraco.AI.local.slnx"
 }
 
+# Reads the version of the globally installed Umbraco.Templates package from
+# `dotnet new uninstall` (called with no package name, this only lists what's installed --
+# it does not uninstall anything). Returns $null if the package isn't installed.
+function Get-InstalledTemplateVersion {
+    $installed = dotnet new uninstall 2>&1 | Out-String
+    if ($installed -match '(?m)^[ \t]*Umbraco\.Templates[ \t]*\r?\n[ \t]*Version:[ \t]*(\S+)') {
+        return $matches[1]
+    }
+    return $null
+}
+
 # Step 1: Install Umbraco templates
 if (-not $SkipTemplateInstall) {
     Write-Host "Installing Umbraco templates ($TemplateVersion)..." -ForegroundColor Green
@@ -112,6 +123,27 @@ if (-not $SkipTemplateInstall) {
         Write-Host "NOTE: Prerelease template ($TemplateVersion) requires the umbracoprereleases MyGet source." -ForegroundColor Yellow
     }
     dotnet new install "Umbraco.Templates::$TemplateVersion" --force
+} else {
+    # -SkipTemplateInstall trusts whatever Umbraco.Templates is already installed globally.
+    # That's only safe if it's the same major version this branch targets -- otherwise the
+    # demo site gets scaffolded from the wrong major and fails to restore.
+    Write-Host "Skipping template install (-SkipTemplateInstall); checking the installed Umbraco.Templates matches v$VersionMajor..." -ForegroundColor Gray
+    $installedTemplateVersion = Get-InstalledTemplateVersion
+    $installedTemplateMajor = if ($installedTemplateVersion) { [int]($installedTemplateVersion -split '\.')[0] } else { $null }
+    if (-not $installedTemplateVersion -or $installedTemplateMajor -ne $VersionMajor) {
+        Write-Host ""
+        if (-not $installedTemplateVersion) {
+            Write-Host "ERROR: -SkipTemplateInstall was given, but no Umbraco.Templates package is installed globally." -ForegroundColor Red
+        } else {
+            Write-Host "ERROR: -SkipTemplateInstall was given, but the globally installed Umbraco.Templates is v$installedTemplateVersion, not v$VersionMajor.x." -ForegroundColor Red
+        }
+        Write-Host "This branch targets Umbraco.Cms v$VersionMajor (template $TemplateVersion) -- scaffolding the demo site from a different major template will fail to restore." -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Drop -SkipTemplateInstall and re-run so the matching template gets installed, or install it yourself first:" -ForegroundColor Yellow
+        Write-Host "  dotnet new install `"Umbraco.Templates::$TemplateVersion`" --force" -ForegroundColor Yellow
+        exit 1
+    }
+    Write-Host "Installed Umbraco.Templates v$installedTemplateVersion matches v$VersionMajor. Skipping reinstall." -ForegroundColor Gray
 }
 
 # Step 2: Create demo folder with build overrides

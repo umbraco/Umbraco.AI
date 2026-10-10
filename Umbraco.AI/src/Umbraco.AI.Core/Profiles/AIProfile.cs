@@ -8,10 +8,20 @@ namespace Umbraco.AI.Core.Profiles;
 /// </summary>
 public sealed class AIProfile : IAIVersionableEntity
 {
+    private Guid _id;
+
     /// <summary>
     /// The unique identifier of the AI profile.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the profile is first saved. Set it when creating a
+    /// profile that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// The alias of the AI profile.
@@ -84,4 +94,9 @@ public sealed class AIProfile : IAIVersionableEntity
     /// The key (GUID) of the user who last modified this profile.
     /// </summary>
     public Guid? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Assigns the ID of a new profile. Used by the service when saving a profile with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

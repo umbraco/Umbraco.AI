@@ -5,10 +5,20 @@ namespace Umbraco.AI.Core.Contexts;
 /// </summary>
 public sealed class AIContextResource
 {
+    private Guid _id;
+
     /// <summary>
     /// The unique identifier of the resource.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the context is saved. Set it when creating a
+    /// resource that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// The immutable identifier of the resource type (e.g., "brand-voice", "text").
@@ -43,4 +53,9 @@ public sealed class AIContextResource
     public AIContextResourceInjectionMode InjectionMode { get; set; } = AIContextResourceInjectionMode.Always;
 
     // V2: public float[]? Embedding { get; set; }  // For semantic injection mode
+
+    /// <summary>
+    /// Assigns the ID of a new resource. Used by the service when saving a resource with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

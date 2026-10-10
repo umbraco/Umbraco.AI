@@ -20,10 +20,20 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </remarks>
 public sealed class AIAgent : IAIVersionableEntity
 {
+    private Guid _id;
+
     /// <summary>
     /// Unique identifier for the agent.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the agent is first saved. Set it when creating a
+    /// agent that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// Unique alias for the agent (URL-safe identifier).
@@ -127,4 +137,9 @@ public sealed class AIAgent : IAIVersionableEntity
     /// Starts at 1 and increments with each save operation.
     /// </summary>
     public int Version { get; internal set; } = 1;
+
+    /// <summary>
+    /// Assigns the ID of a new agent. Used by the service when saving a agent with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

@@ -13,10 +13,20 @@ namespace Umbraco.AI.Core.Contexts;
 /// </remarks>
 public sealed class AIContext : IAIVersionableEntity
 {
+    private Guid _id;
+
     /// <summary>
     /// The unique identifier of the AI context.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the context is first saved. Set it when creating a
+    /// context that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// The alias of the AI context (e.g., "corporate-brand-voice").
@@ -60,4 +70,9 @@ public sealed class AIContext : IAIVersionableEntity
     /// Resources are ordered by <see cref="AIContextResource.SortOrder"/>.
     /// </summary>
     public IList<AIContextResource> Resources { get; set; } = [];
+
+    /// <summary>
+    /// Assigns the ID of a new context. Used by the service when saving a context with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

@@ -184,7 +184,7 @@ internal sealed class AIProfileService : IAIProfileService
         // Generate new ID if needed
         if (profile.Id == Guid.Empty)
         {
-            profile.Id = Guid.NewGuid();
+            profile.SetId(Guid.NewGuid());
         }
 
         // Check for alias uniqueness

@@ -41,6 +41,7 @@ public class ContextMapDefinition : IMapDefinition
     {
         return new AIContextResource
         {
+            Id = source.Id,
             ResourceTypeId = source.ResourceTypeId,
             Name = source.Name,
             Settings = source.Settings
@@ -62,11 +63,10 @@ public class ContextMapDefinition : IMapDefinition
         target.Resources = source.Resources.Select(r => context.Map<AIContextResource>(r)!).ToList();
     }
 
-    // Umbraco.Code.MapAll -ResourceTypeId
+    // Umbraco.Code.MapAll -Id -ResourceTypeId
     private static void MapResourceFromModel(ContextResourceModel source, AIContextResource target, MapperContext context)
     {
-        target.Id = source.Id;
-        // ResourceTypeId is set in factory (init-only property)
+        // Id and ResourceTypeId are set in factory (init-only properties)
         target.Name = source.Name;
         target.Description = source.Description;
         target.SortOrder = source.SortOrder;

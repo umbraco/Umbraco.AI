@@ -189,6 +189,9 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
         const capabilityLower = capability.toLowerCase();
         if (capabilityLower === "chat") return "icon-chat";
         if (capabilityLower === "embedding") return "icon-list";
+        if (capabilityLower === "speechtotext") return "icon-wand";
+        if (capabilityLower === "imagegeneration") return "icon-wand";
+        if (capabilityLower === "decision") return "icon-directions";
         return "icon-wand";
     }
 

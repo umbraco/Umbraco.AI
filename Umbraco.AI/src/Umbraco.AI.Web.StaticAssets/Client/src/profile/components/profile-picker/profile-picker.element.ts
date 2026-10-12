@@ -9,6 +9,7 @@ import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-pic
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { UaiProfileTypeMapper } from "../../type-mapper.js";
 import type { UaiProfileItemModel } from "../../types.js";
+import { getCapabilityIcon } from "../../../core/utils/capability-icon.utils.js";
 
 const elementName = "uai-profile-picker";
 
@@ -181,18 +182,8 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
                 value: profile.id,
                 label: profile.name,
                 description: profile.alias,
-                icon: this.#getCapabilityIcon(profile.capability),
+                icon: getCapabilityIcon(profile.capability),
             }));
-    }
-
-    #getCapabilityIcon(capability: string): string {
-        const capabilityLower = capability.toLowerCase();
-        if (capabilityLower === "chat") return "icon-chat";
-        if (capabilityLower === "embedding") return "icon-list";
-        if (capabilityLower === "speechtotext") return "icon-wand";
-        if (capabilityLower === "imagegeneration") return "icon-wand";
-        if (capabilityLower === "decision") return "icon-directions";
-        return "icon-wand";
     }
 
     #addSelections(items: UaiPickableItemModel[]) {
@@ -243,7 +234,7 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
     #renderItem(item: UaiProfileItemModel) {
         return html`
             <uui-ref-node name=${item.name} detail=${item.alias} readonly>
-                <umb-icon slot="icon" name=${this.#getCapabilityIcon(item.capability)}></umb-icon>
+                <umb-icon slot="icon" name=${getCapabilityIcon(item.capability)}></umb-icon>
                 ${when(item.model, () => html` <uui-tag slot="tag" look="secondary">${item.model!.modelId}</uui-tag> `)}
                 ${when(
                     !this.readonly,

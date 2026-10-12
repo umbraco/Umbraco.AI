@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.AI.Core;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
@@ -22,6 +23,7 @@ using Umbraco.Cms.Core.Notifications;
 namespace Umbraco.AI.Tests.Unit.RuntimeContext;
 
 #pragma warning disable MEAI001 // Speech-to-text abstractions are experimental in M.E.AI
+#pragma warning disable UMBRACOAI_DECISION // Decision capability is experimental
 
 /// <summary>
 /// The runtime context each AI entry point runs its work in, with the real scope provider: every step of a
@@ -123,6 +125,49 @@ public class AIRuntimeContextFlowTests
         }
 
         probe.Seen.ShouldBe(["dictation", "dictation", "dictation"]);
+    }
+
+    [Fact]
+    public async Task ScopedInlineDecisionClient_NestedInARunningCall_SeesItsOwnProfileAndFeatureAndLeavesTheParentsAlone()
+    {
+        // Mirrors ScopedProfileChatClient_StreamingNestedInARunningCall_SeesItsOwnProfileAndLeavesTheParentsAlone
+        // (#573/#575): a Decision call made from inside another running tracked call (e.g. a guardrail
+        // judge or a tool) must get its own runtime context, not corrupt the outer call's.
+        using var outerScope = _scopeProvider.CreateScope();
+        outerScope.Context.SetValue(Constants.ContextKeys.ProfileAlias, "outer-profile");
+        outerScope.Context.SetValue(Constants.ContextKeys.FeatureAlias, "outer-feature");
+        var tracker = new AIOperationTracker(_scopeProvider, [], NullLogger<AIOperationTracker>.Instance);
+        var running = await tracker.BeginAsync(new AIOperationDescriptor { Capability = AICapability.Chat }, CancellationToken.None);
+
+        string? seenProfileAlias = null;
+        string? seenFeatureAlias = null;
+        var inner = new FakeDecisionClient(request =>
+        {
+            seenProfileAlias = _scopeProvider.Context?.GetValue<string>(Constants.ContextKeys.ProfileAlias);
+            seenFeatureAlias = _scopeProvider.Context?.GetValue<string>(Constants.ContextKeys.FeatureAlias);
+            return new AIDecisionResponse
+            {
+                Answers = request.Questions.ToDictionary(
+                    q => q.Id ?? "answer", _ => (AIDecisionAnswer)new AIBinaryDecisionAnswer { TrueProbability = 0.9 }),
+            };
+        });
+        var profileClient = new ScopedProfileDecisionClient(inner, Profile("judge", AICapability.Decision), _scopeProvider, _scopeProvider, _contributors);
+        var client = new ScopedInlineDecisionClient(profileClient, new AIDecisionBuilder().WithAlias("spam-check"), _scopeProvider, _scopeProvider, _contributors);
+
+        using (running.EnterScope())
+        {
+            await client.GetResponseAsync(new AIDecisionRequest
+            {
+                State = "text",
+                Questions = [new AIBinaryDecisionQuestion { Id = "spam", Instructions = "Is this spam?" }],
+            });
+        }
+
+        seenProfileAlias.ShouldBe("judge");
+        seenFeatureAlias.ShouldBe("spam-check");
+        outerScope.Context.GetValue<string>(Constants.ContextKeys.ProfileAlias).ShouldBe("outer-profile");
+        outerScope.Context.GetValue<string>(Constants.ContextKeys.FeatureAlias).ShouldBe("outer-feature");
+        await running.CompleteAsync(usage: null, responseData: null);
     }
 
     [Fact]

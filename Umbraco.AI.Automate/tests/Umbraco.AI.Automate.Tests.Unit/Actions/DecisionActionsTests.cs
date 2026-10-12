@@ -78,6 +78,27 @@ public class DecisionActionsTests
 
     #endregion
 
+    #region Sad path: "Ask pick-one" provider rejects the request as invalid
+
+    [Fact]
+    public async Task AskChoice_WhenProviderRejectsTheRequest_ReportsANonRetryableConfigurationError()
+    {
+        // StepErrorCategoryMapping (from #557) is what makes this non-retryable instead of Unknown --
+        // resending the same request to the same model can never change the answer.
+        _decisionServiceMock
+            .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIChoiceDecisionQuestion>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIProviderException(
+                new AIProviderErrorInfo(AIProviderErrorCategory.InvalidRequest, "unknown model", ProviderCode: null, "unknown model")));
+        var action = new AskChoiceDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskChoiceDecisionAction>>());
+
+        var result = await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskChoiceDecision,
+            new AskChoiceDecisionSettings { Instructions = "Pick", Options = [new AskChoiceDecisionOption { Key = "a" }, new AskChoiceDecisionOption { Key = "b" }] }), CancellationToken.None);
+
+        result.ErrorCategory.ShouldBe(StepRunErrorCategory.ConfigurationError);
+    }
+
+    #endregion
+
     #region Scenario: "Ask score" with levels low, high and the provider returns 1.0
 
     [Fact]
@@ -92,6 +113,27 @@ public class DecisionActionsTests
             new AskScoreDecisionSettings { Instructions = "Rate", Levels = ["low", "high"] }), CancellationToken.None);
 
         result.OutputData.ShouldBeOfType<AskScoreDecisionOutput>().Level.ShouldBe("high");
+    }
+
+    #endregion
+
+    #region Sad path: "Ask score" provider rejects the request as invalid
+
+    [Fact]
+    public async Task AskScore_WhenProviderRejectsTheRequest_ReportsANonRetryableConfigurationError()
+    {
+        // StepErrorCategoryMapping (from #557) is what makes this non-retryable instead of Unknown --
+        // resending the same request to the same model can never change the answer.
+        _decisionServiceMock
+            .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIScoreDecisionQuestion>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIProviderException(
+                new AIProviderErrorInfo(AIProviderErrorCategory.InvalidRequest, "unknown model", ProviderCode: null, "unknown model")));
+        var action = new AskScoreDecisionAction(_infrastructure, _decisionServiceMock.Object, _experimentalMock.Object, Mock.Of<ILogger<AskScoreDecisionAction>>());
+
+        var result = await action.ExecuteAsync(Context(UmbracoAIAutomateConstants.ActionTypes.AskScoreDecision,
+            new AskScoreDecisionSettings { Instructions = "Rate", Levels = ["low", "high"] }), CancellationToken.None);
+
+        result.ErrorCategory.ShouldBe(StepRunErrorCategory.ConfigurationError);
     }
 
     #endregion
@@ -346,6 +388,21 @@ public class DecisionActionsTests
         var result = await CreateYesNo().ExecuteAsync(YesNoContext(), CancellationToken.None);
 
         result.Exception!.Message.ShouldContain("Jev is down"); // ActionResult exposes Exception, not ErrorMessage
+    }
+
+    [Fact]
+    public async Task AskYesNo_WhenProviderRejectsTheApiKey_ReportsANonRetryableAuthenticationError()
+    {
+        // StepErrorCategoryMapping (from #557) is what makes this non-retryable instead of Unknown --
+        // resending the same request to the same rejected key can never succeed.
+        _decisionServiceMock
+            .Setup(s => s.AskAsync(It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIBinaryDecisionQuestion>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIProviderException(
+                new AIProviderErrorInfo(AIProviderErrorCategory.Authentication, "invalid api key", ProviderCode: null, "invalid api key")));
+
+        var result = await CreateYesNo().ExecuteAsync(YesNoContext(), CancellationToken.None);
+
+        result.ErrorCategory.ShouldBe(StepRunErrorCategory.Authentication);
     }
 
     #endregion

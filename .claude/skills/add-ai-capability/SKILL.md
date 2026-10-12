@@ -133,6 +133,29 @@ write the proof rather than assuming it:
   against that specific real provider too, not just a minimal test-double — a generic
   proof and a proof against the actual shipping provider are different guarantees.
 
+## Scope creation: always `AIRuntimeContextCallScope.Begin`, never hand-rolled
+
+Every `Scoped*Profile*`/`Scoped*Inline*` wrapper opens its runtime-context scope with
+`AIRuntimeContextCallScope.Begin(contextAccessor, scopeProvider, contributors, contextItems)`
+— never a hand-rolled `var scopeExisted = contextAccessor.Context != null; ... if (!scopeExisted) { scopeProvider.CreateScope(...); contributors.Populate(...); }`.
+`Begin` isn't just that `if` collapsed into one call: it also detects a call made from
+*inside* another already-running tracked call (e.g. a guardrail judge, or a tool that
+makes its own AI call) and opens a **fresh** scope for it instead of reusing the parent's
+— the hand-rolled version reuses the parent's scope unconditionally whenever one exists,
+silently overwriting the outer call's own profile/feature metadata with the nested call's
+(the bug `AIRuntimeContextCallScope` itself exists to fix — see commit `fc5db41c`). The
+`Decision` capability's own `Scoped*Decision*` classes shipped with the hand-rolled version
+and had to be fixed to match once this was caught in review — don't repeat that. Set
+profile metadata (`ProfileId`/`ProfileAlias`/`ProfileVersion`/`ProviderId`/`ModelId`) via
+`context.SetProfileMetadata(profile)` (`Umbraco.AI.Extensions.AIRuntimeContextProfileExtensions`),
+not by calling `context.SetValue(...)` field-by-field.
+
+Write a test that a call made *inside* an already-running tracked call gets its own
+profile/feature metadata and leaves the outer call's context values unchanged after it
+returns — see `AIRuntimeContextFlowTests.ScopedProfileChatClient_StreamingNestedInARunningCall_SeesItsOwnProfileAndLeavesTheParentsAlone`
+(Chat) or `...ScopedInlineDecisionClient_NestedInARunningCall_SeesItsOwnProfileAndFeatureAndLeavesTheParentsAlone`
+(Decision) for the pattern to copy.
+
 ## If the capability needs an inline/notification-based execution path
 
 Match whichever rule the *execute* path uses on a sibling capability, not the rule its
@@ -140,12 +163,38 @@ Match whichever rule the *execute* path uses on a sibling capability, not the ru
 similar but are not the same, and picking the wrong one is silent (no compile error, just
 wrong runtime behavior). Concretely: feature-metadata stamping (`FeatureType`/`FeatureId`
 on the shared runtime context) is decided by `!builder.IsPassThrough` on `AIChatService`'s
-and `AISpeechToTextService`'s execute paths — not by `!scopeExisted`, which is what their
-`Scoped*Inline*` wrapper classes use, but only because those wrappers have never before
-sat on an execute path themselves. The two rules disagree in two cases, not one: a
+and `AISpeechToTextService`'s execute paths — not by `!hadContext` (whether
+`contextAccessor.Context` was already non-null *before* calling `Begin`), which is what
+their `Scoped*Inline*` wrapper classes use, but only because those wrappers have never
+before sat on an execute path themselves. The two rules disagree in two cases, not one: a
 pass-through call with no parent scope, and a normal call made from *inside* an existing
 parent scope (e.g. an agent run) — write a test for both, not just the first one that
 comes to mind.
+
+## Telemetry middleware: tag the span with `AITraceTags.Apply`
+
+The `AIOpenTelemetry<Foo>Middleware`'s `EnrichActivity` must call `AITraceTags.Apply(activity)`
+(`Umbraco.AI.Core.Telemetry`) alongside its own `gen_ai.*` tags — this is what puts the
+running call's `umbraco.ai.*` tags (profile alias, audit ID, etc., #562) onto the span.
+Every existing capability's telemetry middleware does this (e.g.
+`AIOpenTelemetrySpeechToTextMiddleware`/`AIOpenTelemetryImageGenerationMiddleware`); a new
+capability that skips it silently loses those tags on its own span. Write a tag test like
+`AIOpenTelemetryChatMiddlewareTagsTests`/`AIOpenTelemetryDecisionMiddlewareTagsTests` — and
+remember the `otel-test-shared-activity-source` memory: filter the process-wide
+`ActivityListener` by span name, since every capability's middleware shares one
+`ActivitySource`.
+
+## If an Umbraco.AI.Automate action wraps the capability
+
+The action's final `catch (Exception ex)` must report
+`StepErrorCategoryMapping.FromException(ex)` (`Umbraco.AI.Automate.Helpers`), not a
+hard-coded `StepRunErrorCategory.Unknown` — see `RunAgentAction`/`TranscribeAudioAction`
+for the pattern. `StepErrorCategoryMapping` maps an `AIProviderException`'s category onto
+the `StepRunErrorCategory` Automate uses to decide whether a retry can help (e.g.
+authentication/invalid-request failures are non-retryable); reporting every failure as
+`Unknown` means Automate retries requests that can never succeed, burning provider quota.
+Write one test per action: an `AIProviderException` with an auth/invalid-request category
+maps to the matching non-retryable `StepRunErrorCategory` — see `TranscribeAudioActionTests`.
 
 ## Commit hygiene
 

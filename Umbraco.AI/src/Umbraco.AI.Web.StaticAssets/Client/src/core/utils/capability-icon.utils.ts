@@ -11,13 +11,13 @@ export function getCapabilityIcon(capability: string): string {
         case "chat":
             return "icon-chat";
         case "embedding":
-            return "icon-embed";
+            return "icon-layers";
         case "media":
             return "icon-video";
         case "moderation":
             return "icon-shield";
         case "speechtotext":
-            return "icon-sound-waves";
+            return "icon-voice";
         case "imagegeneration":
             return "icon-picture";
         case "decision":

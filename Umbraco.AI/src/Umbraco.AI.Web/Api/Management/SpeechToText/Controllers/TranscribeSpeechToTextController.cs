@@ -84,9 +84,15 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
                 await using var audioStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read);
 
                 // Resolve profile ID from IdOrAlias
-                var profileId = profileIdOrAlias != null
-                    ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken)
-                    : null;
+                Guid? profileId = null;
+                if (profileIdOrAlias != null)
+                {
+                    profileId = await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken);
+                    if (!profileId.HasValue)
+                    {
+                        return ProfileNotFound();
+                    }
+                }
 
                 var result = await _speechToTextService.TranscribeAsync(
                     b =>

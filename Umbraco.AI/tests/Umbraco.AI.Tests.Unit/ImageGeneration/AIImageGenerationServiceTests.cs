@@ -197,6 +197,52 @@ public class AIImageGenerationServiceTests
     }
 
     [Fact]
+    public async Task GenerateImagesAsync_WithKnownProfileAlias_UsesResolvedProfile()
+    {
+        var profileId = Guid.NewGuid();
+        var generator = new FakeImageGenerator();
+        var profile = new AIProfileBuilder()
+            .WithId(profileId)
+            .WithAlias("my-image-profile")
+            .WithCapability(AICapability.ImageGeneration)
+            .WithModel("fake-provider", "gpt-image-1")
+            .Build();
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("my-image-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _factoryMock
+            .Setup(x => x.CreateGeneratorAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(generator);
+
+        var response = await _service.GenerateImagesAsync(
+            b => b.WithAlias("alias-test").WithProfile("my-image-profile"),
+            "a cat");
+
+        response.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GenerateImagesAsync_WithUnknownProfileAlias_ThrowsInvalidOperationException()
+    {
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("missing-alias", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var act = () => _service.GenerateImagesAsync(
+            b => b.WithAlias("alias-test").WithProfile("missing-alias"),
+            "a cat");
+
+        await Should.ThrowAsync<InvalidOperationException>(act);
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task CreateImageGeneratorAsync_ReturnsGenerator_ResolvingProviderClientViaGetService()
     {
         var surrogate = new object();

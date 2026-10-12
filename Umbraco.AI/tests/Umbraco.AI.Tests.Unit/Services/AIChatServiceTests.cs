@@ -215,6 +215,67 @@ public class AIChatServiceTests
 
     #endregion
 
+    #region GetChatResponseAsync - By profile alias
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithKnownProfileAlias_UsesResolvedProfile()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
+
+        var profile = new AIProfileBuilder()
+            .WithId(profileId)
+            .WithAlias("my-chat-profile")
+            .WithCapability(AICapability.Chat)
+            .WithModel("openai", "gpt-4")
+            .Build();
+
+        var fakeChatClient = new FakeChatClient("Response from aliased profile");
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("my-chat-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeChatClient);
+
+        // Act
+        var response = await _service.GetChatResponseAsync(
+            b => b.WithAlias("alias-test").WithProfile("my-chat-profile"),
+            messages);
+
+        // Assert
+        response.Text.ShouldBe("Response from aliased profile");
+    }
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithUnknownProfileAlias_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("missing-alias", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        // Act
+        var act = () => _service.GetChatResponseAsync(
+            b => b.WithAlias("alias-test").WithProfile("missing-alias"),
+            messages);
+
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(act);
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    #endregion
+
     #region GetChatResponseAsync - Options merging
 
     [Fact]

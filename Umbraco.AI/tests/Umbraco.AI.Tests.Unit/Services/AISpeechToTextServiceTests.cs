@@ -461,6 +461,28 @@ public class AISpeechToTextServiceTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task TranscribeAsync_WithBuilder_WithUnknownProfileAlias_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var audioStream = new MemoryStream([1, 2, 3]);
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("missing-alias", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        // Act
+        var act = () => _service.TranscribeAsync(
+            b => b.WithAlias("alias-test").WithProfile("missing-alias"),
+            audioStream);
+
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(act);
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     #endregion
 
     #region CreateSpeechToTextClientAsync - Builder API

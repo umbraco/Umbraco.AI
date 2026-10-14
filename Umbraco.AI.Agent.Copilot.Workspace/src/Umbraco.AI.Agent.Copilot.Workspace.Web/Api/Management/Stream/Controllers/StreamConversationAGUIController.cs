@@ -137,6 +137,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
         {
             return Results.NotFound(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Conversation not found",
                 Detail = "The specified conversation could not be found for the current user.",
                 Status = StatusCodes.Status404NotFound,
@@ -164,6 +165,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             {
                 return Results.NotFound(new ProblemDetails
                 {
+                    Type = "Error",
                     Title = "No agent available",
                     Detail = "No active agent is available for the Copilot Workspace surface.",
                     Status = StatusCodes.Status404NotFound,

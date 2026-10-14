@@ -61,11 +61,13 @@ public class CompleteChatController : ChatControllerBase
             Guid? profileId = null;
             if (profileIdOrAlias != null)
             {
-                profileId = await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken);
-                if (!profileId.HasValue)
+                var resolvedProfile = await _profileService.GetProfileAsync(profileIdOrAlias, cancellationToken);
+                if (resolvedProfile is null)
                 {
                     return ProfileNotFound();
                 }
+
+                profileId = resolvedProfile.Id;
             }
 
             // Convert request messages to ChatMessage list
@@ -91,6 +93,7 @@ public class CompleteChatController : ChatControllerBase
             var phase = ex.EvaluationResult.Phase == AIGuardrailPhase.PreGenerate ? "input" : "response";
             var problemDetails = new ProblemDetails
             {
+                Type = "Error",
                 Title = "Chat blocked by guardrail policy",
                 Detail = ex.Message,
                 Status = StatusCodes.Status422UnprocessableEntity
@@ -104,14 +107,11 @@ public class CompleteChatController : ChatControllerBase
                 .ToList();
             return UnprocessableEntity(problemDetails);
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ProfileNotFound();
-        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Chat completion failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

@@ -64,6 +64,7 @@ public class RunAgentController : AgentControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Agent execution failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

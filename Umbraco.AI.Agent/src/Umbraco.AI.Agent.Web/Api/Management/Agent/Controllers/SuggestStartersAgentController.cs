@@ -92,6 +92,7 @@ public class SuggestStartersAgentController : AgentControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Suggesting starter prompts failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

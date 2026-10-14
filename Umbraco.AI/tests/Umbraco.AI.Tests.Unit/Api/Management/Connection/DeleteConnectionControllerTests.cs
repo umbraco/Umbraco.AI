@@ -14,6 +14,10 @@ public class DeleteConnectionControllerTests
     public DeleteConnectionControllerTests()
     {
         _connectionServiceMock = new Mock<IAIConnectionService>();
+        // Connections are looked up by ID before use; unless a test says otherwise, they exist.
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid id, CancellationToken _) => new AIConnectionBuilder().WithId(id).Build());
         _controller = new DeleteConnectionController(_connectionServiceMock.Object);
     }
 
@@ -42,11 +46,10 @@ public class DeleteConnectionControllerTests
         // Arrange
         var connectionId = Guid.NewGuid();
 
-        // TryGetConnectionIdAsync returns the ID directly (no lookup for IDs)
-        // DeleteConnectionAsync throws when connection doesn't exist
+        // An ID is returned without a lookup, so the controller checks existence explicitly
         _connectionServiceMock
-            .Setup(x => x.DeleteConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException($"Connection with ID '{connectionId}' not found"));
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await _controller.DeleteConnection(new IdOrAlias(connectionId));

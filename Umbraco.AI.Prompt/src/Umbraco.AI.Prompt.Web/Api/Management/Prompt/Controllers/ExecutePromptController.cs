@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Extensions;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
@@ -44,9 +45,10 @@ public class ExecutePromptController : PromptControllerBase
         [FromBody] PromptExecutionRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        // Resolve prompt ID from IdOrAlias
+        // Resolve prompt ID from IdOrAlias. An ID is returned without a lookup, so confirm the prompt
+        // exists here; failures during execution are then never about the prompt itself.
         var promptId = await _promptService.TryGetPromptIdAsync(promptIdOrAlias, cancellationToken);
-        if (!promptId.HasValue)
+        if (!promptId.HasValue || await _promptService.GetPromptAsync(promptId.Value, cancellationToken) is null)
         {
             return PromptNotFound();
         }
@@ -57,18 +59,25 @@ public class ExecutePromptController : PromptControllerBase
             var result = await _promptService.ExecutePromptAsync(promptId.Value, request, cancellationToken);
             return Ok(_mapper.Map<PromptExecutionResponseModel>(result));
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return PromptNotFound();
-        }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Prompt execution failed",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
+            // Covers a missing default profile, profile, connection or provider as well as scope and
+            // notification failures.
+            return ExecutionFailed(ex.Message);
+        }
+        catch (AIProviderException ex)
+        {
+            return ExecutionFailed(ex.UserMessage);
         }
     }
+
+    // The backoffice only shows a problem's detail when it has a type; without one the user sees a
+    // generic error message.
+    private BadRequestObjectResult ExecutionFailed(string detail) => BadRequest(new ProblemDetails
+    {
+        Type = "Error",
+        Title = "Prompt execution failed",
+        Detail = detail,
+        Status = StatusCodes.Status400BadRequest
+    });
 }

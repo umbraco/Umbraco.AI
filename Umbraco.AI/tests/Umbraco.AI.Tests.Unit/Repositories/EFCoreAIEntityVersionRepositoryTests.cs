@@ -238,6 +238,8 @@ public class EFCoreAIEntityVersionRepositoryTests : IClassFixture<EFCoreTestFixt
         // Arrange
         var entityId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var dateAuthored = new DateTime(2026, 3, 1, 9, 30, 0, DateTimeKind.Utc);
 
         // Act
         await using var actContext = _fixture.CreateContext();
@@ -248,7 +250,9 @@ public class EFCoreAIEntityVersionRepositoryTests : IClassFixture<EFCoreTestFixt
             1,
             "test-snapshot",
             userId,
-            "Initial creation");
+            "Initial creation",
+            authorId,
+            dateAuthored);
 
         // Assert
         await using var assertContext = _fixture.CreateContext();
@@ -259,6 +263,8 @@ public class EFCoreAIEntityVersionRepositoryTests : IClassFixture<EFCoreTestFixt
         version.Version.ShouldBe(1);
         version.Snapshot.ShouldBe("test-snapshot");
         version.CreatedByUserId.ShouldBe(userId);
+        version.AuthoredByUserId.ShouldBe(authorId);
+        version.DateAuthored.ShouldBe(dateAuthored);
         version.ChangeDescription.ShouldBe("Initial creation");
     }
 
@@ -447,6 +453,32 @@ public class EFCoreAIEntityVersionRepositoryTests : IClassFixture<EFCoreTestFixt
 
         var count = await CreateRepository(assertContext).GetVersionCountByEntityAsync(entityId, "Profile");
         count.ShouldBe(1); // Only recent version remains
+    }
+
+    [Fact]
+    public async Task DeleteVersionsOlderThanAsync_KeepsRecentlyArchivedVersionOfLongUnchangedEntity()
+    {
+        // Arrange - a version authored long ago but only just archived by a new edit
+        await using var setupContext = _fixture.CreateContext();
+        var entityId = Guid.NewGuid();
+        await CreateRepository(setupContext).SaveVersionAsync(
+            entityId,
+            "Profile",
+            1,
+            "snapshot",
+            Guid.NewGuid(),
+            null,
+            Guid.NewGuid(),
+            DateTime.UtcNow.AddDays(-200));
+
+        // Act
+        await using var actContext = _fixture.CreateContext();
+        await CreateRepository(actContext).DeleteVersionsOlderThanAsync(DateTime.UtcNow.AddDays(-90));
+
+        // Assert
+        await using var assertContext = _fixture.CreateContext();
+        var version = await CreateRepository(assertContext).GetVersionAsync(entityId, "Profile", 1);
+        version.ShouldNotBeNull();
     }
 
     #endregion

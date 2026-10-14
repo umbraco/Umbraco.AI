@@ -701,6 +701,9 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.DateCreated)
                 .IsRequired();
 
+            entity.Property(e => e.DateAuthored)
+                .IsRequired();
+
             entity.Property(e => e.ChangeDescription)
                 .HasMaxLength(500);
 

@@ -88,6 +88,8 @@ internal sealed class EFCoreAIEntityVersionRepository : IAIEntityVersionReposito
         string snapshot,
         Guid? userId,
         string? changeDescription,
+        Guid? authoredByUserId,
+        DateTime dateAuthored,
         CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
@@ -103,6 +105,8 @@ internal sealed class EFCoreAIEntityVersionRepository : IAIEntityVersionReposito
                 Snapshot = snapshot,
                 DateCreated = DateTime.UtcNow,
                 CreatedByUserId = userId,
+                DateAuthored = dateAuthored,
+                AuthoredByUserId = authoredByUserId,
                 ChangeDescription = changeDescription
             };
 
@@ -201,6 +205,8 @@ internal sealed class EFCoreAIEntityVersionRepository : IAIEntityVersionReposito
             Snapshot = entity.Snapshot,
             DateCreated = entity.DateCreated,
             CreatedByUserId = entity.CreatedByUserId,
+            DateAuthored = entity.DateAuthored,
+            AuthoredByUserId = entity.AuthoredByUserId,
             ChangeDescription = entity.ChangeDescription
         };
     }

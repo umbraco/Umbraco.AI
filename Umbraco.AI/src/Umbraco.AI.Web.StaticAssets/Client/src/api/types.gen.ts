@@ -361,6 +361,8 @@ export type EntityVersionResponseModel = {
     dateCreated: string;
     createdByUserId?: null | string;
     createdByUserName?: null | string;
+    dateAuthored: string;
+    authoredByUserId?: null | string;
     changeDescription?: null | string;
 };
 

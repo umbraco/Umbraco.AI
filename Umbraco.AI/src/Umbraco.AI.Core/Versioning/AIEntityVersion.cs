@@ -39,14 +39,24 @@ public sealed class AIEntityVersion
     public string Snapshot { get; init; } = string.Empty;
 
     /// <summary>
-    /// The date and time when this version was created.
+    /// The date and time when this version record was created, i.e. when the version was replaced and archived.
     /// </summary>
     public DateTime DateCreated { get; init; }
 
     /// <summary>
-    /// The key (GUID) of the user who created this version, if available.
+    /// The key (GUID) of the user whose save archived this version, if available.
     /// </summary>
     public Guid? CreatedByUserId { get; init; }
+
+    /// <summary>
+    /// The date and time when the entity state in this version was made.
+    /// </summary>
+    public DateTime DateAuthored { get; init; }
+
+    /// <summary>
+    /// The key (GUID) of the user who made the entity state in this version, if available.
+    /// </summary>
+    public Guid? AuthoredByUserId { get; init; }
 
     /// <summary>
     /// Optional description of what changed in this version.

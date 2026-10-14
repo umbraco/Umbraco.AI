@@ -63,6 +63,8 @@ internal sealed class InMemoryAIEntityVersionRepository : IAIEntityVersionReposi
         string snapshot,
         Guid? userId,
         string? changeDescription,
+        Guid? authoredByUserId,
+        DateTime dateAuthored,
         CancellationToken cancellationToken = default)
     {
         var key = GetKey(entityId, entityType, version);
@@ -75,6 +77,8 @@ internal sealed class InMemoryAIEntityVersionRepository : IAIEntityVersionReposi
             Snapshot = snapshot,
             DateCreated = DateTime.UtcNow,
             CreatedByUserId = userId,
+            DateAuthored = dateAuthored,
+            AuthoredByUserId = authoredByUserId,
             ChangeDescription = changeDescription
         };
 

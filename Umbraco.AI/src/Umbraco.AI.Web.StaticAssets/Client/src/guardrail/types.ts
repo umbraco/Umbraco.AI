@@ -70,11 +70,16 @@ export function createEmptyRuleConfig(): UaiGuardrailRuleConfig {
 
 /**
  * Returns a human-readable summary of a rule configuration.
+ * @param localize Resolves a localization key, falling back to the given value (e.g. `localize.termOrDefault`).
  */
-export function getRuleSummary(rule: UaiGuardrailRuleConfig, evaluatorName?: string): string {
+export function getRuleSummary(
+    rule: UaiGuardrailRuleConfig,
+    evaluatorName?: string,
+    localize: (key: string, fallback: string) => string = (_key, fallback) => fallback,
+): string {
     const parts: string[] = [];
     if (evaluatorName) parts.push(evaluatorName);
-    parts.push(rule.phase);
-    parts.push(rule.action);
+    parts.push(localize(`uaiGuardrail_phase${rule.phase}`, rule.phase));
+    parts.push(localize(`uaiGuardrail_action${rule.action}`, rule.action));
     return parts.join(" · ");
 }

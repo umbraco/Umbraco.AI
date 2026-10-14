@@ -56,6 +56,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         this._error = undefined;
         this._completed = false;
         this._response = "";
+        this._resultOptions = undefined;
 
         this.#abortController = new AbortController();
 
@@ -199,6 +200,17 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
 
 
+    /**
+     * Whether the AI returned something to show. Structured results wrap the value (e.g. `{"value":" "}`),
+     * so check the options' display values rather than the raw content when there are options.
+     */
+    get #hasResult() {
+        if (this._resultOptions?.length) {
+            return this._resultOptions.some((option) => option.displayValue?.trim());
+        }
+        return !!this._response.trim();
+    }
+
     #renderResponse() {
         if (this._error) {
             return html`
@@ -220,7 +232,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             `;
         }
 
-        if (this._response.trim()) {
+        if (this.#hasResult) {
             return html`
                 <uui-scroll-container class="response-container ${this._resultOptions && this._resultOptions.length > 1 ? "multiple" : ""}">
                     ${this._resultOptions && this._resultOptions.length > 1
@@ -270,7 +282,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 </div>
 
                 <div slot="actions">
-                    ${this._response && !this._loading
+                    ${this.#hasResult && !this._loading
                         ? html`<uai-disclosure-notice location="prompt"></uai-disclosure-notice>`
                         : nothing}
                     <uui-button label=${this.localize.termOrDefault("general_cancel", "Cancel")} @click=${this.#onCancel}>
@@ -284,7 +296,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                                   label=${this.localize.termOrDefault("general_insert", "Insert")}
                                   look="primary"
                                   color="positive"
-                                  ?disabled=${!this._response ||
+                                  ?disabled=${!this.#hasResult ||
                                   this._loading ||
                                   this._selectedOptionIndex === undefined ||
                                   !this._resultOptions[this._selectedOptionIndex]?.valueChange}

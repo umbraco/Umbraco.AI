@@ -493,5 +493,7 @@ Before saying a task is done, actually run the relevant build/test command and l
 - Location: `umbraco/Umbraco.AI` (same repo as the source code)
 - Access: `gh` CLI (e.g. `gh issue view <n> --repo umbraco/Umbraco.AI`)
 - Triage log: `docs/triage/TRIAGE-LOG.md`
+- State labels: default (`state/needs-investigation`, `state/needs-info`, `state/needs-decision`, `state/blocked`, `state/ready`), plus the team's own `state/sprint-candidate`
+- Needs-info timeout: 30 days
 
 Bugs and user-reported issues go here. The Azure DevOps AI Team backlog (see Project Management above) is for internal planning, not issue triage.

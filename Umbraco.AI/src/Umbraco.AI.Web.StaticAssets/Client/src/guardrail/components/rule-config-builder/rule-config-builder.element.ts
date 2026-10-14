@@ -53,7 +53,7 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
             data: {
                 fetchItems: () => this.#getEvaluatorItems(),
                 selectionMode: "single",
-                title: "Select Evaluator",
+                title: this.localize.termOrDefault("uaiGuardrail_selectEvaluator", "Select Evaluator"),
                 autoSubmit: false,
             },
         });
@@ -134,6 +134,7 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
     }
 
     override render() {
+        const addRuleLabel = this.localize.termOrDefault("uaiGuardrail_addRule", "Add Rule");
         return html`
             <uui-ref-list>
                 ${repeat(
@@ -141,15 +142,21 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
                     (rule) => rule.id,
                     (rule) => html`
                         <uui-ref-node
-                            name=${rule.name || "Unnamed rule"}
+                            name=${rule.name || this.localize.termOrDefault("uaiGuardrail_unnamedRule", "Unnamed rule")}
                             detail=${this.#getRuleDetail(rule)}
                         >
                             <umb-icon slot="icon" name="icon-shield color-blue"></umb-icon>
                             <uui-action-bar slot="actions">
-                                <uui-button @click=${() => this.#onEdit(rule)} label="Edit">
+                                <uui-button
+                                    @click=${() => this.#onEdit(rule)}
+                                    label=${this.localize.termOrDefault("uaiGeneral_edit", "Edit")}
+                                >
                                     <uui-icon name="icon-edit"></uui-icon>
                                 </uui-button>
-                                <uui-button @click=${() => this.#onRemove(rule.id)} label="Remove">
+                                <uui-button
+                                    @click=${() => this.#onRemove(rule.id)}
+                                    label=${this.localize.termOrDefault("uaiGeneral_remove", "Remove")}
+                                >
                                     <uui-icon name="icon-trash"></uui-icon>
                                 </uui-button>
                             </uui-action-bar>
@@ -157,9 +164,9 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
                     `,
                 )}
             </uui-ref-list>
-            <uui-button class="add-btn" look="placeholder" label="Add Rule" @click=${this.#onAdd}>
+            <uui-button class="add-btn" look="placeholder" label=${addRuleLabel} @click=${this.#onAdd}>
                 <uui-icon name="icon-add"></uui-icon>
-                Add Rule
+                ${addRuleLabel}
             </uui-button>
         `;
     }

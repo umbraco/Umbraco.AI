@@ -90,12 +90,12 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
         const options: Array<{ value: string; name: string; selected: boolean }> = [
             {
                 value: "Block",
-                name: "Block",
+                name: this.localize.termOrDefault("uaiGuardrail_actionBlock", "Block"),
                 selected: this._rule.action === "Block",
             },
             {
                 value: "Warn",
-                name: "Warn",
+                name: this.localize.termOrDefault("uaiGuardrail_actionWarn", "Warn"),
                 selected: this._rule.action === "Warn",
             },
         ];
@@ -103,7 +103,7 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
         if (this._evaluator?.supportsRedaction) {
             options.push({
                 value: "Redact",
-                name: "Redact",
+                name: this.localize.termOrDefault("uaiGuardrail_actionRedact", "Redact"),
                 selected: this._rule.action === "Redact",
             });
         }
@@ -160,7 +160,7 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                         </umb-property-layout>
 
                         <umb-property-layout
-                            label="Phase"
+                            label=${this.localize.termOrDefault("uaiGuardrail_rulePhase", "Phase")}
                             description="When to evaluate this rule (before or after AI generation)"
                         >
                             <div slot="editor">
@@ -170,12 +170,12 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                                     .options=${[
                                         {
                                             value: "PreGenerate",
-                                            name: "Pre-Generate",
+                                            name: this.localize.termOrDefault("uaiGuardrail_phasePreGenerate", "Pre-Generate"),
                                             selected: this._rule.phase === "PreGenerate",
                                         },
                                         {
                                             value: "PostGenerate",
-                                            name: "Post-Generate",
+                                            name: this.localize.termOrDefault("uaiGuardrail_phasePostGenerate", "Post-Generate"),
                                             selected: this._rule.phase === "PostGenerate",
                                         },
                                     ]}
@@ -186,7 +186,7 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                         </umb-property-layout>
 
                         <umb-property-layout
-                            label="Action"
+                            label=${this.localize.termOrDefault("uaiGuardrail_ruleAction", "Action")}
                             description="Action to take when the rule is triggered"
                         >
                             <div slot="editor">

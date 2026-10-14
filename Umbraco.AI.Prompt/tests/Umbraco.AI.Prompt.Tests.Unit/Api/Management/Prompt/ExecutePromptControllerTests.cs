@@ -60,7 +60,9 @@ public class ExecutePromptControllerTests
     {
         var result = await ExecuteThrowingAsync(new InvalidOperationException(message));
 
-        var problem = result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeOfType<ProblemDetails>();
+        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        objectResult.StatusCode.ShouldBe(400);
+        var problem = objectResult.Value.ShouldBeOfType<ProblemDetails>();
         problem.Detail.ShouldBe(message);
         problem.Type.ShouldNotBeNullOrEmpty();
     }
@@ -71,8 +73,33 @@ public class ExecutePromptControllerTests
         var result = await ExecuteThrowingAsync(new AIProviderException(new AIProviderErrorInfo(
             AIProviderErrorCategory.InvalidRequest, "The model does not exist.", null, "raw")));
 
-        var problem = result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeOfType<ProblemDetails>();
+        var problem = result.ShouldBeOfType<ObjectResult>().Value.ShouldBeOfType<ProblemDetails>();
         problem.Detail.ShouldBe("The model does not exist.");
+    }
+
+    [Theory]
+    [InlineData(AIProviderErrorCategory.RateLimited, 429)]
+    [InlineData(AIProviderErrorCategory.Transient, 503)]
+    [InlineData(AIProviderErrorCategory.NetworkError, 502)]
+    [InlineData(AIProviderErrorCategory.Unknown, 400)]
+    [InlineData(AIProviderErrorCategory.InvalidRequest, 400)]
+    [InlineData(AIProviderErrorCategory.NotFound, 400)]
+    [InlineData(AIProviderErrorCategory.Cancelled, 400)]
+    // A 401 would make the backoffice think the user's session expired, and a 403 is a user permission
+    // error, so a provider rejecting the connection's credentials must be a 400.
+    [InlineData(AIProviderErrorCategory.Authentication, 400)]
+    public async Task ExecutePrompt_WhenTheProviderFails_ReturnsTheStatusForItsCategory(
+        AIProviderErrorCategory category, int expectedStatus)
+    {
+        var result = await ExecuteThrowingAsync(new AIProviderException(new AIProviderErrorInfo(
+            category, "Provider said no.", null, "raw")));
+
+        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        objectResult.StatusCode.ShouldBe(expectedStatus);
+        var problem = objectResult.Value.ShouldBeOfType<ProblemDetails>();
+        problem.Status.ShouldBe(expectedStatus);
+        problem.Type.ShouldBe("Error");
+        problem.Detail.ShouldBe("Provider said no.");
     }
 
     [Fact]

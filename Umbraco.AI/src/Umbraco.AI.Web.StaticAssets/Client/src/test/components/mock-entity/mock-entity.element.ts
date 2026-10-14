@@ -396,6 +396,8 @@ export class UaiMockEntityElement extends UmbLitElement {
             <uui-ref-node
                 name=${summary.name || "Unnamed Entity"}
                 detail=${summary.detail}
+                ?readonly=${this.readonly}
+                @open=${this.readonly ? nothing : hasCustomEditor ? this.#onEdit : this.#onEditJson}
             >
                 <umb-icon slot="icon" name=${this.#getMockEntityIcon()}></umb-icon>
                 ${!this.readonly

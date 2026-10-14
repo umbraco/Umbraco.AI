@@ -17,6 +17,7 @@ public abstract class FileControllerBase : UmbracoAIAgentManagementControllerBas
     /// </summary>
     protected IActionResult FileNotFound() => NotFound(new ProblemDetails
     {
+        Type = "Error",
         Title = "File not found",
         Detail = "The specified file could not be found or has expired.",
         Status = StatusCodes.Status404NotFound

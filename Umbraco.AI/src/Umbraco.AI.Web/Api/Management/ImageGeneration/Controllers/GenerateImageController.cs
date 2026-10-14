@@ -67,6 +67,7 @@ public class GenerateImageController : ImageGenerationControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Invalid prompt",
                 Detail = "A prompt must be provided.",
                 Status = StatusCodes.Status400BadRequest
@@ -79,11 +80,13 @@ public class GenerateImageController : ImageGenerationControllerBase
             Guid? profileId = null;
             if (model.ProfileIdOrAlias != null)
             {
-                profileId = await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(model.ProfileIdOrAlias, null), cancellationToken);
-                if (!profileId.HasValue)
+                var resolvedProfile = await _profileService.GetProfileAsync(IdOrAlias.Parse(model.ProfileIdOrAlias, null), cancellationToken);
+                if (resolvedProfile is null)
                 {
                     return ProfileNotFound();
                 }
+
+                profileId = resolvedProfile.Id;
             }
 
             var originalImages = MapOriginalImages(model.OriginalImages);
@@ -110,14 +113,11 @@ public class GenerateImageController : ImageGenerationControllerBase
 
             return Ok(MapResponse(result));
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ProfileNotFound();
-        }
         catch (FormatException)
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Invalid image data",
                 Detail = "One or more original images were not valid base64.",
                 Status = StatusCodes.Status400BadRequest
@@ -127,6 +127,7 @@ public class GenerateImageController : ImageGenerationControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Image generation failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

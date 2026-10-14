@@ -180,6 +180,7 @@ public class StreamAgentAGUIController : AgentControllerBase
             {
                 return Results.BadRequest(new ProblemDetails
                 {
+                    Type = "Error",
                     Title = "Surface is required for auto agent selection",
                     Detail = "The AG-UI context must include a surface to use 'auto' agent selection.",
                     Status = StatusCodes.Status400BadRequest
@@ -202,6 +203,7 @@ public class StreamAgentAGUIController : AgentControllerBase
             {
                 return Results.NotFound(new ProblemDetails
                 {
+                    Type = "Error",
                     Title = "No active agents found",
                     Detail = $"No active agents found in '{context.Surface}' surface for the current context.",
                     Status = StatusCodes.Status404NotFound
@@ -218,6 +220,7 @@ public class StreamAgentAGUIController : AgentControllerBase
             {
                 return Results.NotFound(new ProblemDetails
                 {
+                    Type = "Error",
                     Title = "AIAgent not found",
                     Detail = "The specified agent could not be found.",
                     Status = StatusCodes.Status404NotFound
@@ -240,6 +243,7 @@ public class StreamAgentAGUIController : AgentControllerBase
                 {
                     return Results.NotFound(new ProblemDetails
                     {
+                        Type = "Error",
                         Title = "AIAgent not available in this context",
                         Detail = $"Agent '{agent.Alias}' is not available in the '{explicitContext.Surface}' surface for the current context.",
                         Status = StatusCodes.Status404NotFound

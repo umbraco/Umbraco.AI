@@ -300,6 +300,29 @@ public class AskDecisionControllerTests
         }
     }
 
+    public class GivenAProfileIdThatDoesNotExist
+    {
+        [Fact]
+        public async Task ReturnsNotFoundAndNeverCallsTheService()
+        {
+            var profileId = Guid.NewGuid();
+            var profileService = new Mock<IAIProfileService>();
+            profileService
+                .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((AIProfile?)null);
+            var service = new Mock<IAIDecisionService>();
+
+            var result = await CreateController(service, profileService, enabled: true)
+                .Ask(Binary(profile: profileId.ToString()));
+
+            result.ShouldBeOfType<NotFoundObjectResult>();
+            service.Verify(
+                x => x.GetDecisionResponseAsync(
+                    It.IsAny<Action<AIDecisionBuilder>>(), It.IsAny<AIDecisionRequest>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+    }
+
     public class GivenANonDecisionProfile
     {
         [Fact]

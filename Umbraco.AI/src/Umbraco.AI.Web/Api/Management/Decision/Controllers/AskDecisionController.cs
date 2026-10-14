@@ -74,13 +74,14 @@ public class AskDecisionController : DecisionControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            // A supplied-but-missing profile is already handled above via TryGetProfileIdAsync before
+            // A supplied-but-missing profile is already handled by the existence check in TryResolveProfileAsync before
             // the service is ever called, so any InvalidOperationException reaching here is a
             // configuration problem (no default Decision profile, or a resolved profile that isn't a
             // Decision profile) rather than a "not found" the caller can fix by retrying — see SPEC.md's
             // guarantees for POST decision/ask.
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Decision failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest
@@ -90,6 +91,7 @@ public class AskDecisionController : DecisionControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Invalid question",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest
@@ -104,6 +106,7 @@ public class AskDecisionController : DecisionControllerBase
             // own provider-level failures.
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Decision request failed",
                 Detail = ex.UserMessage,
                 Status = StatusCodes.Status400BadRequest
@@ -164,9 +167,9 @@ public class AskDecisionController : DecisionControllerBase
             return ProfileResolution.Success(null);
         }
 
-        var profileId = await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken);
-        return profileId.HasValue
-            ? ProfileResolution.Success(profileId)
+        var profile = await _profileService.GetProfileAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken);
+        return profile is not null
+            ? ProfileResolution.Success(profile.Id)
             : ProfileResolution.Failure(ProfileNotFound());
     }
 
@@ -200,6 +203,7 @@ public class AskDecisionController : DecisionControllerBase
 
     private static ProblemDetails InvalidQuestion(string detail) => new()
     {
+        Type = "Error",
         Title = "Invalid question",
         Detail = detail,
         Status = StatusCodes.Status400BadRequest

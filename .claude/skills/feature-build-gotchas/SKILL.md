@@ -1,19 +1,19 @@
 ---
-name: umb-build-loop-gotchas
-description: Process checklist for running umbraco-claude-playbook's umb-explore/umb-design/umb-plan/umb-build-loop pipeline in this repo — worktree-creation trap, commit hygiene, orchestrator discipline, and the demo-site live-verification recipe. Documents gaps found in the cached playbook skills without editing them directly. Use whenever running that pipeline, not just for capability work.
+name: feature-build-gotchas
+description: Process checklist for running umbraco-devkit's feature-explore/feature-design/feature-plan/feature-build pipeline in this repo — worktree-creation trap, commit hygiene, orchestrator discipline, and the demo-site live-verification recipe. Documents gaps found in the cached devkit skills without editing them directly. Use whenever running that pipeline, not just for capability work.
 ---
 
-# umb-build-loop workflow gotchas (this repo)
+# feature-build workflow gotchas (this repo)
 
-Findings from running the full `umb-explore → umb-design → umb-plan → umb-build-loop`
+Findings from running the full `feature-explore → feature-design → feature-plan → feature-build`
 pipeline end to end on the `decision-capability` feature (2026-09). These are process
 traps in *how the pipeline runs in this specific repo*, not in the skills' own written
-instructions — `umbraco-claude-playbook` lives in a plugin cache that gets overwritten on
+instructions — `umbraco-devkit` lives in a plugin cache that gets overwritten on
 update, so these are captured here instead of edited into it directly.
 
 ## Before creating the worktree: push trunk first if the plan-folder commit is local-only
 
-`umb-build-loop`'s Phase 0/4 commits the plan folder to trunk, then calls `EnterWorktree`.
+`feature-build`'s step 4 commits the plan folder to trunk, then calls `EnterWorktree`.
 **This repo's `WorktreeCreate` hook branches the new worktree off `origin/<default-branch>`,
 not local HEAD.** If the plan-folder commit (or anything else) only exists locally when
 `EnterWorktree` runs, it gets silently dropped from the new branch — the worktree simply

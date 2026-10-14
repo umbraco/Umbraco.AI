@@ -1,7 +1,7 @@
 # Build log
 
-T0 to T6 were built by hand, not through `umb-build-loop`, so no task had a reviewer gate before
-merge. T7 ran the playbook's reviewer agent over each task's merged v18 diff after the fact. Each
+T0 to T6 were built by hand, not through `feature-build`, so no task had a reviewer gate before
+merge. T7 ran the devkit's reviewer agent over each task's merged v18 diff after the fact. Each
 reviewer rebuilt the merge commit in a scratch copy and reran the unit tests. Findings are marked
 "fixed later" when a later task already closed them.
 

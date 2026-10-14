@@ -1,8 +1,8 @@
 # Plan
 
-Task checklist for `umb-build-loop`. Slice 1 only, `v18/dev` only (no v17 backport, per the
+Task checklist for `feature-build`. Slice 1 only, `v18/dev` only (no v17 backport, per the
 brief). Work happens in a worktree branched from `origin/v18/dev`; push trunk before
-`EnterWorktree` (see `umb-build-loop-gotchas`).
+`EnterWorktree` (see `feature-build-gotchas`).
 
 Paths are relative to the repo root. `Core` = `Umbraco.AI/src/Umbraco.AI.Core`,
 `Web` = `Umbraco.AI/src/Umbraco.AI.Web`, `FE` = `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src`,

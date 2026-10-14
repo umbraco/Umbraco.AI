@@ -37,10 +37,10 @@ infrastructure. See `ARCHITECTURE.md`/`SPEC.md` for the mechanism.
   That product does **not exist on `v18/dev` yet** — it's still confined to the Copilot RC release
   branches (`v18/release/2026.08.1` / `v17/release/2026.08.1`), deliberately held out of dev until
   that release goes final (see `[[project_copilot_rc_2026_08]]` memory). **Decided: build work
-  waits.** No branch off the RC release line for actual implementation — `umb-build-loop` shouldn't
+  waits.** No branch off the RC release line for actual implementation — `feature-build` shouldn't
   start for this feature until the Copilot RC has merged into `v18/dev` (and `v17/dev`); re-check
   `[[project_copilot_rc_2026_08]]` (or the RC branches directly) at that point. **Design work
-  (`umb-design`) proceeds now against the code as it exists on the RC branches** (e.g. the
+  (`feature-design`) proceeds now against the code as it exists on the RC branches** (e.g. the
   `v18-copilot-starter-prompts` worktree, which is branched from the RC line) — reading and
   reasoning about that code doesn't require a branch of its own, and the conversation model isn't
   expected to change shape before the RC finalizes. Re-verify against the merged `v18/dev` code
@@ -63,7 +63,7 @@ infrastructure. See `ARCHITECTURE.md`/`SPEC.md` for the mechanism.
 - **Snapshot vs. live scope.** The owner needs to choose, at share time, whether the recipient sees
   **only messages up to the moment of sharing** (a frozen point) or **also sees messages sent after
   that** (an evolving share that keeps including new turns). Manual refresh is fine either way — no
-  requirement for live/streaming updates while the viewer has the page open. TODO for `umb-design`:
+  requirement for live/streaming updates while the viewer has the page open. TODO for `feature-design`:
   work out how a "shared up to here" cutoff is represented and enforced server-side (a snapshot
   copy? a stored message-index cutoff on the share record?), since the underlying conversation is
   still mutable by the owner.

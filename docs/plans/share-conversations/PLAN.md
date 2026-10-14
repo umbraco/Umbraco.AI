@@ -6,7 +6,7 @@ None of these tasks can start yet. Copilot Workspace (the product this feature b
 on `v18/dev` or `v17/dev` — it's still confined to the Copilot RC release branches, deliberately
 held out of dev until that release goes final (`BRIEF.md`). This checklist is ready to execute the
 moment that merge lands on `v18/dev`; re-check `[[project_copilot_rc_2026_08]]` (memory) or the RC
-branches directly before starting `umb-build-loop`.
+branches directly before starting `feature-build`.
 
 ## Scope of this checklist
 

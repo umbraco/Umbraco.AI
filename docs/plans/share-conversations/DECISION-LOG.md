@@ -20,14 +20,14 @@
   required while they have the shared conversation open. Killed: real-time viewer sync.
 - **2026-09-22** — Owner chooses, at share time, whether the share is frozen at the current message
   or continues to include future messages. Mechanism for enforcing the cutoff is an open TODO for
-  `umb-design`, not decided here.
+  `feature-design`, not decided here.
 - **2026-09-22** — Wait for the Copilot RC to finalize and merge into `v18/dev`/`v17/dev` before
   starting build work, rather than branching off the still-moving RC release line now. Avoids
   building on a branch that could still change and extra RC-merge conflicts.
 - **2026-09-22** — Ships for v18 and v17 at the same time, per the repo's keep-active-versions-in-sync
   policy. Killed: v18-only first with a deferred v17 port decision.
 
-## umb-design
+## feature-design
 
 - **2026-09-22** — Recipients are named (owner picks specific colleagues), not a single
   "anyone with the link" toggle. Confirmed with the user; makes `SharedWithUserKey` and the
@@ -82,7 +82,7 @@
   panel read, instead of patching `isArchived` checks individually — found by tracing the actual
   render code, not assumed.
 - **2026-09-22 (reversal, supersedes the "hide what the viewer can't see" decision from
-  `umb-explore` and the `CanViewAsync` decision above)** — Dropped attachment redaction entirely.
+  `feature-explore` and the `CanViewAsync` decision above)** — Dropped attachment redaction entirely.
   User pushed back: message content is already unredacted, so a reply that leans on an attachment
   can already describe or quote it — hiding just the attachment chip protects a label, not the
   substance, while making such a reply look broken (references something invisible). Since the
@@ -93,7 +93,7 @@
   interface member and its two TODOs (which permission check to reuse; whether `AIContext` needs
   the same treatment) — both moot now that nothing is filtered.
 
-## umb-plan
+## feature-plan
 
 - **2026-09-22** — Owner-side stories (US1 share, US2 manage/revoke) sequenced before
   recipient-side (US3 find, US4 read) in `PLAN.md`. Confirmed with the user. The owner side has no
@@ -104,7 +104,7 @@
   decision 1 directly: shared reads were already required to be a separate code path from owned
   reads/writes, so the task split follows the same seam rather than cutting across it.
 - **2026-09-22** — Migration generation for SqlServer + SQLite (SC-03) is one task, not two,
-  even though `umb-plan`'s general guidance favors small single-seam tasks. Both providers are
+  even though `feature-plan`'s general guidance favors small single-seam tasks. Both providers are
   mechanically generated from the same entity change in the same commit — splitting them wouldn't
   produce two independently reviewable units, just two files reviewed together anyway.
 - **2026-09-22** — Frontend feature work (SC-10 readonly plumbing, SC-11 Share modal, SC-13

@@ -88,8 +88,8 @@
     The agent factory change already shipped in Agent 18.1.0, and nothing outside Agent calls it.
   - Changed constructors on the five content tools, `AIUsageTelemetryProvider`,
     `ProviderMapDefinition` and `CapabilitiesConnectionController` are only called by DI.
-- 08-10-2026: Added T7. The refactor was built by hand rather than through `umb-build-loop`, so no
-  task had its reviewer gate. T7 runs the playbook's reviewer agent over every task's diff at the
+- 08-10-2026: Added T7. The refactor was built by hand rather than through `feature-build`, so no
+  task had its reviewer gate. T7 runs the devkit's reviewer agent over every task's diff at the
   end, compares the work with how the build loop would have shaped it, and writes the missing
   `BUILD-LOG.md`.
 - 08-10-2026: Added T6, re-enabling package validation at the end, baselined on each branch's

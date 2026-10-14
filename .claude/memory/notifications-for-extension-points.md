@@ -16,9 +16,9 @@ product. They can watch or react to a lifecycle moment without writing a full pl
 service. In the `pluggable-agent-selection` design (01-10-2026) notifications were first cut as
 YAGNI, then added back (`AIAgentSelectedNotification`) on review.
 
-**How to apply:** in `umb-design` (and any design for a new extension point), list the lifecycle
+**How to apply:** in `feature-design` (and any design for a new extension point), list the lifecycle
 moments the feature has (before/after, selected, executed, saved) and propose a notification for
 each one that adds value. Prefer an observe-only `*ed` notification when a cancelable `*ing` one
 would duplicate another override mechanism (e.g. an ordered collection that already decides the
 outcome), and record why in the feature's `DECISION-LOG.md`. Add them to `ARCHITECTURE.md`'s
-Connected systems table, so `umb-plan` slices them into real tasks.
+Connected systems table, so `feature-plan` slices them into real tasks.

@@ -83,11 +83,11 @@ Tracked on [#528](https://github.com/umbraco/Umbraco.AI/issues/528).
     per line.
 
 - [x] **T7. Review the whole refactor as the build loop would have** (last, after T6).
-  T0 to T4 were built by hand, not through the playbook's `umb-build-loop`, so no task went
+  T0 to T4 were built by hand, not through the devkit's `feature-build`, so no task went
   through its builder/reviewer gate and there is no `BUILD-LOG.md`. Close that gap after the fact:
   - For each merged task (T0 #532, #530's #534, T1 #537, T2 #539, T3 #541, T4 #543, and T5/T6 when
-    done), run the `umbraco-claude-playbook:reviewer` agent on the task's v18 diff, as
-    `umb-build-loop` would have after the builder: code, conventions and security gate, PASS or
+    done), run the `umbraco-devkit:reviewer` agent on the task's v18 diff, as
+    `feature-build` would have after the builder: code, conventions and security gate, PASS or
     FAIL with findings.
   - Compare each task with how the build loop would have shaped it: one task per plan item, tests
     written before the change, a self-test before review, and a commit only on PASS. Note where the

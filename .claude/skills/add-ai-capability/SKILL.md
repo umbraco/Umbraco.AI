@@ -198,7 +198,7 @@ maps to the matching non-retryable `StepRunErrorCategory` — see `TranscribeAud
 
 ## Commit hygiene
 
-See `umb-build-loop-gotchas` for the general rule (commit each pending spec with the
+See `feature-build-gotchas` for the general rule (commit each pending spec with the
 production code that first makes it pass) — it bit this build twice on exactly this kind
 of feature.
 

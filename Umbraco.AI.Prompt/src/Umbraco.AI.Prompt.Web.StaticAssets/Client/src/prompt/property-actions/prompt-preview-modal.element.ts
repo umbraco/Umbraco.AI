@@ -121,12 +121,12 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             await navigator.clipboard.writeText(value);
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
             notificationContext?.peek("positive", {
-                data: { message: "Value copied to clipboard" },
+                data: { message: this.localize.termOrDefault("uaiPrompt_copiedToClipboard", "Value copied to clipboard") },
             });
         } catch {
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
             notificationContext?.peek("danger", {
-                data: { message: "Failed to copy to clipboard" },
+                data: { message: this.localize.termOrDefault("uaiPrompt_copyFailed", "Failed to copy to clipboard") },
             });
         }
     }
@@ -144,7 +144,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         return html`
             <uui-action-bar class="copy-action">
                 <uui-button
-                    label="Copy"
+                    label=${this.localize.termOrDefault("general_copy", "Copy")}
                     look="secondary"
                     compact
                     @click=${(e: Event) => {
@@ -205,7 +205,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 <div class="error-container">
                     <uui-icon name="icon-alert"></uui-icon>
                     <span>${this._error}</span>
-                    <uui-button label="Retry" look="secondary" compact @click=${this.#onRetry}>
+                    <uui-button label=${this.localize.termOrDefault("general_retry", "Retry")} look="secondary" compact @click=${this.#onRetry}>
                         <uui-icon name="icon-sync"></uui-icon>
                     </uui-button>
                 </div>
@@ -235,7 +235,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             return html`
                 <div class="empty-container">
                     <uui-icon name="icon-info"></uui-icon>
-                    <span>The AI returned an empty result. Try regenerating.</span>
+                    <span>${this.localize.termOrDefault("uaiPrompt_emptyResult", "The AI returned an empty result. Try regenerating.")}</span>
                 </div>
             `;
         }
@@ -249,7 +249,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
                 <div class="response-header">
                     <div>
-                        <h3 class="headline">${this.data?.promptName ?? "Prompt Preview"}</h3>
+                        <h3 class="headline">${this.data?.promptName ?? this.localize.termOrDefault("uaiPrompt_previewTitle", "Prompt Preview")}</h3>
                         ${this.data?.promptDescription
                             ? html`<p class="description">${this.data.promptDescription}</p>`
                             : nothing}
@@ -257,7 +257,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                     ${this._completed && !this._loading
                         ? html`
                         <uui-action-bar>
-                            <uui-button class="regenerate-btn"  label="Regenerate" look="default" compact @click=${this.#onRetry}>
+                            <uui-button class="regenerate-btn"  label=${this.localize.termOrDefault("uaiGeneral_regenerate", "Regenerate")} look="default" compact @click=${this.#onRetry}>
                                 <uui-icon name="icon-sync"></uui-icon>
                             </uui-button>
                         </uui-action-bar>
@@ -273,13 +273,15 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                     ${this._response && !this._loading
                         ? html`<uai-disclosure-notice location="prompt"></uai-disclosure-notice>`
                         : nothing}
-                    <uui-button label="Cancel" @click=${this.#onCancel}> Cancel </uui-button>
+                    <uui-button label=${this.localize.termOrDefault("general_cancel", "Cancel")} @click=${this.#onCancel}>
+                        ${this.localize.termOrDefault("general_cancel", "Cancel")}
+                    </uui-button>
                     ${this._resultOptions &&
                         this._resultOptions.length > 0 &&
                         this._resultOptions.some((opt) => opt.valueChange !== null && opt.valueChange !== undefined)
                         ? html`
                               <uui-button
-                                  label="Insert"
+                                  label=${this.localize.termOrDefault("general_insert", "Insert")}
                                   look="primary"
                                   color="positive"
                                   ?disabled=${!this._response ||
@@ -288,7 +290,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                                   !this._resultOptions[this._selectedOptionIndex]?.valueChange}
                                   @click=${this.#onInsert}
                               >
-                                  Insert
+                                  ${this.localize.termOrDefault("general_insert", "Insert")}
                               </uui-button>
                           `
                         : nothing}

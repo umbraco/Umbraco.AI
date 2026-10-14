@@ -207,6 +207,14 @@ internal sealed class AIPromptService : IAIPromptService
         {
             return await ExecutePromptCoreAsync(promptId, request, options, cancellationToken);
         }
+        catch (InvalidOperationException ex)
+        {
+            // Expected rejections: prompt not found, scope denied, cancelled by a notification handler,
+            // or a missing profile, connection or provider. Logged as a warning, but with the exception so an
+            // inner exception or stack trace is not lost if one of these turns out to be a real bug.
+            _logger.LogWarning(ex, "Prompt {PromptId} could not be executed: {Reason}", promptId, ex.Message);
+            throw;
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Callers usually turn this into a short message, so keep the full cause in the log.

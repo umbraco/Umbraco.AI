@@ -463,8 +463,10 @@ the inner view custom.
 Never break a public API. When a new method replaces an old one, keep the old signature and have it
 **proxy to the new method**, resolving any new parameters via service locator (e.g.
 `StaticServiceProvider.Instance.GetRequiredService<T>()`). Mark the old method `[Obsolete]` with the
-message `"Will be removed in vX"`, where **X = current major version + 2** (currently v17, so
-`"Will be removed in v19"`). This gives consumers two major versions to migrate.
+message `"Will be removed in vX"`, where **X = highest supported major version + 2**, the same on
+every active line (v17 and v18 are supported today, so `"Will be removed in v20"` on both). This gives
+consumers at least two major versions to migrate, and keeps a backported obsoletion identical to the
+original.
 
 ### Verify, Don't Assert
 

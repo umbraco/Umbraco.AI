@@ -130,7 +130,7 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
 
     #getRuleDetail(rule: UaiGuardrailRuleConfig): string {
         const typeName = this._evaluators.find((t) => t.id === rule.evaluatorId)?.name;
-        return getRuleSummary(rule, typeName);
+        return getRuleSummary(rule, typeName, (key, fallback) => this.localize.termOrDefault(key, fallback));
     }
 
     override render() {

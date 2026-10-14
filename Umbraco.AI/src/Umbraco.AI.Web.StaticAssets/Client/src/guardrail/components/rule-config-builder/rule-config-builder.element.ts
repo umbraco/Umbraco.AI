@@ -143,6 +143,7 @@ export class UaiGuardrailRuleConfigBuilderElement extends UmbFormControlMixin<
                         <uui-ref-node
                             name=${rule.name || "Unnamed rule"}
                             detail=${this.#getRuleDetail(rule)}
+                            @open=${() => this.#onEdit(rule)}
                         >
                             <umb-icon slot="icon" name="icon-shield color-blue"></umb-icon>
                             <uui-action-bar slot="actions">

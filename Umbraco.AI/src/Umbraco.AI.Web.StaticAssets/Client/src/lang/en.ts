@@ -327,6 +327,12 @@ export default {
         actionWarn: "Warn",
         actionRedact: "Redact",
         evaluatorConfig: "Configuration",
+        unnamedRule: "Unnamed rule",
+        configureRuleHeadline: (evaluatorName: string) => `Configure ${evaluatorName} Rule`,
+        ruleNameDescription: "Display name for this rule",
+        ruleNamePlaceholder: "Enter rule name",
+        rulePhaseDescription: "When to evaluate this rule (before or after AI generation)",
+        ruleActionDescription: "Action to take when the rule is triggered",
     },
     uaiKeyValueList: {
         keyLabel: "Key",

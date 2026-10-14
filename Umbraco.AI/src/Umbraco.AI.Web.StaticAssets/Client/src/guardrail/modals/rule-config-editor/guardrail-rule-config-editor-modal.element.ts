@@ -142,18 +142,36 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
             return html`<uui-loader></uui-loader>`;
         }
 
+        const cancelLabel = this.localize.termOrDefault("general_cancel", "Cancel");
+        const saveLabel = this.localize.termOrDefault("buttons_save", "Save");
+
         return html`
-            <umb-body-layout headline="Configure ${this.data?.evaluatorName} Rule">
+            <umb-body-layout
+                headline=${this.localize.termOrDefault(
+                    "uaiGuardrail_configureRuleHeadline",
+                    `Configure ${this.data?.evaluatorName} Rule`,
+                    this.data?.evaluatorName,
+                )}
+            >
                 <form id="rule-form" @submit=${this.#onSubmit}>
-                    <uui-box headline="General">
-                        <umb-property-layout label="Name" description="Display name for this rule">
+                    <uui-box headline=${this.localize.termOrDefault("general_general", "General")}>
+                        <umb-property-layout
+                            label=${this.localize.termOrDefault("uaiLabels_name", "Name")}
+                            description=${this.localize.termOrDefault(
+                                "uaiGuardrail_ruleNameDescription",
+                                "Display name for this rule",
+                            )}
+                        >
                             <div slot="editor">
                                 <uui-input
                                     id="name"
                                     type="text"
                                     .value=${this._rule.name}
                                     @input=${this.#onNameChange}
-                                    placeholder="Enter rule name"
+                                    placeholder=${this.localize.termOrDefault(
+                                        "uaiGuardrail_ruleNamePlaceholder",
+                                        "Enter rule name",
+                                    )}
                                     required
                                 ></uui-input>
                             </div>
@@ -161,7 +179,10 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
 
                         <umb-property-layout
                             label=${this.localize.termOrDefault("uaiGuardrail_rulePhase", "Phase")}
-                            description="When to evaluate this rule (before or after AI generation)"
+                            description=${this.localize.termOrDefault(
+                                "uaiGuardrail_rulePhaseDescription",
+                                "When to evaluate this rule (before or after AI generation)",
+                            )}
                         >
                             <div slot="editor">
                                 <uui-select
@@ -187,7 +208,10 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
 
                         <umb-property-layout
                             label=${this.localize.termOrDefault("uaiGuardrail_ruleAction", "Action")}
-                            description="Action to take when the rule is triggered"
+                            description=${this.localize.termOrDefault(
+                                "uaiGuardrail_ruleActionDescription",
+                                "Action to take when the rule is triggered",
+                            )}
                         >
                             <div slot="editor">
                                 <uui-select
@@ -216,15 +240,9 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                 </form>
 
                 <div slot="actions">
-                    <uui-button label="Cancel" @click=${this.#onCancel}> Cancel </uui-button>
-                    <uui-button
-                        type="submit"
-                        form="rule-form"
-                        look="primary"
-                        color="positive"
-                        label="Save"
-                    >
-                        Save
+                    <uui-button label=${cancelLabel} @click=${this.#onCancel}> ${cancelLabel} </uui-button>
+                    <uui-button type="submit" form="rule-form" look="primary" color="positive" label=${saveLabel}>
+                        ${saveLabel}
                     </uui-button>
                 </div>
             </umb-body-layout>

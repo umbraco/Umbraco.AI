@@ -17,6 +17,7 @@ public abstract class AgentControllerBase : UmbracoAIAgentManagementControllerBa
     /// </summary>
     protected IActionResult AgentNotFound() => NotFound(new ProblemDetails
     {
+        Type = "Error",
         Title = "AIAgent not found",
         Detail = "The specified agent could not be found.",
         Status = StatusCodes.Status404NotFound
@@ -27,6 +28,7 @@ public abstract class AgentControllerBase : UmbracoAIAgentManagementControllerBa
     /// </summary>
     protected IActionResult AliasAlreadyExists(string alias) => Conflict(new ProblemDetails
     {
+        Type = "Error",
         Title = "Alias already exists",
         Detail = $"A agent with alias '{alias}' already exists.",
         Status = StatusCodes.Status409Conflict

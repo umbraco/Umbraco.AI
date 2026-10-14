@@ -285,8 +285,11 @@ The `IdOrAlias` class:
 Resolution is handled via extension methods on `IAIProfileService`:
 
 ```csharp
-// Returns Guid? - null if not found
+// Returns Guid? - null only for an unknown alias; an ID is returned as-is, without checking it exists
 await profileService.TryGetProfileIdAsync(idOrAlias, cancellationToken);
+
+// Returns the profile - null if the ID or alias doesn't exist. Use this to check existence
+await profileService.GetProfileAsync(idOrAlias, cancellationToken);
 
 // Returns Guid - throws if not found
 await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);

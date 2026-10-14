@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.Embedding.Controllers;
 using Umbraco.AI.Web.Api.Management.Embedding.Models;
@@ -78,6 +79,10 @@ public class GenerateEmbeddingControllerTests
             ProfileIdOrAlias = new IdOrAlias(profileId),
             Values = new[] { "Test text" }
         };
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIProfileBuilder().Build());
 
         var embeddings = new GeneratedEmbeddings<Embedding<float>>(new[]
         {
@@ -163,6 +168,51 @@ public class GenerateEmbeddingControllerTests
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
         var problemDetails = notFoundResult.Value.ShouldBeOfType<ProblemDetails>();
         problemDetails.Title.ShouldBe("Profile not found");
+    }
+
+    [Fact]
+    public async Task GenerateEmbeddings_WithNonExistingProfileId_Returns404NotFound()
+    {
+        // An ID is returned without a lookup, so the controller must check existence itself
+        var profileId = Guid.NewGuid();
+        var requestModel = new GenerateEmbeddingRequestModel
+        {
+            ProfileIdOrAlias = new IdOrAlias(profileId),
+            Values = new[] { "Test text" }
+        };
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var result = await _controller.GenerateEmbeddings(requestModel);
+
+        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
+        notFoundResult.Value.ShouldBeOfType<ProblemDetails>().Title.ShouldBe("Profile not found");
+    }
+
+    [Fact]
+    public async Task GenerateEmbeddings_WhenServiceReportsSomethingNotFound_Returns400WithTheReason()
+    {
+        // e.g. a missing default profile: this is not "the requested profile does not exist"
+        var requestModel = new GenerateEmbeddingRequestModel
+        {
+            Values = new[] { "Test text" }
+        };
+
+        _embeddingServiceMock
+            .Setup(x => x.GenerateEmbeddingsAsync(
+                It.IsAny<Action<AIEmbeddingBuilder>>(),
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Default Embedding profile with alias 'x' not found."));
+
+        var result = await _controller.GenerateEmbeddings(requestModel);
+
+        var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
+        var problemDetails = badRequestResult.Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Type.ShouldBe("Error");
+        problemDetails.Detail.ShouldBe("Default Embedding profile with alias 'x' not found.");
     }
 
     [Fact]

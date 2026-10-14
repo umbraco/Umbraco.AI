@@ -57,6 +57,7 @@ public class StreamAgentController : AgentControllerBase
         {
             return Results.NotFound(new ProblemDetails
             {
+                Type = "Error",
                 Title = "AIAgent not found",
                 Detail = "The specified agent could not be found.",
                 Status = StatusCodes.Status404NotFound

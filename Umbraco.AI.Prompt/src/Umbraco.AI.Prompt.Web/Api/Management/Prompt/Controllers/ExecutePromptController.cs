@@ -40,6 +40,9 @@ public class ExecutePromptController : PromptControllerBase
     [ProducesResponseType(typeof(PromptExecutionResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> ExecutePrompt(
         IdOrAlias promptIdOrAlias,
         [FromBody] PromptExecutionRequestModel requestModel,
@@ -63,21 +66,31 @@ public class ExecutePromptController : PromptControllerBase
         {
             // Covers a missing default profile, profile, connection or provider as well as scope and
             // notification failures.
-            return ExecutionFailed(ex.Message);
+            return ExecutionFailed(StatusCodes.Status400BadRequest, ex.Message);
         }
         catch (AIProviderException ex)
         {
-            return ExecutionFailed(ex.UserMessage);
+            return ExecutionFailed(GetProviderErrorStatus(ex.Category), ex.UserMessage);
         }
     }
 
+    // Never 401/403 here: the backoffice treats a 401 as an expired session and signs the user out, and
+    // a provider rejecting the connection's credentials says nothing about the user's session.
+    private static int GetProviderErrorStatus(AIProviderErrorCategory category) => category switch
+    {
+        AIProviderErrorCategory.RateLimited => StatusCodes.Status429TooManyRequests,
+        AIProviderErrorCategory.Transient => StatusCodes.Status503ServiceUnavailable,
+        AIProviderErrorCategory.NetworkError => StatusCodes.Status502BadGateway,
+        _ => StatusCodes.Status400BadRequest,
+    };
+
     // The backoffice only shows a problem's detail when it has a type; without one the user sees a
     // generic error message.
-    private BadRequestObjectResult ExecutionFailed(string detail) => BadRequest(new ProblemDetails
+    private ObjectResult ExecutionFailed(int status, string detail) => StatusCode(status, new ProblemDetails
     {
         Type = "Error",
         Title = "Prompt execution failed",
         Detail = detail,
-        Status = StatusCodes.Status400BadRequest
+        Status = status
     });
 }

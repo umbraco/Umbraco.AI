@@ -52,4 +52,35 @@ public class TranscribeSpeechToTextControllerTests
             x => x.TranscribeAsync(It.IsAny<Action<AISpeechToTextBuilder>>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task TranscribeAudio_WithNonExistingProfileId_Returns404AndNeverTranscribes()
+    {
+        var profileId = Guid.NewGuid();
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var result = await _controller.TranscribeAudio(CreateAudioFile(), profileIdOrAlias: profileId.ToString());
+
+        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
+        notFoundResult.Value.ShouldBeOfType<ProblemDetails>().Title.ShouldBe("Profile not found");
+        _speechToTextServiceMock.Verify(
+            x => x.TranscribeAsync(It.IsAny<Action<AISpeechToTextBuilder>>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task TranscribeAudio_WhenServiceReportsSomethingNotFound_Returns400WithTheReason()
+    {
+        _speechToTextServiceMock
+            .Setup(x => x.TranscribeAsync(It.IsAny<Action<AISpeechToTextBuilder>>(), It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Default SpeechToText profile with alias 'x' not found."));
+
+        var result = await _controller.TranscribeAudio(CreateAudioFile());
+
+        var problemDetails = result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Type.ShouldBe("Error");
+        problemDetails.Detail.ShouldBe("Default SpeechToText profile with alias 'x' not found.");
+    }
 }

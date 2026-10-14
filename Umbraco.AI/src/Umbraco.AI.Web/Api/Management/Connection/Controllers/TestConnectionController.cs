@@ -43,24 +43,20 @@ public class TestConnectionController : ConnectionControllerBase
         CancellationToken cancellationToken = default)
     {
         // Resolve to ID first since TestConnectionAsync requires Guid
-        var connectionId = await _connectionService.TryGetConnectionIdAsync(connectionIdOrAlias, cancellationToken);
-        if (connectionId is null)
+        var connection = await _connectionService.GetConnectionAsync(connectionIdOrAlias, cancellationToken);
+        if (connection is null)
         {
             return ConnectionNotFound();
         }
 
         try
         {
-            var success = await _connectionService.TestConnectionAsync(connectionId.Value, cancellationToken);
+            var success = await _connectionService.TestConnectionAsync(connection.Id, cancellationToken);
             return Ok(new ConnectionTestResultModel
             {
                 Success = success,
                 ErrorMessage = success ? null : "Connection test failed"
             });
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ConnectionNotFound();
         }
         catch (Exception ex)
         {

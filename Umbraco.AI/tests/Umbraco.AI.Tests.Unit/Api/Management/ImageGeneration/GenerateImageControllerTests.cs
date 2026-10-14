@@ -8,6 +8,7 @@ using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Web.Api.Management.ImageGeneration.Controllers;
 using Umbraco.AI.Web.Api.Management.ImageGeneration.Models;
 
@@ -104,5 +105,44 @@ public class GenerateImageControllerTests
         _serviceMock.Verify(
             x => x.GenerateImagesAsync(It.IsAny<Action<AIImageGenerationBuilder>>(), It.IsAny<string>(), It.IsAny<IEnumerable<AIContent>?>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task Generate_WithNonExistingProfileId_Returns404AndNeverGeneratesImages()
+    {
+        var controller = CreateController(enabled: true);
+        var profileId = Guid.NewGuid();
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var result = await controller.Generate(new GenerateImageRequestModel
+        {
+            Prompt = "a cat",
+            ProfileIdOrAlias = profileId.ToString(),
+        });
+
+        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
+        notFoundResult.Value.ShouldBeOfType<ProblemDetails>().Title.ShouldBe("Profile not found");
+        _serviceMock.Verify(
+            x => x.GenerateImagesAsync(It.IsAny<Action<AIImageGenerationBuilder>>(), It.IsAny<string>(), It.IsAny<IEnumerable<AIContent>?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Generate_WhenServiceReportsSomethingNotFound_Returns400WithTheReason()
+    {
+        var controller = CreateController(enabled: true);
+
+        _serviceMock
+            .Setup(x => x.GenerateImagesAsync(It.IsAny<Action<AIImageGenerationBuilder>>(), It.IsAny<string>(), It.IsAny<IEnumerable<AIContent>?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Default ImageGeneration profile with alias 'x' not found."));
+
+        var result = await controller.Generate(new GenerateImageRequestModel { Prompt = "a cat" });
+
+        var problemDetails = result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Type.ShouldBe("Error");
+        problemDetails.Detail.ShouldBe("Default ImageGeneration profile with alias 'x' not found.");
     }
 }

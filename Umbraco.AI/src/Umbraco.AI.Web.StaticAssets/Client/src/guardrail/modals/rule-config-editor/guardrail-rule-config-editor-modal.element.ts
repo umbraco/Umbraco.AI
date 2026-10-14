@@ -142,8 +142,8 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
             return html`<uui-loader></uui-loader>`;
         }
 
-        const cancelLabel = this.localize.termOrDefault("uaiGuardrail_cancel", "Cancel");
-        const saveLabel = this.localize.termOrDefault("uaiGuardrail_save", "Save");
+        const cancelLabel = this.localize.termOrDefault("general_cancel", "Cancel");
+        const saveLabel = this.localize.termOrDefault("buttons_save", "Save");
 
         return html`
             <umb-body-layout
@@ -154,9 +154,9 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                 )}
             >
                 <form id="rule-form" @submit=${this.#onSubmit}>
-                    <uui-box headline=${this.localize.termOrDefault("uaiGuardrail_ruleGeneralGroup", "General")}>
+                    <uui-box headline=${this.localize.termOrDefault("general_general", "General")}>
                         <umb-property-layout
-                            label=${this.localize.termOrDefault("uaiGuardrail_ruleNameLabel", "Name")}
+                            label=${this.localize.termOrDefault("uaiLabels_name", "Name")}
                             description=${this.localize.termOrDefault(
                                 "uaiGuardrail_ruleNameDescription",
                                 "Display name for this rule",

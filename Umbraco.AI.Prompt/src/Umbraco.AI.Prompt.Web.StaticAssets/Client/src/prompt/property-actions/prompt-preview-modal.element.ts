@@ -29,6 +29,10 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     @state()
     private _error?: string;
 
+    /** True once a run finished without an error, even if the AI returned nothing. */
+    @state()
+    private _completed = false;
+
     @state()
     private _resultOptions?: UaiPromptResultOption[];
 
@@ -50,6 +54,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
         this._loading = true;
         this._error = undefined;
+        this._completed = false;
         this._response = "";
 
         this.#abortController = new AbortController();
@@ -75,6 +80,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 this._error = error.message;
             }
         } else if (data) {
+            this._completed = true;
             this._response = data.content;
             this._resultOptions = data.resultOptions;
 
@@ -214,7 +220,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             `;
         }
 
-        if (this._response) {
+        if (this._response.trim()) {
             return html`
                 <uui-scroll-container class="response-container ${this._resultOptions && this._resultOptions.length > 1 ? "multiple" : ""}">
                     ${this._resultOptions && this._resultOptions.length > 1
@@ -222,6 +228,15 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                         : this.#renderSingleOption()
                     }
                 </uui-scroll-container>
+            `;
+        }
+
+        if (this._completed) {
+            return html`
+                <div class="empty-container">
+                    <uui-icon name="icon-info"></uui-icon>
+                    <span>The AI returned an empty result. Try regenerating.</span>
+                </div>
             `;
         }
 
@@ -239,7 +254,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                             ? html`<p class="description">${this.data.promptDescription}</p>`
                             : nothing}
                     </div>
-                    ${this._response && !this._loading
+                    ${this._completed && !this._loading
                         ? html`
                         <uui-action-bar>
                             <uui-button class="regenerate-btn"  label="Regenerate" look="default" compact @click=${this.#onRetry}>
@@ -382,6 +397,16 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
             .error-container uui-icon {
                 flex-shrink: 0;
+            }
+
+            .empty-container {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-space-3);
+                padding: var(--uui-size-space-4);
+                border: 1px solid var(--uui-color-border);
+                border-radius: var(--uui-border-radius);
+                color: var(--uui-color-text-alt);
             }
 
             .error-container span {

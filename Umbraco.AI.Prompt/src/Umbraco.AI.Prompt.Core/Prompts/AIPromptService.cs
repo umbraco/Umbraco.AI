@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.InlineChat;
@@ -37,6 +38,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIPromptPropertyValueSchemaResolver _propertyValueSchemaResolver;
     private readonly AISimplifiedPropertyValueTransformerCollection _transformers;
+    private readonly ILogger<AIPromptService> _logger;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -51,6 +53,7 @@ internal sealed class AIPromptService : IAIPromptService
         IEventAggregator eventAggregator,
         IAIPromptPropertyValueSchemaResolver propertyValueSchemaResolver,
         AISimplifiedPropertyValueTransformerCollection transformers,
+        ILogger<AIPromptService> logger,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -65,6 +68,7 @@ internal sealed class AIPromptService : IAIPromptService
         _eventAggregator = eventAggregator;
         _propertyValueSchemaResolver = propertyValueSchemaResolver;
         _transformers = transformers;
+        _logger = logger;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -198,6 +202,24 @@ internal sealed class AIPromptService : IAIPromptService
         AIPromptExecutionRequest request,
         AIPromptExecutionOptions options,
         CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await ExecutePromptCoreAsync(promptId, request, options, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Callers usually turn this into a short message, so keep the full cause in the log.
+            _logger.LogError(ex, "Failed to execute prompt {PromptId}", promptId);
+            throw;
+        }
+    }
+
+    private async Task<AIPromptExecutionResult> ExecutePromptCoreAsync(
+        Guid promptId,
+        AIPromptExecutionRequest request,
+        AIPromptExecutionOptions options,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(options);

@@ -10,6 +10,7 @@ export default {
         close: "Close",
         remove: "Remove",
         edit: "Edit",
+        regenerate: "Regenerate",
         inherited: "Inherited",
         allowed: "Allowed",
         denied: "Denied",

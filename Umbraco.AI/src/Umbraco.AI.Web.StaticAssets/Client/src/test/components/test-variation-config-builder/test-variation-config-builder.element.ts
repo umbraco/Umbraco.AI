@@ -115,6 +115,7 @@ export class UaiTestVariationConfigBuilderElement extends UmbLitElement {
                         <uui-ref-node
                             name=${variation.name || "Unnamed variation"}
                             detail=${getVariationSummary(variation)}
+                            @open=${() => this.#onEdit(variation)}
                         >
                             <umb-icon slot="icon" name="icon-split-alt color-blue"></umb-icon>
                             <uui-action-bar slot="actions">

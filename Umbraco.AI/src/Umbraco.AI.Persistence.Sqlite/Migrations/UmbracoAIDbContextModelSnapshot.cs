@@ -954,11 +954,17 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("AuthoredByUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ChangeDescription")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateAuthored")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")

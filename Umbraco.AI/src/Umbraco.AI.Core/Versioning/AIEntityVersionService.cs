@@ -69,6 +69,8 @@ internal sealed class AIEntityVersionService : IAIEntityVersionService
         if (currentEntity is IAIVersionableEntity versionable && versionable.Version == version)
         {
             // Return a synthetic version record for the current state
+            var dateModified = GetDateModified(currentEntity) ?? DateTime.UtcNow;
+            var modifiedByUserId = GetModifiedByUserId(currentEntity);
             return new AIEntityVersion
             {
                 Id = Guid.Empty, // Synthetic - no DB record exists
@@ -76,8 +78,10 @@ internal sealed class AIEntityVersionService : IAIEntityVersionService
                 EntityType = entityType,
                 Version = version,
                 Snapshot = handler.CreateSnapshot(currentEntity),
-                DateCreated = GetDateModified(currentEntity) ?? DateTime.UtcNow,
-                CreatedByUserId = GetModifiedByUserId(currentEntity)
+                DateCreated = dateModified,
+                CreatedByUserId = modifiedByUserId,
+                DateAuthored = dateModified,
+                AuthoredByUserId = modifiedByUserId
             };
         }
 
@@ -139,6 +143,8 @@ internal sealed class AIEntityVersionService : IAIEntityVersionService
 
         var snapshot = handler.CreateSnapshot(entity);
 
+        // The snapshot is the state the entity was in at entity.Version, so record who made that state
+        // and when, alongside the user whose save is archiving it now.
         await _repository.SaveVersionAsync(
             entityId,
             handler.EntityTypeName,
@@ -146,10 +152,13 @@ internal sealed class AIEntityVersionService : IAIEntityVersionService
             snapshot,
             userId,
             changeDescription,
+            entity.ModifiedByUserId,
+            entity.DateModified,
             cancellationToken);
     }
 
     /// <inheritdoc />
+    [Obsolete("Use SaveVersionAsync<TEntity>, which records who authored the version. Will be removed in v20")]
     public Task SaveVersionAsync(
         Guid entityId,
         string entityType,
@@ -160,7 +169,8 @@ internal sealed class AIEntityVersionService : IAIEntityVersionService
         CancellationToken cancellationToken = default)
     {
         ValidateEntityType(entityType);
-        return _repository.SaveVersionAsync(entityId, entityType, version, snapshot, userId, changeDescription, cancellationToken);
+        // Raw snapshots carry no audit data, so the saving user and time also stand as the author.
+        return _repository.SaveVersionAsync(entityId, entityType, version, snapshot, userId, changeDescription, userId, DateTime.UtcNow, cancellationToken);
     }
 
     /// <inheritdoc />

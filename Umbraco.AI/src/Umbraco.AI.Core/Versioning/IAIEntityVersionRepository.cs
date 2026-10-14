@@ -60,8 +60,10 @@ internal interface IAIEntityVersionRepository
     /// <param name="entityType">The entity type discriminator.</param>
     /// <param name="version">The version number.</param>
     /// <param name="snapshot">The JSON snapshot of the entity state.</param>
-    /// <param name="userId">The user key (GUID) of who created this version.</param>
+    /// <param name="userId">The user key (GUID) of who created this version record.</param>
     /// <param name="changeDescription">Optional description of what changed.</param>
+    /// <param name="authoredByUserId">Who made the entity state in this version, or <c>null</c> if unknown.</param>
+    /// <param name="dateAuthored">When the entity state in this version was made.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     Task SaveVersionAsync(
         Guid entityId,
@@ -70,6 +72,8 @@ internal interface IAIEntityVersionRepository
         string snapshot,
         Guid? userId,
         string? changeDescription,
+        Guid? authoredByUserId,
+        DateTime dateAuthored,
         CancellationToken cancellationToken = default);
 
     /// <summary>

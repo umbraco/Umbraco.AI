@@ -19,6 +19,8 @@ export const UaiVersionHistoryTypeMapper = {
                     dateCreated: v.dateCreated,
                     createdByUserId: v.createdByUserId,
                     createdByUserName: v.createdByUserName,
+                    dateAuthored: v.dateAuthored,
+                    authoredByUserId: v.authoredByUserId,
                     changeDescription: v.changeDescription,
                 }),
             ),

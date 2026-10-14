@@ -287,14 +287,7 @@ internal sealed class AIPromptService : IAIPromptService
         }
 
         // 4. Build template context from basic request info + processor results
-        var templateContext = BuildExecutionContext(request);
-        foreach (var (key, value) in runtimeContext.Variables)
-        {
-            templateContext[key] = value;
-        }
-        templateContext["currentValue"] = templateContext.TryGetValue(request.PropertyAlias, out var propValue)
-            ? propValue
-            : null;
+        var templateContext = BuildTemplateContext(request, runtimeContext.Variables);
 
         // 5. Process template variables (returns multimodal content list)
         var contents = await _templateService.ProcessTemplateAsync(prompt.Instructions, templateContext, cancellationToken);
@@ -570,6 +563,36 @@ internal sealed class AIPromptService : IAIPromptService
     }
 
     /// <summary>
+    /// Builds the template variables: the request's own fields, then the variables contributed by the
+    /// runtime context (which win on a clash), then the derived <c>name</c> and <c>currentValue</c>.
+    /// </summary>
+    internal static Dictionary<string, object?> BuildTemplateContext(
+        AIPromptExecutionRequest request,
+        IReadOnlyDictionary<string, object?> runtimeVariables)
+    {
+        var templateContext = BuildExecutionContext(request);
+        foreach (var (key, value) in runtimeVariables)
+        {
+            templateContext[key] = value;
+        }
+
+        // {{name}} is the entity being edited. Inside a block the parent entity's variables carry an
+        // "entity." prefix, while the unprefixed entityName is the block's own placeholder name.
+        // A property aliased "name" keeps its value.
+        if (!templateContext.ContainsKey("name"))
+        {
+            templateContext["name"] = templateContext.GetValueOrDefault("entity.entityName")
+                ?? templateContext.GetValueOrDefault("entityName");
+        }
+
+        templateContext["currentValue"] = templateContext.TryGetValue(request.PropertyAlias, out var propValue)
+            ? propValue
+            : null;
+
+        return templateContext;
+    }
+
+    /// <summary>
     /// Builds the execution context dictionary from the request.
     /// </summary>
     private static Dictionary<string, object?> BuildExecutionContext(AIPromptExecutionRequest request)
@@ -580,6 +603,11 @@ internal sealed class AIPromptService : IAIPromptService
             ["entityType"] = request.EntityType,
             ["propertyAlias"] = request.PropertyAlias,
         };
+
+        if (!string.IsNullOrEmpty(request.ContentTypeAlias))
+        {
+            context["contentTypeAlias"] = request.ContentTypeAlias;
+        }
 
         if (request.ElementId.HasValue)
         {

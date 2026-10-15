@@ -8,10 +8,20 @@ namespace Umbraco.AI.Core.Connections;
 /// </summary>
 public class AIConnection : IAIVersionableEntity
 {
+    private Guid _id;
+
     /// <summary>
     /// Unique identifier for the connection.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the connection is first saved. Set it when creating a
+    /// connection that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// Unique alias for the connection (used for programmatic lookup).
@@ -65,4 +75,9 @@ public class AIConnection : IAIVersionableEntity
     /// Starts at 1 and increments with each save operation.
     /// </summary>
     public int Version { get; internal set; } = 1;
+
+    /// <summary>
+    /// Assigns the ID of a new connection. Used by the service when saving a connection with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

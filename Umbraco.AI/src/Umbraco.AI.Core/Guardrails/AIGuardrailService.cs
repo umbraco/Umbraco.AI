@@ -57,13 +57,13 @@ internal sealed class AIGuardrailService : IAIGuardrailService
         // Generate new ID if needed
         if (guardrail.Id == Guid.Empty)
         {
-            guardrail.Id = Guid.NewGuid();
+            guardrail.SetId(Guid.NewGuid());
         }
 
         // Generate IDs for new rules
         foreach (var rule in guardrail.Rules.Where(r => r.Id == Guid.Empty))
         {
-            rule.Id = Guid.NewGuid();
+            rule.SetId(Guid.NewGuid());
         }
 
         // Check for alias uniqueness

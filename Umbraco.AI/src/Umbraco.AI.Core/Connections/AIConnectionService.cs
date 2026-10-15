@@ -87,7 +87,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         // Generate new ID if needed
         if (connection.Id == Guid.Empty)
         {
-            connection.Id = Guid.NewGuid();
+            connection.SetId(Guid.NewGuid());
         }
 
         // Check for alias uniqueness

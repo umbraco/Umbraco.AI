@@ -41,6 +41,7 @@ Single-project structure (consistent with Deploy pattern):
 **Service Connector** - `UmbracoAIAgentServiceConnector`:
 - Extends `UmbracoAIProfileDependentEntityServiceConnectorBase`
 - Handles agent-to-profile dependency resolution
+- Declares guardrail IDs and (standard agents) config context IDs as `Match` dependencies
 - Serializes `IAIAgentConfig` polymorphically based on agent type
 - Deserializes config back using `AIAgentType` to determine concrete type
 - Pass 3 handles both agent creation and profile resolution
@@ -165,6 +166,7 @@ Unit tests cover:
 - AgentType serialization/deserialization
 - Polymorphic config serialization (standard vs orchestrated)
 - Profile dependency tracking (ProfileUdi added to dependencies)
+- Context dependency tracking (standard config ContextIds added to dependencies)
 - Scope serialization/deserialization (Sections/EntityTypes)
 - SurfaceIds array
 

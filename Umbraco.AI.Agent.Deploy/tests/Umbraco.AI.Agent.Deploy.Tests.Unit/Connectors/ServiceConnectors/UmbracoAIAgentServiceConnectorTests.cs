@@ -118,6 +118,32 @@ public class UmbracoAIAgentServiceConnectorTests
     }
 
     [Fact]
+    public async Task GetArtifactAsync_WithStandardConfigContexts_AddsContextDependencies()
+    {
+        // Arrange
+        var contextIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+            AgentType = AIAgentType.Standard,
+            Config = new AIStandardAgentConfig { ContextIds = contextIds },
+        };
+
+        var udi = new GuidUdi("umbraco-ai-agent", agent.Id);
+
+        // Act
+        var artifact = await _connector.GetArtifactAsync(udi, agent);
+
+        // Assert
+        artifact.ShouldNotBeNull();
+        artifact.Dependencies
+            .Where(d => d.Udi.EntityType == "umbraco-ai-context")
+            .Select(d => ((GuidUdi)d.Udi).Guid)
+            .ShouldBe(contextIds, ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task GetArtifactAsync_WithoutOptionalProperties_CreatesMinimalArtifact()
     {
         // Arrange

@@ -101,6 +101,32 @@ public class UmbracoAIPromptServiceConnectorTests
     }
 
     [Fact]
+    public async Task GetArtifactAsync_WithContexts_AddsContextDependencies()
+    {
+        // Arrange
+        var contextIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var prompt = new AIPrompt
+        {
+            Alias = "test-prompt",
+            Name = "Test Prompt",
+            Instructions = "Test instructions",
+            ContextIds = contextIds,
+        };
+
+        var udi = new GuidUdi("umbraco-ai-prompt", prompt.Id);
+
+        // Act
+        var artifact = await _connector.GetArtifactAsync(udi, prompt);
+
+        // Assert
+        artifact.ShouldNotBeNull();
+        artifact.Dependencies
+            .Where(d => d.Udi.EntityType == "umbraco-ai-context")
+            .Select(d => ((GuidUdi)d.Udi).Guid)
+            .ShouldBe(contextIds, ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task GetArtifactAsync_WithoutProfile_CreatesArtifactWithNullProfileUdi()
     {
         // Arrange

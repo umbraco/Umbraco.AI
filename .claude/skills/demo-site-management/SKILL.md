@@ -140,6 +140,33 @@ The main checkout (not a linked worktree) gets `44355` when it's free; other wor
 
 This works identically whether you're in the main checkout or a linked worktree — the alias reads the `wdp-port` file of whichever one you're currently in.
 
+## Live Verification Without the UI
+
+To prove a change works against the real running host (a real API key, a real DB-backed
+connection or profile, a real end-to-end call) when no backoffice flow is needed:
+
+- Add a throwaway `TEMP_<Name>.cs` in the demo site's project root: an `IHostedService` that
+  runs once about 8 seconds after startup, does the real work, and logs the result with a
+  distinctive prefix (e.g. `[VERIFY]`) via `ILogger.LogWarning`, so it's easy to grep.
+  Register it, and any throwaway provider, with a small `IComposer` in the same file.
+- Put any temporary `ProjectReference` or `appsettings.Development.json` overrides straight
+  into the demo site's own files.
+- None of this needs cleanup or a commit. The whole `demos/` tree is gitignored.
+- Loop:
+  ```bash
+  pkill -f "Umbraco.AI.DemoSite" 2>/dev/null; sleep 2
+  cd demos/vN/Umbraco.AI.DemoSite && dotnet build 2>&1 | grep -E "error|Error\(s\)"
+  rm -f /tmp/verify.log
+  dotnet run --no-build 2>&1 | tee /tmp/verify.log &   # background
+  # separately, in a background Bash call:
+  until grep -qE "\[VERIFY\] (SUCCESS|FAILED)" /tmp/verify.log 2>/dev/null; do sleep 2; done
+  grep "VERIFY" /tmp/verify.log
+  ```
+
+**Stale saved state hides fixes.** The demo site saves to a real database, so a connection or
+profile created by an earlier, buggier run is still there on the next run. Re-save everything
+the verification creates on every run. Never find-or-create it, or the fix is never exercised.
+
 ## Common Issues
 
 ### No port set yet

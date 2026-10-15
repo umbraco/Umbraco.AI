@@ -244,6 +244,8 @@ on one line before the other), so those are expected to differ.
 
 ### Backport Workflow
 
+Run `/umbraco-devkit:change-backport` to do a port. It follows the rules below.
+
 When a fix or feature applies to an older supported version:
 
 1. Branch from `vN/dev` for the target version line (not from the line you originally fixed), naming it `vN/feature/<name>` or `vN/hotfix/<name>`

@@ -34,9 +34,7 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
             return Task.FromResult<string?>(null);
         }
 
-        // TODO: Validate context exists via IAIContextService (when Context feature is fully implemented)
-        // For now, create UDI without validation
-
+        // Declaring the context as a Match dependency makes Deploy check it exists on the target
         var udi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Context, contextId);
         dependencies.Add(new UmbracoAIArtifactDependency(udi, ArtifactDependencyMode.Match));
 
@@ -59,8 +57,7 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
         // Try to parse as UDI first (artifact format)
         if (UdiParser.TryParse(value, out Udi? udi) && udi is GuidUdi guidUdi)
         {
-            // TODO: Validate context exists via IAIContextService (when Context feature is fully implemented)
-            // For now, return GUID directly
+            // Existence is already enforced by the Match dependency declared on export
             return Task.FromResult<object?>(guidUdi.Guid.ToString());
         }
 

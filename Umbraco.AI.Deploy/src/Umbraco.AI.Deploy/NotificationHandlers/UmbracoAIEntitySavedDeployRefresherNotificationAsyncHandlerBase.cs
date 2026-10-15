@@ -41,9 +41,6 @@ public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandle
         _diskEntityService = diskEntityService;
         _signatureService = signatureService;
         _entityType = entityType;
-
-        // Register entity type for disk-based deployment
-        diskEntityService.RegisterDiskEntityType(entityType);
     }
 
     /// <inheritdoc />

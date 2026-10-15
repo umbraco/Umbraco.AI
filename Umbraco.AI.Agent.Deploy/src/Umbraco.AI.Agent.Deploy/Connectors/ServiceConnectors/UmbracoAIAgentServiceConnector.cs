@@ -89,6 +89,16 @@ public class UmbracoAIAgentServiceConnector(
             dependencies.Add(new UmbracoAIArtifactDependency(guardrailUdi, ArtifactDependencyMode.Match));
         }
 
+        // Add context dependencies (standard agents only)
+        if (entity.Config is AIStandardAgentConfig standardConfig)
+        {
+            foreach (var contextId in standardConfig.ContextIds)
+            {
+                var contextUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Context, contextId);
+                dependencies.Add(new UmbracoAIArtifactDependency(contextUdi, ArtifactDependencyMode.Match));
+            }
+        }
+
         // Serialize config to JSON
         string? configJson = null;
         if (entity.Config is not null)

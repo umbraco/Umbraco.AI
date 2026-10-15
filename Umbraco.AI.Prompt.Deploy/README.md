@@ -8,7 +8,7 @@ Umbraco Deploy support for Umbraco.AI.Prompt - enables deployment of AI prompt t
 - **Profile Dependencies** - Automatic resolution of prompt-to-profile relationships
 - **Scope Deployment** - Deploy prompt scoping rules for content types and properties
 - **Tag Preservation** - Maintain prompt tags and categorization
-- **Context References** - Deploy context ID references (future)
+- **Context and Guardrail Dependencies** - Referenced contexts and guardrails are declared as dependencies
 - **Disk-Based Artifacts** - Git-friendly JSON artifacts for version control
 
 ## Monorepo Context
@@ -47,24 +47,25 @@ dotnet add package Umbraco.AI.Prompt.Deploy
 AIPrompt artifacts include:
 - **Basic Properties**: Alias, Name, Description, Instructions
 - **Profile Dependency**: Optional ProfileUdi reference
-- **Context References**: Array of context IDs (future)
+- **Context References**: Array of context IDs (each declared as a dependency)
+- **Guardrail References**: Array of guardrail IDs (each declared as a dependency)
 - **Tags**: Categorization tags
 - **Scope**: JSON-serialized scope rules (content types, properties)
 - **Settings**: IsActive, IncludeEntityContext, OptionCount
 
 ### Deployment Process
 
-**Pass 2**: Creates/updates prompt with basic properties
-**Pass 4**: Resolves ProfileUdi → ProfileId dependency
+Prompts are processed in a single pass (**Pass 3**), after connections (pass 1) and profiles,
+contexts and guardrails (pass 2) are in place.
 
 Example:
 ```
 Source Environment:
-  Prompt "Generate Summary" → Profile "GPT-4 Summary"
+  Prompt "Generate Summary" → Profile "GPT-4 Summary", Context "Brand Voice"
 
 Target Environment:
-  Pass 2: Creates prompt with temporary ProfileId
-  Pass 4: Resolves Profile UDI, updates prompt with correct ProfileId
+  Pass 2: Profile and context are created/updated
+  Pass 3: Resolves Profile UDI → ProfileId and creates/updates the prompt
 ```
 
 ## Related Packages

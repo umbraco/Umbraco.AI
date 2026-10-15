@@ -32,7 +32,7 @@ Single-project structure (consistent with Deploy pattern):
 **Artifact** - `AIPromptArtifact`:
 - Basic properties (Alias, Name, Description, Instructions)
 - Optional ProfileUdi for profile dependency
-- ContextIds array (future feature)
+- ContextIds and GuardrailIds arrays (each ID declared as a `Match` dependency)
 - Tags array for categorization
 - Scope as JsonElement (serialized AIPromptScope)
 - Settings (IsActive, IncludeEntityContext, OptionCount)
@@ -49,46 +49,28 @@ Single-project structure (consistent with Deploy pattern):
 ### Base Class Benefits
 
 Uses `UmbracoAIProfileDependentEntityServiceConnectorBase<AIPromptArtifact, AIPrompt>`:
-- Automatic Pass 2/4 pattern for profile resolution
+- Single Pass 3 (after profiles, contexts and guardrails in pass 2)
 - `AddProfileDependency(Guid?, ArtifactDependencyCollection)` helper
 - `ResolveProfileIdAsync(GuidUdi?, CancellationToken)` helper
 - Reduces code duplication with Agent connector
 
 ### Deployment Workflow
 
-**Pass 2: Create/Update Prompt**
+**Pass 3: Resolve Profile and Create/Update Prompt**
 ```csharp
-private async Task Pass2Async(...)
-{
-    // ProfileId can be null initially
-    var prompt = new AIPrompt
-    {
-        Alias = artifact.Alias,
-        Name = artifact.Name,
-        Description = artifact.Description,
-        Instructions = artifact.Instructions,
-        ProfileId = null,  // Resolved in Pass 4
-        ContextIds = artifact.ContextIds.ToList(),
-        Tags = artifact.Tags.ToList(),
-        Scope = DeserializeScope(artifact.Scope),
-        IsActive = artifact.IsActive,
-        IncludeEntityContext = artifact.IncludeEntityContext,
-        OptionCount = artifact.OptionCount
-    };
-
-    await _promptService.SavePromptAsync(prompt, ct);
-}
-```
-
-**Pass 4: Resolve Profile Dependency**
-```csharp
-private async Task Pass4Async(...)
+private async Task Pass3Async(...)
 {
     // Use base class helper
     var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, ct);
 
+    var prompt = state.Entity ?? new AIPrompt { Id = artifact.Udi.Guid, /* ... */ };
+
     prompt.ProfileId = profileId;
-    await _promptService.SavePromptAsync(prompt, ct);
+    prompt.ContextIds = artifact.ContextIds.ToList();
+    prompt.GuardrailIds = artifact.GuardrailIds.ToList();
+    // ... set other properties
+
+    state.Entity = await promptService.SavePromptAsync(prompt, ct);
 }
 ```
 
@@ -144,6 +126,7 @@ Unit tests cover:
 - Artifact creation with all properties populated
 - Artifact creation with minimal/optional properties (null cases)
 - Profile dependency tracking (ProfileUdi added to dependencies)
+- Context dependency tracking (each ContextId added to dependencies)
 - Scope serialization/deserialization
 - ContextIds preservation
 - Tag arrays

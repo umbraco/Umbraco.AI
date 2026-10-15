@@ -38,12 +38,16 @@ This package uses a **simplified single-project structure** (different from Core
 **Artifacts** - Serializable deployment representations:
 - `AIConnectionArtifact` - Connection with filtered settings
 - `AIProfileArtifact` - Profile with model configuration
-- `AIContextArtifact` - Context with resources (future)
+- `AIContextArtifact` - Context with resources
+- `AIGuardrailArtifact` - Guardrail with rules
+- `AISettingsArtifact` - Global AI settings (default profiles)
 
 **Service Connectors** - Transform entities to/from artifacts:
 - `UmbracoAIConnectionServiceConnector` - Connection deployment
 - `UmbracoAIProfileServiceConnector` - Profile deployment with dependency resolution
-- `UmbracoAIContextServiceConnector` - Context deployment (future)
+- `UmbracoAIContextServiceConnector` - Context deployment
+- `UmbracoAIGuardrailServiceConnector` - Guardrail deployment
+- `UmbracoAISettingsServiceConnector` - Settings deployment with default-profile dependencies
 
 **Base Classes**:
 - `UmbracoAIEntityServiceConnectorBase<TArtifact, TEntity>` - Common artifact operations
@@ -70,13 +74,17 @@ When an entity is saved:
 
 **2. Deployment (Target Environment)**
 
-Multi-pass processing:
-- **Pass 2**: Create/update entities with basic properties
-- **Pass 4**: Resolve dependencies and update references
+Each entity type is processed in a single pass (`ProcessPasses`), ordered so an entity's
+dependencies are already saved when it runs:
+- **Pass 1**: Connection
+- **Pass 2**: Profile, Context, Guardrail
+- **Pass 3**: Settings, plus Prompt and Agent (via `UmbracoAIProfileDependentEntityServiceConnectorBase`)
 
 Example: AIProfile deployment
-- Pass 2: Creates profile with temporary ConnectionId
-- Pass 4: Resolves ConnectionUdi → ConnectionId, updates profile
+- Pass 2: Resolves ConnectionUdi → ConnectionId and creates/updates the profile in one step
+
+Any ID an artifact references (profile, connection, context, guardrail) must be declared as an
+artifact dependency in `GetArtifactAsync`, or Deploy can transfer the entity without it.
 
 ### Settings Filtering
 
@@ -129,8 +137,8 @@ UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Context, UdiType.Guid
 
 When adding dependencies to artifacts:
 
-- **Match** - Entity must exist and match exactly (default for profiles)
-- **Exist** - Entity must exist (used for user groups)
+- **Match** - Entity must exist and match exactly (used for all Umbraco.AI entity references)
+- **Exist** - Entity must exist (not currently used)
 
 ```csharp
 dependencies.Add(new UmbracoAIArtifactDependency(
@@ -184,7 +192,7 @@ All service connectors follow this structure:
 public class EntityServiceConnector : UmbracoAIEntityServiceConnectorBase<TArtifact, TEntity>
 {
     public override string UdiEntityType => Constants.UdiEntityType;
-    protected override int[] ProcessPasses => new[] { 2, 4 };
+    protected override int[] ProcessPasses => [2]; // single pass: 1, 2 or 3 depending on dependencies
 
     public override Task<TArtifact?> GetArtifactAsync(GuidUdi? udi, TEntity? entity, CancellationToken ct);
     public override Task ProcessAsync(ArtifactDeployState<TArtifact, TEntity> state, IDeployContext context, int pass, CancellationToken ct);
@@ -217,7 +225,6 @@ Unit tests focus on:
 - Dependency tracking
 - Settings filtering (IgnoreSettings, IgnoreSensitive, IgnoreEncrypted)
 - Optional property handling (null cases)
-- User group dependency validation
 
 ## Deployment Strategy
 
@@ -225,6 +232,7 @@ Unit tests focus on:
 - Entities deployed via git-committed artifacts
 - No "Queue for Transfer" UI
 - Use `RegisterDiskEntityType`, not `RegisterTransferEntityType`
+- Register disk entity types once, in the package's `IAsyncComponent` (e.g. `UmbracoAIDeployComponent`), not in notification handler constructors
 - Configuration managed through backoffice, deployed through git
 
 **Why disk-based?**

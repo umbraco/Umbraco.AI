@@ -8,9 +8,9 @@ Umbraco Deploy support for AI prompt templates - deploy prompts with scoping rul
 - **Profile Dependencies** - Automatic resolution of prompt-to-profile relationships
 - **Scope Deployment** - Deploy scoping rules for content types, properties, and editors
 - **Tag Preservation** - Maintain prompt categorization and organization
-- **Context References** - Deploy context ID references (future feature)
+- **Context and Guardrail Dependencies** - Referenced contexts and guardrails are deployed alongside the prompt
 - **Disk-Based Artifacts** - Git-friendly JSON artifacts for GitOps workflows
-- **Multi-Pass Processing** - Pass 2 creates prompts, Pass 4 resolves profile dependencies
+- **Ordered Processing** - Prompts are processed after the profiles, contexts and guardrails they reference
 
 ### Requirements
 

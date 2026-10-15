@@ -7,10 +7,10 @@ Umbraco Deploy support for AI agents - deploy agents with tool permissions, user
 - **Agent Deployment** - Deploy AI agents with instructions and tool configurations
 - **Profile Dependencies** - Automatic resolution of agent-to-profile relationships
 - **Tool Permissions** - Deploy direct tool IDs and scope-based permissions
-- **User Group Permissions** - Deploy per-group tool permission overrides with validation
+- **User Group Permissions** - Deploy per-group tool permission overrides
 - **Scope Deployment** - Deploy scoping rules for sections and entity types
 - **Surface Configuration** - Deploy surface IDs (backoffice, frontend, custom)
-- **Dependency Validation** - Ensures all user groups exist in target environment
+- **Context and Guardrail Dependencies** - Referenced contexts and guardrails are deployed alongside the agent
 - **Disk-Based Artifacts** - Git-friendly JSON artifacts for GitOps workflows
 
 ### Requirements

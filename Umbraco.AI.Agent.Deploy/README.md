@@ -7,7 +7,8 @@ Umbraco Deploy support for Umbraco.AI.Agent - enables deployment of AI agents wi
 - **Agent Deployment** - Deploy AI agents with instructions and configurations
 - **Profile Dependencies** - Automatic resolution of agent-to-profile relationships
 - **Tool Permissions** - Deploy AllowedToolIds and AllowedToolScopeIds
-- **User Group Permissions** - Deploy per-group tool permissions with validation
+- **User Group Permissions** - Deploy per-group tool permission overrides
+- **Context and Guardrail Dependencies** - Referenced contexts and guardrails are declared as dependencies
 - **Scope Deployment** - Deploy agent scoping rules for sections and entity types
 - **Surface Configuration** - Deploy surface IDs (backoffice, frontend)
 - **Disk-Based Artifacts** - Git-friendly JSON artifacts for version control
@@ -48,7 +49,8 @@ dotnet add package Umbraco.AI.Agent.Deploy
 AIAgent artifacts include:
 - **Basic Properties**: Alias, Name, Description, Instructions
 - **Profile Dependency**: Optional ProfileUdi reference
-- **Context References**: Array of context IDs (future)
+- **Context References**: Array of context IDs in the standard agent config (each declared as a dependency)
+- **Guardrail References**: Array of guardrail IDs (each declared as a dependency)
 - **Surface IDs**: Array of surface identifiers (backoffice, frontend)
 - **Scope**: JSON-serialized scope rules (sections, entity types)
 - **Tool Permissions**:
@@ -57,28 +59,19 @@ AIAgent artifacts include:
 - **User Group Permissions**: Per-group tool permission overrides
 - **Settings**: IsActive flag
 
-### User Group Dependency Validation
-
-Agent's UserGroupPermissions dictionary keys are user group GUIDs:
-- Each user group GUID is added as a dependency with `ArtifactDependencyMode.Exist`
-- Deploy validates that all referenced user groups exist in target environment
-- Deployment fails with clear error if user group doesn't exist
-- User groups must have same GUIDs across environments (standard Umbraco requirement)
-
 ### Deployment Process
 
-**Pass 2**: Creates/updates agent with basic properties
-**Pass 4**: Resolves ProfileUdi → ProfileId dependency
+Agents are processed in a single pass (**Pass 3**), after connections (pass 1) and profiles,
+contexts and guardrails (pass 2) are in place.
 
 Example:
 ```
 Source Environment:
-  Agent "Content Assistant" → Profile "GPT-4"
-  UserGroupPermissions: { Editor GUID, Admin GUID }
+  Agent "Content Assistant" → Profile "GPT-4", Context "Brand Voice"
 
 Target Environment:
-  Pass 2: Creates agent, validates user groups exist
-  Pass 4: Resolves Profile UDI, updates agent with correct ProfileId
+  Pass 2: Profile and context are created/updated
+  Pass 3: Resolves Profile UDI → ProfileId and creates/updates the agent
 ```
 
 ## Tool Permission Model

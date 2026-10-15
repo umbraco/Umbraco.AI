@@ -6,7 +6,8 @@ Umbraco Deploy support for Umbraco.AI - deploy AI connections, profiles, and con
 
 - **Connection Deployment** - Deploy AI provider connections with secure configuration references
 - **Profile Deployment** - Deploy AI profiles with model configurations and dependencies
-- **Context Deployment** - Deploy AI contexts with resource definitions (future feature)
+- **Context Deployment** - Deploy AI contexts with resource definitions
+- **Guardrail Deployment** - Deploy AI guardrails and their rules
 - **Configuration References** - Use `$` syntax to reference appsettings values instead of storing secrets
 - **Dependency Resolution** - Automatic resolution of profile-to-connection and context dependencies
 - **Settings Filtering** - Three-layer filtering: IgnoreSettings, IgnoreSensitive, IgnoreEncrypted

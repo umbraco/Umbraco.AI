@@ -6,7 +6,9 @@ Umbraco Deploy support for Umbraco.AI - enables deployment of AI connections, pr
 
 - **Connection Deployment** - Deploy AI provider connections with configuration references
 - **Profile Deployment** - Deploy AI profiles with model configurations and settings
-- **Context Deployment** - Deploy AI contexts with resource definitions (future)
+- **Context Deployment** - Deploy AI contexts with resource definitions
+- **Guardrail Deployment** - Deploy AI guardrails and their rules
+- **Settings Deployment** - Deploy global AI settings (default profiles)
 - **Dependency Resolution** - Automatic resolution of cross-entity dependencies
 - **Configuration References** - Support for `$` config references to avoid storing secrets
 - **Disk-Based Artifacts** - Git-friendly JSON artifacts for version control
@@ -35,7 +37,9 @@ dotnet add package Umbraco.AI.Deploy
 | ------ | -------- | ----------- |
 | AIConnection | `umbraco-ai-connection` | AI provider connections |
 | AIProfile | `umbraco-ai-profile` | AI model profiles |
-| AIContext | `umbraco-ai-context` | AI contexts (future) |
+| AIContext | `umbraco-ai-context` | AI contexts |
+| AIGuardrail | `umbraco-ai-guardrail` | AI guardrails |
+| AISettings | `umbraco-ai-settings` | Global AI settings |
 
 ## Configuration
 
@@ -88,17 +92,19 @@ When you save an entity (connection, profile, context), Deploy automatically:
 
 1. Creates a JSON artifact in your project's deploy folder
 2. Serializes entity properties and relationships
-3. Adds dependency references (e.g., profile → connection)
+3. Adds dependency references (e.g., profile → connection, profile → contexts and guardrails)
 4. Filters sensitive settings based on configuration
 
 ### Deployment Process
 
 When deploying to another environment, Deploy:
 
-1. **Pass 2**: Creates/updates base entities
-2. **Pass 4**: Resolves dependencies and updates references
-3. Validates all dependencies exist
-4. Resolves configuration references from target environment
+1. Validates all dependencies exist
+2. Processes each entity type in a single pass, ordered so dependencies are saved first:
+   - **Pass 1**: Connections
+   - **Pass 2**: Profiles, contexts, guardrails
+   - **Pass 3**: Settings, prompts, agents (from the add-on Deploy packages)
+3. Resolves configuration references from target environment
 
 ## Related Packages
 

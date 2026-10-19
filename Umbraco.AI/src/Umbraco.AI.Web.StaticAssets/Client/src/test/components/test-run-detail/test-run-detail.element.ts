@@ -7,6 +7,7 @@ import type {
     TestGraderResultResponseModel,
     TestUsageEntryResponseModel,
 } from "../../../api/types.gen.js";
+import { computeWeightedScore } from "../../weighted-score.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
 
@@ -67,10 +68,7 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
     private _computeScores(graderResults: TestGraderResultResponseModel[]) {
         if (graderResults.length === 0) return null;
 
-        const totalWeight = graderResults.reduce((sum, r) => sum + r.weight, 0);
-        const weightedScore = totalWeight > 0
-            ? graderResults.reduce((sum, r) => sum + r.score * r.weight, 0) / totalWeight
-            : 0;
+        const weightedScore = computeWeightedScore(graderResults) ?? 0;
         const passed = graderResults.filter((r) => r.passed).length;
         const failed = graderResults.length - passed;
 
@@ -91,7 +89,7 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                 <div class="scores-container">
                     <div class="scores-grid">
                         <div class="score-card">
-                            <div class="score-label">Weighted Score</div>
+                            <div class="score-label">${this.localize.termOrDefault("uaiTest_weightedScore", "Weighted score")}</div>
                             <div class="score-value ${barClass}">${percentage.toFixed(1)}%</div>
                         </div>
                         <div class="score-card">

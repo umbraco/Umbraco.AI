@@ -302,6 +302,9 @@ export default {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} test(s)?`,
         bulkRunConfirm: (count: number) =>
             `Run ${count} selected test(s)? This will execute against configured AI providers.`,
+        weightedScore: "Weighted score",
+        avgWeightedScore: "Avg. weighted score",
+        avgWeightedScoreDescription: "Mean grader score; errored runs count as 0",
         runCompleted: "Test run completed successfully.",
         runFailed: "Test run failed.",
         bulkRunDeleteConfirm: (count: number) =>

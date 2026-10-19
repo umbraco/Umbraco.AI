@@ -198,9 +198,9 @@ maps to the matching non-retryable `StepRunErrorCategory` — see `TranscribeAud
 
 ## Commit hygiene
 
-See `feature-build-gotchas` for the general rule (commit each pending spec with the
-production code that first makes it pass) — it bit this build twice on exactly this kind
-of feature.
+Commit each pending spec with the production code that first makes it pass, as
+`umbraco-devkit:feature-build`'s Commit step says. Skipping it bit an earlier capability
+build twice.
 
 ## Beyond Core: what a real, shippable capability also needs
 

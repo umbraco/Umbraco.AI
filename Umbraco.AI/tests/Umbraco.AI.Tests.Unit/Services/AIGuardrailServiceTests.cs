@@ -399,4 +399,54 @@ public class AIGuardrailServiceTests
     }
 
     #endregion
+
+    #region Id constructor
+
+    [Fact]
+    public async Task SaveGuardrailAsync_WithIdConstructor_KeepsTheGuardrailAndRuleIds()
+    {
+        // Arrange
+        var guardrailId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var guardrail = new AIGuardrail(guardrailId)
+        {
+            Alias = "known-id",
+            Name = "Known Id",
+            Rules = [new AIGuardrailRule(ruleId) { EvaluatorId = "pii", Name = "Known rule" }],
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIGuardrail>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIGuardrail g, Guid? _, CancellationToken _) => g);
+
+        // Act
+        var result = await _service.SaveGuardrailAsync(guardrail);
+
+        // Assert
+        result.Id.ShouldBe(guardrailId);
+        result.Rules.Single().Id.ShouldBe(ruleId);
+    }
+
+    [Fact]
+    public async Task SaveGuardrailAsync_WithParameterlessConstructors_GeneratesIds()
+    {
+        // Arrange
+        var guardrail = new AIGuardrail
+        {
+            Alias = "no-id",
+            Name = "No Id",
+            Rules = [new AIGuardrailRule { EvaluatorId = "pii", Name = "No Id rule" }],
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIGuardrail>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIGuardrail g, Guid? _, CancellationToken _) => g);
+
+        // Act
+        var result = await _service.SaveGuardrailAsync(guardrail);
+
+        // Assert
+        result.Id.ShouldNotBe(Guid.Empty);
+        result.Rules.Single().Id.ShouldNotBe(Guid.Empty);
+    }
+
+    #endregion
 }

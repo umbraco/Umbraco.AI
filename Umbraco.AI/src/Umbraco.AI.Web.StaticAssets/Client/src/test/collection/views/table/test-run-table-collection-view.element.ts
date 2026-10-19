@@ -13,6 +13,7 @@ import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiTestRunItemModel } from "../../../types.js";
+import { computeMeanWeightedScore, isCompletedRun } from "../../../weighted-score.js";
 import { UAI_TEST_RUN_ICON } from "../../../constants.js";
 import { UAI_TEST_RUN_DETAIL_MODAL } from "../../../modals/test-run-detail/test-run-detail-modal.token.js";
 import { UAI_TEST_EXECUTION_SUMMARY_MODAL } from "../../../modals/test-execution-summary/test-execution-summary-modal.token.js";
@@ -24,6 +25,7 @@ interface RunMetrics {
     failedRuns: number;
     passAtK: number;
     passToTheK: number;
+    meanWeightedScore: number;
 }
 
 interface ExecutionGroupInfo {
@@ -60,6 +62,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         { name: "Run", alias: "run" },
         { name: "Execution", alias: "execution" },
         { name: "Status", alias: "status" },
+        { name: this.localize.termOrDefault("uaiTest_weightedScore", "Weighted score"), alias: "weightedScore" },
         { name: "Duration", alias: "duration" },
         { name: "", alias: "entityActions", align: "right" },
     ];
@@ -115,6 +118,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
         }
     }
 
+    #formatPercent(fraction: number): string {
+        return `${(fraction * 100).toFixed(1)}%`;
+    }
+
     #formatDuration(ms: number): string {
         if (ms < 1000) return `${ms}ms`;
         if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
@@ -140,10 +147,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
     }
 
     #computeMetrics(items: UaiTestRunItemModel[]) {
-        const completed = items.filter((i) => {
-            const s = i.status.toLowerCase();
-            return s === "passed" || s === "failed" || s === "error";
-        });
+        const completed = items.filter(isCompletedRun);
         if (completed.length === 0) {
             this._metrics = undefined;
             return;
@@ -156,6 +160,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
             failedRuns: totalRuns - passedRuns,
             passAtK: totalRuns > 0 ? passedRuns / totalRuns : 0,
             passToTheK: passedRuns === totalRuns ? 1.0 : 0.0,
+            meanWeightedScore: computeMeanWeightedScore(completed) ?? 0,
         };
     }
 
@@ -298,6 +303,10 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         >`,
                     },
                     {
+                        columnAlias: "weightedScore",
+                        value: item.weightedScore != null ? this.#formatPercent(item.weightedScore) : "—",
+                    },
+                    {
                         columnAlias: "duration",
                         value: this.#formatDuration(item.durationMs),
                     },
@@ -352,6 +361,18 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
                         <span class="metric-value">${(m.passToTheK * 100).toFixed(1)}%</span>
                         <span class="metric-desc">all succeed</span>
                     </div>
+                    <div class="metric">
+                        <span class="metric-label"
+                            >${this.localize.termOrDefault("uaiTest_avgWeightedScore", "Avg. weighted score")}</span
+                        >
+                        <span class="metric-value">${this.#formatPercent(m.meanWeightedScore)}</span>
+                        <span class="metric-desc"
+                            >${this.localize.termOrDefault(
+                                "uaiTest_avgWeightedScoreDescription",
+                                "Mean grader score; errored runs count as 0",
+                            )}</span
+                        >
+                    </div>
                 </div>
                 <div class="metric-bar">
                     <div class="metric-bar-fill ${barClass}" style="width: ${passPercent}%"></div>
@@ -394,7 +415,7 @@ export class UaiTestRunTableCollectionViewElement extends UmbLitElement {
 
             .metrics-grid {
                 display: grid;
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
                 gap: 16px;
             }
 

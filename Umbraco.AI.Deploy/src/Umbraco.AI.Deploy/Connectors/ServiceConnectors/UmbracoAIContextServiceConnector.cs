@@ -103,7 +103,9 @@ public class UmbracoAIContextServiceConnector(
         List<AIContextResource>? resources = null;
         if (artifact.Resources.HasValue)
         {
-            resources = artifact.Resources.Value.Deserialize<List<AIContextResource>>();
+            resources = artifact.Resources.Value.Deserialize<List<AIContextResourceArtifactItem>>()
+                ?.Select(item => item.ToResource())
+                .ToList();
         }
 
         // Get or create AIContext entity

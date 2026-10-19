@@ -317,6 +317,10 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("FeatureAlias")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("FeatureId")
                         .HasColumnType("TEXT");
 

@@ -53,6 +53,7 @@ export type AuditLogDetailResponseModel = {
     modelId: string;
     featureType?: string | null;
     featureId?: string | null;
+    featureAlias?: string | null;
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
@@ -85,6 +86,7 @@ export type AuditLogItemResponseModel = {
     modelId: string;
     featureType?: string | null;
     featureId?: string | null;
+    featureAlias?: string | null;
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;

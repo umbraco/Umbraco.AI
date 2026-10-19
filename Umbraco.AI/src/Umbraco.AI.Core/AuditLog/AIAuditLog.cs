@@ -106,6 +106,12 @@ public sealed class AIAuditLog
     public Guid? FeatureId { get; init; }
 
     /// <summary>
+    /// Gets the alias of the feature (prompt or agent) at the time of execution.
+    /// Null for direct API calls, when not applicable, or for entries logged before the alias was captured.
+    /// </summary>
+    public string? FeatureAlias { get; init; }
+
+    /// <summary>
     /// Gets the version of the feature (prompt/agent) at time of execution.
     /// Null for direct API calls or when not applicable.
     /// </summary>

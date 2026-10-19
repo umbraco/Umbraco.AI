@@ -428,6 +428,9 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.FeatureId);
 
+            entity.Property(e => e.FeatureAlias)
+                .HasMaxLength(100);
+
             entity.Property(e => e.ProfileVersion);
 
             entity.Property(e => e.FeatureVersion);

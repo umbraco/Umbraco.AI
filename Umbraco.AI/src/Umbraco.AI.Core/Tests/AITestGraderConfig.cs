@@ -9,6 +9,26 @@ namespace Umbraco.AI.Core.Tests;
 public sealed class AITestGraderConfig
 {
     /// <summary>
+    /// Creates a grader with a newly generated ID.
+    /// </summary>
+    public AITestGraderConfig()
+    {
+    }
+
+    /// <summary>
+    /// Creates a grader with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the grader is created with.</param>
+    /// <remarks>
+    /// The ID is stored with the test that owns the grader, and is kept as given when that test is saved.
+    /// Set it when the grader must keep the same ID across environments.
+    /// </remarks>
+    public AITestGraderConfig(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for the grader within the test.
     /// </summary>
     public Guid Id { get; internal set; } = Guid.NewGuid();

@@ -53,11 +53,12 @@ export class UaiModelEditorElement extends UmbLitElement {
     defaultGroup?: string;
 
     /**
-     * When true, no field is rendered as required, whatever the schema says.
-     * Use for override forms where an empty field means "inherit" (e.g. test variations).
+     * Opt-in mode for override forms where an empty field means "inherit" (e.g. test variations).
+     * No field is required, whatever the schema says, and schema defaults are not applied, so
+     * untouched fields stay unset instead of overriding the value they inherit from.
      */
-    @property({ type: Boolean })
-    optional = false;
+    @property({ type: Boolean, attribute: "inherit-mode" })
+    inheritMode = false;
 
     @state()
     private _propertyValues: UmbPropertyValueData[] = [];
@@ -120,8 +121,11 @@ export class UaiModelEditorElement extends UmbLitElement {
         }
         this._propertyValues = this.schema.fields.map((field) => ({
             alias: field.key,
-            value: this.model?.[field.key] ?? field.defaultValue,
+            value: this.inheritMode ? this.model?.[field.key] : (this.model?.[field.key] ?? field.defaultValue),
         }));
+
+        // Inherit mode never applies defaults, so there is nothing to emit back.
+        if (this.inheritMode) return;
 
         // Emit change if defaults were applied (populated model differs from input)
         const populatedModel = this._propertyValues.reduce(
@@ -206,7 +210,7 @@ export class UaiModelEditorElement extends UmbLitElement {
     }
 
     #toValidation(field: UaiEditableModelFieldModel) {
-        const mandatory = field.isRequired && !this.optional;
+        const mandatory = field.isRequired && !this.inheritMode;
         const cached = this.#validationCache.get(field.key);
         if (cached && cached.mandatory === mandatory) return cached;
 

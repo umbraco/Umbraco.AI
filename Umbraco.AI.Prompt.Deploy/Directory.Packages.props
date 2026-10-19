@@ -4,8 +4,8 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
 
   <ItemGroup>
-    <!-- 18.4.0 is the first Umbraco.AI.Prompt release with the public AIPrompt(Guid id) constructor
+    <!-- 17.4.0 is the first Umbraco.AI.Prompt release with the public AIPrompt(Guid id) constructor
          the service connector creates prompts with. -->
-    <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[18.4.0, 18.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[17.4.0, 17.999.999)" />
   </ItemGroup>
 </Project>

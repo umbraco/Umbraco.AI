@@ -91,4 +91,45 @@ public class EFCoreAIAuditLogRepositoryTests : IClassFixture<EFCoreTestFixture>
     }
 
     #endregion
+
+    #region FeatureAlias
+
+    [Theory]
+    [InlineData("my-prompt")]
+    [InlineData(null)]
+    public async Task GetByIdAsync_RoundTripsFeatureAlias(string? featureAlias)
+    {
+        // Arrange
+        var audit = new AIAuditLog
+        {
+            Id = Guid.NewGuid(),
+            StartTime = DateTime.UtcNow,
+            Status = AIAuditLogStatus.Succeeded,
+            ProfileId = Guid.NewGuid(),
+            ProfileAlias = "test-profile",
+            ProviderId = "fake",
+            ModelId = "fake-model",
+            FeatureType = "prompt",
+            FeatureId = Guid.NewGuid(),
+            FeatureAlias = featureAlias,
+        };
+
+        await using (var context = _fixture.CreateContext())
+        {
+            context.AuditLogs.Add(Umbraco.AI.Persistence.AuditLog.AIAuditLogFactory.BuildEntity(audit));
+            await context.SaveChangesAsync();
+        }
+
+        var repository = CreateRepository(_fixture.CreateContext());
+
+        // Act
+        var result = await repository.GetByIdAsync(audit.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.FeatureAlias.ShouldBe(featureAlias);
+        result.FeatureId.ShouldBe(audit.FeatureId);
+    }
+
+    #endregion
 }

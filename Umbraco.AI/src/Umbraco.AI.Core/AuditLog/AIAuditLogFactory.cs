@@ -46,6 +46,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             EntityType = context.EntityType,
             FeatureType = context.FeatureType,
             FeatureId = context.FeatureId,
+            FeatureAlias = context.FeatureAlias,
             ProfileVersion = context.ProfileVersion,
             FeatureVersion = context.FeatureVersion,
             Metadata = metadata != null

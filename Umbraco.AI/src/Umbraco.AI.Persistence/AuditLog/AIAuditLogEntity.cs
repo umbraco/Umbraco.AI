@@ -96,6 +96,11 @@ internal class AIAuditLogEntity
     public Guid? FeatureId { get; set; }
 
     /// <summary>
+    /// Gets or sets the feature alias (prompt or agent alias) at the time of execution.
+    /// </summary>
+    public string? FeatureAlias { get; set; }
+
+    /// <summary>
     /// Gets or sets the feature version at time of execution.
     /// </summary>
     public int? FeatureVersion { get; set; }

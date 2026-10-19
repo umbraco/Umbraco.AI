@@ -3,12 +3,8 @@ import { customElement, property, state } from "@umbraco-cms/backoffice/external
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
 import type { TestTranscriptResponseModel } from "../../../api/types.gen.js";
+import type { UaiTranscriptMessage } from "../../transcript-input.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
-
-interface TranscriptMessage {
-    role: string;
-    content: string;
-}
 
 interface TranscriptToolCall {
     name: string;
@@ -99,7 +95,7 @@ export class UaiTestRunTranscriptElement extends UmbElementMixin(LitElement) {
     }
 
     private _renderMessages() {
-        const messages = this._asTyped<TranscriptMessage[]>(this._transcript?.messages);
+        const messages = this._asTyped<UaiTranscriptMessage[]>(this._transcript?.messages);
         if (!messages || messages.length === 0) {
             return html`<div class="section-empty">No messages recorded</div>`;
         }

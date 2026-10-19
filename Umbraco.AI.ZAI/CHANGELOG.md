@@ -5,6 +5,11 @@ All notable changes to Umbraco.AI.ZAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.ZAI@18.0.0...Umbraco.AI.ZAI@18.0.1) (2026-10-19)
+
+### Internal
+
+* Bump to align with Umbraco.AI 18.6.0.
 
 ## [18.0.0](https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI.ZAI@18.0.0) (2026-09-14)
 

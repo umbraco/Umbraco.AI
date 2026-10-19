@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Google will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Google@18.0.3...Umbraco.AI.Google@18.0.4) (2026-10-19)
+
+### fix
+
+* **google:** Classify Google API errors instead of reporting a network failure ([2e641d4](https://github.com/umbraco/Umbraco.AI/commit/2e641d4a9ec521313abcad60eeba00c3b5f388ad))
+* **google:** Raise the Google.GenAI floor to 1.22.0 so image attachments work with an API key ([827fc48](https://github.com/umbraco/Umbraco.AI/commit/827fc48ad8ff4d6eeb9715147789e32a0b1345b7))
+
 ## [18.0.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Google@18.0.1...Umbraco.AI.Google@18.0.3) (2026-08-11)
 
 ### Internal

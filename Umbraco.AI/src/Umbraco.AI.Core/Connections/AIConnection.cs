@@ -9,6 +9,26 @@ namespace Umbraco.AI.Core.Connections;
 public class AIConnection : IAIVersionableEntity
 {
     /// <summary>
+    /// Creates a connection with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AIConnection()
+    {
+    }
+
+    /// <summary>
+    /// Creates a connection with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the connection is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating a connection that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that connection instead of creating a new one.
+    /// </remarks>
+    public AIConnection(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for the connection.
     /// </summary>
     public Guid Id { get; internal set; }

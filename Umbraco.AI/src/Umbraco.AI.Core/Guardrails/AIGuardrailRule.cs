@@ -10,6 +10,26 @@ namespace Umbraco.AI.Core.Guardrails;
 public sealed class AIGuardrailRule
 {
     /// <summary>
+    /// Creates a guardrail rule with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AIGuardrailRule()
+    {
+    }
+
+    /// <summary>
+    /// Creates a guardrail rule with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the guardrail rule is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating a guardrail rule that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that guardrail rule within the same guardrail, instead of creating a new one.
+    /// </remarks>
+    public AIGuardrailRule(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// The unique identifier of the rule.
     /// </summary>
     public Guid Id { get; internal set; }

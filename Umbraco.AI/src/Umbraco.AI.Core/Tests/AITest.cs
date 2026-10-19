@@ -10,6 +10,26 @@ namespace Umbraco.AI.Core.Tests;
 public sealed class AITest : IAIVersionableEntity
 {
     /// <summary>
+    /// Creates a test with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AITest()
+    {
+    }
+
+    /// <summary>
+    /// Creates a test with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the test is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating a test that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that test instead of creating a new one.
+    /// </remarks>
+    public AITest(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// The unique identifier of the test.
     /// </summary>
     public Guid Id { get; internal set; }

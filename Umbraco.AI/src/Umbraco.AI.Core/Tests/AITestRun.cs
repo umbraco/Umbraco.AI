@@ -7,6 +7,26 @@ namespace Umbraco.AI.Core.Tests;
 public sealed class AITestRun
 {
     /// <summary>
+    /// Creates a run with a newly generated ID.
+    /// </summary>
+    public AITestRun()
+    {
+    }
+
+    /// <summary>
+    /// Creates a run with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the run is created with.</param>
+    /// <remarks>
+    /// Runs are saved by the test runner. Saving never changes the ID, and saving a run with an ID that already exists
+    /// updates that run instead of creating a new one.
+    /// </remarks>
+    public AITestRun(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for this run.
     /// </summary>
     public Guid Id { get; internal set; } = Guid.NewGuid();

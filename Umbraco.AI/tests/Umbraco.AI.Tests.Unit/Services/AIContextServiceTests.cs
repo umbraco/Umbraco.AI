@@ -285,4 +285,57 @@ public class AIContextServiceTests
     }
 
     #endregion
+
+    #region Id constructor
+
+    [Fact]
+    public async Task SaveContextAsync_WithIdConstructor_KeepsTheContextAndResourceIds()
+    {
+        // Arrange
+        var contextId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+        var context = new AIContext(contextId)
+        {
+            Alias = "known-id",
+            Name = "Known Id",
+            Resources =
+            [
+                new AIContextResource(resourceId) { ResourceTypeId = "text", Name = "Known resource" },
+            ],
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIContext>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIContext c, Guid? _, CancellationToken _) => c);
+
+        // Act
+        var result = await _service.SaveContextAsync(context);
+
+        // Assert
+        result.Id.ShouldBe(contextId);
+        result.Resources.Single().Id.ShouldBe(resourceId);
+    }
+
+    [Fact]
+    public async Task SaveContextAsync_WithParameterlessConstructors_GeneratesIds()
+    {
+        // Arrange
+        var context = new AIContext
+        {
+            Alias = "no-id",
+            Name = "No Id",
+            Resources = [new AIContextResource { ResourceTypeId = "text", Name = "No Id resource" }],
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIContext>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIContext c, Guid? _, CancellationToken _) => c);
+
+        // Act
+        var result = await _service.SaveContextAsync(context);
+
+        // Assert
+        result.Id.ShouldNotBe(Guid.Empty);
+        result.Resources.Single().Id.ShouldNotBe(Guid.Empty);
+    }
+
+    #endregion
 }

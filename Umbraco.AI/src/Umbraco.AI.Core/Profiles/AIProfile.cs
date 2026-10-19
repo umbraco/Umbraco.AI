@@ -9,6 +9,26 @@ namespace Umbraco.AI.Core.Profiles;
 public sealed class AIProfile : IAIVersionableEntity
 {
     /// <summary>
+    /// Creates a profile with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AIProfile()
+    {
+    }
+
+    /// <summary>
+    /// Creates a profile with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the profile is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating a profile that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that profile instead of creating a new one.
+    /// </remarks>
+    public AIProfile(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// The unique identifier of the AI profile.
     /// </summary>
     public Guid Id { get; internal set; }

@@ -36,6 +36,14 @@ steps:
       condition: ${{ parameters.condition }}
       workingDirectory: ${{ parameters.product }}
 
+    # NuGet.CI.config lists ./artifacts/nupkg as the LocalCI source. Restore fails with NU1301 if
+    # that folder is missing, and package validation makes restore query every source for the
+    # baseline package. The Core pack job doesn't run setup-pack-job.yml (which creates it), so
+    # make sure it exists here for every product.
+    - script: mkdir -p $(Build.SourcesDirectory)/artifacts/nupkg
+      displayName: Ensure local NuGet feed directory exists
+      condition: ${{ parameters.condition }}
+
     - script: |
           attempt=1
           max_attempts=3

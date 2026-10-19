@@ -33,6 +33,12 @@ public class PromptResponseModel
     public string Instructions { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether the instructions use the selected text (<c>{{selection}}</c>), so the prompt
+    /// only makes sense when the user has selected something. Computed from <see cref="Instructions"/>.
+    /// </summary>
+    public bool RequiresSelection { get; set; }
+
+    /// <summary>
     /// Optional linked profile ID.
     /// </summary>
     public Guid? ProfileId { get; set; }

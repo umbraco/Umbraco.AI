@@ -2,6 +2,10 @@ import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
+import { UaiTestDetailServerDataSource } from "../../repository/detail/test-detail.server.data-source.js";
+import { UAI_TEST_WORKSPACE_CONTEXT } from "../../workspace/test/test-workspace.context-token.js";
+import { parseTranscriptMessages, pickTranscriptInput } from "../../transcript-input.js";
+import type { UaiTranscriptMessage } from "../../transcript-input.js";
 import type {
     TestRunResponseModel,
     TestGraderResultResponseModel,
@@ -21,6 +25,9 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
 
     @state()
     private _run?: TestRunResponseModel;
+
+    @state()
+    private _input: UaiTranscriptMessage[] = [];
 
     @state()
     private _isLoading = true;
@@ -48,6 +55,40 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
             this._run = data;
         }
         this._isLoading = false;
+
+        if (data) {
+            // Secondary: the Input section is optional, so don't hold up the details for it.
+            await this._loadInput(data);
+        }
+    }
+
+    /** Loads the transcript (and the test's feature type) once per run and derives the grader input from it. */
+    private async _loadInput(run: TestRunResponseModel) {
+        if (!run.transcriptId) return;
+
+        const [transcript, testFeatureId] = await Promise.all([
+            this._repository.requestTranscript(run.id),
+            this._resolveTestFeatureId(run.testId),
+        ]);
+        if (transcript.error || !transcript.data) return;
+
+        this._input = pickTranscriptInput(parseTranscriptMessages(transcript.data.messages), testFeatureId);
+    }
+
+    /**
+     * The test's feature type. Reads it from the surrounding test workspace when that is the same test,
+     * and only fetches the test (a plain read that does not touch the detail store) when it isn't,
+     * e.g. when the modal is opened from the test root.
+     */
+    private async _resolveTestFeatureId(testId: string): Promise<string | undefined> {
+        const workspace = (await this.getContext(UAI_TEST_WORKSPACE_CONTEXT)) as
+            | typeof UAI_TEST_WORKSPACE_CONTEXT.TYPE
+            | undefined;
+        const model = workspace?.getData();
+        if (model?.unique === testId) return model.testFeatureId;
+
+        const { data } = await new UaiTestDetailServerDataSource(this).read(testId);
+        return data?.testFeatureId;
     }
 
     private _getStatusColor(status: string): string {
@@ -278,7 +319,7 @@ export class UaiTestRunDetailElement extends UmbElementMixin(LitElement) {
                 </uui-box>
 
                 <uui-box headline="Grader Results">
-                    <uai-grader-result-list .results=${this._run.graderResults}></uai-grader-result-list>
+                    <uai-grader-result-list .results=${this._run.graderResults} .input=${this._input}></uai-grader-result-list>
                 </uui-box>
             </div>
         `;

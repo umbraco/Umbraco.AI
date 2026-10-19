@@ -287,6 +287,7 @@ export default {
         headline: "User Group Permissions",
     },
     uaiTest: {
+        graderInput: "Input",
         testConfiguration: "Test Configuration",
         testFeatureType: "Test Feature Type",
         selectTestFeature: "Select test feature",

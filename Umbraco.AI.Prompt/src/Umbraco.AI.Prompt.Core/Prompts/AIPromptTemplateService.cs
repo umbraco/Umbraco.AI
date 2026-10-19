@@ -10,11 +10,8 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// Service implementation for processing prompt templates with variable replacement.
 /// Supports multimodal content through prefixed variables (e.g., {{image:propertyAlias}}).
 /// </summary>
-internal sealed partial class AIPromptTemplateService : IAIPromptTemplateService
+internal sealed class AIPromptTemplateService : IAIPromptTemplateService
 {
-    [GeneratedRegex(@"\{\{([^}]+)\}\}", RegexOptions.Compiled)]
-    private static partial Regex VariablePattern();
-
     private readonly Dictionary<string, IAITemplateVariableProcessor> _processors;
 
     public AIPromptTemplateService(
@@ -35,7 +32,7 @@ internal sealed partial class AIPromptTemplateService : IAIPromptTemplateService
         ArgumentNullException.ThrowIfNull(context);
 
         var results = new List<AIContent>();
-        var regex = VariablePattern();
+        var regex = AITemplateExpression.VariablePattern();
         var matches = regex.Matches(template);
 
         var lastIndex = 0;
@@ -51,7 +48,7 @@ internal sealed partial class AIPromptTemplateService : IAIPromptTemplateService
 
             // Parse the variable expression
             var expression = match.Groups[1].Value.Trim();
-            var (prefix, path) = ParseExpression(expression);
+            var (prefix, path) = AITemplateExpression.Parse(expression);
 
             // Route to appropriate processor and get content items
             var contentItems = await ProcessVariableAsync(prefix, path, context, cancellationToken);
@@ -93,45 +90,6 @@ internal sealed partial class AIPromptTemplateService : IAIPromptTemplateService
         }
 
         return results;
-    }
-
-    private static (string? Prefix, string Path) ParseExpression(string expression)
-    {
-        // Check for prefix:path format
-        var colonIndex = expression.IndexOf(':');
-        if (colonIndex > 0)
-        {
-            var prefix = expression[..colonIndex].Trim();
-            var path = expression[(colonIndex + 1)..].Trim();
-
-            // Only treat as prefix if it looks like an identifier (no dots, brackets, etc.)
-            if (IsValidPrefix(prefix))
-            {
-                return (prefix, path);
-            }
-        }
-
-        // No prefix, use entire expression as path
-        return (null, expression);
-    }
-
-    private static bool IsValidPrefix(string prefix)
-    {
-        if (string.IsNullOrEmpty(prefix))
-        {
-            return false;
-        }
-
-        // A valid prefix is a simple identifier (letters, digits, underscores)
-        foreach (var c in prefix)
-        {
-            if (!char.IsLetterOrDigit(c) && c != '_')
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private Task<IEnumerable<AIContent>> ProcessVariableAsync(string? prefix, string path, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken)

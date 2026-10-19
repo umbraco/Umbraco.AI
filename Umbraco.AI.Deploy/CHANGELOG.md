@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.2.0...Umbraco.AI.Deploy@18.3.0) (2026-10-19)
+
+### feat
+
+* **deploy:** Deploy the default Decision profile setting ([9e7c1c5](https://github.com/umbraco/Umbraco.AI/commit/9e7c1c50e13c62c14d5702fd79be9cadb96843e9))
+
+### fix
+
+* **core,deploy:** Validate default profile capabilities when saving settings ([0c2c310](https://github.com/umbraco/Umbraco.AI/commit/0c2c310c011aa910d9454b6f18bb76aa620f4796))
+* **deploy,prompt-deploy,agent-deploy:** Declare referenced contexts as deploy dependencies ([ef4974d](https://github.com/umbraco/Umbraco.AI/commit/ef4974d7d8146cbceecac13510b3f9667fd4303f))
+* **deploy:** Keep context resource and guardrail rule Ids across environments ([f206c61](https://github.com/umbraco/Umbraco.AI/commit/f206c61e2e765044fb594f870179fe57109f9fc4))
+
 ## [18.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.1.0...Umbraco.AI.Deploy@18.2.0) (2026-10-05)
 
 ### feat

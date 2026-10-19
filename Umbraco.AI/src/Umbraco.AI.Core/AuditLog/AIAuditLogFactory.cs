@@ -1,6 +1,4 @@
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.Security;
 
@@ -11,19 +9,10 @@ namespace Umbraco.AI.Core.AuditLog;
 /// </summary>
 internal sealed class AIAuditLogFactory : IAIAuditLogFactory
 {
-    private readonly IOptionsMonitor<AIAuditLogOptions> _options;
     private readonly IBackOfficeSecurityAccessor _securityAccessor;
-    private readonly ILogger<AIAuditLogFactory> _logger;
 
-    public AIAuditLogFactory(
-        IOptionsMonitor<AIAuditLogOptions> options,
-        IBackOfficeSecurityAccessor securityAccessor,
-        ILogger<AIAuditLogFactory> logger)
-    {
-        _options = options;
-        _securityAccessor = securityAccessor;
-        _logger = logger;
-    }
+    public AIAuditLogFactory(IBackOfficeSecurityAccessor securityAccessor)
+        => _securityAccessor = securityAccessor;
 
     /// <inheritdoc />
     public AIAuditLog Create(
@@ -57,6 +46,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             EntityType = context.EntityType,
             FeatureType = context.FeatureType,
             FeatureId = context.FeatureId,
+            FeatureAlias = context.FeatureAlias,
             ProfileVersion = context.ProfileVersion,
             FeatureVersion = context.FeatureVersion,
             Metadata = metadata != null
@@ -209,7 +199,4 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         var size = dataContent.Data.Length;
         return $"[data:{dataContent.MediaType}] ({size} bytes)";
     }
-
-    private string? ApplyRedaction(string? input)
-        => AIAuditLogRedactor.ApplyRedactions(input, _options.CurrentValue.RedactionPatterns, _logger);
 }

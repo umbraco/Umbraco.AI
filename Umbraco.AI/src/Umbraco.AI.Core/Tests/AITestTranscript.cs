@@ -9,6 +9,26 @@ namespace Umbraco.AI.Core.Tests;
 public sealed class AITestTranscript
 {
     /// <summary>
+    /// Creates a transcript with a newly generated ID.
+    /// </summary>
+    public AITestTranscript()
+    {
+    }
+
+    /// <summary>
+    /// Creates a transcript with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the transcript is created with.</param>
+    /// <remarks>
+    /// Transcripts are saved by the test runner. Saving never changes the ID, and saving a transcript with an ID that already exists
+    /// updates that transcript instead of creating a new one.
+    /// </remarks>
+    public AITestTranscript(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for this transcript.
     /// </summary>
     public Guid Id { get; internal set; } = Guid.NewGuid();

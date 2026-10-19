@@ -7,6 +7,7 @@ import type {
     UaiProfileCreateOptionsModalValue,
 } from "./profile-create-options-modal.token.js";
 import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../../../connection/workspace/connection-root/paths.js";
+import { getCapabilityIcon } from "../../../core/utils/capability-icon.utils.js";
 
 @customElement("uai-profile-create-options-modal")
 export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
@@ -74,7 +75,7 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
                             @selected=${() => this.#onSelectCapability(cap)}
                             @open=${() => this.#onSelectCapability(cap)}
                         >
-                            <umb-icon slot="icon" name="icon-wand"></umb-icon>
+                            <umb-icon slot="icon" name=${getCapabilityIcon(cap)}></umb-icon>
                         </uui-ref-node>
                     `,
                 )}

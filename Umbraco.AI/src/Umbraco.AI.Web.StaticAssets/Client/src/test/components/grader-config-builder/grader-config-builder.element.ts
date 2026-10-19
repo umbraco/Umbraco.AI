@@ -161,6 +161,7 @@ export class UaiGraderConfigBuilderElement extends UmbFormControlMixin<
                         <uui-ref-node
                             name=${grader.name || "Unnamed grader"}
                             detail=${this.#getGraderDetail(grader)}
+                            @open=${() => this.#onEdit(grader)}
                         >
                             <umb-icon slot="icon" name="icon-checkbox color-blue"></umb-icon>
                             <uui-action-bar slot="actions">

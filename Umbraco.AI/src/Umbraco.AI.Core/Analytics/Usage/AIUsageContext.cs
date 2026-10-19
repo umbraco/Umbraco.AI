@@ -5,9 +5,13 @@ using Umbraco.AI.Core.RuntimeContext;
 namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
-/// Contains metadata for an AI usage operation.
-/// Extracted from ChatOptions/EmbeddingGenerationOptions AdditionalProperties.
+/// The identity of an AI call: capability, profile, provider, model, entity and feature, with versions.
+/// Read from the runtime context once, when a tracked call starts, and shared by every recorder (usage
+/// analytics, the audit log, trace tags, test-run usage).
 /// </summary>
+/// <remarks>
+/// The name predates that wider use; it is kept because the type is public.
+/// </remarks>
 public sealed class AIUsageContext
 {
     /// <summary>
@@ -56,6 +60,21 @@ public sealed class AIUsageContext
     public Guid? FeatureId { get; init; }
 
     /// <summary>
+    /// Gets the feature alias (prompt or agent alias, or a built-in feature such as "guardrail-llm-evaluator") that initiated this operation.
+    /// </summary>
+    public string? FeatureAlias { get; init; }
+
+    /// <summary>
+    /// Gets the profile version at time of execution.
+    /// </summary>
+    public int? ProfileVersion { get; init; }
+
+    /// <summary>
+    /// Gets the feature version at time of execution.
+    /// </summary>
+    public int? FeatureVersion { get; init; }
+
+    /// <summary>
     /// Extracts usage context from runtime context.
     /// </summary>
     /// <param name="capability">The AI capability being used.</param>
@@ -77,7 +96,10 @@ public sealed class AIUsageContext
             EntityId = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityId),
             EntityType = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityType),
             FeatureType = runtimeContext.GetValue<string>(Constants.ContextKeys.FeatureType),
-            FeatureId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.FeatureId)
+            FeatureId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.FeatureId),
+            FeatureAlias = runtimeContext.GetValue<string>(Constants.ContextKeys.FeatureAlias),
+            ProfileVersion = runtimeContext.GetValue<int>(Constants.ContextKeys.ProfileVersion),
+            FeatureVersion = runtimeContext.GetValue<int>(Constants.ContextKeys.FeatureVersion)
         };
     }
 }

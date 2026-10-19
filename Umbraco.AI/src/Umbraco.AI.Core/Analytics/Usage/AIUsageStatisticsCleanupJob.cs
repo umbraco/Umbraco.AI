@@ -12,17 +12,17 @@ internal sealed class AIUsageStatisticsCleanupJob : RecurringBackgroundJobBase
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
-    private readonly IAIUsageStatisticsRepository _statisticsRepository;
+    private readonly IAIUsageAggregationService _aggregationService;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly ILogger<AIUsageStatisticsCleanupJob> _logger;
 
     public AIUsageStatisticsCleanupJob(
-        IAIUsageStatisticsRepository statisticsRepository,
+        IAIUsageAggregationService aggregationService,
         IOptionsMonitor<AIAnalyticsOptions> options,
         ILogger<AIUsageStatisticsCleanupJob> logger)
         : base(CheckInterval)
     {
-        _statisticsRepository = statisticsRepository;
+        _aggregationService = aggregationService;
         _options = options;
         _logger = logger;
     }
@@ -53,7 +53,7 @@ internal sealed class AIUsageStatisticsCleanupJob : RecurringBackgroundJobBase
 
         try
         {
-            await _statisticsRepository.DeleteHourlyOlderThanAsync(hourlyRetentionDate, ct);
+            await _aggregationService.DeleteHourlyStatisticsOlderThanAsync(hourlyRetentionDate, ct);
             _logger.LogInformation("Completed hourly statistics cleanup");
         }
         catch (Exception ex)
@@ -69,7 +69,7 @@ internal sealed class AIUsageStatisticsCleanupJob : RecurringBackgroundJobBase
 
         try
         {
-            await _statisticsRepository.DeleteDailyOlderThanAsync(dailyRetentionDate, ct);
+            await _aggregationService.DeleteDailyStatisticsOlderThanAsync(dailyRetentionDate, ct);
             _logger.LogInformation("Completed daily statistics cleanup");
         }
         catch (Exception ex)

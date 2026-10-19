@@ -54,7 +54,10 @@ public class GenerateImageController : ImageGenerationControllerBase
         [FromBody] GenerateImageRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        // Experimental gate: when the feature is off the capability does not exist as far as the API is concerned.
+        // Belt-and-suspenders alongside the shared AICapabilityGateFilter (applied via
+        // ImageGenerationControllerBase's [AICapabilityGate(AICapability.ImageGeneration)]): that
+        // filter protects real HTTP traffic, but a caller invoking this action directly (as unit
+        // tests do) bypasses the MVC filter pipeline entirely, so the flag is also checked here.
         if (!_experimentalFeatures.IsCapabilityEnabled(AICapability.ImageGeneration))
         {
             return NotFound();
@@ -64,6 +67,7 @@ public class GenerateImageController : ImageGenerationControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Invalid prompt",
                 Detail = "A prompt must be provided.",
                 Status = StatusCodes.Status400BadRequest
@@ -72,9 +76,18 @@ public class GenerateImageController : ImageGenerationControllerBase
 
         try
         {
-            var profileId = model.ProfileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(model.ProfileIdOrAlias, null), cancellationToken)
-                : null;
+            // Resolve profile ID from IdOrAlias
+            Guid? profileId = null;
+            if (model.ProfileIdOrAlias != null)
+            {
+                var resolvedProfile = await _profileService.GetProfileAsync(IdOrAlias.Parse(model.ProfileIdOrAlias, null), cancellationToken);
+                if (resolvedProfile is null)
+                {
+                    return ProfileNotFound();
+                }
+
+                profileId = resolvedProfile.Id;
+            }
 
             var originalImages = MapOriginalImages(model.OriginalImages);
 
@@ -100,14 +113,11 @@ public class GenerateImageController : ImageGenerationControllerBase
 
             return Ok(MapResponse(result));
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ProfileNotFound();
-        }
         catch (FormatException)
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Invalid image data",
                 Detail = "One or more original images were not valid base64.",
                 Status = StatusCodes.Status400BadRequest
@@ -117,6 +127,7 @@ public class GenerateImageController : ImageGenerationControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Image generation failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

@@ -36,4 +36,7 @@
   <PropertyGroup>
     <GitVersionBaseDirectory>$(MSBuildThisFileDirectory)</GitVersionBaseDirectory>
   </PropertyGroup>
+
+  <!-- Package validation, baselined on this major's X.0.0 release -->
+  <Import Project="$(MSBuildThisFileDirectory)../PackageValidation.props" />
 </Project>

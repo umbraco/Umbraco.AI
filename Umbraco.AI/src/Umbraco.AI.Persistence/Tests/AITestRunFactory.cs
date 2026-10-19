@@ -30,10 +30,10 @@ internal static class AITestRunFactory
                 ?? Array.Empty<AITestGraderResult>();
         }
 
-        AITestTokenUsage? tokenUsage = null;
-        if (!string.IsNullOrEmpty(entity.OutcomeTokenUsageJson))
+        AITestUsage? usage = null;
+        if (!string.IsNullOrEmpty(entity.OutcomeUsageJson))
         {
-            tokenUsage = JsonSerializer.Deserialize<AITestTokenUsage>(entity.OutcomeTokenUsageJson, Constants.DefaultJsonSerializerOptions);
+            usage = JsonSerializer.Deserialize<AITestUsage>(entity.OutcomeUsageJson, Constants.DefaultJsonSerializerOptions);
         }
 
         AITestRunError? error = null;
@@ -60,7 +60,7 @@ internal static class AITestRunFactory
                 OutputType = (AITestOutputType)entity.OutcomeType,
                 OutputValue = entity.OutcomeValue,
                 FinishReason = entity.OutcomeFinishReason,
-                TokenUsage = tokenUsage
+                Usage = usage
             },
             GraderResults = graderResults,
             Error = error,
@@ -92,7 +92,7 @@ internal static class AITestRunFactory
             OutcomeType = run.Outcome != null ? (int)run.Outcome.OutputType : 0,
             OutcomeValue = run.Outcome?.OutputValue,
             OutcomeFinishReason = run.Outcome?.FinishReason,
-            OutcomeTokenUsageJson = run.Outcome?.TokenUsage != null ? JsonSerializer.Serialize(run.Outcome.TokenUsage, Constants.DefaultJsonSerializerOptions) : null,
+            OutcomeUsageJson = run.Outcome?.Usage != null ? JsonSerializer.Serialize(run.Outcome.Usage, Constants.DefaultJsonSerializerOptions) : null,
             GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults, Constants.DefaultJsonSerializerOptions) : null,
             MetadataJson = run.Error != null ? JsonSerializer.Serialize(run.Error, Constants.DefaultJsonSerializerOptions) : null,
             BatchId = run.BatchId,
@@ -119,7 +119,7 @@ internal static class AITestRunFactory
         entity.OutcomeType = run.Outcome != null ? (int)run.Outcome.OutputType : 0;
         entity.OutcomeValue = run.Outcome?.OutputValue;
         entity.OutcomeFinishReason = run.Outcome?.FinishReason;
-        entity.OutcomeTokenUsageJson = run.Outcome?.TokenUsage != null ? JsonSerializer.Serialize(run.Outcome.TokenUsage, Constants.DefaultJsonSerializerOptions) : null;
+        entity.OutcomeUsageJson = run.Outcome?.Usage != null ? JsonSerializer.Serialize(run.Outcome.Usage, Constants.DefaultJsonSerializerOptions) : null;
         entity.GraderResultsJson = run.GraderResults.Count > 0 ? JsonSerializer.Serialize(run.GraderResults, Constants.DefaultJsonSerializerOptions) : null;
         entity.MetadataJson = run.Error != null ? JsonSerializer.Serialize(run.Error, Constants.DefaultJsonSerializerOptions) : null;
         entity.BatchId = run.BatchId;

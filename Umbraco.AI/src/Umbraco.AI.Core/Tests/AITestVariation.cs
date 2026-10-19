@@ -10,6 +10,26 @@ namespace Umbraco.AI.Core.Tests;
 public sealed class AITestVariation
 {
     /// <summary>
+    /// Creates a variation with a newly generated ID.
+    /// </summary>
+    public AITestVariation()
+    {
+    }
+
+    /// <summary>
+    /// Creates a variation with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the variation is created with.</param>
+    /// <remarks>
+    /// The ID is stored with the test that owns the variation, and is kept as given when that test is saved.
+    /// Set it when the variation must keep the same ID across environments.
+    /// </remarks>
+    public AITestVariation(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for the variation within the test.
     /// </summary>
     public Guid Id { get; internal set; } = Guid.NewGuid();

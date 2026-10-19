@@ -2,7 +2,7 @@
 
 **Draft Sets & Content Validators — a functional vision for Umbraco CMS**
 
-> **Status:** Vision/pitch stage, not yet through `umb-explore`. Nothing in this repo builds it. An
+> **Status:** Vision/pitch stage, not yet through `feature-explore`. Nothing in this repo builds it. An
 > interim in-memory Draft Set add-on was scoped separately as CMS-feasible (see the team's own
 > notes/blog draft #68) but not started here.
 

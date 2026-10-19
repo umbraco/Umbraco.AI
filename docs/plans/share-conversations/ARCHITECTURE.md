@@ -157,11 +157,11 @@ spamming a recipient every time the owner adjusts scope.
 existing backoffice user; their email is already on their user record (the same address core's own
 notification emails already go to) — no new address collection needed.
 
-**TODO for `umb-build-loop`**: exact email copy (subject, body, what it links to) — same
+**TODO for `feature-build`**: exact email copy (subject, body, what it links to) — same
 product/legal-adjacent review flag as the disclosure-warning copy in decision 2, not just
 engineering wording, per the org's GDPR-conscious posture.
 
-## TODOs carried into `umb-plan` / `umb-build-loop`
+## TODOs carried into `feature-plan` / `feature-build`
 
 - Exact copy for the share-time disclosure warning (see decision 2) — needs product/legal-adjacent
   review given the org's GDPR-conscious posture, not just engineering wording.

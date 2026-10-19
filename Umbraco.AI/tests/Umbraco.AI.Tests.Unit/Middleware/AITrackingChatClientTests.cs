@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -172,9 +173,9 @@ public class AITrackingChatClientTests
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
 
-        // RecordUsageWhenEmpty=true means even a failed operation with no usage records duration/status.
+        // Usage is always recorded, so even a failed operation with no usage records duration/status.
         var record = await AwaitOrTimeout(usageSignal.Task);
-        record.Status.ShouldBe("Failed");
+        record.Status.ShouldBe(AIUsageRecordStatus.Failed);
         record.ErrorMessage.ShouldBe("AI error");
         record.InputTokens.ShouldBe(0);
         record.OutputTokens.ShouldBe(0);
@@ -184,7 +185,7 @@ public class AITrackingChatClientTests
     [Fact]
     public async Task GetResponseAsync_NullUsage_StillRecordsUsageRow()
     {
-        // Arrange — Chat now uses RecordUsageWhenEmpty=true, so a null Usage still queues a
+        // Arrange — Chat always records usage, so a null Usage still queues a
         // record (with null token usage) capturing duration/status rather than being dropped.
         var responseMessage = new ChatMessage(ChatRole.Assistant, "Response");
         var fakeClient = new FakeChatClient((_, _, _) =>
@@ -197,7 +198,7 @@ public class AITrackingChatClientTests
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        record.Status.ShouldBe("Succeeded");
+        record.Status.ShouldBe(AIUsageRecordStatus.Succeeded);
         record.InputTokens.ShouldBe(0);
         record.OutputTokens.ShouldBe(0);
         record.TotalTokens.ShouldBe(0);
@@ -256,11 +257,32 @@ public class AITrackingChatClientTests
             CancellationToken.None), Times.Once);
     }
 
+    // #529: nested calls made while a stream runs, including after the first chunk has been yielded,
+    // see this call's audit entry as their parent; the consumer never does.
+    [Fact]
+    public async Task GetStreamingResponseAsync_KeepsAuditScopeForEveryChunk_ButNotForTheConsumer()
+    {
+        // Arrange
+        var inner = new ScopeObservingStreamingChatClient(chunks: 3);
+        var client = CreateClient(inner);
+        var consumerScopes = new List<Guid?>();
+
+        // Act
+        await foreach (var _ in client.GetStreamingResponseAsync([new ChatMessage(ChatRole.User, "Hi")]))
+        {
+            consumerScopes.Add(AIAuditScope.Current?.AuditLogId);
+        }
+
+        // Assert
+        inner.ObservedScopes.ShouldBe([_auditLog.Id, _auditLog.Id, _auditLog.Id]);
+        consumerScopes.ShouldAllBe(id => id == null);
+    }
+
     [Fact]
     public async Task GetStreamingResponseAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
     {
         // Arrange — FakeChatClient's streaming updates carry no UsageContent, so the aggregated
-        // Usage is null. Chat now uses RecordUsageWhenEmpty=true even for the streaming path, so
+        // Usage is null. Usage is always recorded, on the streaming path too, so
         // a duration/status record is still queued.
         var fakeClient = new FakeChatClient("Hello world");
         var client = CreateClient(fakeClient);
@@ -274,7 +296,7 @@ public class AITrackingChatClientTests
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        record.Status.ShouldBe("Succeeded");
+        record.Status.ShouldBe(AIUsageRecordStatus.Succeeded);
         record.TotalTokens.ShouldBe(0);
     }
 
@@ -330,7 +352,35 @@ public class AITrackingChatClientTests
             CancellationToken.None), Times.Once);
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
-        record.Status.ShouldBe("Failed");
+        record.Status.ShouldBe(AIUsageRecordStatus.Failed);
+    }
+
+    // Non-streaming calls get the same check: a response that ends on a provider error is a failed call,
+    // but the caller still gets the response.
+    [Fact]
+    public async Task GetResponseAsync_WhenResponseEndsOnProviderError_QueuesFailureNotComplete_AndReturnsTheResponse()
+    {
+        // Arrange
+        var inner = new UpdatesStreamingChatClient(
+            new ChatResponseUpdate(ChatRole.Assistant,
+                [new ErrorContent("Rate limit reached for gpt-4o") { ErrorCode = "rate_limit_exceeded" }]));
+        var client = CreateClient(inner);
+        var usageSignal = ArrangeUsageRecordingSignal();
+
+        // Act
+        var response = await client.GetResponseAsync([new ChatMessage(ChatRole.User, "hi")]);
+        var record = await AwaitOrTimeout(usageSignal.Task);
+
+        // Assert
+        response.Messages.Single().Contents.Single().ShouldBeOfType<ErrorContent>();
+        _auditLogServiceMock.Verify(x => x.QueueRecordAuditLogFailureAsync(
+            _auditLog,
+            It.IsAny<AIAuditPrompt?>(),
+            It.Is<Exception>(e => e.Message.Contains("rate_limit_exceeded") && e.Message.Contains("Rate limit reached")),
+            CancellationToken.None), Times.Once);
+        _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
+            It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
+        record.Status.ShouldBe(AIUsageRecordStatus.Failed);
     }
 
     [Fact]
@@ -375,16 +425,11 @@ public class AITrackingChatClientTests
     #endregion
 
     private AITrackingChatClient CreateClient(IChatClient innerClient) =>
-        new(innerClient, CreateTracker(), _contextAccessorMock.Object);
+        new(innerClient, CreateTracker());
 
     private AIOperationTracker CreateTracker() => new(
         _contextAccessorMock.Object,
-        _auditLogServiceMock.Object,
-        _auditLogFactoryMock.Object,
-        _auditLogOptionsMock.Object,
-        _usageRecordingServiceMock.Object,
-        _usageRecordFactoryMock.Object,
-        _analyticsOptionsMock.Object,
+        TestOperationRecorders.Default(_auditLogServiceMock.Object, _auditLogFactoryMock.Object, _auditLogOptionsMock.Object, _usageRecordingServiceMock.Object, _usageRecordFactoryMock.Object, _analyticsOptionsMock.Object),
         NullLogger<AIOperationTracker>.Instance);
 
     private static AIUsageRecord BuildUsageRecord(AIUsageRecordContext ctx, AIUsageRecordResult result) => new()
@@ -404,7 +449,7 @@ public class AITrackingChatClientTests
         OutputTokens = result.Usage?.OutputTokenCount ?? 0,
         TotalTokens = result.Usage?.TotalTokenCount ?? 0,
         DurationMs = result.DurationMs,
-        Status = result.Succeeded ? "Succeeded" : "Failed",
+        Status = result.Succeeded ? AIUsageRecordStatus.Succeeded : AIUsageRecordStatus.Failed,
         ErrorMessage = result.ErrorMessage,
         CreatedAt = DateTime.UtcNow,
     };
@@ -449,6 +494,35 @@ public class AITrackingChatClientTests
             {
                 await Task.Yield();
                 yield return update;
+            }
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
+    }
+
+    /// <summary>
+    /// Streams the given number of chunks and records <see cref="AIAuditScope.Current"/> as each one is
+    /// produced, standing in for nested AI calls made while the stream runs (e.g. tool calls).
+    /// </summary>
+    private sealed class ScopeObservingStreamingChatClient(int chunks) : IChatClient
+    {
+        public List<Guid?> ObservedScopes { get; } = [];
+
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> chatMessages,
+            ChatOptions? options = null,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            for (var i = 0; i < chunks; i++)
+            {
+                await Task.Yield();
+                ObservedScopes.Add(AIAuditScope.Current?.AuditLogId);
+                yield return new ChatResponseUpdate(ChatRole.Assistant, $"chunk {i}");
             }
         }
 

@@ -108,6 +108,18 @@ public sealed class AIUsageSummary
     public required int TotalRequests { get; init; }
 
     /// <summary>
+    /// Gets how many of <see cref="TotalRequests"/> were made while another tracked AI operation was running
+    /// (a guardrail judge, a search embedding). The rest are requests of their own, such as one per agent run.
+    /// </summary>
+    public int NestedRequestCount { get; init; }
+
+    /// <summary>
+    /// Gets how many of <see cref="TotalRequests"/> were requests of their own rather than nested in another,
+    /// e.g. one per agent run or prompt execution.
+    /// </summary>
+    public int TopLevelRequestCount => TotalRequests - NestedRequestCount;
+
+    /// <summary>
     /// Gets the total number of input tokens consumed.
     /// </summary>
     public required long InputTokens { get; init; }

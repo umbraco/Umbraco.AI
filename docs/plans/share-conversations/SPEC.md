@@ -86,12 +86,12 @@ All in `Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets`, following existing
   the result through the repository.
 - Opens `UAI_SHARE_CONVERSATION_MODAL` (new modal token) with: a recipient picker (reusing
   whichever existing backoffice user-picker component the codebase already has — identify during
-  `umb-build-loop`), a Snapshot/Live radio choice, a list of current recipients with a revoke
+  `feature-build`), a Snapshot/Live radio choice, a list of current recipients with a revoke
   button per row (backed by `GET`/`DELETE .../shares`), and a **disclosure notice** — shown
   whenever the conversation has any `contextIds`/`resources` attached, stating plainly that the
   recipient will see everything referenced in the conversation, including pages or files they
   might not otherwise have permission to open (see `ARCHITECTURE.md` decision 2; exact copy is a
-  TODO for `umb-build-loop`). Not a confirmation the owner has to actively dismiss beyond the
+  TODO for `feature-build`). Not a confirmation the owner has to actively dismiss beyond the
   normal submit — a visible warning, not a blocking gate, consistent with this being the owner's
   judgment call to make.
 - Must observably: let the owner add one or more recipients and pick a scope in one submit (`POST

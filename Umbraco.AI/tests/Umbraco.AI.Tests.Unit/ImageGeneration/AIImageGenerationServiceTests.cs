@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 #pragma warning disable MEAI001 // Image generation types are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Tests the experimental image-generation service
 
@@ -70,12 +71,7 @@ public class AIImageGenerationServiceTests
         // so the usage/audit assertions exercise it through a real tracker built from these mocks.
         var tracker = new AIOperationTracker(
             _contextAccessorMock.Object,
-            _auditLogServiceMock.Object,
-            _auditLogFactoryMock.Object,
-            auditOptions.Object,
-            _usageRecordingServiceMock.Object,
-            _usageRecordFactoryMock.Object,
-            analyticsOptions.Object,
+            TestOperationRecorders.Default(_auditLogServiceMock.Object, _auditLogFactoryMock.Object, auditOptions.Object, _usageRecordingServiceMock.Object, _usageRecordFactoryMock.Object, analyticsOptions.Object),
             NullLogger<AIOperationTracker>.Instance);
 
         _service = new AIImageGenerationService(
@@ -198,6 +194,52 @@ public class AIImageGenerationServiceTests
 
         var ex = await Should.ThrowAsync<InvalidOperationException>(act);
         ex.Message.ShouldContain("does not support image-generation capability");
+    }
+
+    [Fact]
+    public async Task GenerateImagesAsync_WithKnownProfileAlias_UsesResolvedProfile()
+    {
+        var profileId = Guid.NewGuid();
+        var generator = new FakeImageGenerator();
+        var profile = new AIProfileBuilder()
+            .WithId(profileId)
+            .WithAlias("my-image-profile")
+            .WithCapability(AICapability.ImageGeneration)
+            .WithModel("fake-provider", "gpt-image-1")
+            .Build();
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("my-image-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _factoryMock
+            .Setup(x => x.CreateGeneratorAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(generator);
+
+        var response = await _service.GenerateImagesAsync(
+            b => b.WithAlias("alias-test").WithProfile("my-image-profile"),
+            "a cat");
+
+        response.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GenerateImagesAsync_WithUnknownProfileAlias_ThrowsInvalidOperationException()
+    {
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("missing-alias", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var act = () => _service.GenerateImagesAsync(
+            b => b.WithAlias("alias-test").WithProfile("missing-alias"),
+            "a cat");
+
+        await Should.ThrowAsync<InvalidOperationException>(act);
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

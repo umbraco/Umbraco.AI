@@ -104,6 +104,8 @@ public class UmbracoAIAgentDbContext : DbContext
 
             entity.Property(e => e.Scope);
 
+            entity.Property(e => e.StarterPrompts);
+
             entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValue(true);

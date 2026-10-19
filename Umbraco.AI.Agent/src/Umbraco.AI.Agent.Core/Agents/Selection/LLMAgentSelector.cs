@@ -43,7 +43,7 @@ public sealed class LLMAgentSelector : IAIAgentSelector
             return null;
         }
 
-        var userPrompt = GetLastUserMessageText(request.Messages);
+        var userPrompt = AgentSelectionMessages.GetLastUserMessageText(request.Messages);
         var classificationPrompt = BuildClassificationPrompt(request.CandidateAgents, userPrompt);
 
         var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
@@ -59,23 +59,6 @@ public sealed class LLMAgentSelector : IAIAgentSelector
 
         var selectedAgent = request.CandidateAgents.FirstOrDefault(a => a.Id == selectedAgentId.Value);
         return selectedAgent is null ? null : new AIAgentSelectionResult(selectedAgent, AIAgentSelectorIds.Llm, Reason: null);
-    }
-
-    /// <summary>
-    /// Returns the text of the last <see cref="ChatRole.User"/> message, or an empty string if there
-    /// is none.
-    /// </summary>
-    private static string GetLastUserMessageText(IReadOnlyList<ChatMessage> messages)
-    {
-        for (var i = messages.Count - 1; i >= 0; i--)
-        {
-            if (messages[i].Role == ChatRole.User)
-            {
-                return messages[i].Text ?? string.Empty;
-            }
-        }
-
-        return string.Empty;
     }
 
     /// <summary>

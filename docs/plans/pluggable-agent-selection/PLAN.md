@@ -1,6 +1,6 @@
 # Plan
 
-Task checklist for `umb-build-loop`. Work lands on `v18/dev` (via a worktree branched from it).
+Task checklist for `feature-build`. Work lands on `v18/dev` (via a worktree branched from it).
 v17 backport and the Umbraco.Docs page are follow-ups after merge, not tasks here (see bottom).
 
 Backend lives in `Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core` (new folder
@@ -135,7 +135,7 @@ Backend lives in `Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core` (new folder
   - An explicit-agent conversation is unchanged.
   depends-on: T15, T16. parallel-group: J
 
-## Follow-ups (after merge, not `umb-build-loop` tasks)
+## Follow-ups (after merge, not `feature-build` tasks)
 
 - **Pickers can't see persisted history in Workspace.** Selectors only get this turn's messages there.
   Give them the conversation history (decide how much, and the cost). This needs its own design.

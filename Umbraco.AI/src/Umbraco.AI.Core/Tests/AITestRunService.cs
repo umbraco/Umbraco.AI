@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.AI.Core.Tests;
@@ -142,9 +143,71 @@ internal sealed class AITestRunService : IAITestRunService
             IsRegression = isRegression,
             IsImprovement = isImprovement,
             DurationChangeMs = durationChange,
-            GraderComparisons = graderComparisons
+            GraderComparisons = graderComparisons,
+            UsageComparison = CompareUsage(baselineRun.Outcome?.Usage, comparisonRun.Outcome?.Usage)
         };
     }
+
+    private static AITestUsageComparison? CompareUsage(AITestUsage? baseline, AITestUsage? comparison)
+    {
+        // Without usage on both sides there is nothing meaningful to subtract
+        if (baseline is null || comparison is null)
+        {
+            return null;
+        }
+
+        var baselineEntries = baseline.Breakdown.ToLookup(UsageEntryKey);
+        var comparisonEntries = comparison.Breakdown.ToLookup(UsageEntryKey);
+
+        // Keep the baseline's order, then add entries only the comparison run has
+        var keys = baseline.Breakdown.Select(UsageEntryKey)
+            .Concat(comparison.Breakdown.Select(UsageEntryKey))
+            .Distinct()
+            .ToList();
+
+        var entries = keys.Select(key =>
+        {
+            var baselineEntry = baselineEntries[key].FirstOrDefault();
+            var comparisonEntry = comparisonEntries[key].FirstOrDefault();
+
+            return new AITestUsageEntryComparison
+            {
+                Capability = key.Capability,
+                ProviderId = key.ProviderId,
+                ModelId = key.ModelId,
+                ProfileId = key.ProfileId,
+                ProfileAlias = (comparisonEntry ?? baselineEntry)?.ProfileAlias,
+                FeatureType = key.FeatureType,
+                FeatureId = key.FeatureId,
+                FeatureAlias = key.FeatureAlias,
+                BaselineEntry = baselineEntry,
+                ComparisonEntry = comparisonEntry,
+                TotalTokensChange = (comparisonEntry?.TotalTokens ?? 0) - (baselineEntry?.TotalTokens ?? 0),
+                CallDurationChangeMs = (comparisonEntry?.DurationMs ?? 0) - (baselineEntry?.DurationMs ?? 0),
+                FailedCallCountChange = (comparisonEntry?.FailedCallCount ?? 0) - (baselineEntry?.FailedCallCount ?? 0),
+            };
+        }).ToList();
+
+        return new AITestUsageComparison
+        {
+            InputTokensChange = comparison.InputTokens - baseline.InputTokens,
+            OutputTokensChange = comparison.OutputTokens - baseline.OutputTokens,
+            TotalTokensChange = comparison.TotalTokens - baseline.TotalTokens,
+            CallCountChange = comparison.CallCount - baseline.CallCount,
+            FailedCallCountChange = comparison.FailedCallCount - baseline.FailedCallCount,
+            CallDurationChangeMs = comparison.DurationMs - baseline.DurationMs,
+            HasUnreportedCalls = baseline.UnreportedCallCount > 0 || comparison.UnreportedCallCount > 0,
+            BreakdownChanged = entries.Any(e => e.BaselineEntry is null || e.ComparisonEntry is null),
+            Entries = entries,
+        };
+    }
+
+    // Profile alias is left out of the key: it is a label for ProfileId, and renaming a profile
+    // between runs should not make the same calls look like a different entry
+    private static (AICapability Capability, string? ProviderId, string? ModelId, Guid? ProfileId,
+        string? FeatureType, Guid? FeatureId, string? FeatureAlias) UsageEntryKey(AITestUsageEntry entry)
+        => (entry.Capability, entry.ProviderId, entry.ModelId, entry.ProfileId,
+            entry.FeatureType, entry.FeatureId, entry.FeatureAlias);
 
     /// <inheritdoc />
     public async Task<bool> SetBaselineTestRunAsync(Guid testId, Guid testRunId, CancellationToken cancellationToken = default)

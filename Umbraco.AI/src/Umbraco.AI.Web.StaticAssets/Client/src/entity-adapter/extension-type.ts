@@ -20,6 +20,11 @@ export interface ManifestEntityAdapter extends ManifestBase {
     type: typeof UAI_ENTITY_ADAPTER_EXTENSION_TYPE;
     /** The entity type this adapter handles (e.g., "document", "media") */
     forEntityType: string;
+    /**
+     * Whether the entity adapter context may auto-detect open entities with this adapter
+     * (e.g. for the Copilot context selector). Lookups by entity type still find it. Defaults to true.
+     */
+    detectable?: boolean;
     /** The adapter API class loader */
     api: () => Promise<{ default: new () => UaiEntityAdapterApi }>;
 }

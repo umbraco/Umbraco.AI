@@ -231,6 +231,8 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
         const manifests = umbExtensionsRegistry.getByType(UAI_ENTITY_ADAPTER_EXTENSION_TYPE) as ManifestEntityAdapter[];
 
         for (const manifest of manifests) {
+            if (manifest.detectable === false) continue;
+
             let adapter = this.#adaptersCache.get(manifest.alias);
             if (!adapter) {
                 try {

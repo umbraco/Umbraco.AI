@@ -69,6 +69,7 @@ export type PromptResponseModel = {
     name: string;
     description?: null | string;
     instructions: string;
+    requiresSelection: boolean;
     profileId?: null | string;
     contextIds: Array<string>;
     guardrailIds: Array<string>;

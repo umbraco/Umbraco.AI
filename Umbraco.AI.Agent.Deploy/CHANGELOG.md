@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Agent.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Deploy@18.0.2...Umbraco.AI.Agent.Deploy@18.1.0) (2026-10-19)
+
+### feat
+
+* **agent,agent-deploy:** Add starter prompts to the agent definition ([dce6fa1](https://github.com/umbraco/Umbraco.AI/commit/dce6fa1d6388b3dafad36eb11c4d3de5b5590071))
+
+### fix
+
+* **deploy,prompt-deploy,agent-deploy:** Declare referenced contexts as deploy dependencies ([ef4974d](https://github.com/umbraco/Umbraco.AI/commit/ef4974d7d8146cbceecac13510b3f9667fd4303f))
+
 ## [18.0.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Deploy@18.0.0...Umbraco.AI.Agent.Deploy@18.0.2) (2026-08-11)
 
 ### Internal

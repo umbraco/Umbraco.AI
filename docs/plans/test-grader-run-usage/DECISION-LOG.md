@@ -1,0 +1,30 @@
+# Decision log
+
+- 08-10-2026: Routed #516 to the full pipeline, not quick-fix. A quick fix could only surface Prompt's single-call usage and would miss the "sum across all calls" requirement.
+- 08-10-2026: Grader-made model calls are excluded from a run's usage. They are the cost of grading, not of the thing under test.
+- 08-10-2026: Cost/CO2e calculation and a built-in budget grader are out of scope. This supplies inputs only.
+- 08-10-2026: Collect usage at the operation tracker via an internal AsyncLocal scope, not by changing IAITestFeature. One seam covers every feature; no public interface change.
+- 08-10-2026: Per-model breakdown lives on AITestTokenUsage. Graders get it through the existing outcome argument; it persists in the existing JSON column, so no migration.
+- 08-10-2026: Resolved profile is exposed per model entry, not as a new run column (avoids a migration).
+- 08-10-2026: A call with no usage counts as "unreported", not zero, so budget graders can tell totals are incomplete.
+- 08-10-2026: Errored runs keep today's behavior (no outcome, no usage). No consumer for partial usage yet.
+- 08-10-2026: The collector emits its own internal snapshot, mapped to AITestTokenUsage by the runner. Keeps Observability free of a dependency on Tests, so T2 can run alongside T1.
+- 08-10-2026: T4 (runner wiring) waits on T3 (tracker wiring) so runner tests exercise the real tracked path, not a stub.
+- 08-10-2026 (T2): A UsageDetails with all three counts null counts as unreported, same as no usage at all. Partial reports stay reported, missing counts as 0.
+- 08-10-2026 (T2): Usage is grouped by capability, provider, model and profile ID. Profile alias is carried, not keyed. Entries are sorted for stable output.
+- 08-10-2026 (T2): Unknown provider/model stay null, never a placeholder string.
+- 08-10-2026 (T3): Provider/model/profile are captured once at BeginAsync, not read at completion. Nested calls (LLM guardrail judge, semantic search embedding) rewrite the shared runtime context mid-call.
+- 08-10-2026 (T3): Usage analytics (RecordUsageAsync) still reads the context at completion and has the same misattribution. Pre-existing; left out of scope, to raise as its own issue.
+- 08-10-2026 (T3): A stream abandoned early by its consumer is not collected (same as analytics today). Test features read streams to the end, so no impact here.
+- 08-10-2026 (T4): PromptTestFeature still writes its single call's usage into transcript FinalOutput. outcome.TokenUsage (all tracked calls in the run) is the authoritative number; the transcript copy can differ. Left as-is; worth a docs note.
+- 08-10-2026 (T5): Capability is a string in the API (matches ProfileResponseModel); new fields have no [Required], same as the existing token fields. Generated TS still marks non-nullable members required.
+- 08-10-2026 (T8): Reverses the T3 out-of-scope call. The user asked to fix analytics in this PR so there is one read point. BeginAsync now captures the AIUsageContext once; analytics and test collection both use it. AIOperationIdentity removed.
+- 08-10-2026 (T9): User asked to split the breakdown by feature (type, ID, alias) so graders can sum the slice they want, e.g. only the prompt's own call. Models renamed to Breakdown (unreleased). AIUsageContext gains FeatureAlias (additive). The prompt transcript's own usage copy stays for existing custom graders.
+- 08-10-2026 (T10): User asked to centralise run data the features hand-write into transcript JSON. Breakdown entries and totals gain DurationMs (summed AI call time, not wall-clock) and FailedCallCount, from the tracker's existing measurements. Prompt transcript usage marked deprecated in a code comment (removal v20); timing/error JSON left, since it covers whole feature time and error text.
+- 08-10-2026 (T11): Whole-feature review: SOUND WITH FIXES. Kept the public names TokenUsage/AITestTokenUsage and rewrote their docs, rather than an obsolete-and-proxy rename to Usage (would duplicate the API field until v20 for a name only). AIUsageContext.FeatureAlias is public but only the test collector reads it; accepted as additive and possibly useful to analytics later, cannot be removed.
+- 08-10-2026 (T11): Guid.Empty to null normalisation stays in the tracker, not in AIUsageContext.ExtractFromRuntimeContext, so persisted analytics values don't change.
+- 08-10-2026 (T11): Nested calls overwriting the parent's runtime context is pre-existing; raised as #524. Follow-ups #522 (run comparison) and #523 (usage table) raised.
+- 08-10-2026 (T12): Reverses the T11 naming call. User chose a new AITestOutcome.Usage (AITestUsage, AITestUsageEntry) and obsoleting TokenUsage/AITestTokenUsage (always null, removal v20). Possible without a proxy because TokenUsage was always null on dev, so nothing depends on its data. Usage is stored in the existing OutcomeTokenUsageJson column (always null before), so no migration. API gains usage; tokenUsage stays null and obsolete.
+- 08-10-2026 (T12): User then asked for the column rename too. OutcomeTokenUsageJson becomes OutcomeUsageJson via an EF RenameColumn migration (UmbracoAI_RenameTestRunOutcomeUsageColumn) on SQL Server and SQLite. The v17 backport must reuse the same migration IDs.
+- 08-10-2026 (T7): v17 obsolete messages say "Will be removed in v19" (v17's current major + 2), not v20. Plan docs stay on the v18 branch only; the v17 PR links to them.
+- 08-10-2026 (T13): User asked for one usage path. AIOperationScope captures each finished call once into an internal AIUsageObservation and hands it to AIOperationTracker.ReportUsage, which feeds both consumers: the ambient collector (always, when a scope is open) and analytics (only when enabled and the call has usage). CollectUsage/RecordUsageAsync are now private. Analytics is queued before the audit status rather than after; the two are independent. Not a public extension point yet.

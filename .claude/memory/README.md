@@ -11,12 +11,12 @@ facts belong there, not here.
 ## Types
 
 - `decision` — a standing, project-wide call (CMS major version(s) targeted, database
-  provider(s) supported, deploy target, an architectural decision from `umb-design` that
-  outlives the feature it came from). Written by `umb-explore`/`umb-design` when a decision
+  provider(s) supported, deploy target, an architectural decision from `feature-design` that
+  outlives the feature it came from). Written by `feature-explore`/`feature-design` when a decision
   isn't scoped to just the feature being worked on. Umbraco.AI's older architecture decision
   records (ADRs) live here too, under this type — an ADR *is* a standing project-wide decision.
 - `gotcha` — a correction learned the hard way, usually from a `reviewer` FAIL that revealed a
-  rule the `builder` should already have followed. Written by `umb-build-loop` so the next
+  rule the `builder` should already have followed. Written by `feature-build` so the next
   task doesn't repeat the same mistake.
 - `reference` — a pointer to an external system relevant to this project (issue tracker,
   staging environment, a design doc).

@@ -50,6 +50,7 @@ internal static class AIAuditLogFactory
             ModelId = entity.ModelId,
             FeatureType = entity.FeatureType,
             FeatureId = entity.FeatureId,
+            FeatureAlias = entity.FeatureAlias,
             FeatureVersion = entity.FeatureVersion,
             InputTokens = entity.InputTokens,
             CachedInputTokens = entity.CachedInputTokens,
@@ -97,6 +98,7 @@ internal static class AIAuditLogFactory
             ModelId = audit.ModelId,
             FeatureType = audit.FeatureType,
             FeatureId = audit.FeatureId,
+            FeatureAlias = audit.FeatureAlias,
             FeatureVersion = audit.FeatureVersion,
             InputTokens = audit.InputTokens,
             CachedInputTokens = audit.CachedInputTokens,
@@ -141,6 +143,7 @@ internal static class AIAuditLogFactory
         entity.ModelId = audit.ModelId;
         entity.FeatureType = audit.FeatureType;
         entity.FeatureId = audit.FeatureId;
+        entity.FeatureAlias = audit.FeatureAlias;
         entity.FeatureVersion = audit.FeatureVersion;
         entity.InputTokens = audit.InputTokens;
         entity.CachedInputTokens = audit.CachedInputTokens;

@@ -90,6 +90,52 @@ public class UmbracoAISettingsServiceConnectorTests
     }
 
     [Fact]
+    public async Task ProcessAsync_WhenResolvedProfileHasTheWrongCapability_ClearsTheSlotInsteadOfSaving()
+    {
+        // Arrange - the artifact's speech-to-text slot now resolves to a Chat-capability profile
+        // (e.g. the source environment's profile changed capability after the artifact was written).
+        var profileId = Guid.NewGuid();
+        var settings = new AISettings();
+        _settingsServiceMock
+            .Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(settings);
+
+        var resolvedProfile = new AIProfile
+        {
+            Alias = "chat-profile",
+            Name = "Chat Profile",
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4"),
+            ConnectionId = Guid.NewGuid()
+        };
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(resolvedProfile);
+
+        AISettings? savedSettings = null;
+        _settingsServiceMock
+            .Setup(x => x.SaveSettingsAsync(It.IsAny<AISettings>(), It.IsAny<CancellationToken>()))
+            .Callback<AISettings, CancellationToken>((s, _) => savedSettings = s)
+            .ReturnsAsync((AISettings s, CancellationToken _) => s);
+
+        var udi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Settings, AISettings.SettingsId);
+        var artifact = new AISettingsArtifact(udi)
+        {
+            DefaultSpeechToTextProfileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, profileId)
+        };
+
+        var state = new ArtifactDeployState<AISettingsArtifact, AISettings>(
+            artifact, settings, _connector, 3);
+
+        // Act
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3);
+
+        // Assert
+        savedSettings.ShouldNotBeNull();
+        savedSettings.DefaultSpeechToTextProfileId.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task ProcessAsync_ResolvesSpeechToTextDefaultProfile()
     {
         // Arrange

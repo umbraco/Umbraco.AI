@@ -27,6 +27,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.ClassifierChatProfileId = source.ClassifierChatProfileId;
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
+        target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
         target.DisclosureNoticeMode = source.DisclosureNoticeMode.ToString();
     }
 
@@ -38,6 +39,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.ClassifierChatProfileId = source.ClassifierChatProfileId;
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
+        target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
         target.DisclosureNoticeMode = ParseDisclosureNoticeMode(source.DisclosureNoticeMode);
     }
 

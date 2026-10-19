@@ -2,17 +2,10 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for recording raw AI usage data.
-/// Internal - only called by usage recording middleware.
+/// Internal - only called by <see cref="AIAnalyticsOperationRecorder"/>.
 /// </summary>
 internal interface IAIUsageRecordingService
 {
-    /// <summary>
-    /// Records a raw usage entry for an AI operation (synchronous persistence).
-    /// </summary>
-    /// <param name="record">The usage record to save.</param>
-    /// <param name="ct">Cancellation token.</param>
-    Task RecordUsageAsync(AIUsageRecord record, CancellationToken ct = default);
-
     /// <summary>
     /// Queues recording a usage entry in the background.
     /// This is a fire-and-forget operation that uses the background task queue.

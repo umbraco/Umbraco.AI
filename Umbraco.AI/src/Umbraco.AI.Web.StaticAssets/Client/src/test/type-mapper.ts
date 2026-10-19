@@ -7,6 +7,7 @@ import type {
     UpdateTestRequestModel,
 } from "../api/types.gen.js";
 import { UAI_TEST_ENTITY_TYPE, UAI_TEST_RUN_ENTITY_TYPE } from "./constants.js";
+import { computeWeightedScore } from "./weighted-score.js";
 import type { UaiTestItemModel, UaiTestFeatureItemModel, UaiTestDetailModel, UaiTestRunItemModel, UaiTestVariation } from "./types.js";
 
 export const UaiTestTypeMapper = {
@@ -71,6 +72,7 @@ export const UaiTestTypeMapper = {
             profileId: response.profileId,
             isBaseline: response.isBaseline,
             baselineRunId: response.baselineRunId ?? null,
+            weightedScore: computeWeightedScore(response.graderResults),
         };
     },
 

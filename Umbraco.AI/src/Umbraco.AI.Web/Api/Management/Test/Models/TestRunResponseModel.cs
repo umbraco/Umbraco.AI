@@ -194,14 +194,23 @@ public class TestOutcomeResponseModel
     public string? FinishReason { get; set; }
 
     /// <summary>
-    /// Token usage statistics for the execution.
+    /// AI usage for the execution (tokens, call counts, duration and breakdown). Null when the run made no tracked AI call.
     /// </summary>
+    public TestUsageResponseModel? Usage { get; set; }
+
+    /// <summary>
+    /// Always null. Use <see cref="Usage"/> instead.
+    /// </summary>
+    [Obsolete("Always null. Use Usage instead. Will be removed in v20")]
+#pragma warning disable CS0618 // Declares the obsolete TestTokenUsageResponseModel for compatibility
     public TestTokenUsageResponseModel? TokenUsage { get; set; }
+#pragma warning restore CS0618
 }
 
 /// <summary>
-/// Response model for token usage statistics.
+/// Response model for token usage statistics. Always null on the outcome; use <see cref="TestUsageResponseModel"/>.
 /// </summary>
+[Obsolete("Always null. Use TestUsageResponseModel instead. Will be removed in v20")]
 public class TestTokenUsageResponseModel
 {
     /// <summary>
@@ -218,6 +227,133 @@ public class TestTokenUsageResponseModel
     /// Total tokens (input + output).
     /// </summary>
     public int TotalTokens { get; set; }
+}
+
+/// <summary>
+/// Response model for the AI usage of a test execution: tokens, call counts, summed call duration and a breakdown. Covers tracked AI calls made by the test feature; grader calls are excluded.
+/// </summary>
+public class TestUsageResponseModel
+{
+    /// <summary>
+    /// Number of input tokens consumed.
+    /// </summary>
+    public int InputTokens { get; set; }
+
+    /// <summary>
+    /// Number of output tokens generated.
+    /// </summary>
+    public int OutputTokens { get; set; }
+
+    /// <summary>
+    /// Total tokens (input + output).
+    /// </summary>
+    public int TotalTokens { get; set; }
+
+    /// <summary>
+    /// Number of tracked AI calls made by the test feature during the execution, including calls that reported no usage and failed calls. Grader calls are not included.
+    /// </summary>
+    public int CallCount { get; set; }
+
+    /// <summary>
+    /// Number of calls whose provider reported no token usage.
+    /// </summary>
+    public int UnreportedCallCount { get; set; }
+
+    /// <summary>
+    /// Sum of the durations, in milliseconds, of every tracked AI call in the run. Overlapping calls are summed (AI time, not wall-clock).
+    /// </summary>
+    public long DurationMs { get; set; }
+
+    /// <summary>
+    /// Number of tracked calls that failed (included in the call count).
+    /// </summary>
+    public int FailedCallCount { get; set; }
+
+    /// <summary>
+    /// Usage broken down by capability, provider, model, profile and feature.
+    /// </summary>
+    public IEnumerable<TestUsageEntryResponseModel> Breakdown { get; set; } = [];
+}
+
+/// <summary>
+/// Response model for the usage attributed to a single breakdown entry (capability, provider, model, profile and feature).
+/// </summary>
+public class TestUsageEntryResponseModel
+{
+    /// <summary>
+    /// The capability the calls were made with (for example Chat or Embedding).
+    /// </summary>
+    public string Capability { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The ID of the provider that served the calls, if known.
+    /// </summary>
+    public string? ProviderId { get; set; }
+
+    /// <summary>
+    /// The ID of the model that served the calls, if known.
+    /// </summary>
+    public string? ModelId { get; set; }
+
+    /// <summary>
+    /// The ID of the profile the calls were made through, if any.
+    /// </summary>
+    public Guid? ProfileId { get; set; }
+
+    /// <summary>
+    /// The alias of the profile the calls were made through, if any.
+    /// </summary>
+    public string? ProfileAlias { get; set; }
+
+    /// <summary>
+    /// The type of feature that made the calls (for example "prompt", "agent" or "inline-chat"), if any.
+    /// </summary>
+    public string? FeatureType { get; set; }
+
+    /// <summary>
+    /// The ID of the feature that made the calls, if any.
+    /// </summary>
+    public Guid? FeatureId { get; set; }
+
+    /// <summary>
+    /// The alias of the feature that made the calls, if any.
+    /// </summary>
+    public string? FeatureAlias { get; set; }
+
+    /// <summary>
+    /// Number of input tokens consumed.
+    /// </summary>
+    public int InputTokens { get; set; }
+
+    /// <summary>
+    /// Number of output tokens generated.
+    /// </summary>
+    public int OutputTokens { get; set; }
+
+    /// <summary>
+    /// Total tokens (input + output).
+    /// </summary>
+    public int TotalTokens { get; set; }
+
+    /// <summary>
+    /// Number of calls made in this entry.
+    /// </summary>
+    public int CallCount { get; set; }
+
+    /// <summary>
+    /// Number of calls in this entry whose provider reported no token usage.
+    /// </summary>
+    public int UnreportedCallCount { get; set; }
+
+    /// <summary>
+    /// Sum of the durations, in milliseconds, of the calls in this entry. Overlapping calls are summed (AI time, not wall-clock).
+    /// </summary>
+    public long DurationMs { get; set; }
+
+    /// <summary>
+    /// Number of tracked calls that failed (included in the call count).
+    /// </summary>
+    public int FailedCallCount { get; set; }
 }
 
 /// <summary>

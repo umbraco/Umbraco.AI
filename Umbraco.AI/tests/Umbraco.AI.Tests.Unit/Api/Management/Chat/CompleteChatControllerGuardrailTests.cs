@@ -8,6 +8,7 @@ using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.Chat.Controllers;
 using Umbraco.AI.Web.Api.Management.Chat.Models;
 using Umbraco.Cms.Core.Mapping;
@@ -92,5 +93,56 @@ public class CompleteChatControllerGuardrailTests
 
         var flaggedRules = problemDetails.Extensions["flaggedRules"].ShouldBeAssignableTo<IEnumerable<string>>();
         flaggedRules!.ShouldContain("Test policy > Block secret");
+    }
+
+    private static ChatRequestModel HelloRequest()
+    {
+#pragma warning disable CS0618 // Content is obsolete — convenient for the test request
+        return new ChatRequestModel
+        {
+            Messages = [new ChatMessageModel { Role = "user", Content = "hello" }]
+        };
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public async Task CompleteChat_WithNonExistingProfileId_Returns404AndNeverCallsChatService()
+    {
+        // An ID is returned without a lookup, so the controller must check existence itself
+        var profileId = Guid.NewGuid();
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        var result = await _controller.CompleteChat(new IdOrAlias(profileId), HelloRequest());
+
+        var notFound = result.ShouldBeOfType<NotFoundObjectResult>();
+        notFound.Value.ShouldBeOfType<ProblemDetails>().Title.ShouldBe("Profile not found");
+        _chatServiceMock.Verify(
+            x => x.GetChatResponseAsync(
+                It.IsAny<Action<AIChatBuilder>>(),
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CompleteChat_WhenServiceReportsSomethingNotFound_Returns400WithTheReason()
+    {
+        _mapperMock
+            .Setup(x => x.MapEnumerable<ChatMessageModel, ChatMessage>(It.IsAny<IEnumerable<ChatMessageModel>>()))
+            .Returns([new ChatMessage(ChatRole.User, "hello")]);
+        _chatServiceMock
+            .Setup(x => x.GetChatResponseAsync(
+                It.IsAny<Action<AIChatBuilder>>(),
+                It.IsAny<IEnumerable<ChatMessage>>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Default Chat profile with alias 'x' not found."));
+
+        var result = await _controller.CompleteChat(null, HelloRequest());
+
+        var problemDetails = result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Type.ShouldBe("Error");
+        problemDetails.Detail.ShouldBe("Default Chat profile with alias 'x' not found.");
     }
 }

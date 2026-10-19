@@ -1,6 +1,6 @@
 // S3 - I can see why an agent was picked (audit metadata: AC4, AC5, AC7, AC8)
 // Seam: the additional properties AIAgentService hands to IAIAgentFactory become the run's runtime
-// context, and AIAuditMetadata copies exactly the keys listed in LogKeys into AIAuditLog.Metadata.
+// context, and the tracker copies exactly the keys listed in LogKeys into AIAuditLog.Metadata.
 // So each audit criterion is pinned as "value is set" plus "key is listed in LogKeys".
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;

@@ -62,7 +62,7 @@
   },
   "enabledPlugins": {
     "umbraco-cms-backoffice-skills@umbraco-backoffice-marketplace": true,
-    "umbraco-claude-playbook@umbraco-claude-playbook": true
+    "umbraco-devkit@umbraco-devkit": true
   },
   "extraKnownMarketplaces": {
     "umbraco-backoffice-marketplace": {
@@ -72,10 +72,10 @@
         "ref": "main"
       }
     },
-    "umbraco-claude-playbook": {
+    "umbraco-devkit": {
       "source": {
         "source": "git",
-        "url": "https://github.com/mattbrailsford/umbraco-claude-playbook.git"
+        "url": "https://github.com/mattbrailsford/umbraco-devkit.git"
       }
     }
   }

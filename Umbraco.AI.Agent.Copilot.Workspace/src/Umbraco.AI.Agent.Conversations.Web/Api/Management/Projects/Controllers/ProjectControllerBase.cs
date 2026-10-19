@@ -16,6 +16,7 @@ public abstract class ProjectControllerBase : ConversationsManagementControllerB
     /// <summary>Returns a 404 Not Found response for a project.</summary>
     protected IActionResult ProjectNotFound() => NotFound(new ProblemDetails
     {
+        Type = "Error",
         Title = "Project not found",
         Detail = "The specified project could not be found for the current user.",
         Status = StatusCodes.Status404NotFound,
@@ -24,6 +25,7 @@ public abstract class ProjectControllerBase : ConversationsManagementControllerB
     /// <summary>Returns a 400 Bad Request response for a project that cannot be deleted while in use.</summary>
     protected IActionResult ProjectInUse() => BadRequest(new ProblemDetails
     {
+        Type = "Error",
         Title = "Project in use",
         Detail = "The project cannot be deleted because it still contains one or more conversations. " +
                  "Move or delete its conversations first.",

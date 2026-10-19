@@ -21,6 +21,26 @@ namespace Umbraco.AI.Agent.Core.Agents;
 public sealed class AIAgent : IAIVersionableEntity
 {
     /// <summary>
+    /// Creates an agent with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AIAgent()
+    {
+    }
+
+    /// <summary>
+    /// Creates an agent with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the agent is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating an agent that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that agent instead of creating a new one.
+    /// </remarks>
+    public AIAgent(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for the agent.
     /// </summary>
     public Guid Id { get; internal set; }
@@ -87,6 +107,15 @@ public sealed class AIAgent : IAIVersionableEntity
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>
     public AIAgentScope? Scope { get; set; }
+
+    /// <summary>
+    /// Starter prompts shown as clickable chips in an empty chat for this agent.
+    /// </summary>
+    /// <remarks>
+    /// Limited to 4 entries, enforced by <see cref="AIAgentService.SaveAgentAsync"/> and by the
+    /// editor's own list control.
+    /// </remarks>
+    public IReadOnlyList<AIStarterPrompt> StarterPrompts { get; set; } = [];
 
     /// <summary>
     /// Whether this agent is active and available for use.

@@ -62,6 +62,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<long>("InputTokens")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("IsNested")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -144,6 +147,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("NestedRequestCount")
+                        .HasColumnType("int");
 
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");
@@ -232,6 +238,9 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("NestedRequestCount")
+                        .HasColumnType("int");
+
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");
 
@@ -314,6 +323,10 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("FeatureAlias")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("FeatureId")
                         .HasColumnType("uniqueidentifier");
@@ -860,11 +873,11 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("OutcomeTokenUsageJson")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("OutcomeType")
                         .HasColumnType("int");
+
+                    b.Property<string>("OutcomeUsageJson")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OutcomeValue")
                         .HasColumnType("nvarchar(max)");
@@ -952,12 +965,18 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AuthoredByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ChangeDescription")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateAuthored")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");

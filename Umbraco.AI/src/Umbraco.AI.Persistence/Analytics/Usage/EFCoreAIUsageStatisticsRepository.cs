@@ -160,6 +160,30 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
     }
 
     /// <inheritdoc />
+    public async Task<DateTime?> GetFirstAggregatedHourlyPeriodAsync(CancellationToken ct = default)
+    {
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        var firstPeriod = await scope.ExecuteWithContextAsync(async db =>
+            await db.UsageStatisticsHourly.MinAsync(s => (DateTime?)s.Period, ct));
+
+        scope.Complete();
+        return firstPeriod;
+    }
+
+    /// <inheritdoc />
+    public async Task<DateTime?> GetFirstAggregatedDailyPeriodAsync(CancellationToken ct = default)
+    {
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        var firstPeriod = await scope.ExecuteWithContextAsync(async db =>
+            await db.UsageStatisticsDaily.MinAsync(s => (DateTime?)s.Period, ct));
+
+        scope.Complete();
+        return firstPeriod;
+    }
+
+    /// <inheritdoc />
     public async Task<DateTime?> GetLastAggregatedDailyPeriodAsync(CancellationToken ct = default)
     {
         using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();

@@ -84,7 +84,9 @@ public class EntityVersionHistoryController : VersioningControllerBase
             EntityId = entityId,
             Version = auditable is IAIVersionableEntity versionable ? versionable.Version : 1,
             DateCreated = auditable.DateModified,
-            CreatedByUserId = auditable.ModifiedByUserId
+            CreatedByUserId = auditable.ModifiedByUserId,
+            DateAuthored = auditable.DateModified,
+            AuthoredByUserId = auditable.ModifiedByUserId
         };
 
         // Calculate pagination parameters for historical versions

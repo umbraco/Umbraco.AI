@@ -11,9 +11,19 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// </para>
 /// <para>
 /// Scopes can be nested. Each call to <see cref="CreateScope()"/> creates a new isolated
-/// context that is pushed onto a stack. When the scope is disposed, the previous context
+/// context and makes it current. When the scope is disposed, the previous context
 /// is restored. This enables scenarios such as agent A calling agent B, where each agent
 /// gets its own isolated context without polluting the other.
+/// </para>
+/// <para>
+/// The current context belongs to the async flow that created the scope: the code that created it and
+/// everything it awaits or starts. Work running in parallel (e.g. two AI calls started together) each
+/// sees its own context, and work keeps the context it started with even if it outlives the scope (e.g.
+/// a background task). Disposing a scope only affects the code that disposes it. A scope created inside
+/// an async method or iterator is not current for that
+/// method's caller, nor for the iterator's later steps (they run in the consumer's flow). Create the scope
+/// in the method that makes the AI call, around the call; the streaming APIs keep the scope current for
+/// every update of a stream started while it is current.
 /// </para>
 /// </remarks>
 public interface IAIRuntimeContextScopeProvider

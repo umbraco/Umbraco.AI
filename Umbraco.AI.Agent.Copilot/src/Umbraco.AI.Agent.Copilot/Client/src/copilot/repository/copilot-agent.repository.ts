@@ -59,7 +59,7 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
         this.#copilotAgents$ = combineLatest([
             this.#agentRepository.agentItems$,
             section$.pipe(startWith(null)),
-            entityType$.pipe(startWith(null))
+            entityType$.pipe(startWith(null)),
         ]).pipe(
             map(([items, section, entityType]) => {
                 const context: AgentAvailabilityContext = {
@@ -70,7 +70,6 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
                 const filteredAgents: UaiCopilotAgentItem[] = [];
 
                 for (const agent of items.values()) {
-
                     // First check: agent must support copilot surface
                     if (!agent.surfaceIds.includes("copilot")) {
                         continue;
@@ -85,6 +84,7 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
                         id: agent.unique,
                         name: agent.name,
                         alias: agent.alias,
+                        starterPrompts: agent.starterPrompts,
                     });
                 }
 
@@ -142,11 +142,7 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
      */
     #isRuleMatched(rule: UaiAgentScopeRule, context: AgentAvailabilityContext): boolean {
         // Check section (if specified AND copilot cares about it)
-        if (
-            rule.sections &&
-            rule.sections.length > 0 &&
-            COPILOT_RELEVANT_DIMENSIONS.includes("section")
-        ) {
+        if (rule.sections && rule.sections.length > 0 && COPILOT_RELEVANT_DIMENSIONS.includes("section")) {
             // No current section = doesn't match
             if (!context.section) {
                 return false;
@@ -159,11 +155,7 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
         }
 
         // Check entity type (if specified AND copilot cares about it)
-        if (
-            rule.entityTypes &&
-            rule.entityTypes.length > 0 &&
-            COPILOT_RELEVANT_DIMENSIONS.includes("entityType")
-        ) {
+        if (rule.entityTypes && rule.entityTypes.length > 0 && COPILOT_RELEVANT_DIMENSIONS.includes("entityType")) {
             // No current entity type = doesn't match
             if (!context.entityType) {
                 return false;

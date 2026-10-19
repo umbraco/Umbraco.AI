@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -110,7 +111,7 @@ public class AITrackingSpeechToTextClientTests
     [Fact]
     public async Task GetTextAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
     {
-        // Arrange — STT uses RecordUsageWhenEmpty=true, so a duration/status record is queued
+        // Arrange — Usage is always recorded, so a duration/status record is queued
         // even though there is no UsageDetails to report (STT has no token usage).
         var fakeClient = new FakeSpeechToTextClient();
         var client = CreateClient(fakeClient);
@@ -124,7 +125,7 @@ public class AITrackingSpeechToTextClientTests
         record.InputTokens.ShouldBe(0);
         record.OutputTokens.ShouldBe(0);
         record.TotalTokens.ShouldBe(0);
-        record.Status.ShouldBe("Succeeded");
+        record.Status.ShouldBe(AIUsageRecordStatus.Succeeded);
     }
 
     [Fact]
@@ -153,9 +154,9 @@ public class AITrackingSpeechToTextClientTests
         _auditLogServiceMock.Verify(x => x.QueueCompleteAuditLogAsync(
             It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<AIAuditResponse?>(), It.IsAny<CancellationToken>()), Times.Never);
 
-        // RecordUsageWhenEmpty=true means even a failed operation with no usage records duration/status.
+        // Usage is always recorded, so even a failed operation with no usage records duration/status.
         var record = await AwaitOrTimeout(usageSignal.Task);
-        record.Status.ShouldBe("Failed");
+        record.Status.ShouldBe(AIUsageRecordStatus.Failed);
         record.ErrorMessage.ShouldBe("AI error");
     }
 
@@ -248,7 +249,7 @@ public class AITrackingSpeechToTextClientTests
     [Fact]
     public async Task GetStreamingTextAsync_OnSuccess_RecordsUsageEvenWithoutUsageDetails()
     {
-        // Arrange — STT uses RecordUsageWhenEmpty=true even for the streaming path.
+        // Arrange — Usage is always recorded, on the streaming path too.
         var fakeClient = new FakeStreamingSpeechToTextClient("Hello");
         var client = CreateClient(fakeClient);
         var usageSignal = ArrangeUsageRecordingSignal();
@@ -261,7 +262,7 @@ public class AITrackingSpeechToTextClientTests
         var record = await AwaitOrTimeout(usageSignal.Task);
 
         // Assert
-        record.Status.ShouldBe("Succeeded");
+        record.Status.ShouldBe(AIUsageRecordStatus.Succeeded);
         record.TotalTokens.ShouldBe(0);
     }
 
@@ -317,16 +318,11 @@ public class AITrackingSpeechToTextClientTests
     #endregion
 
     private AITrackingSpeechToTextClient CreateClient(ISpeechToTextClient innerClient) =>
-        new(innerClient, CreateTracker(), _contextAccessorMock.Object);
+        new(innerClient, CreateTracker());
 
     private AIOperationTracker CreateTracker() => new(
         _contextAccessorMock.Object,
-        _auditLogServiceMock.Object,
-        _auditLogFactoryMock.Object,
-        _auditLogOptionsMock.Object,
-        _usageRecordingServiceMock.Object,
-        _usageRecordFactoryMock.Object,
-        _analyticsOptionsMock.Object,
+        TestOperationRecorders.Default(_auditLogServiceMock.Object, _auditLogFactoryMock.Object, _auditLogOptionsMock.Object, _usageRecordingServiceMock.Object, _usageRecordFactoryMock.Object, _analyticsOptionsMock.Object),
         NullLogger<AIOperationTracker>.Instance);
 
     private static AIUsageRecord BuildUsageRecord(AIUsageRecordContext ctx, AIUsageRecordResult result) => new()
@@ -346,7 +342,7 @@ public class AITrackingSpeechToTextClientTests
         OutputTokens = result.Usage?.OutputTokenCount ?? 0,
         TotalTokens = result.Usage?.TotalTokenCount ?? 0,
         DurationMs = result.DurationMs,
-        Status = result.Succeeded ? "Succeeded" : "Failed",
+        Status = result.Succeeded ? AIUsageRecordStatus.Succeeded : AIUsageRecordStatus.Failed,
         ErrorMessage = result.ErrorMessage,
         CreatedAt = DateTime.UtcNow,
     };

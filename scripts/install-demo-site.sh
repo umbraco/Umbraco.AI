@@ -114,6 +114,15 @@ if [ "$FORCE" = true ] && [ -f "Umbraco.AI.local.slnx" ]; then
     rm -f "Umbraco.AI.local.slnx"
 fi
 
+# Reads the version of the globally installed Umbraco.Templates package from
+# `dotnet new uninstall` (called with no package name, this only lists what's installed —
+# it does not uninstall anything). Prints nothing if the package isn't installed.
+get_installed_template_version() {
+    dotnet new uninstall 2>&1 | awk '
+        /^[[:space:]]*Umbraco\.Templates[[:space:]]*$/ { getline; if ($0 ~ /Version:/) { sub(/.*Version:[[:space:]]*/, ""); print; exit } }
+    '
+}
+
 # Step 1: Install Umbraco templates
 if [ "$SKIP_TEMPLATE_INSTALL" = false ]; then
     echo "Installing Umbraco templates ($TEMPLATE_VERSION)..."
@@ -128,6 +137,29 @@ if [ "$SKIP_TEMPLATE_INSTALL" = false ]; then
         echo "NOTE: Prerelease template ($TEMPLATE_VERSION) requires the umbracoprereleases MyGet source."
     fi
     dotnet new install "Umbraco.Templates::${TEMPLATE_VERSION}" --force
+else
+    # -s/--skip-template-install trusts whatever Umbraco.Templates is already installed
+    # globally. That's only safe if it's the same major version this branch targets --
+    # otherwise the demo site gets scaffolded from the wrong major and fails to restore.
+    echo "Skipping template install (-s); checking the installed Umbraco.Templates matches v$VERSION_MAJOR..."
+    INSTALLED_TEMPLATE_VERSION=$(get_installed_template_version)
+    INSTALLED_TEMPLATE_MAJOR=$(echo "$INSTALLED_TEMPLATE_VERSION" | cut -d. -f1)
+    if [ -z "$INSTALLED_TEMPLATE_VERSION" ] || [ "$INSTALLED_TEMPLATE_MAJOR" != "$VERSION_MAJOR" ]; then
+        echo "" >&2
+        if [ -z "$INSTALLED_TEMPLATE_VERSION" ]; then
+            echo "ERROR: -s/--skip-template-install was given, but no Umbraco.Templates package is installed globally." >&2
+        else
+            echo "ERROR: -s/--skip-template-install was given, but the globally installed Umbraco.Templates is" >&2
+            echo "v$INSTALLED_TEMPLATE_VERSION, not v$VERSION_MAJOR.x." >&2
+        fi
+        echo "This branch targets Umbraco.Cms v$VERSION_MAJOR (template $TEMPLATE_VERSION) -- scaffolding the demo" >&2
+        echo "site from a different major template will fail to restore." >&2
+        echo "" >&2
+        echo "Drop -s and re-run so the matching template gets installed, or install it yourself first:" >&2
+        echo "  dotnet new install \"Umbraco.Templates::${TEMPLATE_VERSION}\" --force" >&2
+        exit 1
+    fi
+    echo "Installed Umbraco.Templates v$INSTALLED_TEMPLATE_VERSION matches v$VERSION_MAJOR. Skipping reinstall."
 fi
 
 # Step 2: Create demo folder with build overrides
@@ -272,6 +304,9 @@ add_product_projects "Umbraco.AI.OpenRouter" "Providers/OpenRouter"
 echo "Adding Umbraco.AI.TogetherAI projects..."
 add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
 
+echo "Adding Umbraco.AI.TypeSafe projects..."
+add_product_projects "Umbraco.AI.TypeSafe" "Providers/TypeSafe"
+
 echo "Adding Umbraco.AI.ZAI projects..."
 add_product_projects "Umbraco.AI.ZAI" "Providers/ZAI"
 
@@ -387,6 +422,11 @@ fi
 # Z.AI provider
 if [ -f "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj"
+fi
+
+# TypeSafe provider
+if [ -f "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

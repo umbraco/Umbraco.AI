@@ -2,7 +2,11 @@ import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import { UaiTestRunDetailRepository } from "../../repository/test-run-detail/test-run-detail.repository.js";
-import type { TestRunComparisonResponseModel, TestGraderComparisonResponseModel } from "../../../api/types.gen.js";
+import type {
+    TestRunComparisonResponseModel,
+    TestGraderComparisonResponseModel,
+    TestUsageEntryComparisonResponseModel,
+} from "../../../api/types.gen.js";
 
 /**
  * Component that displays a side-by-side comparison between a baseline and comparison test run.
@@ -71,7 +75,7 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
     }
 
     private _formatDelta(delta: number): string {
-        const prefix = delta > 0 ? "+" : "";
+        const prefix = delta > 0 ? "+" : "-";
         return `${prefix}${this._formatDuration(Math.abs(delta))}`;
     }
 
@@ -113,7 +117,7 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
                         </span>
                     </div>
                     <div class="metric-item">
-                        <span class="metric-label">Duration</span>
+                        <span class="metric-label" title="Overall run time, including grading">Run duration</span>
                         <span class="metric-value">
                             ${this._formatDuration(baselineRun.durationMs)}
                             <uui-icon name="icon-arrow-right" class="metric-arrow"></uui-icon>
@@ -124,6 +128,98 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
                         </span>
                     </div>
                 </div>
+            </uui-box>
+        `;
+    }
+
+    /** Renders "before → after" with a signed delta, where an increase is shown as worse. */
+    private _renderUsageMetric(label: string, baseline: number, comparison: number, delta: number, format: (n: number) => string, title?: string) {
+        return html`
+            <div class="metric-item">
+                <span class="metric-label" title=${title ?? nothing}>${label}</span>
+                <span class="metric-value">
+                    ${format(baseline)}
+                    <uui-icon name="icon-arrow-right" class="metric-arrow"></uui-icon>
+                    ${format(comparison)}
+                    ${delta !== 0
+                        ? html`<span class="delta ${delta > 0 ? "negative" : "positive"}">${delta > 0 ? "+" : "-"}${format(Math.abs(delta))}</span>`
+                        : nothing}
+                </span>
+            </div>
+        `;
+    }
+
+    private _formatCount = (n: number) => n.toLocaleString();
+
+    private _renderUsageEntry(entry: TestUsageEntryComparisonResponseModel) {
+        const name = [entry.providerId, entry.modelId].filter(Boolean).join(" / ") || entry.capability;
+        const feature = entry.featureAlias ?? entry.featureType;
+        const side = !entry.baselineEntry
+            ? html`<uui-tag look="outline" color="warning">Only in comparison</uui-tag>`
+            : !entry.comparisonEntry
+              ? html`<uui-tag look="outline" color="warning">Only in baseline</uui-tag>`
+              : nothing;
+
+        return html`
+            <div class="usage-entry">
+                <div class="usage-entry-name">
+                    <strong>${name}</strong>
+                    ${feature ? html`<span class="usage-entry-feature">${feature}</span>` : nothing}
+                    ${side}
+                </div>
+                <span class="metric-value">
+                    ${this._formatCount(entry.baselineEntry?.totalTokens ?? 0)}
+                    <uui-icon name="icon-arrow-right" class="metric-arrow"></uui-icon>
+                    ${this._formatCount(entry.comparisonEntry?.totalTokens ?? 0)} tokens
+                </span>
+            </div>
+        `;
+    }
+
+    private _renderUsage() {
+        if (!this._comparison) return nothing;
+
+        const { baselineRun, comparisonRun, usageComparison } = this._comparison;
+        const baseline = baselineRun.outcome?.usage;
+        const comparison = comparisonRun.outcome?.usage;
+
+        if (!usageComparison || !baseline || !comparison) {
+            return html`
+                <uui-box headline="AI Usage">
+                    <div class="usage-note">
+                        Not available. One or both runs have no recorded AI usage.
+                    </div>
+                </uui-box>
+            `;
+        }
+
+        return html`
+            <uui-box headline="AI Usage">
+                <div class="summary-metrics">
+                    ${this._renderUsageMetric("Total tokens", baseline.totalTokens, comparison.totalTokens, usageComparison.totalTokensChange, this._formatCount)}
+                    ${this._renderUsageMetric("Input tokens", baseline.inputTokens, comparison.inputTokens, usageComparison.inputTokensChange, this._formatCount)}
+                    ${this._renderUsageMetric("Output tokens", baseline.outputTokens, comparison.outputTokens, usageComparison.outputTokensChange, this._formatCount)}
+                    ${this._renderUsageMetric(
+                        "AI call time",
+                        baseline.durationMs,
+                        comparison.durationMs,
+                        usageComparison.callDurationChangeMs,
+                        (n) => this._formatDuration(n),
+                        "Summed time of the AI calls, excluding grading",
+                    )}
+                    ${this._renderUsageMetric("Failed calls", baseline.failedCallCount, comparison.failedCallCount, usageComparison.failedCallCountChange, this._formatCount)}
+                </div>
+                ${usageComparison.hasUnreportedCalls
+                    ? html`<div class="usage-note">Some calls reported no usage, so token figures are approximate.</div>`
+                    : nothing}
+                ${usageComparison.breakdownChanged
+                    ? html`
+                          <div class="usage-note">These runs used different models or features.</div>
+                          <div class="usage-entries">
+                              ${usageComparison.entries.map((e) => this._renderUsageEntry(e))}
+                          </div>
+                      `
+                    : nothing}
             </uui-box>
         `;
     }
@@ -200,6 +296,7 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
         return html`
             <div class="container">
                 ${this._renderSummary()}
+                ${this._renderUsage()}
                 ${this._renderGraderComparisons()}
             </div>
         `;
@@ -269,6 +366,42 @@ export class UaiTestRunComparisonElement extends UmbElementMixin(LitElement) {
 
         .delta.negative {
             color: var(--uui-color-danger);
+        }
+
+        /* --- Usage --- */
+
+        .usage-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--uui-color-text-alt);
+        }
+
+        .usage-entries {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .usage-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--uui-color-border);
+            padding: 8px 12px;
+        }
+
+        .usage-entry-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .usage-entry-feature {
+            font-size: 12px;
+            color: var(--uui-color-text-alt);
         }
 
         /* --- Grader comparisons --- */

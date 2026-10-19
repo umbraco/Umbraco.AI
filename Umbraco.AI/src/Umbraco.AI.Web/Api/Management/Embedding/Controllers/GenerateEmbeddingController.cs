@@ -53,11 +53,13 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
             Guid? profileId = null;
             if (requestModel.ProfileIdOrAlias != null)
             {
-                profileId = await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken);
-                if (!profileId.HasValue)
+                var resolvedProfile = await _profileService.GetProfileAsync(requestModel.ProfileIdOrAlias, cancellationToken);
+                if (resolvedProfile is null)
                 {
                     return ProfileNotFound();
                 }
+
+                profileId = resolvedProfile.Id;
             }
 
             var embeddings = await _embeddingService.GenerateEmbeddingsAsync(
@@ -89,14 +91,11 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
 
             return Ok(response);
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ProfileNotFound();
-        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Embedding generation failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

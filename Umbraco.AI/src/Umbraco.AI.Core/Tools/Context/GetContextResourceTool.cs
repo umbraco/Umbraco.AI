@@ -47,7 +47,7 @@ public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISys
     protected override async Task<object> ExecuteAsync(GetContextResourceArgs args, CancellationToken cancellationToken = default)
     {
         var context = _contextAccessor.Context;
-        if (context is null)
+        if (context is null || context.OnDemandResources.Count == 0)
         {
             return new GetContextResourceResult(
                 false,

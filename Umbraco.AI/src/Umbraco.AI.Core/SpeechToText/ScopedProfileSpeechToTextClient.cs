@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
 
@@ -52,16 +53,11 @@ internal sealed class ScopedProfileSpeechToTextClient : AIBoundSpeechToTextClien
         SpeechToTextOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context != null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, []);
 
             PopulateProfileMetadata();
             return await base.GetTextAsync(audioSpeechStream, options, cancellationToken);
@@ -78,20 +74,15 @@ internal sealed class ScopedProfileSpeechToTextClient : AIBoundSpeechToTextClien
         SpeechToTextOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context != null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, []);
 
             PopulateProfileMetadata();
 
-            await foreach (var update in base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken))
+            await foreach (var update in base.GetStreamingTextAsync(audioSpeechStream, options, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }
@@ -110,10 +101,6 @@ internal sealed class ScopedProfileSpeechToTextClient : AIBoundSpeechToTextClien
             return;
         }
 
-        context.SetValue(Constants.ContextKeys.ProfileId, _profile.Id);
-        context.SetValue(Constants.ContextKeys.ProfileAlias, _profile.Alias);
-        context.SetValue(Constants.ContextKeys.ProfileVersion, _profile.Version);
-        context.SetValue(Constants.ContextKeys.ProviderId, _profile.Model.ProviderId);
-        context.SetValue(Constants.ContextKeys.ModelId, _profile.Model.ModelId);
+        context.SetProfileMetadata(_profile);
     }
 }

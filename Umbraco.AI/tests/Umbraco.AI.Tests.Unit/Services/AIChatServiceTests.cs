@@ -5,6 +5,7 @@ using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
@@ -210,6 +211,67 @@ public class AIChatServiceTests
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("does not support chat capability");
+    }
+
+    #endregion
+
+    #region GetChatResponseAsync - By profile alias
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithKnownProfileAlias_UsesResolvedProfile()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
+
+        var profile = new AIProfileBuilder()
+            .WithId(profileId)
+            .WithAlias("my-chat-profile")
+            .WithCapability(AICapability.Chat)
+            .WithModel("openai", "gpt-4")
+            .Build();
+
+        var fakeChatClient = new FakeChatClient("Response from aliased profile");
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("my-chat-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fakeChatClient);
+
+        // Act
+        var response = await _service.GetChatResponseAsync(
+            b => b.WithAlias("alias-test").WithProfile("my-chat-profile"),
+            messages);
+
+        // Assert
+        response.Text.ShouldBe("Response from aliased profile");
+    }
+
+    [Fact]
+    public async Task GetChatResponseAsync_WithUnknownProfileAlias_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var messages = new List<ChatMessage> { new(ChatRole.User, "Hello") };
+
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync("missing-alias", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile?)null);
+
+        // Act
+        var act = () => _service.GetChatResponseAsync(
+            b => b.WithAlias("alias-test").WithProfile("missing-alias"),
+            messages);
+
+        // Assert
+        await Should.ThrowAsync<InvalidOperationException>(act);
+        _profileServiceMock.Verify(
+            x => x.GetDefaultProfileAsync(It.IsAny<AICapability>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     #endregion
@@ -684,6 +746,113 @@ public class AIChatServiceTests
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("does-not-exist");
+    }
+
+    // A response that ends on a provider error returns normally, but the Executed notification must
+    // report it as a failure, as the usage and audit records already do.
+    [Fact]
+    public async Task GetChatResponseAsync_Inline_WhenResponseEndsOnProviderError_ReportsExecutedAsFailed()
+    {
+        // Arrange
+        var executed = ArrangeExecutedNotificationCapture();
+        ArrangeDefaultProfileClient(new ErrorEndingChatClient());
+
+        // Act
+        await _service.GetChatResponseAsync(
+            chat => chat.WithAlias("inline"),
+            [new ChatMessage(ChatRole.User, "hi")]);
+
+        // Assert
+        executed.ShouldHaveSingleItem().IsSuccess.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task StreamChatResponseAsync_Inline_WhenStreamEndsOnProviderError_ReportsExecutedAsFailed()
+    {
+        // Arrange
+        var executed = ArrangeExecutedNotificationCapture();
+        ArrangeDefaultProfileClient(new ErrorEndingChatClient());
+
+        // Act
+        await foreach (var _ in _service.StreamChatResponseAsync(
+            chat => chat.WithAlias("inline"),
+            [new ChatMessage(ChatRole.User, "hi")]))
+        {
+        }
+
+        // Assert
+        executed.ShouldHaveSingleItem().IsSuccess.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task StreamChatResponseAsync_Inline_WhenStreamEndsNormally_ReportsExecutedAsSucceeded()
+    {
+        // Arrange
+        var executed = ArrangeExecutedNotificationCapture();
+        ArrangeDefaultProfileClient(new FakeChatClient("All good"));
+
+        // Act
+        await foreach (var _ in _service.StreamChatResponseAsync(
+            chat => chat.WithAlias("inline"),
+            [new ChatMessage(ChatRole.User, "hi")]))
+        {
+        }
+
+        // Assert
+        executed.ShouldHaveSingleItem().IsSuccess.ShouldBeTrue();
+    }
+
+    private List<AIChatExecutedNotification> ArrangeExecutedNotificationCapture()
+    {
+        var executed = new List<AIChatExecutedNotification>();
+        _eventAggregatorMock
+            .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
+            .Callback<INotification, CancellationToken>((n, _) =>
+            {
+                if (n is AIChatExecutedNotification e)
+                {
+                    executed.Add(e);
+                }
+            })
+            .Returns(Task.CompletedTask);
+        return executed;
+    }
+
+    private void ArrangeDefaultProfileClient(IChatClient client)
+    {
+        var profile = new AIProfileBuilder()
+            .WithAlias("default-chat")
+            .WithCapability(AICapability.Chat)
+            .WithModel("openai", "gpt-4")
+            .Build();
+        _profileServiceMock
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+        _clientFactoryMock
+            .Setup(x => x.CreateClientAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(client);
+    }
+
+    /// <summary>A provider that reports a rate limit as <see cref="ErrorContent"/> instead of throwing.</summary>
+    private sealed class ErrorEndingChatClient : IChatClient
+    {
+        private static ErrorContent Error() => new("Rate limit reached") { ErrorCode = "rate_limit_exceeded" };
+
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, CancellationToken cancellationToken = default)
+            => Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, [Error()])));
+
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> chatMessages,
+            ChatOptions? options = null,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await Task.Yield();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, [Error()]);
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
     }
 
     private AIChatService CreateServiceWithTools(params IAITool[] tools)

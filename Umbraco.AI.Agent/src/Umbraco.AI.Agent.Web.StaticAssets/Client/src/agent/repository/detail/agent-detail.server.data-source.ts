@@ -50,6 +50,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
                             userGroupPermissions: {},
                       },
             guardrailIds: [],
+            starterPrompts: [],
             isActive: true,
             dateCreated: null,
             dateModified: null,

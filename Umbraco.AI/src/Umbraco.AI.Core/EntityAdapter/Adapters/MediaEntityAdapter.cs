@@ -85,7 +85,7 @@ internal sealed class MediaEntityAdapter : AIEntityAdapterBase
         // This whole extraction path is only exercised by the interactive Copilot chat today (a live
         // HTTP request), which is what makes blocking on the async calls below safe — but the runtime
         // context contributor pipeline that calls in here is explicitly built to also run detached
-        // from any request (see AIRuntimeContextScopeProvider's AsyncLocal-backed DetachedScope, and
+        // from any request (AIRuntimeContextScopeProvider holds the context per async flow, see also
         // AIAgentExecutionOptions.ContextItems' "headless execution" use case for callers such as
         // Umbraco.Automate). If a serialized media entity is ever supplied that way, there is no
         // request pipeline underneath to absorb the blocked thread — for Automate specifically that

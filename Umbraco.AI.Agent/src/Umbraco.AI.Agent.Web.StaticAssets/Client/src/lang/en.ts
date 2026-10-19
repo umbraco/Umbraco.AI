@@ -21,6 +21,16 @@ export default {
         allowedToolScopes: "Allowed Tool Scopes",
         allowedToolIds: "Allowed Tools",
         noDefaultPermissions: "No default permissions configured",
+
+        // Starter prompts
+        starterPrompts: "Starter Prompts",
+        starterPromptsDescription: "Up to 4 prompts shown as clickable chips in an empty chat for this agent",
+        starterPromptTooLong: (max: number) => `A starter prompt cannot exceed ${max} characters.`,
+        suggestStarters: "Suggest starters",
+        suggestStartersUnsavedAgent: "Save the agent before suggesting starters.",
+        suggestStartersNoProfile:
+            "Select a profile for this agent, or configure a default chat profile in Settings, before suggesting starters.",
+        suggestStartersFailed: "Couldn't suggest starter prompts. Try again, or add them manually.",
     },
     uaiAgentSurface: {
         automationsLabel: "Automations",

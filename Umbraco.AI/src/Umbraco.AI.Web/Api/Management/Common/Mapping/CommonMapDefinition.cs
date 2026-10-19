@@ -77,7 +77,8 @@ public class CommonMapDefinition : IMapDefinition
         target.Version = source.Version;
         target.DateCreated = source.DateCreated;
         target.CreatedByUserId = source.CreatedByUserId;
+        target.DateAuthored = source.DateAuthored;
+        target.AuthoredByUserId = source.AuthoredByUserId;
         target.ChangeDescription = source.ChangeDescription;
-        // Note: CreatedByUserName is resolved separately in the controller
     }
 }

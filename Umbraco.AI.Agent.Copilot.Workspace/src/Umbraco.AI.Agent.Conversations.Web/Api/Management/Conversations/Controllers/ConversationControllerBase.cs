@@ -17,6 +17,7 @@ public abstract class ConversationControllerBase : ConversationsManagementContro
     /// <summary>Returns a 404 Not Found response for a conversation.</summary>
     protected IActionResult ConversationNotFound() => NotFound(new ProblemDetails
     {
+        Type = "Error",
         Title = "Conversation not found",
         Detail = "The specified conversation could not be found for the current user.",
         Status = StatusCodes.Status404NotFound,
@@ -30,6 +31,7 @@ public abstract class ConversationControllerBase : ConversationsManagementContro
     private protected IActionResult ConversationSaveCancelled(AIConversationSaveCancelledException exception)
         => BadRequest(new ProblemDetails
         {
+            Type = "Error",
             Title = "Conversation save cancelled",
             Detail = exception.Reason,
             Status = StatusCodes.Status400BadRequest,

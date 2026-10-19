@@ -1,6 +1,6 @@
 # Stories
 
-## Definition of Ready / Definition of Done (proposed — confirm during `umb-plan`'s interview)
+## Definition of Ready / Definition of Done (proposed — confirm during `feature-plan`'s interview)
 
 **Ready:** role/capability/value stated and non-hollow; Given/When/Then acceptance criteria cover
 the happy path; out-of-scope explicit; passes INVEST.

@@ -12,6 +12,9 @@ namespace Umbraco.AI.Agent.Core.Agents.Selection;
 /// <para>
 /// Register a selector with <c>builder.AIAgentSelectors().Append&lt;MySelector&gt;()</c> or
 /// <c>InsertBefore&lt;LLMAgentSelector, MySelector&gt;()</c> to run before the built-in classifier.
+/// The default chain is <see cref="DecisionAgentSelector"/> (when enabled), then
+/// <see cref="LLMAgentSelector"/> - a selector that must run before both, e.g. a sticky/previous-agent
+/// rule, uses <c>Insert&lt;MySelector&gt;()</c> instead (see <see cref="StickyAgentSelector"/>).
 /// </para>
 /// </remarks>
 public interface IAIAgentSelector

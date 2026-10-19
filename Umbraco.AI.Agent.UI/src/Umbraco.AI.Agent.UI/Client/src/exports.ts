@@ -10,6 +10,7 @@ export { UaiAgentStatusElement } from "./chat/components/agent-status.element.js
 export { UaiToolRendererElement } from "./chat/components/tool-renderer.element.js";
 export { UaiAgentToolStatusElement } from "./chat/components/tool-status.element.js";
 export { UaiVoiceButtonElement } from "./chat/components/voice-button.element.js";
+export { UaiStarterPromptsElement } from "./chat/components/starter-prompts.element.js";
 
 // Services
 export { UaiToolRendererManager } from "./chat/services/tool-renderer.manager.js";
@@ -22,6 +23,11 @@ export {
 } from "./chat/services/conversation-strategy.js";
 export { UaiHitlContext, UAI_HITL_CONTEXT } from "./chat/services/hitl.context.js";
 export { UaiInterruptHandlerRegistry } from "./chat/services/interrupt-handler.registry.js";
+export {
+    UaiStarterPromptsController,
+    type UaiStarterPromptAgentSource,
+    type UaiStarterPromptsControllerConfig,
+} from "./chat/services/starter-prompts.controller.js";
 
 // Interrupt handlers
 export { UaiToolExecutionHandler } from "./chat/services/handlers/tool-execution.handler.js";
@@ -29,14 +35,19 @@ export { UaiHitlInterruptHandler } from "./chat/services/handlers/hitl-interrupt
 export { UaiDefaultInterruptHandler } from "./chat/services/handlers/default-interrupt.handler.js";
 
 // Context
-export { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "./chat/context.js";
+export { UAI_CHAT_CONTEXT, type UaiChatContextApi, type UaiStarterPromptEntry } from "./chat/context.js";
 export { UAI_ENTITY_CONTEXT, type UaiEntityContextApi } from "./chat/entity-context.js";
 
 // Extension types (for tool/approval authors)
 export type { ManifestUaiAgentToolRenderer } from "./chat/extensions/uai-agent-tool-renderer.extension.js";
 export type { ManifestUaiAgentFrontendTool } from "./chat/extensions/uai-agent-frontend-tool.extension.js";
 export type { ManifestUaiAgentApprovalElement } from "./chat/extensions/uai-agent-approval-element.extension.js";
-export type { UaiAgentToolApi, UaiAgentToolStatus, UaiAgentToolElementProps, UaiAgentToolElement } from "./chat/types/tool.types.js";
+export type {
+    UaiAgentToolApi,
+    UaiAgentToolStatus,
+    UaiAgentToolElementProps,
+    UaiAgentToolElement,
+} from "./chat/types/tool.types.js";
 export type { UaiAgentToolApprovalConfig } from "./chat/types/tool.types.js";
 
 // Interrupt types

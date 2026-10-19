@@ -9,6 +9,26 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 public sealed class AIPrompt : IAIVersionableEntity
 {
     /// <summary>
+    /// Creates a prompt with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AIPrompt()
+    {
+    }
+
+    /// <summary>
+    /// Creates a prompt with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the prompt is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating a prompt that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that prompt instead of creating a new one.
+    /// </remarks>
+    public AIPrompt(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Unique identifier for the prompt.
     /// </summary>
     public Guid Id { get; internal set; }

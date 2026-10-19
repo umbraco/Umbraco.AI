@@ -14,6 +14,26 @@ namespace Umbraco.AI.Core.Contexts;
 public sealed class AIContext : IAIVersionableEntity
 {
     /// <summary>
+    /// Creates a context with no ID. An ID is generated when it is first saved.
+    /// </summary>
+    public AIContext()
+    {
+    }
+
+    /// <summary>
+    /// Creates a context with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the context is created with.</param>
+    /// <remarks>
+    /// Set the ID when creating a context that must keep the same ID across environments.
+    /// Saving with an ID that already exists updates that context instead of creating a new one.
+    /// </remarks>
+    public AIContext(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// The unique identifier of the AI context.
     /// </summary>
     public Guid Id { get; internal set; }

@@ -467,4 +467,55 @@ public class AIProfileServiceTests
     }
 
     #endregion
+
+    #region Id constructor
+
+    [Fact]
+    public async Task SaveProfileAsync_WithIdConstructor_KeepsTheId()
+    {
+        // Arrange
+        var knownId = Guid.NewGuid();
+        var template = new AIProfileBuilder().WithAlias("known-id").WithName("Known Id").Build();
+        var profile = new AIProfile(knownId)
+        {
+            Alias = template.Alias,
+            Name = template.Name,
+            Capability = template.Capability,
+            ConnectionId = template.ConnectionId,
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIProfile>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile p, Guid? _, CancellationToken _) => p);
+
+        // Act
+        var result = await _service.SaveProfileAsync(profile);
+
+        // Assert
+        result.Id.ShouldBe(knownId);
+    }
+
+    [Fact]
+    public async Task SaveProfileAsync_WithParameterlessConstructor_GeneratesAnId()
+    {
+        // Arrange
+        var template = new AIProfileBuilder().WithAlias("no-id").WithName("No Id").Build();
+        var profile = new AIProfile
+        {
+            Alias = template.Alias,
+            Name = template.Name,
+            Capability = template.Capability,
+            ConnectionId = template.ConnectionId,
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIProfile>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile p, Guid? _, CancellationToken _) => p);
+
+        // Act
+        var result = await _service.SaveProfileAsync(profile);
+
+        // Assert
+        result.Id.ShouldNotBe(Guid.Empty);
+    }
+
+    #endregion
 }

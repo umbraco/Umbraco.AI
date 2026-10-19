@@ -132,9 +132,8 @@ public class UmbracoAIPromptServiceConnector(
 
         // Get or create prompt entity
         var prompt = state.Entity
-            ?? new AIPrompt
+            ?? new AIPrompt(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Instructions = artifact.Instructions,

@@ -108,9 +108,8 @@ public class UmbracoAIContextServiceConnector(
 
         // Get or create AIContext entity
         var aiContext = state.Entity
-            ?? new AIContext
+            ?? new AIContext(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
             };

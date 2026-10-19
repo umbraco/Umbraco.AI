@@ -108,9 +108,8 @@ public class UmbracoAIGuardrailServiceConnector(
 
         // Get or create AIGuardrail entity
         var guardrail = state.Entity
-            ?? new AIGuardrail
+            ?? new AIGuardrail(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
             };

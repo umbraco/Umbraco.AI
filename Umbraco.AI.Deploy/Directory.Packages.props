@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Inherit the central package versions from the root Directory.Packages.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
+
+  <ItemGroup>
+    <!-- 18.6.0 is the first Umbraco.AI release with the public AIConnection(Guid id), AIProfile(Guid id),
+         AIContext(Guid id) and AIGuardrail(Guid id) constructors the service connectors create entities with. -->
+    <PackageVersion Update="Umbraco.AI.Startup" Version="[18.6.0, 18.999.999)" />
+  </ItemGroup>
+</Project>

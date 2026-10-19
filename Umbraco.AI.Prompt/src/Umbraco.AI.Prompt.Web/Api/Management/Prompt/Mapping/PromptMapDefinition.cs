@@ -1,4 +1,5 @@
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Templates;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Strings;
@@ -92,6 +93,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Name = source.Name;
         target.Description = source.Description;
         target.Instructions = source.Instructions;
+        target.RequiresSelection = AITemplateExpression.ReferencesSelection(source.Instructions);
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.GuardrailIds = source.GuardrailIds;

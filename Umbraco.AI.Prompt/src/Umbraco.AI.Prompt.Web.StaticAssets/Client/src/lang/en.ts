@@ -8,6 +8,7 @@ export default {
         emptyResult: "The AI returned an empty result. Try regenerating.",
         copiedToClipboard: "Value copied to clipboard",
         copyFailed: "Failed to copy to clipboard",
+        selectionRequired: "Select some text first",
     },
     tiptapGroup : {
         ai: "AI",

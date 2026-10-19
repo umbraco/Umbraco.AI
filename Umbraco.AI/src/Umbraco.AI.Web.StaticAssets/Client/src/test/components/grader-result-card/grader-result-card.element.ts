@@ -1,6 +1,8 @@
 import { LitElement, html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
 import type { TestGraderResultResponseModel } from "../../../api/types.gen.js";
+import type { UaiTranscriptMessage } from "../../transcript-input.js";
 import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
 
 /**
@@ -8,15 +10,22 @@ import { codeBlockStyles } from "../../../core/styles/code-block.styles.js";
  * Manages its own expand/collapse toggle.
  */
 @customElement("uai-grader-result-card")
-export class UaiGraderResultCardElement extends LitElement {
+export class UaiGraderResultCardElement extends UmbElementMixin(LitElement) {
     @property({ attribute: false })
     result!: TestGraderResultResponseModel;
+
+    /** What the AI was given for this run, taken from the transcript. Empty hides the Input section. */
+    @property({ attribute: false })
+    input: UaiTranscriptMessage[] = [];
 
     @property({ type: Boolean })
     expanded = false;
 
     @state()
     private _expanded = false;
+
+    @state()
+    private _inputExpanded = false;
 
     protected willUpdate(changedProperties: Map<PropertyKey, unknown>) {
         if (changedProperties.has("expanded") && changedProperties.get("expanded") === undefined) {
@@ -26,6 +35,37 @@ export class UaiGraderResultCardElement extends LitElement {
 
     private _toggle() {
         this._expanded = !this._expanded;
+    }
+
+    private _toggleInput() {
+        this._inputExpanded = !this._inputExpanded;
+    }
+
+    private _renderInput() {
+        if (!this.input?.length) return nothing;
+
+        return html`
+            <div class="grader-field">
+                <button class="input-toggle" @click=${this._toggleInput} aria-expanded=${this._inputExpanded}>
+                    <span class="chevron">${this._inputExpanded ? "\u25BC" : "\u25B6"}</span>
+                    ${this.localize.termOrDefault("uaiTest_graderInput", "Input")}
+                </button>
+                ${this._inputExpanded
+                    ? html`
+                          <div class="input-messages">
+                              ${this.input.map(
+                                  (m) => html`
+                                      <div class="input-message">
+                                          <div class="input-role">${m.role}</div>
+                                          <pre class="code-block">${m.content}</pre>
+                                      </div>
+                                  `,
+                              )}
+                          </div>
+                      `
+                    : nothing}
+            </div>
+        `;
     }
 
     private _formatJson(json: string): string {
@@ -112,6 +152,7 @@ export class UaiGraderResultCardElement extends LitElement {
                                         </div>
                                     `
                                   : nothing}
+                              ${this._renderInput()}
                               ${result.expectedValue
                                   ? html`
                                         <div class="grader-field">
@@ -281,6 +322,35 @@ export class UaiGraderResultCardElement extends LitElement {
             gap: 15px;
             font-size: 12px;
             color: var(--uui-color-text-alt);
+        }
+
+        .input-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--uui-color-text-alt);
+        }
+
+        .input-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .input-role {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--uui-color-text-alt);
+            margin-bottom: 2px;
         }
 
         ${codeBlockStyles}

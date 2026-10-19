@@ -108,6 +108,8 @@ export interface UaiTestRunItemModel extends UmbEntityModel {
     profileId?: string | null;
     isBaseline: boolean;
     baselineRunId?: string | null;
+    /** Weighted grader score as a 0..1 fraction; null when no grader produced a result. */
+    weightedScore?: number | null;
 }
 
 /**

@@ -52,6 +52,13 @@ export class UaiModelEditorElement extends UmbLitElement {
     @property({ type: String, attribute: "default-group" })
     defaultGroup?: string;
 
+    /**
+     * When true, no field is rendered as required, whatever the schema says.
+     * Use for override forms where an empty field means "inherit" (e.g. test variations).
+     */
+    @property({ type: Boolean })
+    optional = false;
+
     @state()
     private _propertyValues: UmbPropertyValueData[] = [];
 
@@ -199,12 +206,13 @@ export class UaiModelEditorElement extends UmbLitElement {
     }
 
     #toValidation(field: UaiEditableModelFieldModel) {
+        const mandatory = field.isRequired && !this.optional;
         const cached = this.#validationCache.get(field.key);
-        if (cached && cached.mandatory === field.isRequired) return cached;
+        if (cached && cached.mandatory === mandatory) return cached;
 
         const value = {
-            mandatory: field.isRequired,
-            mandatoryMessage: field.isRequired ? this.localize.string("This field is required") : undefined,
+            mandatory,
+            mandatoryMessage: mandatory ? this.localize.string("This field is required") : undefined,
         };
         this.#validationCache.set(field.key, value);
 

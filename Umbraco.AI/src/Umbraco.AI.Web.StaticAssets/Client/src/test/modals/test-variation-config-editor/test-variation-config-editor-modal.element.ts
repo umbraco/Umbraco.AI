@@ -193,6 +193,7 @@ export class UaiTestVariationConfigEditorModalElement extends UmbModalBaseElemen
                               <uai-model-editor
                                   .schema=${this._featureConfigSchema}
                                   .model=${this._configModel}
+                                  optional
                                   @change=${this.#onConfigChange}
                                   empty-message="This test feature has no configurable parameters."
                                   default-group="Feature Config Overrides"

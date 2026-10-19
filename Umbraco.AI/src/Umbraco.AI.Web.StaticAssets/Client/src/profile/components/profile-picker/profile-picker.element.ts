@@ -181,7 +181,7 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
             .map((profile) => ({
                 value: profile.id,
                 label: profile.name,
-                description: profile.alias,
+                description: profile.model?.modelId ? `${profile.alias} · ${profile.model.modelId}` : profile.alias,
                 icon: getCapabilityIcon(profile.capability),
             }));
     }

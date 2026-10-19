@@ -5,6 +5,22 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.3.0...Umbraco.AI.Agent@17.4.0) (2026-10-19)
+
+### feat
+
+* **agent,agent-deploy:** Add starter prompts to the agent definition ([e9efef8](https://github.com/umbraco/Umbraco.AI/commit/e9efef8e15eeb1abb8e58a4644cf6b269016130b))
+* **agent:** Route auto mode with Decision through a pluggable agent selector ([c40af68](https://github.com/umbraco/Umbraco.AI/commit/c40af6828f74c31ce93f9611658d3ed003ad35cf)), closes [#463](https://github.com/umbraco/Umbraco.AI/issues/463)
+* **agent:** Suggest starter prompts from an agent's instructions ([3bfaef4](https://github.com/umbraco/Umbraco.AI/commit/3bfaef4b17421fd3cb9d6707c8242d8a4bc5cec9))
+* **core,prompt,agent:** Let packages create items with a known Id ([74501bf](https://github.com/umbraco/Umbraco.AI/commit/74501bfd12e954960fd9398a758ea2f48603e647)), closes [#545](https://github.com/umbraco/Umbraco.AI/issues/545) [#544](https://github.com/umbraco/Umbraco.AI/issues/544)
+* **core,typesafe,deploy,automate,agent:** Add experimental Decision capability ([6c338c2](https://github.com/umbraco/Umbraco.AI/commit/6c338c247273031ba7677db632729d2789fc0157)), closes [#419](https://github.com/umbraco/Umbraco.AI/issues/419)
+
+### fix
+
+* **core,agent,copilot-workspace:** Show the real reason when an AI management request fails ([91aeaa6](https://github.com/umbraco/Umbraco.AI/commit/91aeaa679d3aa7c3c99021b02d87e3d29f44b3b2))
+* **core,agent,prompt:** Count agent and prompt runs, not every AI call in them ([56d45ca](https://github.com/umbraco/Umbraco.AI/commit/56d45ca360aaa569e4c4ff86621c5a7e6aa9635e)), closes [#564](https://github.com/umbraco/Umbraco.AI/issues/564)
+* **core,agent:** Keep each AI call's runtime context to its own async flow ([317c487](https://github.com/umbraco/Umbraco.AI/commit/317c487506f14abfa29666c4d19277e9d8246104))
+
 ## [17.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.2.0...Umbraco.AI.Agent@17.3.0) (2026-10-05)
 
 ### feat

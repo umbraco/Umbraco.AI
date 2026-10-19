@@ -96,6 +96,18 @@ export class UaiTestVariationConfigEditorModalElement extends UmbModalBaseElemen
         this._configModel = e.detail.model;
     }
 
+    /**
+     * Keeps only the fields the user actually set. A missing key inherits the test's value at run time,
+     * whereas an empty string, null or empty array would overwrite it in the deep merge.
+     */
+    #toOverrideConfig(model: Record<string, unknown>): Record<string, unknown> | null {
+        const entries = Object.entries(model).filter(
+            ([, value]) =>
+                value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0),
+        );
+        return entries.length > 0 ? Object.fromEntries(entries) : null;
+    }
+
     #onSubmit(e: Event) {
         e.preventDefault();
 
@@ -105,7 +117,7 @@ export class UaiTestVariationConfigEditorModalElement extends UmbModalBaseElemen
 
         const finalVariation: UaiTestVariation = {
             ...this._variation,
-            testFeatureConfig: Object.keys(this._configModel).length > 0 ? this._configModel : null,
+            testFeatureConfig: this.#toOverrideConfig(this._configModel),
         };
 
         this.value = { variation: finalVariation };
@@ -193,6 +205,7 @@ export class UaiTestVariationConfigEditorModalElement extends UmbModalBaseElemen
                               <uai-model-editor
                                   .schema=${this._featureConfigSchema}
                                   .model=${this._configModel}
+                                  inherit-mode
                                   @change=${this.#onConfigChange}
                                   empty-message="This test feature has no configurable parameters."
                                   default-group="Feature Config Overrides"

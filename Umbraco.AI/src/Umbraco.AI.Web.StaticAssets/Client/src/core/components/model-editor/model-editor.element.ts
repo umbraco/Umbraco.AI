@@ -52,6 +52,14 @@ export class UaiModelEditorElement extends UmbLitElement {
     @property({ type: String, attribute: "default-group" })
     defaultGroup?: string;
 
+    /**
+     * Opt-in mode for override forms where an empty field means "inherit" (e.g. test variations).
+     * No field is required, whatever the schema says, and schema defaults are not applied, so
+     * untouched fields stay unset instead of overriding the value they inherit from.
+     */
+    @property({ type: Boolean, attribute: "inherit-mode" })
+    inheritMode = false;
+
     @state()
     private _propertyValues: UmbPropertyValueData[] = [];
 
@@ -113,8 +121,11 @@ export class UaiModelEditorElement extends UmbLitElement {
         }
         this._propertyValues = this.schema.fields.map((field) => ({
             alias: field.key,
-            value: this.model?.[field.key] ?? field.defaultValue,
+            value: this.inheritMode ? this.model?.[field.key] : (this.model?.[field.key] ?? field.defaultValue),
         }));
+
+        // Inherit mode never applies defaults, so there is nothing to emit back.
+        if (this.inheritMode) return;
 
         // Emit change if defaults were applied (populated model differs from input)
         const populatedModel = this._propertyValues.reduce(
@@ -199,12 +210,13 @@ export class UaiModelEditorElement extends UmbLitElement {
     }
 
     #toValidation(field: UaiEditableModelFieldModel) {
+        const mandatory = field.isRequired && !this.inheritMode;
         const cached = this.#validationCache.get(field.key);
-        if (cached && cached.mandatory === field.isRequired) return cached;
+        if (cached && cached.mandatory === mandatory) return cached;
 
         const value = {
-            mandatory: field.isRequired,
-            mandatoryMessage: field.isRequired ? this.localize.string("This field is required") : undefined,
+            mandatory,
+            mandatoryMessage: mandatory ? this.localize.string("This field is required") : undefined,
         };
         this.#validationCache.set(field.key, value);
 

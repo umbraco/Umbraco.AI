@@ -5,6 +5,58 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.5.2...Umbraco.AI@17.6.0) (2026-10-19)
+
+### feat
+
+* **core,automate:** Add a key/value list editor for Ask pick-one options ([379b9d2](https://github.com/umbraco/Umbraco.AI/commit/379b9d2b9e6715c5f308c2336e27326d81dd004e))
+* **core,prompt,agent:** Let packages create items with a known Id ([74501bf](https://github.com/umbraco/Umbraco.AI/commit/74501bfd12e954960fd9398a758ea2f48603e647)), closes [#545](https://github.com/umbraco/Umbraco.AI/issues/545) [#544](https://github.com/umbraco/Umbraco.AI/issues/544)
+* **core,prompt:** Give test graders run usage and a per-model, per-feature breakdown ([e92576f](https://github.com/umbraco/Umbraco.AI/commit/e92576fadb7e47a17c3bfd73c86dfd72c6b8043b)), closes [#516](https://github.com/umbraco/Umbraco.AI/issues/516)
+* **core,typesafe,deploy,automate,agent:** Add the experimental Decision capability: ask an AI model yes/no, pick-one or score questions and get typed answers back. Includes a Decision question list property editor, a Decision Judge test grader and a Decision Safety Judge guardrail evaluator. Off by default; enable it with `Umbraco:AI:Experimental:Decision` ([6c338c2](https://github.com/umbraco/Umbraco.AI/commit/6c338c247273031ba7677db632729d2789fc0157)), closes [#419](https://github.com/umbraco/Umbraco.AI/issues/419)
+* **core:** Add AIRequiresCapability marker for evaluators and graders ([2f4c7b0](https://github.com/umbraco/Umbraco.AI/commit/2f4c7b06f961138d18936bed5e1fb4d304965235))
+* **core:** Hide capability-bound evaluators and graders from listings ([7f3d3eb](https://github.com/umbraco/Umbraco.AI/commit/7f3d3ebbe8db4315c94dbe5d079caaee987642e2))
+* **core:** Let packages create tests, runs and log entries with a known Id ([b411b31](https://github.com/umbraco/Umbraco.AI/commit/b411b315a9eb920152056ad17218278f258c4703))
+* **core:** Show test run token usage as readable values instead of raw JSON ([3392623](https://github.com/umbraco/Umbraco.AI/commit/33926231bc8b31744936200db0680baf4d388900)), closes [#523](https://github.com/umbraco/Umbraco.AI/issues/523)
+* **core:** Show the input next to each grader result ([d7388d4](https://github.com/umbraco/Umbraco.AI/commit/d7388d40d801cd62158ab89c7508b3436232bad4)), closes [#506](https://github.com/umbraco/Umbraco.AI/issues/506)
+* **core:** Show the prompt or agent alias in the AI log ([4fa9260](https://github.com/umbraco/Umbraco.AI/commit/4fa92607f7e42061878a5d0bac21257fe50fa163)), closes [#500](https://github.com/umbraco/Umbraco.AI/issues/500)
+* **core:** Show the weighted score on the test overview and run list ([f02fc27](https://github.com/umbraco/Umbraco.AI/commit/f02fc27ba4c682b66d1d7d2d1325ca00b1e3b11e)), closes [#507](https://github.com/umbraco/Umbraco.AI/issues/507)
+* **core:** Show token usage, AI call time and failed calls in test run comparisons ([7676b36](https://github.com/umbraco/Umbraco.AI/commit/7676b362c9e97d35aa52902a248b0c2a0cc9423c)), closes [#522](https://github.com/umbraco/Umbraco.AI/issues/522)
+
+### fix
+
+* **core,agent,copilot-workspace:** Show the real reason when an AI management request fails ([91aeaa6](https://github.com/umbraco/Umbraco.AI/commit/91aeaa679d3aa7c3c99021b02d87e3d29f44b3b2))
+* **core,agent,prompt:** Count agent and prompt runs, not every AI call in them ([56d45ca](https://github.com/umbraco/Umbraco.AI/commit/56d45ca360aaa569e4c4ff86621c5a7e6aa9635e)), closes [#564](https://github.com/umbraco/Umbraco.AI/issues/564)
+* **core,agent:** Keep each AI call's runtime context to its own async flow ([317c487](https://github.com/umbraco/Umbraco.AI/commit/317c487506f14abfa29666c4d19277e9d8246104))
+* **core,deploy:** Validate default profile capabilities when saving settings ([026a17d](https://github.com/umbraco/Umbraco.AI/commit/026a17dcc50d2bb843e373e4bb2c8a47bc57a614))
+* **core:** Carry the caller's scope through streams and document per-flow contexts ([435afce](https://github.com/umbraco/Umbraco.AI/commit/435afce536f8def948176b701e30ca53f8b1de61))
+* **core:** Clearer context tool message when a call has no on-demand resources ([364ba0d](https://github.com/umbraco/Umbraco.AI/commit/364ba0dad67c6b80a2b6beb5ea6fb86540fcc7d2))
+* **core:** Count a nested AI call's time once, not again in its parent ([4c62e11](https://github.com/umbraco/Umbraco.AI/commit/4c62e11c68ffc5ffe86ff758277afc0614b82e4c)), closes [#563](https://github.com/umbraco/Umbraco.AI/issues/563)
+* **core:** Fail on an unknown profile alias instead of using the default profile ([e27a675](https://github.com/umbraco/Umbraco.AI/commit/e27a675988bf29298fcff1bb51939cb8e0b704b2))
+* **core:** Give each AI capability its own icon ([94aa627](https://github.com/umbraco/Umbraco.AI/commit/94aa627b575ff87cb02805630a93a291f922e0e5))
+* **core:** Give nested AI calls their own runtime context ([7031755](https://github.com/umbraco/Umbraco.AI/commit/7031755e85787d321997d0a5454d32e440cdd7a5))
+* **core:** Group live and aggregated usage statistics the same way ([2aef44e](https://github.com/umbraco/Umbraco.AI/commit/2aef44ebb638ee30a9d3626ba50ced9ce963077b)), closes [#565](https://github.com/umbraco/Umbraco.AI/issues/565)
+* **core:** Keep each AI call's resolved context to its own async flow ([60dbae3](https://github.com/umbraco/Umbraco.AI/commit/60dbae36f455ec045d212463a8b70bcad3593dfe)), closes [#524](https://github.com/umbraco/Umbraco.AI/issues/524)
+* **core:** Keep the caller's chat options when applying a runtime override ([88040d1](https://github.com/umbraco/Umbraco.AI/commit/88040d1bafeefd790b1373f49534bc07c2ced4ae))
+* **core:** Keep the usage record when an AI call is cancelled ([052a248](https://github.com/umbraco/Umbraco.AI/commit/052a248384fc91237ee48c79c76d9baa809e95d2)), closes [#531](https://github.com/umbraco/Umbraco.AI/issues/531)
+* **core:** Link nested AI calls to their parent audit entry ([e698167](https://github.com/umbraco/Umbraco.AI/commit/e69816715f0d61583d1d1e8e4f274632317f948b)), closes [#529](https://github.com/umbraco/Umbraco.AI/issues/529)
+* **core:** Make guardrail rule list and editor text translatable ([1cfbbf0](https://github.com/umbraco/Umbraco.AI/commit/1cfbbf0afdf975bf9ebdc2e5433516f8403aa8cb))
+* **core:** Make test variation fields optional so they inherit from the test ([f4bc438](https://github.com/umbraco/Umbraco.AI/commit/f4bc438e1f79e65e0ea7ca47d7b678cbe2a4628a)), closes [#508](https://github.com/umbraco/Umbraco.AI/issues/508)
+* **core:** Open the editor when clicking a guardrail rule, grader or variation row ([a2de700](https://github.com/umbraco/Umbraco.AI/commit/a2de700c5332f34c9c05e88cff6331d651c5235f)), closes [#501](https://github.com/umbraco/Umbraco.AI/issues/501)
+* **core:** Open the mock entity editor when clicking its row ([f191ac3](https://github.com/umbraco/Umbraco.AI/commit/f191ac3b7e12eb544030bad4d5a9a769146d14f5))
+* **core:** Put Umbraco AI trace tags on the call's own gen_ai span ([e8d0bb9](https://github.com/umbraco/Umbraco.AI/commit/e8d0bb9519d928cc793f5f1725b77bb679b8023d)), closes [#562](https://github.com/umbraco/Umbraco.AI/issues/562)
+* **core:** Re-register the block entity adapter for prompts, kept out of Copilot detection ([a972fac](https://github.com/umbraco/Umbraco.AI/commit/a972fac4991a3e53f8b0c5c7b67b263bafc7b236)), closes [#343](https://github.com/umbraco/Umbraco.AI/issues/343) [#514](https://github.com/umbraco/Umbraco.AI/issues/514)
+* **core:** Read a stored usage status number as failed, not as an unknown status ([025543d](https://github.com/umbraco/Umbraco.AI/commit/025543d910cb819f3fab3edf957ac4aae42e522d)), closes [#541](https://github.com/umbraco/Umbraco.AI/issues/541)
+* **core:** Record guardrail-blocked calls as Blocked in usage analytics ([72b63ed](https://github.com/umbraco/Umbraco.AI/commit/72b63ed9fed4f23cbb0a2a7df62d8877eb47f70a))
+* **core:** Record non-streamed chat responses that end on a provider error as failed ([3e3bbb4](https://github.com/umbraco/Umbraco.AI/commit/3e3bbb4833b7dd2dafa948560f805889c7b2024b))
+* **core:** Record who authored each version separately from who archived it ([84abe6a](https://github.com/umbraco/Umbraco.AI/commit/84abe6ae58cdeb27cf54dcddda8eaffbe63fe065)), closes [#497](https://github.com/umbraco/Umbraco.AI/issues/497)
+* **core:** Report chat responses that end on a provider error as failed in Executed notifications ([ad70d7e](https://github.com/umbraco/Umbraco.AI/commit/ad70d7ef1d252f1cea38d9f874656edce8094f4e))
+* **core:** Show all recorded usage on the dashboard while aggregation catches up ([47bcb84](https://github.com/umbraco/Umbraco.AI/commit/47bcb844aa2dd0a93c3709a1487d6edcbfc9f2c7)), closes [#530](https://github.com/umbraco/Umbraco.AI/issues/530)
+* **core:** Show each profile's model in the profile picker ([f4e215a](https://github.com/umbraco/Umbraco.AI/commit/f4e215a95ab2d643eb23158d6e8b77add67caefa)), closes [#504](https://github.com/umbraco/Umbraco.AI/issues/504)
+* **core:** Show readable phase and action labels on guardrail rules ([d794dfe](https://github.com/umbraco/Umbraco.AI/commit/d794dfef646294e67a4f082118724489690b3d89)), closes [#502](https://github.com/umbraco/Umbraco.AI/issues/502)
+* **core:** Stop empty variation fields overriding the test's values ([e13c9be](https://github.com/umbraco/Umbraco.AI/commit/e13c9be00c8e831f8bab8dee26718707a0d8c59a)), closes [#508](https://github.com/umbraco/Umbraco.AI/issues/508)
+* **core:** Use clearer embedding and speech-to-text icons ([b021f36](https://github.com/umbraco/Umbraco.AI/commit/b021f364a42dc18a55c018134365b38e18c9b181))
+* **core:** Wait for every hour of a day before rolling it up ([54f138a](https://github.com/umbraco/Umbraco.AI/commit/54f138a6948ce367d35939e695cf2458841f8f32))
+
 ## [17.5.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.5.1...Umbraco.AI@17.5.2) (2026-10-07)
 
 ### fix

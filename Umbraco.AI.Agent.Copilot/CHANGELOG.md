@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.1.1...Umbraco.AI.Agent.Copilot@17.2.0) (2026-10-19)
+
+### feat
+
+* **agent-ui,copilot,copilot-workspace:** Aggregate starter prompts across agents in Auto mode ([3fc1518](https://github.com/umbraco/Umbraco.AI/commit/3fc151852b3a015d402ddf3b09f1f3efb4546de0))
+* **agent-ui,copilot,copilot-workspace:** Render starter prompts in the empty chat state ([9a6723a](https://github.com/umbraco/Umbraco.AI/commit/9a6723a4971e60e9cd0656a31276eaab8c7ddc98))
+
 ## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@17.1.0...Umbraco.AI.Agent.Copilot@17.1.1) (2026-10-05)
 
 ### fix

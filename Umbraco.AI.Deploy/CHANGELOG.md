@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@17.2.0...Umbraco.AI.Deploy@17.3.0) (2026-10-19)
+
+### feat
+
+* **core,typesafe,deploy,automate,agent:** Add experimental Decision capability ([6c338c2](https://github.com/umbraco/Umbraco.AI/commit/6c338c247273031ba7677db632729d2789fc0157)), closes [#419](https://github.com/umbraco/Umbraco.AI/issues/419)
+
+### fix
+
+* **core,deploy:** Validate default profile capabilities when saving settings ([026a17d](https://github.com/umbraco/Umbraco.AI/commit/026a17dcc50d2bb843e373e4bb2c8a47bc57a614))
+* **deploy,prompt-deploy,agent-deploy:** Declare referenced contexts as deploy dependencies ([c6a6c36](https://github.com/umbraco/Umbraco.AI/commit/c6a6c36bfa4bf9649fa060d228233b91877553ea))
+* **deploy:** Keep context resource and guardrail rule Ids across environments ([67b7387](https://github.com/umbraco/Umbraco.AI/commit/67b73874a066a3bc3dba184c2cb80618f64e3317))
+
 ## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@17.1.0...Umbraco.AI.Deploy@17.2.0) (2026-10-05)
 
 ### feat

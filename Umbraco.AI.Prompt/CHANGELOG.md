@@ -5,6 +5,24 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.3.0...Umbraco.AI.Prompt@17.4.0) (2026-10-19)
+
+### feat
+
+* **core,prompt,agent:** Let packages create items with a known Id ([74501bf](https://github.com/umbraco/Umbraco.AI/commit/74501bfd12e954960fd9398a758ea2f48603e647)), closes [#545](https://github.com/umbraco/Umbraco.AI/issues/545) [#544](https://github.com/umbraco/Umbraco.AI/issues/544)
+* **core,prompt:** Give test graders run usage and a per-model, per-feature breakdown ([e92576f](https://github.com/umbraco/Umbraco.AI/commit/e92576fadb7e47a17c3bfd73c86dfd72c6b8043b)), closes [#516](https://github.com/umbraco/Umbraco.AI/issues/516)
+
+### fix
+
+* **core,agent,prompt:** Count agent and prompt runs, not every AI call in them ([56d45ca](https://github.com/umbraco/Umbraco.AI/commit/56d45ca360aaa569e4c4ff86621c5a7e6aa9635e)), closes [#564](https://github.com/umbraco/Umbraco.AI/issues/564)
+* **prompt:** Fill the documented name and contentTypeAlias template variables ([8c882fa](https://github.com/umbraco/Umbraco.AI/commit/8c882fa00c5c1ebb11ba6e6562ae43649a237568)), closes [#514](https://github.com/umbraco/Umbraco.AI/issues/514)
+* **prompt:** Make the prompt preview dialog text translatable ([90cfc27](https://github.com/umbraco/Umbraco.AI/commit/90cfc27ba2487d8f7332ea71c359ff1cc2e2a158))
+* **prompt:** Require a selection for TipTap prompts that use it ([d41b440](https://github.com/umbraco/Umbraco.AI/commit/d41b440836ffc7735f31ead2d67b12f007b0ace0)), closes [#498](https://github.com/umbraco/Umbraco.AI/issues/498)
+* **prompt:** Return the right status for provider errors and log expected rejections as warnings ([97b5358](https://github.com/umbraco/Umbraco.AI/commit/97b53588ffa2c9eb28b08911a93eda7c47622f69))
+* **prompt:** Show the empty-result message for structured prompt results ([fae3a07](https://github.com/umbraco/Umbraco.AI/commit/fae3a070e6286d3ab8e966774501b1c8a07f373f)), closes [#499](https://github.com/umbraco/Umbraco.AI/issues/499)
+* **prompt:** Show why a prompt failed instead of a generic error, and log it ([96f9623](https://github.com/umbraco/Umbraco.AI/commit/96f9623eb925df97df26143c5cf97c2607fbaa98)), closes [#233](https://github.com/umbraco/Umbraco.AI/issues/233)
+* **prompt:** Tell the user when a prompt returns an empty result and keep Regenerate ([83f1134](https://github.com/umbraco/Umbraco.AI/commit/83f1134b030d5d9c95976f141efa03a835295490)), closes [#499](https://github.com/umbraco/Umbraco.AI/issues/499)
+
 ## [17.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.2.3...Umbraco.AI.Prompt@17.3.0) (2026-10-05)
 
 ### feat

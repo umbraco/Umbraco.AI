@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Prompt.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt.Deploy@17.0.3...Umbraco.AI.Prompt.Deploy@17.0.4) (2026-10-19)
+
+### fix
+
+* **deploy,prompt-deploy,agent-deploy:** Declare referenced contexts as deploy dependencies ([c6a6c36](https://github.com/umbraco/Umbraco.AI/commit/c6a6c36bfa4bf9649fa060d228233b91877553ea))
+
 ## [17.0.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt.Deploy@17.0.1...Umbraco.AI.Prompt.Deploy@17.0.3) (2026-08-11)
 
 ### Internal

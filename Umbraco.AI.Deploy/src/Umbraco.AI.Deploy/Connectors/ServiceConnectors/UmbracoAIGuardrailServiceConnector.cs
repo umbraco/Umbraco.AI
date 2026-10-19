@@ -103,7 +103,9 @@ public class UmbracoAIGuardrailServiceConnector(
         List<AIGuardrailRule>? rules = null;
         if (artifact.Rules.HasValue)
         {
-            rules = artifact.Rules.Value.Deserialize<List<AIGuardrailRule>>();
+            rules = artifact.Rules.Value.Deserialize<List<AIGuardrailRuleArtifactItem>>()
+                ?.Select(item => item.ToRule())
+                .ToList();
         }
 
         // Get or create AIGuardrail entity

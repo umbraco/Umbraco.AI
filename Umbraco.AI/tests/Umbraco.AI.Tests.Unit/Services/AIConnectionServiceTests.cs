@@ -879,4 +879,63 @@ public class AIConnectionServiceTests
     }
 
     #endregion
+
+    #region Id constructor
+
+    [Fact]
+    public async Task SaveConnectionAsync_WithIdConstructor_KeepsTheId()
+    {
+        // Arrange
+        var knownId = Guid.NewGuid();
+        var connection = new AIConnection(knownId)
+        {
+            Alias = "known-id",
+            Name = "Known Id",
+            ProviderId = "fake-provider",
+            Settings = new FakeProviderSettings { ApiKey = "test-key" },
+        };
+
+        var service = CreateService(new FakeAIProvider("fake-provider", "Fake Provider"));
+        _settingsResolverMock
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(connection.Settings, It.IsAny<AIEditableModelSchema?>()))
+            .Returns((FakeProviderSettings?)connection.Settings);
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, Guid? _, CancellationToken _) => c);
+
+        // Act
+        var result = await service.SaveConnectionAsync(connection);
+
+        // Assert
+        result.Id.ShouldBe(knownId);
+    }
+
+    [Fact]
+    public async Task SaveConnectionAsync_WithParameterlessConstructor_GeneratesAnId()
+    {
+        // Arrange
+        var connection = new AIConnection
+        {
+            Alias = "no-id",
+            Name = "No Id",
+            ProviderId = "fake-provider",
+            Settings = new FakeProviderSettings { ApiKey = "test-key" },
+        };
+
+        var service = CreateService(new FakeAIProvider("fake-provider", "Fake Provider"));
+        _settingsResolverMock
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(connection.Settings, It.IsAny<AIEditableModelSchema?>()))
+            .Returns((FakeProviderSettings?)connection.Settings);
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, Guid? _, CancellationToken _) => c);
+
+        // Act
+        var result = await service.SaveConnectionAsync(connection);
+
+        // Assert
+        result.Id.ShouldNotBe(Guid.Empty);
+    }
+
+    #endregion
 }

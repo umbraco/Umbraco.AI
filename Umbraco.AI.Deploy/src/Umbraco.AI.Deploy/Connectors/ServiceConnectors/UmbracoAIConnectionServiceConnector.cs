@@ -114,9 +114,8 @@ public class UmbracoAIConnectionServiceConnector(
 
         // Create new connection or update existing one
         var connection = state.Entity
-            ?? new AIConnection
+            ?? new AIConnection(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 ProviderId = artifact.ProviderId

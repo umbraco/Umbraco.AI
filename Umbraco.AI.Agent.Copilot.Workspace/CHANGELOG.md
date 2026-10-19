@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.1.0...Umbraco.AI.Agent.Copilot.Workspace@18.2.0) (2026-10-19)
+
+### feat
+
+* **agent-ui,copilot,copilot-workspace:** Aggregate starter prompts across agents in Auto mode ([1ea742f](https://github.com/umbraco/Umbraco.AI/commit/1ea742f14139c7952c8dba69fdfb46a7437807d4))
+* **agent-ui,copilot,copilot-workspace:** Render starter prompts in the empty chat state ([fa26b12](https://github.com/umbraco/Umbraco.AI/commit/fa26b12e23e576fb41111543a117535bba7419d4))
+
+### fix
+
+* **copilot-workspace:** Depend on Umbraco.AI.Agent.UI so New chat loads ([98a73ed](https://github.com/umbraco/Umbraco.AI/commit/98a73edd564ce5bcc8b4cdfade54896aaf10f793)), closes [#515](https://github.com/umbraco/Umbraco.AI/issues/515)
+* **core,agent,copilot-workspace:** Show the real reason when an AI management request fails ([0351908](https://github.com/umbraco/Umbraco.AI/commit/0351908373d8b2b1268912f43854b4bb9204338a))
+
 ## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.0.0...Umbraco.AI.Agent.Copilot.Workspace@18.1.0) (2026-10-05)
 
 ### feat

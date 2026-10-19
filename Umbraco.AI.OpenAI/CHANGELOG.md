@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@18.3.0...Umbraco.AI.OpenAI@18.3.1) (2026-10-19)
+
+### fix
+
+* **openai:** Preserve extended reasoning effort selections ([b59891f](https://github.com/umbraco/Umbraco.AI/commit/b59891f6bc91d7ab63c5854e23a17ee083a893ed))
+* **openai:** Support GPT-6 Luna reasoning effort ([60dfcc4](https://github.com/umbraco/Umbraco.AI/commit/60dfcc4b5845d6f7883338a953f6045fa2a3174f))
+
 ## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@18.3.0-rc.4...Umbraco.AI.OpenAI@18.3.0) (2026-10-01)
 
 ### fix

@@ -5,6 +5,23 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.3.0...Umbraco.AI.Agent@18.4.0) (2026-10-19)
+
+### feat
+
+* **agent,agent-deploy:** Add starter prompts to the agent definition ([dce6fa1](https://github.com/umbraco/Umbraco.AI/commit/dce6fa1d6388b3dafad36eb11c4d3de5b5590071))
+* **agent:** Route auto mode with Decision through a pluggable agent selector ([167799c](https://github.com/umbraco/Umbraco.AI/commit/167799cbd751644505c5788d1839356cdd15ebbe)), closes [#463](https://github.com/umbraco/Umbraco.AI/issues/463)
+* **agent:** Route Copilot auto mode with a Decision choice ([8e2ebbf](https://github.com/umbraco/Umbraco.AI/commit/8e2ebbfae2deba3a08b39c70a0b4e3bafb5bb682))
+* **agent:** Send the Copilot prompt as Decision state in auto mode ([3c7273d](https://github.com/umbraco/Umbraco.AI/commit/3c7273dd4f03d4c2dc56ebfffd71b72c24dba3a2))
+* **agent:** Suggest starter prompts from an agent's instructions ([72a3550](https://github.com/umbraco/Umbraco.AI/commit/72a3550025e4916ada95928f0e53d80dfc42b57e))
+* **core,prompt,agent:** Let packages create items with a known Id ([a781dd4](https://github.com/umbraco/Umbraco.AI/commit/a781dd4d1be3241e1d491eef28e1d3db31008970)), closes [#545](https://github.com/umbraco/Umbraco.AI/issues/545) [#544](https://github.com/umbraco/Umbraco.AI/issues/544)
+
+### fix
+
+* **core,agent,copilot-workspace:** Show the real reason when an AI management request fails ([0351908](https://github.com/umbraco/Umbraco.AI/commit/0351908373d8b2b1268912f43854b4bb9204338a))
+* **core,agent,prompt:** Count agent and prompt runs, not every AI call in them ([60ec260](https://github.com/umbraco/Umbraco.AI/commit/60ec260e18453f2eba8af840ad9b5a450f903136)), closes [#564](https://github.com/umbraco/Umbraco.AI/issues/564)
+* **core,agent:** Keep each AI call's runtime context to its own async flow ([eb1ff0c](https://github.com/umbraco/Umbraco.AI/commit/eb1ff0cd9e9e2f31a7c5f356f47192a03330e6ed))
+
 ## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.2.0...Umbraco.AI.Agent@18.3.0) (2026-10-05)
 
 ### feat

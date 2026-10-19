@@ -5,6 +5,20 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@18.0.1...Umbraco.AI.Automate@18.1.0) (2026-10-19)
+
+### feat
+
+* **automate:** Add a yes/no threshold and send Context as Decision state ([01b794e](https://github.com/umbraco/Umbraco.AI/commit/01b794eb03ad869b9739ccb991c0f8601d9aeba6))
+* **automate:** Add an Ask questions Decision action ([b06c518](https://github.com/umbraco/Umbraco.AI/commit/b06c51813d94a707bf2dd237b8666b8c509db5f0))
+* **automate:** Add Ask yes/no, pick-one and score AI actions ([60ddc7d](https://github.com/umbraco/Umbraco.AI/commit/60ddc7d8cabd21d2eb3a43459a6c5abface1ca0a))
+* **automate:** Let yes/no criteria take values from earlier steps ([ffadc9b](https://github.com/umbraco/Umbraco.AI/commit/ffadc9b51a76d7b4498b4f118b129c64219e9983))
+* **core,automate:** Add a key/value list editor for Ask pick-one options ([9c8ea42](https://github.com/umbraco/Umbraco.AI/commit/9c8ea42444272ec723166ba0149525bc2e81cfa7))
+
+### fix
+
+* **automate:** Report AI provider failures with a matching step error category ([62425ee](https://github.com/umbraco/Umbraco.AI/commit/62425eee8fdc2e39ccbada923d209c6314f3b53a))
+
 ## [18.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@18.0.1-rc.4...Umbraco.AI.Automate@18.0.1) (2026-10-01)
 
 ### feat

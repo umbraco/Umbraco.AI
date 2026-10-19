@@ -72,11 +72,13 @@ public interface IAIEntityVersionService
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <param name="entity">The entity to snapshot.</param>
-    /// <param name="userId">The user key (GUID) of who created this version.</param>
+    /// <param name="userId">The user key (GUID) of who is saving this version record.</param>
     /// <param name="changeDescription">Optional description of what changed.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <remarks>
     /// The snapshot is created using the registered <see cref="IAIVersionableEntityAdapter"/> handler.
+    /// The version's author and authored date are taken from <paramref name="entity"/>
+    /// (<see cref="IAIAuditableEntity.ModifiedByUserId"/> and <see cref="IAIAuditableEntity.DateModified"/>).
     /// </remarks>
     Task SaveVersionAsync<TEntity>(
         TEntity entity,
@@ -92,9 +94,13 @@ public interface IAIEntityVersionService
     /// <param name="entityType">The entity type name (e.g., "Connection", "Profile").</param>
     /// <param name="version">The version number.</param>
     /// <param name="snapshot">The JSON snapshot.</param>
-    /// <param name="userId">The user key (GUID) of who created this version.</param>
+    /// <param name="userId">
+    /// The user key (GUID) of who is saving this version record. Raw snapshots carry no audit data,
+    /// so this user and the current time are also recorded as the version's author and authored date.
+    /// </param>
     /// <param name="changeDescription">Optional description of what changed.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
+    [Obsolete("Use SaveVersionAsync<TEntity>, which records who authored the version. Will be removed in v20")]
     Task SaveVersionAsync(
         Guid entityId,
         string entityType,

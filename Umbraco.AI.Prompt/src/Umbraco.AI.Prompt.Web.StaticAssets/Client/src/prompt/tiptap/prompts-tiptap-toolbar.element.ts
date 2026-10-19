@@ -33,7 +33,7 @@ interface TipTapPromptItem {
     alias: string;
     name: string;
     description: string | null;
-    instructions: string;
+    requiresSelection: boolean;
     scope: UaiPromptScope | null;
     profileId: string | null;
     optionCount: number;
@@ -58,6 +58,9 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
     @state()
     private _loading = true;
+
+    @state()
+    private _hasSelection = false;
 
     #popoverRef: Ref<HTMLElement> = createRef();
 
@@ -127,6 +130,37 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
 
     #allPrompts: TipTapPromptItem[] = [];
 
+    #observedEditor?: Editor;
+
+    #onSelectionUpdate = () => {
+        this._hasSelection = !!this.editor && !this.editor.state.selection.empty;
+    };
+
+    #observeEditor(editor?: Editor) {
+        if (this.#observedEditor === editor) return;
+        this.#observedEditor?.off('selectionUpdate', this.#onSelectionUpdate);
+        this.#observedEditor = editor;
+        editor?.on('selectionUpdate', this.#onSelectionUpdate);
+        this.#onSelectionUpdate();
+    }
+
+    override updated(changed: Map<PropertyKey, unknown>) {
+        super.updated(changed);
+        if (changed.has('editor')) {
+            this.#observeEditor(this.editor);
+        }
+    }
+
+    override disconnectedCallback() {
+        super.disconnectedCallback();
+        this.#observeEditor(undefined);
+    }
+
+    override connectedCallback() {
+        super.connectedCallback();
+        this.#observeEditor(this.editor);
+    }
+
     async #loadPrompts() {
         this._loading = true;
 
@@ -161,7 +195,7 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
                 alias: d.alias,
                 name: d.name,
                 description: d.description ?? null,
-                instructions: d.instructions,
+                requiresSelection: d.requiresSelection,
                 scope: d.scope ?? null,
                 profileId: d.profileId ?? null,
                 optionCount: d.optionCount ?? 1,
@@ -224,6 +258,9 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             empty: true,
             text: this.editor.getHTML(),
         };
+
+        // Prompts that use {{selection}} make no sense without one (the item is disabled in the menu too)
+        if (prompt.requiresSelection && empty) return;
 
         // Restore the editor selection so it's visually highlighted while the modal is open
         if (!empty) {
@@ -381,21 +418,24 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             </uui-button>
             <uui-popover-container id="ai-prompts-popover" placement="bottom-start" ${ref(this.#popoverRef)}>
                 <div class="dropdown">
-                    ${this._prompts.map(
-                        (prompt) => html`
+                    ${this._prompts.map((prompt) => {
+                        const needsSelection = prompt.requiresSelection && !this._hasSelection;
+                        const hint = needsSelection
+                            ? this.localize.termOrDefault('uaiPrompt_selectionRequired', 'Select some text first')
+                            : prompt.description;
+                        return html`
                             <button
-                                class="dropdown-item ${!prompt.description ? 'dropdown-item--name-only' : ''}"
+                                class="dropdown-item ${!hint ? 'dropdown-item--name-only' : ''}"
+                                ?disabled=${needsSelection}
                                 @click=${() => this.#onPromptSelect(prompt)}>
                                 <umb-icon name="icon-wand"></umb-icon>
                                 <div class="dropdown-item-content">
                                     <span class="dropdown-item-name">${prompt.name}</span>
-                                    ${prompt.description
-                                        ? html`<span class="dropdown-item-description">${prompt.description}</span>`
-                                        : nothing}
+                                    ${hint ? html`<span class="dropdown-item-description">${hint}</span>` : nothing}
                                 </div>
                             </button>
-                        `,
-                    )}
+                        `;
+                    })}
                 </div>
             </uui-popover-container>
         `;
@@ -437,8 +477,13 @@ export class UaiPromptsTiptapToolbarElement extends UmbLitElement {
             color: var(--uui-color-text);
         }
 
-        .dropdown-item:hover {
+        .dropdown-item:hover:not(:disabled) {
             background: var(--uui-color-surface-emphasis);
+        }
+
+        .dropdown-item:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
         }
 
         .dropdown-item umb-icon {

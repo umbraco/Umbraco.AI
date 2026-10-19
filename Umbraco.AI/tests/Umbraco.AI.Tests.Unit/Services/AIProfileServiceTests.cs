@@ -1,3 +1,5 @@
+#pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability
+
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -40,6 +42,17 @@ public class AIProfileServiceTests
             .ReturnsAsync(new AISettings());
 
         _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object, _experimentalFeaturesMock.Object);
+    }
+
+    // DC-1: builds against a real AIExperimentalFeatures (not the mock) so gating tests actually
+    // exercise the Umbraco:AI:Experimental:Decision config -> behavior wiring.
+    private AIProfileService CreateServiceWithRealExperimentalFeatures(bool decisionEnabled)
+    {
+        var monitor = new Mock<IOptionsMonitor<AIExperimentalOptions>>();
+        monitor.Setup(x => x.CurrentValue).Returns(new AIExperimentalOptions { Decision = decisionEnabled });
+        var experimentalFeatures = new AIExperimentalFeatures(monitor.Object);
+
+        return new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object, experimentalFeatures);
     }
 
     #region GetProfileAsync
@@ -374,6 +387,46 @@ public class AIProfileServiceTests
         _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // DC-1 AC6
+    [Fact]
+    public async Task SaveProfileAsync_DecisionCapabilityDisabled_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var service = CreateServiceWithRealExperimentalFeatures(decisionEnabled: false);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("decision-profile")
+            .WithCapability(AICapability.Decision)
+            .Build();
+
+        // Act & Assert
+        var ex = await Should.ThrowAsync<InvalidOperationException>(() => service.SaveProfileAsync(profile));
+        ex.Message.ShouldContain("Umbraco:AI:Experimental");
+    }
+
+    // DC-1 AC7
+    [Fact]
+    public async Task SaveProfileAsync_DecisionCapabilityEnabled_Succeeds()
+    {
+        // Arrange
+        var service = CreateServiceWithRealExperimentalFeatures(decisionEnabled: true);
+
+        var profile = new AIProfileBuilder()
+            .WithAlias("decision-profile")
+            .WithCapability(AICapability.Decision)
+            .Build();
+
+        _repositoryMock
+            .Setup(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await service.SaveProfileAsync(profile);
+
+        // Assert
+        result.Capability.ShouldBe(AICapability.Decision);
+    }
+
     #endregion
 
     #region DeleteProfileAsync
@@ -411,6 +464,57 @@ public class AIProfileServiceTests
 
         // Assert
         result.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region Id constructor
+
+    [Fact]
+    public async Task SaveProfileAsync_WithIdConstructor_KeepsTheId()
+    {
+        // Arrange
+        var knownId = Guid.NewGuid();
+        var template = new AIProfileBuilder().WithAlias("known-id").WithName("Known Id").Build();
+        var profile = new AIProfile(knownId)
+        {
+            Alias = template.Alias,
+            Name = template.Name,
+            Capability = template.Capability,
+            ConnectionId = template.ConnectionId,
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIProfile>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile p, Guid? _, CancellationToken _) => p);
+
+        // Act
+        var result = await _service.SaveProfileAsync(profile);
+
+        // Assert
+        result.Id.ShouldBe(knownId);
+    }
+
+    [Fact]
+    public async Task SaveProfileAsync_WithParameterlessConstructor_GeneratesAnId()
+    {
+        // Arrange
+        var template = new AIProfileBuilder().WithAlias("no-id").WithName("No Id").Build();
+        var profile = new AIProfile
+        {
+            Alias = template.Alias,
+            Name = template.Name,
+            Capability = template.Capability,
+            ConnectionId = template.ConnectionId,
+        };
+        _repositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AIProfile>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile p, Guid? _, CancellationToken _) => p);
+
+        // Act
+        var result = await _service.SaveProfileAsync(profile);
+
+        // Assert
+        result.Id.ShouldNotBe(Guid.Empty);
     }
 
     #endregion

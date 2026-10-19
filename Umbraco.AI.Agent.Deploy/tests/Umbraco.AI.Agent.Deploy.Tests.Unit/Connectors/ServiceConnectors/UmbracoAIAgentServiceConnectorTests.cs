@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Deploy.Artifacts;
 using Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Deploy;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -72,6 +74,7 @@ public class UmbracoAIAgentServiceConnectorTests
                     }
                 ]
             },
+            StarterPrompts = [new AIStarterPrompt { Prompt = "Summarize this page" }],
             IsActive = true
         };
 
@@ -98,6 +101,9 @@ public class UmbracoAIAgentServiceConnectorTests
         // Arrays
         artifact.SurfaceIds.ShouldBe(new[] { "backoffice", "frontend" });
 
+        // Starter prompts
+        artifact.StarterPrompts.Select(p => p.Prompt).ShouldBe(["Summarize this page"]);
+
         // JSON properties
         artifact.Scope.ShouldNotBeNull();
         var scope = JsonSerializer.Deserialize<Dictionary<string, object>>(artifact.Scope.Value);
@@ -109,6 +115,32 @@ public class UmbracoAIAgentServiceConnectorTests
         var config = JsonSerializer.Deserialize<JsonElement>(artifact.Config);
         config.TryGetProperty("instructions", out var instructions).ShouldBeTrue();
         instructions.GetString().ShouldBe("Agent instructions");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_WithStandardConfigContexts_AddsContextDependencies()
+    {
+        // Arrange
+        var contextIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+            AgentType = AIAgentType.Standard,
+            Config = new AIStandardAgentConfig { ContextIds = contextIds },
+        };
+
+        var udi = new GuidUdi("umbraco-ai-agent", agent.Id);
+
+        // Act
+        var artifact = await _connector.GetArtifactAsync(udi, agent);
+
+        // Assert
+        artifact.ShouldNotBeNull();
+        artifact.Dependencies
+            .Where(d => d.Udi.EntityType == "umbraco-ai-context")
+            .Select(d => ((GuidUdi)d.Udi).Guid)
+            .ShouldBe(contextIds, ignoreOrder: true);
     }
 
     [Fact]
@@ -229,5 +261,116 @@ public class UmbracoAIAgentServiceConnectorTests
     {
         // Assert
         _connector.UdiEntityType.ShouldBe("umbraco-ai-agent");
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithStarterPrompts_RoundTripsThem()
+    {
+        // Arrange
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+            AgentType = AIAgentType.Standard,
+            Config = new AIStandardAgentConfig(),
+            StarterPrompts =
+            [
+                new AIStarterPrompt { Prompt = "First starter" },
+                new AIStarterPrompt { Prompt = "Second starter" }
+            ],
+            IsActive = true
+        };
+
+        var udi = new GuidUdi("umbraco-ai-agent", agent.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, agent);
+        artifact.ShouldNotBeNull();
+
+        AIAgent? savedAgent = null;
+        _agentServiceMock
+            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Callback<AIAgent, CancellationToken>((a, _) => savedAgent = a)
+            .ReturnsAsync((AIAgent a, CancellationToken _) => a);
+
+        var state = new ArtifactDeployState<AIAgentArtifact, AIAgent>(artifact, null, _connector, 3);
+
+        // Act
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3);
+
+        // Assert
+        savedAgent.ShouldNotBeNull();
+        savedAgent.StarterPrompts.Select(p => p.Prompt).ShouldBe(["First starter", "Second starter"]);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithMoreThanFourStarterPromptsInArtifact_ClampsToFourRatherThanThrowing()
+    {
+        // Arrange — an artifact from another version line, or after a future cap change, must not
+        // fail the whole transfer over a presentation rule
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+            AgentType = AIAgentType.Standard,
+            Config = new AIStandardAgentConfig(),
+            IsActive = true
+        };
+
+        var udi = new GuidUdi("umbraco-ai-agent", agent.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, agent);
+        artifact.ShouldNotBeNull();
+        artifact.StarterPrompts = Enumerable.Range(1, 5)
+            .Select(i => new AIStarterPrompt { Prompt = $"Starter {i}" })
+            .ToList();
+
+        AIAgent? savedAgent = null;
+        _agentServiceMock
+            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Callback<AIAgent, CancellationToken>((a, _) => savedAgent = a)
+            .ReturnsAsync((AIAgent a, CancellationToken _) => a);
+
+        var state = new ArtifactDeployState<AIAgentArtifact, AIAgent>(artifact, null, _connector, 3);
+
+        // Act
+        await Should.NotThrowAsync(() => _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3));
+
+        // Assert
+        savedAgent.ShouldNotBeNull();
+        savedAgent.StarterPrompts.Count.ShouldBe(4);
+        savedAgent.StarterPrompts.Select(p => p.Prompt).ShouldBe(["Starter 1", "Starter 2", "Starter 3", "Starter 4"]);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithOverLongStarterPromptInArtifact_TruncatesRatherThanThrowing()
+    {
+        // Arrange — the length cap is clamped for the same reason the count cap is: leaving it to
+        // SaveAgentAsync's guard would throw and fail the whole transfer
+        var agent = new AIAgent
+        {
+            Alias = "test-agent",
+            Name = "Test Agent",
+            AgentType = AIAgentType.Standard,
+            Config = new AIStandardAgentConfig(),
+            IsActive = true
+        };
+
+        var udi = new GuidUdi("umbraco-ai-agent", agent.Id);
+        var artifact = await _connector.GetArtifactAsync(udi, agent);
+        artifact.ShouldNotBeNull();
+        artifact.StarterPrompts = [new AIStarterPrompt { Prompt = new string('a', 250) }];
+
+        AIAgent? savedAgent = null;
+        _agentServiceMock
+            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Callback<AIAgent, CancellationToken>((a, _) => savedAgent = a)
+            .ReturnsAsync((AIAgent a, CancellationToken _) => a);
+
+        var state = new ArtifactDeployState<AIAgentArtifact, AIAgent>(artifact, null, _connector, 3);
+
+        // Act
+        await Should.NotThrowAsync(() => _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3));
+
+        // Assert
+        savedAgent.ShouldNotBeNull();
+        savedAgent.StarterPrompts.Single().Prompt.Length.ShouldBe(200);
     }
 }

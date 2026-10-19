@@ -12,8 +12,9 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 /// </summary>
 /// <remarks>
 /// This middleware has zero overhead when no OpenTelemetry listener is configured.
-/// It is registered as the innermost middleware so that <c>Activity.Current</c> is
-/// available to all outer middleware for enrichment.
+/// It is registered as the innermost middleware, so its span covers just the provider call. The tracked
+/// call's <c>umbraco.ai.*</c> tags are put on that span here, since the tracking middleware runs before
+/// the span exists (#562).
 /// </remarks>
 public sealed class AIOpenTelemetryEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
@@ -33,6 +34,12 @@ public sealed class AIOpenTelemetryEmbeddingMiddleware : IAIEmbeddingMiddleware
     {
         return generator.AsBuilder()
             .UseOpenTelemetry(_loggerFactory, sourceName: AITelemetry.SourceName)
+            .Use((values, options, innerGenerator, cancellationToken) =>
+            {
+                // Inside the gen_ai span the OpenTelemetry generator just started.
+                AITraceTags.Apply(System.Diagnostics.Activity.Current);
+                return innerGenerator.GenerateAsync(values, options, cancellationToken);
+            })
             .Build();
     }
 }

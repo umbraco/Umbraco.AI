@@ -4,6 +4,7 @@ using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Core.Chat.Middleware;
 
@@ -15,14 +16,10 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 internal sealed class AITrackingChatClient : AIBoundChatClientBase
 {
     private readonly IAIOperationTracker _tracker;
-    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    public AITrackingChatClient(IChatClient innerClient, IAIOperationTracker tracker, IAIRuntimeContextAccessor contextAccessor)
+    public AITrackingChatClient(IChatClient innerClient, IAIOperationTracker tracker)
         : base(innerClient)
-    {
-        _tracker = tracker;
-        _contextAccessor = contextAccessor;
-    }
+        => _tracker = tracker;
 
     /// <inheritdoc />
     public override async Task<ChatResponse> GetResponseAsync(
@@ -40,7 +37,12 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
                 {
                     Result = response,
                     Usage = response.Usage,
-                    AuditResponse = new AIAuditResponse { Data = response.Messages, Usage = response.Usage },
+                    ResponseData = response.Messages,
+                    // Same check as the streaming path: a response that ends on a provider error is a
+                    // failed call, though it is still returned to the caller.
+                    Failure = response.GetTerminalProviderError() is { } providerError
+                        ? new AIProviderErrorContentException(providerError)
+                        : null,
                 };
             },
             cancellationToken);
@@ -60,103 +62,69 @@ internal sealed class AITrackingChatClient : AIBoundChatClientBase
         var updates = new List<ChatResponseUpdate>();
         Exception? captured = null;
 
-        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior).
+        // yield cannot sit inside try/catch, so drive the enumerator manually (matches prior behavior). The scope is
+        // entered around each step: recording scopes are AsyncLocal and don't survive this iterator's yields.
         await using var enumerator = base.GetStreamingResponseAsync(messages, options, cancellationToken)
+            .EnterEachStep(scope.EnterScope)
             .GetAsyncEnumerator(cancellationToken);
-        try
+        while (true)
         {
-            while (true)
+            ChatResponseUpdate current;
+            try
             {
-                ChatResponseUpdate current;
-                try
+                if (!await enumerator.MoveNextAsync())
                 {
-                    if (!await enumerator.MoveNextAsync())
-                    {
-                        break;
-                    }
-
-                    current = enumerator.Current;
-                }
-                catch (Exception ex)
-                {
-                    captured = ex;
                     break;
                 }
 
-                updates.Add(current);
-                yield return current;
+                current = enumerator.Current;
+            }
+            catch (Exception ex)
+            {
+                captured = ex;
+                break;
             }
 
-            if (captured is not null)
-            {
-                await scope.FailAsync(captured);
-                throw captured;
-            }
-
-            var aggregated = updates.ToChatResponse();
-
-            // Some providers report a failure (e.g. a rate limit hit on the final model call of a
-            // tool loop) as streamed ErrorContent rather than by throwing, so the stream itself ends
-            // normally. Record the call as failed when the response ends on such an error, keeping
-            // the usage it consumed; an error the model carried on past stays a success.
-            if (FindTerminalProviderError(aggregated) is { } providerError)
-            {
-                await scope.FailAsync(new AIStreamedProviderErrorException(providerError), aggregated.Usage);
-            }
-            else
-            {
-                await scope.CompleteAsync(
-                    aggregated.Usage,
-                    new AIAuditResponse { Data = aggregated.Messages, Usage = aggregated.Usage });
-            }
+            updates.Add(current);
+            yield return current;
         }
-        finally
+
+        if (captured is not null)
         {
-            scope.Dispose();
+            await scope.FailAsync(captured);
+            throw captured;
         }
-    }
 
-    /// <summary>
-    /// Returns the provider error the response ended on: an <see cref="ErrorContent"/> in the last
-    /// assistant message with no text or function call after it. Null when the response ended normally.
-    /// </summary>
-    private static ErrorContent? FindTerminalProviderError(ChatResponse response)
-    {
-        var lastAssistant = response.Messages.LastOrDefault(m => m.Role == ChatRole.Assistant);
-        if (lastAssistant is null)
+        var aggregated = updates.ToChatResponse();
+
+        // Some providers report a failure (e.g. a rate limit hit on the final model call of a
+        // tool loop) as streamed ErrorContent rather than by throwing, so the stream itself ends
+        // normally. Record the call as failed when the response ends on such an error, keeping
+        // the usage it consumed; an error the model carried on past stays a success.
+        if (aggregated.GetTerminalProviderError() is { } providerError)
         {
-            return null;
+            await scope.FailAsync(new AIProviderErrorContentException(providerError), aggregated.Usage);
         }
-
-        for (var i = lastAssistant.Contents.Count - 1; i >= 0; i--)
+        else
         {
-            switch (lastAssistant.Contents[i])
-            {
-                case ErrorContent error:
-                    return error;
-                case TextContent text when !string.IsNullOrWhiteSpace(text.Text):
-                case FunctionCallContent:
-                    return null;
-            }
+            await scope.CompleteAsync(
+                aggregated.Usage,
+                aggregated.Messages);
         }
-
-        return null;
     }
 
     private AIOperationDescriptor BuildDescriptor(IReadOnlyList<ChatMessage> messages) => new()
     {
         Capability = AICapability.Chat,
         PromptData = messages,
-        Metadata = AIAuditMetadata.ExtractFromRuntimeContext(_contextAccessor.Context),
-        RecordUsageWhenEmpty = true,
     };
 }
 
 /// <summary>
-/// A provider failure reported as streamed <see cref="ErrorContent"/> rather than thrown, wrapped so
-/// the audit log can record it like any other failed call.
+/// A provider failure reported as <see cref="ErrorContent"/> in the response, streamed or not, rather than
+/// thrown. Wrapped so recorders can record it like any other failed call.
 /// </summary>
-internal sealed class AIStreamedProviderErrorException(ErrorContent error)
+internal sealed class AIProviderErrorContentException(ErrorContent error)
     : Exception(string.IsNullOrEmpty(error.ErrorCode)
         ? error.Message ?? "The provider returned an error."
         : $"{error.ErrorCode}: {error.Message ?? "The provider returned an error."}")

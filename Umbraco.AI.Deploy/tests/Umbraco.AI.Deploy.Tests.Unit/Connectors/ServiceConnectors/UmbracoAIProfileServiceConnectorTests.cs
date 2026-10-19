@@ -194,6 +194,34 @@ public class UmbracoAIProfileServiceConnectorTests
     }
 
     [Fact]
+    public async Task GetArtifactAsync_ChatProfileWithContexts_AddsContextDependencies()
+    {
+        // Arrange
+        var contextIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var profile = new AIProfile
+        {
+            Alias = "chat-profile",
+            Name = "Chat Profile",
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4"),
+            ConnectionId = Guid.NewGuid(),
+            Settings = new AIChatProfileSettings { ContextIds = contextIds }
+        };
+
+        var udi = new GuidUdi("umbraco-ai-profile", profile.Id);
+
+        // Act
+        var artifact = await _connector.GetArtifactAsync(udi, profile);
+
+        // Assert
+        artifact.ShouldNotBeNull();
+        artifact.Dependencies
+            .Where(d => d.Udi.EntityType == "umbraco-ai-context")
+            .Select(d => ((GuidUdi)d.Udi).Guid)
+            .ShouldBe(contextIds, ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task ProcessAsync_ChatProfile_RoundTripsSettings()
     {
         // Arrange - guards against the marker-interface being serialized as an empty object,

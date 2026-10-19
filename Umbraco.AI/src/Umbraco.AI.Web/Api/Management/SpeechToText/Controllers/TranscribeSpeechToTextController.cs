@@ -56,6 +56,7 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Invalid audio file",
                 Detail = "An audio file must be provided.",
                 Status = StatusCodes.Status400BadRequest
@@ -84,9 +85,17 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
                 await using var audioStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read);
 
                 // Resolve profile ID from IdOrAlias
-                var profileId = profileIdOrAlias != null
-                    ? await _profileService.TryGetProfileIdAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken)
-                    : null;
+                Guid? profileId = null;
+                if (profileIdOrAlias != null)
+                {
+                    var resolvedProfile = await _profileService.GetProfileAsync(IdOrAlias.Parse(profileIdOrAlias, null), cancellationToken);
+                    if (resolvedProfile is null)
+                    {
+                        return ProfileNotFound();
+                    }
+
+                    profileId = resolvedProfile.Id;
+                }
 
                 var result = await _speechToTextService.TranscribeAsync(
                     b =>
@@ -120,14 +129,11 @@ public class TranscribeSpeechToTextController : SpeechToTextControllerBase
                 }
             }
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ProfileNotFound();
-        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new ProblemDetails
             {
+                Type = "Error",
                 Title = "Transcription failed",
                 Detail = ex.Message,
                 Status = StatusCodes.Status400BadRequest

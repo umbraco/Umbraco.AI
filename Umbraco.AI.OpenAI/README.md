@@ -73,6 +73,22 @@ After installation, create a connection in the Umbraco backoffice:
 - text-embedding-3-small
 - text-embedding-ada-002
 
+## Reasoning effort
+
+Chat profiles expose reasoning effort for the o-series, GPT-5 and `gpt-6-luna` (including dated
+Luna snapshots). Leave the setting empty to use the model default.
+
+GPT-6 Luna accepts `none`, `low`, `medium`, `high`, `xhigh` and `max`. A stored or selected `minimal`
+value maps to `low` on Luna, following [OpenAI's migration guidance](https://developers.openai.com/api/docs/guides/deployment-checklist),
+instead of sending an unsupported value or falling back to the `medium` default.
+
+The dropdown schema is shared across models. `xhigh` and `max` are sent unchanged for Luna and the
+[GPT-5.6 family](https://developers.openai.com/api/docs/guides/gpt-5.6). On other recognized reasoning
+models, both selections map to `high` to preserve the intent of choosing more reasoning. Existing
+models retain their previous handling of `none`, `minimal`, `low`, `medium` and `high`. Unknown values
+and settings on non-reasoning models are skipped. Other GPT-6 variants are outside this declaration
+because their supported levels differ.
+
 ## Documentation
 
 - **[CLAUDE.md](CLAUDE.md)** - Development guide and technical details (if available)

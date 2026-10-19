@@ -1,3 +1,4 @@
+using Umbraco.AI.Tests.Unit.Observability;
 #pragma warning disable MEAI001 // IImageGenerator is experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Tests the experimental image-generation escape hatch
 
@@ -53,12 +54,7 @@ public class AIImageGeneratorEscapeHatchTests
         // dependencies just need to be present.
         var tracker = new AIOperationTracker(
             contextAccessor.Object,
-            new Mock<IAIAuditLogService>().Object,
-            new Mock<IAIAuditLogFactory>().Object,
-            Mock.Of<IOptionsMonitor<AIAuditLogOptions>>(),
-            new Mock<IAIUsageRecordingService>().Object,
-            new Mock<IAIUsageRecordFactory>().Object,
-            Mock.Of<IOptionsMonitor<AIAnalyticsOptions>>(),
+            TestOperationRecorders.Default(new Mock<IAIAuditLogService>().Object, new Mock<IAIAuditLogFactory>().Object, Mock.Of<IOptionsMonitor<AIAuditLogOptions>>(), new Mock<IAIUsageRecordingService>().Object, new Mock<IAIUsageRecordFactory>().Object, Mock.Of<IOptionsMonitor<AIAnalyticsOptions>>()),
             NullLogger<AIOperationTracker>.Instance);
 
         // Build the full pipeline exactly as AIImageGeneratorFactory does.

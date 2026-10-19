@@ -4,6 +4,7 @@ import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-
 import { UaiConnectionCapabilityRepository } from "../../../connection/repository/capability/connection-capability.repository.js";
 import { UAI_CREATE_PROFILE_WORKSPACE_PATH_PATTERN } from "../../workspace/profile/paths.js";
 import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../../../connection/workspace/connection-root/paths.js";
+import { getCapabilityIcon } from "../../../core/utils/capability-icon.utils.js";
 
 /**
  * Collection action element for creating a new profile.
@@ -69,7 +70,7 @@ export class UaiProfileCreateCollectionActionElement extends UmbLitElement {
         return this._availableCapabilities.map(
             (cap) => html`
                 <uui-menu-item label=${this.#getCapabilityLabel(cap)} @click=${() => this.#onSelectCapability(cap)}>
-                    <umb-icon slot="icon" name="icon-wand"></umb-icon>
+                    <umb-icon slot="icon" name=${getCapabilityIcon(cap)}></umb-icon>
                 </uui-menu-item>
             `,
         );

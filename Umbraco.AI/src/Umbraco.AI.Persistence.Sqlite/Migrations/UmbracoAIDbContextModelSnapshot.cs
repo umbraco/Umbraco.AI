@@ -57,6 +57,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<long>("InputTokens")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsNested")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -139,6 +142,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("NestedRequestCount")
+                        .HasColumnType("INTEGER");
 
                     b.Property<long>("OutputTokens")
                         .HasColumnType("INTEGER");
@@ -226,6 +232,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("NestedRequestCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("OutputTokens")
                         .HasColumnType("INTEGER");
 
@@ -306,6 +315,10 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
 
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FeatureAlias")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("FeatureId")
@@ -853,11 +866,11 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OutcomeTokenUsageJson")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("OutcomeType")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("OutcomeUsageJson")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("OutcomeValue")
                         .HasColumnType("TEXT");
@@ -945,11 +958,17 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("AuthoredByUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ChangeDescription")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateAuthored")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")

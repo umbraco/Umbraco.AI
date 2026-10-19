@@ -25,6 +25,7 @@ export interface UaiAuditLogItemModel extends UmbEntityModel {
     providerId: string;
     featureType: string | null;
     featureId: string | null;
+    featureAlias: string | null;
     featureVersion: string | null;
     inputTokens: number | null;
     outputTokens: number | null;

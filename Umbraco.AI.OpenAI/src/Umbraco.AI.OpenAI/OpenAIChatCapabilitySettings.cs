@@ -11,20 +11,18 @@ namespace Umbraco.AI.OpenAI;
 public class OpenAIChatCapabilitySettings
 {
     /// <summary>
-    /// Constrains the reasoning effort for reasoning-capable models (the o-series and the GPT-5 line).
+    /// Constrains the reasoning effort for reasoning-capable models.
     /// Leave empty for the model default.
     /// </summary>
     /// <remarks>
-    /// The levels offered are the ones the pinned OpenAI SDK can express through
-    /// <c>ResponseReasoningEffortLevel</c>. The API also accepts <c>xhigh</c> and <c>max</c> on some
-    /// models; those need an SDK that exposes them and are deliberately not offered here rather than
-    /// silently dropped.
+    /// The schema is shared across models. Extended levels use the SDK's extensible string enum
+    /// where supported and fall back to high otherwise. Legacy minimal values map to low on Luna.
     /// </remarks>
     [AIField(
         Label = "Reasoning effort",
-        Description = "Constrains reasoning effort for reasoning-capable models (the o-series and the GPT-5 line). Leave empty for the model default.",
+        Description = "Constrains reasoning effort for reasoning-capable models. Leave empty for the model default. Extended levels fall back to high where unsupported; legacy minimal values may map to low.",
         EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"none\",\"minimal\",\"low\",\"medium\",\"high\"]}]",
+        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"none\",\"minimal\",\"low\",\"medium\",\"high\",\"xhigh\",\"max\"]}]",
         SortOrder = 1)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? ReasoningEffort { get; set; }

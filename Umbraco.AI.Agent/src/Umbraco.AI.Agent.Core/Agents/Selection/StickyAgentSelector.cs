@@ -7,12 +7,18 @@ namespace Umbraco.AI.Agent.Core.Agents.Selection;
 /// <para>
 /// Ships with the package but is **not** registered by default - turning it on keeps today's
 /// re-pick-every-turn behaviour unchanged for everyone who doesn't ask for sticky selection.
-/// Register it ahead of <see cref="LLMAgentSelector"/> (or any other selector that would switch
-/// agents) so it gets first refusal:
+/// Register it first in the chain so it gets first refusal, ahead of every other selector
+/// (<see cref="DecisionAgentSelector"/>, <see cref="LLMAgentSelector"/>, or any other selector that
+/// would switch agents):
 /// </para>
 /// <code>
-/// builder.AIAgentSelectors().InsertBefore&lt;LLMAgentSelector, StickyAgentSelector&gt;();
+/// builder.AIAgentSelectors().Insert&lt;StickyAgentSelector&gt;();
 /// </code>
+/// <para>
+/// Use <c>Insert</c>, not <c>InsertBefore&lt;LLMAgentSelector, …&gt;</c> - <see cref="DecisionAgentSelector"/>
+/// is registered by default before <see cref="LLMAgentSelector"/>, so inserting only before LLM would
+/// land Sticky after Decision and let Decision override the previous turn's agent.
+/// </para>
 /// </remarks>
 public sealed class StickyAgentSelector : IAIAgentSelector
 {

@@ -8,12 +8,16 @@ export interface UaiVersionHistoryItem {
     entityId: string;
     /** The version number (1, 2, 3, etc.). */
     version: number;
-    /** The date and time when this version was created. */
+    /** The date and time when this version record was created, i.e. when the version was archived. */
     dateCreated: string;
-    /** The user ID who created this version, if available. */
+    /** The user ID whose save archived this version, if available. */
     createdByUserId?: string | null;
     /** The user name who created this version, if available. */
     createdByUserName?: string | null;
+    /** The date and time when the entity state in this version was made. */
+    dateAuthored?: string;
+    /** The user ID who made the entity state in this version, if available. */
+    authoredByUserId?: string | null;
     /** Optional description of what changed in this version. */
     changeDescription?: string | null;
 }

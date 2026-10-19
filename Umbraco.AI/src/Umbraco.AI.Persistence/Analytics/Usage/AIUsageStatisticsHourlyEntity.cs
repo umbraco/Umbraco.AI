@@ -66,6 +66,11 @@ internal class AIUsageStatisticsHourlyEntity
     public int RequestCount { get; set; }
 
     /// <summary>
+    /// Gets or sets how many of the requests were made while another tracked AI operation was running.
+    /// </summary>
+    public int NestedRequestCount { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of successful requests.
     /// </summary>
     public int SuccessCount { get; set; }

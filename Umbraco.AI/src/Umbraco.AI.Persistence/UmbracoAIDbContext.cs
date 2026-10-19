@@ -428,6 +428,9 @@ public class UmbracoAIDbContext : DbContext
 
             entity.Property(e => e.FeatureId);
 
+            entity.Property(e => e.FeatureAlias)
+                .HasMaxLength(100);
+
             entity.Property(e => e.ProfileVersion);
 
             entity.Property(e => e.FeatureVersion);
@@ -525,6 +528,9 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.ErrorMessage)
                 .HasMaxLength(2000);
 
+            entity.Property(e => e.IsNested)
+                .IsRequired();
+
             entity.Property(e => e.CreatedAt)
                 .IsRequired();
 
@@ -565,6 +571,9 @@ public class UmbracoAIDbContext : DbContext
                 .HasMaxLength(50);
 
             entity.Property(e => e.RequestCount)
+                .IsRequired();
+
+            entity.Property(e => e.NestedRequestCount)
                 .IsRequired();
 
             entity.Property(e => e.SuccessCount)
@@ -636,6 +645,9 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.RequestCount)
                 .IsRequired();
 
+            entity.Property(e => e.NestedRequestCount)
+                .IsRequired();
+
             entity.Property(e => e.SuccessCount)
                 .IsRequired();
 
@@ -690,6 +702,9 @@ public class UmbracoAIDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateAuthored)
                 .IsRequired();
 
             entity.Property(e => e.ChangeDescription)
@@ -835,7 +850,7 @@ public class UmbracoAIDbContext : DbContext
             entity.Property(e => e.OutcomeFinishReason)
                 .HasMaxLength(100);
 
-            entity.Property(e => e.OutcomeTokenUsageJson);
+            entity.Property(e => e.OutcomeUsageJson);
 
             entity.Property(e => e.GraderResultsJson);
 

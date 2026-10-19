@@ -2,6 +2,7 @@ using System.Reflection;
 using Umbraco.AI.Core.Providers;
 
 #pragma warning disable UMBRACOAI_IMAGEGEN // Names the experimental image capability in the surface guard
+#pragma warning disable UMBRACOAI_DECISION // Names the experimental Decision capability in the surface guard
 
 namespace Umbraco.AI.Tests.Unit.Providers;
 
@@ -119,6 +120,7 @@ public class CapabilitySettingsSurfaceTests
         nameof(IAIEmbeddingCapability) => "EmbeddingGenerator",
         nameof(IAISpeechToTextCapability) => "SpeechToTextClient",
         nameof(IAIImageGeneratorCapability) => "ImageGenerator",
+        nameof(IAIDecisionCapability) => "DecisionClient",
         _ => throw new NotSupportedException(
             $"{capabilityInterface.Name} is new here. Add its client noun, and make sure it has a "
             + "DeclaredSettings… decorator installed by its base."),

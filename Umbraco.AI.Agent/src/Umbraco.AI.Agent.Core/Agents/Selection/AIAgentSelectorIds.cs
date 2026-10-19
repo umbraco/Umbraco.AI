@@ -6,6 +6,9 @@ namespace Umbraco.AI.Agent.Core.Agents.Selection;
 /// </summary>
 public static class AIAgentSelectorIds
 {
+    /// <summary>The <see cref="DecisionAgentSelector"/>.</summary>
+    public const string Decision = "decision";
+
     /// <summary>The <see cref="LLMAgentSelector"/>.</summary>
     public const string Llm = "llm";
 

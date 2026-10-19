@@ -8,6 +8,7 @@ export interface UaiSettingsModel {
     defaultEmbeddingProfileId: string | null;
     defaultSpeechToTextProfileId: string | null;
     defaultImageGenerationProfileId: string | null;
+    defaultDecisionProfileId: string | null;
     classifierChatProfileId: string | null;
     disclosureNoticeMode: UaiDisclosureNoticeMode;
 }

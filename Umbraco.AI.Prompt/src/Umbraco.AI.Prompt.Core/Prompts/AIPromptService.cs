@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.InlineChat;
@@ -37,6 +38,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIPromptPropertyValueSchemaResolver _propertyValueSchemaResolver;
     private readonly AISimplifiedPropertyValueTransformerCollection _transformers;
+    private readonly ILogger<AIPromptService> _logger;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -51,6 +53,7 @@ internal sealed class AIPromptService : IAIPromptService
         IEventAggregator eventAggregator,
         IAIPromptPropertyValueSchemaResolver propertyValueSchemaResolver,
         AISimplifiedPropertyValueTransformerCollection transformers,
+        ILogger<AIPromptService> logger,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -65,6 +68,7 @@ internal sealed class AIPromptService : IAIPromptService
         _eventAggregator = eventAggregator;
         _propertyValueSchemaResolver = propertyValueSchemaResolver;
         _transformers = transformers;
+        _logger = logger;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -199,6 +203,32 @@ internal sealed class AIPromptService : IAIPromptService
         AIPromptExecutionOptions options,
         CancellationToken cancellationToken = default)
     {
+        try
+        {
+            return await ExecutePromptCoreAsync(promptId, request, options, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Expected rejections: prompt not found, scope denied, cancelled by a notification handler,
+            // or a missing profile, connection or provider. Logged as a warning, but with the exception so an
+            // inner exception or stack trace is not lost if one of these turns out to be a real bug.
+            _logger.LogWarning(ex, "Prompt {PromptId} could not be executed: {Reason}", promptId, ex.Message);
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Callers usually turn this into a short message, so keep the full cause in the log.
+            _logger.LogError(ex, "Failed to execute prompt {PromptId}", promptId);
+            throw;
+        }
+    }
+
+    private async Task<AIPromptExecutionResult> ExecutePromptCoreAsync(
+        Guid promptId,
+        AIPromptExecutionRequest request,
+        AIPromptExecutionOptions options,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(options);
 
@@ -287,14 +317,7 @@ internal sealed class AIPromptService : IAIPromptService
         }
 
         // 4. Build template context from basic request info + processor results
-        var templateContext = BuildExecutionContext(request);
-        foreach (var (key, value) in runtimeContext.Variables)
-        {
-            templateContext[key] = value;
-        }
-        templateContext["currentValue"] = templateContext.TryGetValue(request.PropertyAlias, out var propValue)
-            ? propValue
-            : null;
+        var templateContext = BuildTemplateContext(request, runtimeContext.Variables);
 
         // 5. Process template variables (returns multimodal content list)
         var contents = await _templateService.ProcessTemplateAsync(prompt.Instructions, templateContext, cancellationToken);
@@ -570,6 +593,36 @@ internal sealed class AIPromptService : IAIPromptService
     }
 
     /// <summary>
+    /// Builds the template variables: the request's own fields, then the variables contributed by the
+    /// runtime context (which win on a clash), then the derived <c>name</c> and <c>currentValue</c>.
+    /// </summary>
+    internal static Dictionary<string, object?> BuildTemplateContext(
+        AIPromptExecutionRequest request,
+        IReadOnlyDictionary<string, object?> runtimeVariables)
+    {
+        var templateContext = BuildExecutionContext(request);
+        foreach (var (key, value) in runtimeVariables)
+        {
+            templateContext[key] = value;
+        }
+
+        // {{name}} is the entity being edited. Inside a block the parent entity's variables carry an
+        // "entity." prefix, while the unprefixed entityName is the block's own placeholder name.
+        // A property aliased "name" keeps its value.
+        if (!templateContext.ContainsKey("name"))
+        {
+            templateContext["name"] = templateContext.GetValueOrDefault("entity.entityName")
+                ?? templateContext.GetValueOrDefault("entityName");
+        }
+
+        templateContext["currentValue"] = templateContext.TryGetValue(request.PropertyAlias, out var propValue)
+            ? propValue
+            : null;
+
+        return templateContext;
+    }
+
+    /// <summary>
     /// Builds the execution context dictionary from the request.
     /// </summary>
     private static Dictionary<string, object?> BuildExecutionContext(AIPromptExecutionRequest request)
@@ -580,6 +633,11 @@ internal sealed class AIPromptService : IAIPromptService
             ["entityType"] = request.EntityType,
             ["propertyAlias"] = request.PropertyAlias,
         };
+
+        if (!string.IsNullOrEmpty(request.ContentTypeAlias))
+        {
+            context["contentTypeAlias"] = request.ContentTypeAlias;
+        }
 
         if (request.ElementId.HasValue)
         {

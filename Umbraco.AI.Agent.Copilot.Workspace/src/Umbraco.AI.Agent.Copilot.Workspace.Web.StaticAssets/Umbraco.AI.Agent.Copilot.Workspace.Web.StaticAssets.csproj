@@ -6,6 +6,19 @@
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <!-- The frontend imports @umbraco-ai/agent-ui at runtime, whose import map entry ships in Umbraco.AI.Agent.UI -->
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI.Agent.UI\src\Umbraco.AI.Agent.UI\Umbraco.AI.Agent.UI.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Agent.UI" />
+    </ItemGroup>
+
     <ItemGroup>
         <!-- Dont include the client folder as part of packaging nuget build -->
         <Content Remove="Client\**" />

@@ -1,13 +1,59 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.AuditLog;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Tests.Unit.Factories;
 
 public class AIAuditLogFactoryTests
 {
+    #region Feature Alias
+
+    [Fact]
+    public void Create_FromUsageContext_CarriesFeatureAliasToAuditLog()
+    {
+        // Arrange
+        var identity = new AIUsageContext
+        {
+            Capability = AICapability.Chat,
+            ProfileId = Guid.NewGuid(),
+            ProfileAlias = "test-profile",
+            ProviderId = "fake",
+            ModelId = "fake-model",
+            FeatureType = "prompt",
+            FeatureId = Guid.NewGuid(),
+            FeatureAlias = "my-prompt",
+        };
+        var factory = new AIAuditLogFactory(Mock.Of<IBackOfficeSecurityAccessor>());
+
+        // Act
+        var auditLog = factory.Create(AIAuditContext.FromUsageContext(identity, prompt: null));
+
+        // Assert
+        auditLog.FeatureAlias.ShouldBe("my-prompt");
+        auditLog.FeatureId.ShouldBe(identity.FeatureId);
+    }
+
+    [Fact]
+    public void ExtractFromRuntimeContext_ReadsFeatureAliasFromRuntimeContext()
+    {
+        // Arrange
+        var runtimeContext = new AIRuntimeContext([]);
+        runtimeContext.SetValue(Umbraco.AI.Core.Constants.ContextKeys.FeatureAlias, "my-agent");
+
+        // Act
+        var context = AIAuditContext.ExtractFromRuntimeContext(AICapability.Chat, runtimeContext, prompt: null);
+
+        // Assert
+        context.FeatureAlias.ShouldBe("my-agent");
+    }
+
+    #endregion
+
     #region Text Content Formatting
 
     [Fact]

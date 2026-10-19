@@ -53,6 +53,11 @@ public class AgentResponseModel
     public AIAgentScopeModel? Scope { get; set; }
 
     /// <summary>
+    /// Starter prompts shown as clickable chips in an empty chat for this agent.
+    /// </summary>
+    public IEnumerable<AIStarterPromptModel> StarterPrompts { get; set; } = [];
+
+    /// <summary>
     /// Type-specific configuration for this agent.
     /// </summary>
     public AgentConfigModel? Config { get; set; }

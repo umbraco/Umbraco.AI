@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.AI;
 using Moq;
 using Shouldly;
@@ -149,9 +148,7 @@ public class AgentRunFailedTriggerTests
         Exception? exception = null,
         EventMessages? eventMessages = null)
     {
-        var agent = new AIAgent { Alias = "test-agent", Name = "Test Agent" };
-        typeof(AIAgent).GetProperty(nameof(AIAgent.Id), BindingFlags.Public | BindingFlags.Instance)!
-            .SetValue(agent, TestAgentId);
+        var agent = new AIAgent(TestAgentId) { Alias = "test-agent", Name = "Test Agent" };
 
         var messages = new List<ChatMessage>
         {

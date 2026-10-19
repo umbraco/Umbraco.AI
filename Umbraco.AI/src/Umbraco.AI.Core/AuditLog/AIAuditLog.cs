@@ -9,9 +9,29 @@ namespace Umbraco.AI.Core.AuditLog;
 public sealed class AIAuditLog
 {
     /// <summary>
+    /// Creates an audit-log with a newly generated ID.
+    /// </summary>
+    public AIAuditLog()
+    {
+    }
+
+    /// <summary>
+    /// Creates an audit-log with a known ID.
+    /// </summary>
+    /// <param name="id">The ID the audit-log is created with.</param>
+    /// <remarks>
+    /// Saving never changes the ID.
+    /// Saving an audit-log with an ID that already exists updates that audit-log instead of creating a new one.
+    /// </remarks>
+    public AIAuditLog(Guid id)
+    {
+        Id = id;
+    }
+
+    /// <summary>
     /// Gets the unique identifier for this audit-log in the local database.
     /// </summary>
-    public Guid Id { get; internal set; }
+    public Guid Id { get; internal set; } = Guid.NewGuid();
 
     /// <summary>
     /// Gets the start time of the AI operation.
@@ -104,6 +124,12 @@ public sealed class AIAuditLog
     /// Null for direct API calls or when not applicable.
     /// </summary>
     public Guid? FeatureId { get; init; }
+
+    /// <summary>
+    /// Gets the alias of the feature (prompt or agent) at the time of execution.
+    /// Null for direct API calls, when not applicable, or for entries logged before the alias was captured.
+    /// </summary>
+    public string? FeatureAlias { get; init; }
 
     /// <summary>
     /// Gets the version of the feature (prompt/agent) at time of execution.

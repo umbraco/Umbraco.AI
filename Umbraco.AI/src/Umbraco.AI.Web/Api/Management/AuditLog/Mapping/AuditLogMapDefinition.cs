@@ -75,6 +75,7 @@ public class AuditLogMapDefinition : IMapDefinition
         target.ModelId = source.ModelId;
         target.FeatureType = source.FeatureType;
         target.FeatureId = source.FeatureId;
+        target.FeatureAlias = source.FeatureAlias;
         target.FeatureVersion = source.FeatureVersion;
         target.ParentAuditLogId = source.ParentAuditLogId;
         target.InputTokens = source.InputTokens;
@@ -83,7 +84,7 @@ public class AuditLogMapDefinition : IMapDefinition
         target.ErrorMessage = source.ErrorMessage;
     }
 
-    // Umbraco.Code.MapAll -Id -AuditLogId -StartTime -DurationMs -Status -UserId -UserName -EntityId -Capability -ModelId -ProviderId -FeatureType -FeatureId -FeatureVersion -ParentAuditLogId -Metadata -InputTokens -CachedInputTokens -OutputTokens -ErrorMessage
+    // Umbraco.Code.MapAll -Id -AuditLogId -StartTime -DurationMs -Status -UserId -UserName -EntityId -Capability -ModelId -ProviderId -FeatureType -FeatureId -FeatureAlias -FeatureVersion -ParentAuditLogId -Metadata -InputTokens -CachedInputTokens -OutputTokens -ErrorMessage
     private static void MapToDetailResponse(AIAuditLog source, AuditLogDetailResponseModel target, MapperContext context)
     {
         // First map all base properties from AuditLogItemResponseModel (mapped via MapToItemResponse)

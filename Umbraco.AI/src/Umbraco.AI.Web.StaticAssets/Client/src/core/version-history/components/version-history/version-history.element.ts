@@ -123,7 +123,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
     }
 
     async #requestAndCacheUserItems() {
-        const allUsers = this._versions?.map((item) => item.createdByUserId?.toString()).filter(Boolean) as string[];
+        const allUsers = this._versions?.map((item) => item.authoredByUserId?.toString()).filter(Boolean) as string[];
         const uniqueUsers = [...new Set(allUsers)];
         const uncachedUsers = uniqueUsers.filter((unique) => !this.#userMap.has(unique));
 
@@ -222,7 +222,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
 
     #renderItem(version: UaiVersionHistoryItem) {
         const isCurrent = version.version === this._currentVersion;
-        const user = this.#userMap.get(version.createdByUserId?.toString() || "");
+        const user = this.#userMap.get(version.authoredByUserId?.toString() || "");
         return html`
             <div class="version-item">
                 <div class="user-info">
@@ -233,7 +233,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                     </umb-user-avatar>
                     <div>
                         <span class="name">${user?.name}</span>
-                        <span class="detail">${formatDateTime(version.dateCreated)}</span>
+                        <span class="detail">${formatDateTime(version.dateAuthored ?? version.dateCreated)}</span>
                     </div>
                 </div>
                 <div>

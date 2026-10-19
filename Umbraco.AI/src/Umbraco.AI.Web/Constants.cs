@@ -74,6 +74,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Capability features.
+            /// </summary>
+            public static class Capability
+            {
+                /// <summary>
+                /// The route segment for Capability features.
+                /// </summary>
+                public const string RouteSegment = "capabilities";
+
+                /// <summary>
+                /// The Swagger group name for Capability features.
+                /// </summary>
+                public const string GroupName = "Capabilities";
+            }
+
+            /// <summary>
             /// Defines constants for Provider features.
             /// </summary>
             public static class Provider
@@ -119,6 +135,22 @@ public class Constants
                 /// The Swagger group name for Image Generation features.
                 /// </summary>
                 public const string GroupName = "Image Generation";
+            }
+
+            /// <summary>
+            /// Defines constants for Decision features.
+            /// </summary>
+            public static class Decision
+            {
+                /// <summary>
+                /// The route segment for Decision features.
+                /// </summary>
+                public const string RouteSegment = "decision";
+
+                /// <summary>
+                /// The Swagger group name for Decision features.
+                /// </summary>
+                public const string GroupName = "Decision";
             }
 
             /// <summary>

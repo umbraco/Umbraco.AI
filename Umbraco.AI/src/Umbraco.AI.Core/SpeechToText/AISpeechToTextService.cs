@@ -205,16 +205,11 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
         Stream audioStream,
         CancellationToken cancellationToken)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
@@ -236,16 +231,11 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
         Stream audioStream,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var scopeExisted = _contextAccessor.Context is not null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                createdScope = _scopeProvider.CreateScope(builder.ContextItems ?? []);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, builder.ContextItems ?? []);
 
             await ResolveBuilderAliasesAsync(builder, cancellationToken);
             builder.PopulateContext(_contextAccessor.Context!, setFeatureMetadata: !builder.IsPassThrough);
@@ -254,7 +244,7 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
             var client = await _clientFactory.CreateClientAsync(profile, cancellationToken);
             var mergedOptions = MergeOptions(profile, builder.SpeechToTextOptions);
 
-            await foreach (var update in client.GetStreamingTextAsync(audioStream, mergedOptions, cancellationToken))
+            await foreach (var update in client.GetStreamingTextAsync(audioStream, mergedOptions, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }

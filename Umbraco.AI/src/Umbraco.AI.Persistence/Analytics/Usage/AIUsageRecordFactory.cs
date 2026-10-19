@@ -35,8 +35,13 @@ internal static class AIUsageRecordFactory
             OutputTokens = entity.OutputTokens,
             TotalTokens = entity.TotalTokens,
             DurationMs = entity.DurationMs,
-            Status = entity.Status,
+            // Stored by name. Anything unrecognised is treated as a failure rather than failing the read.
+            // TryParse also accepts numbers, so a stored "7" needs the IsDefined check too.
+            Status = Enum.TryParse<AIUsageRecordStatus>(entity.Status, out var status) && Enum.IsDefined(status)
+                ? status
+                : AIUsageRecordStatus.Failed,
             ErrorMessage = entity.ErrorMessage,
+            IsNested = entity.IsNested,
             CreatedAt = entity.CreatedAt
         };
     }
@@ -68,8 +73,9 @@ internal static class AIUsageRecordFactory
             OutputTokens = record.OutputTokens,
             TotalTokens = record.TotalTokens,
             DurationMs = record.DurationMs,
-            Status = record.Status,
+            Status = record.Status.ToString(),
             ErrorMessage = record.ErrorMessage,
+            IsNested = record.IsNested,
             CreatedAt = record.CreatedAt
         };
     }
@@ -95,6 +101,7 @@ internal static class AIUsageRecordFactory
             EntityType = entity.EntityType,
             FeatureType = entity.FeatureType,
             RequestCount = entity.RequestCount,
+            NestedRequestCount = entity.NestedRequestCount,
             SuccessCount = entity.SuccessCount,
             FailureCount = entity.FailureCount,
             InputTokens = entity.InputTokens,
@@ -127,6 +134,7 @@ internal static class AIUsageRecordFactory
             EntityType = entity.EntityType,
             FeatureType = entity.FeatureType,
             RequestCount = entity.RequestCount,
+            NestedRequestCount = entity.NestedRequestCount,
             SuccessCount = entity.SuccessCount,
             FailureCount = entity.FailureCount,
             InputTokens = entity.InputTokens,
@@ -159,6 +167,7 @@ internal static class AIUsageRecordFactory
             EntityType = statistics.EntityType,
             FeatureType = statistics.FeatureType,
             RequestCount = statistics.RequestCount,
+            NestedRequestCount = statistics.NestedRequestCount,
             SuccessCount = statistics.SuccessCount,
             FailureCount = statistics.FailureCount,
             InputTokens = statistics.InputTokens,
@@ -191,6 +200,7 @@ internal static class AIUsageRecordFactory
             EntityType = statistics.EntityType,
             FeatureType = statistics.FeatureType,
             RequestCount = statistics.RequestCount,
+            NestedRequestCount = statistics.NestedRequestCount,
             SuccessCount = statistics.SuccessCount,
             FailureCount = statistics.FailureCount,
             InputTokens = statistics.InputTokens,

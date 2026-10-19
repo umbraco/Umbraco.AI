@@ -29,6 +29,10 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     @state()
     private _error?: string;
 
+    /** True once a run finished without an error, even if the AI returned nothing. */
+    @state()
+    private _completed = false;
+
     @state()
     private _resultOptions?: UaiPromptResultOption[];
 
@@ -50,7 +54,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
         this._loading = true;
         this._error = undefined;
+        this._completed = false;
         this._response = "";
+        this._resultOptions = undefined;
 
         this.#abortController = new AbortController();
 
@@ -75,6 +81,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 this._error = error.message;
             }
         } else if (data) {
+            this._completed = true;
             this._response = data.content;
             this._resultOptions = data.resultOptions;
 
@@ -115,12 +122,12 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             await navigator.clipboard.writeText(value);
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
             notificationContext?.peek("positive", {
-                data: { message: "Value copied to clipboard" },
+                data: { message: this.localize.termOrDefault("uaiPrompt_copiedToClipboard", "Value copied to clipboard") },
             });
         } catch {
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
             notificationContext?.peek("danger", {
-                data: { message: "Failed to copy to clipboard" },
+                data: { message: this.localize.termOrDefault("uaiPrompt_copyFailed", "Failed to copy to clipboard") },
             });
         }
     }
@@ -138,7 +145,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         return html`
             <uui-action-bar class="copy-action">
                 <uui-button
-                    label="Copy"
+                    label=${this.localize.termOrDefault("general_copy", "Copy")}
                     look="secondary"
                     compact
                     @click=${(e: Event) => {
@@ -193,13 +200,24 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
 
 
+    /**
+     * Whether the AI returned something to show. Structured results wrap the value (e.g. `{"value":" "}`),
+     * so check the options' display values rather than the raw content when there are options.
+     */
+    get #hasResult() {
+        if (this._resultOptions?.length) {
+            return this._resultOptions.some((option) => option.displayValue?.trim());
+        }
+        return !!this._response.trim();
+    }
+
     #renderResponse() {
         if (this._error) {
             return html`
                 <div class="error-container">
                     <uui-icon name="icon-alert"></uui-icon>
                     <span>${this._error}</span>
-                    <uui-button label="Retry" look="secondary" compact @click=${this.#onRetry}>
+                    <uui-button label=${this.localize.termOrDefault("general_retry", "Retry")} look="secondary" compact @click=${this.#onRetry}>
                         <uui-icon name="icon-sync"></uui-icon>
                     </uui-button>
                 </div>
@@ -214,7 +232,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             `;
         }
 
-        if (this._response) {
+        if (this.#hasResult) {
             return html`
                 <uui-scroll-container class="response-container ${this._resultOptions && this._resultOptions.length > 1 ? "multiple" : ""}">
                     ${this._resultOptions && this._resultOptions.length > 1
@@ -222,6 +240,15 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                         : this.#renderSingleOption()
                     }
                 </uui-scroll-container>
+            `;
+        }
+
+        if (this._completed) {
+            return html`
+                <div class="empty-container">
+                    <uui-icon name="icon-info"></uui-icon>
+                    <span>${this.localize.termOrDefault("uaiPrompt_emptyResult", "The AI returned an empty result. Try regenerating.")}</span>
+                </div>
             `;
         }
 
@@ -234,15 +261,15 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
                 <div class="response-header">
                     <div>
-                        <h3 class="headline">${this.data?.promptName ?? "Prompt Preview"}</h3>
+                        <h3 class="headline">${this.data?.promptName ?? this.localize.termOrDefault("uaiPrompt_previewTitle", "Prompt Preview")}</h3>
                         ${this.data?.promptDescription
                             ? html`<p class="description">${this.data.promptDescription}</p>`
                             : nothing}
                     </div>
-                    ${this._response && !this._loading
+                    ${this._completed && !this._loading
                         ? html`
                         <uui-action-bar>
-                            <uui-button class="regenerate-btn"  label="Regenerate" look="default" compact @click=${this.#onRetry}>
+                            <uui-button class="regenerate-btn"  label=${this.localize.termOrDefault("uaiGeneral_regenerate", "Regenerate")} look="default" compact @click=${this.#onRetry}>
                                 <uui-icon name="icon-sync"></uui-icon>
                             </uui-button>
                         </uui-action-bar>
@@ -255,25 +282,27 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 </div>
 
                 <div slot="actions">
-                    ${this._response && !this._loading
+                    ${this.#hasResult && !this._loading
                         ? html`<uai-disclosure-notice location="prompt"></uai-disclosure-notice>`
                         : nothing}
-                    <uui-button label="Cancel" @click=${this.#onCancel}> Cancel </uui-button>
+                    <uui-button label=${this.localize.termOrDefault("general_cancel", "Cancel")} @click=${this.#onCancel}>
+                        ${this.localize.termOrDefault("general_cancel", "Cancel")}
+                    </uui-button>
                     ${this._resultOptions &&
                         this._resultOptions.length > 0 &&
                         this._resultOptions.some((opt) => opt.valueChange !== null && opt.valueChange !== undefined)
                         ? html`
                               <uui-button
-                                  label="Insert"
+                                  label=${this.localize.termOrDefault("general_insert", "Insert")}
                                   look="primary"
                                   color="positive"
-                                  ?disabled=${!this._response ||
+                                  ?disabled=${!this.#hasResult ||
                                   this._loading ||
                                   this._selectedOptionIndex === undefined ||
                                   !this._resultOptions[this._selectedOptionIndex]?.valueChange}
                                   @click=${this.#onInsert}
                               >
-                                  Insert
+                                  ${this.localize.termOrDefault("general_insert", "Insert")}
                               </uui-button>
                           `
                         : nothing}
@@ -382,6 +411,16 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
             .error-container uui-icon {
                 flex-shrink: 0;
+            }
+
+            .empty-container {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-space-3);
+                padding: var(--uui-size-space-4);
+                border: 1px solid var(--uui-color-border);
+                border-radius: var(--uui-border-radius);
+                color: var(--uui-color-text-alt);
             }
 
             .error-container span {

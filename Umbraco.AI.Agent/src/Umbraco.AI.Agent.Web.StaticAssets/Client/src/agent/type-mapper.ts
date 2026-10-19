@@ -14,6 +14,7 @@ import type {
     UaiAgentType,
     UaiStandardAgentConfig,
     UaiOrchestratedAgentConfig,
+    UaiStarterPrompt,
 } from "./types.js";
 
 function mapConfigFromResponse(agentType: string, config: StandardAgentConfigModel | OrchestratedAgentConfigModel | null | undefined): UaiAgentConfig {
@@ -67,6 +68,10 @@ function mapConfigToRequest(config: UaiAgentConfig): StandardAgentConfigModel | 
     } as StandardAgentConfigModel;
 }
 
+function mapStarterPromptsFromResponse(starterPrompts: { prompt: string }[] | null | undefined): UaiStarterPrompt[] {
+    return (starterPrompts ?? []).map((p) => ({ prompt: p.prompt }));
+}
+
 export const UaiAgentTypeMapper = {
     toDetailModel(response: AgentResponseModel): UaiAgentDetailModel {
         const agentType = (response.agentType ?? "standard") as UaiAgentType;
@@ -82,6 +87,7 @@ export const UaiAgentTypeMapper = {
             scope: (response as any).scope ?? null,
             config: mapConfigFromResponse(agentType, response.config),
             guardrailIds: response.guardrailIds ?? [],
+            starterPrompts: mapStarterPromptsFromResponse(response.starterPrompts),
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -101,6 +107,7 @@ export const UaiAgentTypeMapper = {
             surfaceIds: response.surfaceIds ?? [],
             scope: (response as any).scope ?? null,
             guardrailIds: (response as any).guardrailIds ?? [],
+            starterPrompts: mapStarterPromptsFromResponse(response.starterPrompts),
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -118,6 +125,7 @@ export const UaiAgentTypeMapper = {
             scope: model.scope,
             config: mapConfigToRequest(model.config),
             guardrailIds: model.guardrailIds,
+            starterPrompts: model.starterPrompts,
         };
     },
 
@@ -131,6 +139,7 @@ export const UaiAgentTypeMapper = {
             scope: model.scope,
             config: mapConfigToRequest(model.config),
             guardrailIds: model.guardrailIds,
+            starterPrompts: model.starterPrompts,
             isActive: model.isActive,
         };
     },

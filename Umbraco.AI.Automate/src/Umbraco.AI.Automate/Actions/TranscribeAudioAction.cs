@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Umbraco.AI.Automate.Helpers;
 using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.SpeechToText;
 using Umbraco.Automate.Core.Actions;
@@ -128,7 +129,7 @@ public sealed class TranscribeAudioAction : ActionBase<TranscribeAudioSettings, 
             _logger.LogError(ex,
                 "Automation {AutomationId} / Run {RunId}: Audio transcription failed for {AudioPath}",
                 context.AutomationId, context.RunId, settings.AudioPath);
-            return ActionResult.Failed(ex, StepRunErrorCategory.Unknown);
+            return ActionResult.Failed(ex, StepErrorCategoryMapping.FromException(ex));
         }
     }
 }

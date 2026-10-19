@@ -59,6 +59,11 @@ internal class AIAgentEntity
     public string? Scope { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of starter prompts (<c>{ prompt }</c> objects). Null means none.
+    /// </summary>
+    public string? StarterPrompts { get; set; }
+
+    /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; } = true;

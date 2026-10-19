@@ -63,6 +63,13 @@ public class UmbracoAIPromptServiceConnector(
         // Use base class helper for optional profile dependency
         var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
 
+        // Add context dependencies
+        foreach (var contextId in entity.ContextIds)
+        {
+            var contextUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Context, contextId);
+            dependencies.Add(new UmbracoAIArtifactDependency(contextUdi, ArtifactDependencyMode.Match));
+        }
+
         // Add guardrail dependencies
         foreach (var guardrailId in entity.GuardrailIds)
         {
@@ -125,9 +132,8 @@ public class UmbracoAIPromptServiceConnector(
 
         // Get or create prompt entity
         var prompt = state.Entity
-            ?? new AIPrompt
+            ?? new AIPrompt(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Instructions = artifact.Instructions,

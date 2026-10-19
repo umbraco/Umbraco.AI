@@ -44,20 +44,16 @@ public class DeleteConnectionController : ConnectionControllerBase
         CancellationToken cancellationToken = default)
     {
         // Resolve to ID first since DeleteConnectionAsync requires Guid
-        var connectionId = await _connectionService.TryGetConnectionIdAsync(connectionIdOrAlias, cancellationToken);
-        if (connectionId is null)
+        var connection = await _connectionService.GetConnectionAsync(connectionIdOrAlias, cancellationToken);
+        if (connection is null)
         {
             return ConnectionNotFound();
         }
 
         try
         {
-            await _connectionService.DeleteConnectionAsync(connectionId.Value, cancellationToken);
+            await _connectionService.DeleteConnectionAsync(connection.Id, cancellationToken);
             return Ok();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ConnectionNotFound();
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("in use"))
         {

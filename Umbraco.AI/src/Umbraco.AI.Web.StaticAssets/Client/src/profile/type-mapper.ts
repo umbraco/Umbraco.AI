@@ -5,6 +5,7 @@ import type {
     EmbeddingProfileSettingsModel,
     SpeechToTextProfileSettingsModel,
     ImageGenerationProfileSettingsModel,
+    DecisionProfileSettingsModel,
 } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
 import type {
@@ -15,8 +16,15 @@ import type {
     UaiEmbeddingProfileSettings,
     UaiSpeechToTextProfileSettings,
     UaiImageGenerationProfileSettings,
+    UaiDecisionProfileSettings,
 } from "./types.js";
-import { isChatSettings, isEmbeddingSettings, isSpeechToTextSettings, isImageGenerationSettings } from "./types.js";
+import {
+    isChatSettings,
+    isEmbeddingSettings,
+    isSpeechToTextSettings,
+    isImageGenerationSettings,
+    isDecisionSettings,
+} from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
@@ -119,6 +127,12 @@ export const UaiProfileTypeMapper = {
             } as UaiImageGenerationProfileSettings;
         }
 
+        if (settings.$type === "decision") {
+            return {
+                $type: "decision",
+            } as UaiDecisionProfileSettings;
+        }
+
         return null;
     },
 
@@ -132,6 +146,7 @@ export const UaiProfileTypeMapper = {
         | EmbeddingProfileSettingsModel
         | SpeechToTextProfileSettingsModel
         | ImageGenerationProfileSettingsModel
+        | DecisionProfileSettingsModel
         | null {
         if (!settings) return null;
 
@@ -166,6 +181,12 @@ export const UaiProfileTypeMapper = {
                 size: settings.size,
                 mediaType: settings.mediaType,
             } as ImageGenerationProfileSettingsModel;
+        }
+
+        if (isDecisionSettings(settings)) {
+            return {
+                $type: "decision",
+            } as DecisionProfileSettingsModel;
         }
 
         return null;

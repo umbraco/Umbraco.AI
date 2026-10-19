@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property } from "@umbraco-cms/backoffice/external/lit";
 import type { TestGraderResultResponseModel } from "../../../api/types.gen.js";
+import type { UaiTranscriptMessage } from "../../transcript-input.js";
 
 
 /**
@@ -11,6 +12,10 @@ import type { TestGraderResultResponseModel } from "../../../api/types.gen.js";
 export class UaiGraderResultListElement extends LitElement {
     @property({ attribute: false })
     results: TestGraderResultResponseModel[] = [];
+
+    /** The run's input messages, shown in each card's Input section. */
+    @property({ attribute: false })
+    input: UaiTranscriptMessage[] = [];
 
     render() {
         if (!this.results || this.results.length === 0) {
@@ -23,6 +28,7 @@ export class UaiGraderResultListElement extends LitElement {
                     (r) => html`
                         <uai-grader-result-card
                             .result=${r}
+                            .input=${this.input}
                             ?expanded=${!r.passed}
                         ></uai-grader-result-card>
                     `,

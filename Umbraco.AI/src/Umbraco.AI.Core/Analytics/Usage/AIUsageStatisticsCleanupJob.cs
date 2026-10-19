@@ -13,7 +13,7 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// </summary>
 internal sealed class AIUsageStatisticsCleanupJob : UmbracoAIRecurringHostedServiceBase
 {
-    private readonly IAIUsageStatisticsRepository _statisticsRepository;
+    private readonly IAIUsageAggregationService _aggregationService;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
@@ -25,7 +25,7 @@ internal sealed class AIUsageStatisticsCleanupJob : UmbracoAIRecurringHostedServ
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
     public AIUsageStatisticsCleanupJob(
-        IAIUsageStatisticsRepository statisticsRepository,
+        IAIUsageAggregationService aggregationService,
         IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
@@ -33,7 +33,7 @@ internal sealed class AIUsageStatisticsCleanupJob : UmbracoAIRecurringHostedServ
         ILogger<AIUsageStatisticsCleanupJob> logger)
         : base(logger, CheckInterval, StartupDelay)
     {
-        _statisticsRepository = statisticsRepository;
+        _aggregationService = aggregationService;
         _options = options;
         _runtimeState = runtimeState;
         _serverRoleAccessor = serverRoleAccessor;
@@ -98,7 +98,7 @@ internal sealed class AIUsageStatisticsCleanupJob : UmbracoAIRecurringHostedServ
 
         try
         {
-            await _statisticsRepository.DeleteHourlyOlderThanAsync(hourlyRetentionDate, ct);
+            await _aggregationService.DeleteHourlyStatisticsOlderThanAsync(hourlyRetentionDate, ct);
             _logger.LogInformation("Completed hourly statistics cleanup");
         }
         catch (Exception ex)
@@ -115,7 +115,7 @@ internal sealed class AIUsageStatisticsCleanupJob : UmbracoAIRecurringHostedServ
 
         try
         {
-            await _statisticsRepository.DeleteDailyOlderThanAsync(dailyRetentionDate, ct);
+            await _aggregationService.DeleteDailyStatisticsOlderThanAsync(dailyRetentionDate, ct);
             _logger.LogInformation("Completed daily statistics cleanup");
         }
         catch (Exception ex)

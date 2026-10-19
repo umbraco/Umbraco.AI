@@ -112,6 +112,7 @@ public sealed class AIOpenTelemetrySpeechToTextMiddleware : IAISpeechToTextMiddl
         private static void EnrichActivity(Activity activity, SpeechToTextOptions? options)
         {
             activity.SetTag("gen_ai.operation.name", "speech_to_text");
+            AITraceTags.Apply(activity);
 
             if (options?.ModelId is not null)
             {

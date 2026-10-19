@@ -32,6 +32,12 @@ export type AiVariantIdModel = {
     readonly isInvariant: boolean;
 };
 
+export type AskDecisionRequestModel = {
+    profileIdOrAlias?: string | null;
+    state?: string | null;
+    question: BinaryDecisionQuestionModel | ChoiceDecisionQuestionModel | ScoreDecisionQuestionModel;
+};
+
 export type AuditLogDetailResponseModel = {
     id: string;
     startTime: string;
@@ -47,6 +53,7 @@ export type AuditLogDetailResponseModel = {
     modelId: string;
     featureType?: string | null;
     featureId?: string | null;
+    featureAlias?: string | null;
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
@@ -79,6 +86,7 @@ export type AuditLogItemResponseModel = {
     modelId: string;
     featureType?: string | null;
     featureId?: string | null;
+    featureAlias?: string | null;
     featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
@@ -92,6 +100,17 @@ export type BinaryChatContentPartModel = ChatContentPartModel & {
     mimeType: string;
     data: string;
     filename?: string | null;
+};
+
+export type BinaryDecisionQuestionModel = DecisionQuestionModel & {
+    $type: 'binary';
+    trueCriteria?: string | null;
+    falseCriteria?: string | null;
+};
+
+export type BinaryDecisionResponseModel = DecisionResponseModel & {
+    $type: 'binary';
+    trueProbability: number;
 };
 
 export type ChatContentPartModel = {
@@ -124,6 +143,20 @@ export type ChatResponseModel = {
     message: ChatMessageModel;
     finishReason?: string | null;
     usage?: UsageModel | null;
+};
+
+export type ChoiceDecisionQuestionModel = DecisionQuestionModel & {
+    $type: 'choice';
+    options: Array<DecisionOptionModel>;
+};
+
+export type ChoiceDecisionResponseModel = DecisionResponseModel & {
+    $type: 'choice';
+    choice: string;
+    confidence?: number | null;
+    probabilities: {
+        [key: string]: number;
+    };
 };
 
 export type CompareRunsRequestModel = {
@@ -228,7 +261,7 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
 };
@@ -246,6 +279,28 @@ export type CreateTestRequestModel = {
     variations?: Array<TestVariationModel> | null;
     runCount: number;
     tags: Array<string>;
+};
+
+export type DecisionOptionModel = {
+    key: string;
+    description?: string | null;
+};
+
+export type DecisionProfileSettingsModel = ProfileSettingsModel & {
+    $type: 'decision';
+};
+
+export type DecisionQuestionModel = {
+    instructions: string;
+};
+
+export type DecisionResponseModel = {
+    modelId?: string | null;
+    usage?: UsageModel | null;
+};
+
+export type DecisionScoreLevelModel = {
+    description: string;
 };
 
 export type DisclosureSettingsResponseModel = {
@@ -302,6 +357,8 @@ export type EntityVersionResponseModel = {
     dateCreated: string;
     createdByUserId?: string | null;
     createdByUserName?: string | null;
+    dateAuthored: string;
+    authoredByUserId?: string | null;
     changeDescription?: string | null;
 };
 
@@ -501,7 +558,7 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
@@ -565,12 +622,27 @@ export type RunTestsByTagsRequestModel = {
     guardrailIdsOverride?: Array<string> | null;
 };
 
+export type ScoreDecisionQuestionModel = DecisionQuestionModel & {
+    $type: 'score';
+    levels: Array<DecisionScoreLevelModel>;
+};
+
+export type ScoreDecisionResponseModel = DecisionResponseModel & {
+    $type: 'score';
+    score: number;
+    confidence?: number | null;
+    probabilities: {
+        [key: string]: number;
+    };
+};
+
 export type SettingsResponseModel = {
     defaultChatProfileId?: string | null;
     defaultEmbeddingProfileId?: string | null;
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
     defaultImageGenerationProfileId?: string | null;
+    defaultDecisionProfileId?: string | null;
     disclosureNoticeMode: string;
 };
 
@@ -705,6 +777,10 @@ export type TestOutcomeResponseModel = {
     outputType: string;
     outputValue?: string | null;
     finishReason?: string | null;
+    usage?: TestUsageResponseModel | null;
+    /**
+     * @deprecated
+     */
     tokenUsage?: TestTokenUsageResponseModel | null;
 };
 
@@ -735,6 +811,7 @@ export type TestRunComparisonResponseModel = {
     isImprovement: boolean;
     durationChangeMs: number;
     graderComparisons: Array<TestGraderComparisonResponseModel>;
+    usageComparison?: null | TestUsageComparisonResponseModel;
 };
 
 export type TestRunErrorResponseModel = {
@@ -779,6 +856,63 @@ export type TestTranscriptResponseModel = {
     reasoning?: unknown;
     timing?: unknown;
     finalOutput?: unknown;
+};
+
+export type TestUsageComparisonResponseModel = {
+    inputTokensChange: number;
+    outputTokensChange: number;
+    totalTokensChange: number;
+    callCountChange: number;
+    failedCallCountChange: number;
+    callDurationChangeMs: number;
+    hasUnreportedCalls: boolean;
+    breakdownChanged: boolean;
+    entries: Array<TestUsageEntryComparisonResponseModel>;
+};
+
+export type TestUsageEntryComparisonResponseModel = {
+    capability: string;
+    providerId?: null | string;
+    modelId?: null | string;
+    profileId?: null | string;
+    profileAlias?: null | string;
+    featureType?: null | string;
+    featureId?: null | string;
+    featureAlias?: null | string;
+    baselineEntry?: null | TestUsageEntryResponseModel;
+    comparisonEntry?: null | TestUsageEntryResponseModel;
+    totalTokensChange: number;
+    callDurationChangeMs: number;
+    failedCallCountChange: number;
+};
+
+export type TestUsageEntryResponseModel = {
+    capability: string;
+    providerId?: string | null;
+    modelId?: string | null;
+    profileId?: string | null;
+    profileAlias?: string | null;
+    featureType?: string | null;
+    featureId?: string | null;
+    featureAlias?: string | null;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    callCount: number;
+    unreportedCallCount: number;
+    durationMs: number;
+    failedCallCount: number;
+};
+
+export type TestUsageResponseModel = {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    callCount: number;
+    unreportedCallCount: number;
+    durationMs: number;
+    failedCallCount: number;
+    breakdown: Array<TestUsageEntryResponseModel>;
 };
 
 export type TestVariationComparisonResponseModel = {
@@ -853,7 +987,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
 };
@@ -864,6 +998,7 @@ export type UpdateSettingsRequestModel = {
     classifierChatProfileId?: string | null;
     defaultSpeechToTextProfileId?: string | null;
     defaultImageGenerationProfileId?: string | null;
+    defaultDecisionProfileId?: string | null;
     disclosureNoticeMode?: string | null;
 };
 
@@ -1269,6 +1404,29 @@ export type CleanupAuditLogsResponses = {
 };
 
 export type CleanupAuditLogsResponse = CleanupAuditLogsResponses[keyof CleanupAuditLogsResponses];
+
+export type GetEnabledCapabilitiesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/capabilities/enabled';
+};
+
+export type GetEnabledCapabilitiesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetEnabledCapabilitiesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetEnabledCapabilitiesResponse = GetEnabledCapabilitiesResponses[keyof GetEnabledCapabilitiesResponses];
 
 export type CompleteChatData = {
     body?: ChatRequestModel;
@@ -1839,6 +1997,39 @@ export type UpdateContextResponses = {
      */
     200: unknown;
 };
+
+export type AskData = {
+    body?: AskDecisionRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/decision/ask';
+};
+
+export type AskErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type AskError = AskErrors[keyof AskErrors];
+
+export type AskResponses = {
+    /**
+     * OK
+     */
+    200: BinaryDecisionResponseModel | ChoiceDecisionResponseModel | ScoreDecisionResponseModel;
+};
+
+export type AskResponse = AskResponses[keyof AskResponses];
 
 export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;

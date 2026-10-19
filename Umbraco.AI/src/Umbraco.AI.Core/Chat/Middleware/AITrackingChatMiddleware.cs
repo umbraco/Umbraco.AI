@@ -11,14 +11,10 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 internal sealed class AITrackingChatMiddleware : IAIChatMiddleware
 {
     private readonly IAIOperationTracker _tracker;
-    private readonly IAIRuntimeContextAccessor _contextAccessor;
 
-    public AITrackingChatMiddleware(IAIOperationTracker tracker, IAIRuntimeContextAccessor contextAccessor)
-    {
-        _tracker = tracker;
-        _contextAccessor = contextAccessor;
-    }
+    public AITrackingChatMiddleware(IAIOperationTracker tracker)
+        => _tracker = tracker;
 
     /// <inheritdoc />
-    public IChatClient Apply(IChatClient client) => new AITrackingChatClient(client, _tracker, _contextAccessor);
+    public IChatClient Apply(IChatClient client) => new AITrackingChatClient(client, _tracker);
 }

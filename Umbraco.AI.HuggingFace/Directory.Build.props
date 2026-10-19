@@ -31,13 +31,8 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <!-- Package validation -->
-  <PropertyGroup>
-    <EnablePackageValidation>false</EnablePackageValidation>
-    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
-    <EnableStrictModeForCompatibleFrameworksInPackage>true</EnableStrictModeForCompatibleFrameworksInPackage>
-    <EnableStrictModeForCompatibleTfms>true</EnableStrictModeForCompatibleTfms>
-  </PropertyGroup>
+  <!-- Package validation, baselined on this major's X.0.0 release -->
+  <Import Project="$(MSBuildThisFileDirectory)../PackageValidation.props" />
 
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)\..\assets\logo-128.png" Pack="true" PackagePath="" Visible="false" />

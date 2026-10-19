@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Core.Chat;
 
@@ -64,17 +65,11 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context != null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                // Create temporary scope for this execution
-                createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, []);
 
             PopulateProfileMetadata();
             return await base.GetResponseAsync(messages, options, cancellationToken);
@@ -92,21 +87,15 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var scopeExisted = _contextAccessor.Context != null;
         IAIRuntimeContextScope? createdScope = null;
 
         try
         {
-            if (!scopeExisted)
-            {
-                // Create temporary scope for this execution
-                createdScope = _scopeProvider.CreateScope([]);
-                _contributors.Populate(createdScope.Context);
-            }
+            createdScope = AIRuntimeContextCallScope.Begin(_contextAccessor, _scopeProvider, _contributors, []);
 
             PopulateProfileMetadata();
 
-            await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
+            await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken).WithRuntimeContext(createdScope))
             {
                 yield return update;
             }
@@ -132,11 +121,7 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
             return;
         }
 
-        context.SetValue(Constants.ContextKeys.ProfileId, _profile.Id);
-        context.SetValue(Constants.ContextKeys.ProfileAlias, _profile.Alias);
-        context.SetValue(Constants.ContextKeys.ProfileVersion, _profile.Version);
-        context.SetValue(Constants.ContextKeys.ProviderId, _profile.Model.ProviderId);
-        context.SetValue(Constants.ContextKeys.ModelId, _profile.Model.ModelId);
+        context.SetProfileMetadata(_profile);
 
         // Always set (even to null) so a previous profile's prompt in the same scope is not reused.
         context.SetValue(

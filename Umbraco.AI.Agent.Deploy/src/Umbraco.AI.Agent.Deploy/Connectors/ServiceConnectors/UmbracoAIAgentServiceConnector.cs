@@ -168,9 +168,8 @@ public class UmbracoAIAgentServiceConnector(
 
         // Get or create agent entity
         var agent = state.Entity
-            ?? new AIAgent
+            ?? new AIAgent(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 AgentType = agentType,

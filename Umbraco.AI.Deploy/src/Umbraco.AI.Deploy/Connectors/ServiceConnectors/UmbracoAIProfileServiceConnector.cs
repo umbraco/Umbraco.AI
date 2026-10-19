@@ -159,9 +159,8 @@ public class UmbracoAIProfileServiceConnector(
 
         // Get or create profile entity
         var profile = state.Entity
-            ?? new AIProfile
+            ?? new AIProfile(artifact.Udi.Guid)
             {
-                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Capability = (AICapability)artifact.Capability,

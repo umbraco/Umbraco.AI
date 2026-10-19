@@ -93,6 +93,11 @@ public class AuditLogItemResponseModel
     public Guid? FeatureId { get; set; }
 
     /// <summary>
+    /// The alias of the feature (prompt or agent) at the time of execution. Null for older entries.
+    /// </summary>
+    public string? FeatureAlias { get; set; }
+
+    /// <summary>
     /// The feature version at time of execution.
     /// </summary>
     public int? FeatureVersion { get; set; }

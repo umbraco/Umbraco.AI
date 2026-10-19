@@ -58,6 +58,11 @@ public sealed class AIAuditContext
     public Guid? FeatureId { get; init; }
 
     /// <summary>
+    /// Gets the feature alias (prompt or agent alias) that initiated this operation.
+    /// </summary>
+    public string? FeatureAlias { get; init; }
+
+    /// <summary>
     /// Gets the profile version at time of execution.
     /// </summary>
     public int? ProfileVersion { get; init; }
@@ -107,6 +112,7 @@ public sealed class AIAuditContext
             EntityType = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityType),
             FeatureType = runtimeContext.GetValue<string>(Constants.ContextKeys.FeatureType),
             FeatureId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.FeatureId),
+            FeatureAlias = runtimeContext.GetValue<string>(Constants.ContextKeys.FeatureAlias),
             ProfileVersion = runtimeContext.GetValue<int>(Constants.ContextKeys.ProfileVersion),
             FeatureVersion = runtimeContext.GetValue<int>(Constants.ContextKeys.FeatureVersion),
             Prompt = prompt
@@ -128,6 +134,7 @@ public sealed class AIAuditContext
         EntityType = identity.EntityType,
         FeatureType = identity.FeatureType,
         FeatureId = identity.FeatureId,
+        FeatureAlias = identity.FeatureAlias,
         ProfileVersion = identity.ProfileVersion,
         FeatureVersion = identity.FeatureVersion,
         Prompt = prompt,

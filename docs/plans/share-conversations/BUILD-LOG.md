@@ -1,5 +1,20 @@
 # Build Log
 
+- **SC-09** — Recipient-side share Management API controllers. Commit `cd77a0ec`. Two review
+  rounds: (1) FAIL — a builder deleted two pending DI-resolution test placeholders on a false
+  premise (claimed SC-08 set a delete-them precedent; SC-08 actually left its own skipped and
+  retargeted). Restored both and aligned all three placeholders (including the already-committed
+  SC-08 one) on identical wording pointing at SC-10's live verification. Also resolved a new
+  finding into an explicit decision (ARCHITECTURE.md decision 9, STORIES.md US4 AC7): a Snapshot
+  share's `dateModified`/`lastMessageAt` were about to leak that the owner kept chatting after the
+  cutoff — even with no message content exposed, the metadata alone said "something happened after
+  this." Fixed by freezing both fields at the cutoff message's own timestamp for Snapshot shares
+  only. This required a disclosed, reviewed widening of SC-07's already-committed
+  `IAIConversationShareReadService.GetSharedConversationAsync` return tuple (adding the share's
+  `ScopeMode` — data already in scope, no new query) since the Web layer had no other way to tell
+  Snapshot from Live; reviewer confirmed this was the right call given the interface is pre-release
+  (only exists on this feature branch, no external consumer to break). (2) PASS. `dotnet
+  build`/`dotnet test`: 164 unit + 3 skipped + 2 integration passing throughout.
 - **SC-08** — Owner-side share Management API controllers. Commit `848707f9`. Two review rounds:
   (1) FAIL — `Enum.TryParse` alone accepts a numeric string (`"7"`) for a 2-member enum with no
   corresponding value, letting a nonsense scope mode silently flow through and behave like Live

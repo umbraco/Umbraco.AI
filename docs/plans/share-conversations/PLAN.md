@@ -87,7 +87,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   that fires it is wired up. The `GET /conversations` list endpoint's `hasActiveShares` field
   (SC-05) rides on the existing controller — no new controller for it.
 
-- [ ] **SC-09** — Recipient-side share controllers
+- [x] **SC-09** — Recipient-side share controllers
   story: US3 (AC1, AC3 backend half), US4 (AC1, AC2, AC5, AC6)
   depends-on: SC-07
   parallel-group: backend-api

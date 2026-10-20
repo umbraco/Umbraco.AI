@@ -54,7 +54,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   (`ARCHITECTURE.md` decision 6). `AIConversation`/`ConversationResponseModel` both gain the
   read-only field. Independent of SC-04 (reads, not writes) — safe to run in parallel.
 
-- [ ] **SC-06** — Share-notification email
+- [x] **SC-06** — Share-notification email
   story: US1 (AC7–8)
   depends-on: SC-04
   New `AIConversationShareCreatedNotificationHandler` reacting to SC-04's

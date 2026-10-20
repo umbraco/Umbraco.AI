@@ -1,5 +1,21 @@
 # Build Log
 
+- **SC-06** — Share-notification email. Commit `feab5c0a`. Pre-build research corrected a real
+  inaccuracy in ARCHITECTURE.md decision 5 (the design doc said the sharing service "publishes
+  `SendEmailNotification`" directly — checked against the real `Umbraco.Cms` source and found that's
+  backwards; the actual mechanism is `IEmailSender.SendAsync`). Two review rounds on the build
+  itself: (1) FAIL — 1 Critical (the email's "view conversation" link used an invented route and the
+  wrong constant — the section *alias* instead of its *pathname* — so it pointed nowhere real) + 3
+  Important (a happy-path test loose enough to pass even with the broken link; the handler could
+  still throw outside its one `try/catch`, which — because `AIConversationShareService` awaits this
+  notification inline per recipient — would have failed the owner's whole share request and silently
+  dropped any remaining recipients; an unnecessary/incorrectly-justified assembly-visibility change
+  that a simpler, already-proven form would have covered). All fixed, verified against the real
+  frontend route files and a working sibling precedent rather than re-guessed. (2) PASS. Also
+  resolved as an explicit, documented trade-off (not a defect): the email sends inline rather than
+  queued to a background worker, accepting SMTP latency on the share request for what's scoped as a
+  low-volume, internal-collaboration signal. `dotnet build`/`dotnet test`: 137 unit + 2 skipped + 2
+  integration passing throughout.
 - **SC-05** — `hasActiveShares` on the owner's paged conversation list. Commit `9b9c0460`. Two
   review rounds: (1) FAIL — the new tests each set up only one conversation, so they'd still pass if
   the production query dropped its `ConversationId` correlation entirely (every row would report the

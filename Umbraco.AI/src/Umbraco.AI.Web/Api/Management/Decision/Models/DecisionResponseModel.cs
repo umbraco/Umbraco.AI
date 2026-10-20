@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Umbraco.AI.Web.Api.Common.Json;
 using Umbraco.AI.Web.Api.Common.Models;
 
 namespace Umbraco.AI.Web.Api.Management.Decision.Models;
@@ -54,8 +55,10 @@ public sealed class ChoiceDecisionResponseModel : DecisionResponseModel
     public double? Confidence { get; init; }
 
     /// <summary>
-    /// The model's estimated probability for every option, keyed by option key.
+    /// The model's estimated probability for every option, keyed by option key. Keys are written exactly
+    /// as the caller sent them, not camel-cased like other dictionary keys in this API.
     /// </summary>
+    [JsonConverter(typeof(ExactKeyDictionaryJsonConverter<double>))]
     public required IReadOnlyDictionary<string, double> Probabilities { get; init; }
 }
 

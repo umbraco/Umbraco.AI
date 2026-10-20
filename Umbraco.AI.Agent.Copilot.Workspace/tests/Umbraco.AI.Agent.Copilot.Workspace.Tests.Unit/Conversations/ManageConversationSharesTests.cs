@@ -133,11 +133,65 @@ public class ManageConversationSharesTests
     #endregion
 
     /// <summary>
-    /// Not yet exercised: the recipient-facing read path this revoke must close off immediately, which
-    /// lives on a service that doesn't exist yet.
+    /// Spans both the owner-side write service (<see cref="AIConversationShareService"/>, SC-04) and
+    /// the recipient-side read service (<see cref="AIConversationShareReadService"/>, SC-07): revoking
+    /// a share must close off the recipient's read path immediately. The two services don't share
+    /// state directly — this guards their shared contract through the repository they both depend on
+    /// (<see cref="IAIConversationShareRepository"/>): once <c>RevokeAsync</c> has run, the read
+    /// service's active-share lookup must come back empty for that recipient.
     /// </summary>
-    [Fact(Skip = "Pending the recipient-side read service — SC-07")]
-    public Task RevokeConversationShareAsync_ThenGetSharedConversationAsync_NoLongerResolves() => Task.CompletedTask;
+    [Fact]
+    public async Task RevokeConversationShareAsync_ThenGetSharedConversationAsync_NoLongerResolves()
+    {
+        // Arrange — the shared repository mock is genuinely stateful here, so the test exercises the
+        // real interaction between SC-04's write service and SC-07's read service through the
+        // repository they both depend on, rather than two independently-stubbed halves.
+        var conversationId = Guid.NewGuid();
+        var (writeService, conversations, shares, _) = BuildService();
+        SetupOwnedConversation(conversations, conversationId);
+
+        AIConversationShare? active = new AIConversationShare
+        {
+            ConversationId = conversationId,
+            SharedWithUserKey = RecipientKey,
+            SharedByUserKey = OwnerKey,
+            ScopeMode = AIConversationShareScopeMode.Live,
+            DateShared = DateTime.UtcNow,
+        };
+        shares
+            .Setup(r => r.GetActiveShareAsync(conversationId, RecipientKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => active);
+        shares
+            .Setup(r => r.RevokeAsync(conversationId, RecipientKey, It.IsAny<CancellationToken>()))
+            .Callback(() => active = null)
+            .ReturnsAsync(true);
+
+        var readRepository = new Mock<IAIConversationRepository>();
+        readRepository
+            .Setup(r => r.GetByIdAsync(conversationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIConversation { Id = conversationId, UserKey = OwnerKey });
+        readRepository
+            .Setup(r => r.GetMessagesAsync(conversationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var recipientUser = new Mock<IUser>();
+        recipientUser.Setup(x => x.Key).Returns(RecipientKey);
+        var recipientSecurity = new Mock<IBackOfficeSecurity>();
+        recipientSecurity.Setup(x => x.CurrentUser).Returns(recipientUser.Object);
+        var recipientAccessor = new Mock<IBackOfficeSecurityAccessor>();
+        recipientAccessor.Setup(x => x.BackOfficeSecurity).Returns(recipientSecurity.Object);
+        var readService = new AIConversationShareReadService(shares.Object, readRepository.Object, recipientAccessor.Object);
+
+        // Act / Assert — resolves while the share is active, then stops resolving once revoked.
+        var beforeRevoke = await readService.GetSharedConversationAsync(conversationId);
+        beforeRevoke.ShouldNotBeNull();
+
+        await writeService.RevokeConversationShareAsync(conversationId, RecipientKey);
+
+        var afterRevoke = await readService.GetSharedConversationAsync(conversationId);
+        afterRevoke.ShouldBeNull();
+
+        shares.Verify(r => r.RevokeAsync(conversationId, RecipientKey, It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     private static void SetupOwnedConversation(Mock<IAIConversationService> conversations, Guid conversationId)
     {

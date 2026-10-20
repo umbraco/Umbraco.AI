@@ -48,6 +48,11 @@ public static class UmbracoBuilderExtensions
         // same reason the two services above are scoped.
         builder.Services.AddScoped<IAIConversationShareService, AIConversationShareService>();
 
+        // The recipient-side read path — a separate service from IAIConversationShareService (owner
+        // writes) and AIConversationService (owner reads), per ARCHITECTURE.md decision 1. Scoped for
+        // the same IBackOfficeSecurityAccessor reason as the services above.
+        builder.Services.AddScoped<IAIConversationShareReadService, AIConversationShareReadService>();
+
         // Block deleting a project that still owns conversations (mirrors the connection/profile guard).
         builder.AddNotificationAsyncHandler<AIProjectDeletingNotification, AIProjectDeletingNotificationHandler>();
 

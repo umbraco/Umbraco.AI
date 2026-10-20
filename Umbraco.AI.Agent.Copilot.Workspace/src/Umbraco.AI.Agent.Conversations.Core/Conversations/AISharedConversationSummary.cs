@@ -3,9 +3,10 @@ namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
 /// <summary>
 /// One row of the recipient's "shared with me" list: an active <see cref="AIConversationShare"/>
 /// joined with the owning conversation's own display fields, so the paged query needs no follow-up
-/// read per row.
+/// read per row. Public — this is what <see cref="IAIConversationShareReadService.GetSharedConversationsPagedAsync"/>
+/// returns.
 /// </summary>
-internal sealed class AISharedConversationSummary
+public sealed class AISharedConversationSummary
 {
     /// <summary>The shared conversation's id.</summary>
     public Guid ConversationId { get; set; }

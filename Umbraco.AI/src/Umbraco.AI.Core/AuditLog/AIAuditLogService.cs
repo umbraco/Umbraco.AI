@@ -75,7 +75,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
-            var formattedResponse = FormatResponseSnapshot(response.Data);
+            var formattedResponse = FormatResponseSnapshot(response.Data, RedactToolContent);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
                 audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
@@ -168,7 +168,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
-            var formattedResponse = FormatResponseSnapshot(response.Data);
+            var formattedResponse = FormatResponseSnapshot(response.Data, RedactToolContent);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
                 audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
@@ -401,7 +401,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     /// Formats response data for storage in the audit log.
     /// Handles ChatMessage types to include tool calls and other content types.
     /// </summary>
-    private static string? FormatResponseSnapshot(object? data)
+    private static string? FormatResponseSnapshot(object? data, Func<string, string> redact)
     {
         if (data is null)
         {
@@ -410,8 +410,8 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         return data switch
         {
-            IEnumerable<ChatMessage> messages => AIChatMessageFormatter.FormatChatMessages(messages),
-            ChatMessage message => AIChatMessageFormatter.FormatChatMessage(message),
+            IEnumerable<ChatMessage> messages => AIChatMessageFormatter.FormatChatMessages(messages, redact),
+            ChatMessage message => AIChatMessageFormatter.FormatChatMessage(message, redact),
             string text => text,
             _ => data.ToString()
         };
@@ -461,7 +461,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
         if (!_options.CurrentValue.PersistPrompts || prompt?.Data is null)
             return;
 
-        var formatted = AIAuditLogFactory.FormatPromptSnapshot(prompt.Data, prompt.Capability);
+        var formatted = AIAuditLogFactory.FormatPromptSnapshot(prompt.Data, prompt.Capability, RedactToolContent);
         if (!string.IsNullOrEmpty(formatted))
         {
             audit.PromptSnapshot = ApplyRedactions(formatted);
@@ -473,4 +473,9 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
     private string? ApplyRedactions(string? input)
         => AIAuditLogRedactor.ApplyRedactions(input, _options.CurrentValue.RedactionPatterns, _logger);
+
+    // Tool arguments and results are redacted before the formatters truncate them, so a value cut at the
+    // length limit can't escape a pattern that would have matched it whole.
+    private string RedactToolContent(string input)
+        => ApplyRedactions(input) ?? input;
 }

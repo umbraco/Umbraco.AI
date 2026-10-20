@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -278,6 +279,48 @@ public class AIAuditLogFactoryTests
         snapshot.ShouldNotBeNull();
         snapshot.ShouldContain("(truncated,");
         snapshot.ShouldContain("chars)");
+    }
+
+    [Fact]
+    public void FormatPromptSnapshot_WithRedactor_RedactsResultBeforeTruncating()
+    {
+        // Arrange
+        var largeResult = new string('y', 980) + " secret-abcdefghijklmnopqrstuvwxyz1234";
+        var functionResult = new FunctionResultContent(callId: "tc_001", result: largeResult);
+        var messages = new List<ChatMessage> { new(ChatRole.Tool, new List<AIContent> { functionResult }) };
+
+        // Act
+        var snapshot = AIAuditLogFactory.FormatPromptSnapshot(
+            messages,
+            AICapability.Chat,
+            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"));
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.ShouldNotContain("secret-");
+        snapshot.ShouldContain("[REDACTED]");
+    }
+
+    #endregion
+
+    #region JSON Escaping
+
+    [Fact]
+    public void FormatPromptSnapshot_WithEscapableCharacters_WritesThemAsIs()
+    {
+        // Arrange
+        var functionCall = new FunctionCallContent(
+            callId: "tc_001",
+            name: "send",
+            arguments: new Dictionary<string, object?> { ["to"] = "jørgen+news@example.dk", ["note"] = "it's <b>" });
+        var messages = new List<ChatMessage> { new(ChatRole.Assistant, new List<AIContent> { functionCall }) };
+
+        // Act
+        var snapshot = AIAuditLogFactory.FormatPromptSnapshot(messages, AICapability.Chat);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.ShouldContain("send({\"to\":\"jørgen+news@example.dk\",\"note\":\"it's <b>\"})");
     }
 
     #endregion

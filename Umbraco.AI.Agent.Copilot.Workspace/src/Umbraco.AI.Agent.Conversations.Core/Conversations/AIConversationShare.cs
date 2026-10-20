@@ -4,8 +4,8 @@ namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
 /// A grant of read-only access to one conversation for one recipient (domain model). At most one
 /// <em>active</em> (<see cref="DateRevoked"/> <c>null</c>) row per conversation/recipient pair —
 /// re-sharing to an active recipient updates that row, but re-sharing after a revoke inserts a
-/// brand-new row, leaving the revoked row as untouched history. See <c>ARCHITECTURE.md</c>'s "Why a
-/// filtered unique index" section for the full rationale.
+/// brand-new row, leaving the revoked row as untouched history. This keeps a full audit trail of who
+/// had access and when, rather than losing that history every time a share is revoked and re-granted.
 /// </summary>
 public sealed class AIConversationShare
 {

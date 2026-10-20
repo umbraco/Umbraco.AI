@@ -4,8 +4,8 @@ namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
 /// Repository for conversation share persistence. Internal implementation detail — external callers
 /// go through the service layer. Deliberately separate from <see cref="IAIConversationRepository"/>:
 /// shares have their own lifecycle (per-recipient revoke, a recipient-facing read path) that must
-/// never be reachable through the owner's conversation read/write methods — see
-/// <c>ARCHITECTURE.md</c> decision 1.
+/// never be reachable through the owner's conversation read/write methods, so a bug in one can't
+/// accidentally expose or corrupt the other.
 /// </summary>
 internal interface IAIConversationShareRepository
 {
@@ -18,9 +18,10 @@ internal interface IAIConversationShareRepository
     /// never been shared with, or was shared with and then revoked — inserts a brand-new row with a
     /// fresh <see cref="AIConversationShare.DateShared"/> and returns it with <c>WasCreated: true</c>.
     /// Re-sharing after a revoke is therefore always a new grant (its own row, the revoked row's
-    /// history untouched), never a resurrection of the old one — see <c>ARCHITECTURE.md</c>'s "Why a
-    /// filtered unique index" section. The caller uses <c>WasCreated</c> to decide whether to send
-    /// the share-notification email (never sent on an update).
+    /// history untouched), never a resurrection of the old one — the insert gets a fresh
+    /// server-assigned id and <c>DateShared</c> regardless of what the caller's object carried. The
+    /// caller uses <c>WasCreated</c> to decide whether to send the share-notification email (never
+    /// sent on an update).
     /// </summary>
     Task<(AIConversationShare Share, bool WasCreated)> SaveAsync(
         AIConversationShare share,
@@ -61,7 +62,7 @@ internal interface IAIConversationShareRepository
     /// Matches the shared conversation's title only — never message content. A Snapshot share hides
     /// messages after its cutoff from the recipient; matching message content here would let a search
     /// hit (or miss) leak whether a word exists past that cutoff, through a channel the cutoff is
-    /// supposed to close. See <c>SPEC.md</c>'s <c>GET /conversations/shared-with-me</c> note.
+    /// supposed to close.
     /// </param>
     Task<(IReadOnlyList<AISharedConversationSummary> Items, int Total)> GetSharedWithUserPagedAsync(
         Guid viewerUserKey,

@@ -388,3 +388,20 @@
   (the hasActiveShares computation) and specs/frontend/shared-indicator.spec.ts (the entitySign
   badge's simultaneous-with-pin and hover-tooltip behavior) — neither had a spec file in the
   original pass since the mechanism they cover didn't exist yet at that point.
+- **2026-10-20 (`feature-build` SC-01 review → filtered unique index + title-only search)** — The
+  reviewer caught a real gap in `ARCHITECTURE.md` itself, not a builder mistake: the data model
+  never said whether the `(ConversationId, SharedWithUserKey)` uniqueness applied to all rows or
+  just active ones. Taken literally (a plain unique index), it would combine badly with soft-revoke
+  — a revoked recipient's slot would stay occupied forever, permanently blocking re-sharing with
+  them. Resolved: the index is filtered to `WHERE DateRevoked IS NULL`, so uniqueness holds only
+  among active shares; sharing again after a revoke inserts a fresh row (new `DateShared`, fires the
+  notification email same as any first share) rather than resurrecting the revoked one, preserving
+  the full share/revoke history per recipient. `ARCHITECTURE.md`'s data model section rewritten with
+  this as an explicit decision, not left implicit for `SC-02` to guess at.
+  Also fixed from the same review: `SPEC.md`'s `shared-with-me` `search` param now explicitly
+  matches title only, not message content — matching on content could leak whether a word exists
+  past a Snapshot share's cutoff, the exact channel the cutoff exists to close. `SC-01`'s
+  `AISharedConversationSummary` type is being corrected from `OwnerDisplayName` to `OwnerUserKey`
+  (display-name resolution belongs in the service/Web layer, which already has to resolve it for
+  `GET .../shares`' `userName` field anyway) — sent back to a fresh builder along with the other two
+  findings and the reviewer's non-blocking naming/one-type-per-file suggestions.

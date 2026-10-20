@@ -28,7 +28,7 @@ point for the share-notification email:
 |---|---|---|
 | `Id` | `Guid` | PK |
 | `ConversationId` | `Guid` | FK → `AIConversationEntity.Id`, cascade delete |
-| `SharedWithUserKey` | `Guid` | The recipient. Unique together with `ConversationId` (re-sharing to the same person updates their existing row instead of duplicating) |
+| `SharedWithUserKey` | `Guid` | The recipient. Unique together with `ConversationId`, filtered to active rows only (`WHERE DateRevoked IS NULL`) — see "Why a filtered unique index" below |
 | `SharedByUserKey` | `Guid` | Owner at the moment of sharing — explicit rather than inferred from the conversation, so the audit trail survives even if ownership rules ever change later |
 | `ScopeMode` | `int` (enum: `Snapshot` = 0, `Live` = 1) | Owner's choice at share time |
 | `CutoffMessageId` | `Guid?` | Set only when `ScopeMode == Snapshot` — the id of the last message visible at share time (references `AIMessage.Id`). `null` for `Live` (no ceiling) |
@@ -73,6 +73,24 @@ current tail to withhold or expose either way).
 **Why soft-revoke (`DateRevoked`), not delete**: preserves who had access to what and when, which
 matters if a privacy review ever needs to reconstruct exposure — a hard delete erases that history
 at the exact moment it might matter most.
+
+**Why a filtered unique index, not a plain one, and what re-sharing after a revoke does**: a plain
+unique index on `(ConversationId, SharedWithUserKey)` would combine badly with soft-revoke —
+once a recipient's row is revoked, it still occupies that unique slot forever, so the owner could
+never share with that same person on that conversation again. That's not the intent; revoke-then-
+regrant is a normal workflow (undo a mistake, or re-add someone later). The index is filtered to
+`WHERE DateRevoked IS NULL`: uniqueness holds only among *active* shares for a given recipient, so
+multiple revoked rows for the same `(ConversationId, SharedWithUserKey)` pair can coexist — one per
+share/revoke cycle — which is exactly the audit trail the "why soft-revoke" rationale above wants.
+
+The repository's save/upsert operation looks up the recipient's *active* row only (`DateRevoked IS
+NULL`). If one exists, it updates `ScopeMode`/`CutoffMessageId` on it (not a new share — no email,
+per decision 5). If none exists — whether this recipient has never been shared with, or was shared
+with and then revoked — it inserts a brand-new row with a fresh `DateShared`. Sharing again after a
+revoke is therefore a new grant, not a resurrection of the old one: it gets its own row (preserving
+the revoked row's history untouched) and **does** fire the share-notification email, the same as
+any other first-time share for that recipient. This is a deliberate, not incidental, consequence of
+treating "no active row" as the one condition that means "create."
 
 ## Connected systems
 

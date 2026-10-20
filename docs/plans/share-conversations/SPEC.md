@@ -75,6 +75,10 @@ active shares where the acting user is the recipient, not from owned conversatio
 - Query params mirror the existing list endpoint where they still make sense: `skip`, `take`,
   `search`. `projectId`/`includeArchived` do not apply (shared conversations aren't grouped into
   the recipient's own projects, and archiving is an owner-only concept) and are omitted.
+  `search` matches **title only** — not message content like the owner's own list endpoint does.
+  A Snapshot share hides messages after its cutoff from the recipient; matching message content
+  here would let a search hit (or miss) leak whether a word exists past that cutoff, through a
+  channel the cutoff is supposed to close. Title-only is a deliberate narrowing, not an oversight.
 - 200 `PagedViewModel<SharedConversationSummaryResponseModel>` — conversation id, title, owner's
   display name, `scopeMode`, `dateShared`. No message content in the list view.
 

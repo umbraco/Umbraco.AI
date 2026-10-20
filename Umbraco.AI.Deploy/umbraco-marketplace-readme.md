@@ -10,7 +10,7 @@ Umbraco Deploy support for Umbraco.AI - deploy AI connections, profiles, and con
 - **Guardrail Deployment** - Deploy AI guardrails and their rules
 - **Configuration References** - Use `$` syntax to reference appsettings values instead of storing secrets
 - **Dependency Resolution** - Automatic resolution of profile-to-connection and context dependencies
-- **Settings Filtering** - Three-layer filtering: IgnoreSettings, IgnoreSensitive, IgnoreEncrypted
+- **Sensitive Settings Protection** - Secrets such as API keys never leave the environment they were set in; use configuration references to deploy them
 - **Disk-Based Artifacts** - Git-friendly JSON artifacts for GitOps workflows
 - **Multi-Pass Processing** - Intelligent dependency resolution during deployment
 
@@ -29,8 +29,8 @@ Umbraco Deploy support for Umbraco.AI - deploy AI connections, profiles, and con
     "AI": {
       "Deploy": {
         "Connections": {
-          "IgnoreEncrypted": true,
-          "IgnoreSensitive": true
+          "IgnoreSettings": [],
+          "IncludeSensitiveSettings": []
         }
       }
     }

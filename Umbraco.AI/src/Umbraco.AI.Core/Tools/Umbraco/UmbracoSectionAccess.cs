@@ -1,4 +1,5 @@
 using Umbraco.Cms.Core.Models.Membership;
+using Umbraco.Extensions;
 using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -54,5 +55,5 @@ internal static class UmbracoSectionAccess
         => HasAnySection(user, TreeSections);
 
     private static bool HasAnySection(IUser user, params string[] sections)
-        => user.AllowedSections.Any(allowed => sections.Contains(allowed, StringComparer.OrdinalIgnoreCase));
+        => sections.Any(user.HasSectionAccess);
 }

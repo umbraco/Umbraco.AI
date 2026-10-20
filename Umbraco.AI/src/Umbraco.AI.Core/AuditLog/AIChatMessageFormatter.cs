@@ -10,9 +10,6 @@ namespace Umbraco.AI.Core.AuditLog;
 /// </summary>
 internal static class AIChatMessageFormatter
 {
-    private const int MaxArgumentsLength = 500;
-    private const int MaxResultLength = 1000;
-
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
         WriteIndented = false,
@@ -32,9 +29,15 @@ internal static class AIChatMessageFormatter
     /// Applied to tool arguments and results before they are truncated, so a value cut at the limit can't
     /// slip past a redaction pattern.
     /// </param>
+    /// <param name="options">Supplies the tool argument and result length limits; defaults apply when null.</param>
     /// <returns>A formatted string representation of the messages.</returns>
-    public static string FormatChatMessages(IEnumerable<ChatMessage> messages, Func<string, string>? redact = null)
+    public static string FormatChatMessages(
+        IEnumerable<ChatMessage> messages,
+        Func<string, string>? redact = null,
+        AIAuditLogOptions? options = null)
     {
+        options ??= new AIAuditLogOptions();
+
         var sb = new StringBuilder();
         var isFirst = true;
 
@@ -47,7 +50,7 @@ internal static class AIChatMessageFormatter
             }
             isFirst = false;
 
-            FormatChatMessage(sb, message, redact);
+            FormatChatMessage(sb, message, redact, options);
         }
 
         return sb.ToString();
@@ -61,15 +64,19 @@ internal static class AIChatMessageFormatter
     /// Applied to tool arguments and results before they are truncated, so a value cut at the limit can't
     /// slip past a redaction pattern.
     /// </param>
+    /// <param name="options">Supplies the tool argument and result length limits; defaults apply when null.</param>
     /// <returns>A formatted string representation of the message.</returns>
-    public static string FormatChatMessage(ChatMessage message, Func<string, string>? redact = null)
+    public static string FormatChatMessage(
+        ChatMessage message,
+        Func<string, string>? redact = null,
+        AIAuditLogOptions? options = null)
     {
         var sb = new StringBuilder();
-        FormatChatMessage(sb, message, redact);
+        FormatChatMessage(sb, message, redact, options ?? new AIAuditLogOptions());
         return sb.ToString();
     }
 
-    private static void FormatChatMessage(StringBuilder sb, ChatMessage message, Func<string, string>? redact)
+    private static void FormatChatMessage(StringBuilder sb, ChatMessage message, Func<string, string>? redact, AIAuditLogOptions options)
     {
         sb.Append($"===== [{message.Role}] =====");
 
@@ -95,13 +102,13 @@ internal static class AIChatMessageFormatter
 
                 case FunctionCallContent functionCall:
                     sb.AppendLine();
-                    FormatFunctionCall(sb, functionCall, redact);
+                    FormatFunctionCall(sb, functionCall, redact, options.MaxToolArgumentsLength);
                     lastWasText = false;
                     break;
 
                 case FunctionResultContent functionResult:
                     sb.AppendLine();
-                    FormatFunctionResult(sb, functionResult, redact);
+                    FormatFunctionResult(sb, functionResult, redact, options.MaxToolResultLength);
                     lastWasText = false;
                     break;
 
@@ -121,19 +128,19 @@ internal static class AIChatMessageFormatter
         }
     }
 
-    private static void FormatFunctionCall(StringBuilder sb, FunctionCallContent functionCall, Func<string, string>? redact)
+    private static void FormatFunctionCall(StringBuilder sb, FunctionCallContent functionCall, Func<string, string>? redact, int maxLength)
     {
         var callId = functionCall.CallId ?? "unknown";
         var name = functionCall.Name ?? "unknown";
-        var args = FormatArguments(functionCall.Arguments, redact);
+        var args = FormatArguments(functionCall.Arguments, redact, maxLength);
 
         sb.Append($"  [tool_call:{callId}] {name}({args})");
     }
 
-    private static void FormatFunctionResult(StringBuilder sb, FunctionResultContent functionResult, Func<string, string>? redact)
+    private static void FormatFunctionResult(StringBuilder sb, FunctionResultContent functionResult, Func<string, string>? redact, int maxLength)
     {
         var callId = functionResult.CallId ?? "unknown";
-        var result = FormatResult(functionResult.Result, redact);
+        var result = FormatResult(functionResult.Result, redact, maxLength);
 
         sb.Append($"[tool:{callId}] -> {result}");
     }
@@ -146,7 +153,7 @@ internal static class AIChatMessageFormatter
         sb.Append($"  [data:{mimeType}] ({size} bytes)");
     }
 
-    private static string FormatArguments(IDictionary<string, object?>? arguments, Func<string, string>? redact)
+    private static string FormatArguments(IDictionary<string, object?>? arguments, Func<string, string>? redact, int maxLength)
     {
         if (arguments is null || arguments.Count == 0)
         {
@@ -156,7 +163,7 @@ internal static class AIChatMessageFormatter
         try
         {
             var json = JsonSerializer.Serialize(arguments, s_jsonOptions);
-            return TruncateIfNeeded(Redact(json, redact), MaxArgumentsLength);
+            return TruncateIfNeeded(Redact(json, redact), maxLength);
         }
         catch
         {
@@ -164,7 +171,7 @@ internal static class AIChatMessageFormatter
         }
     }
 
-    private static string FormatResult(object? result, Func<string, string>? redact)
+    private static string FormatResult(object? result, Func<string, string>? redact, int maxLength)
     {
         if (result is null)
         {
@@ -174,7 +181,7 @@ internal static class AIChatMessageFormatter
         try
         {
             var json = result is string str ? str : JsonSerializer.Serialize(result, s_jsonOptions);
-            return TruncateIfNeeded(Redact(json, redact), MaxResultLength);
+            return TruncateIfNeeded(Redact(json, redact), maxLength);
         }
         catch
         {
@@ -187,7 +194,7 @@ internal static class AIChatMessageFormatter
 
     private static string TruncateIfNeeded(string value, int maxLength)
     {
-        if (value.Length <= maxLength)
+        if (maxLength <= 0 || value.Length <= maxLength)
         {
             return value;
         }

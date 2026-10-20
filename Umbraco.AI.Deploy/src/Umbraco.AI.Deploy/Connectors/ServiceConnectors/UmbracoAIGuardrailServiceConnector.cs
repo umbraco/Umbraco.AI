@@ -1,9 +1,14 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Extensions.DependencyInjection;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -12,11 +17,39 @@ namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 /// Service connector for Umbraco AI Guardrails, responsible for synchronizing AI Guardrail entities during deploy operations.
 /// </summary>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Guardrail, UdiType.GuidUdi)]
-public class UmbracoAIGuardrailServiceConnector(
-    IAIGuardrailService guardrailService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIEntityServiceConnectorBase<AIGuardrailArtifact, AIGuardrail>(settingsAccessor)
+public class UmbracoAIGuardrailServiceConnector
+    : UmbracoAIEntityServiceConnectorBase<AIGuardrailArtifact, AIGuardrail>
 {
+    private readonly IAIGuardrailService _guardrailService;
+    private readonly AIGuardrailEvaluatorCollection _evaluators;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIGuardrailServiceConnector"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an AIGuardrailEvaluatorCollection. Will be removed in v20.")]
+    public UmbracoAIGuardrailServiceConnector(
+        IAIGuardrailService guardrailService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            guardrailService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<AIGuardrailEvaluatorCollection>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIGuardrailServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIGuardrailServiceConnector(
+        IAIGuardrailService guardrailService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        AIGuardrailEvaluatorCollection evaluators)
+        : base(settingsAccessor)
+    {
+        _guardrailService = guardrailService;
+        _evaluators = evaluators;
+    }
+
     /// <inheritdoc />
     protected override int[] ProcessPasses => [2];
 
@@ -31,12 +64,12 @@ public class UmbracoAIGuardrailServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIGuardrail?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => guardrailService.GetGuardrailAsync(id, cancellationToken);
+        => _guardrailService.GetGuardrailAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIGuardrail> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var guardrails = await guardrailService.GetGuardrailsAsync(cancellationToken);
+        var guardrails = await _guardrailService.GetGuardrailsAsync(cancellationToken);
         foreach (var guardrail in guardrails)
         {
             yield return guardrail;
@@ -62,7 +95,7 @@ public class UmbracoAIGuardrailServiceConnector(
 
         // Serialize Rules as JSON (complex nested structure with evaluator configs)
         var rules = entity.Rules.Count > 0
-            ? JsonSerializer.SerializeToElement(entity.Rules)
+            ? SerializeRules(entity.Rules)
             : (JsonElement?)null;
 
         var artifact = new AIGuardrailArtifact(udi, dependencies)
@@ -98,6 +131,7 @@ public class UmbracoAIGuardrailServiceConnector(
         CancellationToken cancellationToken)
     {
         var artifact = state.Artifact;
+        IList<AIGuardrailRule> targetRules = state.Entity?.Rules ?? [];
 
         // Deserialize Rules from JsonElement
         List<AIGuardrailRule>? rules = null;
@@ -106,6 +140,16 @@ public class UmbracoAIGuardrailServiceConnector(
             rules = artifact.Rules.Value.Deserialize<List<AIGuardrailRuleArtifactItem>>()
                 ?.Select(item => item.ToRule())
                 .ToList();
+        }
+
+        // Sensitive literals never cross environments; keep this environment's own values instead.
+        foreach (AIGuardrailRule rule in rules ?? [])
+        {
+            object? config = UmbracoAISensitiveSettingsFilter.ImportSettings(
+                rule.Config,
+                targetRules.FirstOrDefault(r => r.Id == rule.Id)?.Config,
+                GetConfigSchema(rule.EvaluatorId));
+            rule.Config = config is null ? null : (JsonElement)config;
         }
 
         // Get or create AIGuardrail entity
@@ -121,6 +165,28 @@ public class UmbracoAIGuardrailServiceConnector(
         guardrail.Name = artifact.Name;
         guardrail.Rules = rules ?? [];
 
-        state.Entity = await guardrailService.SaveGuardrailAsync(guardrail, cancellationToken);
+        state.Entity = await _guardrailService.SaveGuardrailAsync(guardrail, cancellationToken);
     }
+
+    private JsonElement SerializeRules(IList<AIGuardrailRule> rules)
+    {
+        var nodes = JsonSerializer.SerializeToNode(rules)!.AsArray();
+        for (var i = 0; i < rules.Count; i++)
+        {
+            object? original = rules[i].Config;
+            object? config = UmbracoAISensitiveSettingsFilter.RemoveSensitiveLiterals(
+                original,
+                GetConfigSchema(rules[i].EvaluatorId));
+
+            if (!ReferenceEquals(config, original))
+            {
+                nodes[i]![nameof(AIGuardrailRule.Config)] = JsonSerializer.SerializeToNode(config);
+            }
+        }
+
+        return JsonSerializer.SerializeToElement(nodes);
+    }
+
+    private AIEditableModelSchema? GetConfigSchema(string evaluatorId)
+        => _evaluators.GetById(evaluatorId)?.GetConfigSchema();
 }

@@ -33,7 +33,10 @@ public class UmbracoAIContextServiceConnectorTests
                 _saved = c;
                 return Task.FromResult(c);
             });
-        _connector = new UmbracoAIContextServiceConnector(_contextServiceMock.Object, settingsAccessorMock.Object);
+        _connector = new UmbracoAIContextServiceConnector(
+            _contextServiceMock.Object,
+            settingsAccessorMock.Object,
+            new Umbraco.AI.Core.Contexts.ResourceTypes.AIContextResourceTypeCollection(() => []));
     }
 
     [Fact]

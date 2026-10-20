@@ -13,6 +13,7 @@ using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Services;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -35,7 +36,8 @@ public class UmbracoAIAgentServiceConnectorTests
         _connector = new UmbracoAIAgentServiceConnector(
             _agentServiceMock.Object,
             _profileServiceMock.Object,
-            _settingsAccessorMock.Object);
+            _settingsAccessorMock.Object,
+            new Mock<IUserGroupService>().Object);
     }
 
     [Fact]

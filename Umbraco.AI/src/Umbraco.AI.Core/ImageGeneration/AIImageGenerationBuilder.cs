@@ -14,7 +14,7 @@ namespace Umbraco.AI.Core.ImageGeneration;
 /// <remarks>
 /// <para>
 /// Inline image generation is ideal for CMS extensions that need image generation with the full middleware
-/// pipeline (auditing, tracking, guardrails, telemetry) without building a full agent.
+/// pipeline (auditing, tracking, telemetry) without building a full agent.
 /// </para>
 /// <para>
 /// <strong>Example:</strong>
@@ -22,8 +22,7 @@ namespace Umbraco.AI.Core.ImageGeneration;
 /// <code>
 /// var response = await imageGenerationService.GenerateImagesAsync(img => img
 ///     .WithAlias("hero-banner")
-///     .WithProfile("image-profile")
-///     .WithGuardrails("content-filter"),   // additive on top of the profile's guardrails
+///     .WithProfile("image-profile"),
 ///     "A serene mountain landscape at dawn", cancellationToken);
 /// </code>
 /// </remarks>
@@ -33,6 +32,11 @@ public sealed class AIImageGenerationBuilder
     // Namespace GUID for deterministic ID generation (UUID v5)
     // Different from the other inline builder namespaces to avoid ID collisions
     private static readonly Guid InlineImageGenerationNamespace = new("E1B7C8F4-6A2D-5C9E-8B4F-7A9C3E5D7F1A");
+
+    // The image pipeline has no guardrail middleware (only telemetry and tracking), so guardrail
+    // settings on this builder are never evaluated.
+    private const string GuardrailsNotAppliedMessage =
+        "Guardrails are not applied to image generation, so this has no effect. Will be removed in v20";
 
     private string? _alias;
     private string? _name;
@@ -150,9 +154,9 @@ public sealed class AIImageGenerationBuilder
     }
 
     /// <summary>
-    /// Adds guardrails on top of the profile's configured guardrails (additive). Use
-    /// <see cref="SetGuardrails(Guid[])"/> to fully replace.
+    /// Has no effect. Guardrails are not applied to image generation.
     /// </summary>
+    [Obsolete(GuardrailsNotAppliedMessage)]
     public AIImageGenerationBuilder WithGuardrails(params Guid[] guardrailIds)
     {
         _aiGuardrails.With(guardrailIds);
@@ -160,9 +164,9 @@ public sealed class AIImageGenerationBuilder
     }
 
     /// <summary>
-    /// Adds guardrails by alias on top of the profile's configured guardrails (additive). Aliases are
-    /// resolved to IDs by the service layer.
+    /// Has no effect. Guardrails are not applied to image generation.
     /// </summary>
+    [Obsolete(GuardrailsNotAppliedMessage)]
     public AIImageGenerationBuilder WithGuardrails(params string[] guardrailAliases)
     {
         _aiGuardrails.WithByAlias(guardrailAliases);
@@ -170,8 +174,9 @@ public sealed class AIImageGenerationBuilder
     }
 
     /// <summary>
-    /// Replaces the profile's configured guardrails with this set (replace).
+    /// Has no effect. Guardrails are not applied to image generation.
     /// </summary>
+    [Obsolete(GuardrailsNotAppliedMessage)]
     public AIImageGenerationBuilder SetGuardrails(params Guid[] guardrailIds)
     {
         _aiGuardrails.Set(guardrailIds);
@@ -179,9 +184,9 @@ public sealed class AIImageGenerationBuilder
     }
 
     /// <summary>
-    /// Replaces the profile's configured guardrails with this set by alias (replace). Aliases are resolved
-    /// to IDs by the service layer.
+    /// Has no effect. Guardrails are not applied to image generation.
     /// </summary>
+    [Obsolete(GuardrailsNotAppliedMessage)]
     public AIImageGenerationBuilder SetGuardrails(params string[] guardrailAliases)
     {
         _aiGuardrails.SetByAlias(guardrailAliases);

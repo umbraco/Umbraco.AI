@@ -44,7 +44,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   still accepts a collection of recipient keys (`SPEC.md`'s `> ASSUMPTION`), even though the
   frontend only ever calls it with one — no special-casing for "exactly one" here.
 
-- [ ] **SC-05** — `hasActiveShares` on the owner's paged conversation list
+- [x] **SC-05** — `hasActiveShares` on the owner's paged conversation list
   story: US2 (AC5, AC6 — backend half)
   depends-on: SC-03
   parallel-group: backend-service

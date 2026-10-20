@@ -1,5 +1,17 @@
 # Build Log
 
+- **SC-05** — `hasActiveShares` on the owner's paged conversation list. Commit `9b9c0460`. Two
+  review rounds: (1) FAIL — the new tests each set up only one conversation, so they'd still pass if
+  the production query dropped its `ConversationId` correlation entirely (every row would report the
+  same global flag); fixed by adding a two-conversations-same-owner test proving the flag differs
+  per row in the same page. Also added, same round: a doc-comment disclosure that the field is only
+  accurate from the paged list endpoint (always `false` from `GetById`/create/update, which don't
+  compute it), and moved the new SQLite test scaffolding into a shared `Fixtures/` folder for later
+  Conversations-repository tests to reuse instead of re-copying it. (2) PASS. First EF-Core-backed
+  (not pure-mock) test harness for this product's repository layer — justified since a mocked
+  repository can't meaningfully prove a correlated-subquery shape is actually correlated. `dotnet
+  build`/`dotnet test`: 130 unit + 2 skipped + 2 integration passing throughout (one known
+  pre-existing flaky integration test, unrelated, noted but not chased).
 - **SC-04** — Owner-side sharing service methods. Commit `3cb6d512`. Three review rounds: (1) FAIL
   — 3 Important findings: a new domain notification (`AIConversationShareCreatedNotification`)
   didn't match this codebase's real notification shape (missing `EventMessages`, verified against

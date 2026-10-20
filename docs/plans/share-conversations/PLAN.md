@@ -26,7 +26,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   `UmbracoAIConversationsDbContext` — mirrors `AIConversationResourceEntity` /
   `EFCoreAIConversationRepository`'s existing shape.
 
-- [ ] **SC-03** — SqlServer + SQLite migrations
+- [x] **SC-03** — SqlServer + SQLite migrations
   story: US1, US2, US3, US4 (foundation)
   depends-on: SC-02
   `UmbracoAIConversations_Shares` migration on both providers (root `CLAUDE.md`'s Database

@@ -1,5 +1,16 @@
 # Build Log
 
+- **SC-03** — SqlServer + SQLite migrations. Commit `3d9a38c3`. One review round, PASS first try.
+  Verified live on both providers (not just generated): applied via `dotnet ef database update`
+  against a throwaway SQLite file and a throwaway SQL Server Docker container, inspected the real
+  schema (`sys.indexes`/`.schema`) to confirm the filtered unique index, cascade delete, and
+  uniqueness-violation behavior all work as designed; reviewer independently re-ran the same checks
+  rather than trusting the builder's report, including spinning up its own SQL Server container.
+  Orchestrator then smoke-tested through the actual application lifecycle: started the demo site for
+  real, confirmed `[INF] Running Umbraco.AI.Agent.Conversations database migrations...` /
+  `...completed successfully` in its startup log, and confirmed the `umbracoAIConversationsShare`
+  table (with the filtered index) exists in the demo site's real SQLite database file — not just a
+  standalone throwaway db.
 - **SC-02** — EF Core entity + repository implementation (Persistence). Commits `0c0f6d12`
   (feature) + `54983aed` (follow-up: inlined two SC-01 doc comments that pointed at
   ARCHITECTURE.md by section, found during this task's review). Four review rounds: (1) FAIL —

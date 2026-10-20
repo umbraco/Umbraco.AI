@@ -240,8 +240,8 @@ public class AIAuditLogFactoryTests
     public void FormatPromptSnapshot_WithLargeArguments_Truncates()
     {
         // Arrange
-        // Create arguments that exceed 500 characters
-        var largeValue = new string('x', 600);
+        // Create arguments that exceed the 1,000-character default
+        var largeValue = new string('x', 1100);
         var functionCall = new FunctionCallContent(
             callId: "tc_001",
             name: "process",
@@ -263,8 +263,8 @@ public class AIAuditLogFactoryTests
     public void FormatPromptSnapshot_WithLargeResult_Truncates()
     {
         // Arrange
-        // Create result that exceeds 1000 characters
-        var largeResult = new string('y', 1200);
+        // Create result that exceeds the 4,000-character default
+        var largeResult = new string('y', 4200);
         var functionResult = new FunctionResultContent(
             callId: "tc_001",
             result: largeResult);
@@ -293,7 +293,8 @@ public class AIAuditLogFactoryTests
         var snapshot = AIAuditLogFactory.FormatPromptSnapshot(
             messages,
             AICapability.Chat,
-            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"));
+            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"),
+            new AIAuditLogOptions { MaxToolResultLength = 1000 });
 
         // Assert
         snapshot.ShouldNotBeNull();

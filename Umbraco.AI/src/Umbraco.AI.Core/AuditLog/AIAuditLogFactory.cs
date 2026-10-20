@@ -63,9 +63,6 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         return auditLog;
     }
 
-    private const int MaxArgumentLength = 500;
-    private const int MaxResultLength = 1000;
-
     // Relaxed escaping keeps characters such as + ' < > and non-ASCII letters as they are rather than
     // \uXXXX escapes, so redaction patterns match the text the tool actually sent. Snapshots are shown
     // as plain text, never as HTML.
@@ -83,8 +80,15 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
     /// Applied to tool arguments and results before they are truncated, so a value cut at the limit can't
     /// slip past a redaction pattern. The caller still redacts the whole snapshot afterwards.
     /// </param>
-    internal static string? FormatPromptSnapshot(object? promptObj, AICapability capability, Func<string, string>? redact = null)
+    /// <param name="options">Supplies the tool argument and result length limits; defaults apply when null.</param>
+    internal static string? FormatPromptSnapshot(
+        object? promptObj,
+        AICapability capability,
+        Func<string, string>? redact = null,
+        AIAuditLogOptions? options = null)
     {
+        options ??= new AIAuditLogOptions();
+
         if (promptObj is null)
         {
             return null;
@@ -95,7 +99,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             return capability switch
             {
                 AICapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
-                    string.Join("\n\n", messages.Select(m => FormatChatMessage(m, redact))),
+                    string.Join("\n\n", messages.Select(m => FormatChatMessage(m, redact, options))),
 
                 AICapability.Embedding when promptObj is IEnumerable<string> values =>
                     string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),
@@ -110,13 +114,13 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         }
     }
 
-    private static string FormatChatMessage(ChatMessage message, Func<string, string>? redact)
+    private static string FormatChatMessage(ChatMessage message, Func<string, string>? redact, AIAuditLogOptions options)
     {
         var parts = new List<string>();
 
         foreach (var content in message.Contents)
         {
-            var formatted = FormatContent(content, redact);
+            var formatted = FormatContent(content, redact, options);
             if (!string.IsNullOrEmpty(formatted))
             {
                 parts.Add(formatted);
@@ -134,7 +138,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         return $"{header}\n{string.Join("\n", parts)}";
     }
 
-    private static string? FormatContent(AIContent content, Func<string, string>? redact)
+    private static string? FormatContent(AIContent content, Func<string, string>? redact, AIAuditLogOptions options)
     {
         return content switch
         {
@@ -142,10 +146,10 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
                 textContent.Text,
 
             FunctionCallContent functionCall =>
-                FormatFunctionCall(functionCall, redact),
+                FormatFunctionCall(functionCall, redact, options.MaxToolArgumentsLength),
 
             FunctionResultContent functionResult =>
-                FormatFunctionResult(functionResult, redact),
+                FormatFunctionResult(functionResult, redact, options.MaxToolResultLength),
 
             DataContent dataContent =>
                 FormatDataContent(dataContent),
@@ -154,13 +158,9 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         };
     }
 
-    private static string FormatFunctionCall(FunctionCallContent functionCall, Func<string, string>? redact)
+    private static string FormatFunctionCall(FunctionCallContent functionCall, Func<string, string>? redact, int maxLength)
     {
-        var args = Redact(FormatArguments(functionCall.Arguments), redact);
-        if (args.Length > MaxArgumentLength)
-        {
-            args = $"{args[..MaxArgumentLength]}... (truncated, {args.Length} chars)";
-        }
+        var args = TruncateIfNeeded(Redact(FormatArguments(functionCall.Arguments), redact), maxLength);
         return $"[tool_call:{functionCall.CallId}] {functionCall.Name}({args})";
     }
 
@@ -181,13 +181,9 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         }
     }
 
-    private static string FormatFunctionResult(FunctionResultContent functionResult, Func<string, string>? redact)
+    private static string FormatFunctionResult(FunctionResultContent functionResult, Func<string, string>? redact, int maxLength)
     {
-        var result = Redact(FormatResult(functionResult.Result), redact);
-        if (result.Length > MaxResultLength)
-        {
-            result = $"{result[..MaxResultLength]}... (truncated, {result.Length} chars)";
-        }
+        var result = TruncateIfNeeded(Redact(FormatResult(functionResult.Result), redact), maxLength);
         return $"[tool:{functionResult.CallId}] -> {result}";
     }
 
@@ -215,6 +211,11 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
 
     private static string Redact(string value, Func<string, string>? redact)
         => redact is null ? value : redact(value);
+
+    private static string TruncateIfNeeded(string value, int maxLength)
+        => maxLength <= 0 || value.Length <= maxLength
+            ? value
+            : $"{value[..maxLength]}... (truncated, {value.Length} chars)";
 
     private static string FormatDataContent(DataContent dataContent)
     {

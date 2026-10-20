@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.AuditLog;
 
@@ -207,6 +208,49 @@ public class AIChatMessageFormatterTests
         // Assert
         result.ShouldContain("(truncated,");
         result.ShouldContain("chars)");
+    }
+
+    #endregion
+
+    #region Redaction and Escaping
+
+    [Fact]
+    public void FormatChatMessage_WithRedactor_RedactsResultBeforeTruncating()
+    {
+        // Arrange
+        var largeResult = new string('y', 980) + " secret-abcdefghijklmnopqrstuvwxyz1234";
+        var message = new ChatMessage(ChatRole.Tool, new List<AIContent>
+        {
+            new FunctionResultContent(callId: "tc_001", result: largeResult)
+        });
+
+        // Act
+        var result = AIChatMessageFormatter.FormatChatMessage(
+            message,
+            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"));
+
+        // Assert
+        result.ShouldNotContain("secret-");
+        result.ShouldContain("[REDACTED]");
+    }
+
+    [Fact]
+    public void FormatChatMessage_WithEscapableCharacters_WritesThemAsIs()
+    {
+        // Arrange
+        var message = new ChatMessage(ChatRole.Assistant, new List<AIContent>
+        {
+            new FunctionCallContent(
+                callId: "tc_001",
+                name: "send",
+                arguments: new Dictionary<string, object?> { ["to"] = "jørgen+news@example.dk" })
+        });
+
+        // Act
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
+
+        // Assert
+        result.ShouldContain("send({\"to\":\"jørgen+news@example.dk\"})");
     }
 
     #endregion

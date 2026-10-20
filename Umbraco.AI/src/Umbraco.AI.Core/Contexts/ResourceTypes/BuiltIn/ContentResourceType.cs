@@ -59,6 +59,8 @@ public sealed class ContentResourceType : AIContextResourceTypeBase<ContentResou
         }
 
         // Full property values need the Content section, as the CMS's document endpoint does.
+        // This is the same rule IUmbracoReadAuthorizer applies. It can't be taken as a dependency here without a
+        // second public constructor, which DI can't choose between, so switch over when the constructor changes.
         if (!UmbracoSectionAccess.CanAccessFullContent(user)
             || await _contentPermissionAuthorizer.IsDeniedAsync(user, contentKey, ActionBrowse.ActionLetter))
         {

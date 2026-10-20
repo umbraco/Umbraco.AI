@@ -454,3 +454,10 @@
   cross-product-consistent choice — already what the mockup used, now made explicit in `SPEC.md`
   (landed in the previous commit alongside an unrelated correction, since both were staged
   together) rather than left implicit in the mockup's CSS class alone.
+- **2026-10-20 (pre-SC-09 fix: `SharedConversationResponseModel` was missing an owner-name field)**
+  — Found before dispatching SC-09: `SPEC.md`'s single-conversation shared-view response never
+  defined a field for the owner's display name, even though the frontend's read-only banner
+  ("shared by \<owner\>") and the sidebar badge's hover tooltip both need one. Added
+  `ownerDisplayName` to the response model's spec, resolved the same way `GET .../shares`'
+  `userName` already is (via `IUserService` at the Web layer, not stored on the domain model) —
+  caught before it became a frontend-task surprise two tasks later.

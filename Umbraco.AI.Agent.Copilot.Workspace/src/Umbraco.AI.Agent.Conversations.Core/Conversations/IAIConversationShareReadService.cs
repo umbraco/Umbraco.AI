@@ -24,9 +24,13 @@ public interface IAIConversationShareReadService
     /// <see cref="AIConversationShareScopeMode.Live"/> share, every message is returned. Attachments
     /// (<see cref="AIConversation.Resources"/>/<see cref="AIConversation.ContextIds"/>) are never
     /// filtered per-viewer — the same attachment list the owner sees is returned as-is, with no
-    /// per-viewer redaction.
+    /// per-viewer redaction. <see cref="AIConversationShareScopeMode"/> is included alongside the
+    /// conversation/messages because the Web layer needs it to decide whether to freeze
+    /// <c>dateModified</c>/<c>lastMessageAt</c> at the cutoff (ARCHITECTURE.md decision 9) — this
+    /// service only ever surfaces the share's own scope mode, it never computes the frozen dates
+    /// itself.
     /// </summary>
-    Task<(AIConversation Conversation, IReadOnlyList<AIMessage> Messages)?> GetSharedConversationAsync(
+    Task<(AIConversation Conversation, IReadOnlyList<AIMessage> Messages, AIConversationShareScopeMode ScopeMode)?> GetSharedConversationAsync(
         Guid conversationId,
         CancellationToken cancellationToken = default);
 

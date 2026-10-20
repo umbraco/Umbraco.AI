@@ -231,7 +231,7 @@ public class ShareConversationTests
     #endregion
 
     /// <summary>Not yet exercised: resolving the service through the real Composer-registered DI graph.</summary>
-    [Fact(Skip = "Pending a real-entry-point/integration test wired against the Composer registration — SC-08")]
+    [Fact(Skip = "Pending real DI resolution — verified live in SC-10")]
     public Task ShareConversationAsync_ResolvedFromDI_SharesSuccessfully() => Task.CompletedTask;
 
     private static AIConversation SetupOwnedConversation(Mock<IAIConversationService> conversations, Guid conversationId)

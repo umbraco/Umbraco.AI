@@ -361,6 +361,27 @@ should be a supported case at all (it would need its own sentinel, since there's
 reference) is a real product question, not a bug to patch around — until decided, failing the share
 is the only safe default.
 
+### 9. A Snapshot share's `dateModified`/`lastMessageAt` freeze at the cutoff — they don't leak the conversation's live state
+
+Found during `feature-build` review (`SC-09`): `SharedConversationResponseModel` was going to carry
+the conversation's live `DateModified`/`LastMessageAt` straight through, same as the owner's own
+response model. For a `Live` share that's correct — there's no ceiling, so "live" metadata is
+exactly what's being disclosed. For a `Snapshot` share it's a small but real version of the same
+leak the title-only-search rule (`SPEC.md`'s `shared-with-me` section) already exists to close: the
+recipient can't see any message the owner sent after the cutoff, but a `LastMessageAt` timestamp
+past that point would still tell them *that* the owner kept talking, and roughly *when* — metadata
+about hidden content is still a disclosure about hidden content, even with no words attached.
+
+**Decision:** for a `Snapshot` share, `dateModified` and `lastMessageAt` on the `shared-view`
+response are the cutoff message's own `DateCreated`, not the conversation's live fields — the same
+"frozen at this point" guarantee the message list itself already makes, applied consistently to the
+two date fields that would otherwise quietly stay live. If the conversation has no messages at all
+(nothing to anchor to, decision 8 already prevents this from happening for a *new* Snapshot share,
+but a `Live`-then-never-updated edge case could still reach here with zero messages), leave
+`DateModified`/`LastMessageAt` at the conversation's own live values, unfrozen — there's nothing
+hidden to leak either way.
+`Live` shares are entirely unaffected; there's no cutoff for them to be honest about.
+
 ## TODOs carried into `feature-plan` / `feature-build`
 
 - Exact copy for the share-time disclosure warning (see decision 2) — needs product/legal-adjacent

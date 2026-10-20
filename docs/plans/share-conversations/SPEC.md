@@ -87,7 +87,18 @@ active shares where the acting user is the recipient, not from owned conversatio
 - 404 if there is no active (non-revoked) share for `{id}` addressed to the acting user.
 - 200 `SharedConversationResponseModel`:
   - Conversation metadata (title, agent, dates) — same shape as the owner's response model, minus
-    owner-only fields (`isPinned`, `isArchived`, `projectId`).
+    owner-only fields (`isPinned`, `isArchived`, `projectId`), **plus `ownerDisplayName`** (string) —
+    not on the owner's own response model, since a conversation never needs to name its own owner
+    to the owner. The frontend's read-only banner ("Read-only — shared by \<owner\>", see the "Chat
+    detail view" section below) and the "Shared with me" sidebar badge's hover tooltip both need
+    this, so it has to come from somewhere on the wire — this is that place, resolved the same way
+    `GET .../shares`' `userName` is (via `IUserService`, not stored on the domain model).
+    **`dateModified`/`lastMessageAt` for a `Snapshot` share are the cutoff message's own timestamp,
+    not the conversation's live values** — see `ARCHITECTURE.md` decision 9: the conversation's
+    current `LastMessageAt` would otherwise reveal *that* (and *when*) the owner kept chatting after
+    the cutoff, even though the recipient can't see *what* was said — a smaller version of the same
+    leak-through-metadata concern the title-only-search rule above already closes. `Live` shares are
+    unaffected (there's no ceiling to be honest about).
   - `messages`: for a `Snapshot` share, every message whose `Sequence` is `<=` the `CutoffMessageId`
     message's `Sequence` (resolved at read time); for a `Live` share, all messages. Both in the
     existing ascending order. If the `CutoffMessageId` message no longer exists (e.g. the owner

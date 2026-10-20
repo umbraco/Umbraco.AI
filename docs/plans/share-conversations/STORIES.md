@@ -221,6 +221,12 @@ Given a Snapshot share's cutoff message was later deleted because the owner used
 When I open the conversation
 Then I see every message that still exists, and no error
 
+**AC7 — A Snapshot share's dates don't reveal activity after the cutoff**
+Given a colleague shared a conversation with me as "Snapshot", then kept chatting in it afterward
+When I open the shared conversation
+Then its "last modified"/"last message" dates reflect the cutoff point, not the owner's later
+activity — I can't tell from the dates alone that anything happened after what I can see
+
 Sad path
 
 **AC6 — Cannot open a conversation not shared with me**

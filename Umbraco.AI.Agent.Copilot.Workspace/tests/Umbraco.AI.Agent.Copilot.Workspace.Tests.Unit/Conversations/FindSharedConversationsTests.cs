@@ -49,7 +49,7 @@ public class FindSharedConversationsTests
     }
 
     // Real entry point, per bdd-specs rule 4.
-    [Fact(Skip = "Pending the Management API controller — SC-09")]
+    [Fact(Skip = "Pending real DI resolution — verified live in SC-10")]
     public Task GetSharedConversationsPagedAsync_ResolvedFromDI_ReturnsSharedConversation() => Task.CompletedTask;
 
     #endregion

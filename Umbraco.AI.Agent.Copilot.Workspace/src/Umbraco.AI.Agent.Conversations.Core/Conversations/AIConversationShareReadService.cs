@@ -26,7 +26,7 @@ internal sealed class AIConversationShareReadService : IAIConversationShareReadS
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
-    public async Task<(AIConversation Conversation, IReadOnlyList<AIMessage> Messages)?> GetSharedConversationAsync(
+    public async Task<(AIConversation Conversation, IReadOnlyList<AIMessage> Messages, AIConversationShareScopeMode ScopeMode)?> GetSharedConversationAsync(
         Guid conversationId,
         CancellationToken cancellationToken = default)
     {
@@ -53,7 +53,7 @@ internal sealed class AIConversationShareReadService : IAIConversationShareReadS
         }
 
         var messages = await _conversationRepository.GetMessagesAsync(conversationId, cancellationToken);
-        return (conversation, ApplyCutoff(messages, share));
+        return (conversation, ApplyCutoff(messages, share), share.ScopeMode);
     }
 
     public async Task<(IReadOnlyList<AISharedConversationSummary> Items, int Total)> GetSharedConversationsPagedAsync(

@@ -25,6 +25,7 @@ public static class UmbracoBuilderExtensions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<ConversationMapDefinition>()
             .Add<ConversationShareMapDefinition>()
+            .Add<SharedConversationMapDefinition>()
             .Add<ProjectMapDefinition>();
 
         return builder;

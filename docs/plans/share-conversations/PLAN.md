@@ -12,7 +12,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
 
 ---
 
-- [ ] **SC-01** — Domain model + repository interface (Core)
+- [x] **SC-01** — Domain model + repository interface (Core)
   story: US1, US2, US3, US4 (foundation)
   depends-on: none
   `AIConversationShare` domain model (`ConversationId`, `SharedWithUserKey`, `SharedByUserKey`,

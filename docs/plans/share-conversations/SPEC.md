@@ -34,7 +34,7 @@ Behavior:
   caller-supplied identity of what's being frozen" posture as `UserKey` elsewhere in this service.
   `scopeMode: "live"` leaves it `null`.
 - For each recipient a **new** share row is created for (not an update to an existing one): sends
-  them an email via `SendEmailNotification` (see `ARCHITECTURE.md` decision 5), naming the owner
+  them an email via `IEmailSender` (see `ARCHITECTURE.md` decision 5), naming the owner
   and linking to the shared conversation. Updating an existing recipient's scope does not send a
   second email.
 
@@ -131,7 +131,13 @@ A new "Shared with" `<details class="cw-context-block">` in `conversation-contex
 ### `UAI_SHARE_PICKER_MODAL` — pick one person + a mode
 
 A single-recipient form, opened directly by "Choose" above — repeatable, one person per
-invocation, the same way adding one resource is one picker invocation:
+invocation, the same way adding one resource is one picker invocation. `modal: { type: "sidebar",
+size: "small" }` — checked against `Umbraco.Automate`'s own sibling product, which puts every
+comparably-scoped picker/settings modal (`node-picker`, `connection-type-picker`, `condition`,
+`notification-channel`, `trigger-settings`) at `size: "small"`, reserving `"medium"` for a
+genuinely heavier form (`node-settings`, which configures a whole flow node). This form is closer
+in weight to Automate's own "settings" modals than to its node-configuration one, so `small`
+matches the established cross-product convention rather than being picked arbitrarily:
 
 - **Recipient**: a one-item picker field (same shape as a content-picker property editor): empty
   shows a "Choose a person" placeholder button that opens the real `UMB_USER_PICKER_MODAL`

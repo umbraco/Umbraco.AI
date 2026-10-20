@@ -16,9 +16,9 @@ point for the share-notification email:
 - **Frontend**: new entity action + modal + sidebar grouping in
   `Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets`, following the existing
   `UaiConversationRenameAction` (action-opens-modal-then-calls-repository) shape.
-- **Email**: publishes Umbraco core's `SendEmailNotification` (`Umbraco.Cms.Core.Notifications`)
-  when a share is first created — see decision 5. Not a new mechanism; the same generic pipeline
-  core already uses for forgot-password and content-change alert emails.
+- **Email**: sends via Umbraco core's `IEmailSender` (`Umbraco.Cms.Core.Mail`) when a share is first
+  created — see decision 5. Not a new mechanism; the same generic pipeline core already uses for
+  forgot-password and content-change alert emails.
 
 ## Data model & persistence
 
@@ -172,17 +172,26 @@ Confirmed with the user: the owner picks specific colleagues (a recipient picker
 ill-defined and the "shared with me" list would have had to become the *owner's* "what I've
 shared" list instead.
 
-### 5. Email on first share, via core's existing `SendEmailNotification` — not on every re-share
+### 5. Email on first share, via core's existing `IEmailSender` — not on every re-share
 
-**Decision:** when the owner-side sharing service (see decision 1, `GetSharedConversationAsync`'s
-counterpart on the write side) creates a **new** share row for a recipient, it publishes
-`SendEmailNotification` (`Umbraco.Cms.Core.Notifications`) with a share-specific
-`NotificationEmailModel` — the same core pipeline already used for forgot-password and
-content-change alert emails (`Umbraco.Core.Events.UserNotificationsHandler` /
-`Umbraco.Core.Notifications.SendEmailNotification`), not new infrastructure. No new toast/bell
-mechanism — checked the codebase and Umbraco core for one; none exists to hook into, and building
-one would be a materially bigger lift than reusing the email pipeline for what's a small,
-internal-collaboration signal.
+**Corrected from an earlier pass:** this decision originally said the sharing service "publishes
+`SendEmailNotification`" directly. Checked against the real Umbraco CMS source rather than assumed:
+`SendEmailNotification` is an internal interception point `EmailSender` (the concrete
+`IEmailSender`) publishes itself, when asked, so *other* handlers can intercept or override a send —
+it isn't something a feature author constructs and publishes to send mail. The actual, correct way
+to send an email is to inject `IEmailSender` and call `SendAsync(EmailMessage, emailType, ...)`;
+this is the exact method core's own password-reset and content-notification emails go through.
+
+**Decision:** a new `AIConversationShareCreatedNotificationHandler`
+(`INotificationAsyncHandler<AIConversationShareCreatedNotification>`, reacting to the notification
+`AIConversationShareService` publishes on a genuinely new share — see the Connected systems section)
+resolves the recipient's and owner's `IUser` records via `IUserService.GetAsync(key)`,
+builds an `EmailMessage`, and calls `IEmailSender.SendAsync(message, emailType)`. Same underlying
+core pipeline already used for forgot-password and content-change alert emails — not new
+infrastructure, just the first consumer of it in this product. No new toast/bell mechanism —
+checked the codebase and Umbraco core for one; none exists to hook into, and building one would be a
+materially bigger lift than reusing the email pipeline for what's a small, internal-collaboration
+signal.
 
 **Decision:** the email fires only when a share row is *created*, not when
 `ShareConversationAsync`'s idempotent upsert (decision — see "Recipients are named" AC4 in

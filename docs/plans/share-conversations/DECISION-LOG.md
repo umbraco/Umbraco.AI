@@ -433,3 +433,14 @@
   decouple "a share was created" from "send an email about it" — `AIConversationShareCreatedNotification`
   now exists for exactly that, published only on a genuinely new share. Updated that paragraph to
   describe the real, current design rather than leave the stale claim in place.
+- **2026-10-20 (`feature-build` pre-SC-06 research: corrected a design-doc inaccuracy about how
+  Umbraco actually sends email)** — Before starting SC-06, checked the real `Umbraco.Cms` source
+  for `SendEmailNotification`/`NotificationEmailModel`/`IEmailSender` rather than trusting
+  ARCHITECTURE.md decision 5's original wording ("the sharing service publishes
+  `SendEmailNotification`"). That's backwards: `SendEmailNotification` is an internal interception
+  point `EmailSender` (the concrete `IEmailSender`) publishes itself when asked to, so *other*
+  handlers can intercept a send — a feature author sends mail by injecting `IEmailSender` and
+  calling `SendAsync(EmailMessage, emailType)`, the same method core's own password-reset and
+  content-alert emails use. Corrected decision 5, the Extension points list, `PLAN.md` SC-06/SC-10,
+  and `SPEC.md`'s POST-shares section to say this accurately before any code was written against
+  the wrong mental model.

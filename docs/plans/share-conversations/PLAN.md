@@ -57,12 +57,13 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
 - [ ] **SC-06** — Share-notification email
   story: US1 (AC7–8)
   depends-on: SC-04
-  Publishes `SendEmailNotification` (`Umbraco.Cms.Core.Notifications`) when the owner-side sharing
-  service creates a **new** share row — not when it updates an existing recipient's scope. Per
-  `ARCHITECTURE.md` decision 5. Separate task from SC-04 despite calling into it, since it's a
-  distinct concern (notification, not CRUD) touching different files (a new
-  `NotificationEmailModel` + template, not the share/list/revoke logic itself). Subject/body copy
-  is a placeholder pending the product/legal-adjacent review flagged in `ARCHITECTURE.md` — this
+  New `AIConversationShareCreatedNotificationHandler` reacting to SC-04's
+  `AIConversationShareCreatedNotification` (fired only for a genuinely new share, never a
+  scope-change update) — resolves the recipient/owner `IUser` records and calls `IEmailSender.SendAsync`.
+  Per `ARCHITECTURE.md` decision 5. Separate task from SC-04 despite reacting to it, since it's a
+  distinct concern (notification, not CRUD) touching different files (a new handler + email
+  content, not the share/list/revoke logic itself). Subject/body copy is a placeholder pending the
+  product/legal-adjacent review flagged in `ARCHITECTURE.md` — this
   task ships the mechanism, not the final wording.
 
 - [ ] **SC-07** — Recipient-side shared-read service methods
@@ -98,7 +99,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   story: US1, US2, US3, US4 (backend acceptance)
   depends-on: SC-08, SC-09
   Not unit-test-green alone. Against the running demo site: create a share (and confirm a real
-  email is sent, not just that `SendEmailNotification` was published), confirm `hasActiveShares`
+  email is actually sent, not just that the notification was published), confirm `hasActiveShares`
   flips to `true` on the owner's list, list the share, read it back via `shared-view`, see it in
   `shared-with-me`, re-share the same recipient and confirm no second email, revoke it, confirm
   the next `shared-view` request 404s. This is the backend half of every story's acceptance.

@@ -28,7 +28,7 @@ internal sealed class AIPromptPropertyValueSchemaResolver : IAIPromptPropertyVal
     }
 
     /// <inheritdoc />
-    [Obsolete("Use ResolvePropertyValueSchemaAsync. Will be removed in v19.")]
+    [Obsolete("Use ResolvePropertyValueSchemaAsync. Will be removed in v20.")]
     public async Task<JsonObject?> ResolveValueSchemaAsync(
         string contentTypeAlias,
         string entityType,

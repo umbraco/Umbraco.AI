@@ -45,7 +45,7 @@ public class ClearUmbracoContentValueTool(
     /// <summary>
     /// Initializes a new instance of the <see cref="ClearUmbracoContentValueTool"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v19")]
+    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v20")]
     public ClearUmbracoContentValueTool(
         IContentEditingService contentEditingService,
         IAIPropertyValueDispatcher dispatcher,

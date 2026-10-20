@@ -30,7 +30,7 @@ public class AllProviderController : ProviderControllerBase
     /// Initializes a new instance of the <see cref="AllProviderController"/> class.
     /// </summary>
     [Obsolete("Use the constructor that accepts an IAIExperimentalFeatures so that providers with every "
-        + "capability disabled can be omitted. Will be removed in v19.")]
+        + "capability disabled can be omitted. Will be removed in v20.")]
     public AllProviderController(AIProviderCollection providers, IUmbracoMapper umbracoMapper)
         : this(
             providers,

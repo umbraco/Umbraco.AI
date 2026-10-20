@@ -28,7 +28,7 @@ public class UpdateSettingsController : SettingsControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateSettingsController"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts an IAIProfileService so that default-profile slots are validated against their required capability. Will be removed in v19.")]
+    [Obsolete("Use the constructor that accepts an IAIProfileService so that default-profile slots are validated against their required capability. Will be removed in v20.")]
     public UpdateSettingsController(IAISettingsService settingsService, IUmbracoMapper umbracoMapper)
         : this(settingsService, StaticServiceProvider.Instance.GetRequiredService<IAIProfileService>(), umbracoMapper)
     {

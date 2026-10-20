@@ -201,7 +201,7 @@ public class TestOutcomeResponseModel
     /// <summary>
     /// Always null. Use <see cref="Usage"/> instead.
     /// </summary>
-    [Obsolete("Always null. Use Usage instead. Will be removed in v19")]
+    [Obsolete("Always null. Use Usage instead. Will be removed in v20")]
 #pragma warning disable CS0618 // Declares the obsolete TestTokenUsageResponseModel for compatibility
     public TestTokenUsageResponseModel? TokenUsage { get; set; }
 #pragma warning restore CS0618
@@ -210,7 +210,7 @@ public class TestOutcomeResponseModel
 /// <summary>
 /// Response model for token usage statistics. Always null on the outcome; use <see cref="TestUsageResponseModel"/>.
 /// </summary>
-[Obsolete("Always null. Use TestUsageResponseModel instead. Will be removed in v19")]
+[Obsolete("Always null. Use TestUsageResponseModel instead. Will be removed in v20")]
 public class TestTokenUsageResponseModel
 {
     /// <summary>

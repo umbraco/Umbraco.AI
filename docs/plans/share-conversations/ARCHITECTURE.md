@@ -203,6 +203,20 @@ spamming a recipient every time the owner adjusts scope.
 existing backoffice user; their email is already on their user record (the same address core's own
 notification emails already go to) — no new address collection needed.
 
+**Why the send happens inline (synchronously, inside the `POST .../shares` request), not queued on
+a background worker**: found during `feature-build` review — core's own `NotificationService` queues
+its mail via a `ThreadPool` worker rather than sending inline, and `umbraco-performance` flags
+blocking I/O inside a notification handler as a smell. Weighed against that: this is explicitly a
+low-volume, internal-collaboration signal (one or a handful of colleagues per share, never a bulk
+send), and building real queue infrastructure for it — a background task runner, a DI-scope-safe
+way to reuse `IUserService`/`IEmailSender` outside the request's own scope — would be a materially
+bigger lift than the feature warrants, the same proportionality call decision 5 already makes about
+not building a new toast/bell mechanism. **Decision:** keep the send inline per recipient, accepting
+that a slow or misconfigured SMTP server adds latency to the owner's `POST .../shares` request (in
+the worst case, a timeout) rather than that latency being invisible. If this product ever needs
+higher-volume or latency-sensitive email sending, revisit with a real background-queue mechanism
+then — not speculatively now for a feature whose own `BRIEF.md` scope is "a handful of colleagues."
+
 **TODO for `feature-build`**: exact email copy (subject, body, what it links to) — same
 product/legal-adjacent review flag as the disclosure-warning copy in decision 2, not just
 engineering wording, per the org's GDPR-conscious posture.

@@ -129,6 +129,44 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAIConversationsConversationResource", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationShareEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CutoffMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DateRevoked")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateShared")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ScopeMode")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SharedByUserKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SharedWithUserKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SharedWithUserKey");
+
+                    b.HasIndex("ConversationId", "SharedWithUserKey")
+                        .IsUnique()
+                        .HasFilter("DateRevoked IS NULL");
+
+                    b.ToTable("umbracoAIConversationsShare", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIMessageEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -272,6 +310,15 @@ namespace Umbraco.AI.Agent.Conversations.Persistence.SqlServer.Migrations
                 });
 
             modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationResourceEntity", b =>
+                {
+                    b.HasOne("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationShareEntity", b =>
                 {
                     b.HasOne("Umbraco.AI.Agent.Conversations.Persistence.Conversations.AIConversationEntity", null)
                         .WithMany()

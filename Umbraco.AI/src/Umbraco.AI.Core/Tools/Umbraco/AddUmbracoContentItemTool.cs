@@ -61,7 +61,7 @@ public class AddUmbracoContentItemTool(
     /// <summary>
     /// Initializes a new instance of the <see cref="AddUmbracoContentItemTool"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v19")]
+    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v20")]
     public AddUmbracoContentItemTool(
         IContentEditingService contentEditingService,
         IAIPropertyValueDispatcher dispatcher,

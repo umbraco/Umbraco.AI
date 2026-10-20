@@ -44,7 +44,7 @@ public interface IAIPromptPropertyValueSchemaResolver
     /// </returns>
     [Obsolete("Use ResolvePropertyValueSchemaAsync, which also reports whether the schema is a simplified " +
         "transformer schema and returns the property's data type key and editor alias. This method returns " +
-        "only the editor's write schema. Will be removed in v19.")]
+        "only the editor's write schema. Will be removed in v20.")]
     Task<JsonObject?> ResolveValueSchemaAsync(
         string contentTypeAlias,
         string entityType,

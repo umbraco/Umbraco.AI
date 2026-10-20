@@ -84,7 +84,7 @@ public sealed class AIAuditContext
     /// Never populated or read: the audit entry's metadata comes from the declared log keys, passed to
     /// <see cref="IAIAuditLogFactory"/> separately.
     /// </remarks>
-    [Obsolete("Never populated; audit metadata comes from the declared log keys. Will be removed in v19.")]
+    [Obsolete("Never populated; audit metadata comes from the declared log keys. Will be removed in v20.")]
     public Dictionary<string, string>? Metadata { get; } = new();
 
     /// <summary>

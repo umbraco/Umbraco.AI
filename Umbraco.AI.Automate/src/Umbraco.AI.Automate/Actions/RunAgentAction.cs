@@ -39,7 +39,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
     /// <summary>
     /// Initializes a new instance of the <see cref="RunAgentAction"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts an IMediaService, IAIUmbracoMediaResolver and IAutomationActionAuthorizer so media can be attached. Will be removed in v19.")]
+    [Obsolete("Use the constructor that accepts an IMediaService, IAIUmbracoMediaResolver and IAutomationActionAuthorizer so media can be attached. Will be removed in v20.")]
     public RunAgentAction(
         ActionInfrastructure infrastructure,
         IAIAgentService agentService,

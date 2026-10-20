@@ -48,7 +48,7 @@ public class UpdateUmbracoContentTool(
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateUmbracoContentTool"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v19")]
+    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v20")]
     public UpdateUmbracoContentTool(
         IContentEditingService contentEditingService,
         IUmbracoWriteAuthorizer authorizer)

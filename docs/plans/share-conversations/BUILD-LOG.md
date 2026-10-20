@@ -1,5 +1,15 @@
 # Build Log
 
+- **SC-07** — Recipient-side shared-read service methods. Commit `9f2044c0`. Two review rounds:
+  (1) FAIL — 1 Important finding: a cross-service test (revoke via SC-04's service, then read via
+  this one) used a mock with no actual shared state, so it would have passed even if revoke were a
+  complete no-op — rewritten with a stateful mock and proven to genuinely fail when the revoke
+  callback is disabled. Plus two cheap fixes: a misleadingly-named test (asserted a `null` return but
+  was named `_ThrowsNotFound`) and lingering plan-doc citations in two files that a follow-up round
+  caught the interface file had too, after the first fix only touched the implementation. (2) PASS.
+  Follows the existing `ConversationChatHistoryProvider` precedent for a specialized in-assembly
+  reader bypassing the owner-gated service — confirmed this is a real precedent, not invented.
+  `dotnet build`/`dotnet test`: 147 unit + 3 skipped + 2 integration passing throughout.
 - **SC-06** — Share-notification email. Commit `feab5c0a`. Pre-build research corrected a real
   inaccuracy in ARCHITECTURE.md decision 5 (the design doc said the sharing service "publishes
   `SendEmailNotification`" directly — checked against the real `Umbraco.Cms` source and found that's

@@ -66,7 +66,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   product/legal-adjacent review flagged in `ARCHITECTURE.md` — this
   task ships the mechanism, not the final wording.
 
-- [ ] **SC-07** — Recipient-side shared-read service methods
+- [x] **SC-07** — Recipient-side shared-read service methods
   story: US3 (AC1, AC3 backend half), US4 (AC1, AC2, AC5, AC6)
   depends-on: SC-03
   parallel-group: backend-service

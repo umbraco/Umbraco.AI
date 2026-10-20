@@ -1,5 +1,7 @@
-// STAGED SPEC — see ShareConversationTests.cs's header for why this lives here and where it moves
-// (Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/, as part of SC-06).
+// STAGED SPEC — not yet in a real test project. Move to
+// Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/ (matching
+// AIConversationServiceTruncateTests.cs's location/style: Moq + Shouldly, flat class,
+// Method_Scenario_ExpectedResult naming, a BuildService() factory) as part of task SC-06.
 
 using Moq;
 using Shouldly;

@@ -89,6 +89,13 @@ Given I've opened the share-picker modal and not yet picked anyone
 When I look at the footer
 Then "Share" is disabled
 
+**AC11 — A Snapshot share that can't be anchored to a message fails, never silently becomes Live**
+Given a conversation has no messages yet (or one is deleted from under the request by a concurrent
+regenerate)
+When I try to share it as "Snapshot"
+Then the share request fails with an error — it never succeeds with a cutoff that behaves like
+"Live"
+
 ---
 
 ### US2 — See and manage who a conversation is shared with

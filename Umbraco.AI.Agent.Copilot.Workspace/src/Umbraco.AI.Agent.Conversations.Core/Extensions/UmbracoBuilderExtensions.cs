@@ -44,6 +44,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddScoped<IAIConversationService, AIConversationService>();
         builder.Services.AddScoped<IAIProjectService, AIProjectService>();
 
+        // Scoped (not singleton) because it uses IBackOfficeSecurityAccessor, which is per-request —
+        // same reason the two services above are scoped.
+        builder.Services.AddScoped<IAIConversationShareService, AIConversationShareService>();
+
         // Block deleting a project that still owns conversations (mirrors the connection/profile guard).
         builder.AddNotificationAsyncHandler<AIProjectDeletingNotification, AIProjectDeletingNotificationHandler>();
 

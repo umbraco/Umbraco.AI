@@ -103,8 +103,13 @@ treating "no active row" as the one condition that means "create."
 - **Notification events**: `AIConversationSaving`/`SavedNotification` already exist for
   create/update/delete on `AIConversation` itself. Sharing doesn't modify the conversation entity,
   so it doesn't need to publish through those — a share is its own entity with its own lifecycle.
-  No new notification type is needed for v1; nothing downstream currently needs to react to a share
-  being created or revoked beyond what this feature itself does (the email in decision 5).
+  It does get one new, non-cancelable notification of its own: `AIConversationShareCreatedNotification`
+  (carrying the new `AIConversationShare` and its `AIConversation`), published only when a genuinely
+  new share row is created — never on a scope-change update to an already-active recipient. This
+  exists purely as the seam decision 5's email hangs off: the sharing service itself knows nothing
+  about email, a separate notification handler reacts to this to send one. Same shape as every other
+  "already happened" notification in this codebase (e.g. `AIAgentSelectedNotification`) — takes an
+  `EventMessages` parameter like its siblings, even though nothing currently cancels it.
 
 ## Key decisions
 
@@ -309,6 +314,29 @@ Rejected alternative (the prior two-modal design): added a menu item, a manage-v
 multi-recipient-with-chips picker, where this feature's only two building blocks — "a list you can
 remove from" and "a picker you can add from" — already exist and are already used twice in this
 exact panel.
+
+### 8. A Snapshot share that can't resolve a cutoff message fails the share — it never silently becomes Live
+
+Found during `feature-build` review (`SC-04`), not anticipated at design time: resolving the
+`CutoffMessageId` for a `Snapshot` share means finding the conversation's current last message. Two
+cases can come back with no message to anchor to — the conversation has zero messages yet, or a
+regenerate truncates the tail in the narrow window between counting messages and fetching the last
+one. The naive handling stores `CutoffMessageId = null` in both cases, but `null` is exactly what a
+`Live` share's cutoff looks like (see the data model table). A share the owner explicitly chose as
+"frozen at today's messages" would silently read as "no ceiling" instead — the opposite of what was
+asked for, and a real exposure: everything the owner writes afterward becomes visible to a recipient
+they only meant to show today's state to.
+
+**Decision:** if a `Snapshot` share's cutoff can't be resolved to a concrete message id, the share
+request fails outright (the service throws, the owner sees an error and can retry) rather than
+falling back to `null`/Live. This is the same "never reveal more than intended" posture the data
+model's graceful-degradation rule already applies at *read* time (a cutoff message deleted by
+regenerate falls back to "everything that still exists," never to "everything, unbounded") — applied
+here at *share* time instead, where the safe failure mode is "reject the share," not "silently widen
+it." `feature-plan`/`feature-build` TODO, not resolved here: whether "Snapshot an empty conversation"
+should be a supported case at all (it would need its own sentinel, since there's no message to
+reference) is a real product question, not a bug to patch around — until decided, failing the share
+is the only safe default.
 
 ## TODOs carried into `feature-plan` / `feature-build`
 

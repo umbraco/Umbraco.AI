@@ -414,3 +414,22 @@
   `filter: "DateRevoked IS NULL"` with no errors. No provider-conditional code needed — a single
   plain filter string works on both. Scratch migrations were deleted (not committed) once this was
   confirmed; the real, permanently-named migration is SC-03's job.
+- **2026-10-20 (`feature-build` SC-04: Snapshot cutoff must fail, never silently become Live)** —
+  Found during review, not anticipated at design time: resolving a Snapshot share's cutoff message
+  (the conversation's current last message) can come back empty two ways — the conversation has no
+  messages yet, or a regenerate race empties the tail between counting messages and fetching the
+  last one. The first implementation stored `CutoffMessageId = null` in both cases, which is exactly
+  what a `Live` share's cutoff looks like — an owner's explicit "frozen at today's messages" choice
+  would have silently become "no ceiling, see everything forever." Resolved: the service now throws
+  (`AIConversationShareCutoffUnresolvableException`) and rejects the share outright in both cases,
+  applying the same "never reveal more than intended" posture the data model's read-time graceful
+  degradation already uses, just at share-creation time instead. Written up as `ARCHITECTURE.md`
+  decision 8 and `STORIES.md` US1 AC11. Whether "Snapshot an empty conversation" should ever be a
+  supported case (it would need its own sentinel) is left as an open product question, not patched
+  around.
+- **2026-10-20 (`feature-build` SC-04: added a notification type, correcting an earlier assumption)**
+  — `ARCHITECTURE.md`'s "Connected systems" section originally said "No new notification type is
+  needed for v1." That turned out to be wrong once the email seam (decision 5) needed a way to
+  decouple "a share was created" from "send an email about it" — `AIConversationShareCreatedNotification`
+  now exists for exactly that, published only on a genuinely new share. Updated that paragraph to
+  describe the real, current design rather than leave the stale claim in place.

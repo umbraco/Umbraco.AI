@@ -34,7 +34,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   `UmbracoAIConversationsDbContext`). One task, not two — both providers are generated from the
   same entity change and reviewed together.
 
-- [ ] **SC-04** — Owner-side sharing service methods
+- [x] **SC-04** — Owner-side sharing service methods
   story: US1 (AC1, AC3, AC4, AC9), US2 (AC1, AC3, AC4, AC8, AC9)
   depends-on: SC-03
   parallel-group: backend-service

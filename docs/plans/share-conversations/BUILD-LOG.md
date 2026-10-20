@@ -1,5 +1,22 @@
 # Build Log
 
+- **SC-04** — Owner-side sharing service methods. Commit `3cb6d512`. Three review rounds: (1) FAIL
+  — 3 Important findings: a new domain notification (`AIConversationShareCreatedNotification`)
+  didn't match this codebase's real notification shape (missing `EventMessages`, verified against
+  `AIAgentSelectedNotification`'s real precedent rather than the builder's unverified claim there
+  was none); a stale plan-task-id code comment; and the serious one — a Snapshot share whose cutoff
+  message couldn't be resolved (empty conversation, or a race with regenerate) silently fell back to
+  behaving like a Live share with no ceiling, the opposite of what the owner asked for. Resolved by
+  the orchestrator as a new, explicit design decision (ARCHITECTURE.md decision 8, STORIES.md AC11):
+  fail the share request outright rather than silently widening it. Also settled during this round:
+  no unit tests existed for the new service, against this codebase's own convention of every service
+  having them — added real tests (moving the two staged spec stubs into the real test project) rather
+  than deferring. (2) PASS on the code, with two non-blocking suggestions (a loose exception-type
+  assertion that wouldn't have caught the exact bug just fixed if it regressed; a wrong doc-comment
+  cross-reference). (3) Fixed both anyway since they were cheap and the first one meaningfully
+  strengthens the regression test; final PASS. `dotnet build`/`dotnet test`: 125 unit (up from 111)
+  + 2 integration passing throughout, 2 unit tests honestly left skipped pointing at SC-07/SC-08 work
+  they depend on.
 - **SC-03** — SqlServer + SQLite migrations. Commit `3d9a38c3`. One review round, PASS first try.
   Verified live on both providers (not just generated): applied via `dotnet ef database update`
   against a throwaway SQLite file and a throwaway SQL Server Docker container, inspected the real

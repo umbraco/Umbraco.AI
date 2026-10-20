@@ -152,6 +152,7 @@ public static partial class UmbracoBuilderExtensions
         // scopes) calls this before touching IContentEditingService/IContentPublishingService/
         // IMediaEditingService/IAIPropertyValueDispatcher, none of which self-authorize.
         services.AddSingleton<IUmbracoWriteAuthorizer, UmbracoWriteAuthorizer>();
+        services.AddSingleton<IUmbracoReadAuthorizer, UmbracoReadAuthorizer>();
 
         // Property value operation infrastructure - dispatcher + handler discovery
         services.AddSingleton<IAIPropertyDefaultValueProvider, AIPropertyDefaultValueProvider>();

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
@@ -27,14 +29,27 @@ public record GetContentTreePathArgs(
 public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
 {
     private readonly IUmbracoContextFactory _umbracoContextFactory;
+    private readonly IUmbracoReadAuthorizer _readAuthorizer;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContentTreePathTool"/>.
     /// </summary>
     /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
     public GetContentTreePathTool(IUmbracoContextFactory umbracoContextFactory)
+        : this(umbracoContextFactory, StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="GetContentTreePathTool"/>.
+    /// </summary>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    /// <param name="readAuthorizer">Limits results to what the acting user's content tree shows.</param>
+    public GetContentTreePathTool(IUmbracoContextFactory umbracoContextFactory, IUmbracoReadAuthorizer readAuthorizer)
     {
         _umbracoContextFactory = umbracoContextFactory;
+        _readAuthorizer = readAuthorizer;
     }
 
     /// <inheritdoc />
@@ -45,12 +60,12 @@ public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
         "find related pages, or navigate the content tree structure.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(GetContentTreePathArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(GetContentTreePathArgs args, CancellationToken cancellationToken = default)
     {
         if (args.ContentKey == Guid.Empty)
         {
-            return Task.FromResult<object>(new GetContentTreePathResult(
-                false, null, null, null, "Content key cannot be empty."));
+            return new GetContentTreePathResult(
+                false, null, null, null, "Content key cannot be empty.");
         }
 
         // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
@@ -58,11 +73,13 @@ public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
         // A no-op if a context is already ambient.
         using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
+        // An item the user's tree doesn't show is reported the same as not found. Every ancestor of an
+        // item the tree shows is itself shown, so the chain below needs no further filtering.
         var content = contextReference.UmbracoContext.Content?.GetById(args.ContentKey);
-        if (content is null)
+        if (content is null || !await _readAuthorizer.CanSeeContentInTreeAsync(content.Key, content.Path))
         {
-            return Task.FromResult<object>(new GetContentTreePathResult(
-                false, null, null, null, $"Content with key '{args.ContentKey}' was not found or is not published."));
+            return new GetContentTreePathResult(
+                false, null, null, null, $"Content with key '{args.ContentKey}' was not found or is not published.");
         }
 
         // Build ancestor chain (root to parent)
@@ -78,13 +95,20 @@ public class GetContentTreePathTool : AIToolBase<GetContentTreePathArgs>
         IReadOnlyList<ContentTreeNode>? siblings = null;
         if (args.IncludeSiblings)
         {
-            siblings = content.Siblings()
-                .Select(s => new ContentTreeNode(s.Key, s.Name, s.ContentType.Alias, s.Url(), s.Level))
-                .ToList();
+            var visibleSiblings = new List<ContentTreeNode>();
+            foreach (var sibling in content.Siblings())
+            {
+                if (await _readAuthorizer.CanSeeContentInTreeAsync(sibling.Key, sibling.Path))
+                {
+                    visibleSiblings.Add(new ContentTreeNode(sibling.Key, sibling.Name, sibling.ContentType.Alias, sibling.Url(), sibling.Level));
+                }
+            }
+
+            siblings = visibleSiblings;
         }
 
-        return Task.FromResult<object>(new GetContentTreePathResult(
-            true, ancestors, current, siblings, null));
+        return new GetContentTreePathResult(
+            true, ancestors, current, siblings, null);
     }
 }
 

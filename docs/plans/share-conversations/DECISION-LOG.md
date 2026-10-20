@@ -444,3 +444,13 @@
   content-alert emails use. Corrected decision 5, the Extension points list, `PLAN.md` SC-06/SC-10,
   and `SPEC.md`'s POST-shares section to say this accurately before any code was written against
   the wrong mental model.
+- **2026-10-20 (share-picker modal size: `small`, matching Automate's own convention)** — At the
+  user's request, checked the sibling `Umbraco.Automate` product's own modals rather than picking a
+  size arbitrarily. Every comparably-scoped picker/settings modal there (`node-picker`,
+  `connection-type-picker`, `condition`, `notification-channel`, `trigger-settings`) uses `size:
+  "small"`; only the heavier whole-node-configuration modal (`node-settings`) uses `"medium"`.
+  `UAI_SHARE_PICKER_MODAL` (one person + one mode dropdown + a disclosure banner) is closer in
+  weight to Automate's "settings" modals than to its node-configuration one, so `small` is the
+  cross-product-consistent choice — already what the mockup used, now made explicit in `SPEC.md`
+  (landed in the previous commit alongside an unrelated correction, since both were staged
+  together) rather than left implicit in the mockup's CSS class alone.

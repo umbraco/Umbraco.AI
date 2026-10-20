@@ -34,6 +34,29 @@ A dedicated extraction model does this in one pass. Per Cloudflare's post, Clair
 Cloudflare's own worked example (extract → decide → write a reply) ran about 3x faster and about half
 the cost of an all-LLM pipeline. That is their benchmark, not ours.
 
+### Why this matters most for Automate
+
+Automate is where Extraction earns its keep. An automation already knows *when* something happened
+(a trigger) and *what to do* (actions). What it can't do today is read messy, unstructured input and
+turn it into the clean values the next step needs.
+
+Decision gave automations a way to **branch** on content. Extraction gives them a way to **fill in**
+values from content. Together they close the loop:
+
+```
+Trigger (Webhook, Media Saved, Content Saved, Scheduled, ...)
+   ↓
+Extract Values      → orderId, amount, startDate, customerEmail   (Extraction)
+   ↓
+Ask Pick-One        → "refund" | "replace" | "escalate"           (Decision)
+   ↓
+Create Content / Update Content Property / Send Email / Request Approval
+```
+
+Every step in that chain is a structured, typed, cheap call. The LLM only appears if a step genuinely
+needs to *write* something. That's the pitch: **"turn any inbound text into structured Umbraco content,
+without writing code and without paying LLM prices for every step."**
+
 ---
 
 ## How It Fits Next to Decision
@@ -146,18 +169,81 @@ as "supports Extraction", which may confuse the profile picker.
 
 ---
 
-## Umbraco Use Cases
+## Automate: The Headline Use Case
+
+### New action: "Extract Values"
+
+Modelled on the existing `Ask Questions` action (`Umbraco.AI.Automate/.../AskDecisionsAction.cs`),
+which already uses `DynamicOutputActionBase` to expose one output per question alias.
+
+- **Settings:** a list of fields (alias, type, instructions), a bindable `Context`, an optional
+  Extraction profile.
+- **Outputs:** one output per field alias, e.g. `${extract.orderId}`, `${extract.amount}`, plus a
+  per-field `confidence` and `found` flag.
+- **Group:** `AI`, next to Ask Yes/No, Ask Pick-One, Ask Score, Ask Questions, Transcribe Audio and
+  Run Agent.
+- **Behaviour on missing values:** a field the content doesn't contain comes back as "not found",
+  never a guess. Later steps can branch on that.
+
+Same rules as the Decision actions: experimental flag check at run time, validation errors map to
+`StepRunErrorCategory.Validation`, default profile when none picked.
+
+### Recipes to show customers
+
+Each one uses triggers, actions and control flow (`If` / `Switch`) that exist on Automate's `v18/dev`
+today, plus the one new action. These are
+the demos and docs pages that sell the feature.
+
+**1. Inbound email / webhook → structured content**
+`Webhook` → **Extract Values** (name, company, budget, deadline) → `Create Content` (a Lead node) →
+`Send Slack Message`.
+"Paste your contact form or mailbox webhook in, get a properly filled Umbraco node out."
+
+**2. Event listings from free text**
+`Content Saved` on an "Event submission" doc type → **Extract Values** (title, venue, start date/time,
+price) → `Update Content Property` on the same node → `Request Approval`.
+Editors write naturally; Automate fills the structured fields.
+
+**3. Voice notes to content**
+`Media Saved` (audio) → `Transcribe Audio` → **Extract Values** → `Create Content`.
+Chains two AI capabilities we already ship with the new one. Good live demo.
+
+**4. Triage with a human safety net**
+`Webhook` (support ticket) → **Extract Values** (order ID, amount) → `Ask Pick-One`
+(refund / replace / escalate) → `If` on confidence → low confidence goes to `Request Approval`,
+high confidence goes straight on.
+Shows that confidence scores make AI automations *safe to trust*, not just fast.
+
+**5. Media metadata enrichment**
+`Media Saved` → **Extract Values** from the caption or document text (date taken, location, people,
+licence) → `Update Media Property`.
+Better search and filtering with no manual tagging. If images are supported in v1 (Clairic takes up
+to four), this works straight from the image too.
+
+**6. Scheduled clean-up**
+`Scheduled Trigger` → `Find Content` (by name / content type) → `If` the date field is empty →
+**Extract Values** from body text → `Update Content Property`.
+Back-fills structured data on old content that was only ever written as prose.
+
+### Why this sells
+
+- **Cost story:** extraction models bill input tokens only. High-volume automations (every webhook,
+  every save) are where LLM costs hurt most, so this is where the saving shows.
+- **Speed story:** sub-second steps mean automations feel instant, not "queued".
+- **Trust story:** typed values, "not found" instead of made-up answers, and a confidence score to
+  route to a human. That answers the first objection most customers raise about AI in workflows.
+- **Pairs with Decision:** Decision lets an automation choose; Extraction lets it fill in. Selling one
+  makes the other easier to sell.
+
+---
+
+## Other Umbraco Use Cases
 
 Ideas only, none scoped:
 
-- **Content import:** pull title, date, author, price from pasted text or a dropped document into the
-  right property fields.
-- **Forms (Umbraco Forms / Automate):** extract order numbers, dates and amounts from free-text
-  submissions, then route with a Decision step.
-- **Automate actions:** an "Extract values" action whose outputs bind into later steps, next to the
-  existing Decision-based actions.
+- **Content import:** pull title, date, author, price from pasted text into the right property fields.
 - **Agent tools:** a cheap extraction tool an agent can call instead of reasoning over a long document.
-- **Media metadata:** pull dates, places and names from captions or PDF text.
+- **Copilot:** "fill the empty fields on this page from the body text", as one typed call.
 
 ---
 

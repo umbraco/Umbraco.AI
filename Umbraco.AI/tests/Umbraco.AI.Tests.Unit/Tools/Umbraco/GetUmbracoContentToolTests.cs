@@ -13,6 +13,7 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 
 public class GetUmbracoContentToolTests
 {
+    private readonly Mock<IUmbracoReadAuthorizer> _readAuthorizerMock = TestReadAuthorizers.AllowAll();
     private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IContentService> _contentServiceMock;
     private readonly Mock<IUmbracoContextFactory> _umbracoContextFactoryMock;
@@ -26,7 +27,8 @@ public class GetUmbracoContentToolTests
         _tool = new GetUmbracoContentTool(
             _contentEditingServiceMock.Object,
             _contentServiceMock.Object,
-            _umbracoContextFactoryMock.Object);
+            _umbracoContextFactoryMock.Object,
+            _readAuthorizerMock.Object);
 
         // Item not (yet) in the nucache by default, so BuildEnrichedContentItem always falls back to the
         // raw/IContentService.GetAncestors path below. The preview-cache path (BuildContentItem(IPublishedContent))
@@ -91,6 +93,24 @@ public class GetUmbracoContentToolTests
         var contentResult = result.ShouldBeOfType<GetUmbracoContentResult>();
         contentResult.Success.ShouldBeFalse();
         contentResult.Message.ShouldContain("not found");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ContentTheUserCannotRead_ReturnsNotFound_WithoutLoadingIt()
+    {
+        // Arrange
+        var key = Guid.NewGuid();
+        _readAuthorizerMock.Setup(x => x.CanReadContentAsync(key)).ReturnsAsync(false);
+
+        // Act
+        var result = await _tool.ExecuteAsync(new GetUmbracoContentArgs(key), CancellationToken.None);
+
+        // Assert
+        var contentResult = result.ShouldBeOfType<GetUmbracoContentResult>();
+        contentResult.Success.ShouldBeFalse();
+        contentResult.Content.ShouldBeNull();
+        contentResult.Message.ShouldContain("not found");
+        _contentEditingServiceMock.Verify(x => x.GetAsync(It.IsAny<Guid>()), Times.Never);
     }
 
     [Fact]

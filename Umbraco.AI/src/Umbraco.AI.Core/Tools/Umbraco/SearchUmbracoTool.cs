@@ -103,16 +103,19 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 
         try
         {
-            // Resolve user start node restrictions for content/media access filtering
+            // Search results show names, keys and places in the tree, so they need an acting user who can
+            // browse the tree; results are then limited to that user's start nodes.
             var user = _backOfficeSecurityAccessor.BackOfficeSecurity?.CurrentUser;
-            int[]? startContentIds = null;
-            int[]? startMediaIds = null;
-
-            if (user is not null)
+            if (user is null || !UmbracoSectionAccess.CanBrowseTree(user))
             {
-                startContentIds = GetEffectiveStartNodeIds(user.StartContentIds, user.Groups.Select(g => g.StartContentId));
-                startMediaIds = GetEffectiveStartNodeIds(user.StartMediaIds, user.Groups.Select(g => g.StartMediaId));
+                return Task.FromResult<object>(new SearchUmbracoResult(
+                    false,
+                    Array.Empty<UmbracoSearchResultItem>(),
+                    "You do not have access to search content or media."));
             }
+
+            var startContentIds = GetEffectiveStartNodeIds(user.StartContentIds, user.Groups.Select(g => g.StartContentId));
+            var startMediaIds = GetEffectiveStartNodeIds(user.StartMediaIds, user.Groups.Select(g => g.StartMediaId));
 
             // Execute search with start node filtering applied at query level
             var searchResults = PerformSearch(index, args.Query, typeFilter, args.Tags, maxResults, startContentIds, startMediaIds);

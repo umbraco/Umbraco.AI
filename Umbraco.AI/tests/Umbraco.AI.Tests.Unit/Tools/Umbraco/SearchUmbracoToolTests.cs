@@ -118,6 +118,32 @@ public class SearchUmbracoToolTests
         // but the test ensures the code path is exercised
     }
 
+    private delegate bool TryGetIndexCallback(string name, out IIndex? index);
+
+    [Fact]
+    public async Task ExecuteAsync_WithNoActingUser_ReturnsError_WithoutSearching()
+    {
+        // Arrange — the index exists, but nobody is signed in (e.g. a background run with no user).
+        var index = new Mock<IIndex>();
+        _examineManagerMock
+            .Setup(x => x.TryGetIndex("ExternalIndex", out It.Ref<IIndex?>.IsAny))
+            .Returns(new TryGetIndexCallback((string _, out IIndex? i) =>
+            {
+                i = index.Object;
+                return true;
+            }));
+        _backOfficeSecurityAccessorMock.SetupGet(x => x.BackOfficeSecurity).Returns((IBackOfficeSecurity?)null);
+
+        // Act
+        var result = await _tool.ExecuteAsync(new SearchUmbracoArgs("test", "all", null, 10), CancellationToken.None);
+
+        // Assert
+        var searchResult = result.ShouldBeOfType<SearchUmbracoResult>();
+        searchResult.Success.ShouldBeFalse();
+        searchResult.Results.ShouldBeEmpty();
+        index.Verify(x => x.Searcher, Times.Never);
+    }
+
     [Fact]
     public async Task ExecuteAsync_WithMissingExamineIndex_ReturnsError()
     {

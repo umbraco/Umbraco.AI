@@ -1,5 +1,16 @@
 # Build Log
 
+- **SC-08** — Owner-side share Management API controllers. Commit `848707f9`. Two review rounds:
+  (1) FAIL — `Enum.TryParse` alone accepts a numeric string (`"7"`) for a 2-member enum with no
+  corresponding value, letting a nonsense scope mode silently flow through and behave like Live
+  (no cutoff ever gets set for an undefined value); fixed by requiring `Enum.IsDefined` too. The
+  builder's own addition beyond the dispatch — a distinct 400 for an unparseable scope mode, plus
+  catching the cutoff-unresolvable exception before the general ownership/not-found catch (C#
+  matches the first applicable `catch`, so order matters: the more specific exception type must
+  come first or it's unreachable) — both held up under review. (2) PASS, plus 2 added test cases
+  (a GET happy path, the "Unknown user" display-name fallback) that were real coverage gaps, not
+  required fixes. `dotnet build`/`dotnet test`: 157 unit + 3 skipped + 2 integration passing
+  throughout.
 - **SC-07** — Recipient-side shared-read service methods. Commit `9f2044c0`. Two review rounds:
   (1) FAIL — 1 Important finding: a cross-service test (revoke via SC-04's service, then read via
   this one) used a mock with no actual shared state, so it would have passed even if revoke were a

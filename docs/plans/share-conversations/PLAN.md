@@ -77,7 +77,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   write method, per `ARCHITECTURE.md` decision 1. Independent files from SC-04/SC-05/SC-06, safe to
   run in parallel with them.
 
-- [ ] **SC-08** — Owner-side share controllers
+- [x] **SC-08** — Owner-side share controllers
   story: US1 (AC1, AC3, AC4, AC7–9), US2 (AC1, AC3, AC4, AC8–9)
   depends-on: SC-06
   parallel-group: backend-api

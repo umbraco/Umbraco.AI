@@ -43,6 +43,20 @@ public class AIAuditLogOptions
     public bool PersistFailureDetails { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets the maximum number of characters of each tool call's arguments to keep in prompt and
+    /// response snapshots. Longer arguments are truncated. Set to 0 or less to keep them in full.
+    /// Default is 1000.
+    /// </summary>
+    public int MaxToolArgumentsLength { get; set; } = 1000;
+
+    /// <summary>
+    /// Gets or sets the maximum number of characters of each tool result to keep in prompt and response
+    /// snapshots. Longer results are truncated. Set to 0 or less to keep them in full.
+    /// Default is 4000.
+    /// </summary>
+    public int MaxToolResultLength { get; set; } = 4000;
+
+    /// <summary>
     /// Gets or sets the list of regex patterns for redacting sensitive data.
     /// </summary>
     public List<string> RedactionPatterns { get; set; } = new();

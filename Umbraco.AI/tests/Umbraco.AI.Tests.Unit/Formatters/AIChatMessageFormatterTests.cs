@@ -175,7 +175,7 @@ public class AIChatMessageFormatterTests
     public void FormatChatMessage_WithLargeArguments_Truncates()
     {
         // Arrange
-        var largeValue = new string('x', 600);
+        var largeValue = new string('x', 1100);
         var functionCall = new FunctionCallContent(
             callId: "tc_001",
             name: "process",
@@ -195,7 +195,7 @@ public class AIChatMessageFormatterTests
     public void FormatChatMessage_WithLargeResult_Truncates()
     {
         // Arrange
-        var largeResult = new string('y', 1200);
+        var largeResult = new string('y', 4200);
         var functionResult = new FunctionResultContent(
             callId: "tc_001",
             result: largeResult);
@@ -227,7 +227,8 @@ public class AIChatMessageFormatterTests
         // Act
         var result = AIChatMessageFormatter.FormatChatMessage(
             message,
-            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"));
+            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"),
+            new AIAuditLogOptions { MaxToolResultLength = 1000 });
 
         // Assert
         result.ShouldNotContain("secret-");
@@ -251,6 +252,28 @@ public class AIChatMessageFormatterTests
 
         // Assert
         result.ShouldContain("send({\"to\":\"jørgen+news@example.dk\"})");
+    }
+
+    #endregion
+
+    #region Length Limits
+
+    [Fact]
+    public void FormatChatMessage_WithLoweredResultLimit_TruncatesAtIt()
+    {
+        // Arrange
+        var message = new ChatMessage(ChatRole.Tool, new List<AIContent>
+        {
+            new FunctionResultContent(callId: "tc_001", result: new string('y', 50))
+        });
+
+        // Act
+        var result = AIChatMessageFormatter.FormatChatMessage(
+            message,
+            options: new AIAuditLogOptions { MaxToolResultLength = 10 });
+
+        // Assert
+        result.ShouldContain("[tool:tc_001] -> yyyyyyyyyy... (truncated, 50 chars)");
     }
 
     #endregion

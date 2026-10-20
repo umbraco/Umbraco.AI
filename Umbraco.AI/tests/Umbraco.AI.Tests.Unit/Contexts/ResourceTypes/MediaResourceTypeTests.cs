@@ -21,7 +21,14 @@ public class MediaResourceTypeTests
     private readonly Mock<IUmbracoContextAccessor> _umbracoContextAccessor = new();
     private readonly Mock<IMediaPermissionAuthorizer> _authorizer = new();
     private readonly Mock<IBackOfficeSecurityAccessor> _securityAccessor = new();
-    private readonly IUser _user = new Mock<IUser>().Object;
+    private readonly IUser _user = UserWithSections("media");
+
+    private static IUser UserWithSections(params string[] sections)
+    {
+        var user = new Mock<IUser>();
+        user.SetupGet(u => u.AllowedSections).Returns(sections);
+        return user.Object;
+    }
 
     private MediaResourceType CreateSut()
         => new(new Mock<IAIContextResourceTypeInfrastructure>().Object, _umbracoContextAccessor.Object, _authorizer.Object, _securityAccessor.Object);
@@ -67,5 +74,35 @@ public class MediaResourceTypeTests
 
         result.ShouldBeNull();
         _umbracoContextAccessor.Verify(a => a.TryGetUmbracoContext(out It.Ref<IUmbracoContext>.IsAny), Times.Never);
+    }
+
+    [Fact]
+    public async Task UserWithoutAnyTreeSection_ReturnsNull_WithoutConsultingTheMediaCache()
+    {
+        var user = UserWithSections("translation");
+        var key = Guid.NewGuid();
+        WithActingUser(user);
+        _authorizer.Setup(a => a.IsDeniedAsync(user, key)).ReturnsAsync(false);
+
+        var result = await CreateSut().ResolveDataAsync(Picked(key));
+
+        result.ShouldBeNull();
+        _umbracoContextAccessor.Verify(a => a.TryGetUmbracoContext(out It.Ref<IUmbracoContext>.IsAny), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("content")]
+    [InlineData("settings")]
+    public async Task UserWithATreeSection_ButNotMedia_PassesTheSectionCheck(string section)
+    {
+        // Media reads follow the media tree rule, so content editors can still use images.
+        var user = UserWithSections(section);
+        var key = Guid.NewGuid();
+        WithActingUser(user);
+        _authorizer.Setup(a => a.IsDeniedAsync(user, key)).ReturnsAsync(false);
+
+        await CreateSut().ResolveDataAsync(Picked(key));
+
+        _umbracoContextAccessor.Verify(a => a.TryGetUmbracoContext(out It.Ref<IUmbracoContext>.IsAny), Times.Once);
     }
 }

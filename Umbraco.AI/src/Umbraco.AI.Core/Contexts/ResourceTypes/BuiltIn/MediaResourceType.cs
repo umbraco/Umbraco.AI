@@ -57,7 +57,9 @@ public sealed class MediaResourceType : AIContextResourceTypeBase<MediaResourceS
             return null;
         }
 
-        if (await _mediaPermissionAuthorizer.IsDeniedAsync(user, mediaKey))
+        // Media reads need one of the sections that open the media tree, as the CMS's pickers do.
+        if (!UmbracoSectionAccess.CanBrowseTree(user)
+            || await _mediaPermissionAuthorizer.IsDeniedAsync(user, mediaKey))
         {
             return null;
         }

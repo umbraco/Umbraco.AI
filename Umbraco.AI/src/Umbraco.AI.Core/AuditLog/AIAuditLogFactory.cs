@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.Security;
@@ -64,7 +66,24 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
     private const int MaxArgumentLength = 500;
     private const int MaxResultLength = 1000;
 
-    internal static string? FormatPromptSnapshot(object? promptObj, AICapability capability)
+    // Relaxed escaping keeps characters such as + ' < > and non-ASCII letters as they are rather than
+    // \uXXXX escapes, so redaction patterns match the text the tool actually sent. Snapshots are shown
+    // as plain text, never as HTML.
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
+    /// <summary>
+    /// Formats a prompt for storage in the audit log.
+    /// </summary>
+    /// <param name="promptObj">The prompt data.</param>
+    /// <param name="capability">The capability the prompt was sent to.</param>
+    /// <param name="redact">
+    /// Applied to tool arguments and results before they are truncated, so a value cut at the limit can't
+    /// slip past a redaction pattern. The caller still redacts the whole snapshot afterwards.
+    /// </param>
+    internal static string? FormatPromptSnapshot(object? promptObj, AICapability capability, Func<string, string>? redact = null)
     {
         if (promptObj is null)
         {
@@ -76,7 +95,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             return capability switch
             {
                 AICapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
-                    string.Join("\n\n", messages.Select(FormatChatMessage)),
+                    string.Join("\n\n", messages.Select(m => FormatChatMessage(m, redact))),
 
                 AICapability.Embedding when promptObj is IEnumerable<string> values =>
                     string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),
@@ -91,13 +110,13 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         }
     }
 
-    private static string FormatChatMessage(ChatMessage message)
+    private static string FormatChatMessage(ChatMessage message, Func<string, string>? redact)
     {
         var parts = new List<string>();
 
         foreach (var content in message.Contents)
         {
-            var formatted = FormatContent(content);
+            var formatted = FormatContent(content, redact);
             if (!string.IsNullOrEmpty(formatted))
             {
                 parts.Add(formatted);
@@ -115,7 +134,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         return $"{header}\n{string.Join("\n", parts)}";
     }
 
-    private static string? FormatContent(AIContent content)
+    private static string? FormatContent(AIContent content, Func<string, string>? redact)
     {
         return content switch
         {
@@ -123,10 +142,10 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
                 textContent.Text,
 
             FunctionCallContent functionCall =>
-                FormatFunctionCall(functionCall),
+                FormatFunctionCall(functionCall, redact),
 
             FunctionResultContent functionResult =>
-                FormatFunctionResult(functionResult),
+                FormatFunctionResult(functionResult, redact),
 
             DataContent dataContent =>
                 FormatDataContent(dataContent),
@@ -135,9 +154,9 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         };
     }
 
-    private static string FormatFunctionCall(FunctionCallContent functionCall)
+    private static string FormatFunctionCall(FunctionCallContent functionCall, Func<string, string>? redact)
     {
-        var args = FormatArguments(functionCall.Arguments);
+        var args = Redact(FormatArguments(functionCall.Arguments), redact);
         if (args.Length > MaxArgumentLength)
         {
             args = $"{args[..MaxArgumentLength]}... (truncated, {args.Length} chars)";
@@ -154,7 +173,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
 
         try
         {
-            return System.Text.Json.JsonSerializer.Serialize(arguments);
+            return JsonSerializer.Serialize(arguments, s_jsonOptions);
         }
         catch
         {
@@ -162,9 +181,9 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
         }
     }
 
-    private static string FormatFunctionResult(FunctionResultContent functionResult)
+    private static string FormatFunctionResult(FunctionResultContent functionResult, Func<string, string>? redact)
     {
-        var result = FormatResult(functionResult.Result);
+        var result = Redact(FormatResult(functionResult.Result), redact);
         if (result.Length > MaxResultLength)
         {
             result = $"{result[..MaxResultLength]}... (truncated, {result.Length} chars)";
@@ -186,13 +205,16 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
 
         try
         {
-            return System.Text.Json.JsonSerializer.Serialize(result);
+            return JsonSerializer.Serialize(result, s_jsonOptions);
         }
         catch
         {
             return result.ToString() ?? "(null)";
         }
     }
+
+    private static string Redact(string value, Func<string, string>? redact)
+        => redact is null ? value : redact(value);
 
     private static string FormatDataContent(DataContent dataContent)
     {

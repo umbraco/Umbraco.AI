@@ -1,5 +1,5 @@
 // STAGED SPEC — see ShareConversationTests.cs's header for why this lives here and where it moves
-// (Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/, as part of SC-05/SC-07).
+// (Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/, as part of SC-07/SC-09).
 
 using Moq;
 using Shouldly;
@@ -21,20 +21,21 @@ public class FindSharedConversationsTests
     #region Happy path
 
     // Real entry point, per bdd-specs rule 4.
-    [Fact(Skip = "Pending implementation — SC-05, SC-07")]
+    [Fact(Skip = "Pending implementation — SC-07, SC-09")]
     public async Task GetSharedConversationsPagedAsync_ResolvedFromDI_ReturnsSharedConversation()
     {
-        // AC1 (backend half) — an active share for the acting-as-recipient user appears in the page.
+        // AC1 (backend half) — an active share for the acting-as-recipient user appears in the page,
+        // including the owner's display name (used for the frontend's hover-tooltip text, AC2).
     }
 
     #endregion
 
     #region Sad path
 
-    [Fact(Skip = "Pending implementation — SC-05")]
+    [Fact(Skip = "Pending implementation — SC-07")]
     public async Task GetSharedConversationsPagedAsync_AfterRevoke_NoLongerIncludesIt()
     {
-        // AC2 (backend half) — a revoked share drops out of the paged result.
+        // AC3 (backend half) — a revoked share drops out of the paged result.
     }
 
     #endregion

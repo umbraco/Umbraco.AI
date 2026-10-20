@@ -1,0 +1,295 @@
+<!doctype html>
+<!--
+  Project starter: the Copilot Workspace section. Copied from, at commit c6643b80c76a1025009838ff1d993e7c52901b27:
+    Umbraco.AI.Agent.Copilot.Workspace/src/.../section/shell/copilot-workspace-shell.element.ts
+      (app-header section tab + resizable menu-area sidebar, 240-460px, default 300px)
+    .../sidebar/sidebar-header.element.ts (New chat / New project / search)
+    .../sidebar/menu/manifests.ts (group order: Pinned > Projects > Recent > Archived, by weight)
+    .../conversation/tree-item.element.ts (uui-menu-item, icon = pin if pinned else chat)
+    .../conversation/workspace/conversation-workspace.element.ts (chat `main` + context panel `aside`)
+    .../layout/context-panel-layout.element.ts (aside: 260-640px, default 340px, border-left, resizer)
+    .../conversation/workspace/conversation-chat-view.element.ts (the chat is a <uai-chat> web
+      component — drawn here as plain stacked message boxes, not the real element, per this skill's
+      "it's a drawing of the surface, not the surface" rule)
+
+  Replace from here / Replace to here marks where a feature's own mockup content goes — usually the
+  chat message list and/or the context panel's content, since the chrome around them rarely changes.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Copilot Workspace</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+	<style>
+		/* ---- Copilot Workspace's own layout, not in the general starter CSS ---- */
+		.cw-sidebar {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+		}
+		.cw-sidebar-header {
+			display: flex;
+			flex-direction: column;
+			gap: var(--uui-size-space-3);
+			padding: var(--uui-size-space-4) var(--uui-size-space-5);
+			border-bottom: 1px solid var(--uui-color-border);
+		}
+		.cw-sidebar-header uui-button-group,
+		.cw-sidebar-header uui-button-group uui-button:first-child,
+		.cw-sidebar-header > uui-button {
+			width: 100%;
+		}
+		.cw-sidebar-header uui-input {
+			width: 100%;
+		}
+		.cw-sidebar-groups {
+			flex: 1;
+			overflow: auto;
+			padding: var(--uui-size-space-3) 0;
+		}
+		.cw-group-label {
+			margin: 0;
+			padding: var(--uui-size-space-4) var(--uui-size-space-5) var(--uui-size-space-2);
+			/* !important: an opaque rule inside UUI's own CDN-loaded theme CSS (cross-origin, can't
+			   even inspect which one) otherwise wins and renders this at ~21px/400 instead. */
+			font-size: 12px !important;
+			font-weight: 700 !important;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var(--uui-color-text-alt);
+		}
+		/* The section-main region: chat (flex) + context panel (340px, border-left) side by side,
+		   matching context-panel-layout.element.ts's CSS grid. */
+		.cw-main-area {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) 340px;
+			height: 100%;
+		}
+		.cw-chat {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+			min-width: 0;
+		}
+		.cw-chat-messages {
+			flex: 1;
+			overflow: auto;
+			padding: var(--uui-size-layout-1);
+			display: flex;
+			flex-direction: column;
+			gap: var(--uui-size-space-5);
+			max-width: 860px;
+			margin: 0 auto;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.cw-msg {
+			display: flex;
+			flex-direction: column;
+			gap: var(--uui-size-space-2);
+		}
+		.cw-msg.user {
+			align-items: flex-end;
+		}
+		.cw-msg.assistant {
+			align-items: flex-start;
+		}
+		.cw-bubble {
+			max-width: 70%;
+			padding: var(--uui-size-space-4) var(--uui-size-space-5);
+			border-radius: var(--uui-border-radius);
+			line-height: 1.5;
+		}
+		.cw-msg.user .cw-bubble {
+			background: var(--uui-color-selected);
+			color: var(--uui-color-selected-contrast);
+		}
+		.cw-msg.assistant .cw-bubble {
+			background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
+		}
+		.cw-composer {
+			flex: none;
+			display: flex;
+			gap: var(--uui-size-space-3);
+			align-items: flex-end;
+			padding: var(--uui-size-space-5) var(--uui-size-layout-1);
+			border-top: 1px solid var(--uui-color-border);
+			max-width: 860px;
+			margin: 0 auto;
+			width: 100%;
+			box-sizing: border-box;
+		}
+		.cw-composer uui-textarea {
+			flex: 1;
+		}
+		.cw-context-panel {
+			height: 100%;
+			border-left: 1px solid var(--uui-color-border);
+			background: var(--uui-color-surface);
+			display: flex;
+			flex-direction: column;
+		}
+		/* Real values (checked live): 70px tall, 0/40/0/12 padding (right clears the collapse
+		   toggle), h3 text — matches the general .body-layout > .header this starter already has,
+		   just re-declared here since the context panel is its own flex column, not a body-layout. */
+		.cw-context-panel .header {
+			flex: none;
+			box-sizing: border-box;
+			height: 70px;
+			display: flex;
+			align-items: center;
+			padding: 0 2.5rem 0 var(--uui-size-space-4);
+			border-bottom: 1px solid var(--uui-color-border);
+		}
+		.cw-context-panel .header h3 {
+			margin: 0;
+			font-size: 16px;
+			font-weight: 700;
+			line-height: 1.3;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.cw-context-panel .main {
+			flex: 1;
+			overflow: auto;
+			padding: 0;
+		}
+		/* Real pattern: collapsible <details> blocks ("Contexts", "Resources"), each a 12px/700/
+		   uppercase summary with a chevron, full-bleed bottom border, content padded inside. */
+		.cw-context-block {
+			border-bottom: 1px solid var(--uui-color-divider);
+		}
+		.cw-context-block > summary {
+			display: flex;
+			align-items: center;
+			gap: var(--uui-size-space-2);
+			padding: var(--uui-size-space-3) var(--uui-size-space-4);
+			cursor: pointer;
+			list-style: none;
+			user-select: none;
+			font-weight: 700;
+			color: var(--uui-color-text-alt);
+			text-transform: uppercase;
+			font-size: 0.75rem;
+			letter-spacing: 0.04em;
+		}
+		.cw-context-block > summary::-webkit-details-marker {
+			display: none;
+		}
+		.cw-context-block-body {
+			padding: 0 var(--uui-size-space-4) var(--uui-size-space-4);
+		}
+		.cw-context-add {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+		}
+	</style>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Copilot" active>Copilot</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar" style="flex-basis: 300px;">
+			<div class="cw-sidebar">
+				<div class="cw-sidebar-header">
+					<!-- Real site: a split button (primary action + chevron), a plain default-look
+					     "New project", and a plain search box with no prepended icon. -->
+					<uui-button-group>
+						<uui-button look="primary" color="default" label="New chat">
+							<uui-icon slot="icon" name="icon-add"></uui-icon>
+							New chat
+						</uui-button>
+						<uui-button compact look="primary" color="default" label="More new-chat options">
+							<uui-symbol-expand></uui-symbol-expand>
+						</uui-button>
+					</uui-button-group>
+					<uui-button look="default" label="New project">New project</uui-button>
+					<uui-input type="search" placeholder="Search conversations" label="Search conversations"></uui-input>
+				</div>
+				<div class="cw-sidebar-groups">
+					<!-- Replace from here: the feature's own sidebar content. -->
+					<h4 class="cw-group-label">Pinned</h4>
+					<uui-menu-item label="Pricing page copy ideas">
+						<uui-icon slot="icon" name="icon-pushpin"></uui-icon>
+						<umb-entity-actions-dropdown slot="actions" compact label="Pricing page copy ideas">
+							<uui-symbol-more slot="label"></uui-symbol-more>
+						</umb-entity-actions-dropdown>
+					</uui-menu-item>
+
+					<h4 class="cw-group-label">Recent</h4>
+					<uui-menu-item label="Debugging the checkout redirect" active>
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+						<umb-entity-actions-dropdown slot="actions" compact label="Debugging the checkout redirect">
+							<uui-symbol-more slot="label"></uui-symbol-more>
+						</umb-entity-actions-dropdown>
+					</uui-menu-item>
+					<uui-menu-item label="Image alt text for the autumn campaign">
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+						<umb-entity-actions-dropdown slot="actions" compact label="Image alt text for the autumn campaign">
+							<uui-symbol-more slot="label"></uui-symbol-more>
+						</umb-entity-actions-dropdown>
+					</uui-menu-item>
+					<!-- Replace to here. -->
+				</div>
+			</div>
+		</nav>
+
+		<main class="section-main">
+			<div class="cw-main-area">
+				<div class="cw-chat">
+					<div class="cw-chat-messages">
+						<!-- Replace from here: the feature's own message thread. -->
+						<div class="cw-msg user"><div class="cw-bubble">Why does the checkout page redirect to /cart instead of /checkout/confirm after payment?</div></div>
+						<div class="cw-msg assistant"><div class="cw-bubble">It looks like the redirect URL is hard-coded in the payment webhook handler. I can show you the file if you'd like.</div></div>
+						<!-- Replace to here. -->
+					</div>
+					<div class="cw-composer">
+						<uui-textarea label="Message" placeholder="Ask Copilot…" rows="1"></uui-textarea>
+						<uui-button look="primary" label="Send"><uui-icon name="icon-send"></uui-icon></uui-button>
+					</div>
+				</div>
+				<aside class="cw-context-panel">
+					<div class="header"><h3>Context</h3></div>
+					<div class="main">
+						<!-- Real pattern: two separate collapsible blocks, not one "Attached" list. -->
+						<details class="cw-context-block" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Contexts</summary>
+							<div class="cw-context-block-body">
+								<!-- Replace from here: the feature's own contexts content. -->
+								<uui-button class="cw-context-add" look="placeholder" label="Add">+ Add</uui-button>
+								<!-- Replace to here. -->
+							</div>
+						</details>
+						<details class="cw-context-block" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Resources</summary>
+							<div class="cw-context-block-body">
+								<!-- Replace from here: the feature's own resources content. -->
+								<uui-ref-node name="Checkout flow docs" detail="Project resource">
+									<uui-icon slot="icon" name="icon-document"></uui-icon>
+								</uui-ref-node>
+								<uui-button class="cw-context-add" look="placeholder" label="Add">+ Add</uui-button>
+								<!-- Replace to here. -->
+							</div>
+						</details>
+					</div>
+				</aside>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

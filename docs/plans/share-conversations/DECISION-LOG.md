@@ -139,3 +139,252 @@
 - **2026-09-22** — Email sends only when a share row is newly *created*, not on an idempotent
   re-share that only changes scope. Avoids emailing a recipient every time the owner adjusts
   Snapshot/Live on an existing share.
+
+## feature-explore (resumed 2026-10-20, after a ~month gap)
+
+- **2026-10-20** — Resumed after Copilot Workspace shipped to `v18/dev`/`v17/dev` for real,
+  resolving the build blocker `BRIEF.md`/`PLAN.md` had been carrying since 2026-09-22.
+- **2026-10-20** — Cut v1 scope down to just the read-only-snapshot core, confirmed with the user:
+  owner shares a conversation (always a frozen snapshot, no Live option in v1) with named
+  colleagues, it appears in their "shared with me" list, they read it read-only. **Deferred, not
+  killed:** the share-notification email (added 2026-09-22, above), revoke/manage-shares (`US2`),
+  and the Live "keep updating" scope choice. Flagged once (not re-litigated): revoke is cheap
+  relative to what's being deferred alongside it — a single delete endpoint and a button, cheaper
+  than either the email or the live-scope mechanism — so there's room to add it back into v1 later
+  without much cost if there's appetite.
+- **2026-10-20** — Corrected two stale docs found while resuming: `BRIEF.md`'s "Riskiest unknowns"
+  still described the reversed redaction requirement (redaction was dropped on 2026-09-22, above,
+  but that reversal never made it back into `BRIEF.md`); `RESEARCH.md` (written later than
+  `BRIEF.md`, for the CTO) had the same stale claim in its "resolved" open-questions section. Both
+  now describe the current design: attachments shown as-is, with a share-time disclosure warning.
+- **2026-10-20** — Created `README.md`, the plan folder's read-order index — this plan predates
+  that convention. `ARCHITECTURE.md`/`SPEC.md`/`STORIES.md`/`PLAN.md` are left marked pending in it
+  even though they already have substantial content from before, since `feature-explore` only owns
+  its own line — the upcoming `feature-design`/`feature-plan` passes (re-cutting these for the v1
+  scope above) will correct their own lines when they run.
+- **2026-10-20 (reversal, minutes later)** — Widened v1 back out: Live scope and revoke are back
+  in, only the notification email stays deferred. Also added a new requirement that wasn't in any
+  earlier pass: the owner needs an ambient, persistent indicator (not just something inside the
+  Share dialog) that a conversation is currently shared and with whom. The earlier "revoke is
+  cheap, flag once" assumption from this same session turned out to be moot within minutes — the
+  user brought revoke back before that flag needed to do any work.
+- **2026-10-20 (reversal again, same session)** — Notification is back in v1 too. Net effect after
+  three scope passes in one sitting: v1 is now the full original feature (share with Snapshot/Live
+  choice, email on first share, revoke, "shared with me" list) plus the one genuinely new
+  requirement from this round — owner-side visibility of share status outside the Share dialog.
+  Nothing is deferred to a later phase at this point.
+
+## feature-design (resumed 2026-10-20)
+
+- **2026-10-20** — Re-verified decisions 1–5 against the real `v18/dev` code (Copilot Workspace had
+  only existed on pre-merge RC branches when they were written). No material drift —
+  `AIConversation`/`AIConversationEntity`/`AIMessage`/`AIConversationResourceEntity`/
+  `AIConversationService` all match on the members this design depends on. One unrelated addition
+  found (`AIMessage.AgentId`, `GetLastAssistantAgentIdAsync` — agent auto-selection tracking) that
+  doesn't touch anything here.
+- **2026-10-20** — Designed the new owner-side "this is shared" requirement from `BRIEF.md`: reuse
+  the tree item's existing single-icon slot (pushpin > share icon > plain chat icon), computed via
+  a server-side `hasActiveShares` field added to the existing paged list query — not a new badge
+  element, not a per-row extra request. Rejected a separate badge: the row has an established
+  single-icon convention (pin today), and pin-vs-shared don't both need to be visible at once often
+  enough to justify a second UI element.
+- **2026-10-20** — Added `## Connected systems` to `ARCHITECTURE.md` (a section this feature's
+  original write-up predates): checked Deploy/uSync, the AI operation audit trail, and notification
+  events — none apply, each for a specific reason now recorded there rather than left as a silent
+  omission.
+- **2026-10-20 (process gap, flagged not hidden)** — `feature-design`'s own process calls for a
+  static mockup + screenshot per new/changed screen before handing off. None were produced this
+  pass, for either the new tree-item indicator or the Share modal/read-only view designed in the
+  original (pre-`feature-design`-skill) session. Recorded as a known gap rather than silently
+  skipped; worth doing before `feature-build` if screens should be visually approved first.
+- **2026-10-20 (gap closed)** — User asked why the mockup step was skipped and asked for it to be
+  done properly, plus project starters for both Copilot surfaces. Created
+  `docs/mockups/starters/copilot-workspace.html` and `copilot-sidebar.html` (read from the real
+  section-shell/sidebar source at commit `c6643b80c76a1025009838ff1d993e7c52901b27`), then three
+  feature mockups built from the workspace starter: `sidebar-shared-indicator.html`,
+  `share-modal.html`, `read-only-shared-conversation.html`. Each served locally and screenshotted
+  at 1440×900 via the browser extension; `SPEC.md` now embeds each screenshot with its mockup
+  source link. One real build quirk found while shooting these: the shared `_mockup.js` loader's
+  `data-mockup-ready` flag sometimes wasn't set on a page's first load (a `swapIcons` timing issue,
+  not specific to any one mockup) — a reload reliably fixed it each time; not a mockup-content bug,
+  just something to know if a future mockup session hits the same blank-page symptom.
+- **2026-10-20 (mockups verified against the real site)** — User asked to check the mockups against
+  the actual backoffice. The local demo site (`demos/v18/Umbraco.AI.DemoSite`) didn't reference
+  Copilot Workspace at all — only the contextual Copilot. Added a temporary `ProjectReference` to
+  `Umbraco.AI.Agent.Copilot.Workspace.Startup`/`.Web.StaticAssets` in the demo site's `.csproj`
+  (commented as temporary; `demos/` is gitignored, so this can't leak into git regardless of
+  whether it's reverted). The section tab and shell chrome rendered once rebuilt, but the
+  package's own frontend bundle never actually registered (`customElements.get('uai-copilot-workspace-shell')`
+  stayed `false`, no init log line, despite the JS being servable) — a manifest-discovery issue
+  in this one demo DB, not chased further since it's a side issue from the actual task. Still got
+  real, confirmed values from what did render: header `#1b264f` / 60px tall, section-sidebar
+  300px, `--uui-color-current` `#ffe8e6`, border `#d8d7d9` — all already matched the mockups,
+  since both use the same real UUI theme. Two real corrections found and applied to all affected
+  mockups: the section tab reads **"Copilot"**, not "Copilot Workspace"; and the sidebar's "New
+  chat" is a split button (primary action + a chevron for more options) with a plain, icon-less
+  "New project" button beside it, not two same-style buttons with icons. Re-screenshotted all four
+  affected files (the `copilot-workspace` starter + the three feature mockups) after the fix.
+- **2026-10-20 (second pass — user said mockups were still off)** — User flagged the tree, header
+  sizes, user-bubble color (pink instead of blue), and modals not using `uui-box`. Got Copilot
+  Workspace's own frontend actually mounting this time (the earlier manifest issue was just a slow
+  first paint — reproduced it again after a restart and it resolved on its own after enough wait
+  time). Confirmed against the real, running section (not just source reading):
+  - **User message bubble was wrong — fixed.** Real CSS (`Umbraco.AI.Agent.UI`'s `message.element.ts`)
+    uses `background: var(--uui-color-selected)` (`#283a97`, deep blue) with white text, as an
+    inline-block `<p>` (hugs its content, not a fixed-width bubble), small default
+    `border-radius`. The mockups had `--uui-color-current` (pale pink) in a larger, more rounded,
+    fixed-width box. Also removed the assistant bubble's border — the real one has none.
+  - **Context panel header was wrong — fixed.** Real header is exactly 70px tall, `0 40px 0 12px`
+    padding (right side clears the collapse toggle), an actual `<h3>` — not a plain bold div with
+    20px padding and no fixed height.
+  - **Context panel content structure was wrong — fixed.** Real panel is two separate collapsible
+    `<details>` blocks, "Contexts" and "Resources" (12px/700/uppercase summary, chevron, dashed
+    "+ Add" button), not one flat "Attached" list. Read-only view now shows both sections correctly
+    (an empty "No contexts attached" state, same real wording pattern as the component's own
+    `#renderEmpty`).
+  - **Share modal restructured into `uui-box` groups** — "Share with" (recipient search + scope +
+    disclosure) and "Currently shared with" are now each their own `uui-box`, matching this
+    skill's own `editor.html` template's "group" convention, instead of flat custom divs.
+  - **Tree item sizing — not changed, and here's why.** `tree-item.element.ts` has zero custom
+    CSS beyond `:host { display: block }` — it's a bare `<uui-menu-item>`, so there's nothing a
+    mockup could get wrong beyond what UUI already renders by default, which the mockups already
+    use unmodified. Confirmed `uui-menu-item`'s real metrics are unmodified defaults by checking
+    the Content tree (same component, real data) after Copilot Workspace's own tree couldn't be
+    populated (no AI connection configured on this demo site, so no conversation could actually be
+    created/saved to populate it). If the tree still looks off after this round, it's worth a
+    closer side-by-side rather than assumed fixed.
+  - Demo site crashed/was killed mid-session three separate times for reasons unrelated to this
+    feature (background process lifecycle in the sandboxed dev environment, not a bug in the
+    product) — re-verify independently if picking this up again rather than trusting it stays up.
+  - Re-screenshotted all four affected mockups again after these fixes.
+- **2026-10-20 (third pass — headings still off, boxes too tight)** — Root cause for the headings:
+  every `<h3>` I'd added (the Share modal's title, the context panel's "Context" header) had no
+  explicit `font-size` at all, so it fell back to the raw browser default (much larger than real),
+  while `uui-box`'s own `headline` attribute (a real loaded component) was always correctly sized —
+  the inconsistency between the two is what read as "off." Fixed by setting `font-size: 16px;
+  font-weight: 700` explicitly on both, matching the 16.38px measured live against the real
+  context-panel header. Also tightened up spacing inside the Share modal's `uui-box`es: bumped
+  gaps between its three fields, between the "currently shared with" rows, and added a proper
+  description-to-input gap — nothing should read as touching now. Re-screenshotted all four
+  affected mockups a third time to confirm visually rather than trust the CSS alone.
+- **2026-10-20 (fourth pass — "Pinned"/"Recent"/"Shared with me" still huge)** — These had been
+  12px via `var(--uui-type-small-size)` since the very first draft, and that variable genuinely
+  does resolve to `12px` in the real theme — but the computed size on the actual element was 21px/
+  weight 400 regardless. Traced it to a rule inside the CDN-loaded `@umbraco-ui/uui` theme CSS
+  itself winning the cascade; couldn't even identify which rule, since cross-origin stylesheets
+  can't be introspected via `document.styleSheets` (`sheet.cssRules` throws). Fixed by forcing
+  `font-size`/`font-weight` with `!important` on `.cw-group-label` — confirmed by computed style
+  (21px/400 → 12px/700) before re-screenshotting, not assumed from the CSS alone this time.
+- **2026-10-20 (owner-side indicator → real entity-sign/flag)** — Replaced the icon-swap design
+  (pin → share → chat, pick one) with Umbraco's own entity-sign mechanism
+  (`core/entity-sign`/`UmbEntityFlag`, the same system behind core's own "has scheduled changes"
+  badge on the document tree), per the user's own suggestion that this was a better fit. Checked
+  directly against `@umbraco-cms/backoffice` source rather than assumed: a new `entitySign`
+  manifest (`forEntityTypes: ['uai-conversation']`, `forEntityFlags:
+  ['Uai.Conversation.IsShared']`) renders a small corner badge via `<umb-entity-sign-bundle>`
+  wrapping the row's existing icon. Pinned and shared now show simultaneously, which the icon-swap
+  design couldn't do. `ARCHITECTURE.md` decision 6 rewritten in place (old icon-swap text replaced,
+  not narrated over); `mockups/sidebar-shared-indicator.html` rebuilt to show a pinned-and-shared
+  row and a shared-only row, both badged.
+- **2026-10-20 (Share UI split into a manage view + a picker modal)** — The single combined Share
+  modal (recipient search + scope + disclosure + current-recipients list, all in one form) is
+  replaced by two modals at the user's request: `UAI_MANAGE_SHARES_MODAL` (opened by the entity
+  action — shows who it's shared with now, plus a "Share" button) and `UAI_SHARE_PICKER_MODAL`
+  (opened from that button — the actual add-a-recipient form, mirroring the stacked-modal pattern
+  `project-picker-modal.element.ts` already uses). Checked what core offers for the recipient
+  picker itself: `UMB_USER_PICKER_MODAL` exists but is a full collection-picker (too heavy for one
+  field in an already-open modal); the lighter `UmbUserPickerInputContext`/`user-input` component
+  is the better fit, with no existing consumer in this repo yet. `ARCHITECTURE.md` decision 7 added
+  (new, not a rewrite of an existing one); `SPEC.md`'s Share-action section restructured to match;
+  old combined `mockups/share-modal.html`/`.png` deleted, replaced by `manage-shares-modal.html`
+  (+ an `-empty` empty-state variant) and `share-picker-modal.html`.
+- **2026-10-20 (new in-chat "Shared" section in the context panel)** — Added a way to see who a
+  conversation is shared with from inside the chat itself, not only via the action menu, per the
+  user's direct question. A new "Shared" collapsible section in
+  `conversation-context-panel.element.ts`, parallel to the existing Contexts/Resources sections,
+  shown first since who can see the conversation outranks what's attached to it. Owner's own
+  conversations only — a recipient already sees who shared with *them* via the read-only banner,
+  and the underlying `GET .../shares` data is owner-only regardless. `ARCHITECTURE.md` decision 8
+  added; `SPEC.md` gains a matching section; shown in the same screenshot as the sidebar indicator
+  (`mockups/sidebar-shared-indicator.html`) rather than a separate near-duplicate mockup file.
+- **2026-10-20 (dropped the entity action entirely; "Shared with" is the only entry point)** — One
+  round later, the user asked to go further: drop `UaiConversationShareAction` and its manage-view
+  modal altogether, and make the context panel's new section work exactly like Contexts/Resources
+  already do (a visible list with an inline add/remove, not a menu item plus modal). Checked the
+  real `<uai-resource-list>` component before redesigning rather than guessing the pattern again
+  (per [[feedback_design_verify_against_real_code]]): rows are `uui-ref-node`s with an inline
+  `uui-action-bar` trash-icon remove button, "+ Add" opens a picker modal directly, no second modal
+  layer. "Shared with" now mirrors this exactly — renamed from "Shared" per the user's request, the
+  "Choose" button opens `UAI_SHARE_PICKER_MODAL` directly, and each row's own remove button calls
+  `DELETE .../shares/{userKey}` immediately.
+  Also replaced the multi-recipient chip picker with a single-recipient form: one person + one mode
+  per invocation (repeatable), since that's what "the actual user" (singular) asked for and matches
+  how adding one resource is already one picker invocation. Checked what's reusable for the person
+  picker: `UMB_USER_PICKER_MODAL` from CMS core is the real single-user-pick primitive — no lighter
+  wrapper or existing precedent anywhere in this codebase, so it's used directly with a max-of-one
+  constraint rather than inventing a new component. Mode switched from a radio group to a
+  `uui-select` dropdown, mirroring this codebase's own idiom for a small fixed-option choice
+  (`agent-details-workspace-view.element.ts`'s output-format dropdown) instead of a different
+  control shape for the same kind of thing.
+  `ARCHITECTURE.md` decisions 7 and 8 merged into one rewritten decision 7 (the entity action and
+  the manage-view modal no longer exist, so there's nothing left for a separate "entry point #2"
+  decision to describe); `SPEC.md`'s Share-related sections rewritten to match. Old
+  `mockups/manage-shares-modal.html`/`.png` and `-empty` variant deleted (no manage view exists
+  anymore); `mockups/share-picker-modal.html` rebuilt as a single-recipient form with a dropdown;
+  `mockups/sidebar-shared-indicator.html`'s context-panel section relabeled "Shared with" and
+  rebuilt with removable `uui-ref-node` rows + a "Choose" button, matching the real Resources
+  pattern instead of a plain `uui-ref-list`.
+- **2026-10-20 (share-picker modal: padding + disclosure banner contrast)** — Two visual fixes,
+  checked live rather than assumed. The box's fields sat flush against its top/bottom edges
+  because `.group`'s default padding (`0 18px`, from `_mockup.css`) is built for stacked
+  `.property` rows that supply their own vertical padding — this box has none, so it needed an
+  explicit override. The disclosure banner was black text on `--uui-color-warning-standalone`,
+  which computed live to `#a17700` (a dark mustard meant for solid buttons/tags), not a light
+  banner background — hard to read. Switched to `--uui-color-warning-emphasis` (`#fbe065`, the
+  lighter tint token), icon recolored to the darker standalone shade so it still reads against it.
+- **2026-10-20 ("Shared with me" rows made to match "shared" rows — icon+badge, one line)** — The
+  "Shared with me" group previously used a different row shape than the owner's own shared rows: a
+  swapped `icon-share` main icon plus a permanent "Shared by \<owner\>" subtitle line. At the user's
+  request, unified both to the identical shape — plain icon with the same entity-sign badge
+  overlay, one line, no subtitle. The owner's name isn't lost, just relocated: it's now the badge's
+  hover tooltip text ("Shared by \<owner\>" instead of plain "Shared"), and still shown in the
+  read-only banner once the conversation is open. `SPEC.md`'s sidebar section rewritten to describe
+  one shared row shape used by both groupings; `mockups/sidebar-shared-indicator.html` and
+  `mockups/read-only-shared-conversation.html` both updated (the latter gained the entity-sign
+  badge CSS it didn't have yet, since its own "Shared with me" row needed the same treatment).
+- **2026-10-20 (share-notification email mockup, built from the real Umbraco template)** — Added a
+  mockup for the first-share email (`ARCHITECTURE.md` decision 5), per the user's request to review
+  what Umbraco's own emails actually look like first rather than invent a style. Checked
+  `Umbraco.Cms`'s source directly: there's no Razor `.cshtml` email template and no shared email
+  layout file — real HTML notification emails (`mailBodyHtml` in
+  `src/Umbraco.Core/EmbeddedResources/Lang/en.xml`) are fully inline-styled literal-hex-color HTML
+  strings, token-replaced and handed straight to `IEmailSender`, since mail clients strip
+  `<style>`/CSS custom properties. Mirrored that exact shell: `#1d1333` dark header strip with the
+  small logo mark, white 560px card with `#392F54` text, `#35C786` teal CTA button (Outlook-safe
+  nested-table markup), plain sign-off footer, no unsubscribe/legal block (none exists in
+  Umbraco's own templates either). New `mockups/share-notification-email.html`/`.png` — the first
+  mockup in this plan folder that isn't a backoffice UUI screen, so it intentionally does not use
+  the usual `_mockup.css`/`_mockup.js` harness.
+- **2026-10-20 (`feature-plan`: full re-cut of STORIES.md and PLAN.md)** — Both files were still
+  shaped like the first design pass (pre-entitySign, pre-single-recipient-picker,
+  pre-entity-action-removal) and were never updated through four rounds of design revision in this
+  same session, so this was a full re-cut against current ARCHITECTURE.md/SPEC.md, not an
+  incremental edit. Restructured to 4 stories / 29 ACs: US1 (share) now describes one recipient per
+  picker invocation instead of "multiple recipients in one submit"; US2 absorbed both "manage"
+  (revoke) and the two new visibility mechanisms (the context panel's "Shared with" section and the
+  sidebar entity-sign badge) under one "see and manage" story, since BRIEF.md's "owner must see
+  it's shared" requirement and the revoke capability now live on the same surface. US3/US4 mostly
+  unchanged in shape, with ACs added for the badge's hover-tooltip wording difference ("Shared by
+  the owner" vs. plain "Shared").
+  PLAN.md grew from 16 to 19 tasks: split the old single "Share modal" task into three
+  independent-file tasks (SC-13 entitySign manifest + badge, SC-14 context-panel section, SC-15
+  picker modal) since they're genuinely separate frontend surfaces now, added SC-05 for the
+  hasActiveShares backend field (previously undocumented as its own task), and added SC-16 as the
+  wire task tying SC-14/SC-15 together. Dropped the stale "blocked until the Copilot RC merges"
+  header — that blocker resolved earlier in this session (Copilot Workspace is live on both dev
+  lines).
+  Regenerated all 9 staged spec files under specs/ to match the new AC numbering and task ids, and
+  added two new ones that didn't exist before: specs/backend/ConversationSharesIndicatorTests.cs
+  (the hasActiveShares computation) and specs/frontend/shared-indicator.spec.ts (the entitySign
+  badge's simultaneous-with-pin and hover-tooltip behavior) — neither had a spec file in the
+  original pass since the mechanism they cover didn't exist yet at that point.

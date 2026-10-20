@@ -1,5 +1,5 @@
 // STAGED SPEC — see ShareConversationTests.cs's header for why this lives here and where it moves
-// (Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/, as part of SC-05/SC-07).
+// (Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/, as part of SC-07/SC-09).
 
 using Moq;
 using Shouldly;
@@ -22,26 +22,26 @@ public class ReadSharedConversationTests
 
     #region Happy path
 
-    [Fact(Skip = "Pending implementation — SC-05")]
+    [Fact(Skip = "Pending implementation — SC-07")]
     public async Task GetSharedConversationAsync_SnapshotScope_ReturnsMessagesUpToCutoffSequenceOnly()
     {
         // AC1 — every message whose Sequence <= the CutoffMessageId message's Sequence, nothing after.
     }
 
-    [Fact(Skip = "Pending implementation — SC-05")]
+    [Fact(Skip = "Pending implementation — SC-07")]
     public async Task GetSharedConversationAsync_LiveScope_ReturnsMessagesAddedAfterSharing()
     {
         // AC2 — no ceiling for a Live share.
     }
 
-    [Fact(Skip = "Pending implementation — SC-05")]
+    [Fact(Skip = "Pending implementation — SC-07")]
     public async Task GetSharedConversationAsync_ResourcesAndContextIds_ReturnedUnfiltered()
     {
         // SPEC.md — no per-viewer redaction (ARCHITECTURE.md decision 2): the same attachment list the
         // owner sees comes back as-is.
     }
 
-    [Fact(Skip = "Pending implementation — SC-05")]
+    [Fact(Skip = "Pending implementation — SC-07")]
     public async Task GetSharedConversationAsync_CutoffMessageDeletedByRegenerate_ReturnsEveryRemainingMessage()
     {
         // AC5 — graceful degradation: TruncateAfterLastUserMessageAsync removed the anchor message,
@@ -49,7 +49,7 @@ public class ReadSharedConversationTests
     }
 
     // Real entry point, per bdd-specs rule 4.
-    [Fact(Skip = "Pending implementation — SC-05, SC-07")]
+    [Fact(Skip = "Pending implementation — SC-07, SC-09")]
     public async Task GetSharedConversationAsync_ResolvedFromDI_ReturnsSharedView()
     {
         // AC1, real-entry-point variant.
@@ -59,7 +59,7 @@ public class ReadSharedConversationTests
 
     #region Sad path
 
-    [Fact(Skip = "Pending implementation — SC-05")]
+    [Fact(Skip = "Pending implementation — SC-07")]
     public async Task GetSharedConversationAsync_NoActiveShareForActingUser_ThrowsNotFound()
     {
         // AC6 — a conversation that was never shared with the acting user 404s, same

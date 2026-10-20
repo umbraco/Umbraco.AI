@@ -74,6 +74,20 @@ current tail to withhold or expose either way).
 matters if a privacy review ever needs to reconstruct exposure — a hard delete erases that history
 at the exact moment it might matter most.
 
+## Connected systems
+
+- **Deploy / uSync**: not applicable. `AIConversation`/`AIMessage` themselves aren't Deploy- or
+  uSync-tracked entities — they're runtime per-user data, not content that moves between
+  environments. A share row is the same kind of thing, one level further removed.
+- **AI operation audit trail** (`IAIOperationTracker`): not applicable. That system tracks AI
+  provider calls/capability usage (chat, embeddings, etc.) — sharing is ordinary CRUD on a new
+  entity, not an AI operation.
+- **Notification events**: `AIConversationSaving`/`SavedNotification` already exist for
+  create/update/delete on `AIConversation` itself. Sharing doesn't modify the conversation entity,
+  so it doesn't need to publish through those — a share is its own entity with its own lifecycle.
+  No new notification type is needed for v1; nothing downstream currently needs to react to a share
+  being created or revoked beyond what this feature itself does (the email in decision 5).
+
 ## Key decisions
 
 ### 1. Shared reads are a separate code path from owned reads — never a widened equality check
@@ -161,12 +175,135 @@ notification emails already go to) — no new address collection needed.
 product/legal-adjacent review flag as the disclosure-warning copy in decision 2, not just
 engineering wording, per the org's GDPR-conscious posture.
 
+### 6. Owner-side "this is shared" indicator uses Umbraco's real entity-sign (flag) system
+
+`BRIEF.md` requires the owner to see, from their own conversation list, that a conversation is
+currently shared — not only inside the Share dialog.
+
+**Superseded approach, kept for context:** an earlier pass of this decision swapped the row's
+single icon (pin → share → chat, picking one). Dropped once the user pointed out Umbraco already
+has a dedicated mechanism for exactly this — small badge icons overlaid on a tree item's main
+icon — and asked for that instead. Checked it directly in `@umbraco-cms/backoffice`'s own source
+rather than assuming:
+
+- **`UmbEntityFlag`** (`core/entity-flag`): `{ alias: string }` — a plain tag an entity carries,
+  independent of anything UI-specific.
+- **`entitySign`** (`core/entity-sign`): the extension type that turns a flag alias into a visible
+  badge. A manifest like Umbraco core's own `Umb.EntitySign.Document.HasScheduledPublish` declares
+  `forEntityTypes`, `forEntityFlags`, and (for the built-in `icon` kind) `meta.iconName` +
+  `meta.iconColorAlias` + a localized `meta.label`.
+- **`<umb-entity-sign-bundle .entityType=... .entityFlags=...>`** wraps the row's existing main
+  icon (slotted as its child) and overlays every matching registered sign as a small corner badge
+  (~8px, circular cut-out background) on top of it — multiple signs can stack. Hovering shows a
+  popover with each sign's label. This is the exact mechanism Umbraco's own document tree uses for
+  "has pending changes," "protected," "scheduled," etc.
+
+**Decision:** register a real `entitySign` manifest for conversations —
+`forEntityTypes: [UAI_CONVERSATION_ENTITY_TYPE]`, `forEntityFlags: ['Uai.Conversation.IsShared']`,
+`meta: { iconName: 'icon-share', iconColorAlias: 'positive', label: '#uaiCopilotWorkspace_isSharedSignLabel' }`
+— and wrap `uai-copilot-workspace-conversation-tree-item`'s existing icon-rendering in
+`<umb-entity-sign-bundle>`, passing `entityFlags: hasActiveShares ? [{ alias: 'Uai.Conversation.IsShared' }] : []`.
+This is strictly additive to the row's existing icon logic (pin vs. chat) — the main icon
+rendering doesn't change at all, the sign just overlays on top of whichever one is showing. Pinned
+and shared now render *simultaneously*, which the earlier icon-swap design couldn't do. Hovering
+the badge gives a quick "Shared" label without opening anything, for free. Rejected alternative
+(the superseded icon-swap): couldn't show both states at once and wasn't the established
+convention for this exact kind of thing — this repo's own "mirror an existing pattern, don't
+hand-roll" rule, applied one level more carefully than the first pass did.
+
+**Data shape, to avoid an N+1 query:** the owner's paged conversation list
+(`AIConversationService.GetConversationsPagedAsync` → `IAIConversationRepository.GetPagedAsync`)
+needs a `HasActiveShares: bool` on each row, computed in the same query
+(`Shares.Any(s => s.DateRevoked == null)` in the EF Core projection), not a follow-up query per
+conversation. `AIConversation`/`ConversationResponseModel` both gain this field, read-only,
+server-computed — never set by a caller, following the same posture as `UserKey`.
+
+**Re-verified against the real `v18/dev` code, not the pre-merge RC branches** (per this repo's
+`feedback_design_verify_against_real_code` memory): `AIConversation`, `AIConversationEntity`,
+`AIMessage`, `AIConversationResourceEntity`, and `AIConversationService` (including
+`GetOwnedOrThrowAsync`'s not-found/not-owned indistinguishability) all match what decisions 1–5
+were designed against, byte-for-byte on the relevant members. One unrelated addition since RC
+finalization: `AIMessage.AgentId` and `AIConversationService.GetLastAssistantAgentIdAsync`
+(agent-auto-selection tracking) — doesn't affect anything in this feature.
+
+**Mockups:** static HTML + screenshot produced for all three screens this feature adds/changes —
+the Share modal, the read-only chat/context-panel view, and the sidebar (shared indicator +
+"shared with me" group) — see `SPEC.md`'s Frontend components section for each, and
+`docs/mockups/starters/copilot-workspace.html` for the reusable Copilot Workspace section starter
+they're built from (also created this pass, alongside a `copilot-sidebar.html` starter for the
+contextual Copilot, on request, for future features to reuse).
+
+### 7. Sharing lives entirely in the context panel's "Shared with" section — no entity action
+
+**Superseded approach, kept for context:** two earlier passes both routed through
+`UaiConversationShareAction` in the entity-action menu — first as one combined modal, then split
+into a manage view plus a separate picker modal. Dropped at the user's request for something
+simpler: sharing should work exactly like the context panel's existing Contexts/Resources
+sections — a visible list with an inline add control — rather than needing its own menu item and
+modal(s) at all.
+
+**What the existing sections actually do, checked against the real source, not assumed:**
+`conversation-context-panel.element.ts` doesn't render its rows itself — both Contexts and
+Resources delegate to the shared `<uai-resource-list compact>` component
+(`Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/context/components/resource-list/resource-list.element.ts`).
+Each row is a `uui-ref-node` with an inline `uui-action-bar` trash-icon button
+(`#renderRemoveAction`) that removes the item directly — no separate confirm step, no second
+modal. The "+ Add" control is a `uui-button look="placeholder"` that opens a picker modal
+(`UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL`) directly; picking an item updates local state and fires
+a plain `UmbChangeEvent` that the parent panel listens for and persists.
+
+**Decision:** give "Shared with" the identical shape, not a parallel one:
+- The section renders first, above Contexts and Resources — who can see a conversation is more
+  load-bearing than what's attached to it — as a `uui-ref-node` per active recipient (name + scope
+  mode in the detail slot, e.g. "Live"/"Snapshot"), sourced from
+  `GET .../shares`, with the same inline `uui-action-bar` trash-icon remove button. Unlike
+  Resources (which re-submits its whole local array on change), each row's remove button calls
+  `DELETE .../shares/{userKey}` directly — shares already have independent per-row persistence
+  identity and an immediate-revoke endpoint, so there's no "whole list" to resubmit.
+- A "Choose" `uui-button look="placeholder"` — same control, same label convention as the
+  Contexts/Resources add button — opens `UAI_SHARE_PICKER_MODAL` directly. No entity-action menu
+  item, no intermediate manage view: this section *is* the management surface.
+- Empty state: "Not shared with anyone yet." in place of the list, same "Choose" button.
+- `UaiConversationShareAction` is dropped entirely — Rename/Move/Pin/Archive/Delete stay as
+  entity actions (they have no natural visible-list home the way sharing now does), but sharing no
+  longer needs one.
+
+**The picker modal (`UAI_SHARE_PICKER_MODAL`), now a single-recipient form:** picking "the actual
+user" is one person per invocation (repeatable, exactly like adding one resource at a time) —
+- **Recipient**: a one-item picker field, same shape as a content-picker property editor — empty
+  shows a "Choose a person" placeholder button; clicking it opens the real
+  `UMB_USER_PICKER_MODAL` (`@umbraco-cms/backoffice/user`) to pick one user. No existing
+  single-select wrapper exists anywhere in this codebase (checked: no `UMB_USER_PICKER_MODAL`,
+  `user-picker`, or any owner/collaborator/assignee picker precedent in `Umbraco.AI`,
+  `Umbraco.AI.Agent*`, or `Umbraco.AI.Agent.Copilot.Workspace`) — this is the first consumer, so
+  `UMB_USER_PICKER_MODAL` is used directly with a max-of-one constraint rather than inventing a
+  new lighter wrapper first. Once picked, the field shows the chosen person as one `uui-ref-node`
+  row, re-pickable by clicking it again.
+- **Mode**: a `uui-select` dropdown (Snapshot/Live), not a radio group — mirrors the codebase's own
+  idiom for a small fixed-option enum, e.g. `agent-details-workspace-view.element.ts`'s output-format
+  `uui-select` (`.options` as `{name, value, selected}[]`, `@change` reads `event.target.value`),
+  rather than introducing a different control shape for the same kind of choice.
+- The disclosure banner (unchanged from earlier passes — only shown when the conversation has
+  attachments) and the submit (`POST .../shares` with the one picked recipient) are otherwise as
+  before.
+
+Rejected alternative (the prior two-modal design): added a menu item, a manage-view modal, and a
+multi-recipient-with-chips picker, where this feature's only two building blocks — "a list you can
+remove from" and "a picker you can add from" — already exist and are already used twice in this
+exact panel.
+
 ## TODOs carried into `feature-plan` / `feature-build`
 
 - Exact copy for the share-time disclosure warning (see decision 2) — needs product/legal-adjacent
   review given the org's GDPR-conscious posture, not just engineering wording.
 - Exact copy for the share-notification email (see decision 5) — same review flag.
-- Which existing backoffice user-picker component to reuse for the recipient picker in the Share
-  modal — not identified this session.
+- Confirm `UMB_USER_PICKER_MODAL` actually supports (or can be configured/wrapped for) a
+  max-selection-of-one constraint at `feature-build` time (decision 7) — identified this session as
+  the real modal to reuse, but its single-select behavior wasn't verified beyond the type shape.
 - No v17-specific CMS API incompatibility is expected (nothing here uses a v18-only API), but this
   hasn't been explicitly checked against the v17 line yet.
+- The exact share-icon name and icon color alias used for the entitySign (decision 6, `icon-share`
+  / `positive` in the design) need confirming against the real Umbraco icon/color sets during
+  `feature-build`.
+- Localization key and exact label text for the entitySign's hover tooltip (decision 6's
+  `uaiCopilotWorkspace_isSharedSignLabel`) — not drafted this session.

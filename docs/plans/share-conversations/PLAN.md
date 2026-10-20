@@ -19,7 +19,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   `ScopeMode`, `CutoffMessageId`, `DateShared`, `DateRevoked`) and `IAIConversationShareRepository`
   in `Umbraco.AI.Agent.Conversations.Core`, per `ARCHITECTURE.md`'s data model section.
 
-- [ ] **SC-02** — EF Core entity + repository implementation (Persistence)
+- [x] **SC-02** — EF Core entity + repository implementation (Persistence)
   story: US1, US2, US3, US4 (foundation)
   depends-on: SC-01
   `AIConversationShareEntity`, `EFCoreAIConversationShareRepository`, `DbSet` + configuration on

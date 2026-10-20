@@ -405,3 +405,12 @@
   (display-name resolution belongs in the service/Web layer, which already has to resolve it for
   `GET .../shares`' `userName` field anyway) — sent back to a fresh builder along with the other two
   findings and the reviewer's non-blocking naming/one-type-per-file suggestions.
+- **2026-10-20 (`feature-build` SC-02: filtered-index cross-provider verification)** — The filtered
+  unique index decided during SC-01's review (`(ConversationId, SharedWithUserKey)` unique where
+  `DateRevoked IS NULL`) is the first of its kind in this codebase, so whether the raw filter SQL
+  would need provider-specific branching (SQL Server vs. SQLite) was an open question rather than
+  assumed. Verified empirically: generated scratch migrations against both
+  `Persistence.SqlServer` and `Persistence.Sqlite` projects; both rendered the identical
+  `filter: "DateRevoked IS NULL"` with no errors. No provider-conditional code needed — a single
+  plain filter string works on both. Scratch migrations were deleted (not committed) once this was
+  confirmed; the real, permanently-named migration is SC-03's job.

@@ -1,5 +1,20 @@
 # Build Log
 
+- **SC-02** — EF Core entity + repository implementation (Persistence). Commits `0c0f6d12`
+  (feature) + `54983aed` (follow-up: inlined two SC-01 doc comments that pointed at
+  ARCHITECTURE.md by section, found during this task's review). Four review rounds: (1) FAIL —
+  the `SaveAsync` insert path copied `Id`/`DateShared`/`DateRevoked` straight from the caller's
+  domain object instead of stamping them server-side, which could silently insert an
+  already-revoked "new" share, a wrong-dated one, or collide on a reused id from an old revoked
+  row; also flagged new comments (plus two pre-existing SC-01 ones) pointing at `ARCHITECTURE.md`
+  by name. (2) FAIL — one leftover `SPEC.md` comment pointer missed in the first fix. (3) PASS on
+  the code; (4) final confirmation pass, PASS. The filtered unique index
+  (`(ConversationId, SharedWithUserKey)` unique where `DateRevoked IS NULL`) — the first of its
+  kind in this codebase — was verified via scratch migrations against both SQL Server and SQLite;
+  the plain filter string worked identically on both, no provider branching needed. No runtime
+  entry point exists yet (no migration applied, no controller) — `dotnet build`/`dotnet test`
+  (111 unit + 2 integration, unrelated to this change) are the applicable gate until SC-03/SC-08
+  land.
 - **SC-01** — Domain model + repository interface (Core). Commit `eac90601`. Three review rounds:
   (1) FAIL — 3 Important findings, the key one a real gap in `ARCHITECTURE.md` itself (the
   recipient-uniqueness constraint didn't say whether it applied across revoked rows, which as

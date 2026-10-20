@@ -58,7 +58,9 @@ public sealed class ContentResourceType : AIContextResourceTypeBase<ContentResou
             return null;
         }
 
-        if (await _contentPermissionAuthorizer.IsDeniedAsync(user, contentKey, ActionBrowse.ActionLetter))
+        // Full property values need the Content section, as the CMS's document endpoint does.
+        if (!UmbracoSectionAccess.CanAccessFullContent(user)
+            || await _contentPermissionAuthorizer.IsDeniedAsync(user, contentKey, ActionBrowse.ActionLetter))
         {
             return null;
         }

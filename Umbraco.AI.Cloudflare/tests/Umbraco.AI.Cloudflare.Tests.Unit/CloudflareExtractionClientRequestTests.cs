@@ -49,44 +49,44 @@ public class CloudflareExtractionClientRequestTests
             SendAsync(new AITextExtractionField { Id = "orderId", Instructions = "The order number" }, TextAnswer)
                 .GetAwaiter().GetResult();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void PostsToTheClairicRunEndpointOnTheDefaultCloudflareApi()
         {
             _sent.Handler.Requests.Single().RequestUri.ShouldBe(
                 new Uri("https://api.cloudflare.com/client/v4/accounts/test-account/ai/run/@cf/cloudflare/clairic"));
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void UsesPost()
         {
             _sent.Handler.Requests.Single().Method.ShouldBe(HttpMethod.Post);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheApiTokenAsABearerToken()
         {
             _sent.Handler.Requests.Single().Headers.Authorization!.ToString().ShouldBe("Bearer test-api-token");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheTextType()
         {
             Field(_sent.Body, "orderId").GetProperty("type").GetString().ShouldBe("text");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheState()
         {
             _sent.Body.GetProperty("state").GetString().ShouldBe(State);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsNoImages()
         {
             _sent.Body.TryGetProperty("images", out _).ShouldBeFalse();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void OmitsTheReferenceDateWhenNoneIsGiven()
         {
             _sent.Body.TryGetProperty("reference_date", out _).ShouldBeFalse();
@@ -101,7 +101,7 @@ public class CloudflareExtractionClientRequestTests
                 TextAnswer,
                 new DateOnly(2026, 10, 20)).GetAwaiter().GetResult().Body;
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsItAsAnIsoReferenceDate()
         {
             _body.GetProperty("reference_date").GetString().ShouldBe("2026-10-20");
@@ -125,31 +125,31 @@ public class CloudflareExtractionClientRequestTests
             _field = Field(SendAsync(field, NumberAnswer).GetAwaiter().GetResult().Body, "amount");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheNumberType()
         {
             _field.GetProperty("type").GetString().ShouldBe("number");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheInstructions()
         {
             _field.GetProperty("instructions").GetString().ShouldBe("Amount paid");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheDecimals()
         {
             _field.GetProperty("decimals").GetInt32().ShouldBe(2);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheWholeNumberFlagAsInteger()
         {
             _field.GetProperty("integer").GetBoolean().ShouldBeTrue();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheUnit()
         {
             _field.GetProperty("unit").GetString().ShouldBe("DKK");
@@ -164,13 +164,13 @@ public class CloudflareExtractionClientRequestTests
                 ListAnswer).GetAwaiter().GetResult().Body,
             "dates");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheListType()
         {
             _field.GetProperty("type").GetString().ShouldBe("list");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheItemTypeUnderItems()
         {
             _field.GetProperty("items").GetProperty("type").GetString().ShouldBe("date");
@@ -185,13 +185,13 @@ public class CloudflareExtractionClientRequestTests
                 DurationAnswer).GetAwaiter().GetResult().Body,
             "stay");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheDurationType()
         {
             _field.GetProperty("type").GetString().ShouldBe("duration");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheUnitInLowerCase()
         {
             _field.GetProperty("unit").GetString().ShouldBe("days");

@@ -67,3 +67,14 @@
 - 21-10-2026: Duration unit and list item type are lowercase strings on the wire, read
   case-insensitively. A bad value is a 400. `confidence`, `nullProbability` and `span` are left out
   when empty; `value` is written as null when not found. (T8)
+- 21-10-2026: The Cloudflare client leaves a missing answer out instead of throwing, so Core's
+  answer checker reports it with a clear message. An unasked answer is passed through as a bare text
+  answer with its raw JSON, for Core to reject. A 2xx body with `success:false` throws
+  `InvalidOperationException` (an Unknown error, not a network error). Error text has the token
+  masked, then is cut to 500 characters. (T5)
+- 21-10-2026: The Clairic model is fixed in the URL; `options.ModelId` is ignored. A datetime with
+  `Z` or an offset comes back as UTC, otherwise `Unspecified`. (T5)
+- 21-10-2026: Unconfirmed Clairic wire-shape guesses for T9 to check: request `fields` keyed by id
+  with `items.type` and lowercase plural duration units, `reference_date`; response `answers`,
+  `p_null`, `span`/`spans`, `model`; ISO date/time strings; 3040/3036 errors as 429 with `errors[]`;
+  `Retry-After` presence; whether `models/search` accepts the token. (T5)

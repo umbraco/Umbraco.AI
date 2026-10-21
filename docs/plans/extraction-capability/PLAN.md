@@ -26,7 +26,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Core
 
-- [ ] **T1** - story: EX-3 (AC1-AC3, AC5-AC7, AC10). Add `AICapability.Extraction = 9`,
+- [ ] **T1** - story: EX-3 (AC1-AC3, AC5-AC7). Add `AICapability.Extraction = 9`,
   `AIExperimentalOptions.Extraction`, its arm in `AIExperimentalFeatures`, the
   `UMBRACOAI_EXTRACTION` experimental id, and the Extraction arm in `AIConnectionService` and
   `AIProfileService`'s capability checks. Add empty sealed `AIExtractionProfileSettings` and its
@@ -43,7 +43,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: validator and checker specs green with the fake client.
   depends-on: T1.
 
-- [ ] **T3** - story: EX-1 (AC15-AC21, AC30-AC32, AC36, AC37), EX-4 (AC1 backend), EX-8. Add
+- [ ] **T3** - story: EX-1 (AC15-AC21, AC30-AC32, AC36, AC37), EX-3 (AC10), EX-4 (AC1 backend), EX-8. Add
   `AISettings.DefaultExtractionProfileId`, `AIOptions.DefaultExtractionProfileAlias`, the profile
   arms in `AIProfileService`, `IAIExtractionCapability` + base classes, `IAIExtractionClientFactory`
   with the wrap order in decision 3, the middleware collection, `AIErrorClassifyingExtractionClient`,

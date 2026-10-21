@@ -59,7 +59,7 @@ skill:
 | Settings screen default-profile picker | Yes | New row, shown only when the flag is on. |
 | Guardrails, test graders | No | Decision has `DecisionGuardrailEvaluator` and `DecisionJudgeGrader`. Extraction has no "pass/fail" meaning to judge with. Out of scope. |
 | Agent tools, Copilot, Prompt | No | Non-goals in `BRIEF.md`. |
-| New provider package plumbing | Yes | Marketplace metadata, install scripts, CI registration, `changelog.config.json` scope, release manifest (the `add-provider` skill's list). |
+| New provider package plumbing | Yes | Marketplace metadata, install scripts, CI registration, `changelog.config.json` scope (the `add-provider` skill's list; the release manifest is added on the release branch). |
 | Root test solution | Yes | New test projects must be added to the root slnx, or CI never runs them. |
 | Version history, search indexing, cache refreshers | No | No content entities are added. |
 

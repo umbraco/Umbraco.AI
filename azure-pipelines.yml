@@ -57,6 +57,9 @@ parameters:
           - name: Umbraco.AI.TypeSafe
             changeVar: TypesafeChanged
             hasNpm: false
+          - name: Umbraco.AI.Cloudflare
+            changeVar: CloudflareChanged
+            hasNpm: false
           # Add-ons (have frontend but don't export types)
           - name: Umbraco.AI.Search
             changeVar: SearchChanged

@@ -57,9 +57,9 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Provider
 
-- [ ] **T4** - story: EX-2 (AC1-AC6, AC28). Scaffold `Umbraco.AI.Cloudflare` with the
+- [x] **T4** - story: EX-2 (AC1-AC6, AC28). Scaffold `Umbraco.AI.Cloudflare` with the
   `add-provider` skill and every registration point it lists (marketplace metadata, install
-  scripts, CI, `changelog.config.json` scope, release manifest, root `.slnx`, `version.json` =
+  scripts, CI, `changelog.config.json` scope, root `.slnx`, `version.json` =
   `18.0.0`). Add `CloudflareProvider`, `CloudflareProviderSettings`,
   `CloudflareExtractionCapability` (static model `@cf/cloudflare/clairic`), and the test project in
   the root `.slnx`. The client may throw `NotImplementedException` until T5.
@@ -71,7 +71,10 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   `TypeSafeDecisionClient`: request and response mapping per `SPEC.md` "Cloudflare provider", both
   envelope shapes, 429 retry (3 attempts, 30s cap, `Retry-After`), Cloudflare error codes in the
   exception, and the cached model-search connection check. Tests fake only the
-  `HttpMessageHandler`; delay and clock are injected.
+  `HttpMessageHandler`; delay and clock are injected. From T4 review: escape `AccountId` with
+  `Uri.EscapeDataString` in every URL; key the probe cache on a SHA-256 hash of the token, like
+  TypeSafe; keep the token out of all exception text; replace T4's `internal IMemoryCache Cache`
+  with TypeSafe's private-field shape.
   Acceptance: EX-2 specs green.
   depends-on: T4.
 
@@ -189,7 +192,9 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   depends-on: T16, T19.
 
 - [ ] **T21** - story: all. Open the v18 PR into `v18/dev` as a draft, with the demo-site results
-  from T9, T14, T16, T18 and T19 in the description.
+  from T9, T14, T16, T18 and T19 in the description. Flag in the PR that the `Umbraco.AI.Core`
+  floor for Cloudflare and Automate must be raised to the release that ships Extraction, and set
+  the real minimum in `Umbraco.AI.Cloudflare/README.md`.
   depends-on: T20.
 
 ## v17 and docs

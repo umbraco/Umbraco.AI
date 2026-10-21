@@ -24,3 +24,7 @@
   FAIL (unit/item-type parsing accepted "3" and "seconds,minutes"; untested mapping); fixed with
   name-only parsing and new tests, red first. Round 2 PASS. Unit 2235/2235, integration 34/34.
   Smoke: real request in T9.
+- **T4** - `Umbraco.AI.Cloudflare` scaffold copied from TypeSafe: provider, settings, capability
+  (static `@cf/cloudflare/clairic`), client stub, every add-provider registration point. 14 specs on
+  (failed first with CS0246). Reviewer PASS first round; root slnx runs the 14 tests. Security
+  follow-ups carried into T5, Core floor into T21. Smoke: live in T9.

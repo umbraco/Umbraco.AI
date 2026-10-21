@@ -18,8 +18,6 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Settings;
 // Copies DefaultDecisionProfileSettingsTests: real UpdateSettingsController / GetSettingsController + real
 // SettingsMapDefinition; the settings service is the mocked collaborator. PUT echoes back what it was asked
 // to save, and GET reads back what was saved, so the pair is the same round trip the Settings screen makes.
-// When this moves into the test project, UpdateSettingsProfileCapabilityValidationTests.AllSlots also
-// needs a "DefaultExtractionProfileId", AICapability.Extraction row.
 public class DefaultExtractionProfileSettingsTests
 {
     private static UmbracoMapper CreateMapper() => new(
@@ -53,10 +51,10 @@ public class DefaultExtractionProfileSettingsTests
                 .GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SavesTheDefaultExtractionProfileId() => _saved!.DefaultExtractionProfileId.ShouldBe(_profileId);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsItInTheResponse()
             => ((SettingsResponseModel)((OkObjectResult)_result).Value!).DefaultExtractionProfileId.ShouldBe(_profileId);
     }
@@ -77,7 +75,7 @@ public class DefaultExtractionProfileSettingsTests
                 .GetSettings().GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void GetSettingsReturnsIt()
             => ((SettingsResponseModel)((OkObjectResult)_result).Value!).DefaultExtractionProfileId.ShouldBe(_profileId);
     }
@@ -88,7 +86,7 @@ public class DefaultExtractionProfileSettingsTests
 
     public class GivenAChatProfileIsPutAsTheDefaultExtractionProfile
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReturnsBadRequest()
         {
             var profileId = Guid.NewGuid();

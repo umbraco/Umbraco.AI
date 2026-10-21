@@ -192,7 +192,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   SC-14's scoping). Acceptance: verified in the running backoffice as a real click-through, not
   just unit tests on the store/model.
 
-- [ ] **SC-19** — Backport to v17
+- [x] **SC-19** — Backport to v17
   story: US1, US2, US3, US4 (all)
   depends-on: SC-01 through SC-18
   Branch off `v17/dev` (per the repo's Backport Workflow), replay SC-01–SC-18, verify the same wire

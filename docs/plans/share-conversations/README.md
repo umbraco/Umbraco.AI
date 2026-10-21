@@ -20,9 +20,11 @@ Read these in order:
    shared-with-me), 29 acceptance criteria total, Given/When/Then with sad paths
 5. [x] [PLAN.md](./PLAN.md) — 19 tasks, first parallel group is SC-04/SC-05/SC-07 (backend
    services); no longer blocked on the Copilot RC — it's live on both dev lines
-6. [ ] [BUILD-LOG.md](./BUILD-LOG.md) — 18 of 19 tasks shipped on `v18`, 38 commits, whole-feature
-   review passed (1 Critical fix for a real data-exposure bug a regenerate could cause); only
-   SC-19 (the v17 backport) remains
+6. [x] [BUILD-LOG.md](./BUILD-LOG.md) — all 19 tasks shipped on both `v18` (38 commits,
+   whole-feature review passed, 1 Critical fix for a real data-exposure bug a regenerate could
+   cause) and `v17` (3 commits: docs, backend, frontend). Owner-side fully live-verified on both
+   lines; recipient-side live-verified on v18, accepted via code-diff parity on v17 after a
+   browser-automation environment issue (not a code defect) blocked a fresh v17 login check
 
 Also see [RESEARCH.md](./RESEARCH.md) — the competitive research behind this feature (written for
 the CTO), and [DECISION-LOG.md](./DECISION-LOG.md) for why things changed along the way.

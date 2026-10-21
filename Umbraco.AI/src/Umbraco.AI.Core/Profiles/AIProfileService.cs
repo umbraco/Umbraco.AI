@@ -178,7 +178,7 @@ internal sealed class AIProfileService : IAIProfileService
         {
             throw new InvalidOperationException(
                 $"The '{profile.Capability}' capability is experimental and not enabled. " +
-                "Enable it under 'Umbraco:AI:Experimental' to create profiles for it.");
+                $"Enable it with 'Umbraco:AI:Experimental:{profile.Capability}' to create profiles for it.");
         }
 
         // Generate new ID if needed

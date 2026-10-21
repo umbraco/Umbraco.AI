@@ -64,3 +64,8 @@
   "no settings" element, "Default Extraction Profile" picker (only when enabled), settings
   repository sends the field both ways. 16 specs on (red first). Label matched to sibling casing.
   Reviewer PASS first round; vitest 172/172, `build:core` passes. Smoke: T14.
+- **T13** - `Uai.PropertyEditorUi.ExtractionFieldList` + `Uai.Modal.ExtractionFieldConfigEditor`,
+  stacked medium modal per the mockups, stored value matches `ExtractValuesField`. 62 specs on (not
+  run red first; first run red only on a test-env stub). Review round 1 FAIL (untranslated item
+  type inside a phrase; duration/list saved shape and decimals range untested; alias rule change
+  not logged); fixed. Round 2 PASS. Vitest 240/240, `build:core` passes. Smoke: T14.

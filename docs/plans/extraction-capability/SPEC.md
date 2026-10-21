@@ -184,7 +184,7 @@ List field variant and the duplicate-alias mistake:
 - **Every type** has Alias and Instructions, both required.
 - **Alias rules** (checked on Save; the modal stays open on a mistake, with the message under the
   field):
-  - It must start with a letter and use only letters, numbers and `_`, to match Automate's alias
+  - It must start with a letter or `_` and use only letters, numbers and `_` (up to 64), to match Core's field id
     rule.
   - It must not be used by another field in the list.
 - **Extra settings by type:**

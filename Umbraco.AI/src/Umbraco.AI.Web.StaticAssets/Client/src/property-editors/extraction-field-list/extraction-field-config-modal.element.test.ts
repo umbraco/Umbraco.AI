@@ -16,7 +16,7 @@ import type { UaiExtractionFieldKind, UaiExtractionFieldListItem } from "./types
 beforeAll(() => {
     if (!HTMLElement.prototype.attachInternals) {
         HTMLElement.prototype.attachInternals = function () {
-            return { setValidity: vi.fn(), form: null } as unknown as ElementInternals;
+            return { setValidity: vi.fn(), setFormValue: vi.fn(), form: null } as unknown as ElementInternals;
         };
     }
 });
@@ -91,11 +91,11 @@ describe("Feature: extraction field config modal", () => {
             ({ el } = await openModal({ kind: "number" }));
         });
 
-        it.skip('shows the headline "Add field: Number"', () => {
+        it('shows the headline "Add field: Number"', () => {
             expect(headline(el)).toBe("Add field: Number");
         });
 
-        it.skip("shows Alias, Instructions, Decimal places, Whole number and Unit", () => {
+        it("shows Alias, Instructions, Decimal places, Whole number and Unit", () => {
             expect(fieldLabels(el)).toEqual(["Alias", "Instructions", "Decimal places", "Whole number", "Unit"]);
         });
     });
@@ -107,11 +107,11 @@ describe("Feature: extraction field config modal", () => {
             ({ el } = await openModal({ kind: "duration" }));
         });
 
-        it.skip("shows Alias, Instructions, Unit, Decimal places and Whole number", () => {
+        it("shows Alias, Instructions, Unit, Decimal places and Whole number", () => {
             expect(fieldLabels(el)).toEqual(["Alias", "Instructions", "Unit", "Decimal places", "Whole number"]);
         });
 
-        it.skip("defaults the unit to seconds", () => {
+        it("defaults the unit to seconds", () => {
             expect(input(el, "unit")?.value).toBe("seconds");
         });
     });
@@ -123,11 +123,11 @@ describe("Feature: extraction field config modal", () => {
             ({ el } = await openModal({ kind: "list" }));
         });
 
-        it.skip("shows Alias, Instructions and Item type", () => {
+        it("shows Alias, Instructions and Item type", () => {
             expect(fieldLabels(el)).toEqual(["Alias", "Instructions", "Item type"]);
         });
 
-        it.skip("defaults the item type to Text", () => {
+        it("defaults the item type to Text", () => {
             expect(input(el, "item-type")?.value).toBe("text");
         });
     });
@@ -146,11 +146,11 @@ describe("Feature: extraction field config modal", () => {
                     ({ el } = await openModal({ kind }));
                 });
 
-                it.skip("shows only Alias and Instructions", () => {
+                it("shows only Alias and Instructions", () => {
                     expect(fieldLabels(el)).toEqual(["Alias", "Instructions"]);
                 });
 
-                it.skip(`shows the headline "Add field: ${title}"`, () => {
+                it(`shows the headline "Add field: ${title}"`, () => {
                     expect(headline(el)).toBe(`Add field: ${title}`);
                 });
             });
@@ -170,11 +170,11 @@ describe("Feature: extraction field config modal", () => {
             await fillAndSave(el, { alias: "amount", instructions: "Amount paid" });
         });
 
-        it.skip("submits", () => {
+        it("submits", () => {
             expect(submit).toHaveBeenCalledOnce();
         });
 
-        it.skip("submits the exact flat field", () => {
+        it("submits the exact flat field", () => {
             expect(submittedField(setValue)).toEqual({
                 kind: "number",
                 alias: "amount",
@@ -195,8 +195,65 @@ describe("Feature: extraction field config modal", () => {
             await fillAndSave(el, { alias: "orderId", instructions: "The order number" });
         });
 
-        it.skip("submits only kind, alias and instructions", () => {
-            expect(submittedField(setValue)).toEqual({ kind: "text", alias: "orderId", instructions: "The order number" });
+        it("submits only kind, alias and instructions", () => {
+            expect(submittedField(setValue)).toEqual({
+                kind: "text",
+                alias: "orderId",
+                instructions: "The order number",
+            });
+        });
+    });
+
+    describe("Scenario: a Duration field is saved", () => {
+        let setValue: ReturnType<typeof vi.fn>;
+
+        beforeEach(async () => {
+            let el: UaiExtractionFieldConfigModalElement;
+            ({ el, setValue } = await openModal({ kind: "duration" }));
+            await fillAndSave(el, { alias: "waited", instructions: "How long the customer waited" });
+        });
+
+        it("submits the exact flat field, with the default unit and integer", () => {
+            expect(submittedField(setValue)).toEqual({
+                kind: "duration",
+                alias: "waited",
+                instructions: "How long the customer waited",
+                integer: false,
+                unit: "seconds",
+            });
+        });
+    });
+
+    describe("Scenario: a List field is saved", () => {
+        let setValue: ReturnType<typeof vi.fn>;
+
+        beforeEach(async () => {
+            let el: UaiExtractionFieldConfigModalElement;
+            ({ el, setValue } = await openModal({ kind: "list" }));
+            await fillAndSave(el, { alias: "damaged", instructions: "Damaged products" });
+        });
+
+        it("submits the exact flat field, with the default item type", () => {
+            expect(submittedField(setValue)).toEqual({
+                kind: "list",
+                alias: "damaged",
+                instructions: "Damaged products",
+                itemType: "text",
+            });
+        });
+    });
+
+    describe("Scenario: the alias starts with an underscore", () => {
+        let submit: ReturnType<typeof vi.fn>;
+
+        beforeEach(async () => {
+            let el: UaiExtractionFieldConfigModalElement;
+            ({ el, submit } = await openModal({ kind: "text" }));
+            await fillAndSave(el, { alias: "_orderId" });
+        });
+
+        it("submits", () => {
+            expect(submit).toHaveBeenCalledOnce();
         });
     });
 
@@ -206,28 +263,34 @@ describe("Feature: extraction field config modal", () => {
         beforeEach(async () => {
             ({ el } = await openModal({
                 kind: "number",
-                existingField: { kind: "number", alias: "amount", instructions: "Amount paid", decimals: 2, unit: "DKK" },
+                existingField: {
+                    kind: "number",
+                    alias: "amount",
+                    instructions: "Amount paid",
+                    decimals: 2,
+                    unit: "DKK",
+                },
                 otherAliases: ["orderId"],
             }));
         });
 
-        it.skip('shows the headline "Edit field: Number"', () => {
+        it('shows the headline "Edit field: Number"', () => {
             expect(headline(el)).toBe("Edit field: Number");
         });
 
-        it.skip("fills in the saved alias", () => {
+        it("fills in the saved alias", () => {
             expect(input(el, "alias")?.value).toBe("amount");
         });
 
-        it.skip("fills in the saved instructions", () => {
+        it("fills in the saved instructions", () => {
             expect(input(el, "instructions")?.value).toBe("Amount paid");
         });
 
-        it.skip("fills in the saved decimal places", () => {
+        it("fills in the saved decimal places", () => {
             expect(String(input(el, "decimals")?.value)).toBe("2");
         });
 
-        it.skip("fills in the saved unit", () => {
+        it("fills in the saved unit", () => {
             expect(input(el, "unit")?.value).toBe("DKK");
         });
     });
@@ -245,7 +308,7 @@ describe("Feature: extraction field config modal", () => {
             await fillAndSave(el, { alias: "orderId", instructions: "The order reference" });
         });
 
-        it.skip("submits", () => {
+        it("submits", () => {
             expect(submit).toHaveBeenCalledOnce();
         });
     });
@@ -260,11 +323,11 @@ describe("Feature: extraction field config modal", () => {
                 await fillAndSave(el, { alias: "" });
             });
 
-            it.skip("stays open", () => {
+            it("stays open", () => {
                 expect(submit).not.toHaveBeenCalled();
             });
 
-            it.skip("shows a message under Alias", () => {
+            it("shows a message under Alias", () => {
                 expect(el.shadowRoot!.querySelector(".alias-error")).not.toBeNull();
             });
         });
@@ -278,11 +341,11 @@ describe("Feature: extraction field config modal", () => {
                 await fillAndSave(el, { instructions: "   " });
             });
 
-            it.skip("stays open", () => {
+            it("stays open", () => {
                 expect(submit).not.toHaveBeenCalled();
             });
 
-            it.skip("shows a message under Instructions", () => {
+            it("shows a message under Instructions", () => {
                 expect(el.shadowRoot!.querySelector(".instructions-error")).not.toBeNull();
             });
         });
@@ -302,11 +365,11 @@ describe("Feature: extraction field config modal", () => {
                         await fillAndSave(el, { alias });
                     });
 
-                    it.skip("stays open", () => {
+                    it("stays open", () => {
                         expect(submit).not.toHaveBeenCalled();
                     });
 
-                    it.skip("says it must start with a letter and use only letters, numbers and _", () => {
+                    it("says it must start with a letter or _ and use only letters, numbers and _", () => {
                         expect(el.shadowRoot!.querySelector(".alias-error")?.textContent).toContain(
                             "start with a letter",
                         );
@@ -324,11 +387,11 @@ describe("Feature: extraction field config modal", () => {
                 await fillAndSave(el, { alias: "orderId" });
             });
 
-            it.skip("stays open", () => {
+            it("stays open", () => {
                 expect(submit).not.toHaveBeenCalled();
             });
 
-            it.skip("names the alias in the message", () => {
+            it("names the alias in the message", () => {
                 expect(el.shadowRoot!.querySelector(".alias-error")?.textContent?.trim()).toBe(
                     'Another field already uses the alias "orderId".',
                 );
@@ -336,18 +399,26 @@ describe("Feature: extraction field config modal", () => {
         });
 
         describe("Scenario: decimal places out of range", () => {
-            let submit: ReturnType<typeof vi.fn>;
+            for (const decimals of ["7", "1.5"]) {
+                describe(`when it is ${decimals}`, () => {
+                    let el: UaiExtractionFieldConfigModalElement;
+                    let submit: ReturnType<typeof vi.fn>;
 
-            beforeEach(async () => {
-                let el: UaiExtractionFieldConfigModalElement;
-                ({ el, submit } = await openModal({ kind: "number" }));
-                setInput(el, "decimals", "7");
-                await fillAndSave(el, { alias: "amount", instructions: "Amount paid" });
-            });
+                    beforeEach(async () => {
+                        ({ el, submit } = await openModal({ kind: "number" }));
+                        setInput(el, "decimals", decimals);
+                        await fillAndSave(el, { alias: "amount", instructions: "Amount paid" });
+                    });
 
-            it.skip("stays open", () => {
-                expect(submit).not.toHaveBeenCalled();
-            });
+                    it("stays open", () => {
+                        expect(submit).not.toHaveBeenCalled();
+                    });
+
+                    it("shows a message under Decimal places", () => {
+                        expect(el.shadowRoot!.querySelector(".decimals-error")).not.toBeNull();
+                    });
+                });
+            }
         });
 
         describe("Scenario: an edit is cancelled", () => {
@@ -365,11 +436,11 @@ describe("Feature: extraction field config modal", () => {
                 await clickButton(el, "btn-cancel");
             });
 
-            it.skip("closes without a value", () => {
+            it("closes without a value", () => {
                 expect(reject).toHaveBeenCalledOnce();
             });
 
-            it.skip("never hands back the changed field", () => {
+            it("never hands back the changed field", () => {
                 expect(setValue).not.toHaveBeenCalled();
             });
         });

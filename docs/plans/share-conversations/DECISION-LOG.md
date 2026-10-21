@@ -483,3 +483,9 @@
   (today only owner-side writes fire the update event `#reload()` responds to) and recommended SC-18
   unify the two load paths into `#reload()` itself (keyed on `model.isShared`) rather than leaving
   two separate routines — noted here so it isn't lost before SC-18 starts.
+- **2026-10-21 (SC-13: `iconColorAlias: 'green'`, not `'positive'`)** — `ARCHITECTURE.md`/`PLAN.md`
+  both named `'positive'` as a placeholder, flagged as needing confirmation against the real
+  icon/color sets. `'positive'` isn't a real `iconColorAlias` token in this CMS version (checked the
+  actual fixed color list in `extractUmbColorVariable.function.js`); `'green'` is what Umbraco core's
+  own entity signs use for this same positive/success styling (e.g. the has-schedule sign), so that's
+  what shipped.

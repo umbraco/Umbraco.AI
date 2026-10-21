@@ -121,7 +121,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   Per `SPEC.md`'s "Chat detail view and context panel" section — this is the one place both
   surfaces' read-only behavior is defined, so it's one task rather than two.
 
-- [ ] **SC-13** — EntitySign manifest + owner's tree-item badge
+- [x] **SC-13** — EntitySign manifest + owner's tree-item badge
   story: US2 (AC5–7)
   depends-on: SC-11
   parallel-group: frontend-features

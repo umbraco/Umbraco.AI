@@ -1,5 +1,21 @@
 # Build Log
 
+- **SC-13** — EntitySign manifest + owner's tree-item badge. Commit `f40f49c5`. First use of
+  Umbraco's `entitySign` extension mechanism in this codebase. Two review rounds: (1) FAIL — the
+  manifest/wiring itself matched real CMS source exactly (verified field-for-field against core's
+  own `is-protected` entitySign and `media-tree-item`'s bundle usage; `iconColorAlias: 'positive'`
+  from the plan isn't a real token, swapped for `'green'`, the real one core uses for this same
+  positive/success styling), but 2 Important gaps: the staged `shared-indicator.spec.ts` was never
+  activated into real tests, and the badge had no cut-out ring because `--umb-sign-bundle-bg` was
+  never set on the tree item (copied verbatim from core's own tree-item-base styles, one rule per
+  hover/active/selected state). (2) PASS — tests activated as `tree-item.helpers.ts`/`.test.ts`
+  (pulling the flag/icon-name logic into pure, independently-testable functions), staged spec
+  deleted, `grouping.test.ts`'s `hasActiveShares` fixture gap (flagged in SC-11's own entry) filled
+  in. Live-verified in the running demo site, not just build/test: re-shared a real conversation to
+  flip `hasActiveShares` true, pinned it too, and visually confirmed the green share badge renders
+  with a real cut-out ring, correctly alongside the pushpin icon (AC6), with a "Shared" hover
+  tooltip and nothing else opening (AC5, AC7) — screenshot at `screenshots/sidebar-shared-badge.png`
+  (Copilot section → sidebar → a pinned+shared conversation's icon). vitest 54/54.
 - **SC-12** — Detail model + workspace-context + context-panel readonly plumbing. Commit
   `726484a3`. One review round, PASS first try. `UaiConversationDetailModel` gains
   `isShared`/`readonly` (derived once at mapping time) and an optional `ownerDisplayName`;

@@ -114,7 +114,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Frontend (Core)
 
-- [ ] **T10** - story: EX-4, EX-5, EX-7 (prerequisite). Regenerate the OpenAPI client
+- [x] **T10** - story: EX-4, EX-5, EX-7 (prerequisite). Regenerate the OpenAPI client
   (`npm run generate-client` against the running demo site) once, after T9. Commit only the
   generated `src/api/` changes.
   depends-on: T9.

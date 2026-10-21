@@ -1,5 +1,47 @@
 # Build Log
 
+- **SC-17** — "Shared with me" sidebar grouping. Commit pending. Three builder/review rounds:
+  (1) First builder pass built the new sidebar slice, menu, and tree-item correctly, but hand-rolled
+  the per-row "Shared by `<owner>`" badge (plain `<umb-icon>` + copied ring CSS + a native `title`
+  attribute) instead of using the real `entitySign`/`<umb-entity-sign-bundle>` extension system
+  SC-13's owner-side badge uses, on the stated belief that the real mechanism can't show per-row
+  dynamic hover text (its label looked fixed per manifest). Reviewer FAILed this: independently
+  verified in the actual `@umbraco-cms/backoffice` source that `UmbEntitySignApi.label` can be an
+  `Observable<string>`, and `entity-sign-bundle.element.js` creates a fresh api instance *per row*
+  (per `<umb-entity-sign-bundle>`), whose element ends up a real DOM descendant of the row — so a
+  custom api can `consumeContext` an ambient, per-row context the same way
+  `UaiConversationEntityContext` already does in this codebase. (2) A fresh builder implemented the
+  prescribed fix: new `UaiSharedConversationRowContext` (per-row context carrying
+  `ownerDisplayName`), a new `UaiSharedWithMeSignApi` (consumes that context, exposes a reactive
+  `label` built from `localize.term("uaiCopilotWorkspace_sharedByOwner", owner)`), a second
+  `entitySign`/`kind: "icon"` manifest entry (`Uai.Conversation.IsSharedWithMe`), and the tree-item
+  rewritten to use the real `<umb-entity-sign-bundle>` instead of the hand-rolled badge. (3) PASS —
+  the orchestrator independently re-verified the api-loader contract and the context-bubbling
+  mechanism against the real CMS source before accepting the re-review.
+  **Everything else passed review in round 1** and was left unchanged across rounds: the
+  `sidebar.context.ts` `#sharedWithMe` slice (loads once per section mount, no live cross-user
+  push — a share created/revoked by the owner happens in a different user's session, and this
+  codebase has no mechanism for that), the `group-not-empty.condition.ts` `"sharedWithMe"` match,
+  the `sidebar/manifests.ts` registration at weight 150 (between Recent=200 and the Archived
+  footer=100), and the standalone `shared-with-me-menu.element.ts` (not forced through the
+  `ConversationResponseModel`-typed `UaiConversationListMenuElementBase`, since the data shape
+  genuinely differs). `npm run build:copilot-workspace` clean and `npm run test:copilot-workspace`
+  72/72 passing throughout all three rounds, no regressions.
+  **Live verification — not completed, code-trace only.** This is the first dynamic-label
+  `entitySign` in this codebase, so a real hover check was worth attempting. The orchestrator made
+  two careful, isolated attempts directly against the running demo site (including a fresh admin
+  login after a session timeout) to create a real share, open "Shared with me", and hover the
+  badge. Both attempts hit the same modal-instability pattern already documented in SC-16's entry
+  above: the share-picker/user-picker modal chain closed itself partway through, even when avoiding
+  the specific zoom/scroll/JS-query triggers SC-16 identified. Given SC-16 already established (and
+  the team accepted) that this category of hover/picker interaction is not reliably drivable via
+  browser automation in this environment, and given the mechanism here was independently verified
+  by two separate reviewers plus the orchestrator directly against the real CMS source (down to the
+  exact function: `entity-sign-bundle.element.js`'s `#gotProperties`/`#handleHoverTimer`,
+  `create-extension-element-with-api.function.js`'s constructor call, `UmbEntitySignApi`'s
+  `label?: Observable<string>` contract), this was accepted as done on code-level verification,
+  consistent with SC-16's precedent. If this ever visibly fails in real use, the fix is isolated to
+  `shared-with-me-sign.api.ts`'s context-consumption wiring.
 - **SC-16** — Wire: "Shared with" section + picker modal end-to-end. No commit (verification-only
   task, no code changes — nothing found broken). Done directly by the orchestrator, live against the
   running demo site, not delegated.

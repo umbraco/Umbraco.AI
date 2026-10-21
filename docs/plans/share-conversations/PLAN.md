@@ -169,7 +169,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   row appear in the "Shared with" section without a reload; then removing that row and confirming
   it disappears and the colleague's next request for the conversation 404s.
 
-- [ ] **SC-17** — "Shared with me" sidebar grouping
+- [x] **SC-17** — "Shared with me" sidebar grouping
   story: US3 (AC1–4)
   depends-on: SC-11
   parallel-group: frontend-features

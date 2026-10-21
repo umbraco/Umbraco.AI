@@ -511,3 +511,25 @@
   confirmed safe since nothing called the old signature yet (unreleased, pre-merge branch), and updated
   `SPEC.md`'s repository-additions section to the corrected `(id, ...)` signatures so the design doc
   doesn't drift from what shipped.
+- **2026-10-21 (SC-17: dynamic per-row badge label via a custom `entitySign` api, not a hand-rolled
+  badge)** — `SPEC.md` asks for "Shared with me" rows to reuse "the same `Uai.Conversation.IsShared`
+  entity-sign badge overlay" as SC-13's owner-side rows, while also requiring per-row dynamic hover
+  text ("Shared by `<owner>`", a different name per row) — a combination a first build pass believed
+  was impossible, since an `entitySign` manifest's label looked fixed per manifest. Verified (reviewer,
+  then independently re-confirmed by the orchestrator against the real CMS 18.0.0 source) that it's
+  not: `UmbEntitySignApi.label` can be an `Observable<string>`, and `entity-sign-bundle.element.js`
+  creates a fresh api instance per `<umb-entity-sign-bundle>` (i.e. per row), with that api's element
+  ending up a real DOM descendant of the row — so a custom api can `consumeContext` a per-row context
+  the row provides, the same ambient-context pattern `UaiConversationEntityContext` already uses.
+  Built a second `entitySign` manifest (`Uai.Conversation.IsSharedWithMe`) with a custom
+  `UaiSharedWithMeSignApi` instead of hand-rolling the badge, keeping both rows' badges on the real
+  extension mechanism rather than one real and one look-alike.
+- **2026-10-21 (SC-17: live hover verification accepted as code-trace-only)** — This is the first
+  dynamic-label `entitySign` in this codebase. Two isolated live-verification attempts against the
+  running demo site (fresh login, real share, hover the badge) both hit the same modal-dismissal
+  instability already documented in SC-16's `BUILD-LOG.md` entry, even after avoiding the specific
+  triggers (zoom/scroll/interleaved JS queries) SC-16 identified. Accepted the strong code-level
+  verification (two independent reviews plus the orchestrator's own re-check of the exact source
+  lines) in place of a live visual confirmation, consistent with the precedent SC-16 already set for
+  this category of interaction in this environment. If this ever visibly misbehaves, the fix is
+  isolated to `shared-with-me-sign.api.ts`'s context-consumption wiring.

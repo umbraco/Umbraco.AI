@@ -5,6 +5,7 @@ import { UaiConversationEntityContext } from "./entity/conversation-entity.conte
 import type { ConversationResponseModel } from "./types.js";
 import { UAI_CONVERSATION_ENTITY_TYPE } from "../constants.js";
 import { copilotWorkspaceConversationPath } from "../paths.js";
+import { conversationIconName, conversationSignFlags } from "./tree-item.helpers.js";
 
 /**
  * A single conversation node in the sidebar tree. Provides the standard `UMB_ENTITY_CONTEXT` plus the
@@ -42,7 +43,14 @@ export class UaiCopilotWorkspaceConversationTreeItemElement extends UmbLitElemen
 
         return html`
             <uui-menu-item label=${title} href=${href} ?active=${active}>
-                <uui-icon slot="icon" name=${conversation.isPinned ? "icon-pushpin" : "icon-chat"}></uui-icon>
+                <div id="icon-container" slot="icon">
+                    <umb-entity-sign-bundle
+                        .entityType=${UAI_CONVERSATION_ENTITY_TYPE}
+                        .entityFlags=${conversationSignFlags(conversation)}
+                    >
+                        <uui-icon name=${conversationIconName(conversation)}></uui-icon>
+                    </umb-entity-sign-bundle>
+                </div>
                 <umb-entity-actions-dropdown slot="actions" compact .label=${title}>
                     <uui-symbol-more slot="label"></uui-symbol-more>
                 </umb-entity-actions-dropdown>
@@ -54,6 +62,43 @@ export class UaiCopilotWorkspaceConversationTreeItemElement extends UmbLitElemen
         css`
             :host {
                 display: block;
+            }
+
+            /*
+             * Matches core's own tree-item-base + media-tree-item (dist-cms/.../tree-item-element-base.js,
+             * dist-cms/.../media-tree-item.element.js): the icon-container wrapper gets the positioning
+             * context and icon sizing the entity-sign badge expects, and --umb-sign-bundle-bg is set on
+             * uui-menu-item per visual state so <umb-entity-sign-bundle>'s cut-out ring (drawn via
+             * drop-shadow + ::before in entity-sign-icon.element.js) matches the row's actual background
+             * instead of defaulting to transparent.
+             */
+            #icon-container {
+                position: relative;
+                font-size: 15px;
+            }
+
+            uui-menu-item {
+                --umb-sign-bundle-bg: var(--uui-color-surface);
+            }
+
+            uui-menu-item:hover {
+                --umb-sign-bundle-bg: var(--uui-color-surface-emphasis);
+            }
+
+            uui-menu-item[active] {
+                --umb-sign-bundle-bg: var(--uui-color-current);
+            }
+
+            uui-menu-item[active]:hover {
+                --umb-sign-bundle-bg: var(--uui-color-current-emphasis);
+            }
+
+            uui-menu-item[selected] {
+                --umb-sign-bundle-bg: var(--uui-color-selected);
+            }
+
+            uui-menu-item[selected]:hover {
+                --umb-sign-bundle-bg: var(--uui-color-selected-emphasis);
             }
         `,
     ];

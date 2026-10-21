@@ -156,7 +156,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   needed.
   depends-on: T3. parallel-group: B
 
-- [ ] **T16** - **wire: Deploy connectors in a real host.** story: EX-12. On the demo site with
+- [x] **T16** - **wire: Deploy connectors in a real host.** story: EX-12. On the demo site with
   `Umbraco.AI.Deploy` referenced, export a settings artifact containing `DefaultExtractionProfileUdi`
   and import it back.
   depends-on: T15, T9.
@@ -171,14 +171,14 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: EX-10 specs green, including the output schema test for every field type.
   depends-on: T3. parallel-group: B
 
-- [ ] **T18** - **wire: Extract Values on the demo site.** story: EX-10 (AC5, AC9, AC14, AC15),
+- [x] **T18** - **wire: Extract Values on the demo site.** story: EX-10 (AC5, AC9, AC14, AC15),
   EX-9 (AC11). Build an automation in the backoffice: Webhook → Extract Values → If on
   `orderId.found`. Post a real body and confirm the branch taken and the outputs in the run detail.
   Restart with the flag off and confirm the action is gone and the existing step fails with
   "Extraction is disabled."
   depends-on: T17, T14.
 
-- [ ] **T19** - **wire: idea recipes end to end.** story: EX-11 (AC1-AC4). Build the three recipes
+- [x] **T19** - **wire: idea recipes end to end.** story: EX-11 (AC1-AC4). Build the three recipes
   in EX-11 on the demo site with no code. Then switch the site to `da-DK` and run the confidence
   check (AC4). Record every result in `BUILD-LOG.md`. If AC4 shows the culture bug, draft the
   Automate issue (problem and expected behaviour only) for the user to review before filing.

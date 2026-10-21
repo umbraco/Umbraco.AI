@@ -1,9 +1,17 @@
-import { css, customElement, html, nothing, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { umbOpenModal } from "@umbraco-cms/backoffice/modal";
 import type { UaiContextPickerElement } from "@umbraco-ai/core";
-import { UAI_CONVERSATION_WORKSPACE_CONTEXT, type UaiConversationWorkspaceContext } from "./conversation-workspace.context.js";
-import type { ContextResourceModel, UaiConversationDetailModel } from "../types.js";
+import {
+    UAI_CONVERSATION_WORKSPACE_CONTEXT,
+    type UaiConversationWorkspaceContext,
+} from "./conversation-workspace.context.js";
+import { UaiConversationRepository } from "../repository/conversation.repository.js";
+import { UAI_SHARE_PICKER_MODAL } from "../modal/share-picker-modal.token.js";
+import { uaiShareHasAttachments } from "../modal/share-picker-modal.helpers.js";
+import { uaiRemoveShare, uaiSharesConversationId, uaiSortShares } from "./conversation-context-panel.helpers.js";
+import type { ContextResourceModel, ConversationShareResponseModel, UaiConversationDetailModel } from "../types.js";
 import type { ProjectResponseModel } from "../../project/types.js";
 
 /** Minimal structural type for the globally-registered (but not type-exported) `uai-resource-list`. */
@@ -29,16 +37,33 @@ interface ResourceListElement extends HTMLElement {
 @customElement("uai-copilot-workspace-conversation-context-panel")
 export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitElement {
     #store?: UaiConversationWorkspaceContext;
+    // Shares are a separate resource from the conversation itself (not part of UaiConversationDetailModel),
+    // so this component resolves its own repository instance for them rather than routing through the
+    // store's writers — the same pattern UaiConversationMoveAction uses for its project repository.
+    #shareRepository = new UaiConversationRepository(this);
+    /** The id the currently-held `_shares` were fetched for — guards against a stale response landing
+     *  after the open conversation has already changed again, and avoids refetching on every unrelated
+     *  conversation$ emission (e.g. a rename). */
+    #sharesConversationId?: string;
+    /** Incremented before every shares fetch (initial/id-change and post-share refetch alike); a fetch
+     *  only applies its result if its captured token still matches when the response resolves, so an
+     *  older in-flight fetch can never clobber a newer one. Same pattern as
+     *  {@link UaiConversationWorkspaceContext}'s own `#requestToken`. */
+    #sharesRequestToken = 0;
 
     @state() private _resolved = false;
     @state() private _project?: ProjectResponseModel;
     @state() private _conversation?: UaiConversationDetailModel;
+    @state() private _shares: ConversationShareResponseModel[] = [];
 
     constructor() {
         super();
         this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
             this.#store = store;
-            this.observe(store?.conversation$, (c) => (this._conversation = c));
+            this.observe(store?.conversation$, (c) => {
+                this._conversation = c;
+                this.#syncShares(c);
+            });
             this.observe(store?.project$, (p) => (this._project = p));
             this.observe(store?.isResolved$, (r) => (this._resolved = r ?? false));
         });
@@ -51,6 +76,48 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
 
     #onResourcesChange(event: Event) {
         this.#store?.setResources([...(event.target as ResourceListElement).items]);
+    }
+
+    /** Fetches `GET .../shares` once when the open, owner-only conversation's id actually changes. */
+    #syncShares(conversation?: UaiConversationDetailModel) {
+        const id = uaiSharesConversationId(conversation);
+        if (id === this.#sharesConversationId) return;
+        this.#sharesConversationId = id;
+        this._shares = [];
+        if (id) void this.#fetchShares(id);
+    }
+
+    async #fetchShares(id: string) {
+        const token = ++this.#sharesRequestToken;
+        const { data } = await this.#shareRepository.getShares(id);
+        if (token !== this.#sharesRequestToken) return; // superseded by a newer fetch
+        if (id !== this.#sharesConversationId) return; // superseded by a newer open
+        this._shares = uaiSortShares(data ?? []);
+    }
+
+    async #onChooseRecipient() {
+        const conversation = this._conversation;
+        if (!conversation?.id) return;
+
+        const result = await umbOpenModal(this, UAI_SHARE_PICKER_MODAL, {
+            data: {
+                title: conversation.title?.trim() || this.localize.term("uaiCopilotWorkspace_untitledConversation"),
+                hasAttachments: uaiShareHasAttachments(conversation.contextIds, conversation.resources),
+            },
+        }).catch(() => undefined);
+        if (!result) return;
+
+        await this.#shareRepository.share(conversation.id, result.recipientUserKey, result.scopeMode);
+        await this.#fetchShares(conversation.id);
+    }
+
+    async #onRevokeShare(userKey: string) {
+        const id = this._conversation?.id;
+        if (!id) return;
+        const { error } = await this.#shareRepository.revokeShare(id, userKey);
+        if (!error) {
+            this._shares = uaiRemoveShare(this._shares, userKey);
+        }
     }
 
     override render() {
@@ -74,6 +141,9 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
         const projectResources = project ? [...project.resources].sort((a, b) => a.sortOrder - b.sortOrder) : [];
 
         return html`
+            ${conversation && !conversation.readonly
+                ? this.#renderBlock("uaiCopilotWorkspace_contextSharedHeading", this.#renderShared())
+                : nothing}
             ${project
                 ? this.#renderBlock(
                       "uaiCopilotWorkspace_contextInstructionsHeading",
@@ -147,6 +217,49 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                       @change=${this.#onResourcesChange}
                   ></uai-resource-list>`
                 : nothing}
+        `;
+    }
+
+    // Owner-only (gated by the caller in #renderBody): one uui-ref-node per active recipient, each with
+    // its own inline remove action — unlike Contexts/Resources, a share row has its own persistence
+    // identity, so removing one calls DELETE .../shares/{userKey} directly instead of resubmitting the
+    // whole list. No confirm step, same posture as the rest of this feature.
+    #renderShared() {
+        if (this._shares.length === 0) {
+            return html` ${this.#renderEmpty("uaiCopilotWorkspace_contextNoShares")} ${this.#renderChooseButton()} `;
+        }
+        return html`
+            <uui-ref-list>
+                ${repeat(
+                    this._shares,
+                    (share) => share.userKey,
+                    (share) => html`
+                        <uui-ref-node name=${share.userName} detail=${share.scopeMode}>
+                            <uui-action-bar slot="actions">
+                                <uui-button
+                                    label=${this.localize.term("uaiCopilotWorkspace_contextShareRemoveLabel")}
+                                    look="secondary"
+                                    @click=${(e: Event) => {
+                                        e.stopPropagation();
+                                        void this.#onRevokeShare(share.userKey);
+                                    }}
+                                >
+                                    <uui-icon name="icon-trash"></uui-icon>
+                                </uui-button>
+                            </uui-action-bar>
+                        </uui-ref-node>
+                    `,
+                )}
+            </uui-ref-list>
+            ${this.#renderChooseButton()}
+        `;
+    }
+
+    #renderChooseButton() {
+        return html`
+            <uui-button look="placeholder" @click=${this.#onChooseRecipient}>
+                ${this.localize.term("uaiCopilotWorkspace_contextShareChoose")}
+            </uui-button>
         `;
     }
 
@@ -243,6 +356,18 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
             .block-body > uai-context-picker,
             .block-body > uai-resource-list {
                 display: block;
+            }
+            /* "Shared with" rows (uui-ref-list) + the "Choose" button beneath them, mirroring
+               uai-resource-list's compact add-button convention (full-width, spaced below the list). */
+            .block-body > uui-ref-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                margin-bottom: var(--uui-size-space-3);
+            }
+            .block-body > uui-button[look="placeholder"] {
+                display: block;
+                width: 100%;
             }
             /* Divider between the inherited (project) layer and the conversation's own layer. Only drawn
                when the second (editable) picker actually has items — an empty one shows just its add

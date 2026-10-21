@@ -108,5 +108,9 @@ export default {
         contextNoContexts: "No contexts attached.",
         contextNoResources: "No resources attached.",
         contextInheritedHint: "Inherited from the project",
+        contextSharedHeading: "Shared with",
+        contextNoShares: "Not shared with anyone yet.",
+        contextShareChoose: "Choose",
+        contextShareRemoveLabel: "Remove",
     },
 } satisfies UmbLocalizationDictionary;

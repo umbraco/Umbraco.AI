@@ -170,9 +170,9 @@ matches the established cross-product convention rather than being picked arbitr
 
 ### `conversation.repository.ts` additions
 
-- `share(conversation, recipientUserKey, scopeMode)` → `POST .../shares`
-- `getShares(conversation)` → `GET .../shares`
-- `revokeShare(conversation, userKey)` → `DELETE .../shares/{userKey}`
+- `share(id, recipientUserKey, scopeMode)` → `POST .../shares`
+- `getShares(id)` → `GET .../shares`
+- `revokeShare(id, userKey)` → `DELETE .../shares/{userKey}`
 - `requestSharedWithMe(skip, take, search?)` → `GET /conversations/shared-with-me`
 - `requestSharedView(id)` → `GET /conversations/{id}/shared-view`
 

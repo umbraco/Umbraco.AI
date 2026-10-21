@@ -94,13 +94,14 @@ export class UaiConversationRepository extends UmbRepositoryBase {
      * Shares (or re-shares) the conversation with one recipient. The wire request still carries
      * `recipientUserKeys` as an array — kept for a future bulk entry point, see SPEC.md — but this
      * method only ever sends the one recipient passed in.
+     *
+     * Takes the conversation id directly (not the full {@link ConversationResponseModel}) — this and
+     * {@link getShares}/{@link revokeShare} never needed more than the id, and taking the id lets a
+     * caller holding only a `UaiConversationDetailModel` (e.g. the context panel's "Shared with"
+     * section, SC-14) call these without first fetching the full response model.
      */
-    async share(
-        conversation: ConversationResponseModel,
-        recipientUserKey: string,
-        scopeMode: ShareConversationRequestModel["scopeMode"],
-    ) {
-        const result = await this.#source.share(conversation.id, {
+    async share(id: string, recipientUserKey: string, scopeMode: ShareConversationRequestModel["scopeMode"]) {
+        const result = await this.#source.share(id, {
             recipientUserKeys: [recipientUserKey],
             scopeMode,
         });
@@ -108,22 +109,22 @@ export class UaiConversationRepository extends UmbRepositoryBase {
             // Dispatched (and awaited, same timing reason as `update`) because sharing flips the
             // owner's `hasActiveShares` badge on the sidebar's conversation list, which otherwise
             // has no way to know this conversation's share state just changed.
-            await dispatchActionEvent(this, UaiEntityActionEvent.updated(conversation.id, UAI_CONVERSATION_ENTITY_TYPE));
+            await dispatchActionEvent(this, UaiEntityActionEvent.updated(id, UAI_CONVERSATION_ENTITY_TYPE));
         }
         return result;
     }
 
-    getShares(conversation: ConversationResponseModel) {
-        return this.#source.getShares(conversation.id);
+    getShares(id: string) {
+        return this.#source.getShares(id);
     }
 
-    async revokeShare(conversation: ConversationResponseModel, userKey: string) {
-        const result = await this.#source.revokeShare(conversation.id, userKey);
+    async revokeShare(id: string, userKey: string) {
+        const result = await this.#source.revokeShare(id, userKey);
         if (!result.error) {
             // Dispatched (and awaited, same timing reason as `update`) because revoking the last share
             // flips the owner's `hasActiveShares` badge back off, which otherwise has no way to know
             // this conversation's share state just changed.
-            await dispatchActionEvent(this, UaiEntityActionEvent.updated(conversation.id, UAI_CONVERSATION_ENTITY_TYPE));
+            await dispatchActionEvent(this, UaiEntityActionEvent.updated(id, UAI_CONVERSATION_ENTITY_TYPE));
         }
         return result;
     }

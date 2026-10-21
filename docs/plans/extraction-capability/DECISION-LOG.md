@@ -78,3 +78,8 @@
   with `items.type` and lowercase plural duration units, `reference_date`; response `answers`,
   `p_null`, `span`/`spans`, `model`; ISO date/time strings; 3040/3036 errors as 429 with `errors[]`;
   `Retry-After` presence; whether `models/search` accepts the token. (T5)
+- 21-10-2026: The Extract Values action owns only its own rules: at most 20 fields, a known kind, a
+  required and valid duration unit, a valid list item type, and the reference date format. Alias
+  shape and uniqueness, empty content, no fields and decimals are left to Core. Stored field JSON is
+  `{ kind, alias, instructions, decimals?, integer, unit?, itemType? }`. Outputs: date
+  `yyyy-MM-dd`, time `HH:mm:ss`, date-time `yyyy-MM-dd'T'HH:mm:ssK`, lists as strings. (T17)

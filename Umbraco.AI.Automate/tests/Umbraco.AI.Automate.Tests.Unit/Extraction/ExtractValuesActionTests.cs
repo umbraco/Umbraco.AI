@@ -85,11 +85,11 @@ public class ExtractValuesActionTests
 
     #region Scenario: the action is described as "Extract Values"
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Action_IsNamedExtractValues()
         => typeof(ExtractValuesAction).GetCustomAttribute<ActionAttribute>()!.Name.ShouldBe("Extract Values");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Action_IsInTheAIGroup()
         => typeof(ExtractValuesAction).GetCustomAttribute<ActionAttribute>()!.Group.ShouldBe("AI");
 
@@ -97,27 +97,27 @@ public class ExtractValuesActionTests
 
     #region Scenario: settings fields are wired to the right editors
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Fields_UseTheExtractionFieldListEditor()
         => GetField(nameof(ExtractValuesSettings.Fields)).EditorUiAlias.ShouldBe("Uai.PropertyEditorUi.ExtractionFieldList");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Fields_AreCappedAtTwentyInTheEditor()
         => GetField(nameof(ExtractValuesSettings.Fields)).EditorConfig.ShouldBe("""[{ "alias": "max", "value": 20 }]""");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Fields_AreNotBindable()
         => GetField(nameof(ExtractValuesSettings.Fields)).SupportsBindings.ShouldBeFalse();
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Context_SupportsBindings()
         => GetField(nameof(ExtractValuesSettings.Context)).SupportsBindings.ShouldBeTrue();
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void ReferenceDate_SupportsBindings()
         => GetField(nameof(ExtractValuesSettings.ReferenceDate)).SupportsBindings.ShouldBeTrue();
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Profile_IsFilteredToExtractionProfiles()
         => GetField(nameof(ExtractValuesSettings.ProfileId)).EditorConfig.ShouldBe("""[{ "alias": "capability", "value": "Extraction" }]""");
 
@@ -125,17 +125,17 @@ public class ExtractValuesActionTests
 
     #region Scenario: the output schema follows the configured fields
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputSchema_ListsEachAlias()
         => (await SchemaJsonAsync(OrderFields())).GetProperty("properties").EnumerateObject().Select(p => p.Name)
             .ShouldBe(["orderId", "amount", "deliveredOn", "returnWindow", "damaged", "invoiceNo"], ignoreOrder: true);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputSchema_GivesEachAliasValueFoundAndConfidence()
         => (await AliasSchemaAsync("text")).GetProperty("properties").EnumerateObject().Select(p => p.Name)
             .ShouldBe(["value", "found", "confidence"], ignoreOrder: true);
 
-    [Theory(Skip = "Pending")]
+    [Theory]
     [InlineData("text", "string")]
     [InlineData("date", "string")]
     [InlineData("time", "string")]
@@ -147,17 +147,17 @@ public class ExtractValuesActionTests
         => (await AliasSchemaAsync(kind)).GetProperty("properties").GetProperty("value").GetProperty("type").GetString()
             .ShouldBe(expectedType);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputSchema_TypesListItemsAsStrings()
         => (await AliasSchemaAsync("list")).GetProperty("properties").GetProperty("value").GetProperty("items").GetProperty("type").GetString()
             .ShouldBe("string");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputSchema_TypesFoundAsBoolean()
         => (await AliasSchemaAsync("number")).GetProperty("properties").GetProperty("found").GetProperty("type").GetString()
             .ShouldBe("boolean");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputSchema_TypesConfidenceAsNullableNumber()
         => (await AliasSchemaAsync("number")).GetProperty("properties").GetProperty("confidence").GetProperty("type")
             .EnumerateArray().Select(t => t.GetString()).ShouldBe(["number", "null"]);
@@ -166,7 +166,7 @@ public class ExtractValuesActionTests
 
     #region Scenario: fields, content and reference date are sent in one call
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task MakesExactlyOneExtractionCall()
     {
         await RunAsync(OrderSettings());
@@ -176,20 +176,20 @@ public class ExtractValuesActionTests
             Times.Once);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheResolvedContentAsState()
         => (await CaptureRequestAsync(OrderSettings())).State.ShouldBe(OrderText);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsOneFieldPerConfiguredField()
         => (await CaptureRequestAsync(OrderSettings())).Fields.Count.ShouldBe(6);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task UsesTheAliasAsTheFieldId()
         => (await CaptureRequestAsync(OrderSettings())).Fields.Select(f => f.Id).ShouldBe(
             ["orderId", "amount", "deliveredOn", "returnWindow", "damaged", "invoiceNo"]);
 
-    [Theory(Skip = "Pending")]
+    [Theory]
     [InlineData("text", typeof(AITextExtractionField))]
     [InlineData("number", typeof(AINumberExtractionField))]
     [InlineData("date", typeof(AIDateExtractionField))]
@@ -201,23 +201,23 @@ public class ExtractValuesActionTests
         => (await CaptureRequestAsync(new ExtractValuesSettings
         {
             Context = OrderText,
-            Fields = [new() { Kind = kind, Alias = "f", Instructions = "Something" }],
+            Fields = [new() { Kind = kind, Alias = "f", Instructions = "Something", Unit = "days" }],
         })).Fields.Single().ShouldBeOfType(expectedType);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheNumberFieldsDecimals()
         => ((AINumberExtractionField)(await CaptureRequestAsync(OrderSettings())).Fields.Single(f => f.Id == "amount")).Decimals.ShouldBe(2);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheNumberFieldsUnit()
         => ((AINumberExtractionField)(await CaptureRequestAsync(OrderSettings())).Fields.Single(f => f.Id == "amount")).Unit.ShouldBe("DKK");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheDurationFieldsUnit()
         => ((AIDurationExtractionField)(await CaptureRequestAsync(OrderSettings())).Fields.Single(f => f.Id == "returnWindow")).Unit
             .ShouldBe(AIDurationUnit.Days);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheListFieldsItemType()
         => ((AIListExtractionField)(await CaptureRequestAsync(new ExtractValuesSettings
         {
@@ -229,17 +229,17 @@ public class ExtractValuesActionTests
 
     #region Scenario: the reference date is bound or defaulted
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsABoundIsoDateAsTheReferenceDate()
         => (await CaptureRequestAsync(new ExtractValuesSettings { Context = OrderText, Fields = OrderFields(), ReferenceDate = "2026-10-20" }))
             .ReferenceDate.ShouldBe(new DateOnly(2026, 10, 20));
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheDatePartOfABoundIsoDateTime()
         => (await CaptureRequestAsync(new ExtractValuesSettings { Context = OrderText, Fields = OrderFields(), ReferenceDate = "2026-10-20T09:15:00Z" }))
             .ReferenceDate.ShouldBe(new DateOnly(2026, 10, 20));
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SendsTheUtcRunDateWhenReferenceDateIsEmpty()
         => (await CaptureRequestAsync(new ExtractValuesSettings { Context = OrderText, Fields = OrderFields(), ReferenceDate = "" }))
             .ReferenceDate.ShouldBe(new DateOnly(2026, 10, 20));
@@ -248,7 +248,7 @@ public class ExtractValuesActionTests
 
     #region Scenario: the profile is picked or defaulted
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task UsesThePickedProfile()
         => GetPrivateField<Guid?>(await CaptureBuilderAsync(new ExtractValuesSettings
         {
@@ -257,7 +257,7 @@ public class ExtractValuesActionTests
             ProfileId = PickedProfileId,
         }), "_profileId").ShouldBe(PickedProfileId);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task LeavesTheProfileUnsetWhenNoneIsPicked()
         // null = the default Extraction profile, resolved by IAIExtractionService.
         => GetPrivateField<Guid?>(await CaptureBuilderAsync(OrderSettings()), "_profileId").ShouldBeNull();
@@ -266,35 +266,50 @@ public class ExtractValuesActionTests
 
     #region Scenario: found values come out as outputs
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Succeeds()
         => (await RunAsync(OrderSettings())).Status.ShouldBe(ActionResultStatus.Success);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsTheTextValue()
         => (await OutputAsync()).GetProperty("orderId").GetProperty("value").GetString().ShouldBe("A-88412");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsFoundTrueForAFoundValue()
         => (await OutputAsync()).GetProperty("orderId").GetProperty("found").GetBoolean().ShouldBeTrue();
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsTheConfidence()
         => (await OutputAsync()).GetProperty("orderId").GetProperty("confidence").GetDouble().ShouldBe(0.9999);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsTheNumberValue()
         => (await OutputAsync()).GetProperty("amount").GetProperty("value").GetDecimal().ShouldBe(701.10m);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsTheDateAsAnIsoString()
         => (await OutputAsync()).GetProperty("deliveredOn").GetProperty("value").GetString().ShouldBe("2026-10-03");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
+    public async Task OutputsTheTimeAsAnIsoString()
+        => (await OutputForAnswerAsync("time", new AITimeExtractionAnswer { Value = new TimeOnly(9, 15) }))
+            .GetProperty("value").GetString().ShouldBe("09:15:00");
+
+    [Fact]
+    public async Task OutputsAUtcDateTimeWithAZSuffix()
+        => (await OutputForAnswerAsync("when", new AIDateTimeExtractionAnswer { Value = new DateTime(2026, 10, 3, 9, 15, 0, DateTimeKind.Utc) }))
+            .GetProperty("value").GetString().ShouldBe("2026-10-03T09:15:00Z");
+
+    [Fact]
+    public async Task OutputsAnUnspecifiedDateTimeWithNoSuffix()
+        => (await OutputForAnswerAsync("when", new AIDateTimeExtractionAnswer { Value = new DateTime(2026, 10, 3, 9, 15, 0, DateTimeKind.Unspecified) }))
+            .GetProperty("value").GetString().ShouldBe("2026-10-03T09:15:00");
+
+    [Fact]
     public async Task OutputsTheDurationValue()
         => (await OutputAsync()).GetProperty("returnWindow").GetProperty("value").GetDecimal().ShouldBe(14m);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsTheListValues()
         => (await OutputAsync()).GetProperty("damaged").GetProperty("value").EnumerateArray().Select(v => v.GetString())
             .ShouldBe(["mug", "teapot"]);
@@ -303,20 +318,20 @@ public class ExtractValuesActionTests
 
     #region Scenario: a field the content doesn't contain still has an output
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsEveryAlias()
         => (await OutputAsync()).EnumerateObject().Select(p => p.Name)
             .ShouldBe(["orderId", "amount", "deliveredOn", "returnWindow", "damaged", "invoiceNo"], ignoreOrder: true);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsFoundFalseForAMissingValue()
         => (await OutputAsync()).GetProperty("invoiceNo").GetProperty("found").GetBoolean().ShouldBeFalse();
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsANullValueForAMissingValue()
         => (await OutputAsync()).GetProperty("invoiceNo").GetProperty("value").ValueKind.ShouldBe(JsonValueKind.Null);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task OutputsANullConfidenceWhenTheProviderReportsNone()
         => (await OutputAsync()).GetProperty("invoiceNo").GetProperty("confidence").ValueKind.ShouldBe(JsonValueKind.Null);
 
@@ -340,27 +355,27 @@ public class ExtractValuesActionTests
     private static readonly JsonSerializerOptions EditorShapedJsonOptions =
         new(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void SettingsDeserialize_FieldsInTheSavedOrder()
         => JsonSerializer.Deserialize<ExtractValuesSettings>(EditorShapedJson, EditorShapedJsonOptions)!
             .Fields.Select(f => f.Alias).ShouldBe(["orderId", "amount", "damaged"]);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void SettingsDeserialize_TheNumberDecimals()
         => JsonSerializer.Deserialize<ExtractValuesSettings>(EditorShapedJson, EditorShapedJsonOptions)!
             .Fields.Single(f => f.Alias == "amount").Decimals.ShouldBe(2);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void SettingsDeserialize_TheListItemType()
         => JsonSerializer.Deserialize<ExtractValuesSettings>(EditorShapedJson, EditorShapedJsonOptions)!
             .Fields.Single(f => f.Alias == "damaged").ItemType.ShouldBe("text");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void SettingsDeserialize_TheReferenceDate()
         => JsonSerializer.Deserialize<ExtractValuesSettings>(EditorShapedJson, EditorShapedJsonOptions)!
             .ReferenceDate.ShouldBe("2026-10-20");
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void SettingsDeserialize_TheProfilePickersGuid()
         => JsonSerializer.Deserialize<ExtractValuesSettings>(EditorShapedJson, EditorShapedJsonOptions)!
             .ProfileId.ShouldBe(PickedProfileId);
@@ -369,7 +384,7 @@ public class ExtractValuesActionTests
 
     #region Sad path: flag turned off after startup
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenFlagOff_FailsWithValidation()
     {
         _experimentalMock.Setup(x => x.IsCapabilityEnabled(It.IsAny<Umbraco.AI.Core.Models.AICapability>())).Returns(false);
@@ -379,7 +394,7 @@ public class ExtractValuesActionTests
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenFlagOff_SaysExtractionIsDisabled()
     {
         _experimentalMock.Setup(x => x.IsCapabilityEnabled(It.IsAny<Umbraco.AI.Core.Models.AICapability>())).Returns(false);
@@ -389,7 +404,7 @@ public class ExtractValuesActionTests
         result.Exception!.Message.ShouldBe("Extraction is disabled.");
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenFlagOff_DoesNotCallTheProvider()
     {
         _experimentalMock.Setup(x => x.IsCapabilityEnabled(It.IsAny<Umbraco.AI.Core.Models.AICapability>())).Returns(false);
@@ -405,10 +420,7 @@ public class ExtractValuesActionTests
 
     public static TheoryData<string, ExtractValuesSettings> InvalidSettings => new()
     {
-        { "empty content", new ExtractValuesSettings { Context = "", Fields = OrderFields() } },
-        { "whitespace content", new ExtractValuesSettings { Context = "   ", Fields = OrderFields() } },
         { "a reference date that isn't ISO", new ExtractValuesSettings { Context = OrderText, Fields = OrderFields(), ReferenceDate = "next week" } },
-        { "no fields", new ExtractValuesSettings { Context = OrderText, Fields = [] } },
         {
             "more than 20 fields",
             new ExtractValuesSettings
@@ -417,6 +429,41 @@ public class ExtractValuesActionTests
                 Fields = Enumerable.Range(0, 21).Select(i => new ExtractValuesField { Kind = "text", Alias = $"f{i}", Instructions = "?" }).ToList(),
             }
         },
+        {
+            "an unknown kind",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "estimate", Alias = "guess", Instructions = "?" }] }
+        },
+        {
+            "a duration with no unit",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "duration", Alias = "window", Instructions = "?" }] }
+        },
+        {
+            "a duration with an unknown unit",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "duration", Alias = "window", Instructions = "?", Unit = "fortnights" }] }
+        },
+        {
+            "a duration unit given as a number",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "duration", Alias = "window", Instructions = "?", Unit = "3" }] }
+        },
+        {
+            "a duration unit given as a flags list",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "duration", Alias = "window", Instructions = "?", Unit = "seconds,days" }] }
+        },
+        {
+            "a list with an unknown item type",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "list", Alias = "items", Instructions = "?", ItemType = "banana" }] }
+        },
+        {
+            "a list item type given as a number",
+            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "list", Alias = "items", Instructions = "?", ItemType = "1" }] }
+        },
+    };
+
+    public static TheoryData<string, ExtractValuesSettings> CoreRejectedSettings => new()
+    {
+        { "empty content", new ExtractValuesSettings { Context = "", Fields = OrderFields() } },
+        { "whitespace content", new ExtractValuesSettings { Context = "   ", Fields = OrderFields() } },
+        { "no fields", new ExtractValuesSettings { Context = OrderText, Fields = [] } },
         {
             "a duplicate alias",
             new ExtractValuesSettings
@@ -433,18 +480,38 @@ public class ExtractValuesActionTests
             "an alias that starts with a digit and has a hyphen",
             new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "text", Alias = "1st-value", Instructions = "?" }] }
         },
-        {
-            "an unknown kind",
-            new ExtractValuesSettings { Context = OrderText, Fields = [new() { Kind = "estimate", Alias = "guess", Instructions = "?" }] }
-        },
     };
 
-    [Theory(Skip = "Pending")]
+    [Theory]
+    [MemberData(nameof(CoreRejectedSettings))]
+    public async Task SettingsCoreRejects_FailWithValidation(string _, ExtractValuesSettings settings)
+    {
+        // Core's validating client owns these rules and throws ArgumentException; the action maps it.
+        SetupServiceThrows(new ArgumentException("Rejected by Core.", "request"));
+
+        (await RunAsync(settings)).ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
+    }
+
+    [Theory]
+    [MemberData(nameof(CoreRejectedSettings))]
+    public async Task SettingsCoreRejects_ReachTheService(string _, ExtractValuesSettings settings)
+    {
+        // The action defers these rules to Core, so the service must be called (and not pre-empted).
+        SetupServiceThrows(new ArgumentException("Rejected by Core.", "request"));
+
+        await RunAsync(settings);
+
+        _extractionServiceMock.Verify(
+            s => s.GetExtractionResponseAsync(It.IsAny<Action<AIExtractionBuilder>>(), It.IsAny<AIExtractionRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
     [MemberData(nameof(InvalidSettings))]
     public async Task InvalidSettings_FailWithValidation(string _, ExtractValuesSettings settings)
         => (await RunAsync(settings)).ErrorCategory.ShouldBe(StepRunErrorCategory.Validation);
 
-    [Theory(Skip = "Pending")]
+    [Theory]
     [MemberData(nameof(InvalidSettings))]
     public async Task InvalidSettings_DoNotCallTheProvider(string _, ExtractValuesSettings settings)
     {
@@ -457,7 +524,7 @@ public class ExtractValuesActionTests
 
     #region Sad path: Core rejects the request (e.g. decimals out of range)
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenCoreRejectsTheRequest_FailsWithValidation()
     {
         // Core's ValidatingExtractionClient owns the 0..6 decimals rule and throws ArgumentException
@@ -473,7 +540,7 @@ public class ExtractValuesActionTests
 
     #region Sad path: no profile resolves
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenNoProfileResolves_FailsWithValidation()
     {
         SetupServiceThrows(new InvalidOperationException("No default Extraction profile is set."));
@@ -487,7 +554,7 @@ public class ExtractValuesActionTests
 
     #region Sad path: the provider fails
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenProviderRejectsTheApiKey_ReportsANonRetryableAuthenticationError()
     {
         SetupServiceThrows(new AIProviderException(
@@ -498,7 +565,7 @@ public class ExtractValuesActionTests
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.Authentication);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenProviderIsRateLimited_ReportsRateLimiting()
     {
         SetupServiceThrows(new AIProviderException(
@@ -509,7 +576,7 @@ public class ExtractValuesActionTests
         result.ErrorCategory.ShouldBe(StepRunErrorCategory.RateLimiting);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task WhenProviderFails_SurfacesTheProviderMessage()
     {
         SetupServiceThrows(new AIProviderException(
@@ -551,6 +618,21 @@ public class ExtractValuesActionTests
     {
         var result = await RunAsync(OrderSettings());
         return JsonSerializer.SerializeToElement(result.OutputData, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    }
+
+    private async Task<JsonElement> OutputForAnswerAsync(string alias, AIExtractionAnswer answer)
+    {
+        _extractionServiceMock
+            .Setup(s => s.GetExtractionResponseAsync(It.IsAny<Action<AIExtractionBuilder>>(), It.IsAny<AIExtractionRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIExtractionResponse { Answers = new Dictionary<string, AIExtractionAnswer> { [alias] = answer } });
+
+        var result = await RunAsync(new ExtractValuesSettings
+        {
+            Context = OrderText,
+            Fields = [new() { Kind = "text", Alias = alias, Instructions = "?" }],
+        });
+
+        return JsonSerializer.SerializeToElement(result.OutputData, new JsonSerializerOptions(JsonSerializerDefaults.Web)).GetProperty(alias);
     }
 
     private async Task<AIExtractionRequest> CaptureRequestAsync(ExtractValuesSettings settings)

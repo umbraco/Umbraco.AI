@@ -44,3 +44,6 @@
   (wire tasks, port, docs), so they get no unit specs.
 - 20-10-2026: `AIExtractionExecutedNotification` keeps Decision's shape, with no response on it.
   EX-8 AC6 now checks the handler runs once with the call marked successful.
+- 21-10-2026: The experimental-capability save error now names the exact key
+  (`Umbraco:AI:Experimental:<Capability>`), built from the enum name. This relies on each option
+  property having the same name as its enum member. (T1)

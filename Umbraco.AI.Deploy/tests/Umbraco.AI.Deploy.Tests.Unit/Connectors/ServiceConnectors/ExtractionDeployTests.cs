@@ -86,7 +86,7 @@ public class ExtractionDeployTests
 
     #region Scenario: an Extraction profile artifact is imported
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Import_ExtractionProfile_KeepsTheExtractionCapability()
     {
         var saved = await ImportExtractionProfileAsync();
@@ -94,7 +94,7 @@ public class ExtractionDeployTests
         saved!.Capability.ShouldBe(AICapability.Extraction);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Import_ExtractionProfile_RoundTripsNonNullExtractionSettings()
     {
         var saved = await ImportExtractionProfileAsync();
@@ -106,7 +106,7 @@ public class ExtractionDeployTests
 
     #region Scenario: a default Extraction profile is set and exported
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Export_WithExtractionDefault_SetsDefaultExtractionProfileUdi()
     {
         var profileId = Guid.NewGuid();
@@ -117,7 +117,7 @@ public class ExtractionDeployTests
         artifact!.DefaultExtractionProfileUdi!.Guid.ShouldBe(profileId);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Export_WithExtractionDefault_UsesProfileEntityType()
     {
         var artifact = await _settingsConnector.GetArtifactAsync(
@@ -126,7 +126,7 @@ public class ExtractionDeployTests
         artifact!.DefaultExtractionProfileUdi!.EntityType.ShouldBe(UmbracoAIConstants.UdiEntityType.Profile);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Export_WithExtractionDefault_AddsProfileDependency()
     {
         var profileId = Guid.NewGuid();
@@ -143,7 +143,7 @@ public class ExtractionDeployTests
 
     #region Scenario: an artifact with a default Extraction profile is imported
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Import_WithDefaultExtractionProfileUdi_SetsDefaultExtractionProfileId()
     {
         var profileId = Guid.NewGuid();
@@ -170,7 +170,7 @@ public class ExtractionDeployTests
 
     #region Sad path: no default Extraction profile
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Export_WithoutExtractionDefault_LeavesUdiNull()
     {
         var artifact = await _settingsConnector.GetArtifactAsync(_settingsUdi, new AISettings());
@@ -178,7 +178,7 @@ public class ExtractionDeployTests
         artifact!.DefaultExtractionProfileUdi.ShouldBeNull();
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Import_OlderArtifactWithoutExtractionUdi_Succeeds()
     {
         // An artifact exported before Extraction existed has no DefaultExtractionProfileUdi at all.
@@ -187,7 +187,7 @@ public class ExtractionDeployTests
         await Should.NotThrowAsync(() => ImportSettingsAsync(artifact, new AISettings()));
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task Import_OlderArtifactWithoutExtractionUdi_LeavesTheDefaultNull()
     {
         var artifact = new AISettingsArtifact(_settingsUdi);

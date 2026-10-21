@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/Umbraco.AI.Cloudflare.Tests.Unit/Umbraco.AI.Cloudflare.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

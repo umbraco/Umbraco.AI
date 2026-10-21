@@ -11,6 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Models;
 [JsonDerivedType(typeof(SpeechToTextProfileSettingsModel), "speechToText")]
 [JsonDerivedType(typeof(ImageGenerationProfileSettingsModel), "imageGeneration")]
 [JsonDerivedType(typeof(DecisionProfileSettingsModel), "decision")]
+[JsonDerivedType(typeof(ExtractionProfileSettingsModel), "extraction")]
 public abstract class ProfileSettingsModel { }
 
 /// <summary>
@@ -95,3 +96,11 @@ public class ImageGenerationProfileSettingsModel : ProfileSettingsModel
 /// Empty today — mirrors the empty <see cref="Umbraco.AI.Core.Profiles.AIDecisionProfileSettings"/>.
 /// </remarks>
 public class DecisionProfileSettingsModel : ProfileSettingsModel { }
+
+/// <summary>
+/// Settings model for Extraction capability profiles.
+/// </summary>
+/// <remarks>
+/// Empty today — mirrors the empty <see cref="Umbraco.AI.Core.Profiles.AIExtractionProfileSettings"/>.
+/// </remarks>
+public class ExtractionProfileSettingsModel : ProfileSettingsModel { }

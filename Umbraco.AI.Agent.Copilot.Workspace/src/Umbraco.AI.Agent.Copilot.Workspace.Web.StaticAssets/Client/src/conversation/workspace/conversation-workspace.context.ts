@@ -96,8 +96,10 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
      * (`requestById`), and maps into the store via {@link toSharedConversationDetailModel}. Has no owning
      * project — a share never carries one.
      *
-     * NOTE: nothing calls this yet. There is no route to a shared conversation yet, and which path a given
-     * route should take (owned vs. shared) is a routing decision owned by SC-17/SC-18, not this task.
+     * Called by {@link #reload} as the fallback when the owner lookup 404s — not by {@link setConversationId}
+     * directly. There is only one route (`conversation/:id`) for both an owned and a shared conversation
+     * (see `shared-with-me-tree-item.element.ts`), so the owner's 404 is the only signal available that
+     * `id` might instead belong to a conversation shared with the current user.
      */
     async setSharedConversationId(conversationId: string): Promise<void> {
         const token = ++this.#requestToken;
@@ -135,9 +137,17 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
 
         const { data } = await this.#conversationRepository.requestById(id);
         if (token !== this.#requestToken) return; // superseded by a newer open
-        this.#model.setValue(data ? toConversationDetailModel(data) : undefined);
+        if (!data) {
+            // Not owned by the acting user — the owner's lookup 404s indistinguishably whether `id` is
+            // truly nonexistent or belongs to a conversation shared with the current user instead. Fall
+            // back to the recipient's view rather than giving up; {@link setSharedConversationId} bumps
+            // `#requestToken` again itself, so a third open racing this fallback still wins correctly.
+            await this.setSharedConversationId(id);
+            return;
+        }
+        this.#model.setValue(toConversationDetailModel(data));
         this.#resolved.setValue(true);
-        await this.#loadProject(data?.projectId ?? undefined, token);
+        await this.#loadProject(data.projectId ?? undefined, token);
     }
 
     async #loadProject(projectId: string | null | undefined, token = this.#requestToken): Promise<void> {

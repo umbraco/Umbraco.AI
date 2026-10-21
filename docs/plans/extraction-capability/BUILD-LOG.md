@@ -36,3 +36,7 @@
 - **T15** - `DefaultExtractionProfileUdi` on the Deploy settings artifact, export with dependency,
   import through the shared resolver. 9 specs on (failed first with CS1061/CS0117). Reviewer PASS
   first round; Deploy 44/44. Core floor left for release prep (T21). Smoke: real host in T16.
+- **T17** - `ExtractValuesAction`, settings, field, constant, compose-time exclusion. EX-10 specs
+  on; spec's settings theory split so Core-owned rules go through Core (memory gotcha). Review
+  round 1 FAIL (action-owned rules and time/datetime formats untested; unit parsing accepted "3");
+  fixed red-first; round 2 PASS. Automate 274/274. Core floor deferred to T21. Smoke: T18.

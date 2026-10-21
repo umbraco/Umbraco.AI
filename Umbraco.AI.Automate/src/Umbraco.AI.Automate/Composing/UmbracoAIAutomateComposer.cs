@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Umbraco.AI.Agent.Startup.Configuration;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.Automate.Extensions;
@@ -6,6 +7,7 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 
 #pragma warning disable UMBRACOAI_DECISION // Decision capability is experimental
+#pragma warning disable UMBRACOAI_EXTRACTION // Extraction capability is experimental
 
 namespace Umbraco.AI.Automate.Composing;
 
@@ -37,5 +39,14 @@ public class UmbracoAIAutomateComposer : IComposer
                 .Exclude<AskScoreDecisionAction>()
                 .Exclude<AskDecisionsAction>();
         }
+
+        // Same gate for Extract Values, against its own flag.
+        if (!builder.Config.GetValue<bool>("Umbraco:AI:Experimental:Extraction"))
+        {
+            builder.AutomateActions().Exclude<ExtractValuesAction>();
+        }
+
+        // Extract Values reads the run date (UTC) from TimeProvider when no reference date is set.
+        builder.Services.TryAddSingleton(TimeProvider.System);
     }
 }

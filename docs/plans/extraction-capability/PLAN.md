@@ -163,7 +163,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Automate
 
-- [ ] **T17** - story: EX-10 (AC1-AC13, AC15-AC21). In `Umbraco.AI.Automate/src/.../Actions/`, add
+- [x] **T17** - story: EX-10 (AC1-AC13, AC15-AC21). In `Umbraco.AI.Automate/src/.../Actions/`, add
   `ExtractValuesAction`, `ExtractValuesSettings` and `ExtractValuesField`, copying
   `AskDecisionsAction`. Outputs per `ARCHITECTURE.md` decision 8 (every alias always present).
   Compose-time exclusion and run-time flag check, as for the Decision actions. Raise the

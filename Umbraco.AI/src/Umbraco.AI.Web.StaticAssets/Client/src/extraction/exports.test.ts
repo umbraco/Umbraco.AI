@@ -9,7 +9,7 @@ import * as extraction from "./exports.js";
 
 describe("Feature: extraction public exports", () => {
     describe("Scenario: an extension imports the controller", () => {
-        it.skip("exports UaiExtractionController", () => {
+        it("exports UaiExtractionController", () => {
             expect(typeof extraction.UaiExtractionController).toBe("function");
         });
     });

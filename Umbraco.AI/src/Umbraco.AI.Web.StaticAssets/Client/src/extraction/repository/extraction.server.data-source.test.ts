@@ -1,7 +1,6 @@
 // EX-7 — Extract from TypeScript (AC2-AC5)
 //
-// Stubs the generated SDK. ASSUMPTION: T10's regenerated client exposes `ExtractionService.extract`;
-// rename here if the generator names it differently (as the Decision data source spec notes).
+// Stubs the generated SDK (ExtractionService.extract).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UmbElementControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
@@ -40,7 +39,14 @@ describe("Feature: extraction server data source", () => {
                 profileIdOrAlias: "cloudflare-clairic",
                 fields: [
                     { kind: "text", id: "orderId", instructions: "The order number" },
-                    { kind: "number", id: "amount", instructions: "Amount paid", decimals: 2, integer: false, unit: "DKK" },
+                    {
+                        kind: "number",
+                        id: "amount",
+                        instructions: "Amount paid",
+                        decimals: 2,
+                        integer: false,
+                        unit: "DKK",
+                    },
                     { kind: "date", id: "deliveredOn", instructions: "Delivery date" },
                     { kind: "time", id: "deliveredAt", instructions: "Delivery time" },
                     { kind: "datetime", id: "orderedAt", instructions: "Order placed" },
@@ -50,7 +56,7 @@ describe("Feature: extraction server data source", () => {
             });
         });
 
-        it.skip("sends each field's kind as the API's $type", () => {
+        it("sends each field's kind as the API's $type", () => {
             expect(sdkExtract.mock.calls[0][0].body.fields.map((f: { $type: string }) => f.$type)).toEqual([
                 "text",
                 "number",
@@ -62,35 +68,39 @@ describe("Feature: extraction server data source", () => {
             ]);
         });
 
-        it.skip("sends a datetime field with $type datetime", () => {
+        it("sends a datetime field with $type datetime", () => {
             expect(sdkExtract.mock.calls[0][0].body.fields[4].$type).toBe("datetime");
         });
 
-        it.skip("doesn't send kind on the wire", () => {
+        it("doesn't send kind on the wire", () => {
             expect(sdkExtract.mock.calls[0][0].body.fields[0]).not.toHaveProperty("kind");
         });
 
-        it.skip("sends the field id", () => {
+        it("sends the field id", () => {
             expect(sdkExtract.mock.calls[0][0].body.fields[0].id).toBe("orderId");
         });
 
-        it.skip("sends the number field's options", () => {
-            expect(sdkExtract.mock.calls[0][0].body.fields[1]).toMatchObject({ decimals: 2, integer: false, unit: "DKK" });
+        it("sends the number field's options", () => {
+            expect(sdkExtract.mock.calls[0][0].body.fields[1]).toMatchObject({
+                decimals: 2,
+                integer: false,
+                unit: "DKK",
+            });
         });
 
-        it.skip("sends the list field's item type", () => {
+        it("sends the list field's item type", () => {
             expect(sdkExtract.mock.calls[0][0].body.fields[6].itemType).toBe("text");
         });
 
-        it.skip("sends the state at the top level of the body", () => {
+        it("sends the state at the top level of the body", () => {
             expect(sdkExtract.mock.calls[0][0].body.state).toBe(state);
         });
 
-        it.skip("sends the reference date", () => {
+        it("sends the reference date", () => {
             expect(sdkExtract.mock.calls[0][0].body.referenceDate).toBe("2026-10-20");
         });
 
-        it.skip("forwards the profile id or alias", () => {
+        it("forwards the profile id or alias", () => {
             expect(sdkExtract.mock.calls[0][0].body.profileIdOrAlias).toBe("cloudflare-clairic");
         });
     });
@@ -103,7 +113,13 @@ describe("Feature: extraction server data source", () => {
             sdkExtract.mockResolvedValue({
                 data: {
                     answers: {
-                        amount: { $type: "number", value: 701.1, confidence: 0.9999, nullProbability: 0.00002, isFound: true },
+                        amount: {
+                            $type: "number",
+                            value: 701.1,
+                            confidence: 0.9999,
+                            nullProbability: 0.00002,
+                            isFound: true,
+                        },
                         damaged: {
                             $type: "list",
                             values: ["mug", "teapot"],
@@ -128,34 +144,37 @@ describe("Feature: extraction server data source", () => {
             });
         });
 
-        it.skip("maps the API's $type back to kind", () => {
+        it("maps the API's $type back to kind", () => {
             expect(result.data?.answers.amount?.kind).toBe("number");
         });
 
-        it.skip("gives the number answer a numeric value", () => {
+        it("gives the number answer a numeric value", () => {
             expect(typeof (result.data?.answers.amount as { value?: unknown } | undefined)?.value).toBe("number");
         });
 
-        it.skip("gives the list answer a values array", () => {
-            expect((result.data?.answers.damaged as { values?: unknown } | undefined)?.values).toEqual(["mug", "teapot"]);
+        it("gives the list answer a values array", () => {
+            expect((result.data?.answers.damaged as { values?: unknown } | undefined)?.values).toEqual([
+                "mug",
+                "teapot",
+            ]);
         });
 
-        it.skip("keeps the list answer's spans in the same order as its values", () => {
+        it("keeps the list answer's spans in the same order as its values", () => {
             expect((result.data?.answers.damaged as { spans?: unknown } | undefined)?.spans).toEqual([
                 { start: 64, end: 67 },
                 { start: 72, end: 78 },
             ]);
         });
 
-        it.skip("keeps the confidence", () => {
+        it("keeps the confidence", () => {
             expect(result.data?.answers.amount).toMatchObject({ confidence: 0.9999 });
         });
 
-        it.skip("doesn't leak the generated model's $type onto the answer", () => {
+        it("doesn't leak the generated model's $type onto the answer", () => {
             expect(result.data?.answers.amount).not.toHaveProperty("$type");
         });
 
-        it.skip("keeps the model id", () => {
+        it("keeps the model id", () => {
             expect(result.data?.modelId).toBe("@cf/cloudflare/clairic");
         });
     });
@@ -174,7 +193,7 @@ describe("Feature: extraction server data source", () => {
             });
         });
 
-        it.skip("keeps the answer key exactly as sent", () => {
+        it("keeps the answer key exactly as sent", () => {
             expect(Object.keys(result.data?.answers ?? {})).toEqual(["OrderID"]);
         });
     });
@@ -193,7 +212,7 @@ describe("Feature: extraction server data source", () => {
             });
         });
 
-        it.skip("keeps the null value", () => {
+        it("keeps the null value", () => {
             expect((result.data?.answers.invoiceNo as { value?: unknown } | undefined)?.value).toBeNull();
         });
     });
@@ -211,7 +230,7 @@ describe("Feature: extraction server data source", () => {
                 });
             });
 
-            it.skip("returns the error and no answers", () => {
+            it("returns the error and no answers", () => {
                 expect(result).toEqual({ error: { status: 400 } });
             });
         });
@@ -230,7 +249,7 @@ describe("Feature: extraction server data source", () => {
                 });
             });
 
-            it.skip("returns an explicit error instead of silently dropping the answer", () => {
+            it("returns an explicit error instead of silently dropping the answer", () => {
                 expect(result).toEqual({ error: expect.any(Error) });
             });
         });

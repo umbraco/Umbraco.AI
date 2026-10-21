@@ -52,3 +52,11 @@
   Succeeded with 711 tokens, and the rejected call logged as Failed with a readable message.
   Real shapes: bare response, `model` "clairic", datetime "…T09:00:00.000Z". The flag-off check
   (404, capability hidden) is folded into the flag-off restart in T18.
+- **T10** - `npm run generate-client:core` against the running site. Adds `ExtractionService.extract`,
+  the 7+7 `$type` field and answer models, `defaultExtractionProfileId` and the `extraction` profile
+  settings type. No unrelated changes. Generated code only, no review.
+- **T11** - `src/extraction/`: public `UaiExtractionController`, repository, server data source,
+  types, exports via root `exports.ts`. 31 specs on (failed first on missing modules). Review round 1
+  FAIL (no compile-time `never` check on answer `$type`); added, plus literal unions for duration
+  unit and list item type (values confirmed by the live Cloudflare error). Vitest 156/156;
+  `build:core` passes; public rollup has the controller and no generated models. Smoke: T14.

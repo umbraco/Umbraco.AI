@@ -223,7 +223,7 @@ public class ExtractValuesActionTests
         {
             Context = OrderText,
             Fields = [new() { Kind = "list", Alias = "dates", Instructions = "Dates", ItemType = "date" }],
-        })).Fields.Single()).ItemType.ShouldBe(AIListItemType.Date);
+        })).Fields.Single()).ItemType.ShouldBe(AIExtractionListItemType.Date);
 
     #endregion
 

@@ -9,7 +9,7 @@ namespace Umbraco.AI.Tests.Unit.Extraction;
 
 /// <summary>
 /// <see cref="ValidatingExtractionClient"/> on its own, like <c>ValidatingDecisionClientTests</c>. That the
-/// real factory puts it outermost is pinned in <see cref="AIExtractionClientFactoryTests"/>.
+/// real factory puts it outermost is pinned in the factory tests.
 /// </summary>
 public class ExtractionRequestValidationTests
 {
@@ -23,7 +23,7 @@ public class ExtractionRequestValidationTests
     {
         private readonly FakeExtractionClient _inner = new();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PassesItToTheInnerClient()
         {
             var client = new ValidatingExtractionClient(_inner);
@@ -38,7 +38,7 @@ public class ExtractionRequestValidationTests
     {
         private readonly FakeExtractionClient _inner = new();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PassesItToTheInnerClient()
         {
             var client = new ValidatingExtractionClient(_inner);
@@ -53,7 +53,7 @@ public class ExtractionRequestValidationTests
     {
         private readonly FakeExtractionClient _inner = new();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PassesItToTheInnerClient()
         {
             var client = new ValidatingExtractionClient(_inner);
@@ -68,7 +68,7 @@ public class ExtractionRequestValidationTests
     {
         private readonly FakeExtractionClient _inner = new();
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [InlineData(0)]
         [InlineData(6)]
         public async Task PassesItToTheInnerClient(int decimals)
@@ -87,11 +87,14 @@ public class ExtractionRequestValidationTests
 
     public class GivenAnInvalidRequest
     {
-        /// <summary>One case per rule in ARCHITECTURE.md decision 2. Also used by <see cref="AIExtractionClientFactoryTests"/>.</summary>
+        /// <summary>One case per validation rule. Also used by the factory tests.</summary>
         public static TheoryData<string, AIExtractionRequest> Cases => new()
         {
             { "no fields", new AIExtractionRequest { State = "text", Fields = [] } },
             { "a blank field id", Request(Text(" ")) },
+            { "an id with a trailing newline", Request(Text("orderId\n")) },
+            { "a null state", new AIExtractionRequest { State = null!, Fields = [Text("orderId")] } },
+            { "a null field entry", Request(Text("orderId"), null!) },
             { "two fields with id orderId", Request(Text("orderId"), Text("orderId")) },
             { "an id that starts with a digit and has a hyphen", Request(Text("1st-value")) },
             { "an id of 65 characters", Request(Text("a" + new string('b', 64))) },
@@ -105,7 +108,7 @@ public class ExtractionRequestValidationTests
             },
         };
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(Cases))]
         public async Task ThrowsArgumentException(string _, AIExtractionRequest request)
         {
@@ -116,7 +119,7 @@ public class ExtractionRequestValidationTests
             await Should.ThrowAsync<ArgumentException>(act);
         }
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(Cases))]
         public async Task NeverReachesTheInnerClient(string _, AIExtractionRequest request)
         {

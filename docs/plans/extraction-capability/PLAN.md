@@ -34,10 +34,10 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: EX-3 specs green; a positive-control test with the flag on.
   depends-on: T0. parallel-group: A
 
-- [ ] **T2** - story: EX-1 (AC1-AC14, AC22-AC29, AC33-AC35). Add the core types in
+- [x] **T2** - story: EX-1 (AC1-AC14, AC22-AC29, AC33-AC35). Add the core types in
   `Umbraco.AI.Core/Extraction/` per `ARCHITECTURE.md` decision 1 (request, response, options,
   field and answer base classes, the seven field/answer pairs, `AIExtractionSpan`,
-  `AIDurationUnit`, `AIListItemType`), `IAIExtractionClient`, `ExtractionFieldValidator`,
+  `AIDurationUnit`, `AIExtractionListItemType`), `IAIExtractionClient`, `ExtractionFieldValidator`,
   `ValidatingExtractionClient` and `ExtractionAnswerChecker`. A fake client in
   `Umbraco.AI.Tests.Common` returns canned answers.
   Acceptance: validator and checker specs green with the fake client.

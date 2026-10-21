@@ -1,12 +1,14 @@
 #pragma warning disable UMBRACOAI_EXTRACTION // Exercises the experimental extraction capability surface
 
-// EX-1 — Extract typed values from C# (AC1-AC16, AC33-AC35): one typed answer per field.
+// EX-1 — Extract typed values from C# (AC9, AC15, AC16, AC33-AC35): the service-level specs, pending for T3.
+//
+// The pipeline-level versions of the typed-answer specs (AC1-AC14, AC33-AC35) are active in
+// ExtractionTypedAnswerTests, written against the client pipeline Core owns. What stays here needs
+// IAIExtractionService and the factory (T3): AC9 (one answer per field through GetExtractionResponseAsync),
+// AC15 and AC16 (model, usage and reference date), and AC33-AC35 (the provider-answer checks through the service).
 //
 // ASSUMPTIONS (builder confirms/adjusts, keeping each test's behavior and single assertion):
 // - ExtractAsync assigns an internal id when Field.Id is null; the fake answers whatever id it was sent.
-// - AIExtractionAnswer.IsFound is computed (Value != null, or Values.Count > 0), not set by the provider.
-// - Turning Clairic's strings ("2026-10-03", "14:30") into DateOnly/TimeOnly/DateTime is the provider
-//   client's job (EX-2), so the fake hands Core the already-typed value.
 
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Extraction;
@@ -63,89 +65,17 @@ public class ExtractTypedValuesTests
 
     #region Happy path
 
-    public class GivenATextFieldTheProviderFindsAt6To13
+    public class GivenAProviderReportingItsModelAndUsage
     {
         private readonly AIExtractionResponse<AITextExtractionAnswer> _response = Extract(
-            new AITextExtractionAnswer { Value = "A-88412", Span = new AIExtractionSpan(6, 13) },
+            new AITextExtractionAnswer { Value = "A-88412" },
             new AITextExtractionField { Instructions = "The order number" });
 
         [Fact(Skip = "Pending")]
-        public void ReturnsATextAnswer() => _response.Answer.ShouldBeOfType<AITextExtractionAnswer>();
+        public void CarriesTheModelId() => _response.ModelId.ShouldBe("@cf/cloudflare/clairic");
 
         [Fact(Skip = "Pending")]
-        public void ReturnsTheValue() => _response.Answer.Value.ShouldBe("A-88412");
-
-        [Fact(Skip = "Pending")]
-        public void ReturnsThePosition() => _response.Answer.Span.ShouldBe(new AIExtractionSpan(6, 13));
-    }
-
-    public class GivenANumberFieldTheProviderAnswers701Point10
-    {
-        [Fact(Skip = "Pending")]
-        public void ReturnsTheDecimal()
-            => Extract(new AINumberExtractionAnswer { Value = 701.10m }, new AINumberExtractionField { Instructions = "Amount paid" })
-                .Answer.Value.ShouldBe(701.10m);
-    }
-
-    public class GivenADateFieldTheProviderAnswers3October2026
-    {
-        [Fact(Skip = "Pending")]
-        public void ReturnsADateOnly()
-            => Extract(
-                    new AIDateExtractionAnswer { Value = new DateOnly(2026, 10, 3) },
-                    new AIDateExtractionField { Instructions = "Delivery date" })
-                .Answer.Value.ShouldBe(new DateOnly(2026, 10, 3));
-    }
-
-    public class GivenATimeFieldTheProviderAnswers1430
-    {
-        [Fact(Skip = "Pending")]
-        public void ReturnsATimeOnly()
-            => Extract(
-                    new AITimeExtractionAnswer { Value = new TimeOnly(14, 30) },
-                    new AITimeExtractionField { Instructions = "Delivery time" })
-                .Answer.Value.ShouldBe(new TimeOnly(14, 30));
-    }
-
-    public class GivenADateTimeFieldTheProviderAnswers3October2026At1430
-    {
-        [Fact(Skip = "Pending")]
-        public void ReturnsADateTime()
-            => Extract(
-                    new AIDateTimeExtractionAnswer { Value = new DateTime(2026, 10, 3, 14, 30, 0) },
-                    new AIDateTimeExtractionField { Instructions = "When it was delivered" })
-                .Answer.Value.ShouldBe(new DateTime(2026, 10, 3, 14, 30, 0));
-    }
-
-    public class GivenADurationFieldInDaysTheProviderAnswers14
-    {
-        private readonly AIExtractionResponse<AIDurationExtractionAnswer> _response = Extract(
-            new AIDurationExtractionAnswer { Value = 14m, Unit = AIDurationUnit.Days },
-            new AIDurationExtractionField { Instructions = "How long the return window is", Unit = AIDurationUnit.Days });
-
-        [Fact(Skip = "Pending")]
-        public void ReturnsTheNumber() => _response.Answer.Value.ShouldBe(14m);
-
-        [Fact(Skip = "Pending")]
-        public void ReturnsItInTheRequestedUnit() => _response.Answer.Unit.ShouldBe(AIDurationUnit.Days);
-    }
-
-    public class GivenAListFieldTheProviderAnswersMugAndTeapot
-    {
-        private readonly AIExtractionResponse<AIListExtractionAnswer> _response = Extract(
-            new AIListExtractionAnswer
-            {
-                Values = ["mug", "teapot"],
-                Spans = [new AIExtractionSpan(64, 67), new AIExtractionSpan(72, 78)],
-            },
-            new AIListExtractionField { Instructions = "Damaged products" });
-
-        [Fact(Skip = "Pending")]
-        public void ReturnsTheValuesInOrder() => _response.Answer.Values.ShouldBe(["mug", "teapot"]);
-
-        [Fact(Skip = "Pending")]
-        public void ReturnsOneSpanPerValueInTheSameOrder()
-            => _response.Answer.Spans.ShouldBe([new AIExtractionSpan(64, 67), new AIExtractionSpan(72, 78)]);
+        public void CarriesTheInputTokenCount() => _response.Usage!.InputTokenCount.ShouldBe(612);
     }
 
     public class GivenATextANumberAndADateFieldInOneRequest
@@ -178,63 +108,6 @@ public class ExtractTypedValuesTests
 
         [Fact(Skip = "Pending")]
         public void AnswersTheDateFieldWithADateAnswer() => _response.Answers["deliveredOn"].ShouldBeOfType<AIDateExtractionAnswer>();
-    }
-
-    public class GivenATextFieldTheProviderReportsAsNotPresent
-    {
-        private readonly AIExtractionResponse<AITextExtractionAnswer> _response = Extract(
-            new AITextExtractionAnswer { Value = null, NullProbability = 0.97 },
-            new AITextExtractionField { Instructions = "The tracking number" });
-
-        [Fact(Skip = "Pending")]
-        public void ReturnsANullValue() => _response.Answer.Value.ShouldBeNull();
-
-        [Fact(Skip = "Pending")]
-        public void FlagsItAsNotFound() => _response.Answer.IsFound.ShouldBeFalse();
-    }
-
-    public class GivenAListFieldTheProviderReportsAsNotPresent
-    {
-        [Fact(Skip = "Pending")]
-        public void ReturnsAnEmptyListNotNull()
-            => Extract(
-                    new AIListExtractionAnswer { Values = [], Spans = [] },
-                    new AIListExtractionField { Instructions = "Missing accessories" })
-                .Answer.Values.ShouldBeEmpty();
-    }
-
-    public class GivenAProviderReportingConfidenceAndNullProbability
-    {
-        private readonly AIExtractionResponse<AITextExtractionAnswer> _response = Extract(
-            new AITextExtractionAnswer { Value = "A-88412", Confidence = 0.99, NullProbability = 0.001 },
-            new AITextExtractionField { Instructions = "The order number" });
-
-        [Fact(Skip = "Pending")]
-        public void PassesTheConfidenceThrough() => _response.Answer.Confidence.ShouldBe(0.99);
-
-        [Fact(Skip = "Pending")]
-        public void PassesTheNullProbabilityThrough() => _response.Answer.NullProbability.ShouldBe(0.001);
-    }
-
-    public class GivenAProviderReportingNoConfidence
-    {
-        [Fact(Skip = "Pending")]
-        public void LeavesConfidenceNull()
-            => Extract(new AITextExtractionAnswer { Value = "A-88412" }, new AITextExtractionField { Instructions = "The order number" })
-                .Answer.Confidence.ShouldBeNull();
-    }
-
-    public class GivenAProviderReportingItsModelAndUsage
-    {
-        private readonly AIExtractionResponse<AITextExtractionAnswer> _response = Extract(
-            new AITextExtractionAnswer { Value = "A-88412" },
-            new AITextExtractionField { Instructions = "The order number" });
-
-        [Fact(Skip = "Pending")]
-        public void CarriesTheModelId() => _response.ModelId.ShouldBe("@cf/cloudflare/clairic");
-
-        [Fact(Skip = "Pending")]
-        public void CarriesTheInputTokenCount() => _response.Usage!.InputTokenCount.ShouldBe(612);
     }
 
     public class GivenARequestWithAReferenceDate

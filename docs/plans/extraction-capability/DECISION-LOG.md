@@ -47,3 +47,8 @@
 - 21-10-2026: The experimental-capability save error now names the exact key
   (`Umbraco:AI:Experimental:<Capability>`), built from the enum name. This relies on each option
   property having the same name as its enum member. (T1)
+- 21-10-2026: The list item enum is `AIExtractionListItemType`, not `AIListItemType`, so it reads
+  as part of Extraction. `AIDurationUnit` keeps its name. (T2)
+- 21-10-2026: `IsFound` is worked out from the value (null, or an empty list), never set by a
+  provider. The answer checker also rejects confidence or null probability outside 0 to 1, a null
+  list, and a duration in a different unit from the one asked for. (T2)

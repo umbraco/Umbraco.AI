@@ -20,7 +20,7 @@ interface ResourceListElement extends HTMLElement {
  *
  * Purely reactive: it observes the workspace store (conversation + owning project) and routes its edits
  * back through the store's writers — it never fetches or tracks the conversation itself. When the
- * conversation is archived the whole panel is read-only.
+ * conversation is archived or a recipient's shared view the whole panel is read-only (`conversation.readonly`).
  *
  * It has no notion of a draft. The store hands it the same model whether the conversation is persisted or
  * still unsaved, so attaching context before the first message works through exactly this code path; the
@@ -95,7 +95,7 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
 
     // Contexts and resources render as a single list per block: the project's items are shown locked
     // (read-only) above the conversation's own editable items and a slim add control. The divider is only
-    // drawn when the editable picker actually has items (has-items class). When archived, all read-only.
+    // drawn when the editable picker actually has items (has-items class). When read-only, all read-only.
     #renderContexts(projectContextIds: Array<string>, conversation?: UaiConversationDetailModel) {
         if (projectContextIds.length === 0 && !conversation) {
             return this.#renderEmpty("uaiCopilotWorkspace_contextNoContexts");
@@ -106,7 +106,7 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                       readonly
                       multiple
                       .value=${projectContextIds}
-                      .readonlyHint=${conversation?.isArchived
+                      .readonlyHint=${conversation?.readonly
                           ? undefined
                           : this.localize.term("uaiCopilotWorkspace_contextInheritedHint")}
                   ></uai-context-picker>`
@@ -115,7 +115,7 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                 ? html`<uai-context-picker
                       class=${conversation.contextIds.length > 0 ? "has-items" : ""}
                       multiple
-                      ?readonly=${conversation.isArchived}
+                      ?readonly=${conversation.readonly}
                       .value=${conversation.contextIds}
                       @change=${this.#onContextsChange}
                   ></uai-context-picker>`
@@ -133,7 +133,7 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                       compact
                       readonly
                       .items=${projectResources}
-                      .readonlyHint=${conversation?.isArchived
+                      .readonlyHint=${conversation?.readonly
                           ? undefined
                           : this.localize.term("uaiCopilotWorkspace_contextInheritedHint")}
                   ></uai-resource-list>`
@@ -142,7 +142,7 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                 ? html`<uai-resource-list
                       class=${conversation.resources.length > 0 ? "has-items" : ""}
                       compact
-                      ?readonly=${conversation.isArchived}
+                      ?readonly=${conversation.readonly}
                       .items=${conversation.resources}
                       @change=${this.#onResourcesChange}
                   ></uai-resource-list>`

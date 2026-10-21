@@ -19,6 +19,7 @@ import {
     createConversationDraft,
     toConversationDetailModel,
     toCreateConversationRequestModel,
+    toSharedConversationDetailModel,
     toUpdateConversationRequestModel,
 } from "../types.js";
 import type { ContextResourceModel, UaiConversationDetailModel } from "../types.js";
@@ -59,8 +60,8 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
     readonly conversation$ = this.#model.asObservable();
     /** The conversation's owning project, for the inherited context layer (undefined if none). */
     readonly project$ = this.#project.asObservable();
-    /** True while the conversation is archived — consumers render read-only. */
-    readonly isReadonly$ = this.#model.asObservablePart((c) => c?.isArchived ?? false);
+    /** True while the conversation is archived or a recipient's read-only share — consumers render read-only. */
+    readonly isReadonly$ = this.#model.asObservablePart((c) => c?.readonly ?? false);
     /** True once the current target's mode is known (loaded, or a draft) — gates the composer flash. */
     readonly isResolved$ = this.#resolved.asObservable();
     /** The route-set target (conversation id or draft), emitted synchronously for the chat runtime. */
@@ -87,6 +88,27 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
         this.#resolved.setValue(false);
         this.#target.setValue({ id: conversationId, isDraft: false });
         await this.#reload(conversationId);
+    }
+
+    /**
+     * Opens a conversation shared with the current user, in place of {@link setConversationId}. Parallel to
+     * it, but loads the recipient's read-only view (`requestSharedView`) rather than the owner's
+     * (`requestById`), and maps into the store via {@link toSharedConversationDetailModel}. Has no owning
+     * project — a share never carries one.
+     *
+     * NOTE: nothing calls this yet. There is no route to a shared conversation yet, and which path a given
+     * route should take (owned vs. shared) is a routing decision owned by SC-17/SC-18, not this task.
+     */
+    async setSharedConversationId(conversationId: string): Promise<void> {
+        const token = ++this.#requestToken;
+        this.#resolved.setValue(false);
+        this.#target.setValue({ id: conversationId, isDraft: false });
+
+        const { data } = await this.#conversationRepository.requestSharedView(conversationId);
+        if (token !== this.#requestToken) return; // superseded by a newer open
+        this.#model.setValue(data ? toSharedConversationDetailModel(data) : undefined);
+        this.#resolved.setValue(true);
+        this.#project.setValue(undefined);
     }
 
     /** Enters draft mode (nothing persisted yet); an optional project pre-attaches the eventual chat. */

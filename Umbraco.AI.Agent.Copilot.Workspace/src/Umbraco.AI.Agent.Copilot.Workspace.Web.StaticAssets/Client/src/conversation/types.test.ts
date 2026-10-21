@@ -3,9 +3,10 @@ import {
     createConversationDraft,
     toConversationDetailModel,
     toCreateConversationRequestModel,
+    toSharedConversationDetailModel,
     toUpdateConversationRequestModel,
 } from "./types.js";
-import type { ContextResourceModel, ConversationResponseModel } from "./types.js";
+import type { ContextResourceModel, ConversationResponseModel, SharedConversationResponseModel } from "./types.js";
 
 const PROJECT_ID = "33333333-3333-3333-3333-333333333333";
 const CONTEXT_ID = "44444444-4444-4444-4444-444444444444";
@@ -32,11 +33,29 @@ function response(overrides: Partial<ConversationResponseModel> = {}): Conversat
         resources: [],
         isPinned: false,
         isArchived: false,
+        hasActiveShares: false,
         dateCreated: "2026-07-29T12:00:00Z",
         dateModified: "2026-07-29T12:00:00Z",
         lastMessageAt: null,
         ...overrides,
     } as ConversationResponseModel;
+}
+
+function sharedResponse(overrides: Partial<SharedConversationResponseModel> = {}): SharedConversationResponseModel {
+    return {
+        id: "88888888-8888-8888-8888-888888888888",
+        title: null,
+        agentIdOrAlias: null,
+        profileId: null,
+        ownerDisplayName: "Jane Owner",
+        contextIds: [],
+        resources: [],
+        messages: [],
+        dateCreated: "2026-07-29T12:00:00Z",
+        dateModified: "2026-07-29T12:00:00Z",
+        lastMessageAt: null,
+        ...overrides,
+    };
 }
 
 describe("createConversationDraft", () => {
@@ -54,6 +73,8 @@ describe("createConversationDraft", () => {
         expect(draft.resources).toEqual([]);
         expect(draft.isPinned).toBe(false);
         expect(draft.isArchived).toBe(false);
+        expect(draft.isShared).toBe(false);
+        expect(draft.readonly).toBe(false);
     });
 
     it("pre-attaches a project when one is given", () => {
@@ -78,6 +99,51 @@ describe("toConversationDetailModel", () => {
 
         expect(model.title).toBeNull();
         expect(model.projectId).toBeNull();
+    });
+
+    it("is never shared, and is read-only exactly when archived", () => {
+        expect(toConversationDetailModel(response({ isArchived: false }))).toMatchObject({
+            isShared: false,
+            readonly: false,
+        });
+        expect(toConversationDetailModel(response({ isArchived: true }))).toMatchObject({
+            isShared: false,
+            readonly: true,
+        });
+    });
+});
+
+describe("toSharedConversationDetailModel", () => {
+    it("marks the model shared and read-only, with no owning project", () => {
+        const model = toSharedConversationDetailModel(sharedResponse());
+
+        expect(model.isShared).toBe(true);
+        expect(model.readonly).toBe(true);
+        expect(model.projectId).toBeNull();
+    });
+
+    it("leaves isPinned/isArchived at their defaults — those are owner-only concepts", () => {
+        const model = toSharedConversationDetailModel(sharedResponse());
+
+        expect(model.isPinned).toBe(false);
+        expect(model.isArchived).toBe(false);
+    });
+
+    it("carries the owner's display name for the read-only notice/badge to show", () => {
+        const model = toSharedConversationDetailModel(sharedResponse({ ownerDisplayName: "Jane Owner" }));
+
+        expect(model.ownerDisplayName).toBe("Jane Owner");
+    });
+
+    it("copies the arrays so editing the model cannot mutate the loaded response", () => {
+        const loaded = sharedResponse({ contextIds: [CONTEXT_ID], resources: [resource()] });
+
+        const model = toSharedConversationDetailModel(loaded);
+        model.contextIds.push("77777777-7777-7777-7777-777777777777");
+        model.resources.pop();
+
+        expect(loaded.contextIds).toEqual([CONTEXT_ID]);
+        expect(loaded.resources).toHaveLength(1);
     });
 });
 

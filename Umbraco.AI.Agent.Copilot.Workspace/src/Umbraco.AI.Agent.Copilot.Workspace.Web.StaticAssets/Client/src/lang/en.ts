@@ -51,8 +51,9 @@ export default {
         deleteConfirmTitle: "Delete conversation",
         deleteConfirmMessage: "Are you sure you want to delete this conversation? This cannot be undone.",
 
-        // Read-only (archived) conversation
+        // Read-only (archived or shared) conversation
         readOnlyNotice: "This conversation is archived. Restore it to continue chatting.",
+        sharedReadOnlyNotice: "This conversation is read-only — shared by %0%.",
 
         // Projects
         newProject: "New project",

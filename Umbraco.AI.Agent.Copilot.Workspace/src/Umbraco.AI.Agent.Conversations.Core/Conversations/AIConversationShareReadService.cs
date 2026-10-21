@@ -74,17 +74,25 @@ internal sealed class AIConversationShareReadService : IAIConversationShareReadS
     /// <summary>
     /// A <see cref="AIConversationShareScopeMode.Live"/> share has no ceiling. A
     /// <see cref="AIConversationShareScopeMode.Snapshot"/> share returns every message whose
-    /// <see cref="AIMessage.Sequence"/> is at or before the cutoff message's own sequence; if the
-    /// cutoff message can no longer be resolved from <paramref name="messages"/> (e.g. a regenerate
-    /// deleted it), every message that still exists is returned instead.
+    /// <see cref="AIMessage.Sequence"/> is at or before the cutoff message's own sequence.
+    /// <para>
+    /// If the cutoff message can no longer be resolved from <paramref name="messages"/> (e.g. a
+    /// regenerate's <c>TruncateAfterLastUserMessageAsync</c> deleted it), falling back to "every
+    /// message that currently exists" is unsafe: the regenerate also reassigns fresh
+    /// <see cref="AIMessage.Sequence"/> values starting from the surviving max, so a reply written
+    /// long after the share — and anything the owner writes after that — would reuse sequence numbers
+    /// that look like they belong before the (deleted) cutoff. The fallback is instead a time bound on
+    /// the share's own <see cref="AIConversationShare.DateShared"/>: only messages that already existed
+    /// at share time (<see cref="AIMessage.DateCreated"/> at or before <c>DateShared</c>) are returned.
+    /// This still never errors, and still never reveals more than what existed when the share was
+    /// made — it just stops trusting post-truncation sequence numbers to mean "before the cutoff."
+    /// </para>
     /// <para>
     /// This is the deliberate opposite of the fallback at share-creation time
     /// (<see cref="AIConversationShareCutoffUnresolvableException"/>): there, an unresolvable cutoff
     /// rejects the share outright rather than risk it silently reading as Live (no ceiling at all).
-    /// Here, at read time, there is nothing beyond the current tail left to withhold either way — the
-    /// share was already anchored to "today's messages," and those messages are exactly what's left —
-    /// so returning everything that remains is the correct fallback, not a reintroduction of that same
-    /// bug.
+    /// Here, at read time, the share already exists and must still honor its own frozen-at-sharing-time
+    /// promise even once the anchor message is gone.
     /// </para>
     /// </summary>
     private static IReadOnlyList<AIMessage> ApplyCutoff(IReadOnlyList<AIMessage> messages, AIConversationShare share)
@@ -95,9 +103,12 @@ internal sealed class AIConversationShareReadService : IAIConversationShareReadS
         }
 
         var cutoff = messages.FirstOrDefault(m => m.Id == share.CutoffMessageId.Value);
-        return cutoff is null
-            ? messages
-            : messages.Where(m => m.Sequence <= cutoff.Sequence).ToList();
+        if (cutoff is not null)
+        {
+            return messages.Where(m => m.Sequence <= cutoff.Sequence).ToList();
+        }
+
+        return messages.Where(m => m.DateCreated <= share.DateShared).ToList();
     }
 
     private Guid? GetActingUserKeyOrNull()

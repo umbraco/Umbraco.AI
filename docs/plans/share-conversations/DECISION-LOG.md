@@ -565,3 +565,21 @@
   row was created — it just queries the same `umbracoAIConversationsShare` table either way. Confirmed
   working end-to-end: real sidebar entry, real dynamic badge tooltip, real chat history, real
   read-only notice with the correct owner name, no "Shared with" section.
+- **2026-10-21 (whole-feature review: Snapshot-cutoff-not-found fallback changed from "everything
+  current" to a `DateShared` time bound)** — Found by the whole-feature review, not any per-task
+  review: a Snapshot share's cutoff message can be deleted by the owner's (pre-existing, unrelated)
+  regenerate feature, and the original graceful-degradation fallback for "cutoff not found" —
+  "return every message that currently exists" — was only safe at the instant of truncation. Once
+  the owner wrote anything new afterward, that fallback silently turned a frozen Snapshot share into
+  an unbounded Live one, because a regenerated reply's `Sequence` number gets reassigned (reused)
+  from the deleted message, so sequence-based reasoning alone can't tell "written before the share"
+  from "written after." Changed the fallback to a time bound on the share's own `DateShared`
+  timestamp instead — a value that exists independently of `Sequence` and can't be fooled by
+  sequence reuse. `ARCHITECTURE.md`'s "Graceful degradation" note, decision 8, and decision 9 all
+  updated to describe this (the original text described the "everything current" behavior as the
+  intended design, not a known limitation — this wasn't a documented tradeoff being corrected, it
+  was a genuine bug that review caught before release). Non-blocking follow-up noted but not
+  actioned: cross-server clock drift could in theory let a message squeak through this time bound in
+  a load-balanced deployment if the drift exceeds the gap between share and regenerate — judged
+  acceptable risk for now, revisit if this product is ever deployed with multiple app servers behind
+  a load balancer sharing one database.

@@ -1,5 +1,46 @@
 # Build Log
 
+- **Whole-feature review** (per `feature-build`'s "Finish" step, all 18 tasks SC-01–SC-18 already
+  committed and individually reviewed). Commit pending. One round: **FAIL** → fixed → **PASS**.
+  Full suite re-run clean before the review: `dotnet test` on
+  `Umbraco.AI.Agent.Copilot.Workspace.slnx` (164 passed + 3 pre-existing skipped, 2 integration
+  passed), `npm run test` (84/84), `tsc --noEmit` clean.
+  **1 Critical finding, fixed:** a Snapshot share (the owner's explicit choice to freeze a
+  conversation "at today's messages") could silently become an unbounded Live share. If the owner
+  later regenerated a message, the regenerate's pre-existing truncate could delete the exact message
+  a Snapshot share's `CutoffMessageId` pointed at; the old read-time fallback for "cutoff not found"
+  responded by returning *every message that currently exists*, which — once the owner wrote
+  anything new post-regenerate — meant the recipient permanently saw content the owner never meant
+  to disclose past the freeze point. No single task's own tests caught this, since it only manifests
+  across three things that are each correct in isolation (SC-04's cutoff-at-share-time, the
+  pre-existing unrelated regenerate/truncate feature, and SC-07's cutoff-not-found fallback). Fixed:
+  `AIConversationShareReadService.ApplyCutoff`'s fallback now bounds by the share's own `DateShared`
+  timestamp (`messages.Where(m => m.DateCreated <= share.DateShared)`) instead of returning
+  everything current — a time bound can't be fooled by a post-truncation message reusing a
+  `Sequence` number that looks earlier than it is. `SharedConversationResponseModelFactory`'s frozen
+  `dateModified`/`lastMessageAt` now derive from the actual bounded message list
+  (`messages.Max(m => m.DateCreated)`), not an assumption that the last array element is always the
+  correct tail. New regression test
+  `GetSharedConversationAsync_CutoffMessageDeletedThenRegenerateAddsNewMessage_ExcludesMessageWrittenAfterShare`
+  reproduces the exact bug (deleted cutoff, reused Sequence, dated after `DateShared`) and fails
+  against the old code. `dotnet test` after the fix: 165 passed (was 164 — one old test, whose name
+  asserted the buggy behavior, was renamed and a second, real regression test added alongside it) +
+  3 pre-existing skipped, 2 integration passed.
+  **1 Important finding, fixed directly by the orchestrator (doc-only, not code):** several
+  `DECISION-LOG.md` outcomes from mid-build task deviations had never been written back into
+  `ARCHITECTURE.md`/`SPEC.md`, which are meant to be current-state snapshots — the second
+  `entitySign` manifest for "Shared with me"'s dynamic badge (SC-17), `iconColorAlias: 'green'` not
+  `'positive'` (SC-13), the real entity-type string, the try-then-fallback routing description
+  (SC-18), `scopeMode`'s PascalCase casing, and a TODOs list that still listed several
+  already-resolved items. All corrected in place to describe what actually shipped.
+  **Non-blocking suggestions logged for later, not actioned:** duplicated `--umb-sign-bundle-bg` CSS
+  between the two tree-item elements; duplicated unknown-user-display-name and acting-user-key
+  helpers across the share services/factories; three empty `[Fact(Skip=...)]` DI-resolution test
+  stubs; no server-side validation that a recipient key is a real user; a concurrent-share race
+  against the filtered unique index would 500 instead of upserting; `HasActiveShares` always reports
+  `false` from non-list endpoints; N+1 user lookups on the shares/shared-with-me list endpoints;
+  this product's `CLAUDE.md` Management API table doesn't yet list the 5 new endpoints; archived
+  conversations remain visible to recipients (undocumented as a decision, probably fine).
 - **SC-18** — Wire: recipient reads a shared conversation end-to-end. Commit pending. Two builder
   passes, one review round (PASS):
   (1) First pass fixed the routing gap: `conversation-workspace.context.ts`'s `#reload()` now falls

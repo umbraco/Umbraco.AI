@@ -115,19 +115,22 @@ public class ReadSharedConversationTests
     }
 
     [Fact]
-    public async Task GetSharedConversationAsync_CutoffMessageDeletedByRegenerate_ReturnsEveryRemainingMessage()
+    public async Task GetSharedConversationAsync_CutoffMessageDeletedByRegenerate_ReturnsOnlyMessagesPredatingShare()
     {
-        // AC5 — graceful degradation: TruncateAfterLastUserMessageAsync removed the anchor message,
-        // the read falls back to everything that still exists rather than erroring.
+        // AC5 — graceful degradation: TruncateAfterLastUserMessageAsync removed the anchor message.
+        // Immediately after truncation (before anything new is written), every surviving message still
+        // predates the share, so the time-bound fallback returns the same set the old "everything that
+        // still exists" fallback would have — this case alone doesn't distinguish the two.
         var conversationId = Guid.NewGuid();
         var deletedCutoffMessageId = Guid.NewGuid();
+        var dateShared = new DateTime(2026, 10, 20, 12, 0, 0, DateTimeKind.Utc);
         var (service, conversations, shares) = BuildService();
         SetupConversation(conversations, conversationId);
         SetupMessages(
             conversations,
             conversationId,
-            new AIMessage { Id = Guid.NewGuid(), Sequence = 1 },
-            new AIMessage { Id = Guid.NewGuid(), Sequence = 2 });
+            new AIMessage { Id = Guid.NewGuid(), Sequence = 1, DateCreated = dateShared.AddMinutes(-2) },
+            new AIMessage { Id = Guid.NewGuid(), Sequence = 2, DateCreated = dateShared.AddMinutes(-1) });
         SetupActiveShare(shares, conversationId, new AIConversationShare
         {
             ConversationId = conversationId,
@@ -135,6 +138,43 @@ public class ReadSharedConversationTests
             SharedByUserKey = OwnerKey,
             ScopeMode = AIConversationShareScopeMode.Snapshot,
             CutoffMessageId = deletedCutoffMessageId,
+            DateShared = dateShared,
+        });
+
+        var result = await service.GetSharedConversationAsync(conversationId);
+
+        result.ShouldNotBeNull();
+        result.Value.Messages.Select(m => m.Sequence).ShouldBe([1, 2]);
+    }
+
+    [Fact]
+    public async Task GetSharedConversationAsync_CutoffMessageDeletedThenRegenerateAddsNewMessage_ExcludesMessageWrittenAfterShare()
+    {
+        // The actual bug this guards against: a regenerate deletes the cutoff message and reassigns a
+        // reused/higher Sequence to the replacement reply, so "return everything that still exists"
+        // would permanently leak the regenerated reply (and anything after it) to the recipient. The
+        // DateShared time bound must exclude it regardless of its reused Sequence number.
+        var conversationId = Guid.NewGuid();
+        var deletedCutoffMessageId = Guid.NewGuid();
+        var dateShared = new DateTime(2026, 10, 20, 12, 0, 0, DateTimeKind.Utc);
+        var (service, conversations, shares) = BuildService();
+        SetupConversation(conversations, conversationId);
+        SetupMessages(
+            conversations,
+            conversationId,
+            new AIMessage { Id = Guid.NewGuid(), Sequence = 1, DateCreated = dateShared.AddMinutes(-2) },
+            new AIMessage { Id = Guid.NewGuid(), Sequence = 2, DateCreated = dateShared.AddMinutes(-1) },
+            // Regenerated reply: reused Sequence (the truncated-away cutoff message was also
+            // Sequence 3 before deletion), written well after the share was created.
+            new AIMessage { Id = Guid.NewGuid(), Sequence = 3, DateCreated = dateShared.AddHours(1) });
+        SetupActiveShare(shares, conversationId, new AIConversationShare
+        {
+            ConversationId = conversationId,
+            SharedWithUserKey = RecipientKey,
+            SharedByUserKey = OwnerKey,
+            ScopeMode = AIConversationShareScopeMode.Snapshot,
+            CutoffMessageId = deletedCutoffMessageId,
+            DateShared = dateShared,
         });
 
         var result = await service.GetSharedConversationAsync(conversationId);

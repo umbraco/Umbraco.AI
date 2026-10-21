@@ -21,9 +21,11 @@ Request:
 ```json
 {
   "recipientUserKeys": ["<guid>", "..."],
-  "scopeMode": "snapshot" | "live"
+  "scopeMode": "Snapshot" | "Live"
 }
 ```
+(`scopeMode` is parsed case-insensitively server-side, but the API documents and returns the
+PascalCase enum member names, and that's what the frontend sends.)
 
 Behavior:
 - 404 if `{id}` isn't owned by the acting user (indistinguishable from not-found).
@@ -102,8 +104,9 @@ active shares where the acting user is the recipient, not from owned conversatio
   - `messages`: for a `Snapshot` share, every message whose `Sequence` is `<=` the `CutoffMessageId`
     message's `Sequence` (resolved at read time); for a `Live` share, all messages. Both in the
     existing ascending order. If the `CutoffMessageId` message no longer exists (e.g. the owner
-    used regenerate and truncated past it), falls back to every message that still exists — never
-    an error.
+    used regenerate and truncated past it), falls back to every message whose `DateCreated` is at
+    or before the share's own `DateShared` — never an error, and never a message written after the
+    share was made, regardless of `Sequence` reuse from the regenerate.
   - `resources` / `contextIds`: unfiltered — the same attachment list the owner sees. See
     `ARCHITECTURE.md` decision 2 for why; the corresponding disclosure happens at share time, in
     the Share modal (below), not by filtering the read.
@@ -193,11 +196,18 @@ from the owner's own shared entries, just a different group.
 **"Shared with me" grouping:**
 - A new group in the existing conversation sidebar list, visually parallel to the existing
   Pinned/Recent groupings, sourced from `requestSharedWithMe()`.
-- Each entry renders like any other tree item: title only, plain chat icon with the same
-  `Uai.Conversation.IsShared` entity-sign badge overlay described below — no owner-name subtitle
-  row. The owner's name isn't dropped as information, just moved: hovering the badge on one of
-  these entries shows "Shared by \<owner\>" (vs. plain "Shared" on the owner's own rows), and
-  opening the conversation shows the same owner name again in the read-only banner (below).
+- Each entry renders like any other tree item: title only, plain chat icon with a corner badge —
+  no owner-name subtitle row. This is a *second* `entitySign` flag/manifest
+  (`Uai.Conversation.IsSharedWithMe`), not a reuse of the owner-side `Uai.Conversation.IsShared`
+  one below: these rows' badge needs a different, per-row *dynamic* hover label ("Shared by
+  \<owner\>", the summary's actual owner name), which a static per-manifest label can't produce, so
+  its `kind: 'icon'` manifest carries a custom `api` (`UaiSharedWithMeSignApi`) that reads the
+  owner's name from a per-row context (`UaiSharedConversationRowContext`, provided by each row) and
+  exposes it as a reactive `label`. Visually the badge is identical to the owner-side one (same
+  icon, same ring styling) — only the label mechanism differs. The owner's name isn't dropped as
+  information, just moved: hovering the badge shows "Shared by \<owner\>" (vs. plain "Shared" on
+  the owner's own rows), and opening the conversation shows the same owner name again in the
+  read-only banner (below).
 - Only a "View" affordance — no Pin/Archive/Rename/Move/Delete entity actions render for shared
   entries; those remain exclusively on the owner's own conversations.
 - **Not** a separate section or tab — reuses the one existing sidebar list surface, since Copilot
@@ -207,17 +217,17 @@ from the owner's own shared entries, just a different group.
 in the mockup, under Recent): a real Umbraco **entity sign** (flag badge), per `ARCHITECTURE.md`
 decision 6 — not an icon swap. `uai-copilot-workspace-conversation-tree-item` wraps its existing
 icon (pin if `isPinned`, else plain chat icon — unchanged) in `<umb-entity-sign-bundle
-.entityType="uai-conversation" .entityFlags=${hasActiveShares ? [{ alias:
-'Uai.Conversation.IsShared' }] : []}>`, and a new `entitySign` manifest
-(`forEntityTypes: ['uai-conversation']`, `forEntityFlags: ['Uai.Conversation.IsShared']`, `kind:
-'icon'`, `iconName: 'icon-share'`, `iconColorAlias: 'positive'`) renders it as a small corner badge
-over whichever main icon is showing. Pinned and shared now show **simultaneously** — a pinned,
-shared conversation has both the pushpin and the badge at once. Hovering the badge shows its label
-as a tooltip ("Shared") without opening anything. "With whom" is answered by opening the
-conversation and looking at the context panel's "Shared with" section (below) — not a tooltip on
-the row itself, and not a separate entity action (there isn't one — see `ARCHITECTURE.md` decision
-7). The exact icon name (`icon-share`) and color alias (`positive`) are `feature-build` details to
-confirm against the real icon/color sets, not decided here.
+.entityType="uai:copilot-workspace-conversation" .entityFlags=${hasActiveShares ? [{ alias:
+'Uai.Conversation.IsShared' }] : []}>`, and an `entitySign` manifest
+(`forEntityTypes: ['uai:copilot-workspace-conversation']`, `forEntityFlags:
+['Uai.Conversation.IsShared']`, `kind: 'icon'`, `iconName: 'icon-share'`, `iconColorAlias: 'green'`
+— `'positive'` isn't a real UUI color-alias token, confirmed against core's own usage) renders it
+as a small corner badge over whichever main icon is showing. Pinned and shared now show
+**simultaneously** — a pinned, shared conversation has both the pushpin and the badge at once.
+Hovering the badge shows its label as a tooltip ("Shared") without opening anything. "With whom" is
+answered by opening the conversation and looking at the context panel's "Shared with" section
+(below) — not a tooltip on the row itself, and not a separate entity action (there isn't one — see
+`ARCHITECTURE.md` decision 7).
 
 ### Chat detail view and context panel: read-only mode
 
@@ -255,12 +265,17 @@ resource/context" is enabled.
   working-looking "add a resource/context" controls that silently fail, since there's no write
   endpoint for a shared view. It shows the same (unfiltered — see `ARCHITECTURE.md` decision 2)
   resource list the owner sees; it just can't be edited.
-- `UaiConversationWorkspaceContext.#reload()` needs a second path: when the route target is a
-  shared conversation, it calls the new `requestSharedView(id)` instead of the owner's
-  `requestById(id)`, and maps the `SharedConversationResponseModel` into
-  `UaiConversationDetailModel` via a new `toSharedConversationDetailModel()` (parallel to the
-  existing `toConversationDetailModel()`) that sets `isShared: true` and leaves
-  `isPinned`/`isArchived` at their defaults, since those concepts don't apply to a share.
+- `UaiConversationWorkspaceContext.#reload()` tries the owner's `requestById(id)` first; there is
+  only one route (`conversation/:id`) for both an owned and a shared conversation, so the store —
+  not the router — decides which kind it's looking at. When that lookup 404s (the backend's
+  ownership check is indistinguishable from not-found), it falls back to
+  `setSharedConversationId(id)`, which calls `requestSharedView(id)` and maps the
+  `SharedConversationResponseModel` into `UaiConversationDetailModel` via
+  `toSharedConversationDetailModel()` (parallel to the existing `toConversationDetailModel()`),
+  setting `isShared: true` and leaving `isPinned`/`isArchived` at their defaults, since those
+  concepts don't apply to a share. The chat runtime's own history load
+  (`UaiServerPersistedConversationStrategy.loadInitial()`) mirrors the same try-then-fallback
+  independently, since it is a separate call the store doesn't fetch on the chat's behalf.
 - The `readonly-notice` text varies by *why* it's read-only (archived vs. shared-by-\<owner name\>)
   — `conversation-chat-view.element.ts` already passes this as a plain attribute, so this is a
   matter of picking the right localized string (a new `uaiCopilotWorkspace_sharedReadOnlyNotice`,

@@ -37,11 +37,16 @@ internal static class SharedConversationResponseModelFactory
     /// <summary>
     /// Maps a shared conversation and its visible messages, resolving the owner's display name. For a
     /// <see cref="AIConversationShareScopeMode.Snapshot"/> share, <c>dateModified</c>/<c>lastMessageAt</c>
-    /// are frozen at the cutoff message's own <see cref="AIMessage.DateCreated"/> rather than the
-    /// conversation's live fields (ARCHITECTURE.md decision 9) — otherwise those two fields would
-    /// quietly disclose that (and roughly when) the owner kept chatting after the cutoff, even though
-    /// the recipient can never see what was said. A <see cref="AIConversationShareScopeMode.Live"/>
-    /// share has no ceiling, so its dates are left exactly as the conversation's own live values.
+    /// are frozen at the latest <see cref="AIMessage.DateCreated"/> among the already-bounded
+    /// <paramref name="messages"/> (ARCHITECTURE.md decision 9) rather than the conversation's live
+    /// fields — otherwise those two fields would quietly disclose that (and roughly when) the owner
+    /// kept chatting after the cutoff, even though the recipient can never see what was said. Deriving
+    /// this from <c>Max(DateCreated)</c> over the bounded list — not its last array element — matters
+    /// specifically for the post-regenerate fallback in <c>IAIConversationShareReadService</c>: once
+    /// the cutoff message itself is gone, there is no single "cutoff message" left to point at, only
+    /// the bounded list itself, so the frozen date has to be derived from that list's own content, not
+    /// assumed from its position. A <see cref="AIConversationShareScopeMode.Live"/> share has no
+    /// ceiling, so its dates are left exactly as the conversation's own live values.
     /// </summary>
     public static async Task<SharedConversationResponseModel> MapAsync(
         IUmbracoMapper umbracoMapper,
@@ -54,19 +59,15 @@ internal static class SharedConversationResponseModelFactory
         model.Messages = umbracoMapper.MapEnumerable<AIMessage, MessageResponseModel>(messages);
         model.OwnerDisplayName = await ResolveOwnerDisplayNameAsync(userService, conversation.UserKey);
 
-        if (scopeMode == AIConversationShareScopeMode.Snapshot)
+        if (scopeMode == AIConversationShareScopeMode.Snapshot && messages.Count > 0)
         {
-            // `messages` is already cutoff-filtered (see IAIConversationShareReadService), so its last
-            // element — when one exists — is the cutoff message itself. No messages to anchor to
-            // (decision 8 should normally prevent a brand-new Snapshot share from ever reaching here
-            // with zero messages, but don't assume that holds for every code path) falls back to the
-            // conversation's own fields — there's nothing hidden to leak either way.
-            var cutoffMessage = messages.Count > 0 ? messages[^1] : null;
-            if (cutoffMessage is not null)
-            {
-                model.DateModified = cutoffMessage.DateCreated;
-                model.LastMessageAt = cutoffMessage.DateCreated;
-            }
+            // No messages to anchor to (decision 8 should normally prevent a brand-new Snapshot share
+            // from ever reaching here with zero messages, but don't assume that holds for every code
+            // path) falls back to the conversation's own fields — there's nothing hidden to leak either
+            // way.
+            var frozenDate = messages.Max(m => m.DateCreated);
+            model.DateModified = frozenDate;
+            model.LastMessageAt = frozenDate;
         }
 
         return model;

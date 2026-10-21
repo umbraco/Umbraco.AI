@@ -65,10 +65,13 @@ ever added, removed, or renumbered for a reason unrelated to sharing.
 
 **Graceful degradation if the cutoff message no longer exists**: `TruncateAfterLastUserMessageAsync`
 (the regenerate feature) can delete messages after a point in the conversation, which could delete
-the very message a `Snapshot` share was anchored to. If the read-time lookup for `CutoffMessageId`
-finds nothing, the shared-view read falls back to returning every message that still exists —
-never an error, and never a reason to reveal more than what remains (there is nothing beyond the
-current tail to withhold or expose either way).
+the very message a `Snapshot` share was anchored to — and the regenerated reply that replaces it
+gets a fresh `Sequence`, which may reuse a number the deleted message held. If the read-time lookup
+for `CutoffMessageId` finds nothing, the shared-view read falls back to a time bound instead:
+every message whose `DateCreated` is at or before the share's own `DateShared`. This never errors,
+and still never reveals anything written after the share was made — unlike falling back to "every
+message that currently exists," a time bound isn't fooled by a post-truncation message reusing a
+`Sequence` number that looks like it belongs before the cutoff.
 
 **Why soft-revoke (`DateRevoked`), not delete**: preserves who had access to what and when, which
 matters if a privacy review ever needs to reconstruct exposure — a hard delete erases that history
@@ -246,8 +249,10 @@ rather than assuming:
 
 **Decision:** register a real `entitySign` manifest for conversations —
 `forEntityTypes: [UAI_CONVERSATION_ENTITY_TYPE]`, `forEntityFlags: ['Uai.Conversation.IsShared']`,
-`meta: { iconName: 'icon-share', iconColorAlias: 'positive', label: '#uaiCopilotWorkspace_isSharedSignLabel' }`
-— and wrap `uai-copilot-workspace-conversation-tree-item`'s existing icon-rendering in
+`meta: { iconName: 'icon-share', iconColorAlias: 'green', label: '#uaiCopilotWorkspace_sharedBadgeLabel' }`
+(`'green'`, not `'positive'` — that string isn't a real UUI color-alias token; confirmed against
+core's own usage of the same badge mechanism) — and wrap
+`uai-copilot-workspace-conversation-tree-item`'s existing icon-rendering in
 `<umb-entity-sign-bundle>`, passing `entityFlags: hasActiveShares ? [{ alias: 'Uai.Conversation.IsShared' }] : []`.
 This is strictly additive to the row's existing icon logic (pin vs. chat) — the main icon
 rendering doesn't change at all, the sign just overlays on top of whichever one is showing. Pinned
@@ -256,6 +261,16 @@ the badge gives a quick "Shared" label without opening anything, for free. Rejec
 (the superseded icon-swap): couldn't show both states at once and wasn't the established
 convention for this exact kind of thing — this repo's own "mirror an existing pattern, don't
 hand-roll" rule, applied one level more carefully than the first pass did.
+
+A **second**, independent `entitySign` manifest (`Uai.Conversation.IsSharedWithMe`) uses the same
+`kind: 'icon'` visual treatment for the "Shared with me" sidebar grouping's rows, but with a custom
+`api` (`UaiSharedWithMeSignApi`) instead of a static `meta.label`: those rows need a per-row dynamic
+label ("Shared by \<owner\>", a different name per row), which one static per-manifest label can't
+produce. The api reads the owner's name from a per-row context (`UaiSharedConversationRowContext`,
+provided by the row element itself) and exposes it as a reactive `label: Observable<string>` —
+`<umb-entity-sign-bundle>` already supports an api-supplied observable label, it's just unused by
+every other sign in this codebase today. The two manifests are deliberately separate rather than
+one manifest trying to serve both a static and a dynamic label.
 
 **Data shape, to avoid an N+1 query:** the owner's paged conversation list
 (`AIConversationService.GetConversationsPagedAsync` → `IAIConversationRepository.GetPagedAsync`)
@@ -354,9 +369,9 @@ they only meant to show today's state to.
 request fails outright (the service throws, the owner sees an error and can retry) rather than
 falling back to `null`/Live. This is the same "never reveal more than intended" posture the data
 model's graceful-degradation rule already applies at *read* time (a cutoff message deleted by
-regenerate falls back to "everything that still exists," never to "everything, unbounded") — applied
-here at *share* time instead, where the safe failure mode is "reject the share," not "silently widen
-it." `feature-plan`/`feature-build` TODO, not resolved here: whether "Snapshot an empty conversation"
+regenerate falls back to a `DateShared` time bound, never to "everything, unbounded") — applied here
+at *share* time instead, where the safe failure mode is "reject the share," not "silently widen it."
+`feature-plan`/`feature-build` TODO, not resolved here: whether "Snapshot an empty conversation"
 should be a supported case at all (it would need its own sentinel, since there's no message to
 reference) is a real product question, not a bug to patch around — until decided, failing the share
 is the only safe default.
@@ -373,9 +388,13 @@ past that point would still tell them *that* the owner kept talking, and roughly
 about hidden content is still a disclosure about hidden content, even with no words attached.
 
 **Decision:** for a `Snapshot` share, `dateModified` and `lastMessageAt` on the `shared-view`
-response are the cutoff message's own `DateCreated`, not the conversation's live fields — the same
-"frozen at this point" guarantee the message list itself already makes, applied consistently to the
-two date fields that would otherwise quietly stay live. If the conversation has no messages at all
+response are derived from the returned message list itself (`DateCreated` of its most recent entry)
+rather than the conversation's live fields — the same "frozen at this point" guarantee the message
+list itself already makes, applied consistently to the two date fields that would otherwise quietly
+stay live. This holds whether that list ends at the cutoff message (the normal case) or at the
+`DateShared` time bound (the graceful-degradation fallback above) — deriving from the list itself,
+rather than from "the cutoff message" specifically, means the frozen date is correct either way
+without needing to know which path produced the list. If the conversation has no messages at all
 (nothing to anchor to, decision 8 already prevents this from happening for a *new* Snapshot share,
 but a `Live`-then-never-updated edge case could still reach here with zero messages), leave
 `DateModified`/`LastMessageAt` at the conversation's own live values, unfrozen — there's nothing
@@ -385,15 +404,9 @@ hidden to leak either way.
 ## TODOs carried into `feature-plan` / `feature-build`
 
 - Exact copy for the share-time disclosure warning (see decision 2) — needs product/legal-adjacent
-  review given the org's GDPR-conscious posture, not just engineering wording.
-- Exact copy for the share-notification email (see decision 5) — same review flag.
-- Confirm `UMB_USER_PICKER_MODAL` actually supports (or can be configured/wrapped for) a
-  max-selection-of-one constraint at `feature-build` time (decision 7) — identified this session as
-  the real modal to reuse, but its single-select behavior wasn't verified beyond the type shape.
+  review given the org's GDPR-conscious posture, not just engineering wording. Still placeholder
+  text as shipped.
+- Exact copy for the share-notification email (see decision 5) — same review flag. Still
+  placeholder text as shipped.
 - No v17-specific CMS API incompatibility is expected (nothing here uses a v18-only API), but this
-  hasn't been explicitly checked against the v17 line yet.
-- The exact share-icon name and icon color alias used for the entitySign (decision 6, `icon-share`
-  / `positive` in the design) need confirming against the real Umbraco icon/color sets during
-  `feature-build`.
-- Localization key and exact label text for the entitySign's hover tooltip (decision 6's
-  `uaiCopilotWorkspace_isSharedSignLabel`) — not drafted this session.
+  hasn't been explicitly checked against the v17 line yet (see `SC-19` in `PLAN.md`).

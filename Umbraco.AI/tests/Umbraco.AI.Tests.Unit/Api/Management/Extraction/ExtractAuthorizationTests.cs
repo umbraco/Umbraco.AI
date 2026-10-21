@@ -26,14 +26,14 @@ public class ExtractAuthorizationTests
 
     #region Happy path
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void ExtractController_HasTheSamePoliciesAsTheDecisionEndpoint()
     {
         // A user who can call decision/ask can call extraction/extract.
         GetPolicies(typeof(ExtractController)).ShouldBe(GetPolicies(typeof(AskDecisionController)));
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void ExtractionControllerBase_IsAManagementApiController()
     {
         typeof(ExtractionControllerBase).IsSubclassOf(typeof(Umbraco.AI.Web.Api.Management.Common.Controllers.UmbracoAICoreManagementControllerBase))
@@ -44,13 +44,13 @@ public class ExtractAuthorizationTests
 
     #region Sad path
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void ExtractController_RequiresBackOfficeAccessSoAnUnauthenticatedCallIsRejected()
     {
         GetPolicies(typeof(ExtractController)).ShouldContain(AuthorizationPolicies.BackOfficeAccess);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void ExtractController_DoesNotAllowAnonymousAccess()
     {
         typeof(ExtractController).GetCustomAttribute<AllowAnonymousAttribute>(inherit: true).ShouldBeNull();

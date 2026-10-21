@@ -104,13 +104,14 @@ Response 200:
     "damaged":     { "$type": "list",   "values": ["mug", "teapot"], "spans": [{ "start": 64, "end": 67 }, { "start": 72, "end": 78 }], "confidence": 0.99, "isFound": true }
   },
   "modelId": "@cf/cloudflare/clairic",
-  "usage": { "inputTokenCount": 612, "outputTokenCount": 0, "totalTokenCount": 612 }
+  "usage": { "inputTokens": 612, "outputTokens": 0, "totalTokens": 612 }
 }
 ```
 
 - Answer keys are the field ids exactly as sent (no camel-casing).
-- A validation problem, an unresolvable profile, or a provider error returns 400 `ProblemDetails`,
-  matching the Decision endpoint.
+- A named profile that doesn't exist returns 404 `ProblemDetails`. A validation problem, no default
+  profile, a profile of the wrong capability, or a provider error returns 400 `ProblemDetails`.
+  Both match the Decision endpoint.
 
 ## Frontend components
 

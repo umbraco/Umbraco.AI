@@ -61,3 +61,9 @@
   the field id must start with a letter. (T3)
 - 21-10-2026: `AIExtractionService` checks the experimental flag itself and throws before any
   profile lookup, event or provider call. Decision's service has no such check. (T3)
+- 21-10-2026: The extract endpoint reuses the shared `UsageModel` (`inputTokens`, `outputTokens`,
+  `totalTokens`), not the `inputTokenCount` names first written in SPEC. Matching the existing API
+  wins; SPEC fixed. (T8)
+- 21-10-2026: Duration unit and list item type are lowercase strings on the wire, read
+  case-insensitively. A bad value is a 400. `confidence`, `nullProbability` and `span` are left out
+  when empty; `value` is written as null when not found. (T8)

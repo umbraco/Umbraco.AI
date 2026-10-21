@@ -19,3 +19,8 @@
 - **T7** - `ExtractionProfileSettingsModel` (`$type: "extraction"`) and both mapper arms. 9 specs on
   (failed first with CS0246), run through the real mapper and serializer. Reviewer PASS first
   round; unit 2160/2160, integration 34/34. Smoke: live in T9.
+- **T8** - `POST extraction/extract`: base controller, controller, polymorphic models, shared
+  `UsageModel`. 55 pinned specs on (fail-first not shown; specs pinned names ahead). Review round 1
+  FAIL (unit/item-type parsing accepted "3" and "seconds,minutes"; untested mapping); fixed with
+  name-only parsing and new tests, red first. Round 2 PASS. Unit 2235/2235, integration 34/34.
+  Smoke: real request in T9.

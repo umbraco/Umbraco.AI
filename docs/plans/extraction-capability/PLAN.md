@@ -90,7 +90,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: profile mapping spec green.
   depends-on: T1. parallel-group: B
 
-- [ ] **T8** - story: EX-6 (AC1-AC12), EX-3 (AC9). Add `Constants.ManagementApi.Feature.Extraction`,
+- [x] **T8** - story: EX-6 (AC1-AC12), EX-3 (AC9). Add `Constants.ManagementApi.Feature.Extraction`,
   `ExtractionControllerBase`, `ExtractController` (`POST extraction/extract`) and the polymorphic
   request/response models in `Umbraco.AI.Web/Api/Management/Extraction/`, copying
   `Api/Management/Decision/`. Answers dictionary uses `ExactKeyDictionaryJsonConverter`; return

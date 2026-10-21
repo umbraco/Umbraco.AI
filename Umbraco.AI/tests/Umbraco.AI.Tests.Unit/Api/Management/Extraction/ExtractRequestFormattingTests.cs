@@ -62,7 +62,7 @@ public class ExtractRequestFormattingTests : IAsyncLifetime
 
     #region Happy path
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SpecRequest_ReturnsOk()
     {
         var response = await PostAsync(SpecRequest);
@@ -70,7 +70,7 @@ public class ExtractRequestFormattingTests : IAsyncLifetime
         response.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task SpecRequest_BindsEachFieldToItsTypedModel()
     {
         var response = await PostAsync(SpecRequest);
@@ -84,7 +84,7 @@ public class ExtractRequestFormattingTests : IAsyncLifetime
 
     #region Sad path
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task MissingDiscriminator_ReturnsBadRequest()
     {
         var response = await PostAsync("""{ "state": "x", "fields": [ { "id": "a", "instructions": "x" } ] }""");
@@ -92,7 +92,7 @@ public class ExtractRequestFormattingTests : IAsyncLifetime
         response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
     }
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public async Task UnknownDiscriminator_ReturnsBadRequest()
     {
         var response = await PostAsync("""{ "state": "x", "fields": [ { "$type": "estimate", "id": "a", "instructions": "x" } ] }""");

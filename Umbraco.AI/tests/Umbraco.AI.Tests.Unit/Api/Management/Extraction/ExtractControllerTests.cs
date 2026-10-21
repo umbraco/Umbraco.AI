@@ -57,6 +57,9 @@ public class ExtractControllerTests
         AITextExtractionField => new AITextExtractionAnswer { Value = "A-88412", Span = new AIExtractionSpan(6, 13), Confidence = 0.9999 },
         AINumberExtractionField => new AINumberExtractionAnswer { Value = 701.10m, Confidence = 0.9999 },
         AIDateExtractionField => new AIDateExtractionAnswer { Value = new DateOnly(2026, 10, 3), Confidence = 0.998 },
+        AITimeExtractionField => new AITimeExtractionAnswer { Value = new TimeOnly(14, 30), Confidence = 0.97 },
+        AIDateTimeExtractionField => new AIDateTimeExtractionAnswer { Value = new DateTime(2026, 10, 3, 14, 30, 0), Confidence = 0.97 },
+        AIDurationExtractionField duration => new AIDurationExtractionAnswer { Value = 2m, Unit = duration.Unit, Confidence = 0.96 },
         AIListExtractionField => new AIListExtractionAnswer
         {
             Values = ["mug", "teapot"],
@@ -113,49 +116,49 @@ public class ExtractControllerTests
 
         private ExtractResponseModel Response => (ExtractResponseModel)((OkObjectResult)_result).Value!;
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsOk() => _result.ShouldBeOfType<OkObjectResult>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void DeclaresTheBaseResponseTypeSoTheDiscriminatorsSurvive()
             => ((OkObjectResult)_result).DeclaredType.ShouldBe(typeof(ExtractResponseModel));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsOneAnswerPerField() => Response.Answers.Count.ShouldBe(4);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsATextAnswerForTheTextField()
             => Response.Answers["orderId"].ShouldBeOfType<TextExtractionAnswerModel>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsANumberAnswerForTheNumberField()
             => Response.Answers["amount"].ShouldBeOfType<NumberExtractionAnswerModel>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsADateAnswerForTheDateField()
             => Response.Answers["deliveredOn"].ShouldBeOfType<DateExtractionAnswerModel>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsAListAnswerForTheListField()
             => Response.Answers["damaged"].ShouldBeOfType<ListExtractionAnswerModel>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheTextValue()
             => ((TextExtractionAnswerModel)Response.Answers["orderId"]).Value.ShouldBe("A-88412");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheNumberValue()
             => ((NumberExtractionAnswerModel)Response.Answers["amount"]).Value.ShouldBe(701.10m);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheListValues()
             => ((ListExtractionAnswerModel)Response.Answers["damaged"]).Values.ShouldBe(["mug", "teapot"]);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsTheModelId() => Response.ModelId.ShouldBe("@cf/cloudflare/clairic");
 
-        [Fact(Skip = "Pending")]
-        public void ReturnsTheUsage() => Response.Usage!.InputTokenCount.ShouldBe(612);
+        [Fact]
+        public void ReturnsTheUsage() => Response.Usage!.InputTokens.ShouldBe(612);
     }
 
     public class GivenTheSpecRequestIsSentToTheService
@@ -178,16 +181,16 @@ public class ExtractControllerTests
                 .Extract(SpecRequest()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsEveryFieldInOneBatch() => _sent!.Fields.Count.ShouldBe(4);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheState() => _sent!.State.ShouldBe(State);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SendsTheReferenceDate() => _sent!.ReferenceDate.ShouldBe(new DateOnly(2026, 10, 20));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheNumberFieldOptions()
             => ((AINumberExtractionField)_sent!.Fields[1]).Decimals.ShouldBe(2);
     }
@@ -200,7 +203,7 @@ public class ExtractControllerTests
             => CreateController(ServiceAnsweringEveryField(), _profileService, enabled: true)
                 .Extract(SpecRequest(profile: "cloudflare-clairic")).GetAwaiter().GetResult();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ResolvesTheAlias()
             => _profileService.Verify(
                 x => x.GetProfileByAliasAsync("cloudflare-clairic", It.IsAny<CancellationToken>()),
@@ -219,7 +222,7 @@ public class ExtractControllerTests
                 .Extract(SpecRequest(profile: _profileId.ToString())).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ResolvesTheId()
             => _profileService.Verify(
                 x => x.GetProfileAsync(_profileId, It.IsAny<CancellationToken>()),
@@ -239,11 +242,89 @@ public class ExtractControllerTests
                 .Extract(SpecRequest(profile: null)).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsOk() => _result.ShouldBeOfType<OkObjectResult>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void DoesNotLookUpAProfile() => _profileService.Invocations.ShouldBeEmpty();
+    }
+
+    public class GivenTimeDateTimeAndDurationFields
+    {
+        private readonly AIExtractionRequest? _sent;
+        private readonly ExtractResponseModel _response;
+
+        public GivenTimeDateTimeAndDurationFields()
+        {
+            AIExtractionRequest? sent = null;
+            var service = ServiceAnsweringEveryField();
+            service
+                .Setup(x => x.GetExtractionResponseAsync(
+                    It.IsAny<Action<AIExtractionBuilder>>(), It.IsAny<AIExtractionRequest>(), It.IsAny<CancellationToken>()))
+                .Callback<Action<AIExtractionBuilder>, AIExtractionRequest, CancellationToken>((_, r, _) => sent = r)
+                .ReturnsAsync((Action<AIExtractionBuilder> _, AIExtractionRequest r, CancellationToken _) => new AIExtractionResponse
+                {
+                    Answers = r.Fields.ToDictionary(f => f.Id!, AnswerFor),
+                });
+
+            var result = CreateController(service, new Mock<IAIProfileService>(), enabled: true)
+                .Extract(WithFields(
+                    new TimeExtractionFieldModel { Id = "at", Instructions = "Time of delivery" },
+                    new DateTimeExtractionFieldModel { Id = "when", Instructions = "Delivery moment" },
+                    new DurationExtractionFieldModel { Id = "wait", Instructions = "How long it took", Unit = "Hours" }))
+                .GetAwaiter().GetResult();
+
+            _sent = sent;
+            _response = (ExtractResponseModel)((OkObjectResult)result).Value!;
+        }
+
+        [Fact]
+        public void MapsTheTimeField() => _sent!.Fields[0].ShouldBeOfType<AITimeExtractionField>();
+
+        [Fact]
+        public void MapsTheDateTimeField() => _sent!.Fields[1].ShouldBeOfType<AIDateTimeExtractionField>();
+
+        [Fact]
+        public void MapsAMixedCaseDurationUnit() => ((AIDurationExtractionField)_sent!.Fields[2]).Unit.ShouldBe(AIDurationUnit.Hours);
+
+        [Fact]
+        public void ReturnsTheDurationUnitInLowerCase() => ((DurationExtractionAnswerModel)_response.Answers["wait"]).Unit.ShouldBe("hours");
+
+        [Fact]
+        public void ReturnsTheTimeAnswer() => ((TimeExtractionAnswerModel)_response.Answers["at"]).Value.ShouldBe(new TimeOnly(14, 30));
+
+        [Fact]
+        public void ReturnsTheDateTimeAnswer()
+            => ((DateTimeExtractionAnswerModel)_response.Answers["when"]).Value.ShouldBe(new DateTime(2026, 10, 3, 14, 30, 0));
+    }
+
+    public class GivenAListOfNumbers
+    {
+        [Fact]
+        public void MapsTheNumberItemType() => ItemTypeSent("number").ShouldBe(AIExtractionListItemType.Number);
+    }
+
+    public class GivenAListOfDates
+    {
+        [Fact]
+        public void MapsTheDateItemType() => ItemTypeSent("date").ShouldBe(AIExtractionListItemType.Date);
+    }
+
+    private static AIExtractionListItemType ItemTypeSent(string itemType)
+    {
+        AIExtractionRequest? sent = null;
+        var service = ServiceAnsweringEveryField();
+        service
+            .Setup(x => x.GetExtractionResponseAsync(
+                It.IsAny<Action<AIExtractionBuilder>>(), It.IsAny<AIExtractionRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<Action<AIExtractionBuilder>, AIExtractionRequest, CancellationToken>((_, r, _) => sent = r)
+            .ReturnsAsync(new AIExtractionResponse { Answers = new Dictionary<string, AIExtractionAnswer>() });
+
+        CreateController(service, new Mock<IAIProfileService>(), enabled: true)
+            .Extract(WithFields(new ListExtractionFieldModel { Id = "items", Instructions = "x", ItemType = itemType }))
+            .GetAwaiter().GetResult();
+
+        return ((AIListExtractionField)sent!.Fields[0]).ItemType;
     }
 
     #endregion
@@ -262,13 +343,13 @@ public class ExtractControllerTests
                 .Extract(WithFields()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsAnEmptyNotFound() => _result.ShouldBeOfType<NotFoundResult>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void DoesNotCallTheService() => _service.Invocations.ShouldBeEmpty();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void TheControllerBaseIsGatedOnExtractionForRealHttpTraffic()
             // The shared AICapabilityGateFilter (tested in AICapabilityGateFilterTests) returns the 404
             // before body binding; this pins that ExtractionControllerBase carries it for Extraction.
@@ -293,15 +374,20 @@ public class ExtractControllerTests
             { "invalid field id", WithFields(new TextExtractionFieldModel { Id = "1order", Instructions = "x" }) },
             { "blank instructions", WithFields(new TextExtractionFieldModel { Id = "orderId", Instructions = "  " }) },
             { "decimals above 6", WithFields(new NumberExtractionFieldModel { Id = "amount", Instructions = "x", Decimals = 7 }) },
+            { "unknown duration unit", WithFields(new DurationExtractionFieldModel { Id = "wait", Instructions = "x", Unit = "fortnights" }) },
+            { "numeric duration unit", WithFields(new DurationExtractionFieldModel { Id = "wait", Instructions = "x", Unit = "3" }) },
+            { "flag-combined duration unit", WithFields(new DurationExtractionFieldModel { Id = "wait", Instructions = "x", Unit = "seconds,minutes" }) },
+            { "numeric list item type", WithFields(new ListExtractionFieldModel { Id = "damaged", Instructions = "x", ItemType = "3" }) },
+            { "unknown list item type", WithFields(new ListExtractionFieldModel { Id = "damaged", Instructions = "x", ItemType = "widgets" }) },
         };
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(InvalidRequests))]
         public async Task ReturnsBadRequestProblemDetails(string _, ExtractRequestModel request)
             => ((BadRequestObjectResult)await CreateController(new Mock<IAIExtractionService>(), new Mock<IAIProfileService>(), enabled: true)
                 .Extract(request)).Value.ShouldBeOfType<ProblemDetails>();
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(InvalidRequests))]
         public async Task DoesNotCallTheService(string _, ExtractRequestModel request)
         {
@@ -328,11 +414,11 @@ public class ExtractControllerTests
                 .Extract(SpecRequest(profile: null)).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsBadRequestProblemDetails()
             => ((BadRequestObjectResult)_result).Value.ShouldBeOfType<ProblemDetails>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void NamesTheMissingDefault()
             => ((ProblemDetails)((BadRequestObjectResult)_result).Value!).Detail!
                 .ShouldContain("Default Extraction profile", Case.Insensitive);
@@ -340,7 +426,7 @@ public class ExtractControllerTests
 
     public class GivenANonExtractionProfile
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReturnsBadRequest()
         {
             var profileService = new Mock<IAIProfileService>();
@@ -365,7 +451,7 @@ public class ExtractControllerTests
 
     public class GivenAProfileThatDoesNotExist
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReturnsNotFoundProblemDetails()
         {
             // Same as Decision: a named-but-missing profile is a 404, not a 400.
@@ -398,7 +484,7 @@ public class ExtractControllerTests
                 .Extract(SpecRequest()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReturnsBadRequestProblemDetails()
             => ((BadRequestObjectResult)_result).Value.ShouldBeOfType<ProblemDetails>();
     }

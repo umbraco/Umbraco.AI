@@ -61,41 +61,51 @@ public class ExtractResponseFormattingTests : IAsyncLifetime
 
     // Shouldly's string ShouldContain ignores case by default, which would hide exactly the key-casing bug.
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void TextAnswer_IncludesTheTextDiscriminator()
         => _json.ShouldContain("\"orderId\":{\"$type\":\"text\"", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void NumberAnswer_IncludesTheNumberDiscriminator()
         => _json.ShouldContain("\"amount\":{\"$type\":\"number\"", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void DateAnswer_IncludesTheDateDiscriminator()
         => _json.ShouldContain("\"deliveredOn\":{\"$type\":\"date\"", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void ListAnswer_IncludesTheListDiscriminator()
         => _json.ShouldContain("\"damaged\":{\"$type\":\"list\"", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void MixedCaseFieldId_KeepsItsCasing()
         => _json.ShouldContain("\"deliveredOn\":", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void CapitalisedFieldId_IsNotCamelCased()
         => _json.ShouldContain("\"OrderID\":", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void DateValue_IsAnIsoDate()
         => _json.ShouldContain("\"value\":\"2026-10-03\"", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
+    public void AnswerWithoutConfidence_OmitsConfidence()
+        => JsonDocument.Parse(_json).RootElement.GetProperty("answers").GetProperty("OrderID")
+            .TryGetProperty("confidence", out _).ShouldBeFalse();
+
+    [Fact]
+    public void NotFoundAnswer_WritesTheValueAsNull()
+        => JsonDocument.Parse(_json).RootElement.GetProperty("answers").GetProperty("missing")
+            .GetProperty("value").ValueKind.ShouldBe(JsonValueKind.Null);
+
+    [Fact]
     public void Response_IncludesTheModelId()
         => _json.ShouldContain("\"modelId\":\"@cf/cloudflare/clairic\"", Case.Sensitive);
 
-    [Fact(Skip = "Pending")]
+    [Fact]
     public void Response_IncludesTheUsage()
-        => _json.ShouldContain("\"inputTokenCount\":612", Case.Sensitive);
+        => _json.ShouldContain("\"inputTokens\":612", Case.Sensitive);
 }
 
 // Mirrors ExtractController's [JsonOptionsName]-tagged shape without its auth/versioning/capability-gate
@@ -120,6 +130,7 @@ public class ExtractionResponseFormattingTestController : ControllerBase
                 {
                     ["orderId"] = new AITextExtractionAnswer { Value = "A-88412", Span = new AIExtractionSpan(6, 13), Confidence = 0.9999 },
                     ["OrderID"] = new AITextExtractionAnswer { Value = "A-88412" },
+                    ["missing"] = new AITextExtractionAnswer(),
                     ["amount"] = new AINumberExtractionAnswer { Value = 701.10m, Confidence = 0.9999 },
                     ["deliveredOn"] = new AIDateExtractionAnswer { Value = new DateOnly(2026, 10, 3), Confidence = 0.998 },
                     ["damaged"] = new AIListExtractionAnswer { Values = ["mug", "teapot"], Spans = [], Confidence = 0.99 },
@@ -140,6 +151,7 @@ public class ExtractionResponseFormattingTestController : ControllerBase
             [
                 new TextExtractionFieldModel { Id = "orderId", Instructions = "The order number" },
                 new TextExtractionFieldModel { Id = "OrderID", Instructions = "The order number, again" },
+                new TextExtractionFieldModel { Id = "missing", Instructions = "Something absent" },
                 new NumberExtractionFieldModel { Id = "amount", Instructions = "Amount paid" },
                 new DateExtractionFieldModel { Id = "deliveredOn", Instructions = "Delivery date" },
                 new ListExtractionFieldModel { Id = "damaged", Instructions = "Damaged products", ItemType = "text" },

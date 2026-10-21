@@ -117,7 +117,7 @@ internal sealed partial class CloudflareExtractionClient : IAIExtractionClient
                 node["unit"] = DurationUnitName(duration.Unit);
                 break;
             case AIListExtractionField list:
-                node["items"] = new JsonObject { ["type"] = ListItemTypeName(list.ItemType) };
+                node["items"] = ListItemTypeName(list.ItemType);
                 break;
         }
 
@@ -296,7 +296,7 @@ internal sealed partial class CloudflareExtractionClient : IAIExtractionClient
             AITextExtractionField => new AITextExtractionAnswer
             {
                 Value = ReadString(value),
-                Span = ReadSpan(answer, "span"),
+                Span = IsNull(value) ? null : ReadSpan(answer, "span"),
                 Confidence = confidence,
                 NullProbability = nullProbability,
                 RawRepresentation = answer,
@@ -340,7 +340,7 @@ internal sealed partial class CloudflareExtractionClient : IAIExtractionClient
             AIListExtractionField => new AIListExtractionAnswer
             {
                 Values = ReadList(value),
-                Spans = ReadSpans(answer, "spans"),
+                Spans = IsNull(value) ? [] : ReadSpans(answer, "spans"),
                 Confidence = confidence,
                 NullProbability = nullProbability,
                 RawRepresentation = answer,

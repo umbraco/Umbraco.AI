@@ -40,3 +40,15 @@
   on; spec's settings theory split so Core-owned rules go through Core (memory gotcha). Review
   round 1 FAIL (action-owned rules and time/datetime formats untested; unit parsing accepted "3");
   fixed red-first; round 2 PASS. Automate 274/274. Core floor deferred to T21. Smoke: T18.
+- **T9** - live wire against real Cloudflare on the v18 demo site (flag on). Connection with
+  `$Umbraco:AI:Variables:CloudflareAccountID` + `$Umbraco:AI:Secrets:CloudflareApiKey`: save OK,
+  connection test passed (model search), models list shows Clairic. Extraction profile created and
+  set as default via `PUT settings`. First live extract got 400 `[5006] enum [object Object] not in
+  text,number,date at '/damaged/items'`: list `items` must be a plain string. Also a not-found answer
+  carried Clairic's guessed span. Both fixed red-first (Cloudflare 126/126; review round 1 FAIL on a
+  two-assertion test, split). Re-run: 200, all 7 types correct (Danish "701,10 kr" → 701.1, list
+  "mug","teapot" with spans, not-found has no span), ~0.2s, 736 input tokens. Alias profile → 200,
+  unknown profile → 404, duplicate id → 400 "Duplicate field id 'orderId'.". Audit log: Extraction
+  Succeeded with 711 tokens, and the rejected call logged as Failed with a readable message.
+  Real shapes: bare response, `model` "clairic", datetime "…T09:00:00.000Z". The flag-off check
+  (404, capability hidden) is folded into the flag-off restart in T18.

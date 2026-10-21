@@ -102,7 +102,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   survive.
   depends-on: T3.
 
-- [ ] **T9** - **wire: Cloudflare + Extraction API into the demo site.** story: EX-1, EX-2 (AC7,
+- [x] **T9** - **wire: Cloudflare + Extraction API into the demo site.** story: EX-1, EX-2 (AC7,
   AC22), EX-3 (AC4, AC9), EX-4 (AC1), EX-6, EX-8 (AC1, AC2). With the flag on and a real
   Cloudflare account: create a connection (test passes), create an Extraction profile, set it as
   default via `PUT settings`, then extract all seven field types via `IAIExtractionService` and via

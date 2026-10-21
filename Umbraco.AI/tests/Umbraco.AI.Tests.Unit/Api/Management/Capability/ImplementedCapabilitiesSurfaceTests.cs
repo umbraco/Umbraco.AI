@@ -70,6 +70,7 @@ public class ImplementedCapabilitiesSurfaceTests
         "IAISpeechToTextCapability" => AICapability.SpeechToText,
         "IAIImageGeneratorCapability" => AICapability.ImageGeneration,
         "IAIDecisionCapability" => AICapability.Decision,
+        "IAIExtractionCapability" => AICapability.Extraction,
         _ => throw new NotSupportedException(
             $"{capabilityInterface.Name} is new here. Add its AICapability mapping above, and make sure "
                 + "EnabledCapabilitiesController.ImplementedCapabilities lists that AICapability value if the "

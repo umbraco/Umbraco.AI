@@ -44,7 +44,7 @@ public class ExtractionNotificationTests
             harness.Service.ExtractAsync(OrderNumber(), State).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void RunsTheHandlerBeforeTheProviderCall() => _order.ShouldBe(["executing", "provider"]);
     }
 
@@ -58,13 +58,13 @@ public class ExtractionNotificationTests
             _ = _harness.Service.ExtractAsync(OrderNumber(), State).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void PublishesTheExecutedNotificationOnce()
             => _harness.EventAggregatorMock.Verify(
                 x => x.PublishAsync(It.IsAny<AIExtractionExecutedNotification>(), It.IsAny<CancellationToken>()),
                 Times.Once);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReportsTheCallAsSuccessful()
             => _harness.EventAggregatorMock.Verify(
                 x => x.PublishAsync(It.Is<AIExtractionExecutedNotification>(n => n.IsSuccess), It.IsAny<CancellationToken>()),
@@ -89,7 +89,7 @@ public class ExtractionNotificationTests
                 .Returns(Task.CompletedTask);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task NeverCallsTheProvider()
         {
             await Record.ExceptionAsync(() => _harness.Service.ExtractAsync(OrderNumber(), State));
@@ -97,7 +97,7 @@ public class ExtractionNotificationTests
             _client.ReceivedRequests.ShouldBeEmpty();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsInvalidOperationException()
         {
             var act = () => _harness.Service.ExtractAsync(OrderNumber(), State);

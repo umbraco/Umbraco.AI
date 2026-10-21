@@ -55,10 +55,10 @@ public class ExtractionTelemetryTests
             }
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void EmitsExactlyOneSpan() => _spans.Count.ShouldBe(1);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void TagsTheSpanWithTheSharedTraceTags()
             => _spans.Single().GetTagItem(AITelemetry.Tags.ProfileAlias).ShouldBe("cloudflare-clairic");
     }

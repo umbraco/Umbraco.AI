@@ -41,13 +41,13 @@ public class ExtractionUsageAndAuditTests
             _harness.Client.GetResponseAsync(OrderNumberRequest()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void WritesExactlyOneUsageRecord()
             => _harness.UsageRecordingServiceMock.Verify(
                 x => x.QueueRecordUsageAsync(It.IsAny<AIUsageRecord>(), It.IsAny<CancellationToken>()),
                 Times.Once);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void RecordsTheUsageUnderExtraction()
             => _harness.UsageRecordFactoryMock.Verify(
                 x => x.Create(
@@ -55,7 +55,7 @@ public class ExtractionUsageAndAuditTests
                     It.IsAny<AIUsageRecordResult>()),
                 Times.Once);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void RecordsThe612InputTokens()
             => _harness.UsageRecordFactoryMock.Verify(
                 x => x.Create(
@@ -63,7 +63,7 @@ public class ExtractionUsageAndAuditTests
                     It.Is<AIUsageRecordResult>(r => r.Usage != null && r.Usage.InputTokenCount == 612)),
                 Times.Once);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void WritesExactlyOneAuditEntryUnderExtraction()
             => _harness.AuditLogFactoryMock.Verify(
                 x => x.Create(
@@ -72,7 +72,7 @@ public class ExtractionUsageAndAuditTests
                     It.IsAny<Guid?>()),
                 Times.Once);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void CompletesTheAuditEntry()
             => _harness.AuditLogServiceMock.Verify(
                 x => x.QueueCompleteAuditLogAsync(
@@ -96,14 +96,14 @@ public class ExtractionUsageAndAuditTests
             Record.ExceptionAsync(() => _harness.Client.GetResponseAsync(OrderNumberRequest())).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MarksTheAuditEntryAsFailed()
             => _harness.AuditLogServiceMock.Verify(
                 x => x.QueueRecordAuditLogFailureAsync(
                     It.IsAny<AIAuditLog>(), It.IsAny<AIAuditPrompt?>(), It.IsAny<Exception>(), It.IsAny<CancellationToken>()),
                 Times.Once);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void NeverMarksTheAuditEntryAsCompleted()
             => _harness.AuditLogServiceMock.Verify(
                 x => x.QueueCompleteAuditLogAsync(
@@ -126,7 +126,7 @@ public class ExtractionUsageAndAuditTests
         }
 
         /// <summary>The answer check sits inside tracking, so a bad answer is audited as a failed call.</summary>
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MarksTheAuditEntryAsFailed()
             => _harness.AuditLogServiceMock.Verify(
                 x => x.QueueRecordAuditLogFailureAsync(

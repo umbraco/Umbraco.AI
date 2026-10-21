@@ -8,3 +8,7 @@
   review. Review round 1 FAIL (service-level specs for AC9, AC33-35 deleted instead of left for
   T3); restored, plus list/duration checker guards and extra validation cases. Round 2 PASS. Unit
   2051/2051, integration 32/32. Smoke: no entry point yet, live check in T9.
+- **T3** - factory, middleware, notifications, scoped clients, service, builder, defaults, DI, plus
+  the `EnabledCapabilities` entry pulled from T6. 11 spec files on (167 tests); fail-first shown by
+  mutation (40 failures). Reviewer PASS first round; two doc/helper suggestions applied. Unit
+  2144/2144, integration 34/34; Deploy and Automate build. Smoke: DI resolution tests; live in T9.

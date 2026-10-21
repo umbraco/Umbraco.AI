@@ -1,25 +1,10 @@
 #pragma warning disable UMBRACOAI_EXTRACTION // Exercises the experimental extraction capability surface
 
-// EX-3 (AC4, AC10): flag on and off through the real extraction service. Moves in with T3.
+// EX-3 (AC4, AC10): flag on and off through the real extraction service.
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
-using Umbraco.AI.Core.Connections;
-using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Extraction;
-using Umbraco.AI.Core.Models;
-using Umbraco.AI.Core.Profiles;
-using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Settings;
-using Umbraco.AI.Core.Versioning;
-using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
-using Umbraco.AI.Web.Api.Management.Common.Filters;
-using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Tests.Unit.Extraction;
 
@@ -40,7 +25,7 @@ public class ExtractionExperimentalFlagPipelineTests
 
         public GivenTheFlagOnAndAnExtractionCall() => _harness = new ExtractionPipelineHarness(_client, extractionEnabled: true);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReachesTheProvider()
         {
             await _harness.Service.ExtractAsync(ExtractionPipelineHarness.ProfileAlias, OrderNumber(), "Order A-88412");
@@ -56,7 +41,7 @@ public class ExtractionExperimentalFlagPipelineTests
 
         public GivenTheFlagOffAndAnExtractionCall() => _harness = new ExtractionPipelineHarness(_client, extractionEnabled: false);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsInvalidOperationException()
         {
             var act = () => _harness.Service.ExtractAsync(ExtractionPipelineHarness.ProfileAlias, OrderNumber(), "Order A-88412");
@@ -64,7 +49,7 @@ public class ExtractionExperimentalFlagPipelineTests
             await Should.ThrowAsync<InvalidOperationException>(act);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task NeverReachesTheProvider()
         {
             await Record.ExceptionAsync(

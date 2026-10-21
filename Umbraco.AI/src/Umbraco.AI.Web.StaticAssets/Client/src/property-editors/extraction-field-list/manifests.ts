@@ -10,7 +10,6 @@ const propertyEditorUi: ManifestPropertyEditorUi = {
         label: "AI Extraction Field List",
         icon: "icon-filter",
         group: "Umbraco AI",
-        keywords: ["ai", "umbraco ai", "extraction", "extract", "fields", "automate"],
         settings: {
             properties: [
                 {

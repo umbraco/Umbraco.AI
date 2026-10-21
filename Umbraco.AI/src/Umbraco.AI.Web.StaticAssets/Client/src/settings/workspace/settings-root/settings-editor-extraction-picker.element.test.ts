@@ -1,7 +1,7 @@
 // EX-4 — Set a default Extraction profile (AC2-AC5)
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import { UmbElementControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbObjectState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
@@ -47,12 +47,16 @@ function provideSettingsContext(host: UmbControllerHost, model: Partial<UaiSetti
     return { handleCommand };
 }
 
+const TEST_HOST_TAG = "uai-settings-extraction-picker-test-host";
+if (!customElements.get(TEST_HOST_TAG)) {
+    customElements.define(TEST_HOST_TAG, class extends UmbControllerHostElementMixin(HTMLElement) {});
+}
+
 async function renderEditor(enabled: string[], model: Partial<UaiSettingsModel> = {}) {
     getEnabledCapabilities.mockResolvedValue({ data: enabled });
-    const wrapper = document.createElement("div");
+    const wrapper = document.createElement(TEST_HOST_TAG);
     document.body.appendChild(wrapper);
-    const host = new UmbElementControllerHost(wrapper);
-    host.hostConnected();
+    const host = wrapper as unknown as UmbControllerHost;
     const context = provideSettingsContext(host, model);
     const el = document.createElement("uai-settings-editor") as UaiSettingsEditorElement;
     wrapper.appendChild(el);

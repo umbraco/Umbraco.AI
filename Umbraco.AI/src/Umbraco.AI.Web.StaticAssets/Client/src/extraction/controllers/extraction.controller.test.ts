@@ -9,7 +9,7 @@
 // The repository receives one request object carrying state, fields, referenceDate,
 // profileIdOrAlias and signal, like UaiDecisionRepository.ask.
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UmbElementControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
 // Stub at the real boundary: the repository the public controller delegates to.
@@ -23,12 +23,15 @@ vi.mock("../repository/extraction.repository.js", () => ({
 import { UaiExtractionController } from "./extraction.controller.js";
 import type { UaiExtractionRequest, UaiExtractionResult } from "../types.js";
 
+const TEST_HOST_TAG = "uai-extraction-controller-test-host";
+if (!customElements.get(TEST_HOST_TAG)) {
+    customElements.define(TEST_HOST_TAG, class extends UmbControllerHostElementMixin(HTMLElement) {});
+}
+
 function createHost(): UmbControllerHost {
-    const element = document.createElement("div");
+    const element = document.createElement(TEST_HOST_TAG);
     document.body.appendChild(element);
-    const host = new UmbElementControllerHost(element);
-    host.hostConnected();
-    return host;
+    return element as unknown as UmbControllerHost;
 }
 
 const orderRequest: UaiExtractionRequest = {

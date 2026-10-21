@@ -10,7 +10,7 @@
 // Strings use termOrDefault, so happy-dom renders the English defaults asserted below.
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import { UmbElementControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
@@ -76,11 +76,15 @@ function provideModalManager(host: UmbControllerHost) {
     };
 }
 
+const TEST_HOST_TAG = "uai-extraction-field-list-test-host";
+if (!customElements.get(TEST_HOST_TAG)) {
+    customElements.define(TEST_HOST_TAG, class extends UmbControllerHostElementMixin(HTMLElement) {});
+}
+
 async function render(value?: Field[]) {
-    const wrapper = document.createElement("div");
+    const wrapper = document.createElement(TEST_HOST_TAG);
     document.body.appendChild(wrapper);
-    const host = new UmbElementControllerHost(wrapper);
-    host.hostConnected();
+    const host = wrapper as unknown as UmbControllerHost;
     const modals = provideModalManager(host);
     const el = document.createElement(
         "uai-property-editor-ui-extraction-field-list",

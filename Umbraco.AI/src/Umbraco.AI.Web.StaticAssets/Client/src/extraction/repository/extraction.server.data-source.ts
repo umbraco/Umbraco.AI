@@ -1,7 +1,10 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { ExtractionService } from "../../api/sdk.gen.js";
-import type { ExtractionAnswerModel, ExtractionFieldModel, ExtractResponseModel } from "../../api/types.gen.js";
+// On v17, the generated `ExtractionFieldModel`/`ExtractionAnswerModel` are plain base types with no
+// `$type` discriminator, so they can't be narrowed by kind. This uses the concrete per-kind members
+// (as carried by `ExtractRequestModel`/`ExtractResponseModel`) instead.
+import type { ExtractRequestModel, ExtractResponseModel } from "../../api/types.gen.js";
 import type {
     UaiExtractionAnswer,
     UaiExtractionField,
@@ -9,7 +12,10 @@ import type {
     UaiExtractionServerRequest,
 } from "../types.js";
 
-function toFieldModel(field: UaiExtractionField): ExtractionFieldModel {
+type ExtractionFieldWireModel = ExtractRequestModel["fields"][number];
+type ExtractionAnswerWireModel = ExtractResponseModel["answers"][string];
+
+function toFieldModel(field: UaiExtractionField): ExtractionFieldWireModel {
     switch (field.kind) {
         case "text":
         case "date":
@@ -55,7 +61,7 @@ function toOptionalMetrics(answer: { confidence?: number | null; nullProbability
     };
 }
 
-function toAnswer(answer: ExtractionAnswerModel): UaiExtractionAnswer | Error {
+function toAnswer(answer: ExtractionAnswerWireModel): UaiExtractionAnswer | Error {
     switch (answer.$type) {
         case "text":
             return {

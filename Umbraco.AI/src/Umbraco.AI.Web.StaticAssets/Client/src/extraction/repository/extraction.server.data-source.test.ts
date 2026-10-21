@@ -2,7 +2,7 @@
 //
 // Stubs the generated SDK (ExtractionService.extract).
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UmbElementControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
 // Stub at the real boundary: the generated OpenAPI SDK call.
@@ -16,12 +16,15 @@ vi.mock("@umbraco-cms/backoffice/resources", () => ({
 
 import { UaiExtractionServerDataSource } from "./extraction.server.data-source.js";
 
+const TEST_HOST_TAG = "uai-extraction-data-source-test-host";
+if (!customElements.get(TEST_HOST_TAG)) {
+    customElements.define(TEST_HOST_TAG, class extends UmbControllerHostElementMixin(HTMLElement) {});
+}
+
 function createHost(): UmbControllerHost {
-    const element = document.createElement("div");
+    const element = document.createElement(TEST_HOST_TAG);
     document.body.appendChild(element);
-    const host = new UmbElementControllerHost(element);
-    host.hostConnected();
-    return host;
+    return element as unknown as UmbControllerHost;
 }
 
 type ExtractResult = Awaited<ReturnType<UaiExtractionServerDataSource["extract"]>>;

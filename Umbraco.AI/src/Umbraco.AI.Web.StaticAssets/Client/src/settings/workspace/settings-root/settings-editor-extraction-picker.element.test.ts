@@ -79,11 +79,11 @@ describe("Feature: default Extraction profile picker", () => {
             ({ el } = await renderEditor(["Chat", "Embedding", "Extraction"]));
         });
 
-        it.skip("renders a default Extraction profile picker", () => {
+        it("renders a default Extraction profile picker", () => {
             expect(extractionPicker(el)).not.toBeNull();
         });
 
-        it.skip("filters the picker to Extraction profiles", () => {
+        it("filters the picker to Extraction profiles", () => {
             expect(extractionPicker(el)?.getAttribute("capability")).toBe("Extraction");
         });
     });
@@ -91,9 +91,9 @@ describe("Feature: default Extraction profile picker", () => {
     describe("Scenario: the row is labelled", () => {
         // The editor uses localize.term, which happy-dom renders as the raw key, so the label is
         // asserted at its source (like lang/en.test.ts does for capability labels).
-        it.skip('labels it "Default Extraction profile"', () => {
+        it('labels it "Default Extraction Profile"', () => {
             expect((en.uaiSettings as Record<string, unknown>).defaultExtractionProfileLabel).toBe(
-                "Default Extraction profile",
+                "Default Extraction Profile",
             );
         });
     });
@@ -105,7 +105,7 @@ describe("Feature: default Extraction profile picker", () => {
             ({ el } = await renderEditor(["Chat", "Extraction"], { defaultExtractionProfileId: null }));
         });
 
-        it.skip("starts the picker empty", () => {
+        it("starts the picker empty", () => {
             expect(extractionPicker(el)?.value).toBeUndefined();
         });
     });
@@ -119,7 +119,7 @@ describe("Feature: default Extraction profile picker", () => {
             }));
         });
 
-        it.skip("shows the stored profile in the picker", () => {
+        it("shows the stored profile in the picker", () => {
             expect(extractionPicker(el)?.value).toBe("44444444-4444-4444-4444-444444444444");
         });
     });
@@ -135,7 +135,7 @@ describe("Feature: default Extraction profile picker", () => {
             picker.dispatchEvent(new UmbChangeEvent());
         });
 
-        it.skip("updates defaultExtractionProfileId on the workspace model", () => {
+        it("updates defaultExtractionProfileId on the workspace model", () => {
             const receiver: Partial<UaiSettingsModel> = {};
             handleCommand.mock.calls[0][0].execute(receiver);
             expect(receiver.defaultExtractionProfileId).toBe("44444444-4444-4444-4444-444444444444");
@@ -152,7 +152,7 @@ describe("Feature: default Extraction profile picker", () => {
                 }));
             });
 
-            it.skip("does not render the Extraction picker", () => {
+            it("does not render the Extraction picker", () => {
                 expect(extractionPicker(el)).toBeNull();
             });
         });

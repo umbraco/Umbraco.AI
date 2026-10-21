@@ -10,19 +10,19 @@ import { getCapabilityIcon } from "./capability-icon.utils.js";
  */
 describe("Feature: Extraction capability label and icon", () => {
     describe("Scenario: the Extraction capability is listed", () => {
-        it.skip('labels it "Extraction"', () => {
+        it('labels it "Extraction"', () => {
             expect((en.uaiCapabilities as Record<string, string>).extraction).toBe("Extraction");
         });
 
-        it.skip("gives it the icon-filter icon", () => {
+        it("gives it the icon-filter icon", () => {
             expect(getCapabilityIcon("extraction")).toBe("icon-filter");
         });
 
-        it.skip("matches the icon whatever the casing of the capability name", () => {
+        it("matches the icon whatever the casing of the capability name", () => {
             expect(getCapabilityIcon("Extraction")).toBe("icon-filter");
         });
 
-        it.skip("keeps every known capability's icon distinct", () => {
+        it("keeps every known capability's icon distinct", () => {
             const capabilities = [
                 "chat",
                 "embedding",

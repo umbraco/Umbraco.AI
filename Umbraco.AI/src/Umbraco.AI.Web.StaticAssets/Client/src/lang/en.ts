@@ -42,6 +42,7 @@ export default {
         speechtotext: "Speech to Text",
         imagegeneration: "Image Generation",
         decision: "Decision",
+        extraction: "Extraction",
     },
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",
@@ -78,6 +79,9 @@ export default {
         defaultDecisionProfileLabel: "Default Decision Profile",
         defaultDecisionProfileDescription:
             "The default profile to use for decision requests when no profile is specified in API calls.",
+        defaultExtractionProfileLabel: "Default Extraction Profile",
+        defaultExtractionProfileDescription:
+            "The default profile to use for extraction requests when no profile is specified in API calls.",
     },
     uaiContext: {
         selectContext: "Select AI Context",

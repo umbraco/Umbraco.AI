@@ -125,10 +125,10 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: `npm run build:core` passes, including the api-extractor rollup.
   depends-on: T10. parallel-group: C
 
-- [ ] **T12** - story: EX-4 (AC2-AC6), EX-5 (AC1, AC2). Add `uaiCapabilities_extraction` +
+- [x] **T12** - story: EX-4 (AC2-AC6), EX-5 (AC1, AC2). Add `uaiCapabilities_extraction` +
   `icon-filter`, `UaiExtractionProfileSettings` + type guard, both mapper directions, the
   `case "extraction"` in `profile-details-workspace-view.element.ts`, the "no settings" element,
-  and the "Default Extraction profile" picker on the Settings screen (shown only when enabled;
+  and the "Default Extraction Profile" picker on the Settings screen (shown only when enabled;
   hidden value preserved on save because `PUT settings` is full-replace).
   Acceptance: `npm run build:core` passes.
   depends-on: T10. parallel-group: C

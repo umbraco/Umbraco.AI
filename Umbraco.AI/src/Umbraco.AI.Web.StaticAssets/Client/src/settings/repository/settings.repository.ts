@@ -19,6 +19,7 @@ export class UaiSettingsRepository {
             defaultSpeechToTextProfileId: data?.defaultSpeechToTextProfileId ?? null,
             defaultImageGenerationProfileId: data?.defaultImageGenerationProfileId ?? null,
             defaultDecisionProfileId: data?.defaultDecisionProfileId ?? null,
+            defaultExtractionProfileId: data?.defaultExtractionProfileId ?? null,
             classifierChatProfileId: data?.classifierChatProfileId ?? null,
             disclosureNoticeMode: toDisclosureNoticeMode(data?.disclosureNoticeMode),
         };
@@ -32,6 +33,7 @@ export class UaiSettingsRepository {
                 defaultSpeechToTextProfileId: model.defaultSpeechToTextProfileId ?? undefined,
                 defaultImageGenerationProfileId: model.defaultImageGenerationProfileId ?? undefined,
                 defaultDecisionProfileId: model.defaultDecisionProfileId ?? undefined,
+                defaultExtractionProfileId: model.defaultExtractionProfileId ?? undefined,
                 classifierChatProfileId: model.classifierChatProfileId ?? undefined,
                 disclosureNoticeMode: model.disclosureNoticeMode,
             },
@@ -42,6 +44,7 @@ export class UaiSettingsRepository {
             defaultSpeechToTextProfileId: data?.defaultSpeechToTextProfileId ?? null,
             defaultImageGenerationProfileId: data?.defaultImageGenerationProfileId ?? null,
             defaultDecisionProfileId: data?.defaultDecisionProfileId ?? null,
+            defaultExtractionProfileId: data?.defaultExtractionProfileId ?? null,
             classifierChatProfileId: data?.classifierChatProfileId ?? null,
             disclosureNoticeMode: toDisclosureNoticeMode(data?.disclosureNoticeMode),
         };

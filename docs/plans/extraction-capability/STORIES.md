@@ -372,7 +372,7 @@ so that code and Automate steps can extract without naming a profile.
 - AC2: picker shown when on
   Given the flag on
   When I open the AI Settings screen
-  Then there is a "Default Extraction profile" picker
+  Then there is a "Default Extraction Profile" picker
 - AC3: picker only offers Extraction profiles
   Given a Chat profile and an Extraction profile
   When I open the picker

@@ -126,7 +126,7 @@ All in `Umbraco.AI.Web.StaticAssets` (`@umbraco-ai/core`) unless noted.
 - **Capability label and icon:** `uaiCapabilities.extraction` = "Extraction", icon `icon-filter`.
   It shows up wherever capabilities are listed (connection capabilities, profile create, usage
   dashboards).
-- **Settings screen:** a "Default Extraction profile" picker row (picker filtered to Extraction
+- **Settings screen:** a "Default Extraction Profile" picker row (picker filtered to Extraction
   profiles), shown only when the flag is on. It saves to `defaultExtractionProfileId`.
 - **Cloudflare connection editor:** generated from the provider's settings fields. No custom UI.
 

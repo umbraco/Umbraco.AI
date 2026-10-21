@@ -85,7 +85,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: `DefaultExtractionProfileSettingsTests` green.
   depends-on: T3. parallel-group: B
 
-- [ ] **T7** - story: EX-5 (AC3 backend). Add `ExtractionProfileSettingsModel`
+- [x] **T7** - story: EX-5 (AC3 backend). Add `ExtractionProfileSettingsModel`
   (`$type: "extraction"`) and both directions in `ProfileMapDefinition`.
   Acceptance: profile mapping spec green.
   depends-on: T1. parallel-group: B

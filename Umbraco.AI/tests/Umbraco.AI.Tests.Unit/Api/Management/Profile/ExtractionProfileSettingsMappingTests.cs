@@ -48,20 +48,20 @@ public class ExtractionProfileSettingsMappingTests
             _response = CreateMapper().Map<ProfileResponseModel>(profile)!;
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsToAnExtractionSettingsModel() => _response.Settings.ShouldBeOfType<ExtractionProfileSettingsModel>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SerializesWithTheExtractionDiscriminator()
             => JsonSerializer.Serialize(_response.Settings, Options).ShouldContain("\"$type\":\"extraction\"");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheCapabilityName() => _response.Capability.ShouldBe("Extraction");
     }
 
     public class GivenACreateRequestForAnExtractionProfileWithNoSettings
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsToNonNullExtractionSettings()
         {
             var profile = CreateMapper().Map<AIProfile>(new CreateProfileRequestModel
@@ -96,22 +96,22 @@ public class ExtractionProfileSettingsMappingTests
             _reopened = mapper.Map<ProfileResponseModel>(saved)!;
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void KeepsItsConnection() => _reopened.ConnectionId.ShouldBe(_connectionId);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void KeepsItsProvider() => _reopened.Model!.ProviderId.ShouldBe("cloudflare");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void KeepsItsModel() => _reopened.Model!.ModelId.ShouldBe("@cf/cloudflare/clairic");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void KeepsItsEmptyExtractionSettings() => _reopened.Settings.ShouldBeOfType<ExtractionProfileSettingsModel>();
     }
 
     public class GivenADollarTypeExtractionSettingsPayload
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void DeserializesToAnExtractionProfileSettingsModel()
         {
             const string json = """{"$type":"extraction"}""";

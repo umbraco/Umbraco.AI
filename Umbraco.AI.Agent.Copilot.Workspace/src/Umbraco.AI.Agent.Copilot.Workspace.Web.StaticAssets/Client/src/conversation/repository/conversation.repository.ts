@@ -7,6 +7,7 @@ import { toConversationDetailModel, toUpdateConversationRequestModel } from "../
 import type {
     ConversationResponseModel,
     CreateConversationRequestModel,
+    ShareConversationRequestModel,
     UaiConversationCollectionFilter,
     UpdateConversationRequestModel,
 } from "../types.js";
@@ -89,6 +90,51 @@ export class UaiConversationRepository extends UmbRepositoryBase {
         return this.update(conversation.id, { ...toUpdateModel(conversation), projectId });
     }
 
+    /**
+     * Shares (or re-shares) the conversation with one recipient. The wire request still carries
+     * `recipientUserKeys` as an array — kept for a future bulk entry point, see SPEC.md — but this
+     * method only ever sends the one recipient passed in.
+     */
+    async share(
+        conversation: ConversationResponseModel,
+        recipientUserKey: string,
+        scopeMode: ShareConversationRequestModel["scopeMode"],
+    ) {
+        const result = await this.#source.share(conversation.id, {
+            recipientUserKeys: [recipientUserKey],
+            scopeMode,
+        });
+        if (!result.error) {
+            // Dispatched (and awaited, same timing reason as `update`) because sharing flips the
+            // owner's `hasActiveShares` badge on the sidebar's conversation list, which otherwise
+            // has no way to know this conversation's share state just changed.
+            await dispatchActionEvent(this, UaiEntityActionEvent.updated(conversation.id, UAI_CONVERSATION_ENTITY_TYPE));
+        }
+        return result;
+    }
+
+    getShares(conversation: ConversationResponseModel) {
+        return this.#source.getShares(conversation.id);
+    }
+
+    async revokeShare(conversation: ConversationResponseModel, userKey: string) {
+        const result = await this.#source.revokeShare(conversation.id, userKey);
+        if (!result.error) {
+            // Dispatched (and awaited, same timing reason as `update`) because revoking the last share
+            // flips the owner's `hasActiveShares` badge back off, which otherwise has no way to know
+            // this conversation's share state just changed.
+            await dispatchActionEvent(this, UaiEntityActionEvent.updated(conversation.id, UAI_CONVERSATION_ENTITY_TYPE));
+        }
+        return result;
+    }
+
+    requestSharedWithMe(skip?: number, take?: number, search?: string) {
+        return this.#source.getSharedWithMe(skip, take, search);
+    }
+
+    requestSharedView(id: string) {
+        return this.#source.getSharedView(id);
+    }
 }
 
 /**

@@ -1,14 +1,24 @@
 import type {
     ContextResourceModel,
     ConversationResponseModel,
+    ConversationShareResponseModel,
     CreateConversationRequestModel,
+    PagedSharedConversationSummaryResponseModel,
+    ShareConversationRequestModel,
+    SharedConversationResponseModel,
+    SharedConversationSummaryResponseModel,
     UpdateConversationRequestModel,
 } from "../api/types.gen.js";
 
 export type {
     ContextResourceModel,
     ConversationResponseModel,
+    ConversationShareResponseModel,
     CreateConversationRequestModel,
+    PagedSharedConversationSummaryResponseModel,
+    ShareConversationRequestModel,
+    SharedConversationResponseModel,
+    SharedConversationSummaryResponseModel,
     UpdateConversationRequestModel,
 };
 

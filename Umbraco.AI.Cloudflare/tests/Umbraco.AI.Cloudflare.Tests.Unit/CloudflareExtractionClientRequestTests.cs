@@ -171,9 +171,10 @@ public class CloudflareExtractionClientRequestTests
         }
 
         [Fact]
-        public void SendsTheItemTypeUnderItems()
+        public void SendsTheItemTypeAsAPlainStringUnderItems()
         {
-            _field.GetProperty("items").GetProperty("type").GetString().ShouldBe("date");
+            // Verified against the live API: items is a plain string; an object is rejected with a 400.
+            _field.GetProperty("items").GetString().ShouldBe("date");
         }
     }
 

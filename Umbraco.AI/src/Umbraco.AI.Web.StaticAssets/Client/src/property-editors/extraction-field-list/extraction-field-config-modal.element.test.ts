@@ -84,6 +84,15 @@ describe("Feature: extraction field config modal", () => {
         document.body.innerHTML = "";
     });
 
+    describe("Scenario: the alias field explains how to reference the value", () => {
+        it("shows the literal binding example in the alias description", async () => {
+            const { el } = await openModal({ kind: "text" });
+            const layout = el.shadowRoot!.querySelector("umb-property-layout")!;
+            const example = layout.querySelector('[slot="description"] code');
+            expect(example?.textContent).toBe("${ steps.<stepAlias>.<alias>.value }");
+        });
+    });
+
     describe("Scenario: a Number field is added", () => {
         let el: UaiExtractionFieldConfigModalElement;
 

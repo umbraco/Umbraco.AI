@@ -140,7 +140,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: `npm run build:core` passes.
   depends-on: T10. parallel-group: C
 
-- [ ] **T14** - **wire: frontend into the running backoffice.** story: EX-4 (AC2-AC6), EX-5,
+- [x] **T14** - **wire: frontend into the running backoffice.** story: EX-4 (AC2-AC6), EX-5,
   EX-7 (AC2), EX-9. In a browser on the demo site: create a Cloudflare connection and an
   Extraction profile through the UI, reopen the profile, set the default in Settings, and call
   `UaiExtractionController.extract` from the console. Restart with the flag off and confirm the

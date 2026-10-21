@@ -407,8 +407,8 @@ export default {
     uaiExtractionFieldConfigModal: {
         headlineAdd: (type: string) => `Add field: ${type}`,
         headlineEdit: (type: string) => `Edit field: ${type}`,
-        aliasDescription:
-            "Used to reach this value in later steps, e.g. ${steps.extract.amount.value}. Letters, numbers and _ only.",
+        aliasDescription: "Used to reach this value in later steps. Letters, numbers and _ only.",
+        aliasExampleLabel: "Example:",
         instructionsLabel: "Instructions",
         instructionsDescription: "What the field should contain. Be specific about what you mean.",
         decimalsLabel: "Decimal places",

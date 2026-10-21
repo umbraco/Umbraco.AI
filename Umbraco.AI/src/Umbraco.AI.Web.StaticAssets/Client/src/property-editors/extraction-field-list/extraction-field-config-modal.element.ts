@@ -225,9 +225,17 @@ export class UaiExtractionFieldConfigModalElement extends UmbModalBaseElement<
                             label=${aliasLabel}
                             description=${this.localize.termOrDefault(
                                 "uaiExtractionFieldConfigModal_aliasDescription",
-                                "Used to reach this value in later steps, e.g. ${steps.extract.amount.value}. Letters, numbers and _ only.",
+                                "Used to reach this value in later steps. Letters, numbers and _ only.",
                             )}
                         >
+                            <!-- The description attribute is rendered as UFM, which swallows "{...}", so the binding example lives in the slot. -->
+                            <div slot="description" class="alias-example">
+                                ${this.localize.termOrDefault(
+                                    "uaiExtractionFieldConfigModal_aliasExampleLabel",
+                                    "Example:",
+                                )}
+                                <code>\${ steps.&lt;stepAlias&gt;.&lt;alias&gt;.value }</code>
+                            </div>
                             <div slot="editor">
                                 <uui-input
                                     id="alias"
@@ -442,6 +450,10 @@ export class UaiExtractionFieldConfigModalElement extends UmbModalBaseElement<
 
             uui-input.narrow {
                 width: 200px;
+            }
+
+            .alias-example {
+                color: var(--uui-color-text-alt);
             }
 
             .alias-error,

@@ -69,3 +69,25 @@
   run red first; first run red only on a test-env stub). Review round 1 FAIL (untranslated item
   type inside a phrase; duration/list saved shape and decimals range untested; alias rule change
   not logged); fixed. Round 2 PASS. Vitest 240/240, `build:core` passes. Smoke: T14.
+- **T14** - **wire, browser, v18 demo site (flag on).** First found the branch's frontends had never
+  been built and the site predated the core bundle, so AI was missing from the backoffice; fixed by
+  `npm run build` + restart (local only, nothing to commit). Then, live:
+  - AI › Profiles: "Cloudflare Clairic" row shows the Extraction tag
+    ([screenshot](./screenshots/profiles-list.png)).
+  - AI › Profiles › Cloudflare Clairic: Cloudflare connection, Clairic model, "This capability has no
+    additional settings" ([screenshot](./screenshots/extraction-profile.png)).
+  - AI › Settings: "Default Extraction Profile" row with the filter icon shows Cloudflare Clairic
+    ([screenshot](./screenshots/settings-extraction-default.png)). Save keeps the stored id.
+  - Console: `new UaiExtractionController(host).extract(...)` returned typed answers live; Danish
+    "1.250,00 kr" → 1250, date and list correct, 356 tokens.
+  - Automation › Extraction demo › Support ticket triage › Extract Values step (double-click node):
+    settings, field list, field modal, seven-type picker and duplicate-alias error all match the
+    mockups ([settings](./screenshots/extract-values-settings.png),
+    [field](./screenshots/extraction-field-config.png),
+    [picker](./screenshots/extraction-field-picker.png),
+    [error](./screenshots/extraction-field-config-error.png)). Differences: help text under Fields and
+    Content comes from the action (T17) rather than the mockup wording.
+  - Bug found and fixed: the Alias help showed "e.g. ." because `umb-property-layout` renders
+    `description` through UFM, which ate `${…}`. Example moved into the description slot as `<code>`;
+    review round 1 FAIL (prettier, fake UUI token), fixed. Vitest 241/241.
+  - Flag-off checks (picker hidden, value kept) are folded into the flag-off restart in T18.

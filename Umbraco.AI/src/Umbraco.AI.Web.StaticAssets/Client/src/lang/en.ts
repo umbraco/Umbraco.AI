@@ -58,6 +58,7 @@ export default {
         noProfilesAvailable: "No AI profiles available. Create one in the AI section.",
         deleteConfirm: "Are you sure you want to delete this profile?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
+        systemSettings: "System Settings",
         noSettingsAvailable: "This capability has no additional settings to configure.",
     },
     uaiSettings: {

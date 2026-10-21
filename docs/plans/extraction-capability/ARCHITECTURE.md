@@ -239,3 +239,16 @@ type, then a per-type config modal.
 Build on `v18/dev`, then port to `v17/dev` on its own branch and PR (Backport Workflow). The only
 known per-line difference is the frontend data source (decision 7). Migration-free, so the
 migration-ID drift problem doesn't apply.
+
+## Adding a field type later
+
+Each field type name is a separate wire or storage contract, so it lives in five places. A new
+type (for example `estimate`) touches all of them:
+
+- Core: the field/answer pair, `ExtractionFieldKind`, the validator and answer checker.
+- Management API: the `$type` field and answer models in `ExtractRequestModel` and
+  `ExtractResponseModel`, and the controller mapping.
+- Cloudflare: the request type name and the response mapping in `CloudflareExtractionClient`.
+- Automate: `ExtractValuesAction`'s kind mapping and output schema.
+- Frontend: `extraction-field-kinds.ts`, the field modal's extra settings, `src/extraction/types.ts`
+  and the server data source mapping.

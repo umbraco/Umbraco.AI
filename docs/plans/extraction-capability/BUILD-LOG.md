@@ -133,3 +133,11 @@
   "Step 'Extract ticket details' uses 'umbracoAI.extractValues', which is not available…", not
   "Extraction is disabled." (the compose-time exclusion removes the action, so the run-time check
   never runs). SPEC updated to match; see DECISION-LOG.
+- **T20** - whole-feature review PASS (Decision parity complete or logged, no unlogged drift, no
+  secrets, CI wiring for Cloudflare done; commitlint clean on all commits). Refactor round from its
+  suggestions: shared internal enum-name parser and field-id check in Core (used by the API and
+  Automate), localized "System Settings" headline in the Extraction element, prettier, and an
+  "Adding a field type later" checklist in ARCHITECTURE. Round re-reviewed PASS. Full root suite:
+  19 test projects green (Core unit 2243, integration 34, Automate 274, Cloudflare 126, Deploy 44);
+  vitest 241. Open for a person: SPEC's 100-second HttpClient timeout assumption, and
+  ARCHITECTURE's string-only list answers and separate field-list editor copies.

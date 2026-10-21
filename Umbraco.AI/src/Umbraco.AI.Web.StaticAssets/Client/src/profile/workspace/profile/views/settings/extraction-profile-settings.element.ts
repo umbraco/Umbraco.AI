@@ -22,7 +22,7 @@ export class UaiExtractionProfileSettingsElement extends UmbLitElement {
 
     override render() {
         return html`
-            <uui-box headline="System Settings">
+            <uui-box headline=${this.localize.term("uaiProfile_systemSettings")}>
                 <p class="empty">${this.localize.term("uaiProfile_noSettingsAvailable")}</p>
             </uui-box>
         `;

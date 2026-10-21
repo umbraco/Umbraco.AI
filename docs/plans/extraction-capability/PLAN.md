@@ -119,7 +119,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   generated `src/api/` changes.
   depends-on: T9.
 
-- [ ] **T11** - story: EX-7 (AC1-AC5). Add `src/extraction/`: `UaiExtractionController`
+- [x] **T11** - story: EX-7 (AC1-AC5). Add `src/extraction/`: `UaiExtractionController`
   (`@public`), repository, server data source, `types.ts`, exported through the root
   `src/exports.ts`. Map field kind to `$type`. No generated types leak.
   Acceptance: `npm run build:core` passes, including the api-extractor rollup.

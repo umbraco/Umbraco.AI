@@ -1,6 +1,6 @@
 // EX-7 — Extract from TypeScript (AC2, AC5)
 //
-// Assumed public shape (copies UaiDecisionController; rename here if the build differs):
+// Public shape (mirrors UaiDecisionController):
 //   controller.extract(request: UaiExtractionRequest, options?: { profileIdOrAlias?, signal? })
 //     → Promise<{ data?: UaiExtractionResult; error?: unknown }>
 //   UaiExtractionRequest { state: string; referenceDate?: string; fields: UaiExtractionField[] }
@@ -57,15 +57,15 @@ describe("Feature: UaiExtractionController", () => {
             result = await new UaiExtractionController(createHost()).extract(orderRequest);
         });
 
-        it.skip("returns the number answer's value as a number", () => {
+        it("returns the number answer's value as a number", () => {
             expect(result.data?.answers.amount).toMatchObject({ kind: "number", value: 701.1 });
         });
 
-        it.skip("returns the list answer's values as an array", () => {
+        it("returns the list answer's values as an array", () => {
             expect(result.data?.answers.damaged).toMatchObject({ kind: "list", values: ["mug", "teapot"] });
         });
 
-        it.skip("returns the model id", () => {
+        it("returns the model id", () => {
             expect(result.data?.modelId).toBe("@cf/cloudflare/clairic");
         });
     });
@@ -80,23 +80,23 @@ describe("Feature: UaiExtractionController", () => {
             );
         });
 
-        it.skip("forwards the state to the repository", () => {
+        it("forwards the state to the repository", () => {
             expect(extract.mock.calls[0][0].state).toBe(orderRequest.state);
         });
 
-        it.skip("forwards the fields to the repository", () => {
+        it("forwards the fields to the repository", () => {
             expect(extract.mock.calls[0][0].fields).toEqual(orderRequest.fields);
         });
 
-        it.skip("forwards the reference date to the repository", () => {
+        it("forwards the reference date to the repository", () => {
             expect(extract.mock.calls[0][0].referenceDate).toBe("2026-10-20");
         });
 
-        it.skip("forwards the profile id or alias to the repository", () => {
+        it("forwards the profile id or alias to the repository", () => {
             expect(extract.mock.calls[0][0].profileIdOrAlias).toBe("cloudflare-clairic");
         });
 
-        it.skip("forwards the abort signal to the repository", () => {
+        it("forwards the abort signal to the repository", () => {
             expect(extract.mock.calls[0][0].signal).toBeInstanceOf(AbortSignal);
         });
     });
@@ -111,7 +111,7 @@ describe("Feature: UaiExtractionController", () => {
                 result = await new UaiExtractionController(createHost()).extract(orderRequest);
             });
 
-            it.skip("resolves with an error and no answers instead of throwing", () => {
+            it("resolves with an error and no answers instead of throwing", () => {
                 expect(result).toEqual({ error: { status: 400, title: "Duplicate field id 'orderId'." } });
             });
         });
@@ -125,7 +125,7 @@ describe("Feature: UaiExtractionController", () => {
                 result = await new UaiExtractionController(createHost()).extract(orderRequest);
             });
 
-            it.skip("resolves with an error and no answers instead of throwing", () => {
+            it("resolves with an error and no answers instead of throwing", () => {
                 expect(result).toEqual({ error: { status: 404 } });
             });
         });

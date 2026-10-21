@@ -11,7 +11,9 @@ applies to both `v18/dev` and `v17/dev` unless it says otherwise.
   - The Management API endpoint returns 404.
   - The settings screen has no default Extraction profile row.
   - The Automate "Extract Values" action isn't in the action list. An existing automation that
-    still has the step fails it with a validation error ("Extraction is disabled.").
+    still has the step fails at that step with Automate's "not available" message (the action is
+    removed at startup). The action's own "Extraction is disabled." check is a fallback for hosts
+    that skip the compose-time exclusion.
   - `IAIExtractionService` throws `InvalidOperationException`.
 - With it on, all of the above work.
 

@@ -91,3 +91,45 @@
     `description` through UFM, which ate `${…}`. Example moved into the description slot as `<code>`;
     review round 1 FAIL (prettier, fake UUI token), fixed. Vitest 241/241.
   - Flag-off checks (picker hidden, value kept) are folded into the flag-off restart in T18.
+- **T16** - **wire, Deploy in a real host.** Demo site run locally with `Umbraco.AI.Deploy` plus
+  `Umbraco.Deploy.OnPrem` 18.0.1 (local-only csproj changes). Saving AI settings wrote
+  `umbraco/Deploy/Revision/umbraco-ai-settings__….uda` with
+  `"DefaultExtractionProfileUdi": "umb://umbraco-ai-profile/c92ed564…"` and that profile as a
+  dependency. Live import could not run: Deploy logged "Licensing check failed. Deploy extraction
+  will not be enabled." on the unlicensed demo, so the import path is covered by the 9 T15 unit
+  specs only. Needs a licensed Deploy site to check import end to end.
+- **T18 + T19** - **wire, Automate on the v18 demo site (flag on).** Workspace "Extraction demo"
+  with a new API user "Automate service" as its service account (local demo data). Automations
+  created through Automate's Management API, published, and run with the trigger endpoint:
+  - "Extract Values" is in Automate's action catalogue.
+  - **Support ticket triage** (Webhook → Extract Values → If `${ steps.extract.orderId.found }`
+    Equals `true` → Log): run Completed; outputs `orderId` "A-88412", `amount` 701.1, `deliveredOn`
+    "2026-10-03", `damagedProducts` ["mug","teapot"], each with `found` and `confidence`; the true
+    branch ran, the false branch didn't (EX-10 AC14).
+  - **Lead intake** (Webhook → Extract Values → Create Content): created "Lead: Nordlys Bryggeri ApS
+    – Mette Jensen (demo 2026-11-12)" from a lead email (EX-11 AC1).
+  - **Refund triage** (Webhook → Extract Values → If amount found → Request Approval): amount not
+    in the ticket came back `found: false`, `value: null`; run Suspended at "Ask a person" with
+    prompt "Refund for A-90211 has no clear amount. Approve?" (EX-11 AC2, without Ask Pick-One:
+    no Decision provider on this demo).
+  - **Voice note to quote** (Transcribe Audio → Extract Values → Create Content): blocked before
+    Extraction. OpenAI rejected the uploaded file in Transcribe Audio ("Audio file might be corrupted
+    or unsupported") for both m4a and WAV uploaded as File media. Existing Transcribe Audio
+    behaviour, not this feature; EX-11 AC3 not proven.
+  - **Danish culture (EX-11 AC4), site run with `LANG/LC_ALL=da_DK.UTF-8`:** If
+    `${ steps.extract.amount.confidence }` GreaterThan `0.8` took the **false** branch for a 0.99999
+    confidence. A Log step showed the bindings render as "0,9999942779854932" and "701,1". Automate
+    stringifies numbers with the server culture, so numeric If checks against `0.8` fail on da-DK.
+    This is the known risk in SPEC; it affects the Decision actions too. Automate issue drafted for
+    the user to review before filing.
+  - Step settings screens: see T14.
+  - Flag-off check: next entry.
+- **Flag-off restart (T9, T14, T18)** - demo site restarted with
+  `Umbraco:AI:Experimental:Extraction = false`: `GET capabilities/enabled` lists Chat, Embedding,
+  SpeechToText, Decision (no Extraction); Cloudflare missing from `GET providers`;
+  `POST extraction/extract` → 404; Extract Values missing from Automate's action catalogue; AI ›
+  Settings has no Extraction row, and pressing Save kept the stored `defaultExtractionProfileId`.
+  The existing Support ticket triage automation failed its first step with Automate's own message
+  "Step 'Extract ticket details' uses 'umbracoAI.extractValues', which is not available…", not
+  "Extraction is disabled." (the compose-time exclusion removes the action, so the run-time check
+  never runs). SPEC updated to match; see DECISION-LOG.

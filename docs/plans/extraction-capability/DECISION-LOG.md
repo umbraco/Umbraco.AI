@@ -89,3 +89,12 @@
   EX-9 AC14 updated. (T13)
 - 21-10-2026: The field modal uses the general Cancel/Save/Edit/Remove keys, not per-modal keys
   like Decision's, and shows the instructions and decimals errors under their own fields. (T13)
+- 21-10-2026: The field modal's binding example sits in the property layout's description slot as
+  code, because `umb-property-layout` renders the description as UFM and blanks `{…}`. (T14)
+- 21-10-2026: With the flag off, an existing Extract Values step fails with Automate's own "not
+  available" message, because the compose-time exclusion removes the action. The action's
+  "Extraction is disabled." check stays as a fallback. SPEC and EX-10 AC16 updated to what the
+  live run showed. (T18)
+- 21-10-2026: Recipe checks ran three of the idea's recipes; Ask Pick-One was left out of the
+  triage recipe (no Decision provider on the demo) and the voice-note recipe was blocked by
+  Transcribe Audio, not Extraction. (T19)

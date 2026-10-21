@@ -704,7 +704,7 @@ so that later steps can create content, route or ask for approval from what was 
 - AC16: flag off fails an existing step
   Given an automation that already has the step, and the flag off
   When it runs
-  Then the step fails with a validation error "Extraction is disabled."
+  Then the step fails, saying `umbracoAI.extractValues` is not available
 - AC17: empty content
   Given Content that resolves to empty
   When the step runs

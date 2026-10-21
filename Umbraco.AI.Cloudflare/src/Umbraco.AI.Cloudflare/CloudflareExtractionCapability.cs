@@ -29,10 +29,17 @@ public class CloudflareExtractionCapability(CloudflareProvider provider)
     private new CloudflareProvider Provider => (CloudflareProvider)base.Provider;
 
     /// <inheritdoc />
-    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+    /// <remarks>
+    /// Validates <paramref name="settings"/> with a free model-search call before returning the static list,
+    /// so "Test connection" fails with Cloudflare's own message on a wrong token or account.
+    /// </remarks>
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         CloudflareProviderSettings settings,
         CancellationToken cancellationToken = default)
-        => Task.FromResult(Models);
+    {
+        await Provider.EnsureConnectionValidAsync(settings, cancellationToken);
+        return Models;
+    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -43,20 +50,13 @@ public class CloudflareExtractionCapability(CloudflareProvider provider)
         string? modelId,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(settings.AccountId))
-        {
-            throw new InvalidOperationException("Cloudflare account ID is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.ApiToken))
-        {
-            throw new InvalidOperationException("Cloudflare API token is required.");
-        }
+        CloudflareApi.ValidateSettings(settings);
 
         IAIExtractionClient client = new CloudflareExtractionClient(
             Provider.CreateHttpClient(),
             settings,
-            modelId ?? DefaultModel);
+            modelId ?? DefaultModel,
+            static (delay, ct) => Task.Delay(delay, ct));
 
         return Task.FromResult(client);
     }

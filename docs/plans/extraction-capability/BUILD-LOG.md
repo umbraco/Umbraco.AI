@@ -28,3 +28,8 @@
   (static `@cf/cloudflare/clairic`), client stub, every add-provider registration point. 14 specs on
   (failed first with CS0246). Reviewer PASS first round; root slnx runs the 14 tests. Security
   follow-ups carried into T5, Core floor into T21. Smoke: live in T9.
+- **T5** - `CloudflareExtractionClient`, `CloudflareApi`, cached model-search connection check.
+  Specs red against the stub (60 failed), then green. Review round 1 FAIL: token cut before masking,
+  2xx `success:false` classed as a network error, adapter duplicated Core's missing-answer check, no
+  culture guard. Fixed with red-first tests; round 2 PASS. Cloudflare 112/112 (passes under
+  da_DK too). Smoke: live Clairic call in T9; wire-shape guesses listed in DECISION-LOG.

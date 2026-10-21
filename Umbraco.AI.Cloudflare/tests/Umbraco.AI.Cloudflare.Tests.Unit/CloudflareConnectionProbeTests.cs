@@ -24,13 +24,13 @@ public class CloudflareConnectionProbeTests
 
         private Task CheckAsync() => CloudflareTestHost.CreateCapability(_handler).GetModelsAsync(CloudflareTestHost.Settings());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task Passes()
         {
             await Should.NotThrowAsync(CheckAsync);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task MakesExactlyOneRequest()
         {
             await CheckAsync();
@@ -38,7 +38,7 @@ public class CloudflareConnectionProbeTests
             _handler.Attempts.ShouldBe(1);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task UsesGet()
         {
             await CheckAsync();
@@ -46,7 +46,7 @@ public class CloudflareConnectionProbeTests
             _handler.Requests.Single().Method.ShouldBe(HttpMethod.Get);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task CallsTheModelSearchEndpointForTheAccount()
         {
             await CheckAsync();
@@ -55,7 +55,7 @@ public class CloudflareConnectionProbeTests
                 .ShouldBe("https://api.cloudflare.com/client/v4/accounts/test-account/ai/models/search");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task SearchesForClairic()
         {
             await CheckAsync();
@@ -63,7 +63,7 @@ public class CloudflareConnectionProbeTests
             _handler.Requests.Single().RequestUri!.Query.ShouldBe("?search=clairic");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task NeverCallsTheRunEndpoint()
         {
             // AC8: no tokens are spent, so the paid /ai/run/ endpoint must never be hit.
@@ -72,7 +72,7 @@ public class CloudflareConnectionProbeTests
             _handler.Requests.ShouldNotContain(r => r.RequestUri!.AbsolutePath.Contains("/ai/run/"));
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task SendsTheApiTokenAsABearerToken()
         {
             await CheckAsync();
@@ -83,7 +83,7 @@ public class CloudflareConnectionProbeTests
 
     public class GivenASuccessfulCheckAlreadyCached
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ASecondCallWithinTheCacheWindowMakesNoSecondHttpRequest()
         {
             var handler = new ScriptedHttpMessageHandler(ScriptedHttpMessageHandler.Json(CloudflareTestHost.ModelSearchAnswer));
@@ -95,7 +95,7 @@ public class CloudflareConnectionProbeTests
             handler.Attempts.ShouldBe(1);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ADifferentTokenIsCheckedAgain()
         {
             var handler = new ScriptedHttpMessageHandler(ScriptedHttpMessageHandler.Json(CloudflareTestHost.ModelSearchAnswer));
@@ -118,13 +118,13 @@ public class CloudflareConnectionProbeTests
 
         private Task CheckAsync() => CloudflareTestHost.CreateCapability(_handler).GetModelsAsync(CloudflareTestHost.Settings());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task Fails()
         {
             await Should.ThrowAsync<HttpRequestException>(CheckAsync);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReportsCloudflaresOwnErrorMessage()
         {
             var exception = await Record.ExceptionAsync(CheckAsync);
@@ -135,7 +135,7 @@ public class CloudflareConnectionProbeTests
 
     public class GivenAFailedCheck
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task IsNotCachedSoTheNextCallChecksAgain()
         {
             var handler = new ScriptedHttpMessageHandler(

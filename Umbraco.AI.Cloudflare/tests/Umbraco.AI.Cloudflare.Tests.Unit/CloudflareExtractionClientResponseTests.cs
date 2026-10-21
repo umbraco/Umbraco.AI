@@ -36,61 +36,61 @@ public class CloudflareExtractionClientResponseTests
 
         private AITextExtractionAnswer Answer => (AITextExtractionAnswer)_response.Answers["orderId"];
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReadsTheAnswersFromResult()
         {
             _response.Answers["orderId"].ShouldBeOfType<AITextExtractionAnswer>();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsValue()
         {
             Answer.Value.ShouldBe("A-88412");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsConfidence()
         {
             Answer.Confidence.ShouldBe(0.9999);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsPNullToNullProbability()
         {
             Answer.NullProbability.ShouldBe(0.00001);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheSpan()
         {
             Answer.Span.ShouldNotBeNull();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheSpanStart()
         {
-            Answer.Span!.Start.ShouldBe(6);
+            Answer.Span!.Value.Start.ShouldBe(6);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheSpanEndAsExclusive()
         {
-            Answer.Span!.End.ShouldBe(13);
+            Answer.Span!.Value.End.ShouldBe(13);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsInputTokens()
         {
             _response.Usage!.InputTokenCount.ShouldBe(612);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsOutputTokens()
         {
             _response.Usage!.OutputTokenCount.ShouldBe(0);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void KeepsTheGuessInTheRawRepresentation()
         {
             // ASSUMPTION: RawRepresentation holds the provider's answer object as a JsonElement.
@@ -102,13 +102,13 @@ public class CloudflareExtractionClientResponseTests
     {
         private readonly AIExtractionResponse _response = ExtractAsync(OrderId, BareTextAnswer).GetAwaiter().GetResult();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReadsTheAnswersFromTheTopLevel()
         {
             ((AITextExtractionAnswer)_response.Answers["orderId"]).Value.ShouldBe("A-88412");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ReadsTheUsageFromTheTopLevel()
         {
             _response.Usage!.InputTokenCount.ShouldBe(612);
@@ -122,13 +122,13 @@ public class CloudflareExtractionClientResponseTests
             """{"result":{"answers":{"damaged":{"value":["mug","teapot"],"confidence":0.99,"p_null":0.001,"spans":[[64,67],[72,78]]}},"usage":{"input_tokens":1,"output_tokens":0}},"success":true,"errors":[],"messages":[]}""")
             .GetAwaiter().GetResult().Answers["damaged"];
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsTheValues()
         {
             _answer.Values.ShouldBe(["mug", "teapot"]);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsSpansToSpans()
         {
             _answer.Spans.ShouldBe([new AIExtractionSpan(64, 67), new AIExtractionSpan(72, 78)]);
@@ -142,13 +142,13 @@ public class CloudflareExtractionClientResponseTests
             """{"result":{"answers":{"orderId":{"value":"A-88412"}},"usage":{"input_tokens":1,"output_tokens":0}},"success":true,"errors":[],"messages":[]}""")
             .GetAwaiter().GetResult().Answers["orderId"];
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsAMissingConfidenceToNull()
         {
             _answer.Confidence.ShouldBeNull();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MapsAMissingPNullToNull()
         {
             _answer.NullProbability.ShouldBeNull();
@@ -161,7 +161,7 @@ public class CloudflareExtractionClientResponseTests
 
     public class GivenMalformedJson
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsAJsonException()
         {
             // Classification into a provider failure happens in AIErrorClassifyingExtractionClient (Core);

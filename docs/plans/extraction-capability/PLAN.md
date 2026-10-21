@@ -67,7 +67,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   the test project shows up in a root-slnx `dotnet test` run.
   depends-on: T3. parallel-group: B
 
-- [ ] **T5** - story: EX-2 (AC7-AC27). Implement `CloudflareExtractionClient`, copying
+- [x] **T5** - story: EX-2 (AC7-AC27). Implement `CloudflareExtractionClient`, copying
   `TypeSafeDecisionClient`: request and response mapping per `SPEC.md` "Cloudflare provider", both
   envelope shapes, 429 retry (3 attempts, 30s cap, `Retry-After`), Cloudflare error codes in the
   exception, and the cached model-search connection check. Tests fake only the

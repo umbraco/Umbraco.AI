@@ -75,7 +75,7 @@ public class CloudflareExtractionClientRetryTests
             ScriptedHttpMessageHandler.Status(HttpStatusCode.TooManyRequests),
             ScriptedHttpMessageHandler.Json(TextAnswer));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task SucceedsAfterRetrying()
         {
             var response = await ExtractAsync(_harness.Client);
@@ -83,7 +83,7 @@ public class CloudflareExtractionClientRetryTests
             response.Answers["orderId"].ShouldBeOfType<AITextExtractionAnswer>();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task MakesTwoAttempts()
         {
             await ExtractAsync(_harness.Client);
@@ -98,7 +98,7 @@ public class CloudflareExtractionClientRetryTests
             TooManyRequestsRetryAfter(new RetryConditionHeaderValue(TimeSpan.FromSeconds(3))),
             ScriptedHttpMessageHandler.Json(TextAnswer));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task WaitsForTheRetryAfterDelay()
         {
             await ExtractAsync(_harness.Client);
@@ -116,7 +116,7 @@ public class CloudflareExtractionClientRetryTests
             TooManyRequestsRetryAfter(new RetryConditionHeaderValue(Now.AddSeconds(5))),
             ScriptedHttpMessageHandler.Json(TextAnswer));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task WaitsForTheTimeUntilTheDate()
         {
             await ExtractAsync(_harness.Client);
@@ -132,7 +132,7 @@ public class CloudflareExtractionClientRetryTests
             ScriptedHttpMessageHandler.Status(HttpStatusCode.TooManyRequests),
             ScriptedHttpMessageHandler.Json(TextAnswer));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task BacksOffOneSecondOnTheFirstRetry()
         {
             await ExtractAsync(_harness.Client);
@@ -140,7 +140,7 @@ public class CloudflareExtractionClientRetryTests
             _harness.Delays[0].ShouldBe(TimeSpan.FromSeconds(1));
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task BacksOffTwoSecondsOnTheSecondRetry()
         {
             await ExtractAsync(_harness.Client);
@@ -159,7 +159,7 @@ public class CloudflareExtractionClientRetryTests
             TooManyRequestsRetryAfter(new RetryConditionHeaderValue(TimeSpan.FromSeconds(120))),
             ScriptedHttpMessageHandler.Json(TextAnswer));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task CapsTheDelayAtThirtySeconds()
         {
             await ExtractAsync(_harness.Client);
@@ -177,7 +177,7 @@ public class CloudflareExtractionClientRetryTests
             TooManyRequestsRetryAfter(new RetryConditionHeaderValue(Now.AddHours(1))),
             ScriptedHttpMessageHandler.Json(TextAnswer));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task CapsTheDelayAtThirtySeconds()
         {
             await ExtractAsync(_harness.Client);
@@ -190,7 +190,7 @@ public class CloudflareExtractionClientRetryTests
     {
         private readonly Harness _harness = new(ScriptedHttpMessageHandler.Json(CapacityExceeded, HttpStatusCode.TooManyRequests));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task FailsAfterExactlyThreeAttempts()
         {
             await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -198,7 +198,7 @@ public class CloudflareExtractionClientRetryTests
             _harness.Handler.Attempts.ShouldBe(3);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReportsTheTooManyRequestsStatus()
         {
             var exception = await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -206,7 +206,7 @@ public class CloudflareExtractionClientRetryTests
             ((HttpRequestException)exception!).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PutsCloudflaresErrorCodeInTheMessage()
         {
             var exception = await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -214,7 +214,7 @@ public class CloudflareExtractionClientRetryTests
             exception!.Message.ShouldContain("3040");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PutsCloudflaresErrorMessageInTheMessage()
         {
             var exception = await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -227,7 +227,7 @@ public class CloudflareExtractionClientRetryTests
     {
         private readonly Harness _harness = new(ScriptedHttpMessageHandler.Json(BadInput, HttpStatusCode.BadRequest));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task DoesNotRetry()
         {
             await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -235,7 +235,7 @@ public class CloudflareExtractionClientRetryTests
             _harness.Handler.Attempts.ShouldBe(1);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReportsTheBadRequestStatus()
         {
             var exception = await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -243,7 +243,7 @@ public class CloudflareExtractionClientRetryTests
             ((HttpRequestException)exception!).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PutsCloudflaresErrorCodeInTheMessage()
         {
             var exception = await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));
@@ -256,7 +256,7 @@ public class CloudflareExtractionClientRetryTests
     {
         private readonly Harness _harness = new(ScriptedHttpMessageHandler.Status(HttpStatusCode.Unauthorized));
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task DoesNotRetry()
         {
             await Record.ExceptionAsync(() => ExtractAsync(_harness.Client));

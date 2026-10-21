@@ -2,9 +2,7 @@
 #pragma warning disable UMBRACOAI_EXTRACTION // Exercises the experimental Extraction flag
 
 // Copies EnabledCapabilitiesControllerTests: a real AIExperimentalFeatures (not a mocked
-// IAIExperimentalFeatures), so the specs prove the real flag gates the list, per the add-ai-capability
-// skill. When this moves into the test project, ImplementedCapabilitiesSurfaceTests.KindOf also needs an
-// "IAIExtractionCapability" => AICapability.Extraction arm, or that surface test throws.
+// IAIExperimentalFeatures), so the specs prove the real flag gates the list.
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -30,7 +28,7 @@ public class EnabledCapabilitiesExtractionTests
 
     public class GivenTheExtractionCapability
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void IsInTheImplementedSet()
             => EnabledCapabilitiesController.ImplementedCapabilities.ShouldContain(AICapability.Extraction);
     }
@@ -39,10 +37,10 @@ public class EnabledCapabilitiesExtractionTests
     {
         private readonly IReadOnlyList<string> _enabled = GetEnabled(new AIExperimentalOptions { Extraction = true });
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void IncludesExtraction() => _enabled.ShouldContain("Extraction");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void StillExcludesDecision() => _enabled.ShouldNotContain("Decision");
     }
 
@@ -52,13 +50,13 @@ public class EnabledCapabilitiesExtractionTests
 
     public class GivenEveryExperimentalFlagOff
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ExcludesExtraction() => GetEnabled(new AIExperimentalOptions()).ShouldNotContain("Extraction");
     }
 
     public class GivenOnlyTheDecisionFlagOn
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void StillExcludesExtraction()
             => GetEnabled(new AIExperimentalOptions { Decision = true }).ShouldNotContain("Extraction");
     }

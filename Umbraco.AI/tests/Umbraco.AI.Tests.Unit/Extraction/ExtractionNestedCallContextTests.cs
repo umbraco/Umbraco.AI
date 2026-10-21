@@ -81,16 +81,16 @@ public class ExtractionNestedCallContextTests
             running.CompleteAsync(usage: null, responseData: null).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SeesItsOwnProfile() => _seenProfileAlias.ShouldBe("extractor");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void SeesItsOwnFeature() => _seenFeatureAlias.ShouldBe("order-extract");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void LeavesTheOuterCallsProfileAlone() => _outerProfileAliasAfter.ShouldBe("outer-profile");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void LeavesTheOuterCallsFeatureAlone() => _outerFeatureAliasAfter.ShouldBe("outer-feature");
     }
 

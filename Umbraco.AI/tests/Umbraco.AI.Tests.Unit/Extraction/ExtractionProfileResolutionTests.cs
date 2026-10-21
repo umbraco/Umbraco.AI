@@ -25,7 +25,7 @@ public class ExtractionProfileResolutionTests
     {
         private readonly ExtractionPipelineHarness _harness = new(new FakeExtractionClient());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task RunsAgainstThatProfile()
         {
             await _harness.Service.ExtractAsync(_harness.Profile.Id, OrderNumber(), State);
@@ -40,7 +40,7 @@ public class ExtractionProfileResolutionTests
     {
         private readonly ExtractionPipelineHarness _harness = new(new FakeExtractionClient());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task RunsAgainstThatProfile()
         {
             await _harness.Service.ExtractAsync(ExtractionPipelineHarness.ProfileAlias, OrderNumber(), State);
@@ -55,7 +55,7 @@ public class ExtractionProfileResolutionTests
     {
         private readonly ExtractionPipelineHarness _harness = new(new FakeExtractionClient());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task RunsAgainstThatProfile()
         {
             await _harness.Service.ExtractAsync(b => b.WithProfile(ExtractionPipelineHarness.ProfileAlias), OrderNumber(), State);
@@ -70,7 +70,7 @@ public class ExtractionProfileResolutionTests
     {
         private readonly ExtractionPipelineHarness _harness = new(new FakeExtractionClient());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task RunsAgainstTheDefaultExtractionProfile()
         {
             await _harness.Service.ExtractAsync(OrderNumber(), State);
@@ -92,7 +92,7 @@ public class ExtractionProfileResolutionTests
 
         public GivenAChatProfileAlias() => _harness = new ExtractionPipelineHarness(_client, profileCapability: AICapability.Chat);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsInvalidOperationException()
         {
             var act = () => _harness.Service.ExtractAsync(ExtractionPipelineHarness.ProfileAlias, OrderNumber(), State);
@@ -100,7 +100,7 @@ public class ExtractionProfileResolutionTests
             await Should.ThrowAsync<InvalidOperationException>(act);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task NeverReachesTheProvider()
         {
             await Record.ExceptionAsync(

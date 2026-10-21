@@ -19,7 +19,7 @@ public class SettingsMapDefinition : IMapDefinition
         mapper.Define<UpdateSettingsRequestModel, AISettings>((_, _) => new AISettings(), MapFromUpdateRequest);
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DefaultExtractionProfileId
     private static void MapToResponse(AISettings source, SettingsResponseModel target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;
@@ -31,7 +31,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.DisclosureNoticeMode = source.DisclosureNoticeMode.ToString();
     }
 
-    // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
+    // Umbraco.Code.MapAll -DefaultExtractionProfileId -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateSettingsRequestModel source, AISettings target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;

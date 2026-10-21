@@ -71,10 +71,10 @@ public class ExtractTypedValuesTests
             new AITextExtractionAnswer { Value = "A-88412" },
             new AITextExtractionField { Instructions = "The order number" });
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void CarriesTheModelId() => _response.ModelId.ShouldBe("@cf/cloudflare/clairic");
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void CarriesTheInputTokenCount() => _response.Usage!.InputTokenCount.ShouldBe(612);
     }
 
@@ -96,23 +96,23 @@ public class ExtractTypedValuesTests
             _response = harness.Service.GetExtractionResponseAsync(TextNumberDateRequest()).GetAwaiter().GetResult();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void KeysOneAnswerByEachFieldId()
             => _response.Answers.Keys.ShouldBe(["orderId", "amount", "deliveredOn"], ignoreOrder: true);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void AnswersTheTextFieldWithATextAnswer() => _response.Answers["orderId"].ShouldBeOfType<AITextExtractionAnswer>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void AnswersTheNumberFieldWithANumberAnswer() => _response.Answers["amount"].ShouldBeOfType<AINumberExtractionAnswer>();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void AnswersTheDateFieldWithADateAnswer() => _response.Answers["deliveredOn"].ShouldBeOfType<AIDateExtractionAnswer>();
     }
 
     public class GivenARequestWithAReferenceDate
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task PassesTheReferenceDateToTheProviderClient()
         {
             var client = new FakeExtractionClient();
@@ -135,7 +135,7 @@ public class ExtractTypedValuesTests
 
     public class GivenAProviderThatLeavesOutAField
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsAIProviderException()
         {
             var harness = new ExtractionPipelineHarness(new FakeExtractionClient(_ => new AIExtractionResponse
@@ -151,7 +151,7 @@ public class ExtractTypedValuesTests
 
     public class GivenAProviderThatAnswersAFieldThatWasNotAsked
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsAIProviderException()
         {
             var harness = new ExtractionPipelineHarness(new FakeExtractionClient(_ => new AIExtractionResponse
@@ -173,7 +173,7 @@ public class ExtractTypedValuesTests
 
     public class GivenAProviderThatAnswersANumberFieldWithText
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsAIProviderException()
         {
             var harness = new ExtractionPipelineHarness(new FakeExtractionClient(

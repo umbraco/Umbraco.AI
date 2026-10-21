@@ -24,7 +24,7 @@ public class AIExtractionClientFactoryTests
 
     public class GivenAValidRequest
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ReachesTheProviderClientOnce()
         {
             var inner = new FakeExtractionClient();
@@ -46,7 +46,7 @@ public class AIExtractionClientFactoryTests
 
     public class GivenAnInvalidRequest
     {
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(ExtractionRequestValidationTests.GivenAnInvalidRequest.Cases), MemberType = typeof(ExtractionRequestValidationTests.GivenAnInvalidRequest))]
         public async Task NeverCallsTheProviderClient(string _, AIExtractionRequest request)
         {
@@ -58,7 +58,7 @@ public class AIExtractionClientFactoryTests
             inner.ReceivedRequests.ShouldBeEmpty();
         }
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(ExtractionRequestValidationTests.GivenAnInvalidRequest.Cases), MemberType = typeof(ExtractionRequestValidationTests.GivenAnInvalidRequest))]
         public async Task ThrowsArgumentExceptionNotAIProviderException(string _, AIExtractionRequest request)
         {
@@ -69,7 +69,7 @@ public class AIExtractionClientFactoryTests
             await Should.ThrowAsync<ArgumentException>(act);
         }
 
-        [Theory(Skip = "Pending")]
+        [Theory]
         [MemberData(nameof(ExtractionRequestValidationTests.GivenAnInvalidRequest.Cases), MemberType = typeof(ExtractionRequestValidationTests.GivenAnInvalidRequest))]
         public async Task WritesNoUsageRecord(string _, AIExtractionRequest request)
         {
@@ -85,7 +85,7 @@ public class AIExtractionClientFactoryTests
 
     public class GivenAGenuineProviderFailure
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsAIProviderException()
         {
             var harness = await ExtractionTrackingAndChecksHarness.CreateAsync(new FakeExtractionClient(

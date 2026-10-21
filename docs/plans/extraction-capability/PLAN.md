@@ -43,7 +43,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: validator and checker specs green with the fake client.
   depends-on: T1.
 
-- [ ] **T3** - story: EX-1 (AC15-AC21, AC30-AC32, AC36, AC37), EX-3 (AC10), EX-4 (AC1 backend), EX-8. Add
+- [x] **T3** - story: EX-1 (AC15-AC21, AC30-AC32, AC36, AC37), EX-3 (AC10), EX-4 (AC1 backend), EX-8. Add
   `AISettings.DefaultExtractionProfileId`, `AIOptions.DefaultExtractionProfileAlias`, the profile
   arms in `AIProfileService`, `IAIExtractionCapability` + base classes, `IAIExtractionClientFactory`
   with the wrap order in decision 3, the middleware collection, `AIErrorClassifyingExtractionClient`,
@@ -77,12 +77,12 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Management API
 
-- [ ] **T6** - story: EX-3 (AC8), EX-4 (AC1). Add Extraction to
-  `EnabledCapabilitiesController.ImplementedCapabilities`, and `defaultExtractionProfileId` to the
-  settings request/response models and `SettingsMapDefinition`.
-  Also add an `IAIExtractionCapability` arm to `ImplementedCapabilitiesSurfaceTests.KindOf` and a
-  `DefaultExtractionProfileId` row to `UpdateSettingsProfileCapabilityValidationTests.AllSlots`.
-  Acceptance: specs green for both.
+- [ ] **T6** - story: EX-4 (AC1). Add `defaultExtractionProfileId` to the settings
+  request/response models and `SettingsMapDefinition`, and remove the two
+  `-DefaultExtractionProfileId` MapAll exclusions T3 added. Add a `DefaultExtractionProfileId` row
+  to `UpdateSettingsProfileCapabilityValidationTests.AllSlots`. (The `ImplementedCapabilities`
+  entry, the `KindOf` arm and EX-3 AC8 were pulled into T3.)
+  Acceptance: `DefaultExtractionProfileSettingsTests` green.
   depends-on: T3. parallel-group: B
 
 - [ ] **T7** - story: EX-5 (AC3 backend). Add `ExtractionProfileSettingsModel`

@@ -60,7 +60,7 @@ public class DefaultExtractionProfileTests
                 new AIOptions());
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ResolvesThatProfile()
         {
             var profile = await _service.GetDefaultProfileAsync(AICapability.Extraction);
@@ -89,7 +89,7 @@ public class DefaultExtractionProfileTests
                 new AIOptions { DefaultExtractionProfileAlias = "cloudflare-clairic" });
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ResolvesTheProfileWithThatAlias()
         {
             var profile = await _service.GetDefaultProfileAsync(AICapability.Extraction);
@@ -109,7 +109,7 @@ public class DefaultExtractionProfileTests
             new AISettings(),
             new AIOptions());
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ThrowsInvalidOperationException()
         {
             var act = () => _service.GetDefaultProfileAsync(AICapability.Extraction);
@@ -117,7 +117,7 @@ public class DefaultExtractionProfileTests
             await Should.ThrowAsync<InvalidOperationException>(act);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task SaysNoDefaultExtractionProfileIsSet()
         {
             var exception = await Record.ExceptionAsync(() => _service.GetDefaultProfileAsync(AICapability.Extraction));

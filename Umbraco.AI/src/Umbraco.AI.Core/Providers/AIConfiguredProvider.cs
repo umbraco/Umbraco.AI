@@ -1,5 +1,6 @@
 #pragma warning disable UMBRACOAI_IMAGEGEN // Wraps the experimental image-generation capability
 #pragma warning disable UMBRACOAI_DECISION // Wraps the experimental decision capability
+#pragma warning disable UMBRACOAI_EXTRACTION // Wraps the experimental extraction capability
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -38,6 +39,7 @@ internal sealed class AIConfiguredProvider(IAIProvider provider, object resolved
                 IAISpeechToTextCapability stt => new AIConfiguredSpeechToTextCapability(stt, settings),
                 IAIImageGeneratorCapability imageGen => new AIConfiguredImageGeneratorCapability(imageGen, settings),
                 IAIDecisionCapability decision => new AIConfiguredDecisionCapability(decision, settings),
+                IAIExtractionCapability extraction => new AIConfiguredExtractionCapability(extraction, settings),
                 _ => null
             };
             if (wrapped is not null)

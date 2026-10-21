@@ -52,3 +52,12 @@
 - 21-10-2026: `IsFound` is worked out from the value (null, or an empty list), never set by a
   provider. The answer checker also rejects confidence or null probability outside 0 to 1, a null
   list, and a duration in a different unit from the one asked for. (T2)
+- 21-10-2026: The `EnabledCapabilitiesController` entry moved from T6 into T3. Adding
+  `IAIExtractionCapability` makes the capability surface test fail without it, and no red test is
+  committed. T6 runs straight after T3 to close the short gap where a settings save drops a stored
+  Extraction default. (T3)
+- 21-10-2026: The builder overloads default the alias to "extraction" when the caller doesn't set
+  one. Decision's builder throws instead. Single-field calls get an id of "f" plus a GUID, because
+  the field id must start with a letter. (T3)
+- 21-10-2026: `AIExtractionService` checks the experimental flag itself and throws before any
+  profile lookup, event or provider call. Decision's service has no such check. (T3)

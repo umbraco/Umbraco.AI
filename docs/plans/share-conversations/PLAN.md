@@ -111,7 +111,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   (single `recipientUserKey`, not an array — `SPEC.md`'s repository section), `getShares`,
   `revokeShare`, `requestSharedWithMe`, `requestSharedView`.
 
-- [ ] **SC-12** — Detail model + workspace-context + context-panel readonly plumbing
+- [x] **SC-12** — Detail model + workspace-context + context-panel readonly plumbing
   story: US4 (AC3–4)
   depends-on: SC-11
   parallel-group: frontend-features

@@ -1,5 +1,19 @@
 # Build Log
 
+- **SC-12** — Detail model + workspace-context + context-panel readonly plumbing. Commit
+  `726484a3`. One review round, PASS first try. `UaiConversationDetailModel` gains
+  `isShared`/`readonly` (derived once at mapping time) and an optional `ownerDisplayName`;
+  `toSharedConversationDetailModel()` maps a `SharedConversationResponseModel` with `readonly: true`
+  unconditionally. `isReadonly$` and the context panel's 4 `isArchived` checks switch to `readonly`.
+  The chat view's notice text now distinguishes archived from shared-by-owner, following a real
+  interpolated-`localize.term()` precedent from `Umbraco.AI.Agent.UI`. Added a currently-uncalled
+  `setSharedConversationId()` on the workspace context as SC-18's future entry point (no route to a
+  shared conversation exists yet). Reviewer confirmed the readonly derivation can't go stale and
+  `ownerDisplayName` can't leak onto an owned conversation, and left 4 non-blocking suggestions for
+  SC-18 to pick up: unify `#reload()`'s two load paths instead of a separate method, decide whether
+  `setSharedConversationId` should no-op on an already-open id like `setConversationId` does, add a
+  generic fallback if `ownerDisplayName` is ever empty, and add an element-level test for the
+  notice-picking logic. `dotnet`/`npm` builds clean; vitest 50/50 (up from 45 after SC-11).
 - **SC-11** — OpenAPI client regen + `conversation.repository.ts` additions. Commit `7c2ba810`.
   Two review rounds: (1) PASS with one requested fix — `share()`/`revokeShare()` didn't dispatch
   `UaiEntityActionEvent.updated(...)` on success the way `update()` does, so the owner's sidebar

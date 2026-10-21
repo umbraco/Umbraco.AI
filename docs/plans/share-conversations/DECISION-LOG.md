@@ -471,3 +471,15 @@
   plain `string` rather than a hand-written `"Snapshot" | "Live"` union, matching this file's existing
   convention for other enum-like wire fields (e.g. `MessageResponseModel.role`); SC-15 (the mode
   dropdown) can add a stricter frontend-only type if it turns out to need one.
+- **2026-10-21 (SC-12: `ownerDisplayName` lives on `UaiConversationDetailModel` itself; shared-view
+  loading is a separate workspace-context method, not `#reload()`'s "second path")** — Neither was
+  spelled out precisely in `SPEC.md`. (1) `ownerDisplayName?: string` was added directly to the one
+  store model, set only by `toSharedConversationDetailModel()`, so the chat view's read-only notice
+  and the later sidebar badge tooltip (SC-13/17) both read it off the same place rather than a
+  second observable. (2) `SPEC.md` describes `#reload()` needing "a second path" for a shared
+  conversation, but since no route to a shared conversation exists yet (that's SC-17/SC-18), SC-12
+  added a separate, currently-uncalled `setSharedConversationId()` alongside `#reload()` instead of
+  merging the branching logic into it now. Reviewer flagged this as a real but not-yet-reachable gap
+  (today only owner-side writes fire the update event `#reload()` responds to) and recommended SC-18
+  unify the two load paths into `#reload()` itself (keyed on `model.isShared`) rather than leaving
+  two separate routines — noted here so it isn't lost before SC-18 starts.

@@ -583,3 +583,10 @@
   a load-balanced deployment if the drift exceeds the gap between share and regenerate — judged
   acceptable risk for now, revisit if this product is ever deployed with multiple app servers behind
   a load balancer sharing one database.
+- **2026-10-21 (SC-19: backport decisions recorded on the v17 branch, not duplicated here)** — The
+  v17 backport's own design/porting decisions (how the migration IDs were handled, the two real
+  v17-vs-v18 API differences found, why the cross-branch port used `git show` instead of
+  `cherry-pick`/`merge`, and why recipient-side live verification was accepted via code-diff parity
+  rather than a fresh v17 login check) are logged in full on `v17/feature/share-conversations`'s own
+  `DECISION-LOG.md`, per this repo's convention that plan-folder docs are branch-specific. This entry
+  is just the pointer.

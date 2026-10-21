@@ -1,5 +1,22 @@
 # Build Log
 
+- **SC-19** — Backport to v17. Done on `v17/feature/share-conversations` (branched off `v17/dev`),
+  3 commits: plan docs copied unchanged, backend ported, frontend ported. Full detail lives in that
+  branch's own `BUILD-LOG.md`/`DECISION-LOG.md` (plan-folder docs are branch-specific per this
+  repo's `CLAUDE.md`, so this entry is a summary, not the record of truth). Headlines: normal
+  cross-branch git operations were blocked by this session's safety tooling, so the port was done by
+  reading each file from this branch via `git show` and writing it into the v17 worktree; two
+  genuine v17-vs-v18 API differences were found and fixed (EF Core's `IEfCoreScope<T>` casing,
+  `IEmailSender.SendAsync`'s obsolete 2-arg overload); migrations were regenerated fresh against
+  v17's own schema rather than copied, then renamed to this branch's exact migration IDs to avoid a
+  previously-documented migration-ID-drift bug class; both backend and frontend passed review
+  (one fix round on the backend) with test counts matching this branch exactly (165+3 skipped unit,
+  2 integration, 84 frontend). Owner-side live-verified fully working on the real v17 demo site.
+  Recipient-side live verification could not be completed due to a browser-automation environment
+  issue (Chrome's own autofill repeatedly overriding the login form, unrelated to the shipped code)
+  — accepted via the reviewer's byte-for-byte diff confirming the recipient-rendering code is
+  unchanged from this branch, which was already live-verified working as a real recipient login
+  here (see SC-18's entry above).
 - **Whole-feature review** (per `feature-build`'s "Finish" step, all 18 tasks SC-01–SC-18 already
   committed and individually reviewed). Commit pending. One round: **FAIL** → fixed → **PASS**.
   Full suite re-run clean before the review: `dotnet test` on

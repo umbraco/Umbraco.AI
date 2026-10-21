@@ -154,6 +154,22 @@ public class Constants
             }
 
             /// <summary>
+            /// Defines constants for Extraction features.
+            /// </summary>
+            public static class Extraction
+            {
+                /// <summary>
+                /// The route segment for Extraction features.
+                /// </summary>
+                public const string RouteSegment = "extraction";
+
+                /// <summary>
+                /// The Swagger group name for Extraction features.
+                /// </summary>
+                public const string GroupName = "Extraction";
+            }
+
+            /// <summary>
             /// Defines constants for Embedding features.
             /// </summary>
             public static class Embedding

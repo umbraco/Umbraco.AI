@@ -32,6 +32,7 @@ public class EnabledCapabilitiesController : CapabilityControllerBase
         AICapability.SpeechToText,
         AICapability.ImageGeneration,
         AICapability.Decision,
+        AICapability.Extraction,
     };
 
     private readonly IAIExperimentalFeatures _experimentalFeatures;

@@ -612,7 +612,7 @@ so that each one becomes an output later steps can use.
 - AC14: alias format
   Given the alias `1st-value`
   When I click Save
-  Then the modal stays open with a message saying it must start with a letter and use only letters, numbers and `_`
+  Then the modal stays open with a message saying it must start with a letter or `_` and use only letters, numbers and `_`
 - AC15: duplicate alias
   Given a list that already has `orderId`
   When I save another field with alias `orderId`

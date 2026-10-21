@@ -133,7 +133,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   Acceptance: `npm run build:core` passes.
   depends-on: T10. parallel-group: C
 
-- [ ] **T13** - story: EX-9 (AC1-AC18). Add `Uai.PropertyEditorUi.ExtractionFieldList` and
+- [x] **T13** - story: EX-9 (AC1-AC18). Add `Uai.PropertyEditorUi.ExtractionFieldList` and
   `Uai.Modal.ExtractionFieldConfigEditor` in `src/property-editors/extraction-field-list/`,
   copying `decision-question-list/`. Match the two mockups in `mockups/` (stacked layout, medium
   modal). New strings go in `lang/en.ts`; Cancel, Save, Edit and Remove reuse the general keys.

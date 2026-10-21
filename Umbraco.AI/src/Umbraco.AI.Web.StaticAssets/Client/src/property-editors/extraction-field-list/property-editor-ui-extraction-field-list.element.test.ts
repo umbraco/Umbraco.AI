@@ -113,15 +113,15 @@ describe("Feature: extraction field list editor", () => {
             ({ el } = await render());
         });
 
-        it.skip('shows the "No fields yet" message', () => {
+        it('shows the "No fields yet" message', () => {
             expect(el.shadowRoot!.textContent).toContain("No fields yet");
         });
 
-        it.skip("shows an Add field button", () => {
+        it("shows an Add field button", () => {
             expect(el.shadowRoot!.getElementById("btn-add")?.getAttribute("label")).toBe("Add field");
         });
 
-        it.skip("shows no rows", () => {
+        it("shows no rows", () => {
             expect(rows(el).length).toBe(0);
         });
     });
@@ -136,11 +136,11 @@ describe("Feature: extraction field list editor", () => {
             await settle();
         });
 
-        it.skip("opens the type picker", () => {
+        it("opens the type picker", () => {
             expect(modals.opened).toEqual(["picker"]);
         });
 
-        it.skip("offers the seven field types in order", () => {
+        it("offers the seven field types in order", () => {
             expect(pickerItems(modals.open)).toEqual([
                 "Text",
                 "Number",
@@ -167,33 +167,33 @@ describe("Feature: extraction field list editor", () => {
             await el.updateComplete;
         });
 
-        it.skip("opens the field modal for a Number field, passing the other aliases", () => {
+        it("opens the field modal for a Number field, passing the other aliases", () => {
             expect(modals.open).toHaveBeenLastCalledWith(el, UAI_EXTRACTION_FIELD_CONFIG_MODAL, {
                 data: { kind: "number", otherAliases: ["orderId"] },
             });
         });
 
-        it.skip("closes the picker once the field is saved", () => {
+        it("closes the picker once the field is saved", () => {
             expect(modals.picker.reject).toHaveBeenCalledOnce();
         });
 
-        it.skip("adds a row", () => {
+        it("adds a row", () => {
             expect(rows(el).length).toBe(2);
         });
 
-        it.skip("names the row after the instructions", () => {
+        it("names the row after the instructions", () => {
             expect(rows(el)[1]!.getAttribute("name")).toBe("Amount paid");
         });
 
-        it.skip('shows "Type · alias" under the name', () => {
+        it('shows "Type · alias" under the name', () => {
             expect(rows(el)[1]!.getAttribute("detail")).toBe("Number · amount");
         });
 
-        it.skip("adds the field to the end of the value", () => {
+        it("adds the field to the end of the value", () => {
             expect(el.value).toEqual([orderId, amount]);
         });
 
-        it.skip("hides the empty message", () => {
+        it("hides the empty message", () => {
             expect(el.shadowRoot!.textContent).not.toContain("No fields yet");
         });
     });
@@ -210,11 +210,11 @@ describe("Feature: extraction field list editor", () => {
             await el.updateComplete;
         });
 
-        it.skip("opens the field modal directly, without the picker", () => {
+        it("opens the field modal directly, without the picker", () => {
             expect(modals.opened).toEqual(["config"]);
         });
 
-        it.skip("passes the saved field and the other aliases to the modal", () => {
+        it("passes the saved field and the other aliases to the modal", () => {
             expect(modals.open).toHaveBeenCalledWith(el, UAI_EXTRACTION_FIELD_CONFIG_MODAL, {
                 data: { kind: "number", existingField: amount, otherAliases: ["orderId"] },
             });
@@ -236,15 +236,15 @@ describe("Feature: extraction field list editor", () => {
             await el.updateComplete;
         });
 
-        it.skip("updates the row", () => {
+        it("updates the row", () => {
             expect(rows(el)[1]!.getAttribute("name")).toBe("Total paid");
         });
 
-        it.skip("keeps the row in place", () => {
+        it("keeps the row in place", () => {
             expect(el.value?.map((f) => f.alias)).toEqual(["orderId", "amount"]);
         });
 
-        it.skip("fires a change event", () => {
+        it("fires a change event", () => {
             expect(changeCount).toBe(1);
         });
     });
@@ -258,7 +258,7 @@ describe("Feature: extraction field list editor", () => {
             await el.updateComplete;
         });
 
-        it.skip("removes it from the list", () => {
+        it("removes it from the list", () => {
             expect(el.value?.map((f) => f.alias)).toEqual(["amount"]);
         });
     });
@@ -270,7 +270,7 @@ describe("Feature: extraction field list editor", () => {
             ({ el } = await render([amount, orderId, damaged]));
         });
 
-        it.skip("shows the rows in the saved order", () => {
+        it("shows the rows in the saved order", () => {
             expect(Array.from(rows(el)).map((r) => r.getAttribute("name"))).toEqual([
                 "Amount paid",
                 "The order number",
@@ -289,7 +289,7 @@ describe("Feature: extraction field list editor", () => {
             el.checkValidity();
         });
 
-        it.skip("is valid", () => {
+        it("is valid", () => {
             expect(el.validity.valid).toBe(true);
         });
     });
@@ -307,7 +307,7 @@ describe("Feature: extraction field list editor", () => {
                 await el.updateComplete;
             });
 
-            it.skip("leaves the saved field unchanged", () => {
+            it("leaves the saved field unchanged", () => {
                 expect(el.value).toEqual([orderId, amount]);
             });
         });
@@ -326,11 +326,11 @@ describe("Feature: extraction field list editor", () => {
                 await el.updateComplete;
             });
 
-            it.skip("leaves the type picker open", () => {
+            it("leaves the type picker open", () => {
                 expect(modals.picker.reject).not.toHaveBeenCalled();
             });
 
-            it.skip("adds nothing", () => {
+            it("adds nothing", () => {
                 expect(rows(el).length).toBe(0);
             });
         });
@@ -340,12 +340,15 @@ describe("Feature: extraction field list editor", () => {
 
             beforeEach(async () => {
                 ({ el } = await render(
-                    Array.from({ length: 21 }, (_, i) => ({ kind: "text", alias: `f${i}`, instructions: "?" }) as Field),
+                    Array.from(
+                        { length: 21 },
+                        (_, i) => ({ kind: "text", alias: `f${i}`, instructions: "?" }) as Field,
+                    ),
                 ));
                 el.checkValidity();
             });
 
-            it.skip("is invalid, which blocks saving the step", () => {
+            it("is invalid, which blocks saving the step", () => {
                 expect(el.validity.valid).toBe(false);
             });
         });

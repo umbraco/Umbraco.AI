@@ -83,3 +83,9 @@
   shape and uniqueness, empty content, no fields and decimals are left to Core. Stored field JSON is
   `{ kind, alias, instructions, decimals?, integer, unit?, itemType? }`. Outputs: date
   `yyyy-MM-dd`, time `HH:mm:ss`, date-time `yyyy-MM-dd'T'HH:mm:ssK`, lists as strings. (T17)
+- 21-10-2026: The field modal's alias rule is Core's field id rule (start with a letter or `_`,
+  then letters, numbers and `_`, up to 64), not "start with a letter". Core, the Automate action and
+  Automate's binding paths all accept a leading `_`, so the modal shouldn't be stricter. SPEC and
+  EX-9 AC14 updated. (T13)
+- 21-10-2026: The field modal uses the general Cancel/Save/Edit/Remove keys, not per-modal keys
+  like Decision's, and shows the instructions and decimals errors under their own fields. (T13)

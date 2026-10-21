@@ -186,7 +186,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Review
 
-- [ ] **T20** - story: all. Whole-branch review with the `reviewer` agent: Decision parity (every
+- [x] **T20** - story: all. Whole-branch review with the `reviewer` agent: Decision parity (every
   Decision file has its Extraction sibling or a note in `ARCHITECTURE.md` saying why not), no
   secrets, public API rules, localization keys.
   depends-on: T16, T19.

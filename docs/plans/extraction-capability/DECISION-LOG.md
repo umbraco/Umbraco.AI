@@ -98,3 +98,7 @@
 - 21-10-2026: Recipe checks ran three of the idea's recipes; Ask Pick-One was left out of the
   triage recipe (no Decision provider on the demo) and the voice-note recipe was blocked by
   Transcribe Audio, not Extraction. (T19)
+- 21-10-2026: The extract endpoint and the Extract Values action share one internal enum-name
+  parser in Core, and Automate uses Core's field id rule directly (both via InternalsVisibleTo,
+  like Agent and Deploy). The parser trims surrounding spaces, so " Hours " is now accepted by the
+  API too; numbers and comma lists are still a 400. (T20)

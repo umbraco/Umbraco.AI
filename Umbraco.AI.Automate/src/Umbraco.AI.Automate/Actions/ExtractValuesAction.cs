@@ -28,9 +28,6 @@ public sealed class ExtractValuesAction : DynamicOutputActionBase<ExtractValuesS
 {
     private const int MaxFields = 20;
 
-    // Mirrors Core's extraction field id rule; only used to filter the output schema.
-    private static readonly Regex AliasPattern = new(@"^[A-Za-z_][A-Za-z0-9_]{0,63}\z", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-
     // An ISO date, optionally followed by a time part. Anything else (e.g. "next week", "20/10/2026") is rejected.
     private static readonly Regex IsoDatePrefix = new(@"^\d{4}-\d{2}-\d{2}(?:T.+)?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -151,7 +148,7 @@ public sealed class ExtractValuesAction : DynamicOutputActionBase<ExtractValuesS
         var properties = new JsonObject();
         foreach (var field in fields)
         {
-            if (field is null || string.IsNullOrWhiteSpace(field.Alias) || !AliasPattern.IsMatch(field.Alias))
+            if (field is null || string.IsNullOrWhiteSpace(field.Alias) || !ExtractionFieldValidator.IsValidFieldId(field.Alias))
             {
                 continue;
             }
@@ -269,7 +266,7 @@ public sealed class ExtractValuesAction : DynamicOutputActionBase<ExtractValuesS
     }
 
     private static bool TryParseDurationUnit(string? value, out AIDurationUnit unit)
-        => TryParseName(value, out unit);
+        => ExtractionEnumNames.TryParse(value, out unit);
 
     private static bool TryParseItemType(string? value, out AIExtractionListItemType itemType)
     {
@@ -279,25 +276,7 @@ public sealed class ExtractValuesAction : DynamicOutputActionBase<ExtractValuesS
             return true;
         }
 
-        return TryParseName(value, out itemType);
-    }
-
-    // Exact member name, case-insensitive. Enum.TryParse would also accept "3" and "Seconds,Days".
-    private static bool TryParseName<TEnum>(string? value, out TEnum result)
-        where TEnum : struct, Enum
-    {
-        var trimmed = value?.Trim();
-        foreach (var name in Enum.GetNames<TEnum>())
-        {
-            if (string.Equals(name, trimmed, StringComparison.OrdinalIgnoreCase))
-            {
-                result = Enum.Parse<TEnum>(name);
-                return true;
-            }
-        }
-
-        result = default;
-        return false;
+        return ExtractionEnumNames.TryParse(value, out itemType);
     }
 
     /// <summary>

@@ -23,7 +23,9 @@ describe("Feature: Extraction profile settings view", () => {
         });
 
         it("renders no inputs", () => {
-            expect(el.shadowRoot!.querySelectorAll("uui-input, uui-select, uui-toggle, umb-property-layout").length).toBe(0);
+            expect(
+                el.shadowRoot!.querySelectorAll("uui-input, uui-select, uui-toggle, umb-property-layout").length,
+            ).toBe(0);
         });
     });
 

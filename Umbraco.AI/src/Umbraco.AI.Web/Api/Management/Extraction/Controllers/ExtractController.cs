@@ -217,7 +217,7 @@ public class ExtractController : ExtractionControllerBase
                 field = new AIDateTimeExtractionField { Id = model.Id, Instructions = model.Instructions };
                 break;
             case DurationExtractionFieldModel duration:
-                if (!TryParseName<AIDurationUnit>(duration.Unit, out var unit))
+                if (!ExtractionEnumNames.TryParse<AIDurationUnit>(duration.Unit, out var unit))
                 {
                     return $"Unit '{duration.Unit}' is invalid for field '{model.Id}': use seconds, minutes, hours, days, weeks, months or years.";
                 }
@@ -234,7 +234,7 @@ public class ExtractController : ExtractionControllerBase
             case ListExtractionFieldModel list:
                 var itemType = AIExtractionListItemType.Text;
                 if (!string.IsNullOrWhiteSpace(list.ItemType)
-                    && !TryParseName(list.ItemType, out itemType))
+                    && !ExtractionEnumNames.TryParse(list.ItemType, out itemType))
                 {
                     return $"Item type '{list.ItemType}' is invalid for field '{model.Id}': use text, number or date.";
                 }
@@ -246,23 +246,6 @@ public class ExtractController : ExtractionControllerBase
         }
 
         return null;
-    }
-
-    // Enum.TryParse also accepts numeric strings and comma-joined flags, so match the names only.
-    private static bool TryParseName<TEnum>(string? value, out TEnum result)
-        where TEnum : struct, Enum
-    {
-        foreach (var name in Enum.GetNames<TEnum>())
-        {
-            if (string.Equals(name, value, StringComparison.OrdinalIgnoreCase))
-            {
-                result = Enum.Parse<TEnum>(name);
-                return true;
-            }
-        }
-
-        result = default;
-        return false;
     }
 
     private static ExtractResponseModel MapResponse(AIExtractionResponse response) => new()

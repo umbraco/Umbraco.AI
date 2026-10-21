@@ -20,6 +20,15 @@ internal static partial class ExtractionFieldValidator
     private static partial Regex FieldIdPattern();
 
     /// <summary>
+    /// Whether <paramref name="id"/> is a legal field id: a letter or underscore, then letters, digits
+    /// or underscores, at most 64 characters.
+    /// </summary>
+    /// <remarks>Used by Umbraco.AI.Automate via InternalsVisibleTo, so renaming or changing it breaks an installed Automate at runtime.</remarks>
+    /// <param name="id">The id to check.</param>
+    /// <returns><see langword="true"/> when the id is legal.</returns>
+    public static bool IsValidFieldId(string id) => FieldIdPattern().IsMatch(id);
+
+    /// <summary>
     /// Validates <paramref name="request"/>'s batch shape and every one of its fields.
     /// </summary>
     /// <param name="request">The request to validate.</param>
@@ -54,7 +63,7 @@ internal static partial class ExtractionFieldValidator
                 return "Every field's Id must be non-blank.";
             }
 
-            if (!FieldIdPattern().IsMatch(field.Id))
+            if (!IsValidFieldId(field.Id))
             {
                 return $"Field id '{field.Id}' is invalid: it must start with a letter or underscore, contain only letters, digits and underscores, and be at most 64 characters.";
             }

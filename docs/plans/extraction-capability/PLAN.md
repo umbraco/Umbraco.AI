@@ -191,7 +191,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   secrets, public API rules, localization keys.
   depends-on: T16, T19.
 
-- [ ] **T21** - story: all. Open the v18 PR into `v18/dev` as a draft, with the demo-site results
+- [x] **T21** - story: all. Open the v18 PR into `v18/dev` as a draft, with the demo-site results
   from T9, T14, T16, T18 and T19 in the description. Flag in the PR that the `Umbraco.AI.Core`
   floor for Cloudflare, Automate and Deploy must be raised to the release that ships Extraction, and set
   the real minimum in `Umbraco.AI.Cloudflare/README.md`.

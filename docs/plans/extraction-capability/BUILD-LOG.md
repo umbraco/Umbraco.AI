@@ -141,3 +141,5 @@
   19 test projects green (Core unit 2243, integration 34, Automate 274, Cloudflare 126, Deploy 44);
   vitest 241. Open for a person: SPEC's 100-second HttpClient timeout assumption, and
   ARCHITECTURE's string-only list answers and separate field-list editor copies.
+- **T21** - branch pushed; draft PR #655 into `v18/dev` with demo-site results, screenshots and
+  the open decisions (Core floor, Deploy import, Automate culture issue, timeout assumption).

@@ -1,4 +1,8 @@
-import { UAI_CONVERSATION_ENTITY_TYPE, UAI_CONVERSATION_SHARED_FLAG } from "../constants.js";
+import {
+    UAI_CONVERSATION_ENTITY_TYPE,
+    UAI_CONVERSATION_SHARED_FLAG,
+    UAI_CONVERSATION_SHARED_WITH_ME_FLAG,
+} from "../constants.js";
 import {
     UaiConversationStateCondition,
     UAI_CONVERSATION_STATE_CONDITION,
@@ -67,6 +71,24 @@ export const conversationManifests: UmbExtensionManifest[] = [
             iconName: "icon-share",
             label: "#uaiCopilotWorkspace_sharedBadgeLabel",
             iconColorAlias: "green",
+        },
+    },
+    {
+        type: "entitySign",
+        kind: "icon",
+        alias: "Uai.CopilotWorkspace.EntitySign.SharedWithMe",
+        name: "Shared With Me Entity Sign",
+        weight: 1000,
+        ...forConversation,
+        forEntityFlags: [UAI_CONVERSATION_SHARED_WITH_ME_FLAG],
+        api: () => import("./shared-with-me-sign.api.js"),
+        // The static meta.label is unused once the api's reactive `label` observable resolves (the bundle
+        // prefers `sign.api.label` over `meta.label` — see entity-sign-bundle.element.js's #gotProperties);
+        // it only matters as a harmless fallback if the api fails to load.
+        meta: {
+            iconName: "icon-share",
+            iconColorAlias: "green",
+            label: "",
         },
     },
 

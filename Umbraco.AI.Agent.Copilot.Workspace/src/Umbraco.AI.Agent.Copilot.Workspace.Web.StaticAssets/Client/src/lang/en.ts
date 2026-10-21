@@ -28,9 +28,11 @@ export default {
         listNoResults: "No conversations match your search.",
         untitledConversation: "Untitled conversation",
         sharedBadgeLabel: "Shared",
+        sharedByOwner: "Shared by %0%",
 
         // Sidebar group headers
         groupPinned: "Pinned",
+        groupSharedWithMe: "Shared with me",
         groupToday: "Today",
         groupYesterday: "Yesterday",
         groupPrevious7Days: "Previous 7 days",

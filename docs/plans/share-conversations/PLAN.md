@@ -95,7 +95,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   from SC-08 (different controller classes, no shared route-constants edit expected since both
   root at the existing `conversations` segment) — safe to run in parallel with it.
 
-- [ ] **SC-10** — Wire: backend endpoints resolve for real
+- [x] **SC-10** — Wire: backend endpoints resolve for real
   story: US1, US2, US3, US4 (backend acceptance)
   depends-on: SC-08, SC-09
   Not unit-test-green alone. Against the running demo site: create a share (and confirm a real

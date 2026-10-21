@@ -1,5 +1,28 @@
 # Build Log
 
+- **SC-10** — Wire: backend endpoints resolve for real. No commit (verification-only task, no
+  code changes). Built the frontend once (`npm run build`) since this worktree had never built it
+  — the Copilot Workspace section didn't even appear in the backoffice nav until the static assets
+  existed; a `dotnet build` alone doesn't regenerate the Vite output. Seeded a real conversation
+  with messages directly into the demo site's SQLite file (no AI connection configured in this
+  environment, so going through a live chat completion wasn't possible) — hit and fixed a real
+  gotcha worth remembering: EF Core's SQLite GUID-to-TEXT mapping stores/compares uppercase, so a
+  lowercase-cased seeded `Id` 404s on every by-id lookup even though list queries (scanned, not
+  indexed-compared the same way) still return it; fixed by uppercasing the seeded GUIDs. Verified
+  every endpoint for real via two Umbraco API Users (client-credentials OAuth — a demo site has no
+  way to borrow the interactive backoffice's in-memory bearer token, and API Users are the
+  supported, intended path for exactly this): create a Snapshot share (confirmed a real `.eml`
+  landed in the SMTP pickup directory, matching the approved mockup's text and linking to the real
+  conversation route), `hasActiveShares` flipped true on the owner's paged list (and confirmed, not
+  a regression, that `GetConversationAsync`/`GetById` still always report `false` — the documented
+  SC-05 limitation), listed the share, read it back via `shared-view` as the recipient (correct
+  `ownerDisplayName`), saw it in `shared-with-me`, re-shared the same recipient as Live (updated the
+  existing row — same `dateShared`, no second email), confirmed Live then surfaced a message added
+  after the original share while Snapshot had kept it frozen (live-exercised SC-09's cutoff-freeze
+  fix, decision 9, with a real third message seeded after the share), revoked (204), confirmed the
+  next `shared-view` 404s, `shared-with-me` goes empty, `hasActiveShares` flips back to `false`, and
+  revoking an already-revoked share 404s rather than silently no-op succeeding (US2 AC9). All green
+  against the real running app, real HTTP, real auth — nothing bypassed.
 - **SC-09** — Recipient-side share Management API controllers. Commit `cd77a0ec`. Two review
   rounds: (1) FAIL — a builder deleted two pending DI-resolution test placeholders on a false
   premise (claimed SC-08 set a delete-them precedent; SC-08 actually left its own skipped and

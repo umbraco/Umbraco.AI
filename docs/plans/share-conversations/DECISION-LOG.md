@@ -461,3 +461,13 @@
   `ownerDisplayName` to the response model's spec, resolved the same way `GET .../shares`'
   `userName` already is (via `IUserService` at the Web layer, not stored on the domain model) —
   caught before it became a frontend-task surprise two tasks later.
+- **2026-10-21 (SC-11: `share()`/`revokeShare()` dispatch an entity-action event; `scopeMode`
+  stays a plain `string` at the generated-type layer)** — Neither was spelled out in `SPEC.md`'s
+  repository-additions section. (1) Sharing/revoking flips `hasActiveShares` on the owner's own
+  conversation row, but nothing told the sidebar's conversation list to refetch after either call —
+  caught in SC-11's review and fixed by mirroring `update()`'s existing `UaiEntityActionEvent.updated(...)`
+  dispatch pattern exactly (including the same awaited-dispatch timing). `getShares()` stays a plain
+  read with no dispatch. (2) `ShareConversationRequestModel["scopeMode"]` is left as the generated
+  plain `string` rather than a hand-written `"Snapshot" | "Live"` union, matching this file's existing
+  convention for other enum-like wire fields (e.g. `MessageResponseModel.role`); SC-15 (the mode
+  dropdown) can add a stricter frontend-only type if it turns out to need one.

@@ -104,7 +104,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   `shared-with-me`, re-share the same recipient and confirm no second email, revoke it, confirm
   the next `shared-view` request 404s. This is the backend half of every story's acceptance.
 
-- [ ] **SC-11** — OpenAPI client regen + `conversation.repository.ts` additions
+- [x] **SC-11** — OpenAPI client regen + `conversation.repository.ts` additions
   story: US1, US2, US3, US4 (frontend data-access foundation)
   depends-on: SC-10
   Requires the running demo site (root `CLAUDE.md`'s `npm run generate-client`). Adds `share`

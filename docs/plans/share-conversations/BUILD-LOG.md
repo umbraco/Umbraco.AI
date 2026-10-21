@@ -1,5 +1,21 @@
 # Build Log
 
+- **SC-11** — OpenAPI client regen + `conversation.repository.ts` additions. Commit `7c2ba810`.
+  Two review rounds: (1) PASS with one requested fix — `share()`/`revokeShare()` didn't dispatch
+  `UaiEntityActionEvent.updated(...)` on success the way `update()` does, so the owner's sidebar
+  `hasActiveShares` badge (SC-13) would go stale after the first share or last revoke until some
+  unrelated refresh happened to occur; fixed by mirroring `update()`'s exact awaited-dispatch
+  pattern. (2) PASS, confirmed via a targeted re-check of just the fix. Confirmed the OpenAPI
+  client regen genuinely picked up all 5 new endpoints (`ai-copilot-workspace-management` doc name
+  matches `CopilotWorkspaceConstants.ApiName`) plus `hasActiveShares` on `ConversationResponseModel`;
+  confirmed the `share()` wire body (`recipientUserKeys: [recipientUserKey]`) matches the generated
+  `ShareConversationRequestModel` field name/casing exactly, not just type-checks against a loose
+  type. Backend-data-access-only task — no UI wiring, no new manifests, no callers added (that's
+  SC-12 onward) — so the build/typecheck + 45 passing vitest specs is the applicable gate, same
+  precedent as SC-01/SC-02's "no runtime entry point yet" foundation tasks. One deferred item: test
+  fixtures in `grouping.test.ts`/`types.test.ts` are missing the now-required `hasActiveShares`
+  field (invisible to `tsc` since `*.test.ts` is excluded from the build) — left for SC-13 to add
+  when it starts testing the badge, per reviewer's note.
 - **SC-10** — Wire: backend endpoints resolve for real. No commit (verification-only task, no
   code changes). Built the frontend once (`npm run build`) since this worktree had never built it
   — the Copilot Workspace section didn't even appear in the backoffice nav until the static assets

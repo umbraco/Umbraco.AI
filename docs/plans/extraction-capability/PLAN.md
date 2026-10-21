@@ -114,7 +114,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Frontend (Core)
 
-- [ ] **T10** - story: EX-4, EX-5, EX-7 (prerequisite). Regenerate the OpenAPI client
+- [x] **T10** - story: EX-4, EX-5, EX-7 (prerequisite). Regenerate the OpenAPI client
   (`npm run generate-client` against the running demo site) once, after T9. Commit only the
   generated `src/api/` changes.
   depends-on: T9.
@@ -191,7 +191,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
   secrets, public API rules, localization keys.
   depends-on: T16, T19.
 
-- [ ] **T21** - story: all. Open the v18 PR into `v18/dev` as a draft, with the demo-site results
+- [x] **T21** - story: all. Open the v18 PR into `v18/dev` as a draft, with the demo-site results
   from T9, T14, T16, T18 and T19 in the description. Flag in the PR that the `Umbraco.AI.Core`
   floor for Cloudflare, Automate and Deploy must be raised to the release that ships Extraction, and set
   the real minimum in `Umbraco.AI.Cloudflare/README.md`.
@@ -199,13 +199,13 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## v17 and docs
 
-- [ ] **T22** - story: EX-13 (AC1-AC3). Port everything with the `change-backport` skill:
+- [x] **T22** - story: EX-13 (AC1-AC3). Port everything with the `change-backport` skill:
   `v17/feature/extraction-capability` from `v17/dev`, Cloudflare `version.json` = `17.0.0`,
   `AICapability.Extraction = 9`, the v17 frontend data-source split (EX-7 AC6). All touched products
   build and test green. Draft PR into `v17/dev`, cross-linked with the v18 PR.
   depends-on: T21.
 
-- [ ] **T23** - **wire: v17 demo site.** story: EX-13 (AC4), EX-7 (AC6). Real
+- [x] **T23** - **wire: v17 demo site.** story: EX-13 (AC4), EX-7 (AC6). Real
   `POST extraction/extract` and one Extract Values run on the v17 demo site.
   depends-on: T22.
 

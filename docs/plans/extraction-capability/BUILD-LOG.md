@@ -141,3 +141,16 @@
   19 test projects green (Core unit 2243, integration 34, Automate 274, Cloudflare 126, Deploy 44);
   vitest 241. Open for a person: SPEC's 100-second HttpClient timeout assumption, and
   ARCHITECTURE's string-only list answers and separate field-list editor copies.
+- **T21** - v18 draft PR #655 (description lives on the v18 branch).
+- **T22** - ported to `v17/feature/extraction-capability` from `v17/dev`: 20 source commits
+  cherry-picked with `-x`; the v18 generated client was regenerated from the v17 demo site instead.
+  v17 changes: Cloudflare `version.json` 17.0.0 and docs; frontend data source maps through the
+  concrete generated unions (v17 base models have no `$type`), tests use the v17 controller host,
+  field-list manifest drops `keywords`. Reviewer PASS. Core unit 2244, integration 34, Cloudflare 126,
+  Deploy 44, Automate 274; vitest 241; `build:core` passes.
+- **T23** - **wire, v17 demo site** (fresh, flag on): Cloudflare connection via `$` references, test
+  passed; Extraction profile + default set; `POST extraction/extract` returned all 7 types correctly
+  (same answers as v18, 736 tokens); Automate "Support ticket triage" run Completed with the four
+  outputs and the "found" branch; field modal renders with the binding example;
+  `UaiExtractionController.extract` from the console returned typed answers incl. datetime,
+  duration in weeks and a not-found field (EX-7 AC6).

@@ -27,6 +27,7 @@ export default {
         listEmpty: "Your conversations will appear here.",
         listNoResults: "No conversations match your search.",
         untitledConversation: "Untitled conversation",
+        sharedBadgeLabel: "Shared",
 
         // Sidebar group headers
         groupPinned: "Pinned",

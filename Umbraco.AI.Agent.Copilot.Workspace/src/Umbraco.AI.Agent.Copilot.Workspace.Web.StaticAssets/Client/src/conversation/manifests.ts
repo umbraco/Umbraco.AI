@@ -1,4 +1,4 @@
-import { UAI_CONVERSATION_ENTITY_TYPE } from "../constants.js";
+import { UAI_CONVERSATION_ENTITY_TYPE, UAI_CONVERSATION_SHARED_FLAG } from "../constants.js";
 import {
     UaiConversationStateCondition,
     UAI_CONVERSATION_STATE_CONDITION,
@@ -23,8 +23,9 @@ const action = (name: keyof typeof import("./entity-actions/conversation.actions
 
 /**
  * Conversation entity extensions: the ⋯-menu entity actions rendered by each sidebar tree item
- * (pin/unpin, rename, move, archive/unarchive, delete), their pin/archive state conditions, and the
- * rename modal. The per-node conversation context (provided by the tree item) drives the conditions.
+ * (pin/unpin, rename, move, archive/unarchive, delete), their pin/archive state conditions, the
+ * "shared" entity-sign badge, and the rename modal. The per-node conversation context (provided by
+ * the tree item) drives the conditions.
  */
 export const conversationManifests: UmbExtensionManifest[] = [
     {
@@ -45,6 +46,21 @@ export const conversationManifests: UmbExtensionManifest[] = [
         alias: UAI_CONVERSATION_STATE_CONDITION,
         name: "Conversation State Condition",
         api: UaiConversationStateCondition,
+    },
+
+    {
+        type: "entitySign",
+        kind: "icon",
+        alias: "Uai.CopilotWorkspace.EntitySign.Conversation.IsShared",
+        name: "Is Shared Conversation Entity Sign",
+        weight: 1000,
+        ...forConversation,
+        forEntityFlags: [UAI_CONVERSATION_SHARED_FLAG],
+        meta: {
+            iconName: "icon-share",
+            label: "#uaiCopilotWorkspace_sharedBadgeLabel",
+            iconColorAlias: "green",
+        },
     },
 
     {

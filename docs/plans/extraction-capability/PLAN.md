@@ -26,7 +26,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Core
 
-- [ ] **T1** - story: EX-3 (AC1-AC3, AC5-AC7). Add `AICapability.Extraction = 9`,
+- [x] **T1** - story: EX-3 (AC1-AC3, AC5-AC7). Add `AICapability.Extraction = 9`,
   `AIExperimentalOptions.Extraction`, its arm in `AIExperimentalFeatures`, the
   `UMBRACOAI_EXTRACTION` experimental id, and the Extraction arm in `AIConnectionService` and
   `AIProfileService`'s capability checks. Add empty sealed `AIExtractionProfileSettings` and its

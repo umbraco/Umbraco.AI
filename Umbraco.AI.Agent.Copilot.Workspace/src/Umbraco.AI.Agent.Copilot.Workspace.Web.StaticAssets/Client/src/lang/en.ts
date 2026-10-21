@@ -52,6 +52,21 @@ export default {
         deleteConfirmTitle: "Delete conversation",
         deleteConfirmMessage: "Are you sure you want to delete this conversation? This cannot be undone.",
 
+        // Share-picker modal
+        sharePickerHeadline: 'Share "%0%"',
+        sharePersonLabel: "Person",
+        sharePersonHelp: "Pick one colleague — not a link anyone can open.",
+        sharePersonChoose: "Choose a person",
+        sharePickDifferentPerson: "Pick a different person",
+        shareModeLabel: "Mode",
+        shareModeSnapshot: "Snapshot — frozen at today's messages",
+        shareModeLive: "Live — always shows the latest messages",
+        // Placeholder copy pending real product/legal review (ARCHITECTURE.md decision 2) — same status
+        // as the share-notification email's copy.
+        shareDisclosureBanner:
+            "The person you share with will see everything referenced in this conversation, including pages or files they might not otherwise have permission to open.",
+        shareSubmit: "Share",
+
         // Read-only (archived or shared) conversation
         readOnlyNotice: "This conversation is archived. Restore it to continue chatting.",
         sharedReadOnlyNotice: "This conversation is read-only — shared by %0%.",

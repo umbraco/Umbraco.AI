@@ -6,6 +6,7 @@ import {
 } from "./entity/conversation-state.conditions.js";
 import { UAI_RENAME_CONVERSATION_MODAL_ALIAS } from "./modal/rename-conversation-modal.token.js";
 import { UAI_PROJECT_PICKER_MODAL_ALIAS } from "./modal/project-picker-modal.token.js";
+import { UAI_SHARE_PICKER_MODAL_ALIAS } from "./modal/share-picker-modal.token.js";
 
 const forConversation = { forEntityTypes: [UAI_CONVERSATION_ENTITY_TYPE] };
 
@@ -24,8 +25,8 @@ const action = (name: keyof typeof import("./entity-actions/conversation.actions
 /**
  * Conversation entity extensions: the ⋯-menu entity actions rendered by each sidebar tree item
  * (pin/unpin, rename, move, archive/unarchive, delete), their pin/archive state conditions, the
- * "shared" entity-sign badge, and the rename modal. The per-node conversation context (provided by
- * the tree item) drives the conditions.
+ * "shared" entity-sign badge, and the rename/project-picker/share-picker modals. The per-node
+ * conversation context (provided by the tree item) drives the conditions.
  */
 export const conversationManifests: UmbExtensionManifest[] = [
     {
@@ -39,6 +40,12 @@ export const conversationManifests: UmbExtensionManifest[] = [
         alias: UAI_PROJECT_PICKER_MODAL_ALIAS,
         name: "Project Picker Modal",
         element: () => import("./modal/project-picker-modal.element.js"),
+    },
+    {
+        type: "modal",
+        alias: UAI_SHARE_PICKER_MODAL_ALIAS,
+        name: "Share Picker Modal",
+        element: () => import("./modal/share-picker-modal.element.js"),
     },
 
     {

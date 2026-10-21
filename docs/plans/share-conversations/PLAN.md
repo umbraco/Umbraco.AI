@@ -134,7 +134,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   part of this task (flagged as not yet drafted in `ARCHITECTURE.md`'s TODOs). Independent files
   from SC-12, SC-14, SC-15, SC-17 — safe to run in parallel with all of them.
 
-- [ ] **SC-14** — "Shared with" context panel section
+- [x] **SC-14** — "Shared with" context panel section
   story: US2 (AC1–4)
   depends-on: SC-11
   parallel-group: frontend-features

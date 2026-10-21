@@ -502,3 +502,12 @@
   property: setting `max = 1` makes the picker pass `multiple: false` into the modal's data
   automatically. SC-19 (v17 backport) should re-verify this same behavior against the v17 CMS tag,
   since it couldn't be checked from this worktree.
+- **2026-10-21 (SC-14: narrowed `share`/`getShares`/`revokeShare` to take `id: string`)** —
+  `SPEC.md` originally documented these repository methods as taking the full `conversation` object
+  (matching the pattern of this file's own writers like `rename(conversation, title)`). SC-14's
+  component only ever holds the lighter `UaiConversationDetailModel` (not the `ConversationResponseModel`
+  SC-11 originally typed these against), and all three methods only ever read `.id` anyway — the
+  data-source layer underneath already took a plain `id`. Narrowed the repository signatures to match,
+  confirmed safe since nothing called the old signature yet (unreleased, pre-merge branch), and updated
+  `SPEC.md`'s repository-additions section to the corrected `(id, ...)` signatures so the design doc
+  doesn't drift from what shipped.

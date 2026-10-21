@@ -1,5 +1,22 @@
 # Build Log
 
+- **SC-14** — "Shared with" context panel section. Commit `61a45215`. Two review rounds: (1) FAIL —
+  one Important bug: revoke removed the recipient's row from the UI optimistically, before the
+  DELETE call was even confirmed — on a failed request the owner would see the row gone while the
+  recipient still had real access, a security-relevant UI/reality mismatch; fixed to only remove the
+  row after a confirmed-successful response. Also fixed two related suggestions alongside it: a real
+  request-token guard (mirroring `UaiConversationWorkspaceContext`'s own `#requestToken`) so an
+  older in-flight shares fetch can never clobber a newer one (e.g. the initial fetch landing after a
+  post-share refetch), and a title-fallback inconsistency (`?? ` → `?.trim() ||`, matching
+  `tree-item.element.ts`). Also narrowed `conversation.repository.ts`'s `share`/`getShares`/
+  `revokeShare` (SC-11) from taking a full `ConversationResponseModel` to a plain `id: string` —
+  disclosed scope deviation into an already-committed file; reviewer confirmed it's safe (nothing
+  called the old signature yet, the data-source underneath already took `id`) and the fix also
+  updated `SPEC.md`'s stale method signatures to match. (2) PASS. Live-verified in the running demo
+  site: the section renders first, above Contexts/Resources, owner-only; lists a real share with its
+  mode; the trash icon appears on hover; "Choose" opens the real `UAI_SHARE_PICKER_MODAL` (confirmed
+  via its real tag and action buttons) — screenshot at
+  `screenshots/context-panel-shared-with.png`. vitest 72/72.
 - **SC-15** — Share-picker modal. Commit `d88c08ad`. Built before SC-14 (order swapped — see
   `DECISION-LOG.md`). Two review rounds: (1) FAIL — one Important finding: both fields used bare
   `uui-label`/manual help text instead of this repo's standard `umb-property-layout` wrapping

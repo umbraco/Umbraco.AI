@@ -168,6 +168,24 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                           </umb-property-layout>
                       `
                     : ""}
+                ${this.#isCapabilityEnabled("Extraction")
+                    ? html`
+                          <umb-property-layout
+                              label=${this.localize.term("uaiSettings_defaultExtractionProfileLabel")}
+                              description=${this.localize.term("uaiSettings_defaultExtractionProfileDescription")}
+                          >
+                              <div slot="editor">
+                                  <uai-profile-picker
+                                      name="defaultExtractionProfileId"
+                                      capability="Extraction"
+                                      .value=${this._model?.defaultExtractionProfileId ?? undefined}
+                                      @change=${this.#onPropertyChange}
+                                  >
+                                  </uai-profile-picker>
+                              </div>
+                          </umb-property-layout>
+                      `
+                    : ""}
             </uui-box>
 
             <uui-box headline="Transparency">

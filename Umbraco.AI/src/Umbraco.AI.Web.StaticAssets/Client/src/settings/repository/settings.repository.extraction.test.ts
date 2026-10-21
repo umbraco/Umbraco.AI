@@ -33,7 +33,7 @@ describe("Feature: saving settings with a default Extraction profile", () => {
             await new UaiSettingsRepository().save(stored);
         });
 
-        it.skip("sends the stored default Extraction profile unchanged", () => {
+        it("sends the stored default Extraction profile unchanged", () => {
             expect(updateSettings.mock.calls[0][0].body.defaultExtractionProfileId).toBe(
                 "44444444-4444-4444-4444-444444444444",
             );

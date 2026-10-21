@@ -60,3 +60,7 @@
   FAIL (no compile-time `never` check on answer `$type`); added, plus literal unions for duration
   unit and list item type (values confirmed by the live Cloudflare error). Vitest 156/156;
   `build:core` passes; public rollup has the controller and no generated models. Smoke: T14.
+- **T12** - capability label + `icon-filter`, Extraction profile settings type/guard/mappers and
+  "no settings" element, "Default Extraction Profile" picker (only when enabled), settings
+  repository sends the field both ways. 16 specs on (red first). Label matched to sibling casing.
+  Reviewer PASS first round; vitest 172/172, `build:core` passes. Smoke: T14.

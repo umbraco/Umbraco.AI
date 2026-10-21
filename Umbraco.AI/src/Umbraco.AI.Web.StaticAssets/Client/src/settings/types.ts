@@ -9,6 +9,7 @@ export interface UaiSettingsModel {
     defaultSpeechToTextProfileId: string | null;
     defaultImageGenerationProfileId: string | null;
     defaultDecisionProfileId: string | null;
+    defaultExtractionProfileId: string | null;
     classifierChatProfileId: string | null;
     disclosureNoticeMode: UaiDisclosureNoticeMode;
 }

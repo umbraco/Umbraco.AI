@@ -12,3 +12,7 @@
   the `EnabledCapabilities` entry pulled from T6. 11 spec files on (167 tests); fail-first shown by
   mutation (40 failures). Reviewer PASS first round; two doc/helper suggestions applied. Unit
   2144/2144, integration 34/34; Deploy and Automate build. Smoke: DI resolution tests; live in T9.
+- **T6** - `defaultExtractionProfileId` on the settings API, MapAll exclusions removed, slot
+  validation. 4 specs on (failed first with CS0117/CS1061). Reviewer PASS first round; unit
+  2151/2151, integration 34/34. Note: the current Settings screen still omits the field on save
+  (same as before T6); T12 must send it. Smoke: live in T9.

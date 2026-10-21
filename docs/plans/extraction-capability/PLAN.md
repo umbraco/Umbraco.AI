@@ -77,7 +77,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Management API
 
-- [ ] **T6** - story: EX-4 (AC1). Add `defaultExtractionProfileId` to the settings
+- [x] **T6** - story: EX-4 (AC1). Add `defaultExtractionProfileId` to the settings
   request/response models and `SettingsMapDefinition`, and remove the two
   `-DefaultExtractionProfileId` MapAll exclusions T3 added. Add a `DefaultExtractionProfileId` row
   to `UpdateSettingsProfileCapabilityValidationTests.AllSlots`. (The `ImplementedCapabilities`

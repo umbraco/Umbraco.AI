@@ -19,7 +19,7 @@ public class SettingsMapDefinition : IMapDefinition
         mapper.Define<UpdateSettingsRequestModel, AISettings>((_, _) => new AISettings(), MapFromUpdateRequest);
     }
 
-    // Umbraco.Code.MapAll -DefaultExtractionProfileId
+    // Umbraco.Code.MapAll
     private static void MapToResponse(AISettings source, SettingsResponseModel target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;
@@ -28,10 +28,11 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
         target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
+        target.DefaultExtractionProfileId = source.DefaultExtractionProfileId;
         target.DisclosureNoticeMode = source.DisclosureNoticeMode.ToString();
     }
 
-    // Umbraco.Code.MapAll -DefaultExtractionProfileId -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
+    // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateSettingsRequestModel source, AISettings target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;
@@ -40,6 +41,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
         target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
+        target.DefaultExtractionProfileId = source.DefaultExtractionProfileId;
         target.DisclosureNoticeMode = ParseDisclosureNoticeMode(source.DisclosureNoticeMode);
     }
 

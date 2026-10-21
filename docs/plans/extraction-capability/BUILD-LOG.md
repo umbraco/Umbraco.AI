@@ -16,3 +16,6 @@
   validation. 4 specs on (failed first with CS0117/CS1061). Reviewer PASS first round; unit
   2151/2151, integration 34/34. Note: the current Settings screen still omits the field on save
   (same as before T6); T12 must send it. Smoke: live in T9.
+- **T7** - `ExtractionProfileSettingsModel` (`$type: "extraction"`) and both mapper arms. 9 specs on
+  (failed first with CS0246), run through the real mapper and serializer. Reviewer PASS first
+  round; unit 2160/2160, integration 34/34. Smoke: live in T9.

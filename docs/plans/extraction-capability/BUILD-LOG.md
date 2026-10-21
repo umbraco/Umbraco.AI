@@ -33,3 +33,6 @@
   2xx `success:false` classed as a network error, adapter duplicated Core's missing-answer check, no
   culture guard. Fixed with red-first tests; round 2 PASS. Cloudflare 112/112 (passes under
   da_DK too). Smoke: live Clairic call in T9; wire-shape guesses listed in DECISION-LOG.
+- **T15** - `DefaultExtractionProfileUdi` on the Deploy settings artifact, export with dependency,
+  import through the shared resolver. 9 specs on (failed first with CS1061/CS0117). Reviewer PASS
+  first round; Deploy 44/44. Core floor left for release prep (T21). Smoke: real host in T16.

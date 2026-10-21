@@ -150,7 +150,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Deploy
 
-- [ ] **T15** - story: EX-12 (AC1-AC5). Add `DefaultExtractionProfileUdi` to `AISettingsArtifact`,
+- [x] **T15** - story: EX-12 (AC1-AC5). Add `DefaultExtractionProfileUdi` to `AISettingsArtifact`,
   export (+ dependency) and import in `UmbracoAISettingsServiceConnector`, and an Extraction profile
   round-trip test for `UmbracoAIProfileServiceConnector`. Raise the `Umbraco.AI.Core` floor if
   needed.
@@ -193,7 +193,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 - [ ] **T21** - story: all. Open the v18 PR into `v18/dev` as a draft, with the demo-site results
   from T9, T14, T16, T18 and T19 in the description. Flag in the PR that the `Umbraco.AI.Core`
-  floor for Cloudflare and Automate must be raised to the release that ships Extraction, and set
+  floor for Cloudflare, Automate and Deploy must be raised to the release that ships Extraction, and set
   the real minimum in `Umbraco.AI.Cloudflare/README.md`.
   depends-on: T20.
 

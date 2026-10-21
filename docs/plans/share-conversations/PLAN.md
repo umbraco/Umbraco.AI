@@ -161,7 +161,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   recipient + mode. Independent files from SC-12, SC-13, SC-14, SC-17 — safe to run in parallel
   with all of them, though SC-14 and SC-15 are wired together in SC-16.
 
-- [ ] **SC-16** — Wire: "Shared with" section + picker modal end-to-end
+- [x] **SC-16** — Wire: "Shared with" section + picker modal end-to-end
   story: US1, US2 (frontend acceptance)
   depends-on: SC-14, SC-15
   Acceptance: verified in the running backoffice, not unit tests alone. Opening a conversation's

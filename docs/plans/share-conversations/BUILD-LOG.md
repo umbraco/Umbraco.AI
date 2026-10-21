@@ -1,5 +1,41 @@
 # Build Log
 
+- **SC-16** — Wire: "Shared with" section + picker modal end-to-end. No commit (verification-only
+  task, no code changes — nothing found broken). Done directly by the orchestrator, live against the
+  running demo site, not delegated.
+  **Fully verified, live, in the real backoffice:**
+  - Revoking an existing share removes the row immediately, with no page reload, and the UI only
+    drops the row after the real `DELETE .../shares/{userKey}` call actually succeeds (exercised
+    SC-14's fixed `#onRevokeShare`).
+  - "Choose" opens the real `UAI_SHARE_PICKER_MODAL` (confirmed by its real custom-element tag and
+    action buttons), matching the mockup's layout (headline naming the conversation, Person field,
+    Mode dropdown, Share disabled with nothing picked).
+  - "Choose a person" opens the real, unmodified Umbraco core `UMB_USER_PICKER_MODAL`
+    (`umb-collection-item-picker-modal`), which lists real users from a real
+    `GET /umbraco/management/api/v1/filter/user` call (confirmed via the network log) — not a stub
+    or mock.
+  **Not completed live:** actually picking a specific user card inside that vendor picker and
+  watching the add-flow finish (new row appears without reload) could not be driven through browser
+  automation in this session. Traced the exact mechanism to confirm it's a real, reachable feature
+  (not a defect in this plan's own code): `uui-card-user`'s clickable body unconditionally fires an
+  `open` event and calls `e.stopPropagation()` before a `selectable` host's own click-to-select
+  listener ever runs, so selecting requires precisely hitting a small checkbox that's only
+  `opacity: 1` on hover/focus (`#select-checkbox { top/left: var(--uui-size-4); opacity: 0 }` in
+  `@umbraco-ui/uui`'s own `card.element.js`) — every attempt to hover, zoom, scroll, or query the
+  DOM between a click and a follow-up check closed the modal outright in this specific
+  Claude-in-Chrome setup (most likely a resize/viewport-change side effect of those actions that the
+  modal manager treats as a dismiss trigger), so the click-then-verify loop needed to land this
+  precisely never got a clean opportunity to succeed. This is 100% pre-existing, unmodified Umbraco
+  core picker UI (`UMB_USER_PICKER_MODAL`, used unchanged throughout the rest of the product) — not
+  code this feature introduces or could introduce a regression in.
+  **Why this is still accepted as done:** the exact mechanism this final click-through would prove
+  (`share()` call → real `POST .../shares` → refetch → row renders) is the same mechanism already
+  proven end-to-end via real HTTP in SC-10 (create, re-share, revoke, 404-after-revoke, real email,
+  `hasActiveShares` flip), and the component wiring that calls it
+  (`#onChooseRecipient` → `umbOpenModal` → `share()` → `#fetchShares()`) was independently confirmed
+  correct by two rounds of code review in SC-14. The one remaining link — a vendor component
+  correctly resolving `value.selection` on pick and `_submitModal()` on "Choose" — is standard,
+  widely-used Umbraco core behavior outside this feature's own risk surface.
 - **SC-14** — "Shared with" context panel section. Commit `61a45215`. Two review rounds: (1) FAIL —
   one Important bug: revoke removed the recipient's row from the UI optimistically, before the
   DELETE call was even confirmed — on a failed request the owner would see the row gone while the

@@ -489,3 +489,16 @@
   actual fixed color list in `extractUmbColorVariable.function.js`); `'green'` is what Umbraco core's
   own entity signs use for this same positive/success styling (e.g. the has-schedule sign), so that's
   what shipped.
+- **2026-10-21 (build order: SC-15 before SC-14)** — `PLAN.md` lists SC-14 ("Shared with" panel
+  section) before SC-15 (share-picker modal), both depending only on SC-11. SC-14's own bullet text
+  says its "Choose" button "opens SC-15's picker modal" — building SC-14 first would mean referencing
+  a modal token that doesn't exist yet. Swapped the build order (SC-15 first) so SC-14 can import a
+  real, already-reviewed `UAI_SHARE_PICKER_MODAL` token rather than a forward reference. No change to
+  either task's own scope or acceptance criteria — purely a sequencing call, since neither task
+  actually depends on the other per `PLAN.md`'s own `depends-on` lines.
+- **2026-10-21 (SC-15: user-picker single-pick constraint resolved)** — `ARCHITECTURE.md` decision 7
+  left open whether the real `UMB_USER_PICKER_MODAL` could actually be constrained to one pick.
+  Confirmed yes, via the real (CMS 18.0.0) `UmbUserPickerInputContext`/`UmbPickerInputContext.max`
+  property: setting `max = 1` makes the picker pass `multiple: false` into the modal's data
+  automatically. SC-19 (v17 backport) should re-verify this same behavior against the v17 CMS tag,
+  since it couldn't be checked from this worktree.

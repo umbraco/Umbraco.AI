@@ -148,7 +148,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   SC-15, SC-17 — safe to run in parallel with all of them, though SC-14 and SC-15 are wired together
   in SC-16.
 
-- [ ] **SC-15** — Share-picker modal
+- [x] **SC-15** — Share-picker modal
   story: US1 (AC1, AC3–6, AC10)
   depends-on: SC-11
   parallel-group: frontend-features

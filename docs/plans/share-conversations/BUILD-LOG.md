@@ -1,5 +1,21 @@
 # Build Log
 
+- **SC-15** — Share-picker modal. Commit `d88c08ad`. Built before SC-14 (order swapped — see
+  `DECISION-LOG.md`). Two review rounds: (1) FAIL — one Important finding: both fields used bare
+  `uui-label`/manual help text instead of this repo's standard `umb-property-layout` wrapping
+  (`CLAUDE.md`'s "mirror an existing editor" rule), and the `uui-select` had no `label` attribute
+  for screen readers; fixed by mirroring `Umbraco.AI`'s own `resource-options-modal.element.ts`
+  pattern. Also took the reviewer's two free suggestions alongside the required fix: swapped a
+  hand-rolled `UmbPickerInputContext<UmbUserItemModel, UmbUserDetailModel>` construction for the
+  real, already-exported `UmbUserPickerInputContext` (same wiring, simpler), and removed a no-op
+  `min = 1`. (2) PASS. Confirmed real and correct against CMS 18.0.0 source (not guessed): the
+  user-picker's `max = 1` genuinely constrains `UMB_USER_PICKER_MODAL` to a single pick
+  (`multiple: false`, traced through `picker-input.context.js`) — resolving `ARCHITECTURE.md`
+  decision 7's open question. The modal only resolves its value; the caller (SC-14) will invoke
+  `UaiConversationRepository.share(...)` after it closes, mirroring the existing rename-modal split.
+  Activated the staged `share-conversation.spec.ts` as real, un-skipped helper tests. No end-to-end
+  browser check yet (no real caller exists until SC-14/SC-16) — code-level mockup comparison was the
+  bar for this task. vitest 63/63.
 - **SC-13** — EntitySign manifest + owner's tree-item badge. Commit `f40f49c5`. First use of
   Umbraco's `entitySign` extension mechanism in this codebase. Two review rounds: (1) FAIL — the
   manifest/wiring itself matched real CMS source exactly (verified field-for-field against core's
